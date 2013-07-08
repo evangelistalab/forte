@@ -1,0 +1,469 @@
+#include <libmoinfo/libmoinfo.h>
+
+#include "string_determinant.h"
+
+using namespace std;
+using namespace psi;
+
+#include <psi4-dec.h>
+
+namespace psi{ namespace libadaptive{
+
+double SlaterSign(bool *I, int n);
+
+ExplorerIntegrals* StringDeterminant::ints_ = 0;
+
+StringDeterminant::StringDeterminant()
+    : nmo_(0)
+{
+}
+
+StringDeterminant::StringDeterminant(int nmo,bool print_det)
+    : nmo_(nmo)
+{
+    allocate();
+    for (int n = 0; n < 2 * nmo_; ++n){
+        alfa_bits_[n] = false;
+    }
+    if (print_det) print();
+}
+
+StringDeterminant::StringDeterminant(std::vector<int> occupation,bool print_det)
+    : nmo_(occupation.size() / 2)
+{
+    allocate();
+    for(int p = 0; p < nmo_; ++p){
+        alfa_bits_[p] = occupation[p];
+        beta_bits_[p] = occupation[p + nmo_];
+    }
+    if (print_det) print();
+}
+
+StringDeterminant::StringDeterminant(std::vector<bool> occupation,bool print_det)
+    : nmo_(occupation.size() / 2)
+{
+    allocate();
+    for(int p = 0; p < nmo_; ++p){
+        alfa_bits_[p] = occupation[p];
+        beta_bits_[p] = occupation[p + nmo_];
+    }
+    if (print_det) print();
+}
+
+StringDeterminant::StringDeterminant(const StringDeterminant& det)
+    : nmo_(det.nmo_)
+{
+    allocate();
+    for (int n = 0; n < 2 * nmo_; ++n){
+        alfa_bits_[n] = det.alfa_bits_[n];
+    }
+}
+
+StringDeterminant& StringDeterminant::operator=(const StringDeterminant& rhs) {
+    if(nmo_ != rhs.nmo_){
+        deallocate();
+        nmo_ = rhs.nmo_;
+        allocate();
+    }
+    for (int n = 0; n < 2 * nmo_; ++n){
+        alfa_bits_[n] = rhs.alfa_bits_[n];
+    }
+    return *this;
+}
+
+StringDeterminant::~StringDeterminant()
+{
+    deallocate();
+}
+
+void StringDeterminant::allocate()
+{
+    if (nmo_ > 0){
+        alfa_bits_ = new bool[2 * nmo_];
+        beta_bits_ = &(alfa_bits_[nmo_]);
+    }
+}
+
+void StringDeterminant::deallocate()
+{
+    if(nmo_ > 0){
+        delete[] alfa_bits_;
+    }
+}
+
+void StringDeterminant::set_bits(bool *&alfa_bits,bool *&beta_bits)
+{
+    std::copy(alfa_bits,alfa_bits + nmo_,alfa_bits_);
+    std::copy(beta_bits,beta_bits + nmo_,beta_bits_);
+}
+
+void StringDeterminant::set_bits(std::vector<bool>& alfa_bits,std::vector<bool>& beta_bits)
+{
+    std::copy(alfa_bits.begin(),alfa_bits.end(),alfa_bits_);
+    std::copy(beta_bits.begin(),beta_bits.end(),beta_bits_);
+}
+
+/**
+ * Print the determinant
+ */
+void StringDeterminant::print()
+{
+    fprintf(outfile,"\n  |");
+    for(int p = 0; p < nmo_; ++p){
+        fprintf(outfile,"%d",alfa_bits_[p] ? 1 :0);
+    }
+    fprintf(outfile,"|");
+    for(int p = 0; p < nmo_; ++p){
+        fprintf(outfile,"%d",beta_bits_[p] ? 1 :0);
+    }
+    fprintf(outfile,">");
+    fflush(outfile);
+}
+
+/**
+ * Compute the energy of this determinant
+ * @return the electronic energy (does not include the nuclear repulsion energy)
+ */
+double StringDeterminant::energy()
+{
+    double matrix_element = 0.0;
+    matrix_element = ints_->frozen_core_energy();
+    for(int p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p]) matrix_element += ints_->roei(p,p);
+        if(beta_bits_[p]) matrix_element += ints_->roei(p,p);
+        for(int q = 0; q < nmo_; ++q){
+            if(alfa_bits_[p] and alfa_bits_[q])
+                matrix_element +=   0.5 * ints_->rtei(p,p,q,q)
+                        - 0.5 * ints_->rtei(p,q,p,q);
+            if(beta_bits_[p] and beta_bits_[q])
+                matrix_element +=   0.5 * ints_->rtei(p,p,q,q)
+                        - 0.5 * ints_->rtei(p,q,p,q);
+            if(alfa_bits_[p] and beta_bits_[q])
+                matrix_element += ints_->rtei(p,p,q,q);
+        }
+    }
+    return(matrix_element);
+}
+
+
+/**
+ * Compute the relative excitation of two determinants
+ * @return the relative excitation level
+ */
+int StringDeterminant::excitation_level(const StringDeterminant& reference)
+{
+    int nex = 0;
+    for(int p = 0; p < nmo_; ++p){
+        if(reference.alfa_bits_[p] and (not alfa_bits_[p])) nex += 1;
+        if(reference.beta_bits_[p] and (not beta_bits_[p])) nex += 1;
+    }
+    return(nex);
+}
+
+/**
+ * Compute the relative excitation of two determinants
+ * @return the relative excitation level
+ */
+int StringDeterminant::excitation_level(const bool* Ia,const bool* Ib)
+{
+    int nex = 0;
+    for(int p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p] and (not Ia[p])) nex += 1;
+        if(beta_bits_[p] and (not Ib[p])) nex += 1;
+    }
+    return(nex);
+}
+
+//double SlaterRules(StringDeterminant& PhiI, StringDeterminant& PhiJ,boost::shared_ptr<Integrals>& ints)
+//{
+//    double matrix_element = 0.0;
+//    bool* Ia = PhiI.get_alfa_bits();
+//    bool* Ib = PhiI.get_beta_bits();
+//    bool* Ja = PhiJ.get_alfa_bits();
+//    bool* Jb = PhiJ.get_beta_bits();
+
+//    int nmo = PhiI.nmo();
+
+//    int nadiff = 0;
+//    int nbdiff = 0;
+
+//    // Count how many differences in mos are there
+//    for (int n = 0; n < nmo; ++n) {
+//        if (Ia[n] != Ja[n]) nadiff++;
+//        if (Ib[n] != Jb[n]) nbdiff++;
+//    }
+//    nadiff /= 2;
+//    nbdiff /= 2;
+
+//    // Slater rule 1 PhiI = PhiJ
+//    if ((nadiff == 0) and (nbdiff == 0)) {
+//        // Diagonal contribution
+//        matrix_element = ints->frozen_core_energy();
+//        for(int p = 0; p < nmo; ++p){
+//            if(Ia[p]) matrix_element += ints->get_oei_aa_all(p,p);
+//            if(Ib[p]) matrix_element += ints->get_oei_bb_all(p,p);
+//            for(int q = 0; q < nmo; ++q){
+//                if(Ia[p] and Ia[q])
+//                    matrix_element +=   0.5 * ints->get_tei_aaaa_all(p,p,q,q)
+//                            - 0.5 * ints->get_tei_aaaa_all(p,q,p,q);
+//                if(Ib[p] and Ib[q])
+//                    matrix_element +=   0.5 * ints->get_tei_bbbb_all(p,p,q,q)
+//                            - 0.5 * ints->get_tei_bbbb_all(p,q,p,q);
+//                if(Ia[p] and Ib[q])
+//                    matrix_element += ints->get_tei_aabb_all(p,p,q,q);
+//            }
+//        }
+//    }
+
+//    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+//    if ((nadiff == 1) and (nbdiff == 0)) {
+//        // Diagonal contribution
+//        int i = 0;
+//        int j = 0;
+//        for(int p = 0; p < nmo; ++p){
+//            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+//            if((Ia[p] != Ja[p]) and Ja[p]) j = p;
+//        }
+//        double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
+//        matrix_element = sign * ints->get_oei_aa(i,j);
+//        for(int p = 0; p < nmo; ++p){
+//            if(Ia[p] and Ja[p]){
+//                matrix_element += sign * (ints->get_tei_aaaa_all(i,j,p,p) - ints->get_tei_aaaa_all(i,p,p,j));
+//            }
+//            if(Ib[p] and Jb[p]){
+//                matrix_element += sign * ints->get_tei_aabb_all(i,j,p,p);
+//            }
+//        }
+//    }
+//    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
+//    if ((nadiff == 0) and (nbdiff == 1)) {
+//        // Diagonal contribution
+//        int i = 0;
+//        int j = 0;
+//        for(int p = 0; p < nmo; ++p){
+//            if((Ib[p] != Jb[p]) and Ib[p]) i = p;
+//            if((Ib[p] != Jb[p]) and Jb[p]) j = p;
+//        }
+//        double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
+//        matrix_element = sign * ints->get_oei_bb_all(i,j);
+//        for(int p = 0; p < nmo; ++p){
+//            if(Ia[p] and Ja[p]){
+//                matrix_element += sign * ints->get_tei_aabb_all(p,p,i,j);
+//            }
+//            if(Ib[p] and Jb[p]){
+//                matrix_element += sign * (ints->get_tei_bbbb_all(i,j,p,p) - ints->get_tei_bbbb_all(i,p,p,j));
+//            }
+//        }
+//    }
+
+//    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+//    if ((nadiff == 2) and (nbdiff == 0)) {
+//        // Diagonal contribution
+//        int i = -1;
+//        int j =  0;
+//        int k = -1;
+//        int l =  0;
+//        for(int p = 0; p < nmo; ++p){
+//            if((Ia[p] != Ja[p]) and Ia[p]){
+//                if (i == -1) { i = p; } else { j = p; }
+//            }
+//            if((Ia[p] != Ja[p]) and Ja[p]){
+//                if (k == -1) { k = p; } else { l = p; }
+//            }
+//        }
+//        double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
+//        matrix_element = sign * (ints->get_tei_aaaa_all(i,k,j,l) - ints->get_tei_aaaa_all(i,l,j,k));
+//    }
+
+//    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+//    if ((nadiff == 0) and (nbdiff == 2)) {
+//        // Diagonal contribution
+//        int i,j,k,l;
+//        i = -1;
+//        j = -1;
+//        k = -1;
+//        l = -1;
+//        for(int p = 0; p < nmo; ++p){
+//            if((Ib[p] != Jb[p]) and Ib[p]){
+//                if (i == -1) { i = p; } else { j = p; }
+//            }
+//            if((Ib[p] != Jb[p]) and Jb[p]){
+//                if (k == -1) { k = p; } else { l = p; }
+//            }
+//        }
+//        double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
+//        matrix_element = sign * (ints->get_tei_bbbb_all(i,k,j,l) - ints->get_tei_bbbb_all(i,l,j,k));
+//    }
+
+//    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
+//    if ((nadiff == 1) and (nbdiff == 1)) {
+//        // Diagonal contribution
+//        int i,j,k,l;
+//        i = j = k = l = -1;
+//        for(int p = 0; p < nmo; ++p){
+//            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+//            if((Ib[p] != Jb[p]) and Ib[p]) j = p;
+//            if((Ia[p] != Ja[p]) and Ja[p]) k = p;
+//            if((Ib[p] != Jb[p]) and Jb[p]) l = p;
+//        }
+//        double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
+//        matrix_element = sign * ints->get_tei_aabb_all(i,k,j,l);
+//    }
+//    return(matrix_element);
+//}
+
+//double SlaterSign(bool* I,int n)
+//{
+//    double sign = 1.0;
+//    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+//        if(I[i]) sign *= -1.0;
+//    }
+//    return(sign);
+//}
+
+//double SlaterAnnihilate(bool* I,int n)
+//{
+//    if (I[n]) {
+//        I[n] = false;
+//        double sign = 1.0;
+//        for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+//            if(I[i]) sign *= -1.0;
+//        }
+//        return(sign);
+//    }
+//    return 0.0;
+//}
+
+//double SlaterOPDM(StringDeterminant& PhiI, StringDeterminant& PhiJ,int p,bool spin_p,int q,bool spin_q)
+//{
+//    double sign = 1.0;
+//    bool* Ia = PhiI.get_alfa_bits();
+//    bool* Ib = PhiI.get_beta_bits();
+//    bool* Ja = PhiJ.get_alfa_bits();
+//    bool* Jb = PhiJ.get_beta_bits();
+
+//    int n = PhiI.nmo();
+
+//    if(spin_p){
+//        sign *= SlaterAnnihilate(Ia,p);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,p);
+//    }
+
+//    if(spin_q){
+//        sign *= SlaterAnnihilate(Ja,q);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,q);
+//    }
+
+//    if((Ia == Ja) and (Ib == Jb))
+//        return(sign);
+//    else
+//        return 0.0;
+//}
+
+//double SlaterTPDM(StringDeterminant& PhiI, StringDeterminant& PhiJ,int p,bool spin_p,int q,bool spin_q,int r,bool spin_r,int s,bool spin_s)
+//{
+//    double sign = 1.0;
+//    bool* Ia = PhiI.get_alfa_bits();
+//    bool* Ib = PhiI.get_beta_bits();
+//    bool* Ja = PhiJ.get_alfa_bits();
+//    bool* Jb = PhiJ.get_beta_bits();
+
+//    int n = PhiI.nmo();
+
+//    if(spin_p){
+//        sign *= SlaterAnnihilate(Ia,p);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,p);
+//    }
+
+//    if(spin_q){
+//        sign *= SlaterAnnihilate(Ia,q);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,q);
+//    }
+
+//    if(spin_r){
+//        sign *= SlaterAnnihilate(Ja,r);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,r);
+//    }
+
+//    if(spin_s){
+//        sign *= SlaterAnnihilate(Ja,s);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,s);
+//    }
+
+//    if((Ia == Ja) and (Ib == Jb))
+//        return(sign);
+//    else
+//        return 0.0;
+//}
+
+//double Slater3PDM(StringDeterminant& PhiI, StringDeterminant& PhiJ,int p,bool spin_p,int q,bool spin_q,int r,bool spin_r,int s,bool spin_s,int t,bool spin_t,int u,bool spin_u)
+//{
+//    double sign = 1.0;
+//    bool* Ia = PhiI.get_alfa_bits();
+//    bool* Ib = PhiI.get_beta_bits();
+//    bool* Ja = PhiJ.get_alfa_bits();
+//    bool* Jb = PhiJ.get_beta_bits();
+
+//    int n = PhiI.nmo();
+
+//    if(spin_p){
+//        sign *= SlaterAnnihilate(Ia,p);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,p);
+//    }
+
+//    if(spin_q){
+//        sign *= SlaterAnnihilate(Ia,q);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,q);
+//    }
+
+//    if(spin_r){
+//        sign *= SlaterAnnihilate(Ia,r);
+//    }else{
+//        sign *= SlaterSign(Ia,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Ib,r);
+//    }
+
+//    if(spin_s){
+//        sign *= SlaterAnnihilate(Ja,s);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,s);
+//    }
+
+//    if(spin_t){
+//        sign *= SlaterAnnihilate(Ja,t);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,t);
+//    }
+
+//    if(spin_u){
+//        sign *= SlaterAnnihilate(Ja,u);
+//    }else{
+//        sign *= SlaterSign(Ja,n); // Count the alpha part as well
+//        sign *= SlaterAnnihilate(Jb,u);
+//    }
+
+//    if((Ia == Ja) and (Ib == Jb))
+//        return(sign);
+//    else
+//        return 0.0;
+//}
+
+}} // End Namespaces
