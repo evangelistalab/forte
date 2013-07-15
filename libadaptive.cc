@@ -5,6 +5,7 @@
 #include <libpsio/psio.hpp>
 #include <libtrans/integraltransform.h>
 #include <libmints/wavefunction.h>
+#include <cmath>
 
 #include "explorer.h"
 
@@ -36,7 +37,9 @@ read_options(std::string name, Options &options)
         /*- The energy threshold for the determinant energy in Hartree -*/
         options.add_double("DET_THRESHOLD",1.0);
         /*- The energy threshold for the MP denominators energy in Hartree -*/
-        options.add_double("DEN_THRESHOLD",0.0);
+        options.add_double("DEN_THRESHOLD",1.5);
+        /*- The criteria used to screen the strings -*/
+        options.add_str("SCREENING_TYPE","MP","MP DET");
         /*- Write an output file? -*/
         options.add_bool("WRITE_FILE",true);
         /*- Write the determinant occupation? -*/
@@ -47,6 +50,9 @@ read_options(std::string name, Options &options)
         options.add_bool("WRITE_DEN_ENERGY",false);
         /*- Write the excitation level? -*/
         options.add_bool("WRITE_EXC_LEVEL",false);
+        /*- Write information only for a given excitation level.
+            0 (default) means print all -*/
+        options.add_int("RESTRICT_EXCITATION",0);
         /*- The energy buffer for building the Hamiltonian matrix in Hartree -*/
         options.add_double("H_BUFFER",0.0);
     }
@@ -57,7 +63,16 @@ read_options(std::string name, Options &options)
 extern "C" PsiReturnType
 libadaptive(Options &options)
 {
-    Explorer explorer(options);
+    // Get the one- and two-electron integrals in the MO basis
+    ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
+
+    // The explorer object will do its job
+    Explorer* explorer = new Explorer(options,ints_);
+    delete explorer;
+
+    // Delete ints_;
+    delete ints_;
+
     return Success;
 }
 

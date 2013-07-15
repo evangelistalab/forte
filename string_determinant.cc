@@ -12,6 +12,10 @@ namespace psi{ namespace libadaptive{
 double SlaterSign(bool *I, int n);
 
 ExplorerIntegrals* StringDeterminant::ints_ = 0;
+double StringDeterminant::ahole_[20];
+double StringDeterminant::bhole_[20];
+double StringDeterminant::apart_[20];
+double StringDeterminant::bpart_[20];
 
 StringDeterminant::StringDeterminant()
     : nmo_(0)
@@ -129,22 +133,168 @@ double StringDeterminant::energy()
     double matrix_element = 0.0;
     matrix_element = ints_->frozen_core_energy();
     for(int p = 0; p < nmo_; ++p){
-        if(alfa_bits_[p]) matrix_element += ints_->roei(p,p);
-        if(beta_bits_[p]) matrix_element += ints_->roei(p,p);
+        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
+        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
         for(int q = 0; q < nmo_; ++q){
             if(alfa_bits_[p] and alfa_bits_[q])
-                matrix_element +=   0.5 * ints_->rtei(p,p,q,q)
-                        - 0.5 * ints_->rtei(p,q,p,q);
+                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
             if(beta_bits_[p] and beta_bits_[q])
-                matrix_element +=   0.5 * ints_->rtei(p,p,q,q)
-                        - 0.5 * ints_->rtei(p,q,p,q);
+                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
             if(alfa_bits_[p] and beta_bits_[q])
-                matrix_element += ints_->rtei(p,p,q,q);
+                matrix_element += ints_->diag_c_rtei(p,q);
         }
     }
     return(matrix_element);
 }
 
+
+/**
+ * Compute the energy of this determinant with respect to a reference determinant
+ * @return the electronic energy (does not include the nuclear repulsion energy)
+ */
+double StringDeterminant::excitation_energy(const StringDeterminant& reference)
+{
+    double matrix_element = 0.0;
+    // Find the difference in orbital occupation
+    int naexp = 0;
+    int nbexp = 0;
+    int naexh = 0;
+    int nbexh = 0;
+    for(int p = 0; p < nmo_; ++p){
+        if(reference.alfa_bits_[p] and not alfa_bits_[p]){
+            ahole_[naexh] = p;
+            naexh++;
+        }
+        if(alfa_bits_[p] and not reference.alfa_bits_[p]){
+            apart_[naexp] = p;
+            naexp++;
+        }
+        if(reference.beta_bits_[p] and not beta_bits_[p]){
+            bhole_[nbexh] = p;
+            nbexh++;
+        }
+        if(beta_bits_[p] and not reference.beta_bits_[p]){
+            bpart_[nbexp] = p;
+            nbexp++;
+        }
+    }
+    for (int i = 0; i < naexh; ++i){
+        matrix_element -= ints_->diag_fock_a(ahole_[i]);
+        matrix_element += ints_->diag_fock_a(apart_[i]);
+    }
+    for (int i = 0; i < nbexh; ++i){
+        matrix_element -= ints_->diag_fock_b(bhole_[i]);
+        matrix_element += ints_->diag_fock_b(bpart_[i]);
+    }
+
+    for (int i = 0; i < naexh; ++i){
+        for (int j = i + 1; j < naexh; ++j){
+            matrix_element += ints_->diag_ce_rtei(ahole_[i],ahole_[j]);
+        }
+    }
+    for (int i = 0; i < nbexh; ++i){
+        for (int j = i + 1; j < nbexh; ++j){
+            matrix_element += ints_->diag_ce_rtei(bhole_[i],bhole_[j]);
+        }
+    }
+    for (int i = 0; i < naexh; ++i){
+        for (int j = 0; j < nbexh; ++j){
+            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+        }
+    }
+
+    for (int i = 0; i < naexh; ++i){
+        for (int a = 0; a < naexp; ++a){
+            matrix_element -= ints_->diag_ce_rtei(ahole_[i],apart_[a]);
+        }
+    }
+    for (int i = 0; i < nbexh; ++i){
+        for (int a = 0; a < nbexp; ++a){
+            matrix_element -= ints_->diag_ce_rtei(bhole_[i],bpart_[a]);
+        }
+    }
+    for (int i = 0; i < naexh; ++i){
+        for (int a = 0; a < nbexp; ++a){
+            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+        }
+    }
+    for (int i = 0; i < nbexh; ++i){
+        for (int a = 0; a < naexp; ++a){
+            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+        }
+    }
+
+    for (int a = 0; a < naexp; ++a){
+        for (int b = a + 1; b < naexp; ++b){
+            matrix_element += ints_->diag_ce_rtei(apart_[a],apart_[b]);
+        }
+    }
+    for (int a = 0; a < nbexp; ++a){
+        for (int b = a + 1; b < nbexp; ++b){
+            matrix_element += ints_->diag_ce_rtei(bpart_[a],bpart_[b]);
+        }
+    }
+    for (int a = 0; a < naexp; ++a){
+        for (int b = 0; b < nbexp; ++b){
+            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+        }
+    }
+    return(matrix_element);
+}
+
+/**
+ * Compute the energy of this determinant with respect to a reference determinant
+ * @return the electronic energy (does not include the nuclear repulsion energy)
+ */
+double StringDeterminant::excitation_ab_energy(const StringDeterminant& reference)
+{
+    double matrix_element = 0.0;
+    // Find the difference in orbital occupation
+    int naexp = 0;
+    int nbexp = 0;
+    int naexh = 0;
+    int nbexh = 0;
+    for(int p = 0; p < nmo_; ++p){
+        if(reference.alfa_bits_[p] and not alfa_bits_[p]){
+            ahole_[naexh] = p;
+            naexh++;
+        }
+        if(alfa_bits_[p] and not reference.alfa_bits_[p]){
+            apart_[naexp] = p;
+            naexp++;
+        }
+        if(reference.beta_bits_[p] and not beta_bits_[p]){
+            bhole_[nbexh] = p;
+            nbexh++;
+        }
+        if(beta_bits_[p] and not reference.beta_bits_[p]){
+            bpart_[nbexp] = p;
+            nbexp++;
+        }
+    }
+
+    for (int i = 0; i < naexh; ++i){
+        for (int j = 0; j < nbexh; ++j){
+            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+        }
+    }
+    for (int i = 0; i < naexh; ++i){
+        for (int a = 0; a < nbexp; ++a){
+            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+        }
+    }
+    for (int i = 0; i < nbexh; ++i){
+        for (int a = 0; a < naexp; ++a){
+            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+        }
+    }
+    for (int a = 0; a < naexp; ++a){
+        for (int b = 0; b < nbexp; ++b){
+            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+        }
+    }
+    return(matrix_element);
+}
 
 /**
  * Compute the relative excitation of two determinants

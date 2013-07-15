@@ -20,6 +20,7 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options)
     startup();
     read_one_electron_integrals();
     read_two_electron_integrals();
+    make_diagonal_integrals();
     freeze_core();
 }
 
@@ -44,7 +45,6 @@ void ExplorerIntegrals::startup()
     // TODO: transform only the orbitals within an energy range to save time on this step.
     spaces.push_back(MOSpace::all);
     ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1);
@@ -56,12 +56,19 @@ void ExplorerIntegrals::cleanup()
     delete ints_;
     delete[] one_electron_integrals;
     delete[] two_electron_integrals;
+    delete[] diagonal_one_electron_integrals;
+    delete[] diagonal_c_integrals;
+    delete[] diagonal_ce_integrals;
+    delete[] fock_matrix_alpha;
+    delete[] fock_matrix_beta;
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
 {
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals = new double[nmo_ * nmo_];
+    fock_matrix_alpha = new double[nmo_ * nmo_];
+    fock_matrix_beta = new double[nmo_ * nmo_];
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals[pq] = 0.0;
     double* packed_oei = new double[num_oei];
     // restricted integrals
@@ -90,6 +97,52 @@ void ExplorerIntegrals::read_two_electron_integrals()
     iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
     iwl_buf_close(&V_AAAA, 1);
     delete[] myioff;
+}
+
+void ExplorerIntegrals::make_diagonal_integrals()
+{
+    diagonal_one_electron_integrals = new double[nmo_];
+    for (int p = 0; p < nmo_; ++p){
+        diagonal_one_electron_integrals[p] = roei(p,p);
+    }
+
+    diagonal_c_integrals = new double[nmo_ * nmo_];
+    diagonal_ce_integrals = new double[nmo_ * nmo_];
+    for(size_t p = 0; p < nmo_; ++p){
+        for(size_t q = 0; q < nmo_; ++q){
+            diagonal_c_integrals[p * nmo_ + q] = rtei(p,p,q,q);
+            diagonal_ce_integrals[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+        }
+    }
+}
+
+void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
+{
+    for(size_t p = 0; p < nmo_; ++p){
+        for(size_t q = 0; q < nmo_; ++q){
+            // Builf Fock Diagonal alpha-alpha
+            fock_matrix_alpha[p * nmo_ + q] = roei(p,q);
+            // Add the non-frozen alfa part, the forzen core part is already included in oei
+            for (int k = 0; k < nmo_; ++k) {
+                if (Ia[k]) {
+                    fock_matrix_alpha[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                }
+                if (Ib[k]) {
+                    fock_matrix_alpha[p * nmo_ + q] += rtei(p,q,k,k);
+                }
+            }
+            fock_matrix_beta[p * nmo_ + q] = roei(p,q);
+            // Add the non-frozen alfa part, the forzen core part is already included in oei
+            for (int k = 0; k < nmo_; ++k) {
+                if (Ib[k]) {
+                    fock_matrix_beta[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                }
+                if (Ia[k]) {
+                    fock_matrix_beta[p * nmo_ + q] += rtei(p,q,k,k);
+                }
+            }
+        }
+    }
 }
 
 void ExplorerIntegrals::freeze_core()

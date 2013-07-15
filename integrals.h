@@ -28,8 +28,20 @@ public:
     double frozen_core_energy() const {return core_energy;}
     /// The one-electron integrals
     double roei(size_t p,size_t q) {return one_electron_integrals[p * nmo_ + q];}
+    /// The diagonal one-electron integrals
+    double diag_roei(int p) {return diagonal_one_electron_integrals[p];}
+    /// The diagonal fock matrix integrals
+    double diag_fock_a(int p) {return fock_matrix_alpha[p * nmo_ + p];}
+    /// The diagonal fock matrix integrals
+    double diag_fock_b(int p) {return fock_matrix_beta[p * nmo_ + p];}
     /// The two-electron integrals
     double rtei(size_t p,size_t q,size_t r, size_t s) {return two_electron_integrals[INDEX4(p,q,r,s)];}
+    /// The diagonal two-electron integrals (Coulomb)
+    double diag_c_rtei(int p,int q) {return diagonal_c_integrals[p * nmo_ + q];}
+    /// The diagonal two-electron integrals (Coulomb + Exchange)
+    double diag_ce_rtei(int p, int q) {return diagonal_ce_integrals[p * nmo_ + q];}
+    /// Make Fock matrix with respect to a given determinant
+    void make_fock_matrix(bool* Ia, bool* Ib);
 private:
     // Class data
     psi::Options& options_;
@@ -47,11 +59,17 @@ private:
     void cleanup();
     void read_one_electron_integrals();
     void read_two_electron_integrals();
+    void make_diagonal_integrals();
     void freeze_core();
     int pair_irrep(int p, int q) {return pair_irrep_map[p * nmo_ + q];}
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
     double* one_electron_integrals;
     double* two_electron_integrals;
+    double* diagonal_one_electron_integrals;
+    double* diagonal_c_integrals;
+    double* diagonal_ce_integrals;
+    double* fock_matrix_alpha;
+    double* fock_matrix_beta;
 };
 
 

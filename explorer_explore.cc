@@ -64,7 +64,11 @@ void Explorer::explore(psi::Options& options)
     // [<string irrep>][<string index>](<string energy>,<string structure>)
     fprintf(outfile,"\n  Screening the alpha strings..."); fflush(outfile);
     boost::timer timer_astr;
-    vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,maxnaex);
+    if(mp_screening_){
+        vec_astr_symm_ = compute_strings_mp_screened(epsilon_a_qt_,naocc,maxnaex);
+    }else{
+        vec_astr_symm_ = compute_strings_energy_screened(epsilon_a_qt_,naocc,maxnaex,true);
+    }
     fprintf(outfile," done.  Time required: %f s",timer_astr.elapsed());
 
     for (int ha = 0; ha < nirrep_; ++ha){
@@ -76,7 +80,12 @@ void Explorer::explore(psi::Options& options)
 
     fprintf(outfile,"\n  Screening the beta strings..."); fflush(outfile);
     boost::timer timer_bstr;
-    vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,maxnbex);
+
+    if(mp_screening_){
+        vec_bstr_symm_ = compute_strings_mp_screened(epsilon_b_qt_,nbocc,maxnbex);
+    }else{
+        vec_bstr_symm_ = compute_strings_energy_screened(epsilon_b_qt_,nbocc,maxnbex,false);
+    }
     fprintf(outfile," done.  Time required: %f s",timer_bstr.elapsed());
 
     for (int hb = 0; hb < nirrep_; ++hb){
@@ -85,7 +94,9 @@ void Explorer::explore(psi::Options& options)
         fprintf(outfile,"\n  irrep %d: %ld strings",hb,nsb);
     }
     fflush(outfile);
-
+    double error_sum = 0.0;
+    double den_suma = 0.0;
+    double den_sumb = 0.0;
     vector<bool> empty_det(2 * nmo_,false);
     StringDeterminant det(empty_det);
     boost::timer t_dets;
@@ -99,6 +110,7 @@ void Explorer::explore(psi::Options& options)
         // Loop over alpha strings
         for (size_t sa = 0; sa < nsa; ++sa){
             double ea = vec_astr[sa].first;
+            den_suma += ea;
             std::vector<bool>& str_sa = vec_astr[sa].second;
             // Copy the string and translate it to Pitzer ordering
             for (int p = 0; p < nmo_; ++p) Ia[qt_to_pitzer_[p]] = str_sa[p];
@@ -106,6 +118,7 @@ void Explorer::explore(psi::Options& options)
             // Loop over beta strings
             for (size_t sb = 0; sb < nsb; ++sb){
                 double eb = vec_bstr[sb].first;
+                den_suma += ea + eb;
                 if (ea + eb < denominator_threshold_){
                     std::vector<bool>& str_sb = vec_bstr[sb].second;
                     // Copy the string and translate it to Pitzer ordering
@@ -114,18 +127,20 @@ void Explorer::explore(psi::Options& options)
                     // set the alpha/beta strings and compute the energy of this determinant
                     det.set_bits(Ia,Ib);
                     double det_energy = det.energy() + nuclear_repulsion_energy_;
+//                    double det_energy = det.excitation_ab_energy(reference_determinant_) + ea + eb + min_energy_;
+                    write_determinant_energy(os,Ia,Ib,det_energy,ea + eb);
+                    //double det_energy = det.excitation_energy(reference_determinant_) + min_energy_;
+                    //det.excitation_energy(reference_determinant_)
 
                     // check to see if the energy is below a given threshold
                     if (det_energy < min_energy_ + determinant_threshold_){
                         // TODO this step is actually a bit slow, perhaps it is best to accumulate
                         // this information in a string and then flush it out at the end
-                        determinants_.push_back(std::make_tuple(det_energy,ha,sa,sb));
-                        write_determinant_energy(os,Ia,Ib,det_energy,ea + eb);
+                        determinants_.push_back(boost::make_tuple(det_energy,ha,sa,sb));
                         if (det_energy < min_energy_){
                             reference_determinant_ = det;
                             min_energy_ = det_energy;
                         }
-//                        det_den_energy.push_back(make_tuple(det_energy,ea + eb,reference_determinant_.excitation_level(Ia,Ib)));
                         num_dets_accepted++;
                     }
                     num_dets_visited++;
@@ -139,7 +154,12 @@ void Explorer::explore(psi::Options& options)
     os.close();
     delete[] Ia;
 
-    fprintf(outfile,"\n  The new reference determinant is:");
+    fprintf(outfile,"\n\n  The sum denominator (A) %20e",den_suma);
+    fprintf(outfile,"\n\n  The sum denominator (B) %20e",den_sumb);
+    fprintf(outfile,"\n\n  The sum of the absolute errors is %20e",error_sum);
+
+
+    fprintf(outfile,"\n\n  The new reference determinant is:");
     reference_determinant_.print();
     fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
 
