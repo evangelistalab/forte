@@ -25,7 +25,7 @@ public:
 
     // Class Interface
     /// Return the frozen core energy
-    double frozen_core_energy() const {return core_energy;}
+    double frozen_core_energy() const {return core_energy_;}
     /// The one-electron integrals
     double roei(size_t p,size_t q) {return one_electron_integrals[p * nmo_ + q];}
     /// The diagonal one-electron integrals
@@ -50,7 +50,7 @@ private:
     int nmo_;
     size_t num_oei; // Number of one electron integrals
     size_t num_tei; // Number of two electron integrals
-    double      core_energy;  // Frozen-core energy
+    double core_energy_;  // Frozen-core energy
     std::vector<int> pair_irrep_map;
     std::vector<int> pair_index_map;
 

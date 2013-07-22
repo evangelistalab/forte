@@ -15,7 +15,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 ExplorerIntegrals::ExplorerIntegrals(psi::Options &options)
-    : options_(options), core_energy(0.0)
+    : options_(options), core_energy_(0.0)
 {
     startup();
     read_one_electron_integrals();
@@ -147,18 +147,27 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 
 void ExplorerIntegrals::freeze_core()
 {
-    core_energy = 0.0;
+    core_energy_ = 0.0;
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    //  for(int i = 0; i < moinfo->get_nfocc(); ++i){
-    //    int i_f = moinfo->get_focc_to_mo()[i];
-    //    core_energy += oei_aa[i_f][i_f] + oei_bb[i_f][i_f];
-    //    for(int j = 0; j < moinfo->get_nfocc(); ++j){
-    //      int j_f = moinfo->get_focc_to_mo()[j];
-    //      core_energy += 0.5 * aaaa(i_f,i_f,j_f,j_f) - 0.5 * aaaa(i_f,j_f,i_f,j_f);
-    //      core_energy += 0.5 * bbbb(i_f,i_f,j_f,j_f) - 0.5 * bbbb(i_f,j_f,i_f,j_f);
-    //      core_energy += aabb(i_f,i_f,j_f,j_f);
-    //    }
-    //  }
+    const Dimension& mopi = wfn->nmopi();
+    const Dimension& frzcpi = wfn->frzcpi();
+    const Dimension& frzvpi = wfn->frzvpi();
+
+    for (int hi = 0, p = 0; hi < nirrep_; ++hi){
+        for (int i = 0; i < frzcpi[hi]; ++i){
+            core_energy_ += 2.0 * diag_roei(p + i);
+            for (int hj = 0, q = 0; hj < nirrep_; ++hj){
+                for (int j = 0; j < frzcpi[hj]; ++j){
+                    core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
+                }
+                q += mopi[hj]; // orbital offset for the irrep hj
+            }
+        }
+        p += mopi[hi]; // orbital offset for the irrep hi
+    }
+
+    fprintf(outfile,"\n  Frozen-core energy = %20.12f a.u.",core_energy_);
+
 
     //  alfa_h0_core_energy = 0.0;
     //  for(int i = 0; i < moinfo->get_nfocc(); ++i){
@@ -172,7 +181,6 @@ void ExplorerIntegrals::freeze_core()
     //    beta_h0_core_energy += oei_bb[i_f][i_f];
     //  }
 
-    //  fprintf(outfile,"\n  Frozen-core energy = %20.12f a.u.",core_energy);
 
     //  //Modify the active part of H to include the core effects;
     //  for(size_t p = 0; p < nmo; ++p){

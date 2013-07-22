@@ -34,6 +34,14 @@ read_options(std::string name, Options &options)
         /*- The charge of the molecule.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
         options.add_int("CHARGE",0);
+        /*- The minimum excitation level (Default value: 0) -*/
+        options.add_int("MIN_EXC_LEVEL",0);
+        /*- The maximum excitation level (Default value: 0 = number of electrons) -*/
+        options.add_int("MAX_EXC_LEVEL",0);
+        /*- The frozen doubly occupied orbitals -*/
+        options.add("FROZEN_DOCC",new ArrayType());
+        /*- The frozen doubly occupied orbitals -*/
+        options.add("FROZEN_UOCC",new ArrayType());
         /*- The energy threshold for the determinant energy in Hartree -*/
         options.add_double("DET_THRESHOLD",1.0);
         /*- The energy threshold for the MP denominators energy in Hartree -*/
