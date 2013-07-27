@@ -14,24 +14,55 @@ namespace psi{ namespace libadaptive{
 
 Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
     :
-      min_energy_(min_energy),
-      max_energy_(max_energy),
-      ndod_bins_(2000),
       dod_percent_margin_(1),
-      dod_type_(GaussianDOD),
-      dod_gaussian_width_(0.02),
+      dod_type_(HistogramDOD),
+      dod_bin_width_(0.05),
       dod_fname_("density_of_determinants.txt"),
       dettour_fname_("dettour.txt")
 {
-    dod_.assign(ndod_bins_,0.0);
-    fprintf(outfile,"\n  Cartographer initialized with range [%f,%f]\n",min_energy_,max_energy_);
+    if (options.get_str("DOD_FORMAT") == "GAUSSIAN"){
+        dod_type_ = GaussianDOD;
+    }else if (options.get_str("DOD_FORMAT") == "HISTOGRAM"){
+        dod_type_ =  HistogramDOD;
+    }
+    dod_bin_width_ = options.get_double("DOD_BIN_WIDTH");
 
-    write_file_ = options.get_bool("WRITE_FILE");
+    min_energy_ = int(min_energy/dod_bin_width_) * dod_bin_width_;
+    max_energy_ = int(max_energy/dod_bin_width_) * dod_bin_width_;
+
+    ndod_bins_margin_ = 20;
+    ndod_bins_center_ = 1 + (max_energy - min_energy) / dod_bin_width_;
+    ndod_bins_total_ = ndod_bins_center_ + 2 * ndod_bins_margin_;
+
+
+
+    dod_.assign(2 * ndod_bins_margin_ + ndod_bins_center_,0.0);
+    write_file_ = options.get_bool("DETTOUR_WRITE_FILE");
     write_occupation_ = options.get_bool("WRITE_OCCUPATION");
     write_det_energy_ = options.get_bool("WRITE_DET_ENERGY");
     write_den_energy_ = options.get_bool("WRITE_DEN_ENERGY");
     write_excitation_level_ = options.get_bool("WRITE_EXC_LEVEL");
     restrict_excitation_ = options.get_int("RESTRICT_EXCITATION");
+
+    fprintf(outfile,"\n\n  Cartographer initialized with range [%f,%f]",min_energy_,max_energy_);
+    fprintf(outfile,"\n  The density of determinants will be sampled at %d-points",ndod_bins_center_ + 2 * ndod_bins_margin_);
+    fprintf(outfile,"\n  The %s bin width is %f Hartree\n", (dod_type_ == GaussianDOD ? "Gaussian" : "histogram"),dod_bin_width_);
+
+    if (dod_type_ == GaussianDOD){
+        int gaussian_half_width = int(2.5 * double(ndod_bins_center_) * dod_bin_width_ / (max_energy_ - min_energy_));
+        for (int i = - gaussian_half_width; i <= gaussian_half_width; ++i){
+            double de = i * (max_energy_ - min_energy_) / double(ndod_bins_center_);
+            double value = std::exp(-de * de / (2.0 * dod_bin_width_ * dod_bin_width_)) / (dod_bin_width_ * 2.50662827463);
+            dod_contribution_.push_back(value);
+        }
+    }
+    if (dod_type_ == HistogramDOD){
+        int histogram_width =  int(0.5 * double(ndod_bins_center_) * dod_bin_width_ / (max_energy_ - min_energy_));
+        for (int i = -histogram_width; i <= histogram_width; ++i){
+            dod_contribution_.push_back(1.0 / dod_bin_width_);
+        }
+    }
+
     dettour_file_ = 0;
     if (write_file_){
         dettour_file_ = new ofstream(dettour_fname_.c_str());
@@ -41,6 +72,7 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
 Cartographer::~Cartographer()
 {
     write_dod();
+    write_dod_gnuplot_input();
     write_dettour();
 }
 
@@ -55,19 +87,21 @@ void Cartographer::accumulate_dod(double det_energy)
     // Density of determinants
     // Use 98% of the width to represent the range [min_energy,max_energy] and
     // add a margin on each side to represent 1% of the range
-    int ndod_bin_margin = dod_percent_margin_ * ndod_bins_ / 100;
-    int ndod_bin_center = ndod_bins_ - 2 * ndod_bin_margin;
-    int position = ndod_bin_margin + int(double(ndod_bin_center) * (det_energy - min_energy_) / (max_energy_ - min_energy_));
-    if (dod_type_ == GaussianDOD){
-        int gaussian_half_width = int(2.5 * double(ndod_bin_center) * dod_gaussian_width_ / (max_energy_ - min_energy_));
-        int mini = position - gaussian_half_width;
-        int maxi = position + gaussian_half_width;
-        for (int i = mini; i <= maxi; ++i){
-            double de = (i - position) * (max_energy_ - min_energy_) / double(ndod_bin_center);
-            double value = std::exp(-de * de / (2.0 * dod_gaussian_width_ * dod_gaussian_width_));
-            if (i >= 0 and i < ndod_bins_){
-                dod_[i] += value;
-            }
+//    if (dod_type_ == GaussianDOD){
+//        int position = ndod_bins_margin_ + int(double(ndod_bins_center_) * (det_energy - min_energy_) / (max_energy_ - min_energy_));
+//        int ncontrib = static_cast<int>(dod_contribution_.size());
+//        for (int i = -(ncontrib - 1) / 2, k = 0; i <= (ncontrib - 1) / 2; ++i, ++k){
+//            if (i >= 0 and i < ndod_bins_){
+//                dod_[i] += dod_contribution_[k];
+//            }
+//        }
+//    }
+    if (dod_type_ == HistogramDOD){
+        int position = ndod_bins_margin_ + int((det_energy - (min_energy_ - 0.5 * dod_bin_width_)) / dod_bin_width_);
+        if(position >= 0 and position < ndod_bins_total_){
+            dod_[position] += 1.0;
+        }else{
+            fprintf(outfile,"\n  Cartographer Warning: The datapoint %f is out of the range [%f,%f]",det_energy,min_energy_,max_energy_);
         }
     }
 }
@@ -118,10 +152,9 @@ void Cartographer::write_dod()
 {
     fprintf(outfile,"\n  Cartographer is writing the density of determinants to the file: %s\n",dod_fname_.c_str());
     dod_file_ = new ofstream(dod_fname_.c_str());
-    int ndod_bin_margin = dod_percent_margin_ * ndod_bins_ / 100;
-    int ndod_bin_center = ndod_bins_ - 2 * ndod_bin_margin;
-    for (int i = 0; i < ndod_bins_; ++i){
-        double energy = min_energy_ + (max_energy_ - min_energy_) * static_cast<double>(i) / double(ndod_bin_center);
+    double margin_energy_offset = - static_cast<double>(ndod_bins_margin_) * dod_bin_width_;
+    for (int i = 0; i < ndod_bins_total_; ++i){
+        double energy = margin_energy_offset + min_energy_ + dod_bin_width_ * static_cast<double>(i);
         *dod_file_ << boost::format("%.9f %12e\n") % energy % dod_[i];
     }
     dod_file_->close();
@@ -136,4 +169,68 @@ void Cartographer::write_dettour()
         delete dettour_file_;
     }
 }
+
+void Cartographer::write_dod_gnuplot_input()
+{
+    double dod_min,dod_max;
+    double margin_energy_offset = - static_cast<double>(ndod_bins_margin_) * dod_bin_width_;
+    for (int i = 0; i < ndod_bins_total_; ++i){
+        if (dod_[i] != 0){
+            dod_min = margin_energy_offset + min_energy_ + dod_bin_width_ * static_cast<double>(i);
+            break;
+        }
+    }
+    for (int i = ndod_bins_total_ - 1; i >= 0; --i){
+        if (dod_[i] != 0){
+            dod_max = margin_energy_offset + min_energy_ + dod_bin_width_ * static_cast<double>(i);
+            break;
+        }
+    }
+    double maxsum = 0;
+    for (int i = 0; i < ndod_bins_total_; ++i){
+        maxsum = std::max(maxsum,dod_[i]);
+    }
+
+    dod_min = int((dod_min - 0.3) * 10.) / 10.0;
+    dod_max = int((dod_max + 0.3) * 10.) / 10.0;
+
+    fprintf(outfile,"\n  Cartographer is preparing a gnuplot file for the range [%.3f,%.3f]",dod_min,dod_max);
+
+    std::string gnuplot_input;
+    gnuplot_input += boost::str(boost::format("set xrange [%.3f:%.3f]\n") % dod_min % dod_max);
+    gnuplot_input += boost::str(boost::format("set yrange [%.3f:%.3f]\n") % 0 % (maxsum + 2) );
+
+    gnuplot_input += "set xtics nomirror\n";
+    gnuplot_input += "set ytics nomirror\n";
+
+    gnuplot_input += "set ytics scale 0.75\n";
+    gnuplot_input += "set xtics scale 0.75\n";
+
+    double l = std::log10(maxsum + 1.0);
+    int ytics = 2;
+    if (l > 1.041){
+        ytics = 5 * std::pow(10.0,int(l));
+    }
+
+    gnuplot_input += boost::str(boost::format("set ytics %d,%d,%d\n") % ytics % ytics % int(maxsum + 2));
+
+    gnuplot_input += "set border 3\n";
+    gnuplot_input += "set xzeroaxis\n";
+
+    gnuplot_input += "set format x \"%.0f\"\n";
+    //
+
+    gnuplot_input += "set terminal postscript portrait enhanced monochrome\n"
+    "set output 'dod_hist.eps'\n"
+    "set terminal postscript size 6,3.0\n"
+    "set style fill solid 0.25 noborder\n"
+    "set xlabel \"Energy (E_h)\"\n"
+    "plot 'density_of_determinants.txt' using 1:2 notitle with boxes lc rgb \"black\" fs solid 1";
+
+    ofstream ofs("dod_hist.plt");
+    ofs << gnuplot_input;
+//    set xtics -109,1,-104''
+
+}
+
 }} // EndNamespaces

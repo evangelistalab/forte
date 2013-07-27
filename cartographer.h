@@ -52,13 +52,19 @@ private:
     /// The type of DOD plot
     DODType dod_type_;
     /// The width of the DOD Gaussian
-    double dod_gaussian_width_;
-    /// The total number of bins in the density of determinant plot
-    int ndod_bins_;
+    double dod_bin_width_;
+    /// The total number of bins used to form a plot of the DOD
+    int ndod_bins_total_;
+    /// The number of bins used to represent the range [min_energy_,max_energy_]
+    int ndod_bins_center_;
+    /// The number of bins added to each margin
+    int ndod_bins_margin_;
     /// The percent of the DOD plot allocated for the margins
     int dod_percent_margin_;
     /// The value of the density of determinants
     std::vector<double> dod_;
+    /// The dod contribution from one determinant
+    std::vector<double> dod_contribution_;
     /// The name of the file containing the density of determinants
     std::string dod_fname_;
     /// The dod file
@@ -88,6 +94,8 @@ private:
     void accumulate_dod(double det_energy);
     /// Write the density of determinants to the dod_file_ with name dod_fname_
     void write_dod();
+    /// Write a gnuplot input to plot the DOD
+    void write_dod_gnuplot_input();
     /// Accumulate data for a DetTour output
     void accumulate_dettour(int nmo,std::vector<bool>& Ia,std::vector<bool>& Ib,double det_energy,double a_den_energy,double b_den_energy,int naex,int nbex);
     /// Write the dettour information to the dettour_file_ with name dettour_fname_

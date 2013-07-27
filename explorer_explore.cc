@@ -28,8 +28,8 @@ void Explorer::explore(psi::Options& options)
     int nfrzv = frzvpi_.sum();
     int naocc = nalpha_ - nfrzc;
     int nbocc = nbeta_ - nfrzc;
-    int navir = nmo_ - nalpha_ - nfrzc - nfrzv;
-    int nbvir = nmo_ - nbeta_ - nfrzc - nfrzv;
+    int navir = nmo_ - naocc - nfrzc - nfrzv;
+    int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
 
     // Calculate the maximum excitation level
     maxnaex_ = std::min(naocc,navir);
@@ -54,11 +54,15 @@ void Explorer::explore(psi::Options& options)
     unsigned long long num_total_dets = 0;
     unsigned long num_permutations = 0;
 
-
-
-    // Open the file that will contain the determinants and energies
-    ofstream os;
-    os.open ("det_energy.txt");
+    // Count the total number of determinants
+    for (int nex = minnex_; nex <= maxnex_; ++nex){
+        for (int naex = std::max(0,nex-maxnbex_); naex <= std::min(maxnaex_,nex); ++naex){
+            int nbex = nex - naex;
+            // count the number of determinants
+            unsigned long long num_dets_total_class = choose(naocc,naex) * choose(navir,naex) * choose(nbocc,nbex) * choose(nbvir,nbex);
+            num_total_dets += num_dets_total_class;
+        }
+    }
 
     // Generate all alpha and beta strings with energy < threshold
     // The strings are in QT format and are stored using the following structure:
@@ -75,9 +79,7 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"\n  Time required: %f s",timer_bstr.elapsed());
     fflush(outfile);
 
-    double error_sum = 0.0;
-    double den_suma = 0.0;
-    double den_sumb = 0.0;
+
     vector<bool> empty_det(2 * nmo_,false);
     StringDeterminant det(empty_det);
     boost::timer t_dets;
@@ -99,35 +101,30 @@ void Explorer::explore(psi::Options& options)
                     double ea = vec_astr[sa].get<0>();
                     double da = vec_astr[sa].get<1>();
                     std::vector<bool>& str_sa = vec_astr[sa].get<2>();
-                    den_suma += ea;
                     // Copy the string and translate it to Pitzer ordering
-                    for (int p = 0; p < nmo_; ++p) Ia[qt_to_pitzer_[p]] = str_sa[p];
+                    for (int p = 0; p < nmo_; ++p) Ia[p] = str_sa[p];
 
                     // Loop over beta strings
                     for (size_t sb = 0; sb < nsb; ++sb){
                         double eb = vec_bstr[sb].get<0>();
                         double db = vec_bstr[sb].get<1>();
-                        den_suma += ea + eb;
                         if (ea + eb < denominator_threshold_){
                             std::vector<bool>& str_sb = vec_bstr[sb].get<2>();
                             // Copy the string and translate it to Pitzer ordering
-                            for (int p = 0; p < nmo_; ++p) Ib[qt_to_pitzer_[p]] = str_sb[p];
+                            for (int p = 0; p < nmo_; ++p) Ib[p] = str_sb[p];
 
                             // set the alpha/beta strings and compute the energy of this determinant
                             det.set_bits(Ia,Ib);
-                            //double det_energy = det.energy() + nuclear_repulsion_energy_;
-                            //double det_energy = det.excitation_energy(reference_determinant_) + min_energy_;
-                            double det_energy = det.excitation_ab_energy(reference_determinant_) + da + db + min_energy_;
+//                            double det_energy = det.energy() + nuclear_repulsion_energy_;
+//                            double det_energy = det.excitation_energy(reference_determinant_) + min_energy_;
+                            double det_energy = det.excitation_ab_energy(reference_determinant_) + da + db + ref_energy_;
 
                             // check to see if the energy is below a given threshold
                             if (det_energy < min_energy_ + determinant_threshold_){
-//                                write_determinant_energy(os,Ia,Ib,det_energy,ea,eb,naex,nbex);
                                 cg.accumulate_data(nmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
                                 determinants_.push_back(boost::make_tuple(det_energy,ha,sa,sb));
-                                if (det_energy < min_energy_){
-                                    reference_determinant_ = det;
-                                    min_energy_ = det_energy;
-                                }
+                                min_energy_ = std::min(min_energy_,det_energy);
+                                max_energy_ = std::max(max_energy_,det_energy);
                                 num_dets_accepted++;
                             }
                             num_dets_visited++;
@@ -140,14 +137,15 @@ void Explorer::explore(psi::Options& options)
         }
     }
     time_dets += t_dets.elapsed();
-    os.close();
     delete[] Ia;
 
     fprintf(outfile,"\n\n  The new reference determinant is:");
     reference_determinant_.print();
     fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
 
-//    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
+    fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
+
+    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
     fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
     fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
     fprintf(outfile,"\n  Number of permutations visited    = %ld",num_permutations);
@@ -160,12 +158,4 @@ void Explorer::explore(psi::Options& options)
 }} // EndNamespaces
 
 
-//    // Count the total number of determinants
-//    for (int nex = minnex_; nex <= maxnex_; ++nex){
-//        for (int naex = std::max(0,nex-maxnbex_); naex <= std::min(maxnaex_,nex); ++naex){
-//            int nbex = nex - naex;
-//            // count the number of determinants
-//            unsigned long long num_dets_total_class = choose(naocc,naex) * choose(navir,naex) * choose(nbocc,nbex) * choose(nbvir,nbex);
-//            num_total_dets += num_dets_total_class;
-//        }
-//    }
+

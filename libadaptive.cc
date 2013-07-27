@@ -48,8 +48,17 @@ read_options(std::string name, Options &options)
         options.add_double("DEN_THRESHOLD",1.5);
         /*- The criteria used to screen the strings -*/
         options.add_str("SCREENING_TYPE","MP","MP DET");
+
+
+        // Options for the Cartographer class //
+        /*- Density of determinants format -*/
+        options.add_str("DOD_FORMAT","HISTOGRAM","GAUSSIAN HISTOGRAM");
+        /*- Number of bins used to form the DOD plot -*/
+        options.add_int("DOD_BINS",2000);
+        /*- Width of the DOD Gaussian/histogram.  Default 0.02 Hartree ~ 0.5 eV -*/
+        options.add_double("DOD_BIN_WIDTH",0.05);
         /*- Write an output file? -*/
-        options.add_bool("WRITE_FILE",true);
+        options.add_bool("DETTOUR_WRITE_FILE",true);
         /*- Write the determinant occupation? -*/
         options.add_bool("WRITE_OCCUPATION",true);
         /*- Write the determinant energy? -*/

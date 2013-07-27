@@ -47,7 +47,7 @@ void ExplorerIntegrals::startup()
     ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
-    num_oei = INDEX2(nmo_ - 1, nmo_ - 1);
+    num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
 }
 
@@ -71,6 +71,7 @@ void ExplorerIntegrals::read_one_electron_integrals()
     fock_matrix_beta = new double[nmo_ * nmo_];
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals[pq] = 0.0;
     double* packed_oei = new double[num_oei];
+    for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
     // restricted integrals
     iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,outfile);
     for(size_t p = 0; p < nmo_; ++p){
