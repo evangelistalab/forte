@@ -45,8 +45,8 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
     restrict_excitation_ = options.get_int("RESTRICT_EXCITATION");
 
     fprintf(outfile,"\n\n  Cartographer initialized with range [%f,%f]",min_energy_,max_energy_);
-    fprintf(outfile,"\n  The density of determinants will be sampled at %d-points",ndod_bins_center_ + 2 * ndod_bins_margin_);
     fprintf(outfile,"\n  The %s bin width is %f Hartree\n", (dod_type_ == GaussianDOD ? "Gaussian" : "histogram"),dod_bin_width_);
+    fprintf(outfile,"\n  The density of determinants will be sampled at %d-points",ndod_bins_center_ + 2 * ndod_bins_margin_);
 
     if (dod_type_ == GaussianDOD){
         int gaussian_half_width = int(2.5 * double(ndod_bins_center_) * dod_bin_width_ / (max_energy_ - min_energy_));
@@ -209,7 +209,7 @@ void Cartographer::write_dod_gnuplot_input()
     double l = std::log10(maxsum + 1.0);
     int ytics = 2;
     if (l > 1.041){
-        ytics = 5 * std::pow(10.0,int(l));
+        ytics = 5 * std::pow(10.0,int(l-1));
     }
 
     gnuplot_input += boost::str(boost::format("set ytics %d,%d,%d\n") % ytics % ytics % int(maxsum + 2));

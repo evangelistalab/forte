@@ -101,7 +101,6 @@ void Explorer::explore(psi::Options& options)
                     double ea = vec_astr[sa].get<0>();
                     double da = vec_astr[sa].get<1>();
                     std::vector<bool>& str_sa = vec_astr[sa].get<2>();
-                    // Copy the string and translate it to Pitzer ordering
                     for (int p = 0; p < nmo_; ++p) Ia[p] = str_sa[p];
 
                     // Loop over beta strings
@@ -110,7 +109,6 @@ void Explorer::explore(psi::Options& options)
                         double db = vec_bstr[sb].get<1>();
                         if (ea + eb < denominator_threshold_){
                             std::vector<bool>& str_sb = vec_bstr[sb].get<2>();
-                            // Copy the string and translate it to Pitzer ordering
                             for (int p = 0; p < nmo_; ++p) Ib[p] = str_sb[p];
 
                             // set the alpha/beta strings and compute the energy of this determinant
@@ -122,7 +120,10 @@ void Explorer::explore(psi::Options& options)
                             // check to see if the energy is below a given threshold
                             if (det_energy < min_energy_ + determinant_threshold_){
                                 cg.accumulate_data(nmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
-                                determinants_.push_back(boost::make_tuple(det_energy,ha,sa,sb));
+                                determinants_.push_back(boost::make_tuple(det_energy,exc_class_a,sa,exc_class_b,sb));
+                                if (det_energy < min_energy_){
+                                    min_energy_determinant_ = det;
+                                }
                                 min_energy_ = std::min(min_energy_,det_energy);
                                 max_energy_ = std::max(max_energy_,det_energy);
                                 num_dets_accepted++;
@@ -142,6 +143,28 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"\n\n  The new reference determinant is:");
     reference_determinant_.print();
     fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+
+    fprintf(outfile,"\n  Occupation numbers of the minimum energy determinant:");
+    fprintf(outfile,"|");
+    for (int h = 0, p = 0; h < nirrep_; ++h){
+        int n = 0;
+        for (int i = 0; i < nmopi_[h]; ++i){
+            n += min_energy_determinant_.get_alfa_bit(p);
+            p += 1;
+        }
+        fprintf(outfile," %d",n);
+    }
+    fprintf(outfile," > x ");
+    fprintf(outfile,"|");
+    for (int h = 0, p = 0; h < nirrep_; ++h){
+        int n = 0;
+        for (int i = 0; i < nmopi_[h]; ++i){
+            n += min_energy_determinant_.get_beta_bit(p);
+            p += 1;
+        }
+        fprintf(outfile," %d",n);
+    }
+    fprintf(outfile," >");
 
     fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
 

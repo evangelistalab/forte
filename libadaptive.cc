@@ -58,7 +58,7 @@ read_options(std::string name, Options &options)
         /*- Width of the DOD Gaussian/histogram.  Default 0.02 Hartree ~ 0.5 eV -*/
         options.add_double("DOD_BIN_WIDTH",0.05);
         /*- Write an output file? -*/
-        options.add_bool("DETTOUR_WRITE_FILE",true);
+        options.add_bool("DETTOUR_WRITE_FILE",false);
         /*- Write the determinant occupation? -*/
         options.add_bool("WRITE_OCCUPATION",true);
         /*- Write the determinant energy? -*/

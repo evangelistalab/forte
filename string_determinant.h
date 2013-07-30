@@ -67,6 +67,10 @@ public:
     bool* get_alfa_bits() {return alfa_bits_;}
     /// Get a pointer to the beta bits
     bool* get_beta_bits() {return beta_bits_;}
+    /// Return the value of an alpha bit
+    bool get_alfa_bit(int n) {return alfa_bits_[n];}
+    /// Get a pointer to the beta bits
+    bool get_beta_bit(int n) {return beta_bits_[n];}
     /// Specify the occupation numbers
     void set_bits(bool*& alfa_bits,bool*& beta_bits);
     /// Specify the occupation numbers
@@ -79,6 +83,8 @@ public:
     double excitation_energy(const StringDeterminant& reference);
     /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_ab_energy(const StringDeterminant& reference);
+    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    double slater_rules(StringDeterminant& rhs);
     /// Compute the excitation level of a Slater determiant with respect to a given reference
     int excitation_level(const StringDeterminant& reference);
     int excitation_level(const bool* Ia,const bool* Ib);
@@ -108,8 +114,8 @@ private:
     static double bhole_[20];
     static double apart_[20];
     static double bpart_[20];
-//    /// Compute the matrix element of the Hamiltonian between two Slater determinants
-//    double SlaterRules(StringDeterminant& PhiA, StringDeterminant& PhiB);
+    /// Compute the matrix element of the Hamiltonian between two Slater determinants
+    double SlaterRules(StringDeterminant& PhiA, StringDeterminant& PhiB);
 //    /// Compute the one-particle density matrix contribution from a pair of determinants
 //    double SlaterOPDM(StringDeterminant& PhiI, StringDeterminant& PhiJ,int p,bool spin_p,int q,bool spin_q);
 //    /// Compute the two-particle density matrix contribution from a pair of determinants
