@@ -48,6 +48,12 @@ read_options(std::string name, Options &options)
         options.add_double("DEN_THRESHOLD",1.5);
         /*- The criteria used to screen the strings -*/
         options.add_str("SCREENING_TYPE","MP","MP DET");
+        /*- The form of the Hamiltonian matrix.
+         *  - FIXED diagonalizes a matrix of fixed dimension
+         *  - SMOOTH forms a matrix with smoothed matrix elements -*/
+        options.add_str("H_TYPE","FIXED","FIXED SMOOTH");
+        /*- The number of determinants used to build the Hamiltonian -*/
+        options.add_int("NDETS",100);
 
 
         // Options for the Cartographer class //

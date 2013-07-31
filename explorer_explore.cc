@@ -15,6 +15,29 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 /**
+ * An ancillary function to compare the det_info data structures.  Used to sort determinants.
+ * @param t1
+ * @param t2
+ * @return
+ */
+bool compare_det_info(const det_info& t1, const det_info& t2)
+{
+    if (t1.get<0>() != t2.get<0>()){
+        return (t1.get<0>() < t2.get<0>());
+    }
+    else if (t1.get<1>() != t2.get<1>()){
+        return (t1.get<1>() < t2.get<1>());
+    }
+    else if (t1.get<2>() != t2.get<2>()){
+        return (t1.get<2>() < t2.get<2>());
+    }
+    else if (t1.get<3>() != t2.get<3>()){
+        return (t1.get<3>() < t2.get<3>());
+    }
+    return (t1.get<4>() < t2.get<4>());
+}
+
+/**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
 void Explorer::explore(psi::Options& options)
@@ -67,13 +90,13 @@ void Explorer::explore(psi::Options& options)
     // Generate all alpha and beta strings with energy < threshold
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
-    fprintf(outfile,"\n  Screening the alpha strings..."); fflush(outfile);
+    fprintf(outfile,"\n  +++ Screening the alpha strings +++\n"); fflush(outfile);
     boost::timer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,navir,maxnaex_,true);
     fprintf(outfile,"\n  Time required: %f s",timer_astr.elapsed());
     fflush(outfile);
 
-    fprintf(outfile,"\n\n  Screening the beta strings..."); fflush(outfile);
+    fprintf(outfile,"\n\n  +++ Screening the beta strings +++\n"); fflush(outfile);
     boost::timer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,nbvir,maxnbex_,false);
     fprintf(outfile,"\n  Time required: %f s",timer_bstr.elapsed());
@@ -140,6 +163,11 @@ void Explorer::explore(psi::Options& options)
     time_dets += t_dets.elapsed();
     delete[] Ia;
 
+
+    // sort the determinants
+    fprintf(outfile,"\n\n  Sorting the determinants according to their energy.");
+    std::sort(determinants_.begin(),determinants_.end(),compare_det_info);
+
     fprintf(outfile,"\n\n  The new reference determinant is:");
     reference_determinant_.print();
     fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
@@ -171,7 +199,7 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
     fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
     fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
-    fprintf(outfile,"\n  Number of permutations visited    = %ld",num_permutations);
+//    fprintf(outfile,"\n  Number of permutations visited    = %ld",num_permutations);
     fprintf(outfile,"\n  Time spent on generating strings  = %f s",time_string);
     fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
     fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
