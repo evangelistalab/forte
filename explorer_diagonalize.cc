@@ -14,6 +14,20 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
+inline double clamp(double x, double a, double b)
+
+{
+    return x < a ? a : (x > b ? b : x);
+}
+
+inline double smootherstep(double edge0, double edge1, float x)
+{
+    // Scale, and clamp x to 0..1 range
+    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+    // Evaluate polynomial
+    return x * x * x *( x *( x * 6. - 15.) + 10.);
+}
+
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
@@ -21,23 +35,11 @@ void Explorer::diagonalize(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in a small space\n");
 
-    int ntot_dets = static_cast<int>(determinants_.size());
+    SharedMatrix H = build_hamiltonian(options);
 
-    // the number of determinants used to form the Hamiltonian matrix
-    int ndets = 0;
+    smooth_hamiltonian(H);
 
-    SharedMatrix H;
-
-    if (options.get_str("H_TYPE") == "FIXED"){
-        ndets = std::min(options.get_int("NDETS"),ntot_dets);
-        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
-        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
-
-        H = build_hamiltonian(ndets);
-    }else if (options.get_str("H_TYPE") == "SMOOTH"){
-        fprintf(outfile,"\n\n  Building the Hamiltonian using the first %d determinants",ndets);
-    }
-
+    int ndets = H->nrow();
     SharedMatrix evecs(new Matrix("U",ndets,ndets));
     SharedVector evals(new Vector("e",ndets));
     H->diagonalize(evecs,evals);
@@ -118,8 +120,28 @@ void Explorer::diagonalize(psi::Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix Explorer::build_hamiltonian(int ndets)
+SharedMatrix Explorer::build_hamiltonian(Options& options)
 {
+    int ntot_dets = static_cast<int>(determinants_.size());
+
+    // the number of determinants used to form the Hamiltonian matrix
+    int ndets = 0;
+
+    // Determine the size of the Hamiltonian matrix
+    if (options.get_str("H_TYPE") == "FIXED_SIZE"){
+        ndets = std::min(options.get_int("NDETS"),ntot_dets);
+        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
+        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+    }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
+        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
+        int max_ndets_fixed_energy = 3000;
+        ndets = std::min(max_ndets_fixed_energy,ntot_dets);
+        if (ndets == max_ndets_fixed_energy){
+            fprintf(outfile,"\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
+                            "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",max_ndets_fixed_energy);
+        }
+    }
+
     SharedMatrix H(new Matrix("Hamiltonian Matrix",ndets,ndets));
 
     // Form the Hamiltonian matrix
@@ -146,7 +168,61 @@ SharedMatrix Explorer::build_hamiltonian(int ndets)
         }
         H->set(I,I,determinantI.get<0>());
     }
+
     return H;
+}
+
+void Explorer::smooth_hamiltonian(SharedMatrix H)
+{
+    int ndets = H->nrow();
+    double main_space_threshold = determinant_threshold_ - smoothing_threshold_;
+    // Partition the Hamiltonian into main and intermediate model space
+    int ndets_main = 0;
+    for (int I = 0; I < ndets; ++I){
+        if (H->get(I,I) - H->get(0,0) > main_space_threshold){
+            ndets_main = I;
+            break;
+        }
+    }
+    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_main,ndets - ndets_main);
+    for (int I = 0; I < ndets; ++I){
+        for (int J = ndets_main; J < ndets; ++J){
+            if (I != J){
+                double HIJ = H->get(I,J);
+                double EI = H->get(I,I);
+                double EJ = H->get(J,J);
+                double EJ0 = EJ - H->get(0,0);
+                double factor = 1.0 - smootherstep(0.0,smoothing_threshold_,std::fabs(EJ0 - main_space_threshold));
+                H->set(I,J,factor * HIJ);
+                H->set(J,I,factor * HIJ);
+            }
+        }
+    }
+}
+
+void Explorer::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
+{
+    int n = H->nrow();
+    int n_small = std::min(50,n);
+
+    // Diagonalize a small matrix of dimension 50 x 50 or less
+    SharedMatrix Hsmall(new Matrix("U",n_small,n_small));
+    SharedMatrix evecs_small(new Matrix("U",n_small,n_small));
+    SharedVector evals_small(new Vector("e",n_small));
+    for (int I = 0; I < n_small; ++I){
+        for (int J = 0; J < n_small; ++J){
+            Hsmall->set(I,J,H->get(I,J));
+        }
+    }
+    Hsmall->diagonalize(evecs_small,evals_small);
+    continuer from here sir...
+    if (n_small == n){
+        Eigenvalues = evals_small;
+        Eigenvectors = evecs_small;
+        return;
+    }
+
+
 }
 
 }} // EndNamespaces

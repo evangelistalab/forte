@@ -99,6 +99,8 @@ private:
     double determinant_threshold_;
     /// The energy threshold (in Hartree) for prescreening the determinants
     double denominator_threshold_;
+    /// The energy threshold (in Hartree) for smoothing the Hamiltonian
+    double smoothing_threshold_;
     /// Type of screening: mp denominators or excited determinants?
     bool mp_screening_;
     /// The energy of the reference determinant (includes the nuclear repulsion term)
@@ -150,7 +152,11 @@ private:
     /// Diagonalize the Hamiltonian built from a subset of the determinants
     void diagonalize(Options &options);
     /// Build the Hamiltonian matrix
-    SharedMatrix build_hamiltonian(int ndets);
+    SharedMatrix build_hamiltonian(Options &options);
+    /// Smooth the Hamiltonian matrix in the intermediate space
+    void smooth_hamiltonian(SharedMatrix H);
+    /// Diagonalize the a matrix using the Davidson-Liu method
+    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
     void examine_all(Options& options);
 
     // Functions for generating combination

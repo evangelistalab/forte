@@ -51,9 +51,13 @@ read_options(std::string name, Options &options)
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("H_TYPE","FIXED","FIXED SMOOTH");
+        options.add_str("H_TYPE","FIXED_SIZE","FIXED_ENERGY FIXED_SIZE");
         /*- The number of determinants used to build the Hamiltonian -*/
         options.add_int("NDETS",100);
+        /*- The number of determinants used to build the Hamiltonian -*/
+        options.add_double("SMO_THRESHOLD",0.0);
+        /*- The number of determinants used to build the Hamiltonian -*/
+        options.add_str("SMOOTHING_FUNCTION","I","I");
 
 
         // Options for the Cartographer class //

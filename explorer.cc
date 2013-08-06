@@ -169,6 +169,7 @@ void Explorer::read_info(Options& options)
     }else{
         denominator_threshold_ = 2.0 * determinant_threshold_;
     }
+    smoothing_threshold_ = options.get_double("SMO_THRESHOLD");
 
     if (options.get_str("SCREENING_TYPE") == "MP"){
         mp_screening_ = true;
@@ -178,6 +179,8 @@ void Explorer::read_info(Options& options)
 
     fprintf(outfile,"\n  Determinant threshold = %.3f (Eh)",determinant_threshold_);
     fprintf(outfile,"\n  Denominator threshold = %.3f (Eh)",denominator_threshold_);
+    fprintf(outfile,"\n  Smoothing threshold   = %.3f (Eh)",smoothing_threshold_);
+
     fprintf(outfile,"\n  String screening: %s (%s)",mp_screening_ ? "Moller-Plesset denominators" : "excited determinants",options.get_str("SCREENING_TYPE").c_str());
 }
 
