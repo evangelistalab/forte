@@ -56,8 +56,11 @@ read_options(std::string name, Options &options)
         options.add_int("NDETS",100);
         /*- The number of determinants used to build the Hamiltonian -*/
         options.add_double("SMO_THRESHOLD",0.0);
-        /*- The number of determinants used to build the Hamiltonian -*/
+        /*- The method used to smooth the Hamiltonian -*/
         options.add_str("SMOOTHING_FUNCTION","I","I");
+        /*- The diagonalization method -*/
+        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
+
 
 
         // Options for the Cartographer class //
