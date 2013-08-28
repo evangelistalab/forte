@@ -52,16 +52,18 @@ read_options(std::string name, Options &options)
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
         options.add_str("H_TYPE","FIXED_SIZE","FIXED_ENERGY FIXED_SIZE");
-        /*- The number of determinants used to build the Hamiltonian -*/
+        /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
+        /*- The maximum dimension of the Hamiltonian -*/
+        options.add_int("MAX_NDETS",15000);
         /*- The number of determinants used to build the Hamiltonian -*/
         options.add_double("SMO_THRESHOLD",0.0);
         /*- The method used to smooth the Hamiltonian -*/
         options.add_str("SMOOTHING_FUNCTION","I","I");
         /*- The diagonalization method -*/
         options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
-
-
+        /*- The number of roots computed -*/
+        options.add_int("NROOT",4);
 
         // Options for the Cartographer class //
         /*- Density of determinants format -*/

@@ -41,7 +41,7 @@ inline double smootherstep(double edge0, double edge1, float x)
 
 
 #define BIGNUM 1E100
-#define MAXIT 1000
+#define MAXIT 500
 
 /*!
 ** david(): Computes the lowest few eigenvalues and eigenvectors of a
@@ -83,7 +83,7 @@ int david2(double **A, int N, int M, double *eps, double **v,
     double *lambda, **alpha, **f, *lambda_old;
     double norm, denom, diff;
 
-    maxdim = 8 * M;
+    maxdim = 20 * M;
 
     b = block_matrix(maxdim, N);  /* current set of guess vectors,
                    stored by row */
@@ -155,16 +155,6 @@ int david2(double **A, int N, int M, double *eps, double **v,
                    root */
     while(converged < M && iter < MAXIT) {
 
-        /* orthonormalize them */
-        for(i=0; i < M; i++){
-            norm = 0.0;
-            for(k=0; k < N; k++)
-                norm += b[i][k] * b[i][k];
-            norm = std::sqrt(norm);
-            for(k=0; k < N; k++)
-                b[i][k] /= norm;
-        }
-
         skip_check = 0;
         if(print) printf("\niter = %d\n", iter);
 
@@ -185,7 +175,7 @@ int david2(double **A, int N, int M, double *eps, double **v,
                     f[k][I] += alpha[i][k] * (sigma[I][i] - lambda[k] * b[i][I]);
                 }
                 denom = lambda[k] - A[I][I];
-                if(fabs(denom) > 1e-3) f[k][I] /= denom;
+                if(fabs(denom) > 1e-6) f[k][I] /= denom;
                 else f[k][I] = 0.0;
             }
 
@@ -258,7 +248,7 @@ int david2(double **A, int N, int M, double *eps, double **v,
     }
 
     /* generate final eigenvalues and eigenvectors */
-    if(converged == M) {
+    //if(converged == M) {
         for(i=0; i < M; i++) {
             eps[i] = lambda[i];
             for(j=0; j < L; j++) {
@@ -268,7 +258,7 @@ int david2(double **A, int N, int M, double *eps, double **v,
             }
         }
         if(print) printf("Davidson algorithm converged in %d iterations.\n", iter);
-    }
+//    }
 
     free(conv);
     free_block(b);
@@ -288,10 +278,11 @@ int david2(double **A, int N, int M, double *eps, double **v,
  */
 void Explorer::diagonalize(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in a small space\n");
+    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in a small space");
 
     boost::timer t_hbuild;
-    SharedMatrix H = build_hamiltonian(options);
+    SharedMatrix H = build_hamiltonian_parallel(options);
+//    SharedMatrix H = build_hamiltonian(options);
     fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
 
     boost::timer t_hsmooth;
@@ -302,7 +293,7 @@ void Explorer::diagonalize(psi::Options& options)
     int nroots = ndets;
 
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        nroots = std::min(1,ndets);
+        nroots = std::min(options.get_int("NROOT"),ndets);
     }
 
     SharedMatrix evecs(new Matrix("U",ndets,nroots));
@@ -322,68 +313,6 @@ void Explorer::diagonalize(psi::Options& options)
     for (int i = 0; i < ndets_print; ++ i){
         fprintf(outfile,"\n Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
     }
-
-
-
-
-
-
-    //    double unscreened_range = determinant_threshold - h_buffer;
-
-    //    if (std::fabs(h_buffer) > 0.0){
-    //        for (int I = 1; I < ndets; ++I){
-    //            double deltaE = H->get(I,I) - H->get(0,0);
-    //            if (deltaE > unscreened_range){
-    //                double excessE = deltaE - unscreened_range;
-    //                double factor = smootherstep(excessE,h_buffer,h_buffer);
-    //                fprintf(outfile,"\n  Det %d , De = %f, exE = %f, f = %f",I,deltaE,excessE,factor);
-
-    //                //double factor = 1.0 - excessE / h_buffer;
-    //                for (int J = 0; J <= I; ++J){
-    //                    double element = H->get(I,J);
-    //                    H->set(I,J,element * factor);
-    //                    H->set(J,I,element * factor);
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    for (int n = 1; n <= std::min(ndets,4000); n += 1){
-    //        timer t_hbuild;
-    //        for (int I = 0; I < n; ++I){
-    //            boost::tuple<double,int,int>& determinantI = determinants[I];
-    //            int Isa = std::get<1>(determinantI);
-    //            int Isb = std::get<2>(determinantI);
-    //            detI.set_bits(vec_astr[Isa].second,vec_bstr[Isb].second);
-    //            for (int J = I; J < n; ++J){
-    //                boost::tuple<double,int,int>& determinantJ = determinants[J];
-    //                int Jsa = std::get<1>(determinantJ);
-    //                int Jsb = std::get<2>(determinantJ);
-    //                detJ.set_bits(vec_astr[Jsa].second,vec_bstr[Jsb].second);
-    //                double HIJ = SlaterRules(detI,detJ,ints_);
-    //                H->set(I,J,HIJ);
-    //                H->set(J,I,HIJ);
-    //            }
-    //        }
-    //        fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
-
-    //        timer t_hdiag;
-
-    ////        int nroots = 5;
-    ////        SharedMatrix evecs(new Matrix("U",maxdet,nroots));
-    ////        SharedVector evals(new Vector("e",maxdet));
-    ////        lanczos(H,evecs,evals,nroots);
-
-    //        SharedMatrix evecs(new Matrix("U",maxdet,maxdet));
-    //        SharedVector evals(new Vector("e",maxdet));
-    //        H->diagonalize(evecs,evals);
-
-    //        fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
-    //        fprintf(outfile,"\n %6d",n);
-    //        for (int i = 0; i < 5; ++ i){
-    //            fprintf(outfile," %3d %15.9f %8.4f",i,evals->get(i)+ nuclear_energy,27.211*(evals->get(i) - evals->get(0)));
-    //        }
-    //    }
 }
 
 /**
@@ -406,7 +335,7 @@ SharedMatrix Explorer::build_hamiltonian(Options& options)
         fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
         fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
-        int max_ndets_fixed_energy = 10000;
+        int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
         ndets = std::min(max_ndets_fixed_energy,ntot_dets);
         if (ndets == max_ndets_fixed_energy){
             fprintf(outfile,"\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
@@ -444,18 +373,74 @@ SharedMatrix Explorer::build_hamiltonian(Options& options)
     return H;
 }
 
+/**
+ * Build the Hamiltonian matrix from the list of determinants.
+ * It assumes that the determinants are stored in increasing energetic order.
+ * @param ndets
+ * @return a SharedMatrix object that contains the Hamiltonian
+ */
+SharedMatrix Explorer::build_hamiltonian_parallel(Options& options)
+{
+    int ntot_dets = static_cast<int>(determinants_.size());
+
+    // the number of determinants used to form the Hamiltonian matrix
+    int ndets = 0;
+
+    // Determine the size of the Hamiltonian matrix
+    if (options.get_str("H_TYPE") == "FIXED_SIZE"){
+        ndets = std::min(options.get_int("NDETS"),ntot_dets);
+        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
+        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+    }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
+        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
+        int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
+        ndets = std::min(max_ndets_fixed_energy,ntot_dets);
+        if (ndets == max_ndets_fixed_energy){
+            fprintf(outfile,"\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
+                    "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",max_ndets_fixed_energy);
+        }
+    }
+
+    SharedMatrix H(new Matrix("Hamiltonian Matrix",ndets,ndets));
+
+    // Form the Hamiltonian matrix
+    #pragma omp parallel for schedule(dynamic)
+    for (int I = 0; I < ndets; ++I){
+        boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+        const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+        const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+        const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+        const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+        for (int J = I + 1; J < ndets; ++J){
+            boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+            const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+            const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+            const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+            const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+            const double HIJ = StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
+            H->set(I,J,HIJ);
+            H->set(J,I,HIJ);
+        }
+        H->set(I,I,determinantI.get<0>());
+    }
+
+    return H;
+}
+
 void Explorer::smooth_hamiltonian(SharedMatrix H)
 {
     int ndets = H->nrow();
     double main_space_threshold = determinant_threshold_ - smoothing_threshold_;
+
     // Partition the Hamiltonian into main and intermediate model space
-    int ndets_main = 0;
-    for (int I = 0; I < ndets; ++I){
+    int ndets_main = ndets;
+    for (int I = 1; I < ndets; ++I){
         if (H->get(I,I) - H->get(0,0) > main_space_threshold){
             ndets_main = I;
             break;
         }
     }
+
     fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_main,ndets - ndets_main);
     for (int I = 0; I < ndets; ++I){
         for (int J = ndets_main; J < ndets; ++J){
@@ -476,52 +461,89 @@ void Explorer::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix
 {
     david2(H->pointer(),H->nrow(),nroots,Eigenvalues->pointer(),Eigenvectors->pointer(),1.0e-10,0);
 
-    //    int n = H->nrow();
-    //    int n_small = std::min(50,n);
+//    int n = H->nrow();
+//    int n_small = std::min(50,n);
+//    int max_vecs = 12;
 
-    //    // Diagonalize a small matrix of dimension 50 x 50 or less
-    //    SharedMatrix Hsmall(new Matrix("U",n_small,n_small));
-    //    SharedMatrix evecs_small(new Matrix("U",n_small,n_small));
-    //    SharedVector evals_small(new Vector("e",n_small));
-    //    for (int I = 0; I < n_small; ++I){
-    //        for (int J = 0; J < n_small; ++J){
-    //            Hsmall->set(I,J,H->get(I,J));
-    //        }
-    //    }
-    //    Hsmall->diagonalize(evecs_small,evals_small);
+//    // Diagonalize a small matrix of dimension 50 x 50 or less
+//    SharedMatrix Hsmall(new Matrix("U",n_small,n_small));
+//    SharedMatrix evecs_small(new Matrix("U",n_small,n_small));
+//    SharedVector evals_small(new Vector("e",n_small));
+//    for (int I = 0; I < n_small; ++I){
+//        for (int J = 0; J < n_small; ++J){
+//            Hsmall->set(I,J,H->get(I,J));
+//        }
+//    }
+//    Hsmall->diagonalize(evecs_small,evals_small);
 
-    //    /* 1. Select a set of L orthonormal guess vectors, at least one for each
-    //     * root desired, and place in the set {b_i}.
-    //     */
-    //    int L = nroots;
-    //    SharedMatrix b(new Matrix("b",n,L));
-    //    for (int i = 0; i < L; ++i){
-    //        for (int I = 0; I < n_small; ++I){
-    //            b->set(I,i,evecs_small->get(I,i));
-    //        }
-    //    }
+//    int K = max_vecs * nroots;
+//    SharedMatrix b(new Matrix("b",n,K));
+//    SharedMatrix Hb(new Matrix("Hb",n,L));
 
-    //    /* 2. 2. Use a standard diagonalization method to solve the L × L eigenvalue
-    //     * problem G alpha^k = ρ^k  alpha^k, k = 1,2,...,M
-    //     * where Gij = (b_i,H b_j) = (b_i,sigma_j), 1 ≤ i,j ≤ L (26)
-    //     * and M is the number of roots of interest.
-    //     */
-    //    SharedMatrix Hb(new Matrix("Hb",n,L));
-    //    SharedMatrix R(new Matrix("R",n,L));
-    //    SharedMatrix G(new Matrix("G",L,L));
-    //    SharedMatrix alpha(new Matrix("G Eigenvectors",L,L));
-    //    SharedVector rho(new Vector("G Eigenvalues",L));
-    //    SharedVector Rho(new Matrix("G Eigenvalues",L,L));
-    //    Hb->gemm(false,false,1.0,H,b,0.0);
-    //    G->gemm(true,false,1.0,b,Hb,0.0);
-    //    G->diagonalize(alpha,rho);
-    //    Rho->set_diagonal(rho);
-    //    R->gemm(false,false,1.0,Hb,alpha,0.0);
-    //    R->gemm(false,false,-1.0,b,alpha,1.0);
+//    /* 1. Select a set of L orthonormal guess vectors, at least one for each
+//         * root desired, and place in the set {b_i}.
+//         */
+//    std::vector<SharedVector> Hb;
+//    std::vector<SharedVector> b;
+//    int L = nroots;
+//    for (int i = 0; i < L; ++i){
+//        SharedVector b_i(new Vector(n));
+//        for (int I = 0; I < n_small; ++I){
+//            b_i->set(I,i,evecs_small->get(I,i));
+//        }
+//        b.push_back(b_i);
+//    }
 
+//    SharedVector Hb_i(new Vector("Hb_i",n));
+//    SharedMatrix G(new Matrix("G",K,K));
+//    SharedMatrix alpha(new Matrix("G Eigenvectors",K,K));
+//    SharedVector rho(new Vector("G Eigenvalues",K));
+
+
+//    int nvecs = 0;
+//    for (int iter = 0; iter < max_vecs; ++iter){
+//        /* 2. Use a standard diagonalization method to solve the L × L eigenvalue
+//             * problem G alpha^k = ρ^k  alpha^k, k = 1,2,...,M
+//             * where Gij = (b_i,H b_j) = (b_i,sigma_j), 1 ≤ i,j ≤ L (26)
+//             * and M is the number of roots of interest.
+//             */
+
+//        // Compute H b_i
+//        for (int j = nvecs; j < nvecs + L; ++j){
+//            Hb_j->gemv(false,1.0,H.get_pointer(),b[j].get_pointer(),0.0);
+//            Hb.push_back(Hb_j);
+//        }
+
+//        // Compute G
+//        for (int i = 0; i < nvecs; ++i){
+//            for (int j = nvecs; j < nvecs + L; ++j){
+//                double Gij = b[i]->dot(Hb[j].get_pointer());
+//                G->set(i,j,Gij);
+//                G->set(j,i,Gij);
+//            }
+//        }
+//        for (int i = nvecs; i < nvecs + L; ++i){
+//            for (int j = nvecs; j < nvecs + L; ++j){
+//                double Gij = b[i]->dot(Hb[j].get_pointer());
+//                G->set(i,j,Gij);
+//            }
+//        }
+//        G->diagonalize(alpha,rho);
+
+//    }
 }
 
 }} // EndNamespaces
+
+//SharedMatrix R(new Matrix("R",n,L));
+//SharedMatrix G(new Matrix("G",L,L));
+//SharedVector Rho(new Matrix("G Eigenvalues",L,L));
+//Hb->gemm(false,false,1.0,H,b,0.0);
+//G->gemm(true,false,1.0,b,Hb,0.0);
+
+//Rho->set_diagonal(rho);
+//R->gemm(false,false,1.0,Hb,alpha,0.0);
+//R->gemm(false,false,-1.0,b,alpha,1.0);
 
 
 

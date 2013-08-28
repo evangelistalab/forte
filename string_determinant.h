@@ -90,6 +90,8 @@ public:
     int excitation_level(const bool* Ia,const bool* Ib);
     /// Sets the pointer to the integral object
     static void set_ints(ExplorerIntegrals* ints) {ints_ = ints;}
+    /// Compute the matrix element of the Hamiltonian between two Slater determinants
+    static double SlaterRules(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb);
 private:
     // Functions
     /// Used to allocate the memory for the arrays
@@ -115,7 +117,7 @@ private:
     static double apart_[20];
     static double bpart_[20];
     /// Compute the matrix element of the Hamiltonian between two Slater determinants
-    double SlaterRules(StringDeterminant& PhiA, StringDeterminant& PhiB);
+    //double SlaterRules(StringDeterminant& PhiA, StringDeterminant& PhiB);
 //    /// Compute the one-particle density matrix contribution from a pair of determinants
 //    double SlaterOPDM(StringDeterminant& PhiI, StringDeterminant& PhiJ,int p,bool spin_p,int q,bool spin_q);
 //    /// Compute the two-particle density matrix contribution from a pair of determinants

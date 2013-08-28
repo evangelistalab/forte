@@ -9,7 +9,8 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-double SlaterSign(bool *I, int n);
+double SlaterSign(bool* I, int n);
+double SlaterSign(const std::vector<bool>& I, int n);
 
 ExplorerIntegrals* StringDeterminant::ints_ = 0;
 double StringDeterminant::ahole_[20];
@@ -463,6 +464,141 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
     return(matrix_element);
 }
 
+/**
+ * Compute the matrix element of the Hamiltonian between this determinant and a given one
+ * @param rhs
+ * @return
+ */
+double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb)
+{
+    double matrix_element = 0.0;
+
+    int nadiff = 0;
+    int nbdiff = 0;
+
+    int nmo = static_cast<int>(Ia.size());
+    // Count how many differences in mos are there
+    for (int n = 0; n < nmo; ++n) {
+        if (Ia[n] != Ja[n]) nadiff++;
+        if (Ib[n] != Jb[n]) nbdiff++;
+        if (nadiff + nbdiff > 4) return 0.0; // Get our of this as soon as possible
+    }
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    // Slater rule 1 PhiI = PhiJ
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element = ints_->frozen_core_energy();
+        for(int p = 0; p < nmo; ++p){
+            if(Ia[p]) matrix_element += ints_->diag_roei(p);
+            if(Ib[p]) matrix_element += ints_->diag_roei(p);
+            for(int q = 0; q < nmo; ++q){
+                if(Ia[p] and Ia[q])
+                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                if(Ib[p] and Ib[q])
+                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                if(Ia[p] and Ib[q])
+                    matrix_element += ints_->diag_c_rtei(p,q);
+            }
+        }
+    }
+
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    if ((nadiff == 1) and (nbdiff == 0)) {
+        // Diagonal contribution
+        int i = 0;
+        int j = 0;
+        for(int p = 0; p < nmo; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+            if((Ia[p] != Ja[p]) and Ja[p]) j = p;
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
+        matrix_element = sign * ints_->roei(i,j);
+        for(int p = 0; p < nmo; ++p){
+            if(Ia[p] and Ja[p]){
+                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+            }
+            if(Ib[p] and Jb[p]){
+                matrix_element += sign * ints_->rtei(i,j,p,p);
+            }
+        }
+    }
+    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
+    if ((nadiff == 0) and (nbdiff == 1)) {
+        // Diagonal contribution
+        int i = 0;
+        int j = 0;
+        for(int p = 0; p < nmo; ++p){
+            if((Ib[p] != Jb[p]) and Ib[p]) i = p;
+            if((Ib[p] != Jb[p]) and Jb[p]) j = p;
+        }
+        double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
+        matrix_element = sign * ints_->roei(i,j);
+        for(int p = 0; p < nmo; ++p){
+            if(Ia[p] and Ja[p]){
+                matrix_element += sign * ints_->rtei(p,p,i,j);
+            }
+            if(Ib[p] and Jb[p]){
+                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+            }
+        }
+    }
+
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    if ((nadiff == 2) and (nbdiff == 0)) {
+        // Diagonal contribution
+        int i = -1;
+        int j =  0;
+        int k = -1;
+        int l =  0;
+        for(int p = 0; p < nmo; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]){
+                if (i == -1) { i = p; } else { j = p; }
+            }
+            if((Ia[p] != Ja[p]) and Ja[p]){
+                if (k == -1) { k = p; } else { l = p; }
+            }
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
+        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+    }
+
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    if ((nadiff == 0) and (nbdiff == 2)) {
+        // Diagonal contribution
+        int i,j,k,l;
+        i = -1;
+        j = -1;
+        k = -1;
+        l = -1;
+        for(int p = 0; p < nmo; ++p){
+            if((Ib[p] != Jb[p]) and Ib[p]){
+                if (i == -1) { i = p; } else { j = p; }
+            }
+            if((Ib[p] != Jb[p]) and Jb[p]){
+                if (k == -1) { k = p; } else { l = p; }
+            }
+        }
+        double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
+        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+    }
+
+    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Diagonal contribution
+        int i,j,k,l;
+        i = j = k = l = -1;
+        for(int p = 0; p < nmo; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+            if((Ib[p] != Jb[p]) and Ib[p]) j = p;
+            if((Ia[p] != Ja[p]) and Ja[p]) k = p;
+            if((Ib[p] != Jb[p]) and Jb[p]) l = p;
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
+        matrix_element = sign * ints_->rtei(i,k,j,l);
+    }
+    return(matrix_element);
+}
 //double SlaterRules(StringDeterminant& PhiI, StringDeterminant& PhiJ,boost::shared_ptr<Integrals>& ints)
 //{
 //    double matrix_element = 0.0;
@@ -602,6 +738,15 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
 //}
 
 double SlaterSign(bool* I,int n)
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(I[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double SlaterSign(const std::vector<bool>& I,int n)
 {
     double sign = 1.0;
     for(int i = 0; i < n; ++i){  // This runs up to the operator before n

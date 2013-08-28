@@ -153,6 +153,8 @@ private:
     void diagonalize(Options &options);
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);
+    /// Build the Hamiltonian matrix in parallel
+    SharedMatrix build_hamiltonian_parallel(Options& options);
     /// Smooth the Hamiltonian matrix in the intermediate space
     void smooth_hamiltonian(SharedMatrix H);
     /// Diagonalize the a matrix using the Davidson-Liu method
