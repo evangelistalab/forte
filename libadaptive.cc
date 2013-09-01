@@ -28,40 +28,68 @@ read_options(std::string name, Options &options)
         /*- The symmetry of the electronic state.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
         options.add_int("SYMMETRY",0);
+
         /*- The multiplicity of the electronic state.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
         options.add_int("MULTIPLICITY",0);
+
         /*- The charge of the molecule.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
         options.add_int("CHARGE",0);
+
         /*- The minimum excitation level (Default value: 0) -*/
         options.add_int("MIN_EXC_LEVEL",0);
+
         /*- The maximum excitation level (Default value: 0 = number of electrons) -*/
         options.add_int("MAX_EXC_LEVEL",0);
-        /*- The frozen doubly occupied orbitals -*/
+
+        /*- The frozen doubly occupied orbitals per irrep -*/
         options.add("FROZEN_DOCC",new ArrayType());
-        /*- The frozen doubly occupied orbitals -*/
+
+        /*- The frozen unoccupied orbitals per irrep -*/
         options.add("FROZEN_UOCC",new ArrayType());
+
+        /*- The active orbitals per irrep.  This input is alternative to FROZEN_UOCC. -*/
+        options.add("ACTIVE",new ArrayType());
+
         /*- The energy threshold for the determinant energy in Hartree -*/
         options.add_double("DET_THRESHOLD",1.0);
+
         /*- The energy threshold for the MP denominators energy in Hartree -*/
         options.add_double("DEN_THRESHOLD",1.5);
+
         /*- The criteria used to screen the strings -*/
         options.add_str("SCREENING_TYPE","MP","MP DET");
+
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
         options.add_str("H_TYPE","FIXED_SIZE","FIXED_ENERGY FIXED_SIZE");
+
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
+
         /*- The maximum dimension of the Hamiltonian -*/
-        options.add_int("MAX_NDETS",15000);
-        /*- The number of determinants used to build the Hamiltonian -*/
+        options.add_int("MAX_NDETS",20000);
+
+        /*- The energy threshold for the model space -*/
+        options.add_double("SPACE_M_THRESHOLD",1000.0);
+
+        /*- The energy threshold for the intermdiate space -*/
+        options.add_double("SPACE_I_THRESHOLD",1000.0);
+
+        /*- The energy threshold for smoothing the Hamiltonian.
+         *  Determinants with energy < DET_THRESHOLD - SMO_THRESHOLD will be included in H
+         *  Determinants with DET_THRESHOLD - SMO_THRESHOLD < energy < DET_THRESHOLD will be included in H but smoothed
+         *  Determinants with energy > DET_THRESHOLD will not be included in H -*/
         options.add_double("SMO_THRESHOLD",0.0);
+
         /*- The method used to smooth the Hamiltonian -*/
         options.add_str("SMOOTHING_FUNCTION","I","I");
+
         /*- The diagonalization method -*/
         options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
+
         /*- The number of roots computed -*/
         options.add_int("NROOT",4);
 

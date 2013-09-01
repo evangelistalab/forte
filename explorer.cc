@@ -111,6 +111,21 @@ void Explorer::read_info(Options& options)
 
             exit(Failure);
         }
+    } else if (options["ACTIVE"].has_changed()){
+        if (options["ACTIVE"].size() == nirrep_){
+            for (int h = 0; h < nirrep_; ++h){
+                frzvpi_[h] = nmopi_[h] - frzcpi_[h] - options["ACTIVE"][h].to_integer();
+            }
+        }else{
+            fprintf(outfile,"\n\n  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
+                    options["ACTIVE"].size(),nirrep_);
+            fprintf(outfile,"\n  Exiting the program.\n");
+            printf("  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
+                    options["ACTIVE"].size(),nirrep_);
+            printf("\n  Exiting the program.\n");
+
+            exit(Failure);
+        }
     }
 
     // Create the vectors of frozen orbitals (in the Pitzer ordering)
@@ -169,7 +184,21 @@ void Explorer::read_info(Options& options)
     }else{
         denominator_threshold_ = 2.0 * determinant_threshold_;
     }
-    smoothing_threshold_ = options.get_double("SMO_THRESHOLD");
+    space_m_threshold_ = options.get_double("SPACE_M_THRESHOLD");
+    space_i_threshold_ = options.get_double("SPACE_I_THRESHOLD");
+    if (space_m_threshold_ > denominator_threshold_){
+        space_m_threshold_ = denominator_threshold_;
+        space_i_threshold_ = denominator_threshold_;
+        fprintf(outfile,"\n  The model space comprises all the determinants.\n  Modifying the model and intermediate space thresholds.\n");
+    }
+    if (space_m_threshold_ > space_i_threshold_){
+        space_i_threshold_ = space_m_threshold_;
+    }
+    if (space_i_threshold_ > denominator_threshold_){
+        space_i_threshold_ = space_m_threshold_;
+        fprintf(outfile,"\n  Changing the value of the intermediate space threshold.\n");
+    }
+
 
     if (options.get_str("SCREENING_TYPE") == "MP"){
         mp_screening_ = true;
@@ -177,9 +206,10 @@ void Explorer::read_info(Options& options)
         mp_screening_ = false;
     }
 
-    fprintf(outfile,"\n  Determinant threshold = %.3f (Eh)",determinant_threshold_);
-    fprintf(outfile,"\n  Denominator threshold = %.3f (Eh)",denominator_threshold_);
-    fprintf(outfile,"\n  Smoothing threshold   = %.3f (Eh)",smoothing_threshold_);
+    fprintf(outfile,"\n  Determinant threshold        = %.3f (Eh)",determinant_threshold_);
+    fprintf(outfile,"\n  Denominator threshold        = %.3f (Eh)",denominator_threshold_);
+    fprintf(outfile,"\n  Model space threshold        = %.3f (Eh)",space_m_threshold_);
+    fprintf(outfile,"\n  Intermediate space threshold = %.3f (Eh)",space_i_threshold_);
 
     fprintf(outfile,"\n  String screening: %s (%s)",mp_screening_ ? "Moller-Plesset denominators" : "excited determinants",options.get_str("SCREENING_TYPE").c_str());
 }

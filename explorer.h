@@ -99,8 +99,10 @@ private:
     double determinant_threshold_;
     /// The energy threshold (in Hartree) for prescreening the determinants
     double denominator_threshold_;
-    /// The energy threshold (in Hartree) for smoothing the Hamiltonian
-    double smoothing_threshold_;
+    /// The energy threshold (in Hartree) for the model space
+    double space_m_threshold_;
+    /// The energy threshold (in Hartree) for the intermediate space
+    double space_i_threshold_;
     /// Type of screening: mp denominators or excited determinants?
     bool mp_screening_;
     /// The energy of the reference determinant (includes the nuclear repulsion term)
@@ -160,6 +162,8 @@ private:
     /// Diagonalize the a matrix using the Davidson-Liu method
     void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
     void examine_all(Options& options);
+    /// Compute perturbative corrections to the energy
+    void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
 
     // Functions for generating combination
     half_string_list compute_half_strings_screened(bool is_occ,int n,int k,std::vector<double>& weights,std::string label);

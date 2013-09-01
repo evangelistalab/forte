@@ -309,6 +309,8 @@ void Explorer::diagonalize(psi::Options& options)
     }
     fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
 
+    evaluate_perturbative_corrections(evals,evecs);
+
     int ndets_print = std::min(nroots,10);
     for (int i = 0; i < ndets_print; ++ i){
         fprintf(outfile,"\n Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
@@ -392,12 +394,21 @@ SharedMatrix Explorer::build_hamiltonian_parallel(Options& options)
         fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
         fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
-        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
+        double E0 = determinants_[0].get<0>();
+        for (int I = 0; I < ntot_dets; ++I){
+            double EI = determinants_[I].get<0>();
+            if (EI - E0 > space_i_threshold_){
+                break;
+            }
+            ndets++;
+        }
+        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
+        fprintf(outfile,"\n  This requires a total of %d determinants",ndets);
         int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
-        ndets = std::min(max_ndets_fixed_energy,ntot_dets);
-        if (ndets == max_ndets_fixed_energy){
-            fprintf(outfile,"\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
-                    "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",max_ndets_fixed_energy);
+        if (ndets > max_ndets_fixed_energy){
+            fprintf(outfile,"\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
+                    "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",ndets,max_ndets_fixed_energy);
+            ndets = max_ndets_fixed_energy;
         }
     }
 
@@ -430,31 +441,65 @@ SharedMatrix Explorer::build_hamiltonian_parallel(Options& options)
 void Explorer::smooth_hamiltonian(SharedMatrix H)
 {
     int ndets = H->nrow();
-    double main_space_threshold = determinant_threshold_ - smoothing_threshold_;
 
     // Partition the Hamiltonian into main and intermediate model space
-    int ndets_main = ndets;
-    for (int I = 1; I < ndets; ++I){
-        if (H->get(I,I) - H->get(0,0) > main_space_threshold){
-            ndets_main = I;
+    int ndets_model = 0;
+    for (int I = 0; I < ndets; ++I){
+        if (H->get(I,I) - H->get(0,0) > space_m_threshold_){
             break;
         }
+        ndets_model++;
     }
 
-    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_main,ndets - ndets_main);
+    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
-        for (int J = ndets_main; J < ndets; ++J){
+        for (int J = ndets_model; J < ndets; ++J){
             if (I != J){
                 double HIJ = H->get(I,J);
                 double EI = H->get(I,I);
                 double EJ = H->get(J,J);
                 double EJ0 = EJ - H->get(0,0);
-                double factor = 1.0 - smootherstep(0.0,smoothing_threshold_,std::fabs(EJ0 - main_space_threshold));
+                double factor = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EJ0 - space_m_threshold_));
                 H->set(I,J,factor * HIJ);
                 H->set(J,I,factor * HIJ);
             }
         }
     }
+}
+
+void Explorer::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
+{
+    int root = 0;
+    double E_0 = evals->get(root);
+
+    int ntot_dets = static_cast<int>(determinants_.size());
+    int ndets_p = evecs->nrow();
+
+    fprintf(outfile,"\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
+
+    // Model space - external space 2nd order correction
+    double E_2_PQ = 0.0;
+    #pragma omp parallel for schedule(dynamic)
+    for (int A = ndets_p; A < ntot_dets; ++A){
+        boost::tuple<double,int,int,int,int>& determinantA = determinants_[A];
+        const double EA = determinantA.get<0>();
+        const int A_class_a = determinantA.get<1>();  //std::get<1>(determinantI);
+        const int Asa = determinantA.get<2>();        //std::get<1>(determinantI);
+        const int A_class_b = determinantA.get<3>(); //std::get<2>(determinantI);
+        const int Asb = determinantA.get<4>();        //std::get<2>(determinantI);
+        double coupling = 0.0;
+        for (int I = 0; I < ndets_p; ++I){
+            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+            const double HIA = StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[A_class_a][Asa].get<2>(),vec_bstr_symm_[A_class_b][Asb].get<2>());
+            coupling += evecs->get(I,root) * HIA;
+        }
+        E_2_PQ -= coupling * coupling / (EA - E_0);
+    }
+    fprintf(outfile,"\n\n Adaptive CI + PT2 Energy Root %3d = %.12f Eh",root + 1,E_0 + E_2_PQ);
 }
 
 void Explorer::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
