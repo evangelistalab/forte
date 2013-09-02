@@ -97,7 +97,7 @@ void Cartographer::accumulate_dod(double det_energy)
 //        }
 //    }
     if (dod_type_ == HistogramDOD){
-        int position = ndod_bins_margin_ + int((det_energy - (min_energy_ - 0.5 * dod_bin_width_)) / dod_bin_width_);
+        int position = ndod_bins_margin_ + int((det_energy - (min_energy_ + 0.5 * dod_bin_width_)) / dod_bin_width_);
         if(position >= 0 and position < ndod_bins_total_){
             dod_[position] += 1.0;
         }else{
