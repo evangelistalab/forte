@@ -284,7 +284,7 @@ void Explorer::diagonalize(psi::Options& options)
 
     double E = 1.0e100;
     double delta_E = 1.0e10;
-    for (int cycle = 0; cycle < 10; ++cycle){
+    for (int cycle = 0; cycle < 20; ++cycle){
         SharedMatrix H = build_hamiltonian_parallel(options);
 
         lowdin_hamiltonian(H,E);
