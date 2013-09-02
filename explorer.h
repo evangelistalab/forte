@@ -159,6 +159,9 @@ private:
     SharedMatrix build_hamiltonian_parallel(Options& options);
     /// Smooth the Hamiltonian matrix in the intermediate space
     void smooth_hamiltonian(SharedMatrix H);
+    /// Fold in the external configurations into the Hamiltonian
+    void lowdin_hamiltonian(SharedMatrix H,double E);
+
     /// Diagonalize the a matrix using the Davidson-Liu method
     void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
     void examine_all(Options& options);

@@ -281,40 +281,57 @@ void Explorer::diagonalize(psi::Options& options)
     fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in a small space");
 
     boost::timer t_hbuild;
-    SharedMatrix H = build_hamiltonian_parallel(options);
-//    SharedMatrix H = build_hamiltonian(options);
-    fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
 
-    boost::timer t_hsmooth;
-    smooth_hamiltonian(H);
-    fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+    double E = 1.0e100;
+    double delta_E = 1.0e10;
+    for (int cycle = 0; cycle < 10; ++cycle){
+        SharedMatrix H = build_hamiltonian_parallel(options);
 
-    int ndets = H->nrow();
-    int nroots = ndets;
+        lowdin_hamiltonian(H,E);
 
-    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        nroots = std::min(options.get_int("NROOT"),ndets);
+        fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+
+        boost::timer t_hsmooth;
+        smooth_hamiltonian(H);
+        fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+
+        int ndets = H->nrow();
+        int nroots = ndets;
+
+        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+            nroots = std::min(options.get_int("NROOT"),ndets);
+        }
+
+        SharedMatrix evecs(new Matrix("U",ndets,nroots));
+        SharedVector evals(new Vector("e",nroots));
+
+        boost::timer t_hdiag;
+        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            davidson_liu(H,evals,evecs,nroots);
+        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+            fprintf(outfile,"\n  Performing full diagonalization.");
+            H->diagonalize(evecs,evals);
+        }
+        fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+
+        delta_E = evals->get(0) - E;
+        E = evals->get(0);
+        int ndets_print = std::min(nroots,10);
+        for (int i = 0; i < ndets_print; ++ i){
+            fprintf(outfile,"\n  Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        }
+
+        if (std::fabs(delta_E) < options.get_double("E_CONVERGENCE")){
+            int ndets_print = std::min(nroots,10);
+            for (int i = 0; i < ndets_print; ++ i){
+                fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+            }
+            fprintf(outfile,"\n  Lowdin iterations converged!\n");
+            break;
+        }
     }
-
-    SharedMatrix evecs(new Matrix("U",ndets,nroots));
-    SharedVector evals(new Vector("e",nroots));
-
-    boost::timer t_hdiag;
-    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-        davidson_liu(H,evals,evecs,nroots);
-    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-        fprintf(outfile,"\n  Performing full diagonalization.");
-        H->diagonalize(evecs,evals);
-    }
-    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
-
-    evaluate_perturbative_corrections(evals,evecs);
-
-    int ndets_print = std::min(nroots,10);
-    for (int i = 0; i < ndets_print; ++ i){
-        fprintf(outfile,"\n Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-    }
+    //evaluate_perturbative_corrections(evals,evecs);
 }
 
 /**
@@ -500,6 +517,45 @@ void Explorer::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix
         E_2_PQ -= coupling * coupling / (EA - E_0);
     }
     fprintf(outfile,"\n\n Adaptive CI + PT2 Energy Root %3d = %.12f Eh",root + 1,E_0 + E_2_PQ);
+}
+
+void Explorer::lowdin_hamiltonian(SharedMatrix H,double E)
+{
+    int ntot_dets = static_cast<int>(determinants_.size());
+    int ndets_p = H->nrow();
+
+    fprintf(outfile,"\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
+
+    #pragma omp parallel for schedule(dynamic)
+    for (int I = 0; I < ndets_p; ++I){
+        boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+        const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+        const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+        const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+        const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+        for (int J = I; J < ndets_p; ++J){
+            boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+            const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+            const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+            const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+            const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+            double coupling = 0.0;
+            for (int A = ndets_p; A < ntot_dets; ++A){
+                boost::tuple<double,int,int,int,int>& determinantA = determinants_[A];
+                const double EA = determinantA.get<0>();
+                const int A_class_a = determinantA.get<1>();  //std::get<1>(determinantI);
+                const int Asa = determinantA.get<2>();        //std::get<1>(determinantI);
+                const int A_class_b = determinantA.get<3>(); //std::get<2>(determinantI);
+                const int Asb = determinantA.get<4>();        //std::get<2>(determinantI);
+                const double HIA = StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[A_class_a][Asa].get<2>(),vec_bstr_symm_[A_class_b][Asb].get<2>());
+                const double HJA = StringDeterminant::SlaterRules(vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>(),vec_astr_symm_[A_class_a][Asa].get<2>(),vec_bstr_symm_[A_class_b][Asb].get<2>());
+                coupling += HIA * HJA / (E - EA);
+            }
+            double HIJ = H->get(I,J);
+            H->set(I,J,HIJ + coupling);
+            H->set(J,I,HIJ + coupling);
+        }
+    }
 }
 
 void Explorer::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
