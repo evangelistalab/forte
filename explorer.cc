@@ -20,13 +20,14 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     // Explore the space of excited configurations
     explore(options);
 
-    // Diagonalize a small Hamiltonian
-    diagonalize(options);
+    // Optionally diagonalize a small Hamiltonian
+    if(options.get_bool("COMPUTE_ENERGY")){
+        diagonalize(options);
+    }
 }
 
 Explorer::~Explorer()
 {
-    //delete ints_;
 }
 
 void Explorer::startup(Options& options)

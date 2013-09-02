@@ -61,6 +61,10 @@ read_options(std::string name, Options &options)
         /*- The criteria used to screen the strings -*/
         options.add_str("SCREENING_TYPE","MP","MP DET");
 
+        // Options for the diagonalization of the Hamiltonian //
+        /*- Determines if this job will compute the energy -*/
+        options.add_bool("COMPUTE_ENERGY",true);
+
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/

@@ -168,6 +168,17 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"\n\n  Sorting the determinants according to their energy.");
     std::sort(determinants_.begin(),determinants_.end(),compare_det_info);
 
+    // delete determinants that lie above the determinant threshold
+    size_t ndets = determinants_.size();
+    double det_cutoff = min_energy_ + determinant_threshold_;
+    size_t ndets_deleted = 0;
+    while((not determinants_.empty()) and (determinants_.back().get<0>() > det_cutoff)){
+        determinants_.pop_back();
+        ndets_deleted++;
+    }
+    fprintf(outfile,"\n\n  %ld determinants were deleted because their energy is above the determinat threshold.",ndets_deleted);
+
+
     fprintf(outfile,"\n\n  The new reference determinant is:");
     reference_determinant_.print();
     fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
@@ -199,7 +210,6 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
     fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
     fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
-//    fprintf(outfile,"\n  Number of permutations visited    = %ld",num_permutations);
     fprintf(outfile,"\n  Time spent on generating strings  = %f s",time_string);
     fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
     fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
