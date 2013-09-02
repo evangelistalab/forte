@@ -70,6 +70,9 @@ read_options(std::string name, Options &options)
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
         options.add_str("H_TYPE","FIXED_SIZE","FIXED_ENERGY FIXED_SIZE");
 
+        /*- Determines if this job will compute the energy -*/
+        options.add_bool("H_LOWDIN",false);
+
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
 

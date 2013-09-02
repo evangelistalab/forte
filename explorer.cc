@@ -22,7 +22,11 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
 
     // Optionally diagonalize a small Hamiltonian
     if(options.get_bool("COMPUTE_ENERGY")){
-        diagonalize(options);
+        if(options.get_bool("H_LOWDIN")){
+            diagonalize_p_space_lowdin(options);
+        }else{
+            diagonalize_p_space(options);
+        }
     }
 }
 

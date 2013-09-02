@@ -274,27 +274,82 @@ int david2(double **A, int N, int M, double *eps, double **v,
 }
 
 /**
- * Find all the Slater determinants with an energy lower than determinant_threshold_
+ * Diagonalize the
  */
-void Explorer::diagonalize(psi::Options& options)
+void Explorer::diagonalize_p_space(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in a small space");
+    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
+    // 1) Build the Hamiltonian
     boost::timer t_hbuild;
+    SharedMatrix H = build_hamiltonian_parallel(options);
+    fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+    fflush(outfile);
 
+    // 2) Smooth out the couplings of the model and intermediate space
+    boost::timer t_hsmooth;
+    smooth_hamiltonian(H);
+    fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+    fflush(outfile);
+
+    // 3) Setup stuff necessary to diagonalize the Hamiltonian
+    int ndets = H->nrow();
+    int nroots = ndets;
+    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        nroots = std::min(options.get_int("NROOT"),ndets);
+    }
+    SharedMatrix evecs(new Matrix("U",ndets,nroots));
+    SharedVector evals(new Vector("e",nroots));
+
+    // 4) Diagonalize the Hamiltonian
+    boost::timer t_hdiag;
+    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+        davidson_liu(H,evals,evecs,nroots);
+    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+        fprintf(outfile,"\n  Performing full diagonalization.");
+        H->diagonalize(evecs,evals);
+    }
+    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+    fflush(outfile);
+
+    // 5) Print the energy
+    int ndets_print = std::min(nroots,10);
+    for (int i = 0; i < ndets_print; ++ i){
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    }
+    fflush(outfile);
+}
+
+/**
+ * Diagonalize the
+ */
+void Explorer::diagonalize_p_space_lowdin(psi::Options& options)
+{
+    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the P space with Lowdin's contributions from the Q space\n");
+    int root = 0;
     double E = 1.0e100;
     double delta_E = 1.0e10;
     for (int cycle = 0; cycle < 20; ++cycle){
+        // 1) Build the Hamiltonian
+        boost::timer t_hbuild;
         SharedMatrix H = build_hamiltonian_parallel(options);
-
-        lowdin_hamiltonian(H,E);
-
         fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+        fflush(outfile);
 
+        // 2) Add the Lowding contribution to H
+        boost::timer t_hbuild_lowdin;
+        lowdin_hamiltonian(H,E);
+        fprintf(outfile,"\n  Time spent on Lowding corrections = %f s",t_hbuild_lowdin.elapsed());
+        fflush(outfile);
+
+        // 3) Smooth out the couplings of the model and intermediate space
         boost::timer t_hsmooth;
         smooth_hamiltonian(H);
         fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+        fflush(outfile);
 
+        // 4) Setup stuff necessary to diagonalize the Hamiltonian
         int ndets = H->nrow();
         int nroots = ndets;
 
@@ -305,6 +360,7 @@ void Explorer::diagonalize(psi::Options& options)
         SharedMatrix evecs(new Matrix("U",ndets,nroots));
         SharedVector evals(new Vector("e",nroots));
 
+        // 5) Diagonalize the Hamiltonian
         boost::timer t_hdiag;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
@@ -314,19 +370,16 @@ void Explorer::diagonalize(psi::Options& options)
             H->diagonalize(evecs,evals);
         }
         fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+        fflush(outfile);
 
-        delta_E = evals->get(0) - E;
-        E = evals->get(0);
-        int ndets_print = std::min(nroots,10);
-        for (int i = 0; i < ndets_print; ++ i){
-            fprintf(outfile,"\n  Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        }
+        // 5) Print the energy
+        delta_E = evals->get(root) - E;
+        E = evals->get(root);
+        fprintf(outfile,"\n  Cycle %3d  E= %.12f  DE = %.12f",cycle,evals->get(root),std::fabs(delta_E) > 10.0 ? 0 : delta_E);
+        fflush(outfile);
 
         if (std::fabs(delta_E) < options.get_double("E_CONVERGENCE")){
-            int ndets_print = std::min(nroots,10);
-            for (int i = 0; i < ndets_print; ++ i){
-                fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-            }
+            fprintf(outfile,"\n\n  Adaptive CI Energy Root %3d = %.12f Eh",root + 1,evals->get(root));
             fprintf(outfile,"\n  Lowdin iterations converged!\n");
             break;
         }

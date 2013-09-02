@@ -151,8 +151,10 @@ private:
     void screen_mos();
     /// Find the determinants with energy below a given threshold
     void explore(Options &options);
-    /// Diagonalize the Hamiltonian built from a subset of the determinants
-    void diagonalize(Options &options);
+    /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
+    void diagonalize_p_space(psi::Options& options);
+    /// Diagonalize the Hamiltonian in the P space including the Lowdin contribution to the energy
+    void diagonalize_p_space_lowdin(psi::Options& options);
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);
     /// Build the Hamiltonian matrix in parallel
