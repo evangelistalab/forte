@@ -105,6 +105,12 @@ string_list_symm Explorer::compute_strings_screened(vector<double>& epsilon,int 
         half_string_list vec_occ_str = compute_half_strings_screened(true,nocc,nex,occ_weights,"occupied");
         size_t nso = vec_occ_str.size();
         fprintf(outfile," occupied: %ld",nso); fflush(outfile);
+
+        if (nso == 0){
+            fprintf(outfile,"\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
+            break;
+        }
+
         half_string_list vec_vir_str = compute_half_strings_screened(false,nvir,nex,vir_weights,"virtual");
         size_t nsv = vec_vir_str.size();
         fprintf(outfile,", virtual: %ld",nsv); fflush(outfile);
