@@ -119,7 +119,7 @@ private:
     std::vector<double> epsilon_a_qt_;
     /// The beta orbital energies in qt order
     std::vector<double> epsilon_b_qt_;
-    /// Mapping vector from QT to Pitzer
+    /// Mapping vector from QT (energy) to Pitzer (symmetry blocked)
     std::vector<int> qt_to_pitzer_;
     /// A vector that contains all the frozen core
     std::vector<int> frzc_;

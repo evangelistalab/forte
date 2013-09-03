@@ -47,6 +47,8 @@ private:
     double min_energy_;
     /// The maximum value of the energy
     double max_energy_;
+    /// Mapping vector from Pitzer (symmetry blocked) to QT (energy)
+    std::vector<int> pitzer_to_qt_;
 
     // Density of determinants (DOD)
     /// The type of DOD plot

@@ -63,6 +63,21 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
         }
     }
 
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    SharedVector epsilon_a = wfn->epsilon_a();
+    std::vector<std::pair<double,int> > e_mo_pair;
+    for (int h = 0, q = 0; h < epsilon_a->nirrep(); ++h){
+        for (int p = 0; p < epsilon_a->dim(h); ++p){
+            e_mo_pair.push_back(make_pair(epsilon_a->get(h,p),q));
+            q += 1;
+        }
+    }
+
+    std::sort(e_mo_pair.begin(),e_mo_pair.end());
+
+    for (int p = 0; p < e_mo_pair.size(); ++p){
+        pitzer_to_qt_.push_back(e_mo_pair[p].second);
+    }
     dettour_file_ = 0;
     if (write_file_){
         dettour_file_ = new ofstream(dettour_fname_.c_str());
@@ -132,11 +147,11 @@ void Cartographer::accumulate_dettour(int nmo,std::vector<bool>& Ia,std::vector<
 
         if (write_occupation_){
             for (int p = 0; p < nmo; ++p){
-                *dettour_file_ << Ia[p];
+                *dettour_file_ << Ia[pitzer_to_qt_[p]];
             }
             *dettour_file_ << " ";
             for (int p = 0; p < nmo; ++p){
-                *dettour_file_ << Ib[p];
+                *dettour_file_ << Ib[pitzer_to_qt_[p]];
             }
         }
         if (write_det_energy_) *dettour_file_ << boost::format(" %.12f") % det_energy;
