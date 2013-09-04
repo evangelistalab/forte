@@ -1,6 +1,8 @@
 #include "explorer.h"
 
 #include <cmath>
+#include <functional>
+#include <algorithm>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
@@ -314,9 +316,33 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     fflush(outfile);
 
     // 5) Print the energy
-    int ndets_print = std::min(nroots,10);
-    for (int i = 0; i < ndets_print; ++ i){
+    int nroots_print = std::min(nroots,25);
+    for (int i = 0; i < nroots_print; ++ i){
         fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    }
+
+    // 6) Print the major contributions to the eigenvector
+    double significant_threshold = 0.001;
+    double significant_wave_function = 0.95;
+    for (int i = 0; i < nroots_print; ++ i){
+        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        // Identify all contributions with |C_J| > significant_threshold
+        double** C_mat = evecs->pointer();
+        std::vector<std::pair<double,int> > C_J_sorted;
+        for (int J = 0; J < ndets; ++J){
+            if (std::fabs(C_mat[J][i]) > significant_threshold){
+                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+            }
+        }
+        // Sort them and print
+        std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
+        double cum_wfn = 0.0;
+        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
+            int J = C_J_sorted[I].second;
+            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+            cum_wfn += C_mat[J][i] * C_mat[J][i];
+            if (cum_wfn > significant_wave_function) break;
+        }
     }
     fflush(outfile);
 }

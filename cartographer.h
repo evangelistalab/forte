@@ -41,6 +41,12 @@ public:
     Cartographer(Options &options,double min_energy,double max_energy);
     ~Cartographer();
     void accumulate_data(int nmo,std::vector<bool>& Ia,std::vector<bool>& Ib,double det_energy,double a_den_energy,double b_den_energy,int naex,int nbex);
+
+    // Knobs
+    /// Set the name of the file containing the DetTour output
+    void set_dettour_fname(std::string str) {dettour_fname_ = str;}
+    /// set the name of the file containing the density of determinants
+    void set_dod_fname(std::string str) {dod_fname_ = str;}
 private:
     // Class private data
     /// The minimum value of the energy

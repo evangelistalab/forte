@@ -18,7 +18,9 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
       dod_type_(HistogramDOD),
       dod_bin_width_(0.05),
       dod_fname_("density_of_determinants.txt"),
-      dettour_fname_("dettour.txt")
+      dod_file_(0),
+      dettour_fname_("dettour.txt"),
+      dettour_file_(0)
 {
     if (options.get_str("DOD_FORMAT") == "GAUSSIAN"){
         dod_type_ = GaussianDOD;
@@ -63,6 +65,7 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
         }
     }
 
+    // Create the Pitzer to QT mapping
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     SharedVector epsilon_a = wfn->epsilon_a();
     std::vector<std::pair<double,int> > e_mo_pair;
@@ -72,15 +75,9 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
             q += 1;
         }
     }
-
     std::sort(e_mo_pair.begin(),e_mo_pair.end());
-
     for (int p = 0; p < e_mo_pair.size(); ++p){
         pitzer_to_qt_.push_back(e_mo_pair[p].second);
-    }
-    dettour_file_ = 0;
-    if (write_file_){
-        dettour_file_ = new ofstream(dettour_fname_.c_str());
     }
 }
 
@@ -100,17 +97,6 @@ void Cartographer::accumulate_data(int nmo,std::vector<bool>& Ia,std::vector<boo
 void Cartographer::accumulate_dod(double det_energy)
 {
     // Density of determinants
-    // Use 98% of the width to represent the range [min_energy,max_energy] and
-    // add a margin on each side to represent 1% of the range
-//    if (dod_type_ == GaussianDOD){
-//        int position = ndod_bins_margin_ + int(double(ndod_bins_center_) * (det_energy - min_energy_) / (max_energy_ - min_energy_));
-//        int ncontrib = static_cast<int>(dod_contribution_.size());
-//        for (int i = -(ncontrib - 1) / 2, k = 0; i <= (ncontrib - 1) / 2; ++i, ++k){
-//            if (i >= 0 and i < ndod_bins_){
-//                dod_[i] += dod_contribution_[k];
-//            }
-//        }
-//    }
     if (dod_type_ == HistogramDOD){
         int position = ndod_bins_margin_ + int((det_energy - (min_energy_ + 0.5 * dod_bin_width_)) / dod_bin_width_);
         if(position >= 0 and position < ndod_bins_total_){
@@ -122,7 +108,9 @@ void Cartographer::accumulate_dod(double det_energy)
 }
 
 /**
- * Write the occupation number representation of a determinant and its energy
+ * Write the occupation number representation of a determinant and its energy.
+ * If the dettour output file pointer (dettour_file_) is not allocated it will
+ * create a new output file.
  *
  * For occupied strings it returns the sum of the fock matrix elements corresponding
  * to the zeros, e.g. 111010 -> -fock[3][3] - fock[5][5]
@@ -139,6 +127,9 @@ void Cartographer::accumulate_dod(double det_energy)
 void Cartographer::accumulate_dettour(int nmo,std::vector<bool>& Ia,std::vector<bool>& Ib,double det_energy,double a_den_energy,double b_den_energy,int naex,int nbex)
 {
     if(write_file_){
+        if (dettour_file_ == 0){
+            dettour_file_ = new ofstream(dettour_fname_.c_str());
+        }
         if (restrict_excitation_ != 0){
             if(naex + nbex != restrict_excitation_){
                 return;
