@@ -554,10 +554,12 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
                 double HIJ = H->get(I,J);
                 double EI = H->get(I,I);
                 double EJ = H->get(J,J);
+                double EI0 = EI - H->get(0,0);
                 double EJ0 = EJ - H->get(0,0);
-                double factor = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EJ0 - space_m_threshold_));
-                H->set(I,J,factor * HIJ);
-                H->set(J,I,factor * HIJ);
+                double factorI = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EI0 - space_m_threshold_));
+                double factorJ = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EJ0 - space_m_threshold_));
+                H->set(I,J,factorI * factorJ * HIJ);
+                H->set(J,I,factorI * factorJ * HIJ);
             }
         }
     }
