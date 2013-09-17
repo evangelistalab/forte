@@ -549,7 +549,7 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
 
     fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
-        for (int J = ndets_model; J < ndets; ++J){
+        for (int J = 0; J < ndets; ++J){
             if (I != J){
                 double HIJ = H->get(I,J);
                 double EI = H->get(I,I);
@@ -559,7 +559,6 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
                 double factorI = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EI0 - space_m_threshold_));
                 double factorJ = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EJ0 - space_m_threshold_));
                 H->set(I,J,factorI * factorJ * HIJ);
-                H->set(J,I,factorI * factorJ * HIJ);
             }
         }
     }

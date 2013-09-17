@@ -191,16 +191,16 @@ void Explorer::read_info(Options& options)
     }
     space_m_threshold_ = options.get_double("SPACE_M_THRESHOLD");
     space_i_threshold_ = options.get_double("SPACE_I_THRESHOLD");
-    if (space_m_threshold_ > denominator_threshold_){
-        space_m_threshold_ = denominator_threshold_;
-        space_i_threshold_ = denominator_threshold_;
+    if (space_m_threshold_ > determinant_threshold_){
+        space_m_threshold_ = determinant_threshold_;
+        space_i_threshold_ = determinant_threshold_;
         fprintf(outfile,"\n  The model space comprises all the determinants.\n  Modifying the model and intermediate space thresholds.\n");
     }
     if (space_m_threshold_ > space_i_threshold_){
         space_i_threshold_ = space_m_threshold_;
     }
-    if (space_i_threshold_ > denominator_threshold_){
-        space_i_threshold_ = space_m_threshold_;
+    if (space_i_threshold_ > determinant_threshold_){
+        space_i_threshold_ = determinant_threshold_;
         fprintf(outfile,"\n  Changing the value of the intermediate space threshold.\n");
     }
 
