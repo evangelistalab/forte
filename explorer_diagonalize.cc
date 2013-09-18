@@ -32,8 +32,22 @@ inline double clamp(double x, double a, double b)
     return x < a ? a : (x > b ? b : x);
 }
 
+/**
+ * @brief smootherstep
+ * @param edge0
+ * @param edge1
+ * @param x
+ * @return
+ *
+ * This is a smooth step function that is
+ * 0.0 for x <= edge0
+ * 1.0 for x >= edge1
+ */
 inline double smootherstep(double edge0, double edge1, double x)
 {
+    if (edge1 == edge0){
+        return x <= edge0 ? 0.0 : 1.0;
+    }
     // Scale, and clamp x to 0..1 range
     x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
     // Evaluate polynomial
@@ -546,7 +560,7 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
         }
         ndets_model++;
     }
-    H->print();
+//    H->print();
     fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
         for (int J = 0; J < ndets; ++J){
@@ -562,7 +576,7 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
             }
         }
     }
-    H->print();
+//    H->print();
 }
 
 void Explorer::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
