@@ -32,7 +32,7 @@ inline double clamp(double x, double a, double b)
     return x < a ? a : (x > b ? b : x);
 }
 
-inline double smootherstep(double edge0, double edge1, float x)
+inline double smootherstep(double edge0, double edge1, double x)
 {
     // Scale, and clamp x to 0..1 range
     x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
@@ -546,7 +546,7 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
         }
         ndets_model++;
     }
-
+    H->print();
     fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
         for (int J = 0; J < ndets; ++J){
@@ -556,12 +556,13 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
                 double EJ = H->get(J,J);
                 double EI0 = EI - H->get(0,0);
                 double EJ0 = EJ - H->get(0,0);
-                double factorI = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EI0 - space_m_threshold_));
-                double factorJ = 1.0 - smootherstep(0.0,space_i_threshold_-space_m_threshold_,std::fabs(EJ0 - space_m_threshold_));
+                double factorI = 1.0 - smootherstep(space_m_threshold_,space_i_threshold_,EI0);
+                double factorJ = 1.0 - smootherstep(space_m_threshold_,space_i_threshold_,EJ0);
                 H->set(I,J,factorI * factorJ * HIJ);
             }
         }
     }
+    H->print();
 }
 
 void Explorer::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
