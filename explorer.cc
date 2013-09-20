@@ -12,7 +12,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
-    : min_energy_(0.0),ints_(ints)
+    : min_energy_(0.0),ints_(ints),pt2_energy_correction_(0.0)
 {
     // Read data and allocate member objects
     startup(options);
@@ -22,10 +22,14 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
 
     // Optionally diagonalize a small Hamiltonian
     if(options.get_bool("COMPUTE_ENERGY")){
-        if(options.get_bool("H_LOWDIN")){
-            diagonalize_p_space_lowdin(options);
-        }else{
+        if(options.get_str("ENERGY_TYPE") == "SELECT"){
+            diagonalize_selected_space(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "FULL"){
             diagonalize_p_space(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "LOWDIN"){
+            diagonalize_p_space_lowdin(options);
         }
     }
 }
@@ -204,6 +208,7 @@ void Explorer::read_info(Options& options)
         fprintf(outfile,"\n  Changing the value of the intermediate space threshold.\n");
     }
 
+    t2_threshold_ = options.get_double("T2_THRESHOLD");
 
     if (options.get_str("SCREENING_TYPE") == "MP"){
         mp_screening_ = true;
@@ -215,6 +220,7 @@ void Explorer::read_info(Options& options)
     fprintf(outfile,"\n  Denominator threshold        = %.3f (Eh)",denominator_threshold_);
     fprintf(outfile,"\n  Model space threshold        = %.3f (Eh)",space_m_threshold_);
     fprintf(outfile,"\n  Intermediate space threshold = %.3f (Eh)",space_i_threshold_);
+    fprintf(outfile,"\n  Coupling threshold           = %.3f (muEh)",t2_threshold_ * 1000000.0);
 
     fprintf(outfile,"\n  String screening: %s (%s)",mp_screening_ ? "Moller-Plesset denominators" : "excited determinants",options.get_str("SCREENING_TYPE").c_str());
 }

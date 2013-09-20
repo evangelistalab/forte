@@ -68,10 +68,10 @@ read_options(std::string name, Options &options)
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("H_TYPE","FIXED_SIZE","FIXED_ENERGY FIXED_SIZE");
+        options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_bool("H_LOWDIN",false);
+        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN");
 
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
@@ -85,6 +85,9 @@ read_options(std::string name, Options &options)
         /*- The energy threshold for the intermdiate space -*/
         options.add_double("SPACE_I_THRESHOLD",1000.0);
 
+        /*- The energy threshold for the intermdiate space -*/
+        options.add_double("T2_THRESHOLD",0.000001);
+
         /*- The energy threshold for smoothing the Hamiltonian.
          *  Determinants with energy < DET_THRESHOLD - SMO_THRESHOLD will be included in H
          *  Determinants with DET_THRESHOLD - SMO_THRESHOLD < energy < DET_THRESHOLD will be included in H but smoothed
@@ -92,13 +95,18 @@ read_options(std::string name, Options &options)
         options.add_double("SMO_THRESHOLD",0.0);
 
         /*- The method used to smooth the Hamiltonian -*/
-        options.add_str("SMOOTHING_FUNCTION","I","I");
+        options.add_bool("SMOOTH",true);
+
+        /*- The method used to smooth the Hamiltonian -*/
+        options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
         options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",4);
+        /*- The root selected for state-specific computations -*/
+        options.add_int("ROOT",0);
 
         // Options for the Cartographer class //
         /*- Density of determinants format -*/

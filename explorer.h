@@ -103,6 +103,8 @@ private:
     double space_m_threshold_;
     /// The energy threshold (in Hartree) for the intermediate space
     double space_i_threshold_;
+    /// The threshold for screening matrix elements using the density matrix
+    double t2_threshold_;
     /// Type of screening: mp denominators or excited determinants?
     bool mp_screening_;
     /// The energy of the reference determinant (includes the nuclear repulsion term)
@@ -133,6 +135,8 @@ private:
     StringDeterminant reference_determinant_;
     /// The determinant with minimum energy
     StringDeterminant min_energy_determinant_;
+    /// The PT2 energy correction
+    double pt2_energy_correction_;
 
 
     // // The strings are in QT format and are stored using the following structure:
@@ -155,14 +159,23 @@ private:
     void diagonalize_p_space(psi::Options& options);
     /// Diagonalize the Hamiltonian in the P space including the Lowdin contribution to the energy
     void diagonalize_p_space_lowdin(psi::Options& options);
+    /// Diagonalize the Hamiltonian in the main space and include only contributions relevant to each state
+    void diagonalize_selected_space(psi::Options& options);
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);
     /// Build the Hamiltonian matrix in parallel
     SharedMatrix build_hamiltonian_parallel(Options& options);
+    /// Build the Hamiltonian matrix in the model space in parallel
+    SharedMatrix build_model_space_hamiltonian(Options& options);
+    /// Build an Hamiltonian with determinants selected using a threshold
+    SharedMatrix build_select_hamiltonian_roth(Options& options, double E, SharedVector evect);
     /// Smooth the Hamiltonian matrix in the intermediate space
     void smooth_hamiltonian(SharedMatrix H);
+    /// Select the elements in the intermediate space according to the T2 coupling
+    void select_important_hamiltonian(SharedMatrix H);
     /// Fold in the external configurations into the Hamiltonian
     void lowdin_hamiltonian(SharedMatrix H,double E);
+
 
     /// Diagonalize the a matrix using the Davidson-Liu method
     void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);

@@ -304,7 +304,15 @@ void Explorer::diagonalize_p_space(psi::Options& options)
 
     // 2) Smooth out the couplings of the model and intermediate space
     boost::timer t_hsmooth;
-    smooth_hamiltonian(H);
+
+    if (options.get_bool("SELECT")){
+        select_important_hamiltonian(H);
+    }
+
+    if (options.get_bool("SMOOTH")){
+        smooth_hamiltonian(H);
+    }
+
     fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
     fflush(outfile);
 
@@ -560,7 +568,6 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
         }
         ndets_model++;
     }
-//    H->print();
     fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
         for (int J = 0; J < ndets; ++J){
@@ -576,7 +583,45 @@ void Explorer::smooth_hamiltonian(SharedMatrix H)
             }
         }
     }
-//    H->print();
+}
+
+void Explorer::select_important_hamiltonian(SharedMatrix H)
+{
+    int ndets = H->nrow();
+
+    // Partition the Hamiltonian into main and intermediate model space
+    int ndets_model = 0;
+    for (int I = 0; I < ndets; ++I){
+        if (H->get(I,I) - H->get(0,0) > space_m_threshold_){
+            break;
+        }
+        ndets_model++;
+    }
+    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
+
+    // Check if any of the determinants in the model space has a large overlap with the model space
+    size_t ndiscarded = 0;
+    for (int J = ndets_model; J < ndets; ++J){
+        bool is_important = false;
+        for (int I = 0; I < ndets_model; ++I){
+            double HIJ = H->get(I,J);
+            double EI = H->get(I,I);
+            double EJ = H->get(J,J);
+            double T2 = std::pow(HIJ / (EI - EJ),2.0);
+            if (T2 > t2_threshold_){
+                is_important = true;
+            }
+        }
+        if (not is_important){
+            // Eliminate this determinant
+            for (int I = 0; I < ndets; ++I){
+                H->set(I,J,0);
+                H->set(J,I,0);
+            }
+            ndiscarded += 1;
+        }
+    }
+    fprintf(outfile,"\n\n  %ld states were discarded because the coupling to the main space is less than %f muE_h",ndiscarded,t2_threshold_ * 1000000.0);
 }
 
 void Explorer::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
