@@ -24,6 +24,7 @@
 #define _string_determinant_h_
 
 #include "integrals.h"
+#include "excitation_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -31,12 +32,11 @@ namespace psi{ namespace libadaptive{
  * A class to store a Slater determinant.
  *
  * The determinant is represented by a pair of alpha/beta strings
- * that specify the occupation of each molecular orbital.
+ * that specify the occupation of each molecular orbital
+ * (including frozen core and virtual orbitals).
  *
  * |Det> = |Ia> x |Ib>
  *
- * Frozen core and virtual orbital are not included in the strings
- * and are assumed to be doubly occupied and empty, respectively.
  * The strings are represented using an array of bits, and the
  * following convention is used here:
  * true <-> 1
@@ -55,6 +55,8 @@ public:
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     StringDeterminant(std::vector<bool> occupation,bool print_det = false);
+    /// Construct an excited determinant of a given reference
+    StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
     /// Copy constructor
     StringDeterminant(const StringDeterminant& det);
     /// Assignment operator
@@ -79,6 +81,10 @@ public:
     void print();
     /// Compute the energy of a Slater determinant
     double energy();
+    /// Compute the one-electron contribution to the energy of a Slater determinant
+    double one_electron_energy();
+    /// Compute the kinetic energy of a Slater determinant
+    double kinetic_energy();
     /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_energy(const StringDeterminant& reference);
     /// Compute the energy of a Slater determinant with respect to a given reference

@@ -18,7 +18,11 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     startup(options);
 
     // Explore the space of excited configurations
-    explore(options);
+    if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
+        explore_original(options);
+    }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
+        explore_singles(options);
+    }
 
     // Optionally diagonalize a small Hamiltonian
     if(options.get_bool("COMPUTE_ENERGY")){
@@ -279,6 +283,8 @@ void Explorer::screen_mos()
 //        int pa = std::get<2>(sorted_ea[p]);
 //        int pb = std::get<2>(sorted_eb[p]);
         //if (std::max(std::fabs(ea),std::fabs(eb)) < denominator_threshold_ * 1.25)
+
+
         bool frozen = false;
         fprintf(outfile,"\n %6d    %3d %12.6f  %1d    %3d %12.6f  %1d",p,ha,ea,p < nalpha_,hb,eb,p < nbeta_);
         if (std::find(frzc_.begin(), frzc_.end(), pa) != frzc_.end()){

@@ -52,6 +52,11 @@ read_options(std::string name, Options &options)
         /*- The active orbitals per irrep.  This input is alternative to FROZEN_UOCC. -*/
         options.add("ACTIVE",new ArrayType());
 
+        /*- The algorithm used to screen the determinant
+         *  - DENOMINATORS uses the MP denominators to screen strings
+         *  - SINGLES generates the space by a series of single excitations -*/
+        options.add_str("EXPLORER_ALGORITHM","DENOMINATORS","DENOMINATORS SINGLES");
+
         /*- The energy threshold for the determinant energy in Hartree -*/
         options.add_double("DET_THRESHOLD",1.0);
 

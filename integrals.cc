@@ -4,6 +4,7 @@
 #include <libiwl/iwl.h>
 #include <libtrans/integraltransform.h>
 #include <libpsio/psio.hpp>
+#include <libmints/matrix.h>
 
 #include "integrals.h"
 
@@ -38,6 +39,7 @@ void ExplorerIntegrals::startup()
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     nirrep_ = wfn->nirrep();
     nmo_ = wfn->nmo();
+    nso_ = wfn->nso();
 
     // For now, we'll just transform for closed shells and generate all integrals.
     std::vector<boost::shared_ptr<MOSpace> > spaces;
@@ -55,6 +57,7 @@ void ExplorerIntegrals::cleanup()
 {
     delete ints_;
     delete[] one_electron_integrals;
+    delete[] diagonal_kinetic_energy_integrals;
     delete[] two_electron_integrals;
     delete[] diagonal_one_electron_integrals;
     delete[] diagonal_c_integrals;
@@ -67,19 +70,53 @@ void ExplorerIntegrals::read_one_electron_integrals()
 {
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals = new double[nmo_ * nmo_];
+    diagonal_kinetic_energy_integrals = new double[nmo_];
     fock_matrix_alpha = new double[nmo_ * nmo_];
     fock_matrix_beta = new double[nmo_ * nmo_];
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals[pq] = 0.0;
     double* packed_oei = new double[num_oei];
+
+    // Read the one-electron integrals (restricted integrals, T + V)
     for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-    // restricted integrals
     iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,outfile);
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = p; q < nmo_; ++q){
+    for (int p = 0; p < nmo_; ++p){
+        for (int q = p; q < nmo_; ++q){
             one_electron_integrals[p * nmo_ + q] = one_electron_integrals[q * nmo_ + p] = packed_oei[p + ioff[q]];
         }
     }
     delete[] packed_oei;
+
+    int num_oei_so = INDEX2(nso_ - 1, nso_ - 1) + 1;
+    for (size_t p = 0; p < nmo_; ++p) diagonal_kinetic_energy_integrals[p] = 0.0;
+    double* packed_oei_so = new double[num_oei_so];
+
+    // Read the kinetic energy integrals (restricted integrals, T)
+    for (size_t pq = 0; pq < num_oei_so; ++pq) packed_oei_so[pq] = 0.0;
+    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,1,outfile);
+
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    SharedMatrix Ca = wfn->Ca();
+    Dimension mopi = Ca->colspi();
+    Dimension sopi = Ca->rowspi();
+
+    // Transform the SO integrals to the MO basis
+    int q = 0;
+    int rho = 0;
+    for (int h = 0; h < nirrep_; ++h){
+        double** c = Ca->pointer(h);
+        for (int p = 0; p < mopi[h]; ++p){
+            double t_int = 0.0;
+            for (int mu = 0; mu < sopi[h]; ++mu){
+                for (int nu = 0; nu < sopi[h]; ++nu){
+                    t_int += packed_oei_so[INDEX2(rho + mu,rho + nu)] * c[mu][p] * c[nu][p];
+                }
+            }
+            diagonal_kinetic_energy_integrals[q] = t_int;
+            q++;
+        }
+        rho += sopi[h];
+    }
+    delete[] packed_oei_so;
 }
 
 void ExplorerIntegrals::read_two_electron_integrals()
@@ -141,6 +178,35 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
                 if (Ia[k]) {
                     fock_matrix_beta[p * nmo_ + q] += rtei(p,q,k,k);
                 }
+            }
+        }
+    }
+}
+
+void ExplorerIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vector<double>, std::vector<double> > &fock_diagonals)
+{
+    std::vector<double>& fock_diagonal_alpha = fock_diagonals.first;
+    std::vector<double>& fock_diagonal_beta = fock_diagonals.second;
+    for(size_t p = 0; p < nmo_; ++p){
+        // Builf Fock Diagonal alpha-alpha
+        fock_diagonal_alpha[p] = roei(p,p);
+        // Add the non-frozen alfa part, the forzen core part is already included in oei
+        for (int k = 0; k < nmo_; ++k) {
+            if (Ia[k]) {
+                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+            }
+            if (Ib[k]) {
+                fock_diagonal_alpha[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+            }
+        }
+        fock_diagonal_beta[p] = roei(p,p);
+        // Add the non-frozen alfa part, the forzen core part is already included in oei
+        for (int k = 0; k < nmo_; ++k) {
+            if (Ib[k]) {
+                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+            }
+            if (Ia[k]) {
+                fock_diagonal_beta[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
         }
     }

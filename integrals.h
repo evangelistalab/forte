@@ -27,7 +27,9 @@ public:
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
     /// The one-electron integrals
-    double roei(size_t p,size_t q) {return one_electron_integrals[p * nmo_ + q];}
+    double roei(int p,int q) {return one_electron_integrals[p * nmo_ + q];}
+    /// The diagonal part of the kinetic energy integrals
+    double diag_rkei(int p) {return diagonal_kinetic_energy_integrals[p];}
     /// The diagonal one-electron integrals
     double diag_roei(int p) {return diagonal_one_electron_integrals[p];}
     /// The diagonal fock matrix integrals
@@ -42,12 +44,15 @@ public:
     double diag_ce_rtei(int p, int q) {return diagonal_ce_integrals[p * nmo_ + q];}
     /// Make Fock matrix with respect to a given determinant
     void make_fock_matrix(bool* Ia, bool* Ib);
+    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
+    void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
 private:
     // Class data
     psi::Options& options_;
     IntegralTransform* ints_;
     int nirrep_;
     int nmo_;
+    int nso_;
     size_t num_oei; // Number of one electron integrals
     size_t num_tei; // Number of two electron integrals
     double core_energy_;  // Frozen-core energy
@@ -64,6 +69,7 @@ private:
     int pair_irrep(int p, int q) {return pair_irrep_map[p * nmo_ + q];}
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
     double* one_electron_integrals;
+    double* diagonal_kinetic_energy_integrals;
     double* two_electron_integrals;
     double* diagonal_one_electron_integrals;
     double* diagonal_c_integrals;

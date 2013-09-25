@@ -155,6 +155,8 @@ private:
     void screen_mos();
     /// Find the determinants with energy below a given threshold
     void explore(Options &options);
+    void explore_original(psi::Options& options);
+    void explore_singles(psi::Options& options);
     /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
     void diagonalize_p_space(psi::Options& options);
     /// Diagonalize the Hamiltonian in the P space including the Lowdin contribution to the energy

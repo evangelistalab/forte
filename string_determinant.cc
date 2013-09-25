@@ -64,6 +64,23 @@ StringDeterminant::StringDeterminant(const StringDeterminant& det)
     }
 }
 
+StringDeterminant::StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex)
+    : nmo_(ref.nmo_)
+{
+    allocate();
+    for (int n = 0; n < 2 * nmo_; ++n){
+        alfa_bits_[n] = ref.alfa_bits_[n];
+    }
+    for (int aex = 0; aex < ex.naex_; ++aex){
+        alfa_bits_[ex.aann(aex)] = false;
+        alfa_bits_[ex.acre(aex)] = true;
+    }
+    for (int bex = 0; bex < ex.nbex_; ++bex){
+        beta_bits_[ex.bann(bex)] = false;
+        beta_bits_[ex.bcre(bex)] = true;
+    }
+}
+
 StringDeterminant& StringDeterminant::operator=(const StringDeterminant& rhs) {
     if(nmo_ != rhs.nmo_){
         deallocate();
@@ -148,6 +165,33 @@ double StringDeterminant::energy()
     return(matrix_element);
 }
 
+/**
+ * Compute the kinetic energy of this determinant
+ * @return the kinetic energy
+ */
+double StringDeterminant::one_electron_energy()
+{
+    double matrix_element = 0.0;
+    for(int p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
+        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
+    }
+    return(matrix_element);
+}
+
+/**
+ * Compute the kinetic energy of this determinant
+ * @return the kinetic energy
+ */
+double StringDeterminant::kinetic_energy()
+{
+    double matrix_element = 0.0;
+    for(int p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p]) matrix_element += ints_->diag_rkei(p);
+        if(beta_bits_[p]) matrix_element += ints_->diag_rkei(p);
+    }
+    return(matrix_element);
+}
 
 /**
  * Compute the energy of this determinant with respect to a reference determinant
