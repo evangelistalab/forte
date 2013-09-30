@@ -803,12 +803,6 @@ std::vector<std::vector<std::pair<int,double> > > Explorer::build_hamiltonian_di
         }
         fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
         fprintf(outfile,"\n  This requires a total of %d determinants",ndets);
-        int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
-        if (ndets > max_ndets_fixed_energy){
-            fprintf(outfile,"\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
-                    "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",ndets,max_ndets_fixed_energy);
-            ndets = max_ndets_fixed_energy;
-        }
     }
 
     std::vector<std::vector<std::pair<int,double> > > H_sparse;
