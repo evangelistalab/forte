@@ -46,6 +46,8 @@ public:
     void make_fock_matrix(bool* Ia, bool* Ib);
     /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
     void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
+    void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
 private:
     // Class data
     psi::Options& options_;

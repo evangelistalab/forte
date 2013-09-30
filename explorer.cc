@@ -1,4 +1,4 @@
-    #include <cmath>
+#include <cmath>
 
 #include <libpsio/psio.hpp>
 #include <libmints/wavefunction.h>
@@ -34,6 +34,9 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         }else
         if(options.get_str("ENERGY_TYPE") == "LOWDIN"){
             diagonalize_p_space_lowdin(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "SPARSE"){
+            diagonalize_p_space_direct(options);
         }
     }
 }

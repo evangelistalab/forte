@@ -376,7 +376,6 @@ int StringDeterminant::excitation_level(const bool* Ia,const bool* Ib)
  */
 double StringDeterminant::slater_rules(StringDeterminant& rhs)
 {
-    double matrix_element = 0.0;
     bool* Ia = alfa_bits_;
     bool* Ib = beta_bits_;
     bool* Ja = rhs.alfa_bits_;
@@ -389,11 +388,12 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
     for (int n = 0; n < nmo_; ++n) {
         if (Ia[n] != Ja[n]) nadiff++;
         if (Ib[n] != Jb[n]) nbdiff++;
-        if (nadiff + nbdiff > 4) return 0.0; // Get our of this as soon as possible
+        if (nadiff + nbdiff > 4) return 0.0; // Get out of this as soon as possible
     }
     nadiff /= 2;
     nbdiff /= 2;
 
+    double matrix_element = 0.0;
     // Slater rule 1 PhiI = PhiJ
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element = ints_->frozen_core_energy();

@@ -76,7 +76,7 @@ read_options(std::string name, Options &options)
         options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN");
+        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE");
 
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);

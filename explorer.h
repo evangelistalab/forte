@@ -157,8 +157,11 @@ private:
     void explore(Options &options);
     void explore_original(psi::Options& options);
     void explore_singles(psi::Options& options);
+    void explore_singles_sequential(psi::Options& options);
     /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
     void diagonalize_p_space(psi::Options& options);
+    /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
+    void diagonalize_p_space_direct(psi::Options& options);
     /// Diagonalize the Hamiltonian in the P space including the Lowdin contribution to the energy
     void diagonalize_p_space_lowdin(psi::Options& options);
     /// Diagonalize the Hamiltonian in the main space and include only contributions relevant to each state
@@ -171,6 +174,8 @@ private:
     SharedMatrix build_model_space_hamiltonian(Options& options);
     /// Build an Hamiltonian with determinants selected using a threshold
     SharedMatrix build_select_hamiltonian_roth(Options& options, double E, SharedVector evect);
+    /// Build an Hamiltonian with determinants selected using a threshold and storing only the non-zero elements
+    std::vector<std::vector<std::pair<int,double> > > build_hamiltonian_direct(Options& options);
     /// Smooth the Hamiltonian matrix in the intermediate space
     void smooth_hamiltonian(SharedMatrix H);
     /// Select the elements in the intermediate space according to the T2 coupling
@@ -181,6 +186,8 @@ private:
 
     /// Diagonalize the a matrix using the Davidson-Liu method
     void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
+    /// Diagonalize the a sparse matrix using the Davidson-Liu method
+    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
     void examine_all(Options& options);
     /// Compute perturbative corrections to the energy
     void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
