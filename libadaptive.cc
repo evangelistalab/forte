@@ -14,6 +14,8 @@
 
 INIT_PLUGIN
 
+void test_davidson();
+
 namespace psi{ namespace libadaptive{
 
 extern "C" int
@@ -138,7 +140,6 @@ read_options(std::string name, Options &options)
     }
     return true;
 }
-
 
 extern "C" PsiReturnType
 libadaptive(Options &options)

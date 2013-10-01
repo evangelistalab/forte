@@ -735,6 +735,16 @@ void StringDeterminant::SlaterOPDM(const std::vector<bool>& Ia,const std::vector
     }
 }
 
+void StringDeterminant::SlaterdiagOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,std::vector<double>& Da,std::vector<double>& Db,double w)
+{
+    // Case 1: PhiI = PhiJ
+    int nmo = static_cast<int>(Ia.size());
+    for (int n = 0; n < nmo; ++n) {
+        if (Ia[n])  Da[n] += w;
+        if (Ib[n])  Db[n] += w;
+    }
+}
+
 //double SlaterRules(StringDeterminant& PhiI, StringDeterminant& PhiJ,boost::shared_ptr<Integrals>& ints)
 //{
 //    double matrix_element = 0.0;
