@@ -6,6 +6,7 @@ using namespace std;
 using namespace psi;
 
 #include <psi4-dec.h>
+#include <libmints/matrix.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -643,6 +644,97 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
     }
     return(matrix_element);
 }
+
+/**
+ * Compute the S^2 matrix element of the Hamiltonian between this determinant and a given one
+ * @param rhs
+ * @return
+ */
+double StringDeterminant::Spin2(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb)
+{
+    double matrix_element = 0.0;
+
+    int nadiff = 0;
+    int nbdiff = 0;
+    int na = 0;
+    int nb = 0;
+    int npair = 0;
+    int nmo = static_cast<int>(Ia.size());
+    // Count how many differences in mos are there and the number of alpha/beta electrons
+    for (int n = 0; n < nmo; ++n) {
+        if (Ia[n] != Ja[n]) nadiff++;
+        if (Ib[n] != Jb[n]) nbdiff++;
+        if (Ia[n]) na++;
+        if (Ib[n]) nb++;
+        if ((Ia[n] and Ib[n]) and (Ja[n] and Jb[n])) npair += 1;
+    }
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    double Ms = 0.5 * static_cast<double>(na - nb);
+
+    // Slater rule 1 PhiI = PhiJ
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
+    }
+
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Diagonal contribution
+        int i = 0;
+        int j = 0;
+
+        for(int p = 0; p < nmo; ++p){
+            if((Ib[p] == Ja[p]) and Ja[p]) i = p;
+            if((Ia[p] == Jb[p]) and Jb[p]) j = p;
+        }
+        double sign = SlaterSign(Ja,i) * SlaterSign(Jb,j) * SlaterSign(Ib,i) * SlaterSign(Ia,j);
+        matrix_element -= sign;
+    }
+    return(matrix_element);
+}
+
+void StringDeterminant::SlaterOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb,SharedMatrix Da,SharedMatrix Db,double w)
+{
+    double sign = 1.0;
+    int nmo = static_cast<int>(Ia.size());
+
+    int nadiff = 0;
+    int nbdiff = 0;
+    // Count how many differences in mos are there and the number of alpha/beta electrons
+    for (int n = 0; n < nmo; ++n) {
+        if (Ia[n] != Ja[n]) nadiff++;
+        if (Ib[n] != Jb[n]) nbdiff++;
+    }
+
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    // Case 1: PhiI = PhiJ
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        for (int n = 0; n < nmo; ++n) {
+            if (Ia[n])  Da->add(n,n,w);
+            if (Ib[n])  Db->add(n,n,w);
+        }
+    }
+    // Case 2: PhiI = a+ i PhiJ
+    int i,a;
+    if ((nadiff == 1) and (nbdiff == 0)) {
+        for (int n = 0; n < nmo; ++n) {
+            if ((Ia[n] != Ja[n]) and Ja[n]) i = n;
+            if ((Ia[n] != Ja[n]) and Ia[n]) a = n;
+        }
+        Da->add(i,a,w * SlaterSign(Ia,a) * SlaterSign(Ja,i));
+    }
+    if ((nadiff == 0) and (nbdiff == 1)) {
+        for (int n = 0; n < nmo; ++n) {
+            if ((Ib[n] != Jb[n]) and Jb[n]) i = n;
+            if ((Ib[n] != Jb[n]) and Ib[n]) a = n;
+        }
+        Db->add(i,a,w * SlaterSign(Ib,a) * SlaterSign(Jb,i));
+    }
+}
+
 //double SlaterRules(StringDeterminant& PhiI, StringDeterminant& PhiJ,boost::shared_ptr<Integrals>& ints)
 //{
 //    double matrix_element = 0.0;

@@ -98,6 +98,10 @@ public:
     static void set_ints(ExplorerIntegrals* ints) {ints_ = ints;}
     /// Compute the matrix element of the Hamiltonian between two Slater determinants
     static double SlaterRules(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb);
+    /// Compute the matrix element of the S^2 operator between two Slater determinants
+    static double Spin2(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb);
+    /// Compute the one-particle density matrix contribution from a pair of determinants
+    static void SlaterOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb,SharedMatrix Da,SharedMatrix Db,double w);
 private:
     // Functions
     /// Used to allocate the memory for the arrays

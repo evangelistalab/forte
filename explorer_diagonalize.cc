@@ -340,7 +340,33 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     // 5) Print the energy
     int nroots_print = std::min(nroots,25);
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        double S2 = 0.0;
+        int num_sig = ndets;
+        double norm = 0.0;
+        double** C_mat = evecs->pointer();
+
+        for (int I = 0; I < num_sig; ++I){
+            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+            for (int J = 0; J < num_sig; ++J){
+                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+                if (std::fabs(C_mat[I][i] * C_mat[J][i]) > 1.0e-12){
+                    const double S2IJ = StringDeterminant::Spin2(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
+                    S2 += C_mat[I][i] * S2IJ * C_mat[J][i];
+                }
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+        S2 /= norm;
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV (S^2 = %f)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2);
+
     }
 
     // 6) Print the major contributions to the eigenvector
@@ -355,18 +381,52 @@ void Explorer::diagonalize_p_space(psi::Options& options)
             if (std::fabs(C_mat[J][i]) > significant_threshold){
                 C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
             }
-        }
+        }        
         // Sort them and print
         std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
         double cum_wfn = 0.0;
+        int num_sig = 0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
             fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
+            num_sig++;
             if (cum_wfn > significant_wave_function) break;
         }
+
+        SharedMatrix Da(new Matrix(nmo_,nmo_));
+        SharedMatrix Db(new Matrix(nmo_,nmo_));
+        double norm = 0.0;
+        for (int I = 0; I < ndets; ++I){
+            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+            for (int J = 0; J < ndets; ++J){
+                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+                double w = C_mat[I][i] * C_mat[J][i];
+                if (w > 1.0e-12){
+                    StringDeterminant::SlaterOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>(),
+                                              Da,Db,w);
+                }
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+        fprintf(outfile,"\n  Occupation numbers");
+        for (int h = 0, p = 0; h < nirrep_; ++h){
+            for (int n = 0; n < nmopi_[h]; ++n){
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da->get(n,n),Db->get(n,n));
+                p += 1;
+            }
+        }
+
+        fflush(outfile);
     }
-    fflush(outfile);
 }
 
 /**
@@ -769,6 +829,36 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
+        }
+        SharedMatrix Da(new Matrix(nmo_,nmo_));
+        SharedMatrix Db(new Matrix(nmo_,nmo_));
+        double norm = 0.0;
+        for (int I = 0; I < ndets; ++I){
+            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+            for (int J = 0; J < ndets; ++J){
+                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+                double w = C_mat[I][i] * C_mat[J][i];
+                if (w > 1.0e-12){
+                    StringDeterminant::SlaterOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>(),
+                                              Da,Db,w);
+                }
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+        fprintf(outfile,"\n  Occupation numbers");
+        for (int h = 0, p = 0; h < nirrep_; ++h){
+            for (int n = 0; n < nmopi_[h]; ++n){
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da->get(n,n),Db->get(n,n));
+                p += 1;
+            }
         }
     }
     fflush(outfile);

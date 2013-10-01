@@ -134,8 +134,6 @@ void Explorer::explore_singles(psi::Options& options)
                         }
 
                         if (good_determinants.find(ab_str) == good_determinants.end()){
-//                        if(nonredundant_determinants.find(ia_ex) == nonredundant_determinants.end()){
-//                            nonredundant_determinants.insert(ia_ex);
                             good_determinants[ab_str] = num_dets_visited;
                             new_elements.push_back(boost::make_tuple(absolute_energy,irrep_ia_ex,ia_ex));
                             if ((relative_energy < determinant_threshold_) and (irrep_ia_ex == wavefunction_symmetry_)){
@@ -182,12 +180,7 @@ void Explorer::explore_singles(psi::Options& options)
                         }
 
                         if (good_determinants.find(ab_str) == good_determinants.end()){
-//                        if(nonredundant_determinants.find(ia_ex) == nonredundant_determinants.end()){
-//                            nonredundant_determinants.insert(ia_ex);
                             good_determinants[ab_str] = num_dets_visited;
-
-//                        if(nonredundant_determinants.find(ia_ex) == nonredundant_determinants.end()){
-//                            nonredundant_determinants.insert(ia_ex);
                             new_elements.push_back(boost::make_tuple(absolute_energy,irrep_ia_ex,ia_ex));
                             if ((relative_energy < determinant_threshold_) and (irrep_ia_ex == wavefunction_symmetry_)){
                                 num_dets_accepted_ex++;
