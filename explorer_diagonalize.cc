@@ -719,7 +719,7 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
     double* eps = Eigenvalues->pointer();
     double** v = Eigenvectors->pointer();
     double cutoff = 1.0e-10;
-    int print = 0;
+    int print = 1;
 
     int i, j, k, L, I;
     double minimum;
@@ -859,8 +859,8 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
             norm = sqrt(norm);
             for(I=0; I < N; I++) {
                 f[k][I] /= norm;
-//                if(norm > 1e-6) f[k][I] /= norm;
-//                else f[k][I] = 0.0;
+                if(norm > 1e-6) f[k][I] /= norm;
+                else f[k][I] = 0.0;
             }
         }
 
@@ -973,7 +973,6 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
     free(lambda_old);
 
     return converged;
-
 }
 
 }} // EndNamespaces
