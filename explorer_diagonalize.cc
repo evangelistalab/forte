@@ -615,8 +615,9 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
         }
-        SharedMatrix Da(new Matrix(nmo_,nmo_));
-        SharedMatrix Db(new Matrix(nmo_,nmo_));
+
+        std::vector<double> Da(nmo_,0.0);
+        std::vector<double> Db(nmo_,0.0);
         double norm = 0.0;
         for (int I = 0; I < ndets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
@@ -624,24 +625,25 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
             const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
             const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-            for (int J = 0; J < ndets; ++J){
-                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
-                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
-                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
-                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
-                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
-                double w = C_mat[I][i] * C_mat[J][i];
-                if (w > 1.0e-12){
-                    StringDeterminant::SlaterOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>(),
-                                              Da,Db,w);
-                }
+            double w = C_mat[I][i] * C_mat[I][i];
+            if (w > 1.0e-12){
+                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da,Db,w);
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }
+        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
+        for (int p = 0; p < nmo_; ++p){
+            Da[p] /= norm;
+            Db[p] /= norm;
+        }
         fprintf(outfile,"\n  Occupation numbers");
+        double na = 0.0;
+        double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
             for (int n = 0; n < nmopi_[h]; ++n){
-                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da->get(n,n),Db->get(n,n));
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da[p],Db[p]);
+                na += Da[p];
+                nb += Db[p];
                 p += 1;
             }
         }
