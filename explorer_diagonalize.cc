@@ -95,19 +95,6 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     SharedMatrix evecs(new Matrix("U",ndets,nroots));
     SharedVector evals(new Vector("e",nroots));
 
-    // BEGIN DEBUGGING
-    // Write the Hamiltonian to disk
-    fprintf(outfile,"\n\n  WRITING FILE TO DISK...");
-    fflush(outfile);
-    ofstream of("ham.dat", ios::binary | ios::out);
-    of.write(reinterpret_cast<char*>(&ndets),sizeof(int));
-    double** H_mat = H->pointer();
-    of.write(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
-    of.close();
-    fprintf(outfile," DONE.");
-    fflush(outfile);
-    // END DEBUGGING
-
     // 4) Diagonalize the Hamiltonian
     boost::timer t_hdiag;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
@@ -1001,6 +988,18 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
 //R->gemm(false,false,1.0,Hb,alpha,0.0);
 //R->gemm(false,false,-1.0,b,alpha,1.0);
 
+//// BEGIN DEBUGGING
+//// Write the Hamiltonian to disk
+//fprintf(outfile,"\n\n  WRITING FILE TO DISK...");
+//fflush(outfile);
+//ofstream of("ham.dat", ios::binary | ios::out);
+//of.write(reinterpret_cast<char*>(&ndets),sizeof(int));
+//double** H_mat = H->pointer();
+//of.write(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
+//of.close();
+//fprintf(outfile," DONE.");
+//fflush(outfile);
+//// END DEBUGGING
 
 
 

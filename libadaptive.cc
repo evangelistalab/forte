@@ -84,7 +84,7 @@ read_options(std::string name, Options &options)
         options.add_int("NDETS",100);
 
         /*- The maximum dimension of the Hamiltonian -*/
-        options.add_int("MAX_NDETS",20000);
+        options.add_int("MAX_NDETS",1000000);
 
         /*- The energy threshold for the model space -*/
         options.add_double("SPACE_M_THRESHOLD",1000.0);
