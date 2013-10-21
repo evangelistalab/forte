@@ -74,19 +74,6 @@ public:
     int acre(int n) const {return alpha_ops_[2 * n + 1];}
     int bann(int n) const {return beta_ops_[2 * n];}
     int bcre(int n) const {return beta_ops_[2 * n + 1];}
-
-//    inline bool operator< (const ExcitationDeterminant& other) const{
-//        if (naex_ == other.naex_){
-//            if (nbex_ == other.nbex_){
-//                if (alpha_ops_ == other.alpha_ops_){
-//                    return beta_ops_ < other.beta_ops_;
-//                }
-//                return alpha_ops_ < other.alpha_ops_;
-//            }
-//            return nbex_ < other.nbex_;
-//        }
-//        return naex_ < other.naex_;
-//    }
 private:
     // Data
     /// The alpha excitation level

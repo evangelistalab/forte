@@ -36,17 +36,11 @@ void Explorer::explore_singles_sequential(psi::Options& options)
     int navir = nmo_ - naocc - nfrzc - nfrzv;
     int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
 
-    //    StringDeterminant ref(reference_determinant_);
-    //    fprintf(outfile,"\n\n  The reference determinant is:");
-    //    ref.print();
     ExcitationDeterminant zero_ex;
 
-    std::set<ExcitationDeterminant> nonredundant_determinants;
-    size_t nastr = 0;
-    size_t nbstr = 0;
+//    boost::unordered_map<std::vector<short int>, size_t> alpha_strings_map;
+//    boost::unordered_map<std::vector<short int>, size_t> beta_strings_map;
 
-    boost::unordered_map<std::vector<short int>, size_t> alpha_strings_map;
-    boost::unordered_map<std::vector<short int>, size_t> beta_strings_map;
     boost::unordered_map<std::pair<size_t,size_t>, size_t> good_determinants;
     std::pair<std::vector<double>,std::vector<double> > fock_diagonals;
     std::vector<double> fock_diagonal_alpha(nmo_,0.0);
@@ -210,6 +204,24 @@ void Explorer::explore_singles_sequential(psi::Options& options)
     }
 
     double time_dets = t_dets.elapsed();
+
+
+    // Convert to a string representation
+
+    //    vector<bool> bits(I,I + nmo_);
+    //    int h = string_symmetry(I);
+
+    //    // set the alpha/beta strings and compute the energy of this determinant
+    //    // Copy the string and translate it to Pitzer ordering
+    //    for (int p = 0; p < nmo_; ++p) Im[p] = I[p];
+    //    det.set_bits(Ia,Ib);
+    //    double exc_energy = det.excitation_energy(reference_determinant_);
+
+    //    int exc_class = excitation_class(nex,h);
+
+    //    if(mp_screening_){
+    //        vec_str[exc_class].push_back(boost::make_tuple(eo + ev,exc_energy,bits));
+
 
     fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
     //    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);

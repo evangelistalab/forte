@@ -673,7 +673,7 @@ std::vector<std::vector<std::pair<int,double> > > Explorer::build_hamiltonian_di
 
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
-    //    #pragma omp parallel for schedule(dynamic)
+    #pragma omp parallel for schedule(dynamic)
     for (int I = 0; I < ndets; ++I){
         std::vector<std::pair<int,double> > H_row;
         boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
@@ -696,6 +696,7 @@ std::vector<std::vector<std::pair<int,double> > > Explorer::build_hamiltonian_di
                 }
             }
         }
+        #pragma omp critical
         H_sparse.push_back(H_row);
     }
 

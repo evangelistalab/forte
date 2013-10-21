@@ -36,12 +36,8 @@ void Explorer::explore_singles(psi::Options& options)
     int navir = nmo_ - naocc - nfrzc - nfrzv;
     int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
 
-//    StringDeterminant ref(reference_determinant_);
-//    fprintf(outfile,"\n\n  The reference determinant is:");
-//    ref.print();
-    ExcitationDeterminant zero_ex;
 
-    std::set<ExcitationDeterminant> nonredundant_determinants;
+    ExcitationDeterminant zero_ex;
     size_t nastr = 0;
     size_t nbstr = 0;
     boost::unordered_map<std::vector<short int>, size_t> alpha_strings_map;
