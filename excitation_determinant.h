@@ -23,6 +23,7 @@
 #ifndef _excitation_determinant_h_
 #define _excitation_determinant_h_
 
+#include <algorithm>
 #include <boost/array.hpp>
 #include "integrals.h"
 
@@ -55,9 +56,23 @@ public:
     void print();
 
     /// Add an alpha excitation
-    void add_alpha_ex(int i,int a) {alpha_ops_.push_back(i); alpha_ops_.push_back(a); naex_ += 1;}
-    /// Add an alpha excitation
-    void add_beta_ex(int i,int a) {beta_ops_.push_back(i); beta_ops_.push_back(a); nbex_ += 1;}
+    void add_alpha_ex(short int i,short int a)
+    {
+        std::vector<short int>::iterator it = std::lower_bound(alpha_ops_.begin(), alpha_ops_.end(), i,std::greater<short int>()); // find proper position in descending order
+        alpha_ops_.insert( it, i ); // insert before iterator it
+        it = std::lower_bound(alpha_ops_.begin(), alpha_ops_.end(), a,std::greater<short int>()); // find proper position in descending order
+        alpha_ops_.insert( it, a ); // insert before iterator it
+        naex_ += 1;
+    }
+    /// Add a beta excitation
+    void add_beta_ex(short int i,short int a)
+    {
+        std::vector<short int>::iterator it = std::lower_bound(beta_ops_.begin(), beta_ops_.end(), i,std::greater<short int>()); // find proper position in descending order
+        beta_ops_.insert( it, i ); // insert before iterator it
+        it = std::lower_bound(beta_ops_.begin(), beta_ops_.end(), a,std::greater<short int>()); // find proper position in descending order
+        beta_ops_.insert( it, a ); // insert before iterator it
+        nbex_ += 1;
+    }
 
     std::vector<short int>& alpha_ops() {return alpha_ops_;}
     std::vector<short int>& beta_ops() {return beta_ops_;}

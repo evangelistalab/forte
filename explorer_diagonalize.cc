@@ -164,8 +164,6 @@ void Explorer::diagonalize_p_space(psi::Options& options)
             if (cum_wfn > significant_wave_function) break;
         }
 
-        std::vector<double> Da(nmo_,0.0);
-        std::vector<double> Db(nmo_,0.0);
         double norm = 0.0;
         for (int I = 0; I < ndets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
@@ -175,23 +173,23 @@ void Explorer::diagonalize_p_space(psi::Options& options)
             const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
             double w = C_mat[I][i] * C_mat[I][i];
             if (w > 1.0e-12){
-                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da,Db,w);
+                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da_,Db_,w);
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }
         fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
         for (int p = 0; p < nmo_; ++p){
-            Da[p] /= norm;
-            Db[p] /= norm;
+            Da_[p] /= norm;
+            Db_[p] /= norm;
         }
         fprintf(outfile,"\n  Occupation numbers");
         double na = 0.0;
         double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
             for (int n = 0; n < nmopi_[h]; ++n){
-                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da[p],Db[p]);
-                na += Da[p];
-                nb += Db[p];
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
+                na += Da_[p];
+                nb += Db_[p];
                 p += 1;
             }
         }
@@ -603,7 +601,7 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             if (cum_wfn > significant_wave_function) break;
         }
 
-        std::vector<double> Da(nmo_,0.0);
+        std::vector<double> Da_(nmo_,0.0);
         std::vector<double> Db(nmo_,0.0);
         double norm = 0.0;
         for (int I = 0; I < ndets; ++I){
@@ -614,23 +612,23 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
             double w = C_mat[I][i] * C_mat[I][i];
             if (w > 1.0e-12){
-                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da,Db,w);
+                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da_,Db,w);
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }
         fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
         for (int p = 0; p < nmo_; ++p){
-            Da[p] /= norm;
-            Db[p] /= norm;
+            Da_[p] /= norm;
+            Db_[p] /= norm;
         }
         fprintf(outfile,"\n  Occupation numbers");
         double na = 0.0;
         double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
             for (int n = 0; n < nmopi_[h]; ++n){
-                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da[p],Db[p]);
-                na += Da[p];
-                nb += Db[p];
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
+                na += Da_[p];
+                nb += Db_[p];
                 p += 1;
             }
         }

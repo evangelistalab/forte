@@ -6,8 +6,11 @@
 #include <libtrans/integraltransform.h>
 #include <libmints/wavefunction.h>
 #include <cmath>
+#include "multidimensional_arrays.h"
 
 #include "explorer.h"
+#include "fcimc.h"
+#include "sosrg.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
@@ -25,6 +28,9 @@ read_options(std::string name, Options &options)
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 1);
+
+        /*- The job type -*/
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -137,6 +143,17 @@ read_options(std::string name, Options &options)
         options.add_int("RESTRICT_EXCITATION",0);
         /*- The energy buffer for building the Hamiltonian matrix in Hartree -*/
         options.add_double("H_BUFFER",0.0);
+
+        /*- The energy threshold for the determinant energy in Hartree -*/
+        options.add_int("MAXITER",100);
+
+        //////////////////////////////////////////////////////////////
+        ///
+        ///              OPTIONS FOR THE SOSRG MODULE
+        ///
+        //////////////////////////////////////////////////////////////
+        /*- Density of determinants format -*/
+        options.add_str("SOSRG_OP","UNITARY","UNITARY CC");
     }
     return true;
 }
@@ -148,8 +165,28 @@ libadaptive(Options &options)
     ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
 
     // The explorer object will do its job
-    Explorer* explorer = new Explorer(options,ints_);
-    delete explorer;
+    if (options.get_str("JOB_TYPE") == "EXPLORER"){
+        Explorer* explorer = new Explorer(options,ints_);
+        delete explorer;
+    }
+    if (options.get_str("JOB_TYPE") == "FCIMC"){
+        FCIMC fcimc(options,ints_);
+    }
+    if (options.get_str("JOB_TYPE") == "SOSRG"){
+        Explorer* explorer = new Explorer(options,ints_);
+        std::vector<double> ONa = explorer->Da();
+        std::vector<double> ONb = explorer->Db();
+        int nmo = explorer->nmo();
+        double** G1;
+        init_matrix<double>(G1,2 * nmo,2 * nmo);
+        for (int p = 0; p < nmo; ++p){
+            G1[p][p] = ONa[p];
+            G1[p + nmo][p + nmo] = ONb[p];
+        }
+        SOSRG sosrg(options,ints_,G1);
+        free_matrix<double>(G1,2 * nmo,2 * nmo);
+        delete explorer;
+    }
 
     // Delete ints_;
     delete ints_;

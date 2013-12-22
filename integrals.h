@@ -36,7 +36,7 @@ public:
     double diag_fock_a(int p) {return fock_matrix_alpha[p * nmo_ + p];}
     /// The diagonal fock matrix integrals
     double diag_fock_b(int p) {return fock_matrix_beta[p * nmo_ + p];}
-    /// The two-electron integrals
+    /// The two-electron integrals in chemist notation (pq|rs)
     double rtei(size_t p,size_t q,size_t r, size_t s) {return two_electron_integrals[INDEX4(p,q,r,s)];}
     /// The diagonal two-electron integrals (Coulomb)
     double diag_c_rtei(int p,int q) {return diagonal_c_integrals[p * nmo_ + q];}

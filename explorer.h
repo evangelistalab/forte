@@ -50,6 +50,10 @@ class Explorer
 public:
     Explorer(Options &options, ExplorerIntegrals* ints);
     ~Explorer();
+
+    int nmo() {return nmo_;}
+    std::vector<double> Da() {return Da_;}
+    std::vector<double> Db() {return Db_;}
 private:
     /// The number of irriducible representations
     int nirrep_;
@@ -137,6 +141,10 @@ private:
     StringDeterminant min_energy_determinant_;
     /// The PT2 energy correction
     double pt2_energy_correction_;
+    /// The alpha occupation numbers
+    std::vector<double> Da_;
+    /// The beta occupation numbers
+    std::vector<double> Db_;
 
 
     // // The strings are in QT format and are stored using the following structure:

@@ -186,6 +186,9 @@ void Explorer::read_info(Options& options)
     nalpha_ = (nel + multiplicity - 1) / 2;
     nbeta_ =  nel - nalpha_;
 
+    Da_.assign(nmo_,0.0);
+    Db_.assign(nmo_,0.0);
+
     wavefunction_symmetry_ = 0;
     if(options["SYMMETRY"].has_changed()){
         wavefunction_symmetry_ = options.get_int("SYMMETRY");
