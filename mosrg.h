@@ -29,11 +29,10 @@
 
 namespace psi{ namespace libadaptive{
 
-enum SRGCommutators {SRCommutators,MRNOCommutators,MRCommutators};
-enum SRGOperator  {SRGOpUnitary,SRGOpCC};
-
 class MOSRG : public MOBase
 {
+    enum SRGCommutators {SRCommutators,MRNOCommutators,MRCommutators};
+    enum SRGOperator  {SRGOpUnitary,SRGOpCC};
 public:
     // Constructor and destructor
     MOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb);
@@ -69,7 +68,11 @@ private:
     void update_S1();
     void update_S2();
 
-    /// Functions to compute commutators C = [A,B]
+    /// Functions to compute commutators C += factor * [A,B]
+    void commutator_A_B_C(double factor,
+                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
+                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
+                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
     /// The numbers indicate the rank of each operator
     void commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,double& C);
     void commutator_A1_B1_C1(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,MOTwoIndex C);

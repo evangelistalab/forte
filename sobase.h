@@ -47,6 +47,7 @@ public:
     SOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1);
     ~SOBase();
 protected:
+    Options& options_;
     /// The number of irriducible representations
     int nirrep_;
     /// The wave function symmetry

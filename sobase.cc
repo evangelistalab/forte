@@ -13,7 +13,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 SOBase::SOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1):
-    ints_(ints)
+    ints_(ints), options_(options)
 {
     startup(G1);
 }

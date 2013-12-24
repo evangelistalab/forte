@@ -132,16 +132,16 @@ protected:
     void sort_integrals();
 };
 
-#define loop_p for(int p = 0; p < nmo_; ++p)
-#define loop_q for(int q = 0; q < nmo_; ++q)
-#define loop_r for(int r = 0; r < nmo_; ++r)
-#define loop_s for(int s = 0; s < nmo_; ++s)
-#define loop_t for(int t = 0; t < nmo_; ++t)
-#define loop_u for(int u = 0; u < nmo_; ++u)
-#define loop_v for(int v = 0; v < nmo_; ++v)
-#define loop_x for(int x = 0; x < nmo_; ++x)
-#define loop_y for(int y = 0; y < nmo_; ++y)
-#define loop_z for(int z = 0; z < nmo_; ++z)
+#define loop_mo_p for(int p = 0; p < nmo_; ++p)
+#define loop_mo_q for(int q = 0; q < nmo_; ++q)
+#define loop_mo_r for(int r = 0; r < nmo_; ++r)
+#define loop_mo_s for(int s = 0; s < nmo_; ++s)
+#define loop_mo_t for(int t = 0; t < nmo_; ++t)
+#define loop_mo_u for(int u = 0; u < nmo_; ++u)
+#define loop_mo_v for(int v = 0; v < nmo_; ++v)
+#define loop_mo_x for(int x = 0; x < nmo_; ++x)
+#define loop_mo_y for(int y = 0; y < nmo_; ++y)
+#define loop_mo_z for(int z = 0; z < nmo_; ++z)
 
 }} // End Namespaces
 

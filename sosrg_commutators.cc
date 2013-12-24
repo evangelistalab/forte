@@ -12,6 +12,30 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
+void SOSRG::commutator_A_B_C(double factor,
+                             TwoIndex restrict A1,
+                             FourIndex restrict A2,
+                             TwoIndex restrict B1,
+                             FourIndex restrict B2,
+                             double& C0,
+                             TwoIndex restrict C1,
+                             FourIndex restrict C2)
+{
+    commutator_A1_B1_C0(A1,B1,+factor,C0);
+    commutator_A1_B2_C0(A1,B2,+factor,C0);
+    commutator_A1_B2_C0(B1,A2,-factor,C0);
+    commutator_A2_B2_C0(A2,B2,+factor,C0);
+
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B2_C1(A1,B2,+factor,C1);
+    commutator_A1_B2_C1(B1,A2,-factor,C1);
+    commutator_A2_B2_C1(A2,B2,+factor,C1);
+
+    commutator_A1_B2_C2(A1,B2,+factor,C2);
+    commutator_A1_B2_C2(B1,A2,-factor,C2);
+    commutator_A2_B2_C2(A2,B2,+factor,C2);
+}
+
 void SOSRG::commutator_A1_B1_C0(TwoIndex restrict A,TwoIndex restrict B,double sign,double& C)
 {
     double sum = 0.0;

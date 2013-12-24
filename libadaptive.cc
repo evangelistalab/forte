@@ -11,6 +11,7 @@
 #include "explorer.h"
 #include "fcimc.h"
 #include "sosrg.h"
+#include "mosrg.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
@@ -152,8 +153,12 @@ read_options(std::string name, Options &options)
         ///              OPTIONS FOR THE SOSRG MODULE
         ///
         //////////////////////////////////////////////////////////////
-        /*- Density of determinants format -*/
-        options.add_str("SOSRG_OP","UNITARY","UNITARY CC");
+        /*- The type of operator to use in the SRG transformation -*/
+        options.add_str("SRG_OP","UNITARY","UNITARY CC");
+        /*- The flow generator to use in the SRG equations -*/
+        options.add_str("SRG_ETA","WEGNER_BLOCK","WEGNER_BLOCK WEGNER_DIAG WHITE");
+        /*- The end value of s -*/
+        options.add_double("SRG_SMAX",10.0);
     }
     return true;
 }
@@ -183,8 +188,22 @@ libadaptive(Options &options)
             G1[p][p] = ONa[p];
             G1[p + nmo][p + nmo] = ONb[p];
         }
-        SOSRG sosrg(options,ints_,G1);
+//        SOSRG sosrg(options,ints_,G1);
         free_matrix<double>(G1,2 * nmo,2 * nmo);
+
+        double** G1aa;
+        double** G1bb;
+        init_matrix<double>(G1aa,nmo,nmo);
+        init_matrix<double>(G1bb,nmo,nmo);
+        for (int p = 0; p < nmo; ++p){
+            G1aa[p][p] = ONa[p];
+            G1bb[p][p] = ONb[p];
+        }
+        MOSRG mosrg(options,ints_,G1aa,G1bb);
+        free_matrix<double>(G1aa,nmo,nmo);
+        free_matrix<double>(G1bb,nmo,nmo);
+
+
         delete explorer;
     }
 
