@@ -10,7 +10,6 @@
 #include "sosrg.h"
 
 using namespace std;
-using namespace std::placeholders;
 using namespace psi;
 using namespace boost::numeric::odeint;
 
@@ -21,15 +20,19 @@ SOSRG::SOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1)
 {
     fprintf(outfile,"\n\n      --------------------------------------");
     fprintf(outfile,"\n          Similarity Renormalization Group");
+    fprintf(outfile,"\n                Spin-orbital code");
     fprintf(outfile,"\n");
     fprintf(outfile,"\n                Version 0.1.0");
     fprintf(outfile,"\n");
     fprintf(outfile,"\n       written by Francesco A. Evangelista");
     fprintf(outfile,"\n      --------------------------------------\n");
     fflush(outfile);
-    sosrg_startup(options);
-    compute_canonical_transformation_energy(options);
-//    compute_similarity_renormalization_group(options);
+    sosrg_startup();
+    if(options_.get_str("SRG_MODE") == "SRG"){
+        compute_similarity_renormalization_group();
+    }else if(options_.get_str("SRG_MODE") == "CT"){
+        compute_canonical_transformation_energy();
+    }
 }
 
 SOSRG::~SOSRG()
@@ -89,7 +92,7 @@ struct push_back_state_and_time
     }
 };
 
-void SOSRG::compute_similarity_renormalization_group(Options& options)
+void SOSRG::compute_similarity_renormalization_group()
 {
     vector<double> e_vec,times;
 
@@ -212,7 +215,7 @@ void SOSRG::compute_similarity_renormalization_group_step()
     commutator_A_B_C(1.0,eta1_,eta2_,Hbar1_,Hbar2_,S0_,S1_,S2_);
 }
 
-void SOSRG::compute_canonical_transformation_energy(Options &options)
+void SOSRG::compute_canonical_transformation_energy()
 {
     fprintf(outfile,"\n\n  ######################################");
     fprintf(outfile,"\n  ### Computing the CCSD BCH energy  ###");
@@ -247,12 +250,12 @@ void SOSRG::compute_canonical_transformation_energy(Options &options)
         old_energy = energy;
         fprintf(outfile,"\n  @CC %4d %25.15f %25.15f",cycle,energy,delta_energy);
 
-        if(fabs(delta_energy) < options.get_double("E_CONVERGENCE")){
+        if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
         }
 
-        if(cycle > options.get_int("MAXITER")){
-            fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options.get_int("MAXITER"));
+        if(cycle > options_.get_int("MAXITER")){
+            fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
             fflush(outfile);
 //            exit(1);
             converged = true;
@@ -312,7 +315,7 @@ double SOSRG::compute_recursive_single_commutator()
 }
 
 
-void SOSRG::sosrg_startup(Options& options)
+void SOSRG::sosrg_startup()
 {
     // Compute the MP2 energy
     double emp2 = 0.0;
@@ -328,11 +331,11 @@ void SOSRG::sosrg_startup(Options& options)
     fprintf(outfile,"\n\n  emp2 = %20.12f",emp2);
 
 
-    if (options.get_str("SRG_OP") == "UNITARY"){
+    if (options_.get_str("SRG_OP") == "UNITARY"){
         srgop = SRGOpUnitary;
         fprintf(outfile,"\n\n  Using a unitary operator\n");
     }
-    if (options.get_str("SRG_OP") == "CC"){
+    if (options_.get_str("SRG_OP") == "CC"){
         srgop = SRGOpCC;
         fprintf(outfile,"\n\n  Using an excitation operator\n");
     }

@@ -13,7 +13,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 MOBase::MOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb):
-    ints_(ints)
+    ints_(ints), options_(options)
 {
     startup(G1aa,G1bb);
 }
@@ -30,6 +30,8 @@ void MOBase::startup(TwoIndex G1aa,TwoIndex G1bb)
     nirrep_ = wfn->nirrep();
     nmo_ = wfn->nmo();
     nmopi_ = wfn->nmopi();
+
+    print_ = options_.get_int("PRINT");
 
     //    frzcpi_ = Dimension(nirrep_);
     //    frzvpi_ = Dimension(nirrep_);

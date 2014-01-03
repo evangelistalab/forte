@@ -66,6 +66,10 @@ public:
     MOBase(Options &options, ExplorerIntegrals* ints,TwoIndex G1aa,TwoIndex G1bb);
     ~MOBase();
 protected:
+    /// The print level
+    int print_;
+    /// A reference to the option object
+    Options& options_;
     /// The number of irriducible representations
     int nirrep_;
     /// The wave function symmetry

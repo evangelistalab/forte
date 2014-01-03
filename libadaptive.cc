@@ -12,6 +12,7 @@
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
+#include "tensor.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
@@ -28,10 +29,10 @@ read_options(std::string name, Options &options)
     if (name == "LIBADAPTIVE" || options.read_globals()) {
         /*- The amount of information printed
             to the output file -*/
-        options.add_int("PRINT", 1);
+        options.add_int("PRINT", 0);
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG");
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG TENSORTEST");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -150,15 +151,29 @@ read_options(std::string name, Options &options)
 
         //////////////////////////////////////////////////////////////
         ///
-        ///              OPTIONS FOR THE SOSRG MODULE
+        ///              OPTIONS FOR THE SRG MODULE
         ///
         //////////////////////////////////////////////////////////////
         /*- The type of operator to use in the SRG transformation -*/
+        options.add_str("SRG_MODE","SRG","SRG CT");
+        /*- The type of operator to use in the SRG transformation -*/
         options.add_str("SRG_OP","UNITARY","UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/
-        options.add_str("SRG_ETA","WEGNER_BLOCK","WEGNER_BLOCK WEGNER_DIAG WHITE");
+        options.add_str("SRG_ETA","WHITE","WEGNER_BLOCK WEGNER_DIAG WHITE");
+        /*- The integrator used to propagate the SRG equations -*/
+        options.add_str("SRG_ODEINT","FEHLBERG78","DOPRI5 CASHKARP FEHLBERG78");
         /*- The end value of s -*/
         options.add_double("SRG_SMAX",10.0);
+
+        /////////////////////////EXPERT OPTIONS/////////////////////////
+        /*- The initial time step used by the ode solver -*/
+        options.add_double("SRG_DT",0.001);
+        /*- The absolute error tollerance for the ode solver -*/
+        options.add_double("SRG_ODEINT_ABSERR",1.0e-12);
+        /*- The absolute error tollerance for the ode solver -*/
+        options.add_double("SRG_ODEINT_RELERR",1.0e-12);
+        /*- Select a modified commutator -*/
+        options.add_str("SRG_COMM","STANDARD","STANDARD FO SRG2");
     }
     return true;
 }
@@ -188,8 +203,16 @@ libadaptive(Options &options)
             G1[p][p] = ONa[p];
             G1[p + nmo][p + nmo] = ONb[p];
         }
-//        SOSRG sosrg(options,ints_,G1);
+        SOSRG sosrg(options,ints_,G1);
         free_matrix<double>(G1,2 * nmo,2 * nmo);
+
+        delete explorer;
+    }
+    if (options.get_str("JOB_TYPE") == "SRG"){
+        Explorer* explorer = new Explorer(options,ints_);
+        std::vector<double> ONa = explorer->Da();
+        std::vector<double> ONb = explorer->Db();
+        int nmo = explorer->nmo();
 
         double** G1aa;
         double** G1bb;
@@ -203,6 +226,27 @@ libadaptive(Options &options)
         free_matrix<double>(G1aa,nmo,nmo);
         free_matrix<double>(G1bb,nmo,nmo);
 
+
+        delete explorer;
+    }
+    if (options.get_str("JOB_TYPE") == "TENSORTEST"){
+        Explorer* explorer = new Explorer(options,ints_);
+        int nmo = explorer->nmo();
+
+
+        std::vector<size_t> n4 = {nmo,nmo};
+        Tensor A("A",n4);
+        Tensor B("B",n4);
+        Tensor C("C",n4);
+        Tensor ON("ON",n4);
+        C(1,2) = 5.0;
+        TensorIndexed ti = C("ab");
+        ti.print();
+
+        TensorProduct tp = A("ab") * B("abef");
+        tp.print();
+
+        C("pqrs") += 0.5 * A("pqtu") * B("turs");
 
         delete explorer;
     }

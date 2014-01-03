@@ -46,6 +46,54 @@ void MOSRG::commutator_A_B_C(double factor,
     commutator_A2_B2_C2(A2,B2,+factor,C2);
 }
 
+void MOSRG::commutator_A_B_C_fourth_order(double factor,
+                             MOTwoIndex restrict A1,
+                             MOFourIndex restrict A2,
+                             MOTwoIndex restrict B1,
+                             MOFourIndex restrict B2,
+                             double& C0,
+                             MOTwoIndex restrict C1,
+                             MOFourIndex restrict C2)
+{
+    commutator_A1_B1_C0(A1,B1,+factor,C0);
+    commutator_A1_B2_C0(A1,B2,+factor,C0);
+    commutator_A1_B2_C0(B1,A2,-factor,C0);
+    commutator_A2_B2_C0(A2,B2,+factor,C0);
+
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B2_C1(A1,B2,+factor,C1);
+    commutator_A1_B2_C1(B1,A2,-factor,C1);
+    commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
+
+    commutator_A1_B2_C2(A1,B2,+factor,C2);
+    commutator_A1_B2_C2(B1,A2,-factor,C2);
+    commutator_A2_B2_C2(A2,B2,+factor,C2);
+}
+
+void MOSRG::commutator_A_B_C_SRG2(double factor,
+                             MOTwoIndex restrict A1,
+                             MOFourIndex restrict A2,
+                             MOTwoIndex restrict B1,
+                             MOFourIndex restrict B2,
+                             double& C0,
+                             MOTwoIndex restrict C1,
+                             MOFourIndex restrict C2)
+{
+//    commutator_A1_B1_C0(A1,B1,+factor,C0);
+//    commutator_A1_B2_C0(A1,B2,+factor,C0);
+//    commutator_A1_B2_C0(B1,A2,-factor,C0);
+    commutator_A2_B2_C0(A2,B2,+factor,C0);
+
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
+//    commutator_A1_B2_C1(A1,B2,+factor,C1);
+//    commutator_A1_B2_C1(B1,A2,-factor,C1);
+    commutator_A2_B2_C1(A2,B2,+factor,C1);
+
+//    commutator_A1_B2_C2(A1,B2,+factor,C2);
+    commutator_A1_B2_C2(B1,A2,-factor,C2);
+    commutator_A2_B2_C2(A2,B2,+factor,C2);
+}
+
 void MOSRG::commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,double& C)
 {
     boost::timer t;
@@ -65,7 +113,9 @@ void MOSRG::commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,doub
         }
     }
     C += sign * sum;
-    fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
+    }
     t_commutator_A1_B1_C0 += t.elapsed();
 }
 
@@ -86,7 +136,10 @@ void MOSRG::commutator_A1_B1_C1(MOTwoIndex restrict A,MOTwoIndex restrict B,doub
         }
         C.bb[p][q] += sign * sum;
     }
-    fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
+    }
     t_commutator_A1_B1_C1 += t.elapsed();
 }
 
@@ -97,7 +150,10 @@ void MOSRG::commutator_A1_B2_C0(MOTwoIndex restrict A,MOFourIndex restrict B,dou
     if(srgcomm == MRNOCommutators){  // NOT CHECKED
     }
     C += sign * sum;
-    fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",t.elapsed());
+    }
     t_commutator_A1_B2_C0 += t.elapsed();
 }
 
@@ -131,7 +187,10 @@ void MOSRG::commutator_A1_B2_C1(MOTwoIndex restrict A,MOFourIndex restrict B,dou
 //            C[p][q] += sign * sum;
         }
     }
-    fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+    }
     t_commutator_A1_B2_C1 += t.elapsed();
 }
 
@@ -159,7 +218,10 @@ void MOSRG::commutator_A1_B2_C2(MOTwoIndex restrict A,MOFourIndex restrict B,dou
         }
         C.bbbb[p][q][r][s] += sign * sum;
     }
-    fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+    }
     t_commutator_A1_B2_C2 += t.elapsed();
 }
 
@@ -177,7 +239,10 @@ void MOSRG::commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,do
         sum += 0.25 * (A.bbbb[p][q][r][s] * B.bbbb[r][s][p][q] - B.bbbb[p][q][r][s] * A.bbbb[r][s][p][q]) * (No_.b[p] * No_.b[q] * Nv_.b[r] * Nv_.b[s]);
     }
     C += sign * sum;
-    fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+    }
     t_commutator_A2_B2_C0 += t.elapsed();
 }
 
@@ -204,7 +269,10 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,do
         }
         C.bb[p][q] += sign * sum;
     }
-    fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+    }
     t_commutator_A2_B2_C1 += t.elapsed();
 }
 
@@ -253,8 +321,25 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         }
         C.bbbb[p][q][r][s] += sign * sum;
     }
-    fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+
+    if(print_ > 1){
+        fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+    }
     t_commutator_A2_B2_C2 += t.elapsed();
+}
+
+void MOSRG::print_timings()
+{
+    fprintf(outfile,"\n\n  =========== TIMINGS =========");
+    fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t_commutator_A1_B1_C0);
+    fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t_commutator_A1_B1_C1);
+    fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",t_commutator_A1_B2_C0);
+    fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t_commutator_A1_B2_C1);
+    fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t_commutator_A1_B2_C2);
+    fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t_commutator_A2_B2_C0);
+    fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t_commutator_A2_B2_C1);
+    fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t_commutator_A2_B2_C2);
+    fprintf(outfile,"\n  =============================\n");
 }
 
 }} // EndNamespaces

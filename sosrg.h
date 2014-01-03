@@ -72,12 +72,12 @@ private:
     /// The one-body component of the operator S
     FourIndex S2_;
 
-    void sosrg_startup(Options &options);
+    void sosrg_startup();
     void sosrg_cleanup();
 
-    void compute_canonical_transformation_energy(Options &options);
+    void compute_canonical_transformation_energy();
     double compute_recursive_single_commutator();
-    void compute_similarity_renormalization_group(Options& options);
+    void compute_similarity_renormalization_group();
     void compute_similarity_renormalization_group_step();
     void compute_flow( const state_type &x , state_type &dxdt , const double t);
 

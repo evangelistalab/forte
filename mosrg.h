@@ -29,6 +29,10 @@
 
 namespace psi{ namespace libadaptive{
 
+/* The type of container used to hold the state vector  *
+ * Used by boost::odeint                                */
+typedef std::vector<double> odeint_state_type;
+
 class MOSRG : public MOBase
 {
     enum SRGCommutators {SRCommutators,MRNOCommutators,MRCommutators};
@@ -42,10 +46,16 @@ private:
     SRGOperator srgop;
     /// The type of commutators used in the computations
     SRGCommutators srgcomm;
+    /// The scalar component of the similarity-transformed Hamiltonian
+    double Hbar0_;
     /// The one-body component of the similarity-transformed Hamiltonian
     MOTwoIndex Hbar1_;
     /// The two-body component of the similarity-transformed Hamiltonian
     MOFourIndex Hbar2_;
+    /// The one-body component of the flow generator
+    MOTwoIndex eta1_;
+    /// The two-body component of the flow generator
+    MOFourIndex eta2_;
     /// An intermediate one-body component of the similarity-transformed Hamiltonian
     MOTwoIndex O1_;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
@@ -54,22 +64,46 @@ private:
     MOTwoIndex C1_;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
     MOFourIndex C2_;
+    /// The scalar component of the operator S
+    double S0_;
     /// The one-body component of the operator S
     MOTwoIndex S1_;
     /// The one-body component of the operator S
     MOFourIndex S2_;
 
-    void mosrg_startup(Options &options);
+    void mosrg_startup();
     void mosrg_cleanup();
 
-    void compute_canonical_transformation_energy(Options &options);
+    /// The SRG routines
+    void compute_similarity_renormalization_group();
+    void compute_similarity_renormalization_group_step();
+
+    void compute_canonical_transformation_energy();
     double compute_recursive_single_commutator();
+
+    void compute_driven_srg_energy();
+    /// The contributions to the one-body DSRG equations
+    void one_body_driven_srg();
+    /// The contributions to the two-body DSRG equations
+    void two_body_driven_srg();
 
     void update_S1();
     void update_S2();
 
     /// Functions to compute commutators C += factor * [A,B]
     void commutator_A_B_C(double factor,
+                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
+                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
+                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
+    /// Functions to compute commutators C += factor * [A,B] but the term [A2,B2] -> C1
+    /// contains a factor of two to recover the correct prefactor for the fourth-order term
+    /// 1/2 [[V,T2],T2] -> R2
+    void commutator_A_B_C_fourth_order(double factor,
+                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
+                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
+                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
+    /// Functions to compute commutators C += factor * [A,B] as done in the SRG(2) approximation
+    void commutator_A_B_C_SRG2(double factor,
                           MOTwoIndex restrict A1,MOFourIndex restrict A2,
                           MOTwoIndex restrict B1,MOFourIndex restrict B2,
                           double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
@@ -82,8 +116,20 @@ private:
     void commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,double sign,double& C);
     void commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C);
     void commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C);
+    void print_timings();
+
+    friend class MOSRG_ODEInterface;
 };
 
+/// This class helps interface the SRG class to the boost ODE integrator
+class MOSRG_ODEInterface {
+    MOSRG& mosrg_obj_;
+    int neval_;
+public:
+    MOSRG_ODEInterface(MOSRG& mosrg_obj) : mosrg_obj_(mosrg_obj), neval_(0) { }
+    void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
+    int neval() {return neval_;}
+};
 
 }} // End Namespaces
 
