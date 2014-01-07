@@ -19,6 +19,8 @@ double t_commutator_A1_B2_C2 = 0;
 double t_commutator_A2_B2_C0 = 0;
 double t_commutator_A2_B2_C1 = 0;
 double t_commutator_A2_B2_C2 = 0;
+double t_tensor = 0;
+double t_four = 0;
 
 namespace psi{ namespace libadaptive{
 
@@ -294,10 +296,40 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         }
         C.aaaa[p][q][r][s] += sign * sum;
     }
+
+    std::vector<size_t> n2 = {nmo_,nmo_};
+    std::vector<size_t> n4 = {nmo_,nmo_,nmo_,nmo_};
+
+    boost::timer t1;
+    tC_abab.zero();
+    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        tA_abab(p,q,r,s) = A.abab[p][q][r][s];
+        tB_abab(p,q,r,s) = B.abab[p][q][r][s];
+        tAm_abab(p,q,r,s) = A.abab[p][q][r][s] * (1.0 - No_.a[p] - No_.b[q]);
+        tBm_abab(p,q,r,s) = B.abab[p][q][r][s] * (1.0 - No_.a[p] - No_.b[q]);
+    }
+    tC_abab("pqrs") +=  sign * tA_abab("pqtu") * tBm_abab("turs");
+    tC_abab("pqrs") += -sign * tB_abab("pqtu") * tAm_abab("turs");
+
+    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        C.abab[p][q][r][s] += tC_abab(p,q,r,s);
+    }
+    t_tensor += t1.elapsed();
+
+//    boost::timer t2;
+//    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+//        double sum = 0.0;
+//        loop_mo_t loop_mo_u{
+//            sum += (A.abab[p][q][t][u] * B.abab[t][u][r][s] - A.abab[t][u][r][s] * B.abab[p][q][t][u]) * (1.0 - No_.a[t] - No_.b[u]);
+//        }
+////        C.abab[p][q][r][s] += sign * sum;
+//    }
+//    t_four += t2.elapsed();
+
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
         double sum = 0.0;
         loop_mo_t loop_mo_u{
-            sum += (A.abab[p][q][t][u] * B.abab[t][u][r][s] - A.abab[t][u][r][s] * B.abab[p][q][t][u]) * (1.0 - No_.a[t] - No_.b[u]);
+//            sum += (A.abab[p][q][t][u] * B.abab[t][u][r][s] - A.abab[t][u][r][s] * B.abab[p][q][t][u]) * (1.0 - No_.a[t] - No_.b[u]);
             sum += (A.aaaa[p][t][r][u] * B.abab[u][q][t][s] + A.abab[t][q][u][s] * B.aaaa[p][u][r][t]) * (No_.a[t] - No_.a[u]);
             sum += (A.abab[p][t][r][u] * B.bbbb[q][u][s][t] + A.bbbb[t][q][u][s] * B.abab[p][u][r][t]) * (No_.b[t] - No_.b[u]);
             sum += -(A.abab[t][q][r][u] * B.abab[p][u][t][s]) * (No_.a[t] - No_.b[u]);
@@ -340,6 +372,8 @@ void MOSRG::print_timings()
     fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t_commutator_A2_B2_C1);
     fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t_commutator_A2_B2_C2);
     fprintf(outfile,"\n  =============================\n");
+    fprintf(outfile,"\n  Time for tensor : %.4f",t_tensor);
+    fprintf(outfile,"\n  Time for four   : %.4f",t_four);
 }
 
 }} // EndNamespaces

@@ -26,6 +26,7 @@
 #include <fstream>
 
 #include "mobase.h"
+#include "tensor.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -70,6 +71,22 @@ private:
     MOTwoIndex S1_;
     /// The one-body component of the operator S
     MOFourIndex S2_;
+
+    Tensor tA_aaaa;
+    Tensor tA_abab;
+    Tensor tA_bbbb;
+    Tensor tAm_aaaa;
+    Tensor tAm_abab;
+    Tensor tAm_bbbb;
+    Tensor tB_aaaa;
+    Tensor tB_abab;
+    Tensor tB_bbbb;
+    Tensor tBm_aaaa;
+    Tensor tBm_abab;
+    Tensor tBm_bbbb;
+    Tensor tC_aaaa;
+    Tensor tC_abab;
+    Tensor tC_bbbb;
 
     void mosrg_startup();
     void mosrg_cleanup();

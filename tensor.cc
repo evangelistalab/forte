@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <boost/algorithm/string/join.hpp>
 
 #include <psi4-dec.h>
@@ -7,16 +9,46 @@
 using namespace std;
 using namespace psi;
 
-Tensor::Tensor(std::string label, std::vector<size_t> dims)
-    : label_(label),
-      ndims_(dims.size()),
-      dims_(dims),
-      t_(nullptr),
-      nelements_(0)
+Tensor::Tensor()
+    : t_(nullptr), nelements_(0)
 {
+}
+
+Tensor::Tensor(std::string label,std::vector<size_t> dims)
+    : label_(label), t_(nullptr), nelements_(0)
+{
+    allocate(dims);
+}
+
+Tensor::~Tensor()
+{
+    release();
+}
+
+void Tensor::resize(std::vector<size_t> dims)
+{
+    allocate(dims);
+}
+
+void Tensor::resize(std::string label, std::vector<size_t> dims)
+{
+    label_ = label;
+    resize(dims);
+}
+
+void Tensor::allocate(std::vector<size_t> dims)
+{
+    // set the dimensions
+    ndims_ = dims.size();
+    dims_ = dims;
+
     // compute the number of elements
     nelements_ = 1;
     for (size_t d : dims_) nelements_ *= d;
+
+    // allocate the memory
+    if (t_ != nullptr) delete[] t_;
+    t_ = new double[nelements_];
 
     // compute the addressing array
     add_.resize(ndims_,1);
@@ -26,61 +58,62 @@ Tensor::Tensor(std::string label, std::vector<size_t> dims)
         fprintf(outfile,"\n add[%zu] = %zu",i,add_[i]);
     }
 
-    allocate();
-}
-
-Tensor::~Tensor()
-{
-    release();
-}
-
-void Tensor::allocate()
-{
+    // print fancy things
     std::vector<std::string> str;
     for_each(dims_.begin(),dims_.end(),[&](size_t d){str.push_back(std::to_string(d));});
     std::string joined = boost::algorithm::join(str, ",");
-
     fprintf(outfile,"\nAllocating the tensor %s[%s] with %zu elements",label_.c_str(),joined.c_str(),nelements_);
-
-    if (t_ != nullptr) delete[] t_;
-    t_ = new double[nelements_];
 }
 
 void Tensor::release()
 {
     if (t_ != nullptr) delete t_;
+    t_ = nullptr;
 }
 
-inline size_t Tensor::two_address(size_t i1,size_t i2) const
+inline size_t Tensor::two_address(size_t i0,size_t i1) const
 {
-//    return(i1 * dims_[1] + i2);
-    return(i1 * add_[0] + i2);
+    return(i0 * add_[0] + i1);
 }
 
-inline size_t Tensor::four_address(size_t i1,size_t i2,size_t i3,size_t i4) const
+inline size_t Tensor::four_address(size_t i0,size_t i1,size_t i2,size_t i3) const
 {
-    return(i1 * add_[0] + i2 * add_[1] + i3 * add_[2] + i4);
-//    return(i1 * dims_[1] * dims_[2] * dims_[3] + i2 * dims_[2] * dims_[3]  + i3 * dims_[3] + i4);
+    return(i0 * add_[0] + i1 * add_[1] + i2 * add_[2] + i3);
 }
 
-double& Tensor::operator()(size_t i1,size_t i2)
+double& Tensor::operator()(size_t i0,size_t i1)
 {
-    return t_[two_address(i1,i2)];
+    return t_[two_address(i0,i1)];
 }
 
-const double& Tensor::operator()(size_t i1,size_t i2) const
+const double& Tensor::operator()(size_t i0,size_t i1) const
 {
-    return t_[two_address(i1,i2)];
+    return t_[two_address(i0,i1)];
 }
 
-double& Tensor::operator()(size_t i1,size_t i2,size_t i3,size_t i4)
+double& Tensor::operator()(size_t i0,size_t i1,size_t i2,size_t i3)
 {
-    return t_[four_address(i1,i2,i3,i4)];
+    return t_[four_address(i0,i1,i2,i3)];
 }
 
-const double& Tensor::operator()(size_t i1,size_t i2,size_t i3,size_t i4) const
+const double& Tensor::operator()(size_t i0,size_t i1,size_t i2,size_t i3) const
 {
-    return t_[four_address(i1,i2,i3,i4)];
+    return t_[four_address(i0,i1,i2,i3)];
+}
+
+void Tensor::zero()
+{
+    std::fill(t_,t_ + nelements_,0.0);
+}
+
+double Tensor::norm(int power)
+{
+    double sum = 0.0;
+    double p = power;
+    for (int n = 0; n < nelements_; ++n){
+        sum += std::pow(t_[n],p);
+    }
+    return std::pow(sum,1.0 / p);
 }
 
 TensorIndexed Tensor::operator()(std::string indices)

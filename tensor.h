@@ -32,10 +32,14 @@ class TensorProduct;
 class Tensor
 {
 public:
+    Tensor();
     Tensor(std::string label,std::vector<size_t> dims);
     ~Tensor();
 
     TensorIndexed operator()(std::string indices);
+
+    void resize(std::vector<size_t> dims);
+    void resize(std::string label,std::vector<size_t> dims);
 
     double& operator()(size_t i1,size_t i2);
     const double& operator()(size_t i1,size_t i2) const;
@@ -44,16 +48,32 @@ public:
 
     /// Return the number of tensor components
     size_t ndims() {return ndims_;}
+    /// Return the dimensions of the tensor components
+    std::vector<size_t>& dims() {return dims_;}
+    /// Return the dimensions of the tensor components
+    size_t dims(size_t n) {return dims_[n];}
+    /// Return the tensor data
+    double* t() {return t_;}
     /// Return the tensor label
     std::string& label() {return label_;}
 
+    // Operations on the tensor
+    /// Zero all the tensor elements
+    void zero();
+    /// Compute the k-norm of the vector.  The default is the 2-norm.
+    double norm(int power = 2);
+
     /// Contract two tensors
     static void evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C);
+
+    /// Functions that deal with the temporary data
+    static void initialize_class(size_t nmo);
+    static void finalize_class();
 private:
-    void allocate();
+    void allocate(std::vector<size_t> dims);
     void release();
-    size_t two_address(size_t i1,size_t i2) const;
-    size_t four_address(size_t i1,size_t i2,size_t i3,size_t i4) const;
+    size_t two_address(size_t i0,size_t i1) const;
+    size_t four_address(size_t i0,size_t i1,size_t i2,size_t i3) const;
 
     /// The label of the tensor
     std::string label_;
@@ -69,28 +89,21 @@ private:
     double* t_;
 
 
-    static void initialize_class();
-    static void finalize_class();
 
-    static void tensor_to_matrix_sort(TensorIndexed T,
-                               std::vector<std::pair<size_t,std::string> > T_left,
-                               std::vector<std::pair<size_t,std::string> > T_right,
-                               double* t);
-    static void matrix_to_tensor_sort(TensorIndexed T,
-                               std::vector<std::pair<size_t,std::string> > T_left,
-                               std::vector<std::pair<size_t,std::string> > T_right,
-                               double* t);
 
-    void (*tensor_to_matrix_sorter[4][2])(std::vector<int> ls,std::vector<int> rs);
-    void tensor_to_matrix_sorter_2_0(std::vector<int> ls,std::vector<int> rs);
-    void tensor_to_matrix_sorter_1_1(std::vector<int> ls,std::vector<int> rs);
-    void tensor_to_matrix_sorter_3_1(std::vector<int> ls,std::vector<int> rs);
-    void tensor_to_matrix_sorter_2_2(std::vector<int> ls,std::vector<int> rs);
+    static std::pair<size_t,size_t> tensor_to_matrix_sort(TensorIndexed T,
+                               std::vector<std::string> T_left,
+                               std::vector<std::string> T_right,
+                               double* t, bool direct);
+
+    template<typename Sorter>
+    void sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter sorter);
 
     /// Temporary arrays
     static double* tA;
     static double* tB;
     static double* tC;
+    static double* tD;
 };
 
 
@@ -148,6 +161,8 @@ private:
 //    double* t1;
 //    double* t2;
 //};
+
+void test_tensor_class();
 
 #endif // _tensor_h_
 

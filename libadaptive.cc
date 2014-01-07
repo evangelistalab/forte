@@ -222,10 +222,11 @@ libadaptive(Options &options)
             G1aa[p][p] = ONa[p];
             G1bb[p][p] = ONb[p];
         }
+        Tensor::initialize_class(nmo);
         MOSRG mosrg(options,ints_,G1aa,G1bb);
+        Tensor::finalize_class();
         free_matrix<double>(G1aa,nmo,nmo);
         free_matrix<double>(G1bb,nmo,nmo);
-
 
         delete explorer;
     }
@@ -234,19 +235,13 @@ libadaptive(Options &options)
         int nmo = explorer->nmo();
 
 
-        std::vector<size_t> n4 = {nmo,nmo};
-        Tensor A("A",n4);
-        Tensor B("B",n4);
-        Tensor C("C",n4);
-        Tensor ON("ON",n4);
-        C(1,2) = 5.0;
-        TensorIndexed ti = C("ab");
-        ti.print();
+        test_tensor_class();
+//        std::vector<size_t> n4 = {nmo,nmo,nmo,nmo};
+//        Tensor A("A",n4);
+//        Tensor B("B",n4);
+//        Tensor C("C",n4);
 
-        TensorProduct tp = A("ab") * B("abef");
-        tp.print();
-
-        C("pqrs") += 0.5 * A("pqtu") * B("turs");
+//        C("pqrs") += 0.5 * A("pqtu") * B("turs");
 
         delete explorer;
     }

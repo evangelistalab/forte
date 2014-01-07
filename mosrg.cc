@@ -540,6 +540,28 @@ void MOSRG::mosrg_startup()
     allocate(S2_);
     allocate(C1_);
     allocate(C2_);
+
+    std::vector<size_t> n2 = {nmo_,nmo_};
+    std::vector<size_t> n4 = {nmo_,nmo_,nmo_,nmo_};
+    tA_aaaa.resize("A",n4);
+    tA_abab.resize("A",n4);
+    tA_bbbb.resize("A",n4);
+
+    tB_aaaa.resize("B",n4);
+    tB_abab.resize("B",n4);
+    tB_bbbb.resize("B",n4);
+
+    tAm_aaaa.resize("Amod",n4);
+    tAm_abab.resize("Amod",n4);
+    tAm_bbbb.resize("Amod",n4);
+
+    tBm_aaaa.resize("Bmod",n4);
+    tBm_abab.resize("Bmod",n4);
+    tBm_bbbb.resize("Bmod",n4);
+
+    tC_aaaa.resize("C",n4);
+    tC_abab.resize("C",n4);
+    tC_bbbb.resize("C",n4);
 }
 
 void MOSRG::mosrg_cleanup()
