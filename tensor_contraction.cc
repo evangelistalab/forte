@@ -89,34 +89,36 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
     size_t nBcols = Bdata.second;
     size_t nsum = nAcols;
 
-
     double factor = A.factor() * B.factor();
+
     // Multiply the two matrices
-    double sum = 0.0;
-    for (size_t i = 0; i < nArows; ++i){
-        for (size_t j = 0; j < nBrows; ++j){
-            double sum = 0.0;
-            for (size_t k = 0; k < nAcols; ++k){
-                //tC[i][j] += tA[i][k] * tB[j][k]
-                sum += factor * tA[i * nAcols + k] * tB[j * nBcols + k];
+    if(use_dgemm_){
+        // C := alpha * A * B^T + beta * C,
+        C_DGEMM('n','t',
+                Adata.first,  // the rows of A
+                Bdata.first,  // the cols of B^T
+                Adata.second, // the cols of A
+                factor,       // the scalar alpha, which multiplies the product of matrices
+                tA,           // the array that contains A
+                Adata.second,  // the leading dimension of A
+                tB,           // the array that contains B^T
+                Bdata.second,  // the leading dimension of B^T
+                1.0,          // the scalar beta
+                tC,           // the array that contains C
+                Cdata.second); // the leading dimension of C
+    }else{
+        double sum = 0.0;
+        for (size_t i = 0; i < nArows; ++i){
+            for (size_t j = 0; j < nBrows; ++j){
+                double sum = 0.0;
+                for (size_t k = 0; k < nAcols; ++k){
+                    //tC[i][j] += tA[i][k] * tB[j][k]
+                    sum += factor * tA[i * nAcols + k] * tB[j * nBcols + k];
+                }
+                tC[i * nBrows + j] += sum;
             }
-            tC[i * nBrows + j] += sum;
         }
     }
-
-    // C := alpha * A * B^T + beta * C,
-    //    C_DGEMM('n','t',
-    //            Adata.first,  // the rows of A
-    //            Bdata.first,  // the cols of B^T
-    //            Adata.second, // the cols of A
-    //            factor,       // the scalar alpha, which multiplies the product of matrices
-    //            tA,           // the array that contains A
-    //            Adata.first,  // the leading dimension of A
-    //            tB,           // the array that contains B^T
-    //            Bdata.first,  // the leading dimension of B^T
-    //            1.0,          // the scalar beta
-    //            tC,           // the array that contains C
-    //            Adata.first); // the leading dimension of C
 
     // Sort the result
     tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,false);
@@ -126,6 +128,21 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
 template<typename Sorter>
 void Tensor::sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter sorter)
 {
+    if (ndims_ == 1){
+        std::vector<size_t> j(1);
+        for (size_t i0 = 0; i0 < dims_[0]; ++i0){
+            j[itoj[0]] = i0;
+            size_t matrix_add = sorter(j);
+            size_t tensor_add = one_address(i0);
+            if (direct){
+                double value = t_[tensor_add];
+                matrix[matrix_add] = value;
+            }else{
+                double value = matrix[matrix_add];
+                t_[tensor_add] = value;
+            }
+        }
+    }
     if (ndims_ == 2){
         std::vector<size_t> j(2);
         for (size_t i0 = 0; i0 < dims_[0]; ++i0){
@@ -140,6 +157,27 @@ void Tensor::sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter
                 }else{
                     double value = matrix[matrix_add];
                     t_[tensor_add] = value;
+                }
+            }
+        }
+    }
+    if (ndims_ == 3){
+        std::vector<size_t> j(3);
+        for (size_t i0 = 0; i0 < dims_[0]; ++i0){
+            j[itoj[0]] = i0;
+            for (size_t i1 = 0; i1 < dims_[1]; ++i1){
+                j[itoj[1]] = i1;
+                for (size_t i2 = 0; i2 < dims_[2]; ++i2){
+                    j[itoj[2]] = i2;
+                    size_t matrix_add = sorter(j);
+                    size_t tensor_add = three_address(i0,i1,i2);
+                    if (direct){
+                        double value = t_[tensor_add];
+                        matrix[matrix_add] = value;
+                    }else{
+                        double value = matrix[matrix_add];
+                        t_[tensor_add] = value;
+                    }
                 }
             }
         }
@@ -218,19 +256,51 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
     }
 
     std::pair<size_t,size_t> matrix_size;
-    if ((nleft == 1) and (nright == 1)){
+    if ((nleft == 2) and (nright == 0)){
+        size_t left_size = dims[jtoi[0]] * dims[jtoi[1]];
+        size_t right_size = 1;
+        matrix_size = {left_size,right_size};
+        size_t add_right_0 = dims[jtoi[1]];
+        tens->sort_me(itoj,t,direct,
+                      [&](const std::vector<size_t>& j){
+            return j[0] * add_right_0 + j[1];
+        }
+        );
+    }else if ((nleft == 1) and (nright == 1)){
         size_t left_size = dims[jtoi[0]];
         size_t right_size = dims[jtoi[1]];
         matrix_size = {left_size,right_size};
         tens->sort_me(itoj,t,direct,
                       [&](const std::vector<size_t>& j){
-                            size_t left  = j[0];
-                            size_t right = j[1];
-                            return left * right_size + right;
-                      }
+            size_t left  = j[0];
+            size_t right = j[1];
+            return left * right_size + right;
+        }
         );
-    }
-    if ((nleft == 2) and (nright == 2)){
+    }else if ((nleft == 0) and (nright == 2)){
+        size_t left_size = 1;
+        size_t right_size = dims[jtoi[0]] * dims[jtoi[1]];
+        matrix_size = {left_size,right_size};
+        size_t add_left_0 = dims[jtoi[1]];
+        tens->sort_me(itoj,t,direct,
+                      [&](const std::vector<size_t>& j){
+            return j[0] * add_left_0 + j[1];
+        }
+        );
+    }else if ((nleft == 3) and (nright == 1)){
+        size_t left_size = dims[jtoi[0]] * dims[jtoi[1]] * dims[jtoi[2]];
+        size_t right_size = dims[jtoi[3]];
+        matrix_size = {left_size,right_size};
+        size_t add_left_0 = dims[jtoi[1]] * dims[jtoi[2]];
+        size_t add_left_1 = dims[jtoi[2]];
+        tens->sort_me(itoj,t,direct,
+                      [&](const std::vector<size_t>& j){
+            size_t left  = j[0] * add_left_0 + j[1] * add_left_1 + j[2];
+            size_t right = j[3];
+            return left * right_size + right;
+        }
+        );
+    }else if ((nleft == 2) and (nright == 2)){
         size_t left_size = dims[jtoi[0]] * dims[jtoi[1]];
         size_t right_size = dims[jtoi[2]] * dims[jtoi[3]];
         matrix_size = {left_size,right_size};
@@ -238,11 +308,26 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
         size_t add_right_2 = dims[jtoi[3]];
         tens->sort_me(itoj,t,direct,
                       [&](const std::vector<size_t>& j){
-                            size_t left  = j[0] * add_left_0 + j[1];
-                            size_t right = j[2] * add_right_2 + j[3];
-                            return left * right_size + right;
-                      }
+            size_t left  = j[0] * add_left_0 + j[1];
+            size_t right = j[2] * add_right_2 + j[3];
+            return left * right_size + right;
+        }
         );
+    }else if ((nleft == 1) and (nright == 3)){
+        size_t left_size = dims[jtoi[0]];
+        size_t right_size = dims[jtoi[1]] * dims[jtoi[2]] * dims[jtoi[3]];
+        matrix_size = {left_size,right_size};
+        size_t add_right_1 = dims[jtoi[2]] * dims[jtoi[3]];
+        size_t add_right_2 = dims[jtoi[3]];
+        tens->sort_me(itoj,t,direct,
+                      [&](const std::vector<size_t>& j){
+            size_t left  = j[0];
+            size_t right = j[1] * add_right_1 + j[2] * add_right_2 + j[3];
+            return left * right_size + right;
+        }
+        );
+    }else{
+        fprintf(outfile,"\n  THIS SORTING IS NOT IMPLEMENTED!!");
     }
 
     return matrix_size;

@@ -235,7 +235,7 @@ libadaptive(Options &options)
         int nmo = explorer->nmo();
 
 
-        test_tensor_class();
+        test_tensor_class(true);
 //        std::vector<size_t> n4 = {nmo,nmo,nmo,nmo};
 //        Tensor A("A",n4);
 //        Tensor B("B",n4);

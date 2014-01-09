@@ -72,7 +72,10 @@ public:
 private:
     void allocate(std::vector<size_t> dims);
     void release();
+
+    size_t one_address(size_t i0) const;
     size_t two_address(size_t i0,size_t i1) const;
+    size_t three_address(size_t i0,size_t i1,size_t i2) const;
     size_t four_address(size_t i0,size_t i1,size_t i2,size_t i3) const;
 
     /// The label of the tensor
@@ -88,13 +91,14 @@ private:
     /// The tensor data
     double* t_;
 
-
-
-
     static std::pair<size_t,size_t> tensor_to_matrix_sort(TensorIndexed T,
                                std::vector<std::string> T_left,
                                std::vector<std::string> T_right,
                                double* t, bool direct);
+
+    // Class static functions
+    /// Set the use of DGEMM for tensor contractions
+    void set_use_dgemm(bool value) {use_dgemm_ = value;}
 
     template<typename Sorter>
     void sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter sorter);
@@ -104,6 +108,10 @@ private:
     static double* tB;
     static double* tC;
     static double* tD;
+
+    // Class options
+    ///  Use of DGEMM for tensor contractions?
+    static bool use_dgemm_;
 };
 
 
@@ -162,7 +170,7 @@ private:
 //    double* t2;
 //};
 
-void test_tensor_class();
+bool test_tensor_class(bool verbose);
 
 #endif // _tensor_h_
 

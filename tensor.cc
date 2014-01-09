@@ -9,6 +9,8 @@
 using namespace std;
 using namespace psi;
 
+bool Tensor::use_dgemm_ = true;
+
 Tensor::Tensor()
     : t_(nullptr), nelements_(0)
 {
@@ -71,9 +73,19 @@ void Tensor::release()
     t_ = nullptr;
 }
 
+inline size_t Tensor::one_address(size_t i0) const
+{
+    return(i0);
+}
+
 inline size_t Tensor::two_address(size_t i0,size_t i1) const
 {
     return(i0 * add_[0] + i1);
+}
+
+inline size_t Tensor::three_address(size_t i0,size_t i1,size_t i2) const
+{
+    return(i0 * add_[0] + i1 * add_[1] + i2);
 }
 
 inline size_t Tensor::four_address(size_t i0,size_t i1,size_t i2,size_t i3) const

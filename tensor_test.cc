@@ -25,159 +25,589 @@ double c4[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR];
 
 using namespace psi;
 
-std::pair<std::string,bool> test_1_1_sort();
-std::pair<std::string,bool> test_2_2_sort();
+std::pair<std::string,double> test_Cij_Aik_Bjk();
+std::pair<std::string,double> test_Cij_Aik_Bkj();
 
-/// This function computes the difference between the matrix elements of a
+std::pair<std::string,double> test_Cijkl_Aijmn_Bmnkl();
+std::pair<std::string,double> test_Cijkl_Aijmn_Bnmkl();
+std::pair<std::string,double> test_Cijkl_Aimjn_Bkmln();
+
+std::pair<std::string,double> test_Cij_Aiklm_Bjklm();
+
+std::pair<std::string,double> test_Cjkli_Ailjm_Bkm();
+std::pair<std::string,double> test_Cklji_Aml_Bjmki();
+
+std::pair<std::string,double> test_Cji_Aklim_Bmjlk();
+std::pair<std::string,double> test_Cij_Aikjl_Bkl();
+std::pair<std::string,double> test_Cijkl_Aij_Bkl();
+
+
+/// These functions computes the difference between the matrix elements of a
 /// tensor and a matrix
-double difference_2(Tensor& tensor,double matrix[MAXTWO][MAXTWO]);
+std::pair<double,double> difference_2(Tensor& tensor,double matrix[MAXTWO][MAXTWO]);
+std::pair<double,double> difference_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
 
-/// This function initializes a tensor and a matrix with the same sequence of
+/// These functions initialize a tensor and a matrix with the same sequence of
 /// random numbers
 void initialize_random_2(Tensor& tensor, double matrix[MAXTWO][MAXTWO]);
-
 void initialize_random_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
-double difference_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR]);
 
-void test_tensor_class()
+bool verbose_test = false;
+
+bool test_tensor_class(bool verbose)
 {
+    verbose_test = verbose;
+    double err_threshold = 1.0e-11;
     Tensor::initialize_class(MAXFOUR);
-    test_1_1_sort();
-    test_2_2_sort();
+    std::vector<std::pair<std::string,double>> results;
+    results.push_back(test_Cij_Aik_Bjk());
+    results.push_back(test_Cij_Aik_Bkj());
+
+    results.push_back(test_Cij_Aikjl_Bkl());
+
+    results.push_back(test_Cij_Aiklm_Bjklm());
+    results.push_back(test_Cji_Aklim_Bmjlk());
+
+    results.push_back(test_Cijkl_Aij_Bkl());
+
+    results.push_back(test_Cjkli_Ailjm_Bkm());
+    results.push_back(test_Cklji_Aml_Bjmki());
+
+    results.push_back(test_Cijkl_Aijmn_Bmnkl());
+    results.push_back(test_Cijkl_Aijmn_Bnmkl());
+    results.push_back(test_Cijkl_Aimjn_Bkmln());
+
+    bool success = true;
+    for (auto sb : results){
+        if (std::fabs(sb.second) > err_threshold) success = false;
+    }
+
+    if(verbose_test){
+        fprintf(outfile,"\n\n Summary of tests:");
+
+        fprintf(outfile,"\n %-40s %12s %s","Test","Max. error","Result");
+        fprintf(outfile,"\n %s",std::string(60,'-').c_str());
+        for (auto sb : results){
+            fprintf(outfile,"\n %-40s %7e %s",sb.first.c_str(),sb.second,std::fabs(sb.second) < err_threshold ? "Passed" : "Failed");
+        }
+        fprintf(outfile,"\n %s",std::string(60,'-').c_str());
+        fprintf(outfile,"\n Tests: %s",success ? "All passed" : "Some failed");
+    }
+
+
     Tensor::finalize_class();
+    return success;
 }
 
-std::pair<std::string,bool> test_1_1_sort()
+std::pair<std::string,double> test_Cij_Aik_Bkj()
 {
-    fprintf(outfile,"\n Testing a A(p,r) * B(r,q)");
-    size_t n0 = 3;
-    size_t n1 = 5;
-    size_t n2 = 7;
-    std::vector<size_t> dimsA = {n0,n1};
-    std::vector<size_t> dimsB = {n1,n2};
-    std::vector<size_t> dimsC = {n0,n2};
+    std::string test = "C2(\"ij\") += A2(\"ik\") * B2(\"kj\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+
+    size_t ni = 9;
+    size_t nj = 6;
+    size_t nk = 7;
+    std::vector<size_t> dimsA = {ni,nk};
+    std::vector<size_t> dimsB = {nk,nj};
+    std::vector<size_t> dimsC = {ni,nj};
 
     Tensor A2("A2",dimsA);
     Tensor B2("B2",dimsB);
     Tensor C2("C2",dimsC);
 
     initialize_random_2(A2,a2);
-    double a_diff = difference_2(A2,a2);
-    fprintf(outfile,"\n A(p,q) error: %e",a_diff);
+    std::pair<double,double> a_diff = difference_2(A2,a2);
+    fprintf(outfile,"\n A2 error: sum = %e max = %e",a_diff.first,a_diff.second);
 
     initialize_random_2(B2,b2);
-    double b_diff = difference_2(B2,b2);
-    fprintf(outfile,"\n B(p,q) error: %e",b_diff);
+    std::pair<double,double> b_diff = difference_2(B2,b2);
+    fprintf(outfile,"\n B2 error: sum = %e max = %e",b_diff.first,b_diff.second);
 
     C2.zero();
-    C2("pq") += A2("pr") * B2("rq");
+    C2("ij") += A2("ik") * B2("kj");
 
-    for (size_t i = 0; i < n0; ++i){
-        for (size_t j = 0; j < n1; ++j){
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
             c2[i][j] = 0.0;
-            for (size_t k = 0; k < n2; ++k){
+            for (size_t k = 0; k < nk; ++k){
                 c2[i][j] += a2[i][k] * b2[k][j];
             }
         }
     }
-    double c_diff = difference_2(C2,c2);
-    fprintf(outfile,"\n C(p,q) error: %e",c_diff);
-    return std::make_pair("A(p,r) * B(r,q)",std::fabs(c_diff) < 1.0e-12);
+    std::pair<double,double> c_diff = difference_2(C2,c2);
+    fprintf(outfile,"\n C(p,q) error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,c_diff.second);
 }
 
-std::pair<std::string,bool> test_2_2_sort()
+std::pair<std::string,double> test_Cij_Aik_Bjk()
 {
-    fprintf(outfile,"\n Testing a A(p,q,t,u) * B(t,u,r,s)");
-    size_t n0 = 3;
-    size_t n1 = 5;
-    size_t n2 = 7;
-    size_t n3 = 9;
-    size_t n4 = 8;
-    size_t n5 = 6;
-    std::vector<size_t> dimsA = {n0,n1,n4,n5};
-    std::vector<size_t> dimsB = {n4,n5,n2,n3};
-    std::vector<size_t> dimsC = {n0,n1,n2,n3};
+    std::string test = "C2(\"ij\") += A2(\"ik\") * B2(\"jk\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 9;
+    size_t nj = 6;
+    size_t nk = 7;
+    std::vector<size_t> dimsA = {ni,nk};
+    std::vector<size_t> dimsB = {nj,nk};
+    std::vector<size_t> dimsC = {ni,nj};
+
+    Tensor A2("A2",dimsA);
+    Tensor B2("B2",dimsB);
+    Tensor C2("C2",dimsC);
+
+    initialize_random_2(A2,a2);
+    std::pair<double,double> a_diff = difference_2(A2,a2);
+    fprintf(outfile,"\n A2 error: sum = %e max = %e",a_diff.first,a_diff.second);
+
+    initialize_random_2(B2,b2);
+    std::pair<double,double> b_diff = difference_2(B2,b2);
+    fprintf(outfile,"\n B2 error: sum = %e max = %e",b_diff.first,b_diff.second);
+
+    C2.zero();
+    C2("ij") += A2("ik") * B2("jk");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            c2[i][j] = 0.0;
+            for (size_t k = 0; k < nk; ++k){
+                c2[i][j] += a2[i][k] * b2[j][k];
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_2(C2,c2);
+//    fprintf(outfile,"\n C2 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+std::pair<std::string,double> test_Cjkli_Ailjm_Bkm()
+{
+    std::string test = "C4(\"jkli\") += A4(\"iljm\") * B4(\"km\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+
+    std::vector<size_t> dimsA = {ni,nl,nj,nm};
+    std::vector<size_t> dimsB = {nk,nm};
+    std::vector<size_t> dimsC = {nj,nk,nl,ni};
+
+    Tensor A4("A4",dimsA);
+    Tensor B2("B2",dimsB);
+    Tensor C4("C4",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_2(B2,b2);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C4.zero();
+    C4("jkli") += A4("iljm") * B2("km");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c4[j][k][l][i] = 0.0;
+                    for (size_t m = 0; m < nm; ++m){
+                        c4[j][k][l][i] += a4[i][l][j][m] * b2[k][m];
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C4 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+std::pair<std::string,double> test_Cklji_Aml_Bjmki()
+{
+    std::string test = "C4(\"klji\") += A4(\"ml\") * B4(\"jmki\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+
+    std::vector<size_t> dimsA = {nm,nl};
+    std::vector<size_t> dimsB = {nj,nm,nk,ni};
+    std::vector<size_t> dimsC = {nk,nl,nj,ni};
+
+    Tensor A2("A2",dimsA);
+    Tensor B4("B4",dimsB);
+    Tensor C4("C4",dimsC);
+
+    initialize_random_2(A2,a2);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_4(B4,b4);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C4.zero();
+    C4("klji") += A2("ml") * B4("jmki");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c4[k][l][j][i] = 0.0;
+                    for (size_t m = 0; m < nm; ++m){
+                        c4[k][l][j][i] += a2[m][l] * b4[j][m][k][i];
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C4 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+std::pair<std::string,double> test_Cijkl_Aijmn_Bmnkl()
+{
+    std::string test = "C4(\"ijkl\") += A4(\"ijmn\") * B4(\"mnkl\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    size_t nn = 6;
+
+    std::vector<size_t> dimsA = {ni,nj,nm,nn};
+    std::vector<size_t> dimsB = {nm,nn,nk,nl};
+    std::vector<size_t> dimsC = {ni,nj,nk,nl};
 
     Tensor A4("A4",dimsA);
     Tensor B4("B4",dimsB);
     Tensor C4("C4",dimsC);
 
     initialize_random_4(A4,a4);
-    double a_diff = difference_4(A4,a4);
-    fprintf(outfile,"\n A error: %e",a_diff);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
 
     initialize_random_4(B4,b4);
-    double b_diff = difference_4(B4,b4);
-    fprintf(outfile,"\n B error: %e",b_diff);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
 
     C4.zero();
-    C4("pqrs") += A4("pqtu") * B4("turs");
+    C4("ijkl") += A4("ijmn") * B4("mnkl");
 
-    for (size_t i = 0; i < n0; ++i){
-        for (size_t j = 0; j < n1; ++j){
-            for (size_t k = 0; k < n2; ++k){
-                for (size_t l = 0; l < n3; ++l){
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
                     c4[i][j][k][l] = 0.0;
-                    for (size_t m = 0; m < n4; ++m){
-                        for (size_t n = 0; n < n5; ++n){
-                            c4[i][j][k][l] += a4[i][j][m][n] * b4[m][n][k][j];
+                    for (size_t m = 0; m < nm; ++m){
+                        for (size_t n = 0; n < nn; ++n){
+                            c4[i][j][k][l] += a4[i][j][m][n] * b4[m][n][k][l];
                         }
                     }
                 }
             }
         }
     }
-    double c_diff = difference_4(C4,c4);
-    fprintf(outfile,"\n C error: %e",c_diff);
-    return std::make_pair("A(p,q,t,u) * B(t,u,r,s)",std::fabs(c_diff) < 1.0e-12);
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C4 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
 }
-/*
-    int nmo = 3;
-    std::vector<size_t> n4 = {nmo,nmo,nmo,nmo};
-    Tensor A("A",n4);
-    Tensor B("B",n4);
-    Tensor C("C",n4);
-    double**** a;
-    double**** b;
-    double**** c;
-    init_matrix<double>(a,nmo,nmo,nmo,nmo);
-    init_matrix<double>(b,nmo,nmo,nmo,nmo);
-    init_matrix<double>(c,nmo,nmo,nmo,nmo);
-    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-        a[p][q][r][s] = 1.0 / double(1 + p + 3 * q + 5 * r + 7 * s);
-        A(p,q,r,s) = 1.0 / double(1 + p + 3 * q + 5 * r + 7 * s);
-        b[p][q][r][s] = (1.0 + double(1 + p + 3 * q + 5 * r + 7 * s)) / double(2.0+p+q+r+s);
-        B(p,q,r,s) = (1.0 + double(1 + p + 3 * q + 5 * r + 7 * s)) / double(2.0+p+q+r+s);
-    }
-    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-        double sum = 0.0;
-        loop_mo_t loop_mo_u{
-            sum += a[p][q][t][u] * b[t][u][r][s] + b[p][q][t][u] * a[t][u][r][s];
-        }
-        c[p][q][r][s] = sum;
-    }
-    C.zero();
-    C("pqrs") += A("pqtu") * B("turs");
-    C("pqrs") += B("pqtu") * A("turs");
-    double sumabs = 0.0;
-    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-        fprintf(outfile,"\n%2d %2d %2d %2d %20.12f %20.12f %20.12e",p,q,r,s,c[p][q][r][s],C(p,q,r,s),C(p,q,r,s)-c[p][q][r][s]);
-        sumabs += std::fabs(C(p,q,r,s)-c[p][q][r][s]);
-    }
-    fprintf(outfile,"\n sum of abs errors %e",sumabs);
-    */
 
-double difference_2(Tensor& tensor,double matrix[MAXTWO][MAXTWO])
+std::pair<std::string,double> test_Cijkl_Aijmn_Bnmkl()
+{
+    std::string test = "C4(\"ijkl\") += A4(\"ijmn\") * B4(\"nmkl\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    size_t nn = 6;
+
+    std::vector<size_t> dimsA = {ni,nj,nm,nn};
+    std::vector<size_t> dimsB = {nn,nm,nk,nl};
+    std::vector<size_t> dimsC = {ni,nj,nk,nl};
+
+    Tensor A4("A4",dimsA);
+    Tensor B4("B4",dimsB);
+    Tensor C4("C4",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_4(B4,b4);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C4.zero();
+    C4("ijkl") += A4("ijmn") * B4("nmkl");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c4[i][j][k][l] = 0.0;
+                    for (size_t m = 0; m < nm; ++m){
+                        for (size_t n = 0; n < nn; ++n){
+                            c4[i][j][k][l] += a4[i][j][m][n] * b4[n][m][k][l];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C4 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+
+std::pair<std::string,double> test_Cijkl_Aimjn_Bkmln()
+{
+    std::string test = "C4(\"ijkl\") += A4(\"imjn\") * B4(\"kmln\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    size_t nn = 6;
+
+    std::vector<size_t> dimsA = {ni,nm,nj,nn};
+    std::vector<size_t> dimsB = {nk,nm,nl,nn};
+    std::vector<size_t> dimsC = {ni,nj,nk,nl};
+
+    Tensor A4("A4",dimsA);
+    Tensor B4("B4",dimsB);
+    Tensor C4("C4",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_4(B4,b4);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C4.zero();
+    C4("ijkl") += A4("imjn") * B4("kmln");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c4[i][j][k][l] = 0.0;
+                    for (size_t m = 0; m < nm; ++m){
+                        for (size_t n = 0; n < nn; ++n){
+                            c4[i][j][k][l] += a4[i][m][j][n] * b4[k][m][l][n];
+                        }
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C4 error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+
+std::pair<std::string,double> test_Cij_Aiklm_Bjklm()
+{
+    std::string test = "C2(\"ij\") += A4(\"iklm\") * B4(\"jklm\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    std::vector<size_t> dimsA = {ni,nk,nl,nm};
+    std::vector<size_t> dimsB = {nj,nk,nl,nm};
+    std::vector<size_t> dimsC = {ni,nj};
+
+    Tensor A4("A4",dimsA);
+    Tensor B4("B4",dimsB);
+    Tensor C2("C2",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_4(B4,b4);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C2.zero();
+    C2("ij") += A4("iklm") * B4("jklm");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            c2[i][j] = 0.0;
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    for (size_t m = 0; m < nm; ++m){
+                        c2[i][j] += a4[i][k][l][m] * b4[j][k][l][m];
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_2(C2,c2);
+//    fprintf(outfile,"\n C(p,q,r,s) error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+
+std::pair<std::string,double> test_Cji_Aklim_Bmjlk()
+{
+    std::string test = "C2(\"ji\") += A4(\"klim\") * B4(\"mjlk\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    std::vector<size_t> dimsA = {nk,nl,ni,nm};
+    std::vector<size_t> dimsB = {nm,nj,nl,nk};
+    std::vector<size_t> dimsC = {nj,ni};
+
+    Tensor A4("A4",dimsA);
+    Tensor B4("B4",dimsB);
+    Tensor C2("C2",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_4(B4,b4);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C2.zero();
+    C2("ji") += A4("klim") * B4("mjlk");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            c2[j][i] = 0.0;
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    for (size_t m = 0; m < nm; ++m){
+                        c2[j][i] += a4[k][l][i][m] * b4[m][j][l][k];
+                    }
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_2(C2,c2);
+//    fprintf(outfile,"\n C(p,q,r,s) error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+
+std::pair<std::string,double> test_Cij_Aikjl_Bkl()
+{
+    std::string test = "C2(\"ij\") += A4(\"ikjl\") * B2(\"kl\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    size_t nm = 8;
+    std::vector<size_t> dimsA = {ni,nk,nj,nl};
+    std::vector<size_t> dimsB = {nk,nl};
+    std::vector<size_t> dimsC = {ni,nj};
+
+    Tensor A4("A4",dimsA);
+    Tensor B2("B4",dimsB);
+    Tensor C2("C2",dimsC);
+
+    initialize_random_4(A4,a4);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_2(B2,b2);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C2.zero();
+    C2("ij") += A4("ikjl") * B2("kl");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            c2[i][j] = 0.0;
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c2[i][j] += a4[i][k][j][l] * b2[k][l];
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_2(C2,c2);
+//    fprintf(outfile,"\n C(p,q,r,s) error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+std::pair<std::string,double> test_Cijkl_Aij_Bkl()
+{
+    std::string test = "C4(\"ijkl\") += A2(\"ij\") * B2(\"kl\")";
+    fprintf(outfile,"\n Testing %s",test.c_str());
+    size_t ni = 5;
+    size_t nj = 6;
+    size_t nk = 7;
+    size_t nl = 9;
+    std::vector<size_t> dimsA = {ni,nj};
+    std::vector<size_t> dimsB = {nk,nl};
+    std::vector<size_t> dimsC = {ni,nj,nk,nl};
+
+    Tensor A2("A2",dimsA);
+    Tensor B2("B2",dimsB);
+    Tensor C4("C4",dimsC);
+
+    initialize_random_2(A2,a2);
+//    double a_diff = difference_4(A4,a4);
+//    fprintf(outfile,"\n A error: %e",a_diff);
+
+    initialize_random_2(B2,b2);
+//    double b_diff = difference_4(B4,b4);
+//    fprintf(outfile,"\n B error: %e",b_diff);
+
+    C4.zero();
+    C4("ijkl") += A2("ij") * B2("kl");
+
+    for (size_t i = 0; i < ni; ++i){
+        for (size_t j = 0; j < nj; ++j){
+            for (size_t k = 0; k < nk; ++k){
+                for (size_t l = 0; l < nl; ++l){
+                    c4[i][j][k][l] = a2[i][j] * b2[k][l];
+                }
+            }
+        }
+    }
+    std::pair<double,double> c_diff = difference_4(C4,c4);
+//    fprintf(outfile,"\n C(p,q,r,s) error: sum = %e max = %e",c_diff.first,c_diff.second);
+    return std::make_pair(test,std::fabs(c_diff.second));
+}
+
+std::pair<double,double> difference_2(Tensor& tensor,double matrix[MAXTWO][MAXTWO])
 {
     double sum = 0.0;
+    double max = 0.0;
     size_t n0 = tensor.dims(0);
     size_t n1 = tensor.dims(1);
     for (size_t i = 0; i < n0; ++i){
         for (size_t j = 0; j < n1; ++j){
             sum += std::fabs(tensor(i,j) - matrix[i][j]);
+            max = std::max(max,std::fabs(tensor(i,j) - matrix[i][j]));
         }
     }
-    return sum;
+    return std::make_pair(sum,max);
 }
 
 
@@ -187,16 +617,17 @@ void initialize_random_2(Tensor& tensor,double matrix[MAXTWO][MAXTWO])
     size_t n1 = tensor.dims(1);
     for (size_t i = 0; i < n0; ++i){
         for (size_t j = 0; j < n1; ++j){
-            double randnum = 1.0 / (1.0 + static_cast<double>(std::rand()));
+            double randnum = double(std::rand())/double(RAND_MAX);
             tensor(i,j) = randnum;
             matrix[i][j] = randnum;
         }
     }
 }
 
-double difference_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
+std::pair<double,double> difference_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
 {
     double sum = 0.0;
+    double max = 0.0;
     size_t n0 = tensor.dims(0);
     size_t n1 = tensor.dims(1);
     size_t n2 = tensor.dims(2);
@@ -206,13 +637,13 @@ double difference_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXF
             for (size_t k = 0; k < n2; ++k){
                 for (size_t l = 0; l < n3; ++l){
                     sum += std::fabs(tensor(i,j,k,l) - matrix[i][j][k][l]);
+                    max = std::max(max,std::fabs(tensor(i,j,k,l) - matrix[i][j][k][l]));
                 }
             }
         }
     }
-    return sum;
+    return std::make_pair(sum,max);
 }
-
 
 void initialize_random_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR][MAXFOUR])
 {
@@ -224,7 +655,7 @@ void initialize_random_4(Tensor& tensor,double matrix[MAXFOUR][MAXFOUR][MAXFOUR]
         for (size_t j = 0; j < n1; ++j){
             for (size_t k = 0; k < n2; ++k){
                 for (size_t l = 0; l < n3; ++l){
-                    double randnum = 1.0 / (1.0 + static_cast<double>(std::rand()));
+                    double randnum = double(std::rand())/double(RAND_MAX);
                     tensor(i,j,k,l) = randnum;
                     matrix[i][j][k][l] = randnum;
                 }
