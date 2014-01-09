@@ -112,6 +112,12 @@ private:
     // Class options
     ///  Use of DGEMM for tensor contractions?
     static bool use_dgemm_;
+    /// The print level of the Tensor class
+    /// 0 : no printing
+    /// 1 : print contraction information
+    /// 2 : print contraction and sorting information
+    /// 3 : print everything
+    static int print_;
 };
 
 

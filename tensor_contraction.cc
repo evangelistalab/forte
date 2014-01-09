@@ -37,13 +37,15 @@ void Tensor::finalize_class()
 
 void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
 {
-    fprintf(outfile,"\n  Performing the contraction:");
-    C.print();
-    fprintf(outfile," += ");
-    A.print();
-    B.print();
+    if(print_ > 0){
+        fprintf(outfile,"\n  Performing the contraction:");
+        C.print();
+        fprintf(outfile," += ");
+        A.print();
+        B.print();
+    }
 
-    // Find the common indices
+    // Find the common indices between tensor A and B
     std::vector<std::string> A_idx = A.indices();
     std::vector<std::string> B_idx = B.indices();
     std::vector<std::string> C_idx = C.indices();
@@ -73,12 +75,14 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
         if (not contract) B_fix_idx.push_back(B_idx[b]);
     }
 
-    fprintf(outfile,"\n  Contracting over the indices:");
-    for (std::string& idx_sym : A_sum_idx){
-        fprintf(outfile," %s",idx_sym.c_str());
+    if(print_ > 0){
+        fprintf(outfile,"\n  Contracting over the indices:");
+        for (std::string& idx_sym : A_sum_idx){
+            fprintf(outfile," %s",idx_sym.c_str());
+        }
     }
 
-    // Sort the tensors
+    // Sort the input and output tensors
     pair<size_t,size_t> Adata = tensor_to_matrix_sort(A,A_fix_idx,A_sum_idx,tA,true);
     pair<size_t,size_t> Bdata = tensor_to_matrix_sort(B,B_fix_idx,A_sum_idx,tB,true);
     pair<size_t,size_t> Cdata = tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,true);
@@ -122,7 +126,6 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
 
     // Sort the result
     tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,false);
-    //    std::vector<int> A_sorter;
 }
 
 template<typename Sorter>
@@ -223,36 +226,41 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
     size_t nright = T_right.size();
 
     // maps the indices of i to those of j, itoj: i_k -> j_itoj[k]
-    std::vector<size_t> itoj(10);
+    std::vector<size_t> itoj(nleft + nright);
     // maps the indices of j to those of i, jtoi: j_k -> i_jtoi[k]
-    size_t jtoi[10];
+    std::vector<size_t> jtoi(nleft + nright);
 
-    fprintf(outfile,"\n  The tensor:");
-    T.print();
     int idx_j = 0;
-    fprintf(outfile," will be sorted as the matrix: [");
     for (size_t n = 0; n < nleft; ++n){
         string index = T_left[n];
         size_t position = std::find(std::begin(indices), std::end(indices), index) - std::begin(indices);
-        fprintf(outfile,"%s (%zu)",index.c_str(),position);
         itoj[position] = idx_j;
         jtoi[idx_j] = position;
         idx_j += 1;
     }
-    fprintf(outfile,"][");
     for (size_t n = 0; n < nright; ++n){
         string index = T_right[n];
         size_t position = std::find(std::begin(indices), std::end(indices), index) - std::begin(indices);
-        fprintf(outfile,"%s (%zu)",index.c_str(),position);
         itoj[position] = idx_j;
         jtoi[idx_j] = position;
         idx_j += 1;
     }
-    fprintf(outfile,"]");
-
-    fprintf(outfile,"\n  The indices will map as:");
-    for (size_t n = 0; n < nright + nleft; ++n){
-        fprintf(outfile,"(%zu -> %zu)",n,itoj[n]);
+    if(print_ > 1){
+        fprintf(outfile,"\n  The tensor: ");
+        T.print();
+        fprintf(outfile," will be sorted as the matrix: [");
+        for (size_t n = 0; n < nleft; ++n){
+            fprintf(outfile,"%s",T_left[n].c_str());
+        }
+        fprintf(outfile,"][");
+        for (size_t n = 0; n < nright; ++n){
+            fprintf(outfile,"%s",T_right[n].c_str());
+        }
+        fprintf(outfile,"]");
+        fprintf(outfile,"\n  The indices will map as:");
+        for (size_t n = 0; n < nright + nleft; ++n){
+            fprintf(outfile,"(%zu -> %zu)",n,itoj[n]);
+        }
     }
 
     std::pair<size_t,size_t> matrix_size;
@@ -327,9 +335,14 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
         }
         );
     }else{
-        fprintf(outfile,"\n  THIS SORTING IS NOT IMPLEMENTED!!");
+        std::string msg = "The sorting "
+                            + std::to_string(nleft) + ":"
+                            + std::to_string(nright)
+                            + " is not implemented";
+        fprintf(outfile,"\n\n  %s\n\n",msg.c_str());
+        fflush(outfile);
+        exit(1);
     }
-
     return matrix_size;
 }
 

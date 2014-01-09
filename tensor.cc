@@ -10,6 +10,7 @@ using namespace std;
 using namespace psi;
 
 bool Tensor::use_dgemm_ = true;
+int Tensor::print_ = 0;
 
 Tensor::Tensor()
     : t_(nullptr), nelements_(0)
