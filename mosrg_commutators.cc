@@ -352,7 +352,6 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         Bm_aaaa("pbrc") = I4("abcd") * B_aaaa("pdra");
         C_abab("pqrs") += sign * A_abab("cqbs") * Bm_aaaa("pbrc");
 
-
         I4("abcd") = D_bb("ac") * CD_bb("bd");
         I4("abcd") += -1.0 * CD_bb("ac") * D_bb("bd");
         Bm_bbbb("qbsc") = I4("abcd") * B_bbbb("qdsa");
@@ -360,15 +359,13 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         Bm_abab("pbrc") = I4("abcd") * B_abab("pdra");
         C_abab("pqrs") += sign * A_bbbb("qcsb") * Bm_abab("pbrc");
 
+        I4("aBcD") = D_aa("ac") * CD_bb("BD");
+        I4("aBcD") += -1.0 * CD_aa("ac") * D_bb("BD");
+        Bm_abab("pBcS") = I4("aBcD") * B_abab("pDaS");
+        C_abab("pQrS") += -sign * A_abab("cQrB") * Bm_abab("pBcS");
 
-        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-            double sum = 0.0;
-            loop_mo_t loop_mo_u{
-                sum += -(A.abab[t][q][r][u] * B.abab[p][u][t][s]) * (No_.a[t] - No_.b[u]);
-                sum += -(A.abab[p][t][u][s] * B.abab[u][q][r][t]) * (No_.b[t] - No_.a[u]);
-            }
-            C.abab[p][q][r][s] += sign * sum;
-        }
+        Bm_abab("bQrC") = I4("bAdC") * B_abab("dQrA");
+        C_abab("pQrS") += +sign * A_abab("pCbS") * Bm_abab("bQrC");
 
 
         // BBBB case
