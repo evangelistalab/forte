@@ -1,4 +1,4 @@
-#include <cmath>
+﻿#include <cmath>
 
 #include <boost/numeric/odeint.hpp>
 
@@ -543,25 +543,32 @@ void MOSRG::mosrg_startup()
 
     std::vector<size_t> n2 = {nmo_,nmo_};
     std::vector<size_t> n4 = {nmo_,nmo_,nmo_,nmo_};
-    tA_aaaa.resize("A",n4);
-    tA_abab.resize("A",n4);
-    tA_bbbb.resize("A",n4);
+    D_aa.resize("D",n2);
+    D_bb.resize("D",n2);
+    CD_aa.resize("D",n2);
+    CD_bb.resize("D",n2);
 
-    tB_aaaa.resize("B",n4);
-    tB_abab.resize("B",n4);
-    tB_bbbb.resize("B",n4);
+    A_aaaa.resize("A",n4);
+    A_abab.resize("A",n4);
+    A_bbbb.resize("A",n4);
 
-    tAm_aaaa.resize("Amod",n4);
-    tAm_abab.resize("Amod",n4);
-    tAm_bbbb.resize("Amod",n4);
+    B_aaaa.resize("B",n4);
+    B_abab.resize("B",n4);
+    B_bbbb.resize("B",n4);
 
-    tBm_aaaa.resize("Bmod",n4);
-    tBm_abab.resize("Bmod",n4);
-    tBm_bbbb.resize("Bmod",n4);
+    Am_aaaa.resize("Amod",n4);
+    Am_abab.resize("Amod",n4);
+    Am_bbbb.resize("Amod",n4);
 
-    tC_aaaa.resize("C",n4);
-    tC_abab.resize("C",n4);
-    tC_bbbb.resize("C",n4);
+    Bm_aaaa.resize("Bmod",n4);
+    Bm_abab.resize("Bmod",n4);
+    Bm_bbbb.resize("Bmod",n4);
+
+    C_aaaa.resize("C",n4);
+    C_abab.resize("C",n4);
+    C_bbbb.resize("C",n4);
+
+    I4.resize("I4",n4);
 }
 
 void MOSRG::mosrg_cleanup()

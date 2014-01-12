@@ -72,21 +72,26 @@ private:
     /// The one-body component of the operator S
     MOFourIndex S2_;
 
-    Tensor tA_aaaa;
-    Tensor tA_abab;
-    Tensor tA_bbbb;
-    Tensor tAm_aaaa;
-    Tensor tAm_abab;
-    Tensor tAm_bbbb;
-    Tensor tB_aaaa;
-    Tensor tB_abab;
-    Tensor tB_bbbb;
-    Tensor tBm_aaaa;
-    Tensor tBm_abab;
-    Tensor tBm_bbbb;
-    Tensor tC_aaaa;
-    Tensor tC_abab;
-    Tensor tC_bbbb;
+    Tensor D_aa;
+    Tensor D_bb;
+    Tensor CD_aa;
+    Tensor CD_bb;
+    Tensor A_aaaa;
+    Tensor A_abab;
+    Tensor A_bbbb;
+    Tensor Am_aaaa;
+    Tensor Am_abab;
+    Tensor Am_bbbb;
+    Tensor B_aaaa;
+    Tensor B_abab;
+    Tensor B_bbbb;
+    Tensor Bm_aaaa;
+    Tensor Bm_abab;
+    Tensor Bm_bbbb;
+    Tensor C_aaaa;
+    Tensor C_abab;
+    Tensor C_bbbb;
+    Tensor I4;
 
     void mosrg_startup();
     void mosrg_cleanup();

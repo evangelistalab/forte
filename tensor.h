@@ -64,7 +64,18 @@ public:
     double norm(int power = 2);
 
     /// Contract two tensors
-    static void evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C);
+    /// Performs either C += A * B
+    ///              or C  = A * B
+    /// @param A
+    /// @param B
+    /// @param C
+    /// @param addition Add A * B to C?
+    static void evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool addition);
+
+    /// Add or copy a tensor
+    /// Performs either B += A
+    ///              or B  = A
+    static void add(TensorIndexed A, TensorIndexed B, bool addition);
 
     /// Functions that deal with the temporary data
     static void initialize_class(size_t nmo);
@@ -74,9 +85,14 @@ private:
     void release();
 
     size_t one_address(size_t i0) const;
-    size_t two_address(size_t i0,size_t i1) const;
+//    size_t two_address(size_t i0,size_t i1) const;
+    size_t two_address(size_t i0,size_t i1) const {
+        return(i0 * add_[0] + i1);
+    }
     size_t three_address(size_t i0,size_t i1,size_t i2) const;
-    size_t four_address(size_t i0,size_t i1,size_t i2,size_t i3) const;
+    size_t four_address(size_t i0,size_t i1,size_t i2,size_t i3) const {
+        return(i0 * add_[0] + i1 * add_[1] + i2 * add_[2] + i3);
+    }
 
     /// The label of the tensor
     std::string label_;
@@ -99,6 +115,7 @@ private:
     // Class static functions
     /// Set the use of DGEMM for tensor contractions
     void set_use_dgemm(bool value) {use_dgemm_ = value;}
+    void set_print(int value) {print_ = value;}
 
     template<typename Sorter>
     void sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter sorter);
@@ -108,6 +125,7 @@ private:
     static double* tB;
     static double* tC;
     static double* tD;
+    static size_t nwork_;
 
     // Class options
     ///  Use of DGEMM for tensor contractions?
@@ -140,8 +158,14 @@ public:
     void print();
     /// Multiply two tensors with indices
     TensorProduct operator*(TensorIndexed lhs);
-    /// Add a product of two tensor to a tensor with indices (contraction)
+    /// Add a product of two tensors to a tensor with indices (contraction)
     void operator+=(TensorProduct tp);
+    /// Set this equal to a product of two tensors (contraction)
+    void operator=(TensorProduct tp);
+    /// Add a tensor to this tensors (copy)
+    void operator+=(TensorIndexed lhs);
+    /// Set this tensor equal to another tensors (copy)
+    void operator=(TensorIndexed lhs);
 private:
     double factor_;
     std::vector<std::string> indices_;

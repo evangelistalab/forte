@@ -49,9 +49,10 @@ void Tensor::allocate(std::vector<size_t> dims)
     nelements_ = 1;
     for (size_t d : dims_) nelements_ *= d;
 
-    // allocate the memory
+    // allocate the memory and zero
     if (t_ != nullptr) delete[] t_;
     t_ = new double[nelements_];
+    for (size_t i = 0; i < nelements_; ++i) t_[i] = 0.0;
 
     // compute the addressing array
     add_.resize(ndims_,1);
@@ -79,19 +80,9 @@ inline size_t Tensor::one_address(size_t i0) const
     return(i0);
 }
 
-inline size_t Tensor::two_address(size_t i0,size_t i1) const
-{
-    return(i0 * add_[0] + i1);
-}
-
 inline size_t Tensor::three_address(size_t i0,size_t i1,size_t i2) const
 {
     return(i0 * add_[0] + i1 * add_[1] + i2);
-}
-
-inline size_t Tensor::four_address(size_t i0,size_t i1,size_t i2,size_t i3) const
-{
-    return(i0 * add_[0] + i1 * add_[1] + i2 * add_[2] + i3);
 }
 
 double& Tensor::operator()(size_t i0,size_t i1)
@@ -155,8 +146,24 @@ void TensorIndexed::print()
 
 void TensorIndexed::operator+=(TensorProduct tp)
 {
-    Tensor::evaluate(tp.A(),tp.B(),*this);
+    Tensor::evaluate(tp.A(),tp.B(),*this,true);
 }
+
+void TensorIndexed::operator=(TensorProduct tp)
+{
+    Tensor::evaluate(tp.A(),tp.B(),*this,false);
+}
+
+void TensorIndexed::operator+=(TensorIndexed ti)
+{
+    Tensor::add(ti,*this,true);
+}
+
+void TensorIndexed::operator=(TensorIndexed ti)
+{
+    Tensor::add(ti,*this,false);
+}
+
 
 TensorProduct TensorIndexed::operator*(TensorIndexed lhs)
 {

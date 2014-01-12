@@ -11,14 +11,15 @@ double* Tensor::tA = nullptr;
 double* Tensor::tB = nullptr;
 double* Tensor::tC = nullptr;
 double* Tensor::tD = nullptr;
+size_t Tensor::nwork_ = 0;
 
 void Tensor::initialize_class(size_t nmo)
 {
-    size_t nwork = nmo * nmo * nmo * nmo;
-    tA = new double[nwork];
-    tB = new double[nwork];
-    tC = new double[nwork];
-    tD = new double[nwork];
+    nwork_ = nmo * nmo * nmo * nmo;
+    tA = new double[nwork_];
+    tB = new double[nwork_];
+    tC = new double[nwork_];
+    tD = new double[nwork_];
 }
 
 void Tensor::finalize_class()
@@ -35,7 +36,8 @@ void Tensor::finalize_class()
 //    }
 //}
 
-void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
+/// Performs the operator C +=(=) A * B
+void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool addition)
 {
     if(print_ > 0){
         fprintf(outfile,"\n  Performing the contraction:");
@@ -80,12 +82,16 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
         for (std::string& idx_sym : A_sum_idx){
             fprintf(outfile," %s",idx_sym.c_str());
         }
+        fflush(outfile);
     }
 
     // Sort the input and output tensors
     pair<size_t,size_t> Adata = tensor_to_matrix_sort(A,A_fix_idx,A_sum_idx,tA,true);
     pair<size_t,size_t> Bdata = tensor_to_matrix_sort(B,B_fix_idx,A_sum_idx,tB,true);
     pair<size_t,size_t> Cdata = tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,true);
+    if(not addition){
+        for (int n = 0; n < nwork_; ++n) tC[n] = 0.0;
+    }
 
     size_t nArows = Adata.first;
     size_t nAcols = Adata.second;
@@ -126,6 +132,43 @@ void Tensor::evaluate(TensorIndexed A,TensorIndexed B,TensorIndexed C)
 
     // Sort the result
     tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,false);
+}
+
+/// Performs the operator B +=(=) A
+void Tensor::add(TensorIndexed A, TensorIndexed B, bool addition)
+{
+    if(print_ > 0){
+        fprintf(outfile,"\n  Performing the operation:");
+        B.print();
+        fprintf(outfile," %s ",addition ? "+=" : "=");
+        A.print();
+    }
+
+    // Find the common indices between tensor A and B
+    std::vector<std::string> A_idx = A.indices();
+    std::vector<std::string> B_idx = B.indices();
+    std::vector<std::string> empty_idx;
+
+//    if(print_ > 0){
+//        fprintf(outfile,"\n  Contracting over the indices:");
+//        for (std::string& idx_sym : A_sum_idx){
+//            fprintf(outfile," %s",idx_sym.c_str());
+//        }
+//    }
+
+    double factor = A.factor();
+
+    // Sort the input and output tensors
+    pair<size_t,size_t> Adata = tensor_to_matrix_sort(A,A_idx,empty_idx,tA,true);
+    if(addition){
+        pair<size_t,size_t> Bdata = tensor_to_matrix_sort(B,A_idx,empty_idx,tB,true);
+        for (int n = 0; n < nwork_; ++n) tB[n] += factor * tA[n];
+    }else{
+        for (int n = 0; n < nwork_; ++n) tB[n] = factor * tA[n];
+    }
+
+    // Sort the result
+    tensor_to_matrix_sort(B,A_idx,empty_idx,tB,false);
 }
 
 template<typename Sorter>
@@ -293,6 +336,18 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
         tens->sort_me(itoj,t,direct,
                       [&](const std::vector<size_t>& j){
             return j[0] * add_left_0 + j[1];
+        }
+        );
+    }else if ((nleft == 4) and (nright == 0)){
+        size_t left_size = dims[jtoi[0]] * dims[jtoi[1]] * dims[jtoi[2]] * dims[jtoi[3]];
+        size_t right_size = 1;
+        matrix_size = {left_size,right_size};
+        size_t add_left_0 = dims[jtoi[1]] * dims[jtoi[2]] * dims[jtoi[3]];
+        size_t add_left_1 = dims[jtoi[2]] * dims[jtoi[3]];
+        size_t add_left_2 = dims[jtoi[3]];
+        tens->sort_me(itoj,t,direct,
+                      [&](const std::vector<size_t>& j){
+            return j[0] * add_left_0 + j[1] * add_left_1 + j[2] * add_left_2 + j[3];
         }
         );
     }else if ((nleft == 3) and (nright == 1)){
