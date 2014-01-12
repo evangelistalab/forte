@@ -281,7 +281,7 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,do
 void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C)
 {
     boost::timer t;
-    bool use_tensor = false;
+    bool use_tensor = true;
     if(use_tensor){
         boost::timer t1;
         loop_mo_p loop_mo_q{
@@ -355,7 +355,7 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
 
         I4("abcd") = D_bb("ac") * CD_bb("bd");
         I4("abcd") += -1.0 * CD_bb("ac") * D_bb("bd");
-        Bm_bbbb("qbsc") = I4("abcd") * B_abab("qdsa");
+        Bm_bbbb("qbsc") = I4("abcd") * B_bbbb("qdsa");
         C_abab("pqrs") += sign * A_abab("pcrb") * Bm_bbbb("qbsc");
         Bm_abab("pbrc") = I4("abcd") * B_abab("pdra");
         C_abab("pqrs") += sign * A_bbbb("qcsb") * Bm_abab("pbrc");
@@ -364,8 +364,6 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
             double sum = 0.0;
             loop_mo_t loop_mo_u{
-//                sum += (/* A.aaaa[p][t][r][u] * B.abab[u][q][t][s] */+ A.abab[t][q][u][s] * B.aaaa[p][u][r][t]) * (No_.a[t] - No_.a[u]);
-//                sum += (A.abab[p][t][r][u] * B.bbbb[q][u][s][t] + A.bbbb[t][q][u][s] * B.abab[p][u][r][t]) * (No_.b[t] - No_.b[u]);
                 sum += -(A.abab[t][q][r][u] * B.abab[p][u][t][s]) * (No_.a[t] - No_.b[u]);
                 sum += -(A.abab[p][t][u][s] * B.abab[u][q][r][t]) * (No_.b[t] - No_.a[u]);
             }
