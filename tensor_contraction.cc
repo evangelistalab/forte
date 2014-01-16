@@ -1,3 +1,5 @@
+#include <numeric>
+
 #include <psi4-dec.h>
 
 #include <libqt/qt.h>
@@ -30,16 +32,46 @@ void Tensor::finalize_class()
     delete[] tD;
 }
 
-//for (int i = 0; i < 5; ++i){
-//    for (int j = 0; j < 5; ++j){
-//        tensor_to_matrix_sorter[i][j] = nullptr;
-//    }
-//}
-
-/// Performs the operator C +=(=) A * B
-void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool addition)
+/// Performs the operator Z +=(=) A * B * C *
+void Tensor::contract(TensorProduct tp, TensorIndexed Z, bool addition)
 {
-    if(print_ > 0){
+    /// This algorithm loops over all the permuations of tensor contractions and finds the optimal sequence
+    size_t nterms = tp.size();
+    std::vector<size_t> perm(nterms);
+    std::vector<size_t> best_perm(nterms);
+    std::iota(perm.begin(),perm.end(),0);
+    std::pair<double,double> best_cpu_memory_cost(1.0e200,1.0e200);
+    do {
+        if(perm[0] > perm[1]){
+            std::pair<double,double> cpu_memory_cost = tp.compute_contraction_cost(perm);
+            if (cpu_memory_cost.first < best_cpu_memory_cost.first){
+                best_perm = perm;
+                best_cpu_memory_cost = cpu_memory_cost;
+                if(print_level_ > 0) fprintf(outfile,"\n  Found a better contraction pattern");
+            }
+        }
+    } while (std::next_permutation(perm.begin(),perm.end()));
+
+    TensorIndexed rhs = tp.tensor(perm[0]);
+    for (size_t n = 0; n < nterms - 1; ++n){
+//        TensorIndexed lhs = tp.tensor(perm[n+1]);
+//        // create a temporary tensor
+
+//        Tensor result;
+//        result.resize("I",);
+
+//        binary_contraction(*rhs,lhs,result,false);
+
+//        rhs = result;
+    }
+    TensorIndexed last = tp.tensor(perm[nterms-1]);
+    binary_contraction(rhs,last,Z,addition);
+}
+
+/// Performs the binary contraction C +=(=) A * B
+void Tensor::binary_contraction(TensorIndexed A,TensorIndexed B,TensorIndexed C, bool addition)
+{
+    if(print_level_ > 0){
         fprintf(outfile,"\n  Performing the contraction:");
         C.print();
         fprintf(outfile," += ");
@@ -77,7 +109,7 @@ void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool ad
         if (not contract) B_fix_idx.push_back(B_idx[b]);
     }
 
-    if(print_ > 0){
+    if(print_level_ > 0){
         fprintf(outfile,"\n  Contracting over the indices:");
         for (std::string& idx_sym : A_sum_idx){
             fprintf(outfile," %s",idx_sym.c_str());
@@ -89,9 +121,6 @@ void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool ad
     pair<size_t,size_t> Adata = tensor_to_matrix_sort(A,A_fix_idx,A_sum_idx,tA,true);
     pair<size_t,size_t> Bdata = tensor_to_matrix_sort(B,B_fix_idx,A_sum_idx,tB,true);
     pair<size_t,size_t> Cdata = tensor_to_matrix_sort(C,A_fix_idx,B_fix_idx,tC,true);
-    if(not addition){
-        for (int n = 0; n < nwork_; ++n) tC[n] = 0.0;
-    }
 
     size_t nArows = Adata.first;
     size_t nAcols = Adata.second;
@@ -104,6 +133,7 @@ void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool ad
     // Multiply the two matrices
     if(use_dgemm_){
         // C := alpha * A * B^T + beta * C,
+        double beta = addition ? 1.0 : 0.0;
         C_DGEMM('n','t',
                 Adata.first,  // the rows of A
                 Bdata.first,  // the cols of B^T
@@ -113,7 +143,7 @@ void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool ad
                 Adata.second,  // the leading dimension of A
                 tB,           // the array that contains B^T
                 Bdata.second,  // the leading dimension of B^T
-                1.0,          // the scalar beta
+                beta,          // the scalar beta
                 tC,           // the array that contains C
                 Cdata.second); // the leading dimension of C
     }else{
@@ -137,7 +167,7 @@ void Tensor::evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool ad
 /// Performs the operator B +=(=) A
 void Tensor::add(TensorIndexed A, TensorIndexed B, bool addition)
 {
-    if(print_ > 0){
+    if(print_level_ > 0){
         fprintf(outfile,"\n  Performing the operation:");
         B.print();
         fprintf(outfile," %s ",addition ? "+=" : "=");
@@ -288,7 +318,7 @@ std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
         jtoi[idx_j] = position;
         idx_j += 1;
     }
-    if(print_ > 1){
+    if(print_level_ > 1){
         fprintf(outfile,"\n  The tensor: ");
         T.print();
         fprintf(outfile," will be sorted as the matrix: [");

@@ -71,11 +71,16 @@ private:
     MOTwoIndex S1_;
     /// The one-body component of the operator S
     MOFourIndex S2_;
+    /// Use the Tensor class?
+    bool use_tensor_class_;
 
     Tensor D_aa;
     Tensor D_bb;
     Tensor CD_aa;
     Tensor CD_bb;
+    Tensor C_aa;
+    Tensor C_bb;
+
     Tensor A_aaaa;
     Tensor A_abab;
     Tensor A_bbbb;

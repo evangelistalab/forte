@@ -251,27 +251,135 @@ void MOSRG::commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,do
 void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C)
 {
     boost::timer t;
-    loop_mo_p loop_mo_q{
-        double sum = 0.0;
-        loop_mo_r loop_mo_s loop_mo_t{
-            sum += 0.5 * (A.aaaa[t][p][r][s] * B.aaaa[r][s][t][q] - B.aaaa[t][p][r][s] * A.aaaa[r][s][t][q])
-                    * (No_.a[r] * No_.a[s] * Nv_.a[t] + Nv_.a[r] * Nv_.a[s] * No_.a[t]);
-            sum += (A.abab[p][t][r][s] * B.abab[r][s][q][t] - B.abab[p][t][r][s] * A.abab[r][s][q][t])
-                    * (No_.a[r] * No_.b[s] * Nv_.b[t] + Nv_.a[r] * Nv_.b[s] * No_.b[t]);
+    if(use_tensor_class_){
+        loop_mo_p loop_mo_q{
+            D_aa(p,q) = (p == q) ? No_.a[p] : 0.0;
+            D_bb(p,q) = (p == q) ? No_.b[p] : 0.0;
+            CD_aa(p,q) = (p == q) ? 1.0 - No_.a[p] : 0.0;
+            CD_bb(p,q) = (p == q) ? 1.0 - No_.b[p] : 0.0;
         }
-        C.aa[p][q] += sign * sum;
-    }
-    loop_mo_p loop_mo_q{
-        double sum = 0.0;
-        loop_mo_r loop_mo_s loop_mo_t{
-            sum += 0.5 * (A.bbbb[t][p][r][s] * B.bbbb[r][s][t][q] - B.bbbb[t][p][r][s] * A.bbbb[r][s][t][q])
-                    * (No_.b[r] * No_.b[s] * Nv_.b[t] + Nv_.b[r] * Nv_.b[s] * No_.b[t]);
-            sum += (A.abab[t][p][r][s] * B.abab[r][s][t][q] - B.abab[t][p][r][s] * A.abab[r][s][t][q])
-                    * (No_.a[r] * No_.b[s] * Nv_.a[t] + Nv_.a[r] * Nv_.b[s] * No_.a[t]);
-        }
-        C.bb[p][q] += sign * sum;
-    }
 
+        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+            A_aaaa(p,q,r,s) = A.aaaa[p][q][r][s];
+            B_aaaa(p,q,r,s) = B.aaaa[p][q][r][s];
+            A_abab(p,q,r,s) = A.abab[p][q][r][s];
+            B_abab(p,q,r,s) = B.abab[p][q][r][s];
+            A_bbbb(p,q,r,s) = A.bbbb[p][q][r][s];
+            B_bbbb(p,q,r,s) = B.bbbb[p][q][r][s];
+        }
+
+        C_aa.zero();
+        C_bb.zero();
+
+        Am_aaaa("cpdb") = A_aaaa("cpab") * D_aa("ad");
+        Am_aaaa("cpde") = Am_aaaa("cpdb") * D_aa("be");
+        Am_aaaa("fpde") = Am_aaaa("cpde") * CD_aa("fc");
+        C_aa("pq") += 0.5 * sign * Am_aaaa("fpde") * B_aaaa("defq");
+
+        Bm_aaaa("cpdb") = B_aaaa("cpab") * D_aa("ad");
+        Bm_aaaa("cpde") = Bm_aaaa("cpdb") * D_aa("be");
+        Bm_aaaa("fpde") = Bm_aaaa("cpde") * CD_aa("fc");
+        C_aa("pq") += -0.5 * sign * Bm_aaaa("fpde") * A_aaaa("defq");
+
+        Am_aaaa("cpdb") = A_aaaa("cpab") * CD_aa("ad");
+        Am_aaaa("cpde") = Am_aaaa("cpdb") * CD_aa("be");
+        Am_aaaa("fpde") = Am_aaaa("cpde") * D_aa("fc");
+        C_aa("pq") += 0.5 * sign * Am_aaaa("fpde") * B_aaaa("defq");
+
+        Bm_aaaa("cpdb") = B_aaaa("cpab") * CD_aa("ad");
+        Bm_aaaa("cpde") = Bm_aaaa("cpdb") * CD_aa("be");
+        Bm_aaaa("fpde") = Bm_aaaa("cpde") * D_aa("fc");
+        C_aa("pq") += -0.5 * sign * Bm_aaaa("fpde") * A_aaaa("defq");
+
+
+        Am_abab("pCbD") = A_abab("pCbA") * D_bb("AD");
+        Am_abab("pCeD") = Am_abab("pCbD") * D_aa("be");
+        Am_abab("pFeD") = Am_abab("pCeD") * CD_bb("FC");
+        C_aa("pq") += sign * Am_abab("pFeD") * B_abab("eDqF");
+
+        Bm_abab("pCbD") = B_abab("pCbA") * D_bb("AD");
+        Bm_abab("pCeD") = Bm_abab("pCbD") * D_aa("be");
+        Bm_abab("pFeD") = Bm_abab("pCeD") * CD_bb("FC");
+        C_aa("pq") += -sign * Bm_abab("pFeD") * A_abab("eDqF");
+
+        Am_abab("pCbD") = A_abab("pCbA") * CD_bb("AD");
+        Am_abab("pCeD") = Am_abab("pCbD") * CD_aa("be");
+        Am_abab("pFeD") = Am_abab("pCeD") * D_bb("FC");
+        C_aa("pq") += sign * Am_abab("pFeD") * B_abab("eDqF");
+
+        Bm_abab("pCbD") = B_abab("pCbA") * CD_bb("AD");
+        Bm_abab("pCeD") = Bm_abab("pCbD") * CD_aa("be");
+        Bm_abab("pFeD") = Bm_abab("pCeD") * D_bb("FC");
+        C_aa("pq") += -sign * Bm_abab("pFeD") * A_abab("eDqF");
+
+
+        Am_bbbb("cpdb") = A_bbbb("cpab") * D_bb("ad");
+        Am_bbbb("cpde") = Am_bbbb("cpdb") * D_bb("be");
+        Am_bbbb("fpde") = Am_bbbb("cpde") * CD_bb("fc");
+        C_bb("pq") += 0.5 * sign * Am_bbbb("fpde") * B_bbbb("defq");
+
+        Bm_bbbb("cpdb") = B_bbbb("cpab") * D_bb("ad");
+        Bm_bbbb("cpde") = Bm_bbbb("cpdb") * D_bb("be");
+        Bm_bbbb("fpde") = Bm_bbbb("cpde") * CD_bb("fc");
+        C_bb("pq") += -0.5 * sign * Bm_bbbb("fpde") * A_bbbb("defq");
+
+        Am_bbbb("cpdb") = A_bbbb("cpab") * CD_bb("ad");
+        Am_bbbb("cpde") = Am_bbbb("cpdb") * CD_bb("be");
+        Am_bbbb("fpde") = Am_bbbb("cpde") * D_bb("fc");
+        C_bb("pq") += 0.5 * sign * Am_bbbb("fpde") * B_bbbb("defq");
+
+        Bm_bbbb("cpdb") = B_bbbb("cpab") * CD_bb("ad");
+        Bm_bbbb("cpde") = Bm_bbbb("cpdb") * CD_bb("be");
+        Bm_bbbb("fpde") = Bm_bbbb("cpde") * D_bb("fc");
+        C_bb("pq") += -0.5 * sign * Bm_bbbb("fpde") * A_bbbb("defq");
+
+        Am_abab("cPdB") = A_abab("cPaB") * D_aa("ad");
+        Am_abab("cPdE") = Am_abab("cPdB") * D_bb("BE");
+        Am_abab("fPdE") = Am_abab("cPdE") * CD_aa("fc");
+        C_bb("PQ") += sign * Am_abab("fPdE") * B_abab("dEfQ");
+
+        Bm_abab("cPdB") = B_abab("cPaB") * D_aa("ad");
+        Bm_abab("cPdE") = Bm_abab("cPdB") * D_bb("BE");
+        Bm_abab("fPdE") = Bm_abab("cPdE") * CD_aa("fc");
+        C_bb("PQ") += -sign * Bm_abab("fPdE") * A_abab("dEfQ");
+
+        Am_abab("cPdB") = A_abab("cPaB") * CD_aa("ad");
+        Am_abab("cPdE") = Am_abab("cPdB") * CD_bb("BE");
+        Am_abab("fPdE") = Am_abab("cPdE") * D_aa("fc");
+        C_bb("PQ") += sign * Am_abab("fPdE") * B_abab("dEfQ");
+
+        Bm_abab("cPdB") = B_abab("cPaB") * CD_aa("ad");
+        Bm_abab("cPdE") = Bm_abab("cPdB") * CD_bb("BE");
+        Bm_abab("fPdE") = Bm_abab("cPdE") * D_aa("fc");
+        C_bb("PQ") += -sign * Bm_abab("fPdE") * A_abab("dEfQ");
+
+
+        loop_mo_p loop_mo_q{
+            C.aa[p][q] += C_aa(p,q);
+            C.bb[p][q] += C_bb(p,q);
+        }
+    }else{
+        loop_mo_p loop_mo_q{
+            double sum = 0.0;
+            loop_mo_r loop_mo_s loop_mo_t{
+                sum += 0.5 * (A.aaaa[t][p][r][s] * B.aaaa[r][s][t][q] - B.aaaa[t][p][r][s] * A.aaaa[r][s][t][q])
+                        * (No_.a[r] * No_.a[s] * Nv_.a[t] + Nv_.a[r] * Nv_.a[s] * No_.a[t]);
+                sum += (A.abab[p][t][r][s] * B.abab[r][s][q][t] - B.abab[p][t][r][s] * A.abab[r][s][q][t])
+                        * (No_.a[r] * No_.b[s] * Nv_.b[t] + Nv_.a[r] * Nv_.b[s] * No_.b[t]);
+            }
+            C.aa[p][q] += sign * sum;
+        }
+        loop_mo_p loop_mo_q{
+            double sum = 0.0;
+            loop_mo_r loop_mo_s loop_mo_t{
+                sum += 0.5 * (A.bbbb[t][p][r][s] * B.bbbb[r][s][t][q] - B.bbbb[t][p][r][s] * A.bbbb[r][s][t][q])
+                        * (No_.b[r] * No_.b[s] * Nv_.b[t] + Nv_.b[r] * Nv_.b[s] * No_.b[t]);
+                sum += (A.abab[t][p][r][s] * B.abab[r][s][t][q] - B.abab[t][p][r][s] * A.abab[r][s][t][q])
+                        * (No_.a[r] * No_.b[s] * Nv_.a[t] + Nv_.a[r] * Nv_.b[s] * No_.a[t]);
+            }
+            C.bb[p][q] += sign * sum;
+        }
+    }
     if(print_ > 1){
         fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
@@ -281,8 +389,7 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,do
 void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C)
 {
     boost::timer t;
-    bool use_tensor = true;
-    if(use_tensor){
+    if(use_tensor_class_){
         boost::timer t1;
         loop_mo_p loop_mo_q{
             D_aa(p,q) = (p == q) ? No_.a[p] : 0.0;

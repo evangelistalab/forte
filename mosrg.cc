@@ -16,7 +16,7 @@ int nstepps = 0;
 namespace psi{ namespace libadaptive{
 
 MOSRG::MOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb)
-    : MOBase(options,ints,G1aa,G1bb), srgop(SRGOpUnitary), srgcomm(SRCommutators)
+    : MOBase(options,ints,G1aa,G1bb), srgop(SRGOpUnitary), srgcomm(SRCommutators), use_tensor_class_(true)
 {
     fprintf(outfile,"\n\n      --------------------------------------");
     fprintf(outfile,"\n          Similarity Renormalization Group");
@@ -468,7 +468,10 @@ double MOSRG::compute_recursive_single_commutator()
     double E0 = E0_;
 
     fprintf(outfile,"\n  %2d %20e %20e %20.12f",0,norm(Hbar1_),norm(Hbar2_),E0);
-    for (int n = 1; n < 20; ++n) {
+
+    int maxn = options_.get_int("SRG_RSC_NCOMM");
+    double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    for (int n = 1; n <= maxn; ++n) {
         double factor = 1.0 / static_cast<double>(n);
 
         zero(C1_);
@@ -487,7 +490,8 @@ double MOSRG::compute_recursive_single_commutator()
         double norm_O2 = norm(O1_);
         double norm_O1 = norm(O2_);
         fprintf(outfile,"\n  %2d %20e %20e %20.12f",n,norm_O1,norm_O2,E0);
-        if (std::sqrt(norm_O2 * norm_O2 + norm_O1 * norm_O1) < 1.0e-12){
+        fflush(outfile);
+        if (std::sqrt(norm_O2 * norm_O2 + norm_O1 * norm_O1) < ct_threshold){
             break;
         }
     }
@@ -547,6 +551,9 @@ void MOSRG::mosrg_startup()
     D_bb.resize("D",n2);
     CD_aa.resize("D",n2);
     CD_bb.resize("D",n2);
+
+    C_aa.resize("D",n2);
+    C_bb.resize("D",n2);
 
     A_aaaa.resize("A",n4);
     A_abab.resize("A",n4);

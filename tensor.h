@@ -20,8 +20,10 @@
  *@END LICENSE
  */
 
+#include <initializer_list>
 #include <vector>
 #include <string>
+
 
 #ifndef _tensor_h_
 #define _tensor_h_
@@ -47,11 +49,11 @@ public:
     const double& operator()(size_t i1,size_t i2,size_t i3,size_t i4) const;
 
     /// Return the number of tensor components
-    size_t ndims() {return ndims_;}
+    size_t ndims() const {return ndims_;}
     /// Return the dimensions of the tensor components
     std::vector<size_t>& dims() {return dims_;}
     /// Return the dimensions of the tensor components
-    size_t dims(size_t n) {return dims_[n];}
+    size_t dims(size_t n) const {return dims_[n];}
     /// Return the tensor data
     double* t() {return t_;}
     /// Return the tensor label
@@ -63,14 +65,22 @@ public:
     /// Compute the k-norm of the vector.  The default is the 2-norm.
     double norm(int power = 2);
 
-    /// Contract two tensors
+    /// Contract a product of tensors (A * B * C * ..) storing the result in Z
+    /// Performs either Z += A * B * C * ..
+    ///              or Z  = A * B * C * ..
+    /// @param product a TensorProduct object
+    /// @param Z the destination tensor
+    /// @param addition Add A * B * C * .. to Z?
+    static void contract(TensorProduct product, TensorIndexed Z, bool addition);
+
+    /// Contract a the tensors A and B storing the result in C
     /// Performs either C += A * B
     ///              or C  = A * B
     /// @param A
     /// @param B
     /// @param C
-    /// @param addition Add A * B to C?
-    static void evaluate(TensorIndexed A, TensorIndexed B, TensorIndexed C, bool addition);
+    /// @param addition Add A * B * C * .. to Z?
+    static void binary_contraction(TensorIndexed A,TensorIndexed B,TensorIndexed C, bool addition);
 
     /// Add or copy a tensor
     /// Performs either B += A
@@ -80,6 +90,8 @@ public:
     /// Functions that deal with the temporary data
     static void initialize_class(size_t nmo);
     static void finalize_class();
+
+    static int print_level() {return print_level_;}
 private:
     void allocate(std::vector<size_t> dims);
     void release();
@@ -115,7 +127,7 @@ private:
     // Class static functions
     /// Set the use of DGEMM for tensor contractions
     void set_use_dgemm(bool value) {use_dgemm_ = value;}
-    void set_print(int value) {print_ = value;}
+    void set_print(int value) {print_level_ = value;}
 
     template<typename Sorter>
     void sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter sorter);
@@ -135,7 +147,7 @@ private:
     /// 1 : print contraction information
     /// 2 : print contraction and sorting information
     /// 3 : print everything
-    static int print_;
+    static int print_level_;
 };
 
 
@@ -152,10 +164,14 @@ public:
         factor_(factor), indices_(indices), tensor_(tensor) {};
 
     double factor() {return factor_;}
-    std::vector<std::string> indices() {return indices_;}
+    std::vector<std::string> indices() const {return indices_;}
     Tensor* tensor() {return tensor_;}
+    Tensor* tensor() const {return tensor_;}
 
+    /// Return a string representing the indexed tensor
     void print();
+    /// Return a string representing the indexed tensor
+    std::string str() const;
     /// Multiply two tensors with indices
     TensorProduct operator*(TensorIndexed lhs);
     /// Add a product of two tensors to a tensor with indices (contraction)
@@ -174,18 +190,30 @@ private:
 
 TensorIndexed operator*(double factor,TensorIndexed ti);
 
-/// This class is used to represent the product of tensors
+/// This class is used to represent a product of tensors
 class TensorProduct
 {
 public:
-    TensorProduct(TensorIndexed A, TensorIndexed B) :
-        A_(A), B_(B) {};
-    TensorIndexed A() {return A_;}
-    TensorIndexed B() {return B_;}
+    TensorProduct() {};
+    TensorProduct(std::initializer_list<TensorIndexed> l) : tensors_(l) {}
+
+    TensorIndexed tensor(size_t n) {return tensors_[n];}
+    void append(TensorIndexed ti) {tensors_.push_back(ti);}
+    void append(std::initializer_list<TensorIndexed> l){
+        tensors_.insert(tensors_.end(),l.begin(),l.end());
+    }
+    /// Compute the flop and memory costs of performing a contraction
+    /// of this tensor product using the factorization pattern defined by perm
+    std::pair<double,double> compute_contraction_cost(std::vector<size_t> perm);
+
     void print();
+
+    /// Multiply two tensors with indices
+    TensorProduct operator*(TensorIndexed lhs);
+
+    size_t size() {return tensors_.size();}
 private:
-    TensorIndexed A_;
-    TensorIndexed B_;
+    std::vector<TensorIndexed> tensors_;
 };
 
 ///// This class is used to evaluate contractions of tensors
