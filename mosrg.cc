@@ -116,6 +116,7 @@ struct push_back_state_and_time
         m_states.push_back( x[0] );
         m_times.push_back( t );
         fprintf(outfile,"\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
+        fflush(outfile);
     }
 };
 
@@ -319,6 +320,9 @@ void MOSRG::compute_similarity_renormalization_group_step()
                 eta2_.bbbb[r][s][p][q] = -e2;
             }
         }
+    }else{
+        fprintf(outfile,"\n\n  Please specify a valid option for the parameter SRG_ETA\n");
+        exit(1);
     }
 
     // Step 2. Compute the Hamiltonian flow as dH/ds = [eta,H] (stored in S)
@@ -547,33 +551,33 @@ void MOSRG::mosrg_startup()
 
     std::vector<size_t> n2 = {nmo_,nmo_};
     std::vector<size_t> n4 = {nmo_,nmo_,nmo_,nmo_};
-    D_aa.resize("D",n2);
-    D_bb.resize("D",n2);
-    CD_aa.resize("D",n2);
-    CD_bb.resize("D",n2);
+    D_a.resize("D",n2);
+    D_b.resize("D",n2);
+    CD_a.resize("D",n2);
+    CD_b.resize("D",n2);
 
-    C_aa.resize("D",n2);
-    C_bb.resize("D",n2);
+    C_a.resize("D",n2);
+    C_b.resize("D",n2);
 
-    A_aaaa.resize("A",n4);
-    A_abab.resize("A",n4);
-    A_bbbb.resize("A",n4);
+    A4_aa.resize("A",n4);
+    A4_ab.resize("A",n4);
+    A4_bb.resize("A",n4);
 
-    B_aaaa.resize("B",n4);
-    B_abab.resize("B",n4);
-    B_bbbb.resize("B",n4);
+    B4_aa.resize("B",n4);
+    B4_ab.resize("B",n4);
+    B4_bb.resize("B",n4);
 
-    Am_aaaa.resize("Amod",n4);
-    Am_abab.resize("Amod",n4);
-    Am_bbbb.resize("Amod",n4);
+    A4m_aa.resize("Amod",n4);
+    A4m_ab.resize("Amod",n4);
+    A4m_bb.resize("Amod",n4);
 
-    Bm_aaaa.resize("Bmod",n4);
-    Bm_abab.resize("Bmod",n4);
-    Bm_bbbb.resize("Bmod",n4);
+    B4m_aa.resize("Bmod",n4);
+    B4m_ab.resize("Bmod",n4);
+    B4m_bb.resize("Bmod",n4);
 
-    C_aaaa.resize("C",n4);
-    C_abab.resize("C",n4);
-    C_bbbb.resize("C",n4);
+    C4_aa.resize("C",n4);
+    C4_ab.resize("C",n4);
+    C4_bb.resize("C",n4);
 
     I4.resize("I4",n4);
 }

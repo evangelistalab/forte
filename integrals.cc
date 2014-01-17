@@ -51,28 +51,70 @@ void ExplorerIntegrals::startup()
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
+
+    // Allocate the memory required to store the one-electron integrals
+    one_electron_integrals_a = new double[nmo_ * nmo_];
+    one_electron_integrals_b = new double[nmo_ * nmo_];
+    one_electron_integrals = one_electron_integrals_a;
+
+    diagonal_one_electron_integrals_a = new double[nmo_];
+    diagonal_one_electron_integrals_b = new double[nmo_];
+    diagonal_one_electron_integrals = diagonal_one_electron_integrals_a;
+
+    diagonal_kinetic_energy_integrals = new double[nmo_];
+
+    fock_matrix_a = new double[nmo_ * nmo_];
+    fock_matrix_b = new double[nmo_ * nmo_];
+
+    // Allocate the memory required to store the two-electron integrals
+    two_electron_integrals_aa = new double[num_tei];
+    two_electron_integrals_ab = new double[num_tei];
+    two_electron_integrals_bb = new double[num_tei];
+    two_electron_integrals = two_electron_integrals_aa;
+
+    diagonal_c_integrals_aa = new double[nmo_ * nmo_];
+    diagonal_c_integrals_ab = new double[nmo_ * nmo_];
+    diagonal_c_integrals_bb = new double[nmo_ * nmo_];
+    diagonal_c_integrals = diagonal_c_integrals_aa;
+
+    diagonal_ce_integrals_aa = new double[nmo_ * nmo_];
+    diagonal_ce_integrals_ab = new double[nmo_ * nmo_];
+    diagonal_ce_integrals_bb = new double[nmo_ * nmo_];
+    diagonal_ce_integrals = diagonal_ce_integrals_aa;
 }
 
 void ExplorerIntegrals::cleanup()
 {
     delete ints_;
-    delete[] one_electron_integrals;
+
+    // Deallocate the memory required to store the one-electron integrals
+    delete[] one_electron_integrals_a;
+    delete[] one_electron_integrals_b;
+
+    delete[] diagonal_one_electron_integrals_a;
+    delete[] diagonal_one_electron_integrals_b;
+
     delete[] diagonal_kinetic_energy_integrals;
-    delete[] two_electron_integrals;
-    delete[] diagonal_one_electron_integrals;
-    delete[] diagonal_c_integrals;
-    delete[] diagonal_ce_integrals;
-    delete[] fock_matrix_alpha;
-    delete[] fock_matrix_beta;
+
+    delete[] fock_matrix_a;
+    delete[] fock_matrix_b;
+
+    // Allocate the memory required to store the two-electron integrals
+    delete[] two_electron_integrals_aa;
+    delete[] two_electron_integrals_ab;
+    delete[] two_electron_integrals_bb;
+
+    delete[] diagonal_c_integrals_aa;
+    delete[] diagonal_c_integrals_ab;
+    delete[] diagonal_c_integrals_bb;
+
+    delete[] diagonal_ce_integrals_aa;
+    delete[] diagonal_ce_integrals_ab;
+    delete[] diagonal_ce_integrals_bb;
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
 {
-    // Allocate the memory required to store the one-electron integrals
-    one_electron_integrals = new double[nmo_ * nmo_];
-    diagonal_kinetic_energy_integrals = new double[nmo_];
-    fock_matrix_alpha = new double[nmo_ * nmo_];
-    fock_matrix_beta = new double[nmo_ * nmo_];
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals[pq] = 0.0;
     double* packed_oei = new double[num_oei];
 
@@ -122,7 +164,6 @@ void ExplorerIntegrals::read_one_electron_integrals()
 void ExplorerIntegrals::read_two_electron_integrals()
 {
     // Allocate the memory required to store the integrals
-    two_electron_integrals = new double[num_tei];
     for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
 
     int ioffmax = 30000;
@@ -139,13 +180,10 @@ void ExplorerIntegrals::read_two_electron_integrals()
 
 void ExplorerIntegrals::make_diagonal_integrals()
 {
-    diagonal_one_electron_integrals = new double[nmo_];
     for (int p = 0; p < nmo_; ++p){
-        diagonal_one_electron_integrals[p] = roei(p,p);
+        diagonal_one_electron_integrals[p] = oei_a(p,p);
     }
 
-    diagonal_c_integrals = new double[nmo_ * nmo_];
-    diagonal_ce_integrals = new double[nmo_ * nmo_];
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
             diagonal_c_integrals[p * nmo_ + q] = rtei(p,p,q,q);
@@ -159,24 +197,24 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
             // Builf Fock Diagonal alpha-alpha
-            fock_matrix_alpha[p * nmo_ + q] = roei(p,q);
+            fock_matrix_a[p * nmo_ + q] = roei(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ia[k]) {
-                    fock_matrix_alpha[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
                 }
                 if (Ib[k]) {
-                    fock_matrix_alpha[p * nmo_ + q] += rtei(p,q,k,k);
+                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k);
                 }
             }
-            fock_matrix_beta[p * nmo_ + q] = roei(p,q);
+            fock_matrix_b[p * nmo_ + q] = roei(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ib[k]) {
-                    fock_matrix_beta[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
                 }
                 if (Ia[k]) {
-                    fock_matrix_beta[p * nmo_ + q] += rtei(p,q,k,k);
+                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k);
                 }
             }
         }

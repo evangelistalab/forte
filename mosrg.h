@@ -27,6 +27,8 @@
 
 #include "mobase.h"
 #include "tensor.h"
+#include "tensor_labeled.h"
+#include "tensor_product.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -74,28 +76,28 @@ private:
     /// Use the Tensor class?
     bool use_tensor_class_;
 
-    Tensor D_aa;
-    Tensor D_bb;
-    Tensor CD_aa;
-    Tensor CD_bb;
-    Tensor C_aa;
-    Tensor C_bb;
+    Tensor D_a;
+    Tensor D_b;
+    Tensor CD_a;
+    Tensor CD_b;
+    Tensor C_a;
+    Tensor C_b;
 
-    Tensor A_aaaa;
-    Tensor A_abab;
-    Tensor A_bbbb;
-    Tensor Am_aaaa;
-    Tensor Am_abab;
-    Tensor Am_bbbb;
-    Tensor B_aaaa;
-    Tensor B_abab;
-    Tensor B_bbbb;
-    Tensor Bm_aaaa;
-    Tensor Bm_abab;
-    Tensor Bm_bbbb;
-    Tensor C_aaaa;
-    Tensor C_abab;
-    Tensor C_bbbb;
+    Tensor A4_aa;
+    Tensor A4_ab;
+    Tensor A4_bb;
+    Tensor A4m_aa;
+    Tensor A4m_ab;
+    Tensor A4m_bb;
+    Tensor B4_aa;
+    Tensor B4_ab;
+    Tensor B4_bb;
+    Tensor B4m_aa;
+    Tensor B4m_ab;
+    Tensor B4m_bb;
+    Tensor C4_aa;
+    Tensor C4_ab;
+    Tensor C4_bb;
     Tensor I4;
 
     void mosrg_startup();

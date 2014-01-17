@@ -253,110 +253,110 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,do
     boost::timer t;
     if(use_tensor_class_){
         loop_mo_p loop_mo_q{
-            D_aa(p,q) = (p == q) ? No_.a[p] : 0.0;
-            D_bb(p,q) = (p == q) ? No_.b[p] : 0.0;
-            CD_aa(p,q) = (p == q) ? 1.0 - No_.a[p] : 0.0;
-            CD_bb(p,q) = (p == q) ? 1.0 - No_.b[p] : 0.0;
+            D_a(p,q) = (p == q) ? No_.a[p] : 0.0;
+            D_b(p,q) = (p == q) ? No_.b[p] : 0.0;
+            CD_a(p,q) = (p == q) ? 1.0 - No_.a[p] : 0.0;
+            CD_b(p,q) = (p == q) ? 1.0 - No_.b[p] : 0.0;
         }
 
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-            A_aaaa(p,q,r,s) = A.aaaa[p][q][r][s];
-            B_aaaa(p,q,r,s) = B.aaaa[p][q][r][s];
-            A_abab(p,q,r,s) = A.abab[p][q][r][s];
-            B_abab(p,q,r,s) = B.abab[p][q][r][s];
-            A_bbbb(p,q,r,s) = A.bbbb[p][q][r][s];
-            B_bbbb(p,q,r,s) = B.bbbb[p][q][r][s];
+            A4_aa(p,q,r,s) = A.aaaa[p][q][r][s];
+            B4_aa(p,q,r,s) = B.aaaa[p][q][r][s];
+            A4_ab(p,q,r,s) = A.abab[p][q][r][s];
+            B4_ab(p,q,r,s) = B.abab[p][q][r][s];
+            A4_bb(p,q,r,s) = A.bbbb[p][q][r][s];
+            B4_bb(p,q,r,s) = B.bbbb[p][q][r][s];
         }
 
-        C_aa.zero();
-        C_bb.zero();
+        C_a.zero();
+        C_b.zero();
 
-        Am_aaaa("cpdb") = A_aaaa("cpab") * D_aa("ad");
-        Am_aaaa("cpde") = Am_aaaa("cpdb") * D_aa("be");
-        Am_aaaa("fpde") = Am_aaaa("cpde") * CD_aa("fc");
-        C_aa("pq") += 0.5 * sign * Am_aaaa("fpde") * B_aaaa("defq");
+        A4m_aa("cpdb") = A4_aa("cpab") * D_a("ad");
+        A4m_aa("cpde") = A4m_aa("cpdb") * D_a("be");
+        A4m_aa("fpde") = A4m_aa("cpde") * CD_a("fc");
+        C_a("pq") += 0.5 * sign * A4m_aa("fpde") * B4_aa("defq");
 
-        Bm_aaaa("cpdb") = B_aaaa("cpab") * D_aa("ad");
-        Bm_aaaa("cpde") = Bm_aaaa("cpdb") * D_aa("be");
-        Bm_aaaa("fpde") = Bm_aaaa("cpde") * CD_aa("fc");
-        C_aa("pq") += -0.5 * sign * Bm_aaaa("fpde") * A_aaaa("defq");
+        B4m_aa("cpdb") = B4_aa("cpab") * D_a("ad");
+        B4m_aa("cpde") = B4m_aa("cpdb") * D_a("be");
+        B4m_aa("fpde") = B4m_aa("cpde") * CD_a("fc");
+        C_a("pq") += -0.5 * sign * B4m_aa("fpde") * A4_aa("defq");
 
-        Am_aaaa("cpdb") = A_aaaa("cpab") * CD_aa("ad");
-        Am_aaaa("cpde") = Am_aaaa("cpdb") * CD_aa("be");
-        Am_aaaa("fpde") = Am_aaaa("cpde") * D_aa("fc");
-        C_aa("pq") += 0.5 * sign * Am_aaaa("fpde") * B_aaaa("defq");
+        A4m_aa("cpdb") = A4_aa("cpab") * CD_a("ad");
+        A4m_aa("cpde") = A4m_aa("cpdb") * CD_a("be");
+        A4m_aa("fpde") = A4m_aa("cpde") * D_a("fc");
+        C_a("pq") += 0.5 * sign * A4m_aa("fpde") * B4_aa("defq");
 
-        Bm_aaaa("cpdb") = B_aaaa("cpab") * CD_aa("ad");
-        Bm_aaaa("cpde") = Bm_aaaa("cpdb") * CD_aa("be");
-        Bm_aaaa("fpde") = Bm_aaaa("cpde") * D_aa("fc");
-        C_aa("pq") += -0.5 * sign * Bm_aaaa("fpde") * A_aaaa("defq");
-
-
-        Am_abab("pCbD") = A_abab("pCbA") * D_bb("AD");
-        Am_abab("pCeD") = Am_abab("pCbD") * D_aa("be");
-        Am_abab("pFeD") = Am_abab("pCeD") * CD_bb("FC");
-        C_aa("pq") += sign * Am_abab("pFeD") * B_abab("eDqF");
-
-        Bm_abab("pCbD") = B_abab("pCbA") * D_bb("AD");
-        Bm_abab("pCeD") = Bm_abab("pCbD") * D_aa("be");
-        Bm_abab("pFeD") = Bm_abab("pCeD") * CD_bb("FC");
-        C_aa("pq") += -sign * Bm_abab("pFeD") * A_abab("eDqF");
-
-        Am_abab("pCbD") = A_abab("pCbA") * CD_bb("AD");
-        Am_abab("pCeD") = Am_abab("pCbD") * CD_aa("be");
-        Am_abab("pFeD") = Am_abab("pCeD") * D_bb("FC");
-        C_aa("pq") += sign * Am_abab("pFeD") * B_abab("eDqF");
-
-        Bm_abab("pCbD") = B_abab("pCbA") * CD_bb("AD");
-        Bm_abab("pCeD") = Bm_abab("pCbD") * CD_aa("be");
-        Bm_abab("pFeD") = Bm_abab("pCeD") * D_bb("FC");
-        C_aa("pq") += -sign * Bm_abab("pFeD") * A_abab("eDqF");
+        B4m_aa("cpdb") = B4_aa("cpab") * CD_a("ad");
+        B4m_aa("cpde") = B4m_aa("cpdb") * CD_a("be");
+        B4m_aa("fpde") = B4m_aa("cpde") * D_a("fc");
+        C_a("pq") += -0.5 * sign * B4m_aa("fpde") * A4_aa("defq");
 
 
-        Am_bbbb("cpdb") = A_bbbb("cpab") * D_bb("ad");
-        Am_bbbb("cpde") = Am_bbbb("cpdb") * D_bb("be");
-        Am_bbbb("fpde") = Am_bbbb("cpde") * CD_bb("fc");
-        C_bb("pq") += 0.5 * sign * Am_bbbb("fpde") * B_bbbb("defq");
+        A4m_ab("pCbD") = A4_ab("pCbA") * D_b("AD");
+        A4m_ab("pCeD") = A4m_ab("pCbD") * D_a("be");
+        A4m_ab("pFeD") = A4m_ab("pCeD") * CD_b("FC");
+        C_a("pq") += sign * A4m_ab("pFeD") * B4_ab("eDqF");
 
-        Bm_bbbb("cpdb") = B_bbbb("cpab") * D_bb("ad");
-        Bm_bbbb("cpde") = Bm_bbbb("cpdb") * D_bb("be");
-        Bm_bbbb("fpde") = Bm_bbbb("cpde") * CD_bb("fc");
-        C_bb("pq") += -0.5 * sign * Bm_bbbb("fpde") * A_bbbb("defq");
+        B4m_ab("pCbD") = B4_ab("pCbA") * D_b("AD");
+        B4m_ab("pCeD") = B4m_ab("pCbD") * D_a("be");
+        B4m_ab("pFeD") = B4m_ab("pCeD") * CD_b("FC");
+        C_a("pq") += -sign * B4m_ab("pFeD") * A4_ab("eDqF");
 
-        Am_bbbb("cpdb") = A_bbbb("cpab") * CD_bb("ad");
-        Am_bbbb("cpde") = Am_bbbb("cpdb") * CD_bb("be");
-        Am_bbbb("fpde") = Am_bbbb("cpde") * D_bb("fc");
-        C_bb("pq") += 0.5 * sign * Am_bbbb("fpde") * B_bbbb("defq");
+        A4m_ab("pCbD") = A4_ab("pCbA") * CD_b("AD");
+        A4m_ab("pCeD") = A4m_ab("pCbD") * CD_a("be");
+        A4m_ab("pFeD") = A4m_ab("pCeD") * D_b("FC");
+        C_a("pq") += sign * A4m_ab("pFeD") * B4_ab("eDqF");
 
-        Bm_bbbb("cpdb") = B_bbbb("cpab") * CD_bb("ad");
-        Bm_bbbb("cpde") = Bm_bbbb("cpdb") * CD_bb("be");
-        Bm_bbbb("fpde") = Bm_bbbb("cpde") * D_bb("fc");
-        C_bb("pq") += -0.5 * sign * Bm_bbbb("fpde") * A_bbbb("defq");
+        B4m_ab("pCbD") = B4_ab("pCbA") * CD_b("AD");
+        B4m_ab("pCeD") = B4m_ab("pCbD") * CD_a("be");
+        B4m_ab("pFeD") = B4m_ab("pCeD") * D_b("FC");
+        C_a("pq") += -sign * B4m_ab("pFeD") * A4_ab("eDqF");
 
-        Am_abab("cPdB") = A_abab("cPaB") * D_aa("ad");
-        Am_abab("cPdE") = Am_abab("cPdB") * D_bb("BE");
-        Am_abab("fPdE") = Am_abab("cPdE") * CD_aa("fc");
-        C_bb("PQ") += sign * Am_abab("fPdE") * B_abab("dEfQ");
 
-        Bm_abab("cPdB") = B_abab("cPaB") * D_aa("ad");
-        Bm_abab("cPdE") = Bm_abab("cPdB") * D_bb("BE");
-        Bm_abab("fPdE") = Bm_abab("cPdE") * CD_aa("fc");
-        C_bb("PQ") += -sign * Bm_abab("fPdE") * A_abab("dEfQ");
+        A4m_bb("cpdb") = A4_bb("cpab") * D_b("ad");
+        A4m_bb("cpde") = A4m_bb("cpdb") * D_b("be");
+        A4m_bb("fpde") = A4m_bb("cpde") * CD_b("fc");
+        C_b("pq") += 0.5 * sign * A4m_bb("fpde") * B4_bb("defq");
 
-        Am_abab("cPdB") = A_abab("cPaB") * CD_aa("ad");
-        Am_abab("cPdE") = Am_abab("cPdB") * CD_bb("BE");
-        Am_abab("fPdE") = Am_abab("cPdE") * D_aa("fc");
-        C_bb("PQ") += sign * Am_abab("fPdE") * B_abab("dEfQ");
+        B4m_bb("cpdb") = B4_bb("cpab") * D_b("ad");
+        B4m_bb("cpde") = B4m_bb("cpdb") * D_b("be");
+        B4m_bb("fpde") = B4m_bb("cpde") * CD_b("fc");
+        C_b("pq") += -0.5 * sign * B4m_bb("fpde") * A4_bb("defq");
 
-        Bm_abab("cPdB") = B_abab("cPaB") * CD_aa("ad");
-        Bm_abab("cPdE") = Bm_abab("cPdB") * CD_bb("BE");
-        Bm_abab("fPdE") = Bm_abab("cPdE") * D_aa("fc");
-        C_bb("PQ") += -sign * Bm_abab("fPdE") * A_abab("dEfQ");
+        A4m_bb("cpdb") = A4_bb("cpab") * CD_b("ad");
+        A4m_bb("cpde") = A4m_bb("cpdb") * CD_b("be");
+        A4m_bb("fpde") = A4m_bb("cpde") * D_b("fc");
+        C_b("pq") += 0.5 * sign * A4m_bb("fpde") * B4_bb("defq");
+
+        B4m_bb("cpdb") = B4_bb("cpab") * CD_b("ad");
+        B4m_bb("cpde") = B4m_bb("cpdb") * CD_b("be");
+        B4m_bb("fpde") = B4m_bb("cpde") * D_b("fc");
+        C_b("pq") += -0.5 * sign * B4m_bb("fpde") * A4_bb("defq");
+
+        A4m_ab("cPdB") = A4_ab("cPaB") * D_a("ad");
+        A4m_ab("cPdE") = A4m_ab("cPdB") * D_b("BE");
+        A4m_ab("fPdE") = A4m_ab("cPdE") * CD_a("fc");
+        C_b("PQ") += sign * A4m_ab("fPdE") * B4_ab("dEfQ");
+
+        B4m_ab("cPdB") = B4_ab("cPaB") * D_a("ad");
+        B4m_ab("cPdE") = B4m_ab("cPdB") * D_b("BE");
+        B4m_ab("fPdE") = B4m_ab("cPdE") * CD_a("fc");
+        C_b("PQ") += -sign * B4m_ab("fPdE") * A4_ab("dEfQ");
+
+        A4m_ab("cPdB") = A4_ab("cPaB") * CD_a("ad");
+        A4m_ab("cPdE") = A4m_ab("cPdB") * CD_b("BE");
+        A4m_ab("fPdE") = A4m_ab("cPdE") * D_a("fc");
+        C_b("PQ") += sign * A4m_ab("fPdE") * B4_ab("dEfQ");
+
+        B4m_ab("cPdB") = B4_ab("cPaB") * CD_a("ad");
+        B4m_ab("cPdE") = B4m_ab("cPdB") * CD_b("BE");
+        B4m_ab("fPdE") = B4m_ab("cPdE") * D_a("fc");
+        C_b("PQ") += -sign * B4m_ab("fPdE") * A4_ab("dEfQ");
 
 
         loop_mo_p loop_mo_q{
-            C.aa[p][q] += C_aa(p,q);
-            C.bb[p][q] += C_bb(p,q);
+            C.aa[p][q] += C_a(p,q);
+            C.bb[p][q] += C_b(p,q);
         }
     }else{
         loop_mo_p loop_mo_q{
@@ -392,123 +392,123 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
     if(use_tensor_class_){
         boost::timer t1;
         loop_mo_p loop_mo_q{
-            D_aa(p,q) = (p == q) ? No_.a[p] : 0.0;
-            D_bb(p,q) = (p == q) ? No_.b[p] : 0.0;
-            CD_aa(p,q) = (p == q) ? 1.0 - No_.a[p] : 0.0;
-            CD_bb(p,q) = (p == q) ? 1.0 - No_.b[p] : 0.0;
+            D_a(p,q) = (p == q) ? No_.a[p] : 0.0;
+            D_b(p,q) = (p == q) ? No_.b[p] : 0.0;
+            CD_a(p,q) = (p == q) ? 1.0 - No_.a[p] : 0.0;
+            CD_b(p,q) = (p == q) ? 1.0 - No_.b[p] : 0.0;
         }
 
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-            A_aaaa(p,q,r,s) = A.aaaa[p][q][r][s];
-            B_aaaa(p,q,r,s) = B.aaaa[p][q][r][s];
-            A_abab(p,q,r,s) = A.abab[p][q][r][s];
-            B_abab(p,q,r,s) = B.abab[p][q][r][s];
-            A_bbbb(p,q,r,s) = A.bbbb[p][q][r][s];
-            B_bbbb(p,q,r,s) = B.bbbb[p][q][r][s];
+            A4_aa(p,q,r,s) = A.aaaa[p][q][r][s];
+            B4_aa(p,q,r,s) = B.aaaa[p][q][r][s];
+            A4_ab(p,q,r,s) = A.abab[p][q][r][s];
+            B4_ab(p,q,r,s) = B.abab[p][q][r][s];
+            A4_bb(p,q,r,s) = A.bbbb[p][q][r][s];
+            B4_bb(p,q,r,s) = B.bbbb[p][q][r][s];
         }
 
-        C_aaaa.zero();
-        C_abab.zero();
-        C_bbbb.zero();
+        C4_aa.zero();
+        C4_ab.zero();
+        C4_bb.zero();
 
         // AAAA case
         // Term I
-        I4("abcd") = CD_aa("ac") * CD_aa("bd");
-        I4("abcd") += -1.0 * D_aa("ac") * D_aa("bd");
-        Bm_aaaa("abrs") = I4("abcd") * B_aaaa("cdrs");
-        C_aaaa("pqrs") +=  0.5 * sign * A_aaaa("pqab") * Bm_aaaa("abrs");
-        Am_aaaa("abrs") = I4("abcd") * A_aaaa("cdrs");
-        C_aaaa("pqrs") += -0.5 * sign * B_aaaa("pqab") * Am_aaaa("abrs");
+        I4("abcd") = CD_a("ac") * CD_a("bd");
+        I4("abcd") += -1.0 * D_a("ac") * D_a("bd");
+        B4m_aa("abrs") = I4("abcd") * B4_aa("cdrs");
+        C4_aa("pqrs") +=  0.5 * sign * A4_aa("pqab") * B4m_aa("abrs");
+        A4m_aa("abrs") = I4("abcd") * A4_aa("cdrs");
+        C4_aa("pqrs") += -0.5 * sign * B4_aa("pqab") * A4m_aa("abrs");
 
         // Term II
-        I4("abcd") = D_aa("ac") * CD_aa("bd");
-        I4("abcd") += -1.0 * CD_aa("ac") * D_aa("bd");
+        I4("abcd") = D_a("ac") * CD_a("bd");
+        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
 
-        Bm_aaaa("qbsc") = I4("abcd") * B_aaaa("qdsa");
-        I4("pqrs") = sign * A_aaaa("pcrb") * Bm_aaaa("qbsc");
-        C_aaaa("pqrs") += +1.0 * I4("pqrs");
-        C_aaaa("pqrs") += -1.0 * I4("qprs");
-        C_aaaa("pqrs") += -1.0 * I4("pqsr");
-        C_aaaa("pqrs") += +1.0 * I4("qpsr");
+        B4m_aa("qbsc") = I4("abcd") * B4_aa("qdsa");
+        I4("pqrs") = sign * A4_aa("pcrb") * B4m_aa("qbsc");
+        C4_aa("pqrs") += +1.0 * I4("pqrs");
+        C4_aa("pqrs") += -1.0 * I4("qprs");
+        C4_aa("pqrs") += -1.0 * I4("pqsr");
+        C4_aa("pqrs") += +1.0 * I4("qpsr");
 
-        I4("abcd") = D_bb("ac") * CD_bb("bd");
-        I4("abcd") += -1.0 * CD_bb("ac") * D_bb("bd");
+        I4("abcd") = D_b("ac") * CD_b("bd");
+        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
 
-        Bm_aaaa("qbsc") = I4("abcd") * B_abab("qdsa");
-        I4("pqrs") = sign * A_abab("pcrb") * Bm_aaaa("qbsc");
-        C_aaaa("pqrs") += +1.0 * I4("pqrs");
-        C_aaaa("pqrs") += -1.0 * I4("qprs");
-        C_aaaa("pqrs") += -1.0 * I4("pqsr");
-        C_aaaa("pqrs") += +1.0 * I4("qpsr");
+        B4m_aa("qbsc") = I4("abcd") * B4_ab("qdsa");
+        I4("pqrs") = sign * A4_ab("pcrb") * B4m_aa("qbsc");
+        C4_aa("pqrs") += +1.0 * I4("pqrs");
+        C4_aa("pqrs") += -1.0 * I4("qprs");
+        C4_aa("pqrs") += -1.0 * I4("pqsr");
+        C4_aa("pqrs") += +1.0 * I4("qpsr");
 
 
         // ABAB case
         // Term I
-        I4("abcd") = CD_aa("ac") * CD_bb("bd");
-        I4("abcd") += -1.0 * D_aa("ac") * D_bb("bd");
-        Bm_abab("abrs") = I4("abcd") * B_abab("cdrs");
-        C_abab("pqrs") +=  sign * A_abab("pqab") * Bm_abab("abrs");
-        Am_abab("abrs") = I4("abcd") * A_abab("cdrs");
-        C_abab("pqrs") += -sign * B_abab("pqab") * Am_abab("abrs");
+        I4("abcd") = CD_a("ac") * CD_b("bd");
+        I4("abcd") += -1.0 * D_a("ac") * D_b("bd");
+        B4m_ab("abrs") = I4("abcd") * B4_ab("cdrs");
+        C4_ab("pqrs") +=  sign * A4_ab("pqab") * B4m_ab("abrs");
+        A4m_ab("abrs") = I4("abcd") * A4_ab("cdrs");
+        C4_ab("pqrs") += -sign * B4_ab("pqab") * A4m_ab("abrs");
 
         // Term II
-        I4("abcd") = D_aa("ac") * CD_aa("bd");
-        I4("abcd") += -1.0 * CD_aa("ac") * D_aa("bd");
-        Bm_abab("bqcs") = I4("abcd") * B_abab("dqas");
-        C_abab("pqrs") += sign * A_aaaa("pcrb") * Bm_abab("bqcs");
-        Bm_aaaa("pbrc") = I4("abcd") * B_aaaa("pdra");
-        C_abab("pqrs") += sign * A_abab("cqbs") * Bm_aaaa("pbrc");
+        I4("abcd") = D_a("ac") * CD_a("bd");
+        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
+        B4m_ab("bqcs") = I4("abcd") * B4_ab("dqas");
+        C4_ab("pqrs") += sign * A4_aa("pcrb") * B4m_ab("bqcs");
+        B4m_aa("pbrc") = I4("abcd") * B4_aa("pdra");
+        C4_ab("pqrs") += sign * A4_ab("cqbs") * B4m_aa("pbrc");
 
-        I4("abcd") = D_bb("ac") * CD_bb("bd");
-        I4("abcd") += -1.0 * CD_bb("ac") * D_bb("bd");
-        Bm_bbbb("qbsc") = I4("abcd") * B_bbbb("qdsa");
-        C_abab("pqrs") += sign * A_abab("pcrb") * Bm_bbbb("qbsc");
-        Bm_abab("pbrc") = I4("abcd") * B_abab("pdra");
-        C_abab("pqrs") += sign * A_bbbb("qcsb") * Bm_abab("pbrc");
+        I4("abcd") = D_b("ac") * CD_b("bd");
+        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
+        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
+        C4_ab("pqrs") += sign * A4_ab("pcrb") * B4m_bb("qbsc");
+        B4m_ab("pbrc") = I4("abcd") * B4_ab("pdra");
+        C4_ab("pqrs") += sign * A4_bb("qcsb") * B4m_ab("pbrc");
 
-        I4("aBcD") = D_aa("ac") * CD_bb("BD");
-        I4("aBcD") += -1.0 * CD_aa("ac") * D_bb("BD");
-        Bm_abab("pBcS") = I4("aBcD") * B_abab("pDaS");
-        C_abab("pQrS") += -sign * A_abab("cQrB") * Bm_abab("pBcS");
+        I4("aBcD") = D_a("ac") * CD_b("BD");
+        I4("aBcD") += -1.0 * CD_a("ac") * D_b("BD");
+        B4m_ab("pBcS") = I4("aBcD") * B4_ab("pDaS");
+        C4_ab("pQrS") += -sign * A4_ab("cQrB") * B4m_ab("pBcS");
 
-        Bm_abab("bQrC") = I4("bAdC") * B_abab("dQrA");
-        C_abab("pQrS") += +sign * A_abab("pCbS") * Bm_abab("bQrC");
+        B4m_ab("bQrC") = I4("bAdC") * B4_ab("dQrA");
+        C4_ab("pQrS") += +sign * A4_ab("pCbS") * B4m_ab("bQrC");
 
 
         // BBBB case
         // Term I
-        I4("abcd") = CD_bb("ac") * CD_bb("bd");
-        I4("abcd") += -1.0 * D_bb("ac") * D_bb("bd");
-        Bm_bbbb("abrs") = I4("abcd") * B_bbbb("cdrs");
-        C_bbbb("pqrs") +=  0.5 * sign * A_bbbb("pqab") * Bm_bbbb("abrs");
-        Am_bbbb("abrs") = I4("abcd") * A_bbbb("cdrs");
-        C_bbbb("pqrs") += -0.5 * sign * B_bbbb("pqab") * Am_bbbb("abrs");
+        I4("abcd") = CD_b("ac") * CD_b("bd");
+        I4("abcd") += -1.0 * D_b("ac") * D_b("bd");
+        B4m_bb("abrs") = I4("abcd") * B4_bb("cdrs");
+        C4_bb("pqrs") +=  0.5 * sign * A4_bb("pqab") * B4m_bb("abrs");
+        A4m_bb("abrs") = I4("abcd") * A4_bb("cdrs");
+        C4_bb("pqrs") += -0.5 * sign * B4_bb("pqab") * A4m_bb("abrs");
 
         // Term II
-        I4("abcd") = D_bb("ac") * CD_bb("bd");
-        I4("abcd") += -1.0 * CD_bb("ac") * D_bb("bd");
+        I4("abcd") = D_b("ac") * CD_b("bd");
+        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
 
-        Bm_bbbb("qbsc") = I4("abcd") * B_bbbb("qdsa");
-        I4("pqrs") = sign * A_bbbb("pcrb") * Bm_bbbb("qbsc");
-        C_bbbb("pqrs") += +1.0 * I4("pqrs");
-        C_bbbb("pqrs") += -1.0 * I4("qprs");
-        C_bbbb("pqrs") += -1.0 * I4("pqsr");
-        C_bbbb("pqrs") += +1.0 * I4("qpsr");
+        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
+        I4("pqrs") = sign * A4_bb("pcrb") * B4m_bb("qbsc");
+        C4_bb("pqrs") += +1.0 * I4("pqrs");
+        C4_bb("pqrs") += -1.0 * I4("qprs");
+        C4_bb("pqrs") += -1.0 * I4("pqsr");
+        C4_bb("pqrs") += +1.0 * I4("qpsr");
 
-        I4("abcd") = D_aa("ac") * CD_aa("bd");
-        I4("abcd") += -1.0 * CD_aa("ac") * D_aa("bd");
+        I4("abcd") = D_a("ac") * CD_a("bd");
+        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
 
-        Bm_bbbb("qbsc") = I4("abcd") * B_abab("dqas");
-        I4("pqrs") = sign * A_abab("cpbr") * Bm_bbbb("qbsc");
-        C_bbbb("pqrs") += +1.0 * I4("pqrs");
-        C_bbbb("pqrs") += -1.0 * I4("qprs");
-        C_bbbb("pqrs") += -1.0 * I4("pqsr");
-        C_bbbb("pqrs") += +1.0 * I4("qpsr");
+        B4m_bb("qbsc") = I4("abcd") * B4_ab("dqas");
+        I4("pqrs") = sign * A4_ab("cpbr") * B4m_bb("qbsc");
+        C4_bb("pqrs") += +1.0 * I4("pqrs");
+        C4_bb("pqrs") += -1.0 * I4("qprs");
+        C4_bb("pqrs") += -1.0 * I4("pqsr");
+        C4_bb("pqrs") += +1.0 * I4("qpsr");
 
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-            C.aaaa[p][q][r][s] += C_aaaa(p,q,r,s);
-            C.abab[p][q][r][s] += C_abab(p,q,r,s);
-            C.bbbb[p][q][r][s] += C_bbbb(p,q,r,s);
+            C.aaaa[p][q][r][s] += C4_aa(p,q,r,s);
+            C.abab[p][q][r][s] += C4_ab(p,q,r,s);
+            C.bbbb[p][q][r][s] += C4_bb(p,q,r,s);
         }
         t_tensor += t1.elapsed();
     }else{

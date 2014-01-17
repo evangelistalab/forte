@@ -5,6 +5,8 @@
 #include <libqt/qt.h>
 
 #include "tensor.h"
+#include "tensor_labeled.h"
+#include "tensor_product.h"
 
 using namespace std;
 using namespace psi;
@@ -33,7 +35,7 @@ void Tensor::finalize_class()
 }
 
 /// Performs the operator Z +=(=) A * B * C *
-void Tensor::contract(TensorProduct tp, TensorIndexed Z, bool addition)
+void Tensor::contract(LabeledTensorProduct tp, LabeledTensor Z, bool addition)
 {
     /// This algorithm loops over all the permuations of tensor contractions and finds the optimal sequence
     size_t nterms = tp.size();
@@ -52,7 +54,7 @@ void Tensor::contract(TensorProduct tp, TensorIndexed Z, bool addition)
         }
     } while (std::next_permutation(perm.begin(),perm.end()));
 
-    TensorIndexed rhs = tp.tensor(perm[0]);
+    LabeledTensor rhs = tp.tensor(perm[0]);
     for (size_t n = 0; n < nterms - 1; ++n){
 //        TensorIndexed lhs = tp.tensor(perm[n+1]);
 //        // create a temporary tensor
@@ -64,12 +66,12 @@ void Tensor::contract(TensorProduct tp, TensorIndexed Z, bool addition)
 
 //        rhs = result;
     }
-    TensorIndexed last = tp.tensor(perm[nterms-1]);
+    LabeledTensor last = tp.tensor(perm[nterms-1]);
     binary_contraction(rhs,last,Z,addition);
 }
 
 /// Performs the binary contraction C +=(=) A * B
-void Tensor::binary_contraction(TensorIndexed A,TensorIndexed B,TensorIndexed C, bool addition)
+void Tensor::binary_contraction(LabeledTensor A,LabeledTensor B,LabeledTensor C, bool addition)
 {
     if(print_level_ > 0){
         fprintf(outfile,"\n  Performing the contraction:");
@@ -165,7 +167,7 @@ void Tensor::binary_contraction(TensorIndexed A,TensorIndexed B,TensorIndexed C,
 }
 
 /// Performs the operator B +=(=) A
-void Tensor::add(TensorIndexed A, TensorIndexed B, bool addition)
+void Tensor::add(LabeledTensor A, LabeledTensor B, bool addition)
 {
     if(print_level_ > 0){
         fprintf(outfile,"\n  Performing the operation:");
@@ -284,7 +286,7 @@ void Tensor::sort_me(std::vector<size_t> itoj,double*& matrix,bool direct,Sorter
     }
 }
 
-std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(TensorIndexed T,
+std::pair<size_t, size_t> Tensor::tensor_to_matrix_sort(LabeledTensor T,
                                                         std::vector<std::string> T_left,
                                                         std::vector<std::string> T_right,
                                                         double* t,bool direct)

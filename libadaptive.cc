@@ -12,7 +12,7 @@
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
-#include "tensor.h"
+#include "tensor_test.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
