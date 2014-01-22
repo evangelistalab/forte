@@ -32,7 +32,7 @@ read_options(std::string name, Options &options)
         options.add_int("PRINT", 0);
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG TENSORTEST");
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -231,6 +231,32 @@ libadaptive(Options &options)
         Tensor::finalize_class();
         free_matrix<double>(G1aa,nmo,nmo);
         free_matrix<double>(G1bb,nmo,nmo);
+
+        delete explorer;
+    }
+    if (options.get_str("JOB_TYPE") == "SRG-LCI"){
+        Explorer* explorer = new Explorer(options,ints_);
+        std::vector<double> ONa = explorer->Da();
+        std::vector<double> ONb = explorer->Db();
+        int nmo = explorer->nmo();
+
+        double** G1aa;
+        double** G1bb;
+        init_matrix<double>(G1aa,nmo,nmo);
+        init_matrix<double>(G1bb,nmo,nmo);
+        for (int p = 0; p < nmo; ++p){
+            G1aa[p][p] = ONa[p];
+            G1bb[p][p] = ONb[p];
+        }
+        Tensor::initialize_class(nmo);
+        MOSRG mosrg(options,ints_,G1aa,G1bb);
+        mosrg.transfer_integrals();
+        delete explorer;
+        explorer = new Explorer(options,ints_);
+
+        free_matrix<double>(G1aa,nmo,nmo);
+        free_matrix<double>(G1bb,nmo,nmo);
+        Tensor::finalize_class();
 
         delete explorer;
     }

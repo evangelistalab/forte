@@ -42,7 +42,7 @@ public:
     double diag_rkei(int p) {return diagonal_kinetic_energy_integrals[p];}
 
     /// The diagonal one-electron integrals
-    double diag_roei(int p) {return diagonal_one_electron_integrals[p];}
+    double diag_roei(int p) {return diagonal_one_electron_integrals_a[p];}
 
     /// The diagonal alpha one-electron integrals
     double diag_oei_a(int p) {return diagonal_one_electron_integrals_a[p];}
@@ -85,12 +85,24 @@ public:
     /// Set the value of the one-electron integrals
     /// @param ints pointer to the integrals
     /// @param the spin type of the integrals
-    void set_oei(double* ints,bool alpha);
+    void set_oei(double** ints,bool alpha);
 
     /// Set the value of the two-electron integrals
     /// @param ints pointer to the integrals
     /// @param the spin type of the integrals
-    void set_tei(double* ints,bool alpha1,bool alpha2);
+    void set_tei(double**** ints,bool alpha1,bool alpha2);
+
+    /// Update all integrals after providing one- and two-electron integrals
+    /// via the functions set_oei and set_tei
+    /// Sample use:
+    ///     ExplorerIntegrals* ints = new ...
+    ///
+    ///     // One-electron integrals are updated
+    ///     ints->set_oei(oei_aa,true);
+    ///     ints->set_oei(oei_bb,false);
+    ///     ints->update_integrals();
+    void update_integrals();
+
 private:
     // Class data
     psi::Options& options_;

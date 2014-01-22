@@ -601,8 +601,6 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             if (cum_wfn > significant_wave_function) break;
         }
 
-        std::vector<double> Da_(nmo_,0.0);
-        std::vector<double> Db(nmo_,0.0);
         double norm = 0.0;
         for (int I = 0; I < ndets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
@@ -612,7 +610,7 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
             const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
             double w = C_mat[I][i] * C_mat[I][i];
             if (w > 1.0e-12){
-                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da_,Db,w);
+                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da_,Db_,w);
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }

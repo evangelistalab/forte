@@ -21,13 +21,18 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options)
     startup();
     read_one_electron_integrals();
     read_two_electron_integrals();
-    make_diagonal_integrals();
-    freeze_core();
+    update_integrals();
 }
 
 ExplorerIntegrals::~ExplorerIntegrals()
 {
     cleanup();
+}
+
+void ExplorerIntegrals::update_integrals()
+{
+    make_diagonal_integrals();
+    freeze_core();
 }
 
 void ExplorerIntegrals::startup()
@@ -115,7 +120,8 @@ void ExplorerIntegrals::cleanup()
 
 void ExplorerIntegrals::read_one_electron_integrals()
 {
-    for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals[pq] = 0.0;
+    for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_a[pq] = 0.0;
+    for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_b[pq] = 0.0;
     double* packed_oei = new double[num_oei];
 
     // Read the one-electron integrals (restricted integrals, T + V)
@@ -123,7 +129,8 @@ void ExplorerIntegrals::read_one_electron_integrals()
     iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,outfile);
     for (int p = 0; p < nmo_; ++p){
         for (int q = p; q < nmo_; ++q){
-            one_electron_integrals[p * nmo_ + q] = one_electron_integrals[q * nmo_ + p] = packed_oei[p + ioff[q]];
+            one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
+            one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_a[p * nmo_ + q];
         }
     }
     delete[] packed_oei;
@@ -164,7 +171,9 @@ void ExplorerIntegrals::read_one_electron_integrals()
 void ExplorerIntegrals::read_two_electron_integrals()
 {
     // Allocate the memory required to store the integrals
-    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_aa[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_ab[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_bb[pqrs] = 0.0;
 
     int ioffmax = 30000;
     int* myioff = new int[ioffmax];
@@ -173,7 +182,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         myioff[i] = myioff[i-1] + i;
     struct iwlbuf V_AAAA;
     iwl_buf_init(&V_AAAA,PSIF_MO_TEI, 0.0, 1, 1);
-    iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
+    iwl_buf_rd_all(&V_AAAA, two_electron_integrals_aa, myioff, myioff, 0, myioff, 0, outfile);
     iwl_buf_close(&V_AAAA, 1);
     delete[] myioff;
 }
@@ -181,13 +190,19 @@ void ExplorerIntegrals::read_two_electron_integrals()
 void ExplorerIntegrals::make_diagonal_integrals()
 {
     for (int p = 0; p < nmo_; ++p){
-        diagonal_one_electron_integrals[p] = oei_a(p,p);
+        diagonal_one_electron_integrals_a[p] = oei_a(p,p);
+        diagonal_one_electron_integrals_b[p] = oei_b(p,p);
     }
 
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
-            diagonal_c_integrals[p * nmo_ + q] = rtei(p,p,q,q);
-            diagonal_ce_integrals[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+            diagonal_c_integrals_aa[p * nmo_ + q] = tei_aa(p,p,q,q);
+            diagonal_c_integrals_ab[p * nmo_ + q] = tei_ab(p,p,q,q);
+            diagonal_c_integrals_bb[p * nmo_ + q] = tei_bb(p,p,q,q);
+
+            diagonal_ce_integrals_aa[p * nmo_ + q] = tei_aa(p,p,q,q) - tei_aa(p,q,p,q);
+            diagonal_ce_integrals_ab[p * nmo_ + q] = tei_ab(p,p,q,q) - tei_ab(p,q,p,q);
+            diagonal_ce_integrals_bb[p * nmo_ + q] = tei_bb(p,p,q,q) - tei_bb(p,q,p,q);
         }
     }
 }
@@ -197,7 +212,7 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
             // Builf Fock Diagonal alpha-alpha
-            fock_matrix_a[p * nmo_ + q] = roei(p,q);
+            fock_matrix_a[p * nmo_ + q] = oei_a(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ia[k]) {
@@ -207,7 +222,7 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
                     fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k);
                 }
             }
-            fock_matrix_b[p * nmo_ + q] = roei(p,q);
+            fock_matrix_b[p * nmo_ + q] = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ib[k]) {
@@ -293,7 +308,7 @@ void ExplorerIntegrals::freeze_core()
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi[hi]; ++i){
-            core_energy_ += 2.0 * diag_roei(p + i);
+            core_energy_ += diag_oei_a(p + i) + diag_oei_b(p + i);
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi[hj]; ++j){
                     core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
@@ -334,6 +349,40 @@ void ExplorerIntegrals::freeze_core()
     //    }
     //  }
 }
+
+
+void ExplorerIntegrals::set_oei(double** ints,bool alpha)
+{
+    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    for (int p = 0; p < nmo_; ++p){
+        for (int q = 0; q < nmo_; ++q){
+            p_oei[p * nmo_ + q] = ints[p][q];
+        }
+    }
+}
+
+
+/// This functions receives integrals stored in the format
+/// ints[p][q][r][s] = v_{pq}^{rs}
+void ExplorerIntegrals::set_tei(double**** ints,bool alpha1,bool alpha2)
+{
+    double* p_tei;
+    if (alpha1 == true and alpha2 == true) p_tei = two_electron_integrals_aa;
+    if (alpha1 == true and alpha2 == false) p_tei = two_electron_integrals_ab;
+    if (alpha1 == false and alpha2 == false) p_tei = two_electron_integrals_bb;
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+            for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    size_t index = INDEX4(p,r,q,s);
+                    fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,ints[p][q][r][s]);
+                    p_tei[index] = ints[p][q][r][s];
+                }
+            }
+        }
+    }
+}
+
 
 ///**
 // * Make the one electron intermediates

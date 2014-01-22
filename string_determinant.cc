@@ -154,13 +154,20 @@ double StringDeterminant::energy()
     for(int p = 0; p < nmo_; ++p){
         if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
         if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
+        if(alfa_bits_[p]) fprintf(outfile,"\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
         for(int q = 0; q < nmo_; ++q){
-            if(alfa_bits_[p] and alfa_bits_[q])
+            if(alfa_bits_[p] and alfa_bits_[q]){
                 matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
-            if(beta_bits_[p] and beta_bits_[q])
-                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
-            if(alfa_bits_[p] and beta_bits_[q])
+                fprintf(outfile,"\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
+            }
+            if(alfa_bits_[p] and beta_bits_[q]){
                 matrix_element += ints_->diag_c_rtei(p,q);
+                fprintf(outfile,"\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_c_rtei(p,q));
+            }
+            if(beta_bits_[p] and beta_bits_[q]){
+                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                fprintf(outfile,"\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
+            }
         }
     }
     return(matrix_element);

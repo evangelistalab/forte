@@ -35,6 +35,9 @@ MOSRG::MOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex 
     }else if(options_.get_str("SRG_MODE") == "DSRG"){
         compute_driven_srg_energy();
     }
+    // Set some environment variables
+    Process::environment.globals["CURRENT ENERGY"] = Hbar0_;
+
     print_timings();
 }
 
@@ -461,47 +464,54 @@ double MOSRG::compute_recursive_single_commutator()
         fprintf(outfile," single-reference normal ordering formalism.");
     }
     fprintf(outfile,"\n  -----------------------------------------------------------------");
-    fprintf(outfile,"\n  nComm          |C1|                 |C2|                  E" );
+    fprintf(outfile,"\n  nComm           C0                 |C1|                  |C2|" );
     fprintf(outfile,"\n  -----------------------------------------------------------------");
 
-    // Initialize Hbar and O with the Hamiltonian
+    // Initialize Hbar and O with the normal ordered Hamiltonian
     add(1.0,F_,0.0,Hbar1_);
     add(1.0,F_,0.0,O1_);
     add(1.0,V_,0.0,Hbar2_);
     add(1.0,V_,0.0,O2_);
-    double E0 = E0_;
+    Hbar0_ = E0_;
 
-    fprintf(outfile,"\n  %2d %20e %20e %20.12f",0,norm(Hbar1_),norm(Hbar2_),E0);
+    fprintf(outfile,"\n  %2d %20.12f %20e %20e",0,Hbar0_,norm(Hbar1_),norm(Hbar2_));
 
     int maxn = options_.get_int("SRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
     for (int n = 1; n <= maxn; ++n) {
         double factor = 1.0 / static_cast<double>(n);
 
+        double C0 = 0;
         zero(C1_);
         zero(C2_);
 
         if (options_.get_str("SRG_COMM") == "STANDARD"){
-            commutator_A_B_C(factor,O1_,O2_,S1_,S2_,E0,C1_,C2_);
+            commutator_A_B_C(factor,O1_,O2_,S1_,S2_,C0,C1_,C2_);
         }else if (options_.get_str("SRG_COMM") == "FO"){
-            commutator_A_B_C_fourth_order(factor,O1_,O2_,S1_,S2_,E0,C1_,C2_);
+            commutator_A_B_C_fourth_order(factor,O1_,O2_,S1_,S2_,C0,C1_,C2_);
         }
+
+        // Hbar += C
+        Hbar0_ += C0;
         add(1.0,C1_,1.0,Hbar1_);
         add(1.0,C2_,1.0,Hbar2_);
+
+        // O = C
         add(1.0,C1_,0.0,O1_);
         add(1.0,C2_,0.0,O2_);
 
-        double norm_O2 = norm(O1_);
-        double norm_O1 = norm(O2_);
-        fprintf(outfile,"\n  %2d %20e %20e %20.12f",n,norm_O1,norm_O2,E0);
+        // Check |C|
+        double norm_C2 = norm(C1_);
+        double norm_C1 = norm(C2_);
+        fprintf(outfile,"\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
         fflush(outfile);
-        if (std::sqrt(norm_O2 * norm_O2 + norm_O1 * norm_O1) < ct_threshold){
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             break;
         }
     }
     fprintf(outfile,"\n  -----------------------------------------------------------------");
     fflush(outfile);
-    return E0;
+    return Hbar0_;
 }
 
 void MOSRG::mosrg_startup()
@@ -681,5 +691,156 @@ void MOSRG::two_body_driven_srg()
         Hbar2_.bbbb[p][q][r][s] -=  No_.b[p] * No_.b[q] * Nv_.b[r] * Nv_.b[s] * V_.bbbb[p][q][r][s] * factor;
     }
 }
+
+void MOSRG::transfer_integrals()
+{
+    // Scalar term
+    double scalar0 = Hbar0_;
+    double scalar1 = 0.0;
+    double scalar2 = 0.0;
+    loop_mo_p{
+        scalar1 -= Hbar1_.aa[p][p] * No_.a[p];
+        scalar1 -= Hbar1_.bb[p][p] * No_.b[p];
+    }
+    loop_mo_p loop_mo_q{
+        scalar2 += 0.5 * Hbar2_.aaaa[p][q][p][q] * No_.a[p] * No_.a[q];
+        scalar2 += Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q];
+        scalar2 += 0.5 * Hbar2_.bbbb[p][q][p][q] * No_.b[p] * No_.b[q];
+//        scalar2 -= 0.25 * (Hbar2_.aaaa[p][q][p][q] - Hbar2_.aaaa[p][q][q][p]) * No_.a[p] * No_.a[q];
+//        scalar2 -= Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q];
+//        scalar2 -= 0.25 * (Hbar2_.bbbb[p][q][p][q] - Hbar2_.bbbb[p][q][q][p]) * No_.b[p] * No_.b[q];
+    }
+    double scalar = scalar0 + scalar1 + scalar2;
+    fprintf(outfile,"\n  The Hamiltonian scalar term (normal ordered wrt the true vacuum");
+    fprintf(outfile,"\n  E0 = %20.12f + %20.12f + %20.12f = %20.12f",scalar0,scalar1,scalar2,scalar);
+
+    loop_mo_p loop_mo_q{
+        double value = Hbar1_.aa[p][q];
+        loop_mo_r{
+            value += - Hbar2_.aaaa[p][r][q][r] * No_.a[r];
+            value += - Hbar2_.abab[p][r][q][r] * No_.b[r];
+        }
+        O1_.aa[p][q] = value;
+    }
+
+    loop_mo_p loop_mo_q{
+        double value = Hbar1_.bb[p][q];
+        loop_mo_r{
+            value += - Hbar2_.bbbb[p][r][q][r] * No_.b[r];
+            value += - Hbar2_.abab[r][p][r][q] * No_.a[r];
+        }
+        O1_.bb[p][q] = value;
+    }
+
+    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        O2_.abab[p][r][q][s] = Hbar2_.abab[p][q][r][s];
+    }
+
+    double error = 0.0;
+    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        error += std::fabs(Hbar2_.aaaa[p][q][r][s] - Hbar2_.abab[p][q][r][s] + Hbar2_.abab[p][q][s][r]);
+    }
+    fprintf(outfile,"\n  The spin-adaptation error is: %20.12f",error);
+
+    double test = 0.0;
+    loop_mo_p{
+        test += Hbar1_.aa[p][p] * No_.a[p];
+        test += Hbar1_.bb[p][p] * No_.b[p];
+    }
+    loop_mo_p loop_mo_q{
+        test -= Hbar2_.aaaa[p][q][p][q] * No_.a[p] * No_.a[q];
+        test -= 2.0 * Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q];
+        test -= Hbar2_.bbbb[p][q][p][q] * No_.b[p] * No_.b[q];
+//        scalar2 -= 0.25 * (Hbar2_.aaaa[p][q][p][q] - Hbar2_.aaaa[p][q][q][p]) * No_.a[p] * No_.a[q];
+//        scalar2 -= Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q];
+//        scalar2 -= 0.25 * (Hbar2_.bbbb[p][q][p][q] - Hbar2_.bbbb[p][q][q][p]) * No_.b[p] * No_.b[q];
+    }
+    fprintf(outfile,"\n  Test energy 1: %20.12f",test);
+
+    double test2 = 0.0;
+    loop_mo_p{
+        test2 += O1_.aa[p][p] * No_.a[p];
+        test2 += O1_.bb[p][p] * No_.b[p];
+
+        if(O1_.aa[p][p] * No_.a[p] != 0.0){
+            fprintf(outfile,"\n  One-electron terms: %20.12f + %20.12f",O1_.aa[p][p] * No_.a[p],O1_.bb[p][p] * No_.b[p]);
+        }
+    }
+
+    loop_mo_p loop_mo_q{
+        if ((Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.a[p] * No_.a[q] != 0.0){
+            fprintf(outfile,"\n  One-electron terms (%da,%da): 0.5 * %20.12f",p,q,(Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.a[p] * No_.a[q]);
+        }
+        if (Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q] != 0.0){
+            fprintf(outfile,"\n  One-electron terms (%da,%db): 0.5 * %20.12f",p,q,Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q]);
+        }
+        if ((Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.b[p] * No_.b[q] != 0.0){
+            fprintf(outfile,"\n  One-electron terms (%db,%db): 0.5 * %20.12f",p,q,(Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.b[p] * No_.b[q]);
+        }
+        test2 += 1.0 * Hbar2_.abab[p][q][p][q] * No_.a[p] * No_.b[q];
+        test2 += 0.5 * (Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.a[p] * No_.a[q];
+        test2 += 0.5 * (Hbar2_.abab[p][q][p][q] - Hbar2_.abab[p][q][q][p]) * No_.b[p] * No_.b[q];
+//        test2 += 0.5 * Hbar2_.aaaa[p][q][p][q] * No_.a[p] * No_.a[q];
+//        test2 += 0.5 * Hbar2_.bbbb[p][q][p][q] * No_.b[p] * No_.b[q];
+    }
+    fprintf(outfile,"\n  Test energy 2: %20.12f",test2);
+
+    fprintf(outfile,"\n  Updating all the integrals");
+    ints_->set_oei(O1_.aa,true);
+    ints_->set_oei(O1_.bb,false);
+    ints_->set_tei(Hbar2_.abab,true,true);
+//    ints_->set_tei(O2_.abab,false,false);
+    ints_->update_integrals();
+
+    loop_mo_p loop_mo_q{
+        fprintf(outfile,"\n (J)_(%d,%d): %20.12f",p,q,ints_->diag_c_rtei(p,q));
+    }
+    loop_mo_p loop_mo_q{
+        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
+                ints_->tei_aa(p,p,q,q),ints_->tei_aa(p,q,p,q),ints_->tei_aa(p,p,q,q)-ints_->tei_aa(p,q,p,q));
+    }
+    loop_mo_p loop_mo_q{
+        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
+                Hbar2_.abab[p][q][p][q],Hbar2_.abab[p][q][q][p],Hbar2_.abab[p][q][p][q]-Hbar2_.abab[p][q][q][p]);
+    }
+//    fprintf(outfile,"\n (J)_(%d,%d): %20.12f",p,q,ints_->tei_aa(p,q,p,q));
+    fprintf(outfile,"\n (01|01): %20.12f",ints_->tei_aa(0,1,0,1));
+    fprintf(outfile,"\n (10|01): %20.12f",ints_->tei_aa(1,0,0,1));
+    fprintf(outfile,"\n (01|10): %20.12f",ints_->tei_aa(0,1,1,0));
+    fprintf(outfile,"\n (10|10): %20.12f\n",ints_->tei_aa(1,0,1,0));
+
+    fprintf(outfile,"\n (01|01): %20.12f",Hbar2_.abab[0][0][1][1]);
+    fprintf(outfile,"\n (10|01): %20.12f",Hbar2_.abab[1][0][0][1]);
+    fprintf(outfile,"\n (01|10): %20.12f",Hbar2_.abab[0][1][1][0]);
+    fprintf(outfile,"\n (10|10): %20.12f",Hbar2_.abab[1][1][0][0]);
+
+
+    fflush(outfile);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }} // EndNamespaces

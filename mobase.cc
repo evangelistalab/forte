@@ -142,6 +142,7 @@ void MOBase::build_fock()
         E0_ += 0.25 * V_.bbbb[p][q][r][s] * (G1_.bb[p][r] * G1_.bb[q][s] - G1_.bb[p][s] * G1_.bb[q][r]);
         E0_ +=  1.0 * V_.abab[p][q][r][s] * G1_.aa[p][r] * G1_.bb[q][s];
     }
+    // Compute the fock matrix
     loop_mo_p loop_mo_q{
         F_.aa[p][q] = H1_.aa[p][q];
         F_.bb[p][q] = H1_.bb[p][q];

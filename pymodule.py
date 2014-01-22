@@ -26,7 +26,7 @@ def run_libadaptive(name, **kwargs):
     #scf_helper(name, **kwargs)
     returnvalue = psi4.plugin('libadaptive.so')
     psi4.set_variable('CURRENT ENERGY', returnvalue)
-
+    return returnvalue
 
 # Integration with driver routines
 procedures['energy']['libadaptive'] = run_libadaptive

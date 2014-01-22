@@ -44,6 +44,12 @@ public:
     // Constructor and destructor
     MOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb);
     ~MOSRG();
+
+    /// Updates the integrals with the CT or SRG matrix elements of the
+    /// similiarity-transformed Hamiltonian
+    ///
+    /// This function should be called after running MOSRG
+    void transfer_integrals();
 private:
     /// The type of operator used
     SRGOperator srgop;
