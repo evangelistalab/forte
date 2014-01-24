@@ -88,6 +88,11 @@ read_options(std::string name, Options &options)
         /*- Determines if this job will compute the energy -*/
         options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE");
 
+        /*- The form of the Hamiltonian matrix.
+         *  - FIXED diagonalizes a matrix of fixed dimension
+         *  - SMOOTH forms a matrix with smoothed matrix elements -*/
+        options.add_str("SELECT_TYPE","ENERGY","ENERGY AMP");
+
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
 

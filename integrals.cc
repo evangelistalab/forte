@@ -44,6 +44,8 @@ void ExplorerIntegrals::startup()
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     nirrep_ = wfn->nirrep();
     nmo_ = wfn->nmo();
+    nmo2_ = nmo_ * nmo_;
+    nmo3_ = nmo_ * nmo_ * nmo_;
     nso_ = wfn->nso();
 
     // For now, we'll just transform for closed shells and generate all integrals.
@@ -56,6 +58,7 @@ void ExplorerIntegrals::startup()
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
+    num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
 
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals_a = new double[nmo_ * nmo_];
@@ -72,10 +75,15 @@ void ExplorerIntegrals::startup()
     fock_matrix_b = new double[nmo_ * nmo_];
 
     // Allocate the memory required to store the two-electron integrals
-    two_electron_integrals_aa = new double[num_tei];
-    two_electron_integrals_ab = new double[num_tei];
-    two_electron_integrals_bb = new double[num_tei];
-    two_electron_integrals = two_electron_integrals_aa;
+    two_electron_integrals = new double[num_tei];
+
+    aphys_tei_aa = new double[num_aptei];
+    aphys_tei_ab = new double[num_aptei];
+    aphys_tei_bb = new double[num_aptei];
+
+    diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
+    diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
+    diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 
     diagonal_c_integrals_aa = new double[nmo_ * nmo_];
     diagonal_c_integrals_ab = new double[nmo_ * nmo_];
@@ -105,9 +113,15 @@ void ExplorerIntegrals::cleanup()
     delete[] fock_matrix_b;
 
     // Allocate the memory required to store the two-electron integrals
-    delete[] two_electron_integrals_aa;
-    delete[] two_electron_integrals_ab;
-    delete[] two_electron_integrals_bb;
+    delete[] two_electron_integrals;
+
+    delete[] aphys_tei_aa;
+    delete[] aphys_tei_ab;
+    delete[] aphys_tei_bb;
+
+    delete[] diagonal_aphys_tei_aa;
+    delete[] diagonal_aphys_tei_ab;
+    delete[] diagonal_aphys_tei_bb;
 
     delete[] diagonal_c_integrals_aa;
     delete[] diagonal_c_integrals_ab;
@@ -170,10 +184,8 @@ void ExplorerIntegrals::read_one_electron_integrals()
 
 void ExplorerIntegrals::read_two_electron_integrals()
 {
-    // Allocate the memory required to store the integrals
-    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_aa[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_ab[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals_bb[pqrs] = 0.0;
+    // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
+    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
 
     int ioffmax = 30000;
     int* myioff = new int[ioffmax];
@@ -182,9 +194,29 @@ void ExplorerIntegrals::read_two_electron_integrals()
         myioff[i] = myioff[i-1] + i;
     struct iwlbuf V_AAAA;
     iwl_buf_init(&V_AAAA,PSIF_MO_TEI, 0.0, 1, 1);
-    iwl_buf_rd_all(&V_AAAA, two_electron_integrals_aa, myioff, myioff, 0, myioff, 0, outfile);
+    iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
     iwl_buf_close(&V_AAAA, 1);
     delete[] myioff;
+
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
+
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+            for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+                    double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
+                    double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
+                    size_t index = aptei_index(p,q,r,s);
+                    aphys_tei_aa[index] = direct - exchange;
+                    aphys_tei_ab[index] = direct;
+                    aphys_tei_bb[index] = direct - exchange;
+                }
+            }
+        }
+    }
 }
 
 void ExplorerIntegrals::make_diagonal_integrals()
@@ -196,13 +228,17 @@ void ExplorerIntegrals::make_diagonal_integrals()
 
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
-            diagonal_c_integrals_aa[p * nmo_ + q] = tei_aa(p,p,q,q);
-            diagonal_c_integrals_ab[p * nmo_ + q] = tei_ab(p,p,q,q);
-            diagonal_c_integrals_bb[p * nmo_ + q] = tei_bb(p,p,q,q);
+            diagonal_c_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q);
+            diagonal_c_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q);
+            diagonal_c_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q);
 
-            diagonal_ce_integrals_aa[p * nmo_ + q] = tei_aa(p,p,q,q) - tei_aa(p,q,p,q);
-            diagonal_ce_integrals_ab[p * nmo_ + q] = tei_ab(p,p,q,q) - tei_ab(p,q,p,q);
-            diagonal_ce_integrals_bb[p * nmo_ + q] = tei_bb(p,p,q,q) - tei_bb(p,q,p,q);
+            diagonal_ce_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+            diagonal_ce_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+            diagonal_ce_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+
+            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
+            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
+            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
         }
     }
 }
@@ -367,16 +403,18 @@ void ExplorerIntegrals::set_oei(double** ints,bool alpha)
 void ExplorerIntegrals::set_tei(double**** ints,bool alpha1,bool alpha2)
 {
     double* p_tei;
-    if (alpha1 == true and alpha2 == true) p_tei = two_electron_integrals_aa;
-    if (alpha1 == true and alpha2 == false) p_tei = two_electron_integrals_ab;
-    if (alpha1 == false and alpha2 == false) p_tei = two_electron_integrals_bb;
+    if (alpha1 == true and alpha2 == true) p_tei = aphys_tei_aa;
+    if (alpha1 == true and alpha2 == false) p_tei = aphys_tei_ab;
+    if (alpha1 == false and alpha2 == false) p_tei = aphys_tei_bb;
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             for (size_t r = 0; r < nmo_; ++r){
                 for (size_t s = 0; s < nmo_; ++s){
-                    size_t index = INDEX4(p,r,q,s);
-                    fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,ints[p][q][r][s]);
-                    p_tei[index] = ints[p][q][r][s];
+                    size_t index = aptei_index(p,q,r,s);
+                    double integral = ints[p][q][r][s];
+                    if (std::fabs(integral) > 1.0e-9)
+                        fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,integral);
+                    p_tei[index] = integral;
                 }
             }
         }

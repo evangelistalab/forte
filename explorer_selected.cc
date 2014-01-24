@@ -221,6 +221,15 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
 
     for (int J = 0; J < ndets_m; ++J) selected_dets.push_back(J);
 
+    bool energy_select = options.get_str("SELECT_TYPE") == "ENERGY" ? true : false;
+
+    if(energy_select) {
+        fprintf(outfile,"\n  Building a selected Hamiltonian using the energy criterium");
+    }else{
+        fprintf(outfile,"\n  Building a selected Hamiltonian using the amplitude criterium");
+    }
+
+
     double ept2 = 0.0;
 //    #pragma omp parallel for schedule(dynamic)
     for (int I = ndets_m; I < ntot_dets; ++I){
@@ -243,7 +252,8 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
         }
         double kappa =  - V / (EI - E);
         double chi = - V * V / (EI - E);
-        if (std::fabs(kappa) > t2_threshold_){
+        double selection_value = energy_select ? chi : kappa;
+        if (std::fabs(selection_value) > t2_threshold_){
 //            #pragma omp critical
             selected_dets.push_back(I);
             ndets_i += 1;
@@ -259,6 +269,7 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
     fprintf(outfile,"\n\n  %d total states: %d (main) + %d (intermediate)",ntot_dets,ndets_m,ndets_i);
     fprintf(outfile,"\n  %d states were discarded because the coupling to the main space is less than %f muE_h",ntot_dets - ndets_m - ndets_i,t2_threshold_ * 1000000.0);
     fprintf(outfile,"\n  The estimated contribution from the excluded space is %.9f Eh",ept2);
+    fflush(outfile);
     SharedMatrix H(new Matrix("Hamiltonian Matrix",ndets,ndets));
     // Form the Hamiltonian matrix
     #pragma omp parallel for schedule(dynamic)

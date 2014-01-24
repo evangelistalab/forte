@@ -21,7 +21,9 @@ top_srcdir = /Users/francesco/Source/psi4
 top_objdir = /Users/francesco/Source/psi4-github-compile-c++11-debug
 
 PSITARGET = $(shell basename `pwd`).so
-PSILIBS = -L$(top_objdir)/lib -lPSI_plugin -l/Users/francesco/Source/libbtl/libbtl.so # -lbtl
+#PSILIBS = -L$(top_objdir)/lib -lPSI_plugin -l/Users/francesco/Source/libbtl/libbtl.so # -lbtl
+PSILIBS = -L$(top_objdir)/lib -lPSI_plugin
+LIBS += -L/Users/francesco/Source/libbtl -lbtl
 
 CXXSRC = $(notdir $(wildcard *.cc))
 CXXFLAGS += -I/Users/francesco/Source/libbtl

@@ -788,33 +788,34 @@ void MOSRG::transfer_integrals()
     fprintf(outfile,"\n  Updating all the integrals");
     ints_->set_oei(O1_.aa,true);
     ints_->set_oei(O1_.bb,false);
-    ints_->set_tei(Hbar2_.abab,true,true);
+    ints_->set_tei(Hbar2_.aaaa,true,true);
+    ints_->set_tei(Hbar2_.abab,true,false);
+    ints_->set_tei(Hbar2_.bbbb,false,false);
 //    ints_->set_tei(O2_.abab,false,false);
     ints_->update_integrals();
 
-    loop_mo_p loop_mo_q{
-        fprintf(outfile,"\n (J)_(%d,%d): %20.12f",p,q,ints_->diag_c_rtei(p,q));
-    }
-    loop_mo_p loop_mo_q{
-        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
-                ints_->tei_aa(p,p,q,q),ints_->tei_aa(p,q,p,q),ints_->tei_aa(p,p,q,q)-ints_->tei_aa(p,q,p,q));
-    }
-    loop_mo_p loop_mo_q{
-        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
-                Hbar2_.abab[p][q][p][q],Hbar2_.abab[p][q][q][p],Hbar2_.abab[p][q][p][q]-Hbar2_.abab[p][q][q][p]);
-    }
+//    loop_mo_p loop_mo_q{
+//        fprintf(outfile,"\n (J)_(%d,%d): %20.12f",p,q,ints_->diag_c_rtei(p,q));
+//    }
+//    loop_mo_p loop_mo_q{
+//        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
+//                ints_->tei_aa(p,p,q,q),ints_->tei_aa(p,q,p,q),ints_->tei_aa(p,p,q,q)-ints_->tei_aa(p,q,p,q));
+//    }
+//    loop_mo_p loop_mo_q{
+//        fprintf(outfile,"\n (J-K)_(%d,%d): %20.12f %20.12f %20.12f %20.12f",p,q,ints_->diag_ce_rtei(p,q),
+//                Hbar2_.abab[p][q][p][q],Hbar2_.abab[p][q][q][p],Hbar2_.abab[p][q][p][q]-Hbar2_.abab[p][q][q][p]);
+//    }
 //    fprintf(outfile,"\n (J)_(%d,%d): %20.12f",p,q,ints_->tei_aa(p,q,p,q));
-    fprintf(outfile,"\n (01|01): %20.12f",ints_->tei_aa(0,1,0,1));
-    fprintf(outfile,"\n (10|01): %20.12f",ints_->tei_aa(1,0,0,1));
-    fprintf(outfile,"\n (01|10): %20.12f",ints_->tei_aa(0,1,1,0));
-    fprintf(outfile,"\n (10|10): %20.12f\n",ints_->tei_aa(1,0,1,0));
 
-    fprintf(outfile,"\n (01|01): %20.12f",Hbar2_.abab[0][0][1][1]);
-    fprintf(outfile,"\n (10|01): %20.12f",Hbar2_.abab[1][0][0][1]);
-    fprintf(outfile,"\n (01|10): %20.12f",Hbar2_.abab[0][1][1][0]);
-    fprintf(outfile,"\n (10|10): %20.12f",Hbar2_.abab[1][1][0][0]);
+//    fprintf(outfile,"\n (01|01): %20.12f",ints_->tei_aa(0,1,0,1));
+//    fprintf(outfile,"\n (10|01): %20.12f",ints_->tei_aa(1,0,0,1));
+//    fprintf(outfile,"\n (01|10): %20.12f",ints_->tei_aa(0,1,1,0));
+//    fprintf(outfile,"\n (10|10): %20.12f\n",ints_->tei_aa(1,0,1,0));
 
-
+//    fprintf(outfile,"\n (01|01): %20.12f",Hbar2_.abab[0][0][1][1]);
+//    fprintf(outfile,"\n (10|01): %20.12f",Hbar2_.abab[1][0][0][1]);
+//    fprintf(outfile,"\n (01|10): %20.12f",Hbar2_.abab[0][1][1][0]);
+//    fprintf(outfile,"\n (10|10): %20.12f",Hbar2_.abab[1][1][0][0]);
     fflush(outfile);
 }
 

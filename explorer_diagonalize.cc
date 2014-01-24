@@ -139,6 +139,9 @@ void Explorer::diagonalize_p_space(psi::Options& options)
         fflush(outfile);
     }
 
+    // Set some environment variables
+    Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options.get_int("ROOT"));
+
     // 6) Print the major contributions to the eigenvector
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
