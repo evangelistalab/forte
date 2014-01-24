@@ -29,8 +29,8 @@ public:
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
 
-    /// The one-electron integrals
-    double roei(int p,int q) {return one_electron_integrals[p * nmo_ + q];}
+//    /// The one-electron integrals
+//    double roei(int p,int q) {return one_electron_integrals[p * nmo_ + q];}
 
     /// The alpha one-electron integrals
     double oei_a(int p,int q) {return one_electron_integrals_a[p * nmo_ + q];}
@@ -44,11 +44,11 @@ public:
     /// The diagonal one-electron integrals
     double diag_roei(int p) {return diagonal_one_electron_integrals_a[p];}
 
-    /// The diagonal alpha one-electron integrals
-    double diag_oei_a(int p) {return diagonal_one_electron_integrals_a[p];}
+//    /// The diagonal alpha one-electron integrals
+//    double diag_oei_a(int p) {return diagonal_one_electron_integrals_a[p];}
 
-    /// The diagonal beta one-electron integrals
-    double diag_oei_b(int p) {return diagonal_one_electron_integrals_b[p];}
+//    /// The diagonal beta one-electron integrals
+//    double diag_oei_b(int p) {return diagonal_one_electron_integrals_b[p];}
 
     /// The diagonal fock matrix integrals
     double diag_fock_a(int p) {return fock_matrix_a[p * nmo_ + p];}
@@ -57,7 +57,7 @@ public:
     double diag_fock_b(int p) {return fock_matrix_b[p * nmo_ + p];}
 
     /// The two-electron integrals in chemist notation (pq|rs)
-    double rtei(size_t p,size_t q,size_t r, size_t s) {return two_electron_integrals[INDEX4(p,q,r,s)];}
+//    double rtei(size_t p,size_t q,size_t r, size_t s) {return two_electron_integrals[INDEX4(p,q,r,s)];}
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
     double aptei_aa(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_aa[aptei_index(p,q,r,s)];}
@@ -77,11 +77,11 @@ public:
     /// The diagonal antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||pq>
     double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * nmo_ + q];}
 
-    /// The diagonal two-electron integrals (Coulomb)
-    double diag_c_rtei(int p,int q) {return diagonal_c_integrals[p * nmo_ + q];}
+//    /// The diagonal two-electron integrals (Coulomb)
+//    double diag_c_rtei(int p,int q) {return diagonal_c_integrals[p * nmo_ + q];}
 
-    /// The diagonal two-electron integrals (Coulomb + Exchange)
-    double diag_ce_rtei(int p, int q) {return diagonal_ce_integrals[p * nmo_ + q];}
+//    /// The diagonal two-electron integrals (Coulomb + Exchange)
+//    double diag_ce_rtei(int p, int q) {return diagonal_ce_integrals[p * nmo_ + q];}
 
     /// Make Fock matrix with respect to a given determinant
     void make_fock_matrix(bool* Ia, bool* Ib);
@@ -159,14 +159,14 @@ private:
     double* diagonal_one_electron_integrals;
     double* diagonal_one_electron_integrals_a;
     double* diagonal_one_electron_integrals_b;
-    double* diagonal_c_integrals;
-    double* diagonal_c_integrals_aa;
-    double* diagonal_c_integrals_ab;
-    double* diagonal_c_integrals_bb;
-    double* diagonal_ce_integrals;
-    double* diagonal_ce_integrals_aa;
-    double* diagonal_ce_integrals_ab;
-    double* diagonal_ce_integrals_bb;
+//    double* diagonal_c_integrals;
+//    double* diagonal_c_integrals_aa;
+//    double* diagonal_c_integrals_ab;
+//    double* diagonal_c_integrals_bb;
+//    double* diagonal_ce_integrals;
+//    double* diagonal_ce_integrals_aa;
+//    double* diagonal_ce_integrals_ab;
+//    double* diagonal_ce_integrals_bb;
     double* fock_matrix_a;
     double* fock_matrix_b;
 };

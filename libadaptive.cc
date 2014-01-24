@@ -240,6 +240,11 @@ libadaptive(Options &options)
         delete explorer;
     }
     if (options.get_str("JOB_TYPE") == "SRG-LCI"){
+        double dett = options.get_double("DET_THRESHOLD");
+        double dent = options.get_double("DEN_THRESHOLD");
+        options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
+        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
+
         Explorer* explorer = new Explorer(options,ints_);
         std::vector<double> ONa = explorer->Da();
         std::vector<double> ONb = explorer->Db();
@@ -257,6 +262,10 @@ libadaptive(Options &options)
         MOSRG mosrg(options,ints_,G1aa,G1bb);
         mosrg.transfer_integrals();
         delete explorer;
+
+        options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
+        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
+
         explorer = new Explorer(options,ints_);
 
         free_matrix<double>(G1aa,nmo,nmo);

@@ -261,54 +261,64 @@ double StringDeterminant::excitation_energy(const StringDeterminant& reference)
 
     for (int i = 0; i < naexh; ++i){
         for (int j = i + 1; j < naexh; ++j){
-            matrix_element += ints_->diag_ce_rtei(ahole_[i],ahole_[j]);
+//            matrix_element += ints_->diag_ce_rtei(ahole_[i],ahole_[j]);
+            matrix_element += ints_->diag_aptei_aa(ahole_[i],ahole_[j]);
         }
     }
     for (int i = 0; i < nbexh; ++i){
         for (int j = i + 1; j < nbexh; ++j){
-            matrix_element += ints_->diag_ce_rtei(bhole_[i],bhole_[j]);
+//            matrix_element += ints_->diag_ce_rtei(bhole_[i],bhole_[j]);
+            matrix_element += ints_->diag_aptei_bb(bhole_[i],bhole_[j]);
         }
     }
     for (int i = 0; i < naexh; ++i){
         for (int j = 0; j < nbexh; ++j){
-            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+//            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+            matrix_element += ints_->diag_aptei_ab(ahole_[i],bhole_[j]);
         }
     }
 
     for (int i = 0; i < naexh; ++i){
         for (int a = 0; a < naexp; ++a){
-            matrix_element -= ints_->diag_ce_rtei(ahole_[i],apart_[a]);
+//            matrix_element -= ints_->diag_ce_rtei(ahole_[i],apart_[a]);
+            matrix_element -= ints_->diag_aptei_aa(ahole_[i],apart_[a]);
         }
     }
     for (int i = 0; i < nbexh; ++i){
         for (int a = 0; a < nbexp; ++a){
-            matrix_element -= ints_->diag_ce_rtei(bhole_[i],bpart_[a]);
+//            matrix_element -= ints_->diag_ce_rtei(bhole_[i],bpart_[a]);
+            matrix_element -= ints_->diag_aptei_bb(bhole_[i],bpart_[a]);
         }
     }
     for (int i = 0; i < naexh; ++i){
         for (int a = 0; a < nbexp; ++a){
-            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+//            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+            matrix_element -= ints_->diag_aptei_ab(ahole_[i],bpart_[a]);
         }
     }
     for (int i = 0; i < nbexh; ++i){
         for (int a = 0; a < naexp; ++a){
-            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+//            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+            matrix_element -= ints_->diag_aptei_ab(apart_[a],bhole_[i]);
         }
     }
 
     for (int a = 0; a < naexp; ++a){
-        for (int b = a + 1; b < naexp; ++b){
-            matrix_element += ints_->diag_ce_rtei(apart_[a],apart_[b]);
+        for (int b = a + 1; b < naexp; ++b){           
+//            matrix_element += ints_->diag_ce_rtei(apart_[a],apart_[b]);
+            matrix_element += ints_->diag_aptei_aa(apart_[a],apart_[b]);
         }
     }
     for (int a = 0; a < nbexp; ++a){
         for (int b = a + 1; b < nbexp; ++b){
-            matrix_element += ints_->diag_ce_rtei(bpart_[a],bpart_[b]);
+//            matrix_element += ints_->diag_ce_rtei(bpart_[a],bpart_[b]);
+            matrix_element += ints_->diag_aptei_bb(bpart_[a],bpart_[b]);
         }
     }
     for (int a = 0; a < naexp; ++a){
         for (int b = 0; b < nbexp; ++b){
-            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+//            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+            matrix_element += ints_->diag_aptei_ab(apart_[a],bpart_[b]);
         }
     }
     return(matrix_element);
@@ -347,22 +357,26 @@ double StringDeterminant::excitation_ab_energy(const StringDeterminant& referenc
 
     for (int i = 0; i < naexh; ++i){
         for (int j = 0; j < nbexh; ++j){
-            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+//            matrix_element += ints_->diag_c_rtei(ahole_[i],bhole_[j]);
+            matrix_element += ints_->diag_aptei_ab(ahole_[i],bhole_[j]);
         }
     }
     for (int i = 0; i < naexh; ++i){
         for (int a = 0; a < nbexp; ++a){
-            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+//            matrix_element -= ints_->diag_c_rtei(ahole_[i],bpart_[a]);
+            matrix_element -= ints_->diag_aptei_ab(ahole_[i],bpart_[a]);
         }
     }
     for (int i = 0; i < nbexh; ++i){
         for (int a = 0; a < naexp; ++a){
-            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+//            matrix_element -= ints_->diag_c_rtei(bhole_[i],apart_[a]);
+            matrix_element -= ints_->diag_aptei_ab(apart_[a],bhole_[i]);
         }
     }
     for (int a = 0; a < naexp; ++a){
         for (int b = 0; b < nbexp; ++b){
-            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+//            matrix_element += ints_->diag_c_rtei(apart_[a],bpart_[b]);
+            matrix_element += ints_->diag_aptei_ab(apart_[a],bpart_[b]);
         }
     }
     return(matrix_element);
@@ -429,11 +443,14 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
             for(int q = 0; q < nmo_; ++q){
                 if(alfa_bits_[p] and alfa_bits_[q])
-                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                    matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
+//                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(beta_bits_[p] and beta_bits_[q])
-                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                    matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
+//                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(alfa_bits_[p] and beta_bits_[q])
-                    matrix_element += ints_->diag_c_rtei(p,q);
+                    matrix_element +=   ints_->diag_aptei_ab(p,q);
+//                    matrix_element += ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -448,13 +465,15 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             if((Ia[p] != Ja[p]) and Ja[p]) j = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
-        matrix_element = sign * ints_->roei(i,j);
+        matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+//                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->rtei(i,j,p,p);
+//                matrix_element += sign * ints_->rtei(i,j,p,p);
+                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
     }
@@ -468,13 +487,15 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             if((Ib[p] != Jb[p]) and Jb[p]) j = p;
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
-        matrix_element = sign * ints_->roei(i,j);
+        matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->rtei(p,p,i,j);
+                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
+//                matrix_element += sign * ints_->rtei(p,p,i,j);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+//                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
     }
@@ -495,7 +516,8 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+//        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -515,7 +537,8 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+//        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -530,7 +553,8 @@ double StringDeterminant::slater_rules(StringDeterminant& rhs)
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->rtei(i,k,j,l);
+        //matrix_element = sign * ints_->rtei(i,k,j,l);
+        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);
 }
@@ -565,11 +589,14 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             if(Ib[p]) matrix_element += ints_->diag_roei(p);
             for(int q = 0; q < nmo; ++q){
                 if(Ia[p] and Ia[q])
-                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                    matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
+//                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(Ib[p] and Ib[q])
-                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                    matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
+//                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(Ia[p] and Ib[q])
-                    matrix_element += ints_->diag_c_rtei(p,q);
+                    matrix_element +=   ints_->diag_aptei_ab(p,q);
+//                    matrix_element += ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -584,13 +611,15 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             if((Ia[p] != Ja[p]) and Ja[p]) j = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
-        matrix_element = sign * ints_->roei(i,j);
+        matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+//                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->rtei(i,j,p,p);
+//                matrix_element += sign * ints_->rtei(i,j,p,p);
+                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
     }
@@ -604,13 +633,15 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             if((Ib[p] != Jb[p]) and Jb[p]) j = p;
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
-        matrix_element = sign * ints_->roei(i,j);
+        matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->rtei(p,p,i,j);
+//                matrix_element += sign * ints_->rtei(p,p,i,j);
+                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+//                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
     }
@@ -631,7 +662,8 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+//        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -651,7 +683,8 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+//        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -666,7 +699,8 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->rtei(i,k,j,l);
+//        matrix_element = sign * ints_->rtei(i,k,j,l);
+        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);
 }

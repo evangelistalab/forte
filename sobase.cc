@@ -105,16 +105,22 @@ void SOBase::sort_integrals()
         fprintf(outfile,"\n  so %3d = mo %3d  spin %s",p,so_mo[p],not so_spin[p] ? "a" : "b");
     }
     loop_p loop_q{
-        if(so_spin[p] == so_spin[q])
-            H1_[p][q] = ints_->roei(so_mo[p],so_mo[q]);
+        H1_[p][q] = 0.0;
+        if(so_spin[p] == true and so_spin[q] == true)
+            H1_[p][q] = ints_->oei_a(so_mo[p],so_mo[q]);
+        if(so_spin[p] == false and so_spin[q] == false)
+            H1_[p][q] = ints_->oei_b(so_mo[p],so_mo[q]);
     }
     loop_p loop_q loop_r loop_s{
         V_[p][q][r][s] = 0.0;
-        if((so_spin[p] == so_spin[r]) and (so_spin[q] == so_spin[s]))
-            V_[p][q][r][s] += ints_->rtei(so_mo[p],so_mo[r],so_mo[q],so_mo[s]);
-        if((so_spin[p] == so_spin[s]) and (so_spin[q] == so_spin[r]))
-            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
+//        if((so_spin[p] == so_spin[r]) and (so_spin[q] == so_spin[s]))
+//            V_[p][q][r][s] += ints_->rtei(so_mo[p],so_mo[r],so_mo[q],so_mo[s]);
+//        if((so_spin[p] == so_spin[s]) and (so_spin[q] == so_spin[r]))
+//            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
     }
+    fprintf(outfile,"\n\n  WARNING: I had to temporarily disable the SO code! :(");
+    fflush(outfile);
+    exit(1);
 }
 
 void SOBase::build_fock()

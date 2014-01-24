@@ -99,7 +99,8 @@ void Explorer::explore_singles(psi::Options& options)
             size_t num_dets_accepted_ex_el = 0;
             for (int i = maxai - 1; i >= minai; --i){
                 for (int a = minaa; a < maxaa; ++a){
-                    double excitation_energy = fock_diagonal_alpha[qt_to_pitzer_[a]] - fock_diagonal_alpha[qt_to_pitzer_[i]] - ints_->diag_ce_rtei(qt_to_pitzer_[a],qt_to_pitzer_[i]);
+//                    double excitation_energy = fock_diagonal_alpha[qt_to_pitzer_[a]] - fock_diagonal_alpha[qt_to_pitzer_[i]] - ints_->diag_ce_rtei(qt_to_pitzer_[a],qt_to_pitzer_[i]);
+                    double excitation_energy = fock_diagonal_alpha[qt_to_pitzer_[a]] - fock_diagonal_alpha[qt_to_pitzer_[i]] - ints_->diag_aptei_aa(qt_to_pitzer_[a],qt_to_pitzer_[i]);
                     excitation_energy += +energy_ex - ref_energy_;
                     double absolute_energy = excitation_energy + ref_energy_;
                     double relative_energy = absolute_energy - min_energy_;
@@ -145,7 +146,8 @@ void Explorer::explore_singles(psi::Options& options)
             }
             for (int i = maxbi - 1; i >= minbi; --i){
                 for (int a = minba; a < maxba; ++a){
-                    double excitation_energy = fock_diagonal_beta[qt_to_pitzer_[a]] - fock_diagonal_beta[qt_to_pitzer_[i]] - ints_->diag_ce_rtei(qt_to_pitzer_[a],qt_to_pitzer_[i]);
+//                    double excitation_energy = fock_diagonal_beta[qt_to_pitzer_[a]] - fock_diagonal_beta[qt_to_pitzer_[i]] - ints_->diag_ce_rtei(qt_to_pitzer_[a],qt_to_pitzer_[i]);
+                    double excitation_energy = fock_diagonal_beta[qt_to_pitzer_[a]] - fock_diagonal_beta[qt_to_pitzer_[i]] - ints_->diag_aptei_bb(qt_to_pitzer_[a],qt_to_pitzer_[i]);
                     excitation_energy += +energy_ex - ref_energy_;
                     double absolute_energy = excitation_energy + ref_energy_;
                     double relative_energy = absolute_energy - min_energy_;

@@ -114,13 +114,13 @@ void MOBase::release(MOFourIndex& four_index)
 void MOBase::sort_integrals()
 {
     loop_mo_p loop_mo_q{
-        H1_.aa[p][q] = ints_->roei(p,q);
-        H1_.bb[p][q] = ints_->roei(p,q);
+        H1_.aa[p][q] = ints_->oei_a(p,q);
+        H1_.bb[p][q] = ints_->oei_b(p,q);
     }
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-        V_.aaaa[p][q][r][s] = ints_->rtei(p,r,q,s) - ints_->rtei(p,s,q,r);
-        V_.abab[p][q][r][s] = ints_->rtei(p,r,q,s);
-        V_.bbbb[p][q][r][s] = ints_->rtei(p,r,q,s) - ints_->rtei(p,s,q,r);
+        V_.aaaa[p][q][r][s] = ints_->aptei_aa(p,q,r,s); //ints_->rtei(p,r,q,s) - ints_->rtei(p,s,q,r);
+        V_.abab[p][q][r][s] = ints_->aptei_ab(p,q,r,s); //ints_->rtei(p,r,q,s);
+        V_.bbbb[p][q][r][s] = ints_->aptei_bb(p,q,r,s); //ints_->rtei(p,r,q,s) - ints_->rtei(p,s,q,r);
     }
 }
 

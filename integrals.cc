@@ -85,15 +85,15 @@ void ExplorerIntegrals::startup()
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 
-    diagonal_c_integrals_aa = new double[nmo_ * nmo_];
-    diagonal_c_integrals_ab = new double[nmo_ * nmo_];
-    diagonal_c_integrals_bb = new double[nmo_ * nmo_];
-    diagonal_c_integrals = diagonal_c_integrals_aa;
+//    diagonal_c_integrals_aa = new double[nmo_ * nmo_];
+//    diagonal_c_integrals_ab = new double[nmo_ * nmo_];
+//    diagonal_c_integrals_bb = new double[nmo_ * nmo_];
+//    diagonal_c_integrals = diagonal_c_integrals_aa;
 
-    diagonal_ce_integrals_aa = new double[nmo_ * nmo_];
-    diagonal_ce_integrals_ab = new double[nmo_ * nmo_];
-    diagonal_ce_integrals_bb = new double[nmo_ * nmo_];
-    diagonal_ce_integrals = diagonal_ce_integrals_aa;
+//    diagonal_ce_integrals_aa = new double[nmo_ * nmo_];
+//    diagonal_ce_integrals_ab = new double[nmo_ * nmo_];
+//    diagonal_ce_integrals_bb = new double[nmo_ * nmo_];
+//    diagonal_ce_integrals = diagonal_ce_integrals_aa;
 }
 
 void ExplorerIntegrals::cleanup()
@@ -123,13 +123,13 @@ void ExplorerIntegrals::cleanup()
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
 
-    delete[] diagonal_c_integrals_aa;
-    delete[] diagonal_c_integrals_ab;
-    delete[] diagonal_c_integrals_bb;
+//    delete[] diagonal_c_integrals_aa;
+//    delete[] diagonal_c_integrals_ab;
+//    delete[] diagonal_c_integrals_bb;
 
-    delete[] diagonal_ce_integrals_aa;
-    delete[] diagonal_ce_integrals_ab;
-    delete[] diagonal_ce_integrals_bb;
+//    delete[] diagonal_ce_integrals_aa;
+//    delete[] diagonal_ce_integrals_ab;
+//    delete[] diagonal_ce_integrals_bb;
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
@@ -144,7 +144,7 @@ void ExplorerIntegrals::read_one_electron_integrals()
     for (int p = 0; p < nmo_; ++p){
         for (int q = p; q < nmo_; ++q){
             one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
-            one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_a[p * nmo_ + q];
+            one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_b[q * nmo_ + p] = packed_oei[p + ioff[q]];
         }
     }
     delete[] packed_oei;
@@ -228,13 +228,13 @@ void ExplorerIntegrals::make_diagonal_integrals()
 
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
-            diagonal_c_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q);
-            diagonal_c_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q);
-            diagonal_c_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q);
+//            diagonal_c_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q);
+//            diagonal_c_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q);
+//            diagonal_c_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q);
 
-            diagonal_ce_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
-            diagonal_ce_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
-            diagonal_ce_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+//            diagonal_ce_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+//            diagonal_ce_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
+//            diagonal_ce_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
 
             diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
             diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
@@ -252,20 +252,23 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ia[k]) {
-                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+//                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_a[p * nmo_ + q] += aptei_aa(p,k,q,k);// -  rtei(p,q,k,k) - rtei(p,k,q,k);
                 }
                 if (Ib[k]) {
-                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k);
+//                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k);
+                    fock_matrix_a[p * nmo_ + q] += aptei_ab(p,k,q,k);
                 }
             }
             fock_matrix_b[p * nmo_ + q] = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < nmo_; ++k) {
                 if (Ib[k]) {
-                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+//                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_b[p * nmo_ + q] += aptei_bb(p,k,q,k);
                 }
                 if (Ia[k]) {
-                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k);
+                    fock_matrix_b[p * nmo_ + q] += aptei_ab(p,k,q,k);//rtei(p,q,k,k);
                 }
             }
         }
@@ -278,24 +281,28 @@ void ExplorerIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
     std::vector<double>& fock_diagonal_beta = fock_diagonals.second;
     for(size_t p = 0; p < nmo_; ++p){
         // Builf Fock Diagonal alpha-alpha
-        fock_diagonal_alpha[p] = roei(p,p);
+        fock_diagonal_alpha[p] =  oei_a(p,p);// roei(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
         for (int k = 0; k < nmo_; ++k) {
             if (Ia[k]) {
-                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+//                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+                fock_diagonal_alpha[p] += diag_aptei_aa(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
             if (Ib[k]) {
-                fock_diagonal_alpha[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+//                fock_diagonal_alpha[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+                fock_diagonal_alpha[p] += diag_aptei_ab(p,k); //rtei(p,p,k,k);
             }
         }
-        fock_diagonal_beta[p] = roei(p,p);
+        fock_diagonal_beta[p] =  oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
         for (int k = 0; k < nmo_; ++k) {
             if (Ib[k]) {
-                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+//                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+                fock_diagonal_beta[p] += diag_aptei_bb(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
             if (Ia[k]) {
-                fock_diagonal_beta[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+//                fock_diagonal_beta[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+                fock_diagonal_beta[p] += diag_aptei_ab(p,k); //rtei(p,p,k,k);
             }
         }
     }
@@ -305,14 +312,14 @@ void ExplorerIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<
 {
     for(size_t p = 0; p < nmo_; ++p){
         // Builf Fock Diagonal alpha-alpha
-        fock_diagonal[p] = roei(p,p);
+        fock_diagonal[p] = oei_a(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
         for (int k = 0; k < nmo_; ++k) {
             if (Ia[k]) {
-                fock_diagonal[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+                fock_diagonal[p] += diag_aptei_aa(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
             if (Ib[k]) {
-                fock_diagonal[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+                fock_diagonal[p] += diag_aptei_ab(p,k); // diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
         }
     }
@@ -321,14 +328,14 @@ void ExplorerIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<
 void ExplorerIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<double> &fock_diagonals)
 {
     for(size_t p = 0; p < nmo_; ++p){
-        fock_diagonals[p] = roei(p,p);
+        fock_diagonals[p] = oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
         for (int k = 0; k < nmo_; ++k) {
             if (Ia[k]) {
-                fock_diagonals[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
+                fock_diagonals[p] += diag_aptei_ab(p,k);  //diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
             if (Ib[k]) {
-                fock_diagonals[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
+                fock_diagonals[p] += diag_aptei_bb(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
         }
     }
@@ -344,10 +351,11 @@ void ExplorerIntegrals::freeze_core()
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi[hi]; ++i){
-            core_energy_ += diag_oei_a(p + i) + diag_oei_b(p + i);
+            core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi[hj]; ++j){
-                    core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
+//                    core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
+                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + i) + 0.5 * diag_aptei_bb(p + i,q + i)  + diag_aptei_ab(p + i,q + i);
                 }
                 q += mopi[hj]; // orbital offset for the irrep hj
             }
