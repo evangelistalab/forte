@@ -1,3 +1,5 @@
+#ifdef _HAS_LIBBTL_
+
 #include <cmath>
 
 #include <boost/timer.hpp>
@@ -580,3 +582,4 @@ void MOSRG::print_timings()
 
 }} // EndNamespaces
 
+#endif
