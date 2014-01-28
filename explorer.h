@@ -141,6 +141,8 @@ private:
     StringDeterminant min_energy_determinant_;
     /// The PT2 energy correction
     double pt2_energy_correction_;
+    /// The PT2 energy correction
+    std::vector<double> multistate_pt2_energy_correction_;
     /// The alpha occupation numbers
     std::vector<double> Da_;
     /// The beta occupation numbers
@@ -181,7 +183,7 @@ private:
     /// Build the Hamiltonian matrix in the model space in parallel
     SharedMatrix build_model_space_hamiltonian(Options& options);
     /// Build an Hamiltonian with determinants selected using a threshold
-    SharedMatrix build_select_hamiltonian_roth(Options& options, double E, SharedVector evect);
+    SharedMatrix build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs);
     /// Build an Hamiltonian with determinants selected using a threshold and storing only the non-zero elements
     std::vector<std::vector<std::pair<int,double> > > build_hamiltonian_direct(Options& options);
     /// Smooth the Hamiltonian matrix in the intermediate space

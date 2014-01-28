@@ -90,10 +90,9 @@ void Explorer::diagonalize_selected_space(psi::Options& options)
     }
     fflush(outfile);
 
-    int root = options.get_int("ROOT");
-    fprintf(outfile,"\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for root %d",root + 1);
-    SharedMatrix H = build_select_hamiltonian_roth(options,evals_m->get(root),evecs_m->get_column(0,root));
-
+    int num_roots = options.get_int("NROOT");
+    fprintf(outfile,"\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
+    SharedMatrix H = build_select_hamiltonian_roth(options,evals_m,evecs_m);
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
     int ndets = H->nrow();
@@ -115,7 +114,8 @@ void Explorer::diagonalize_selected_space(psi::Options& options)
     // 5) Print the energy
     for (int i = 0; i < nroots_print; ++ i){
         fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f",i + 1,evals->get(i) + pt2_energy_correction_);
+        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
 
     // 6) Print the major contributions to the eigenvector
@@ -210,13 +210,13 @@ SharedMatrix Explorer::build_model_space_hamiltonian(Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E, SharedVector evect)
+SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
     // Find out which determinants will be included
     std::vector<int> selected_dets;
-    int ndets_m = evect->dim();
+    int ndets_m = evecs->nrow();
     int ndets_i = 0;
 
     for (int J = 0; J < ndets_m; ++J) selected_dets.push_back(J);
@@ -229,8 +229,13 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
         fprintf(outfile,"\n  Building a selected Hamiltonian using the amplitude criterium");
     }
 
+    int nroot = options.get_int("NROOT");
+    std::vector<double> V_q(nroot,0.0);
+    std::vector<double> t_q(nroot,0.0);
+    std::vector<std::pair<double,double> > kappa_q(nroot,make_pair(0.0,0.0));
+    std::vector<std::pair<double,double> > chi_q(nroot,make_pair(0.0,0.0));
+    std::vector<double> ept2(nroot,0.0);
 
-    double ept2 = 0.0;
 //    #pragma omp parallel for schedule(dynamic)
     for (int I = ndets_m; I < ntot_dets; ++I){
         boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
@@ -239,7 +244,10 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
         const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
         const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
         const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-        double V = 0.0;
+        for (int n = 0; n < nroot; ++n){
+            V_q[n] = 0.0;
+            t_q[n] = 0.0;
+        }
         for (int J = 0; J < ndets_m; ++J){
             boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
             const double EJ = determinantJ.get<0>();  //std::get<0>(determinantJ);
@@ -248,27 +256,40 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, double E,
             const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantJ);
             const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantJ);
             const double HIJ = StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
-            V += evect->get(J) * HIJ;
+            for (int n = 0; n < nroot; ++n){
+                V_q[n] += evecs->get(J,n) * HIJ;
+            }
         }
-        double kappa =  - V / (EI - E);
-        double chi = - V * V / (EI - E);
-        double selection_value = energy_select ? chi : kappa;
+        for (int n = 0; n < nroot; ++n){
+            double kappa = -V_q[n] / (EI - evals->get(n));
+            double chi   = - V_q[n] * V_q[n] / (EI - evals->get(n));
+            kappa_q[n] = make_pair(std::fabs(kappa),kappa);
+            chi_q[n]   = make_pair(std::fabs(chi),chi);
+        }
+
+//        double kappa =  - V / (EI - E);
+//        double chi = - V * V / (EI - E);
+        std::pair<double,double> max_kappa = *std::max_element(kappa_q.begin(),kappa_q.end());
+        std::pair<double,double> max_chi   = *std::max_element(chi_q.begin(),chi_q.end());
+
+        double selection_value = energy_select ? max_chi.first : max_kappa.first;
+
         if (std::fabs(selection_value) > t2_threshold_){
 //            #pragma omp critical
             selected_dets.push_back(I);
             ndets_i += 1;
         }else{
-            ept2 += chi;
+            for (int n = 0; n < nroot; ++n) ept2[n] += chi_q[n].second;
         }
     }
 
-    pt2_energy_correction_ = ept2;
+//    pt2_energy_correction_ = ept2;
+    multistate_pt2_energy_correction_ = ept2;
 
     // the number of determinants used to form the Hamiltonian matrix
     int ndets = ndets_i + ndets_m;
     fprintf(outfile,"\n\n  %d total states: %d (main) + %d (intermediate)",ntot_dets,ndets_m,ndets_i);
     fprintf(outfile,"\n  %d states were discarded because the coupling to the main space is less than %f muE_h",ntot_dets - ndets_m - ndets_i,t2_threshold_ * 1000000.0);
-    fprintf(outfile,"\n  The estimated contribution from the excluded space is %.9f Eh",ept2);
     fflush(outfile);
     SharedMatrix H(new Matrix("Hamiltonian Matrix",ndets,ndets));
     // Form the Hamiltonian matrix

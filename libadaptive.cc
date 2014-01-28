@@ -27,6 +27,9 @@ extern "C" int
 read_options(std::string name, Options &options)
 {
     if (name == "LIBADAPTIVE" || options.read_globals()) {
+        /*- MODULEDESCRIPTION Libadaptive */
+
+        /*- SUBSECTION Job Type */
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -91,7 +94,7 @@ read_options(std::string name, Options &options)
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("SELECT_TYPE","ENERGY","ENERGY AMP");
+        options.add_str("SELECT_TYPE","AMP","ENERGY AMP");
 
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
