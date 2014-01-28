@@ -220,6 +220,7 @@ libadaptive(Options &options)
 
         delete explorer;
     }
+#ifdef _HAS_LIBBTL_
     if (options.get_str("JOB_TYPE") == "SRG"){
         Explorer* explorer = new Explorer(options,ints_);
         std::vector<double> ONa = explorer->Da();
@@ -292,6 +293,7 @@ libadaptive(Options &options)
 
         delete explorer;
     }
+#endif
 
     // Delete ints_;
     delete ints_;
