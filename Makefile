@@ -27,6 +27,7 @@ LIBS += -L/Users/francesco/Source/libbtl -lbtl
 
 CXXSRC = $(notdir $(wildcard *.cc))
 CXXFLAGS += -I/Users/francesco/Source/libbtl
+CXXFLAGS += -D_HAS_LIBBTL_
 DEPENDINCLUDE = $(notdir $(wildcard *.h))
 
 BINOBJ = $(CXXSRC:%.cc=%.o)

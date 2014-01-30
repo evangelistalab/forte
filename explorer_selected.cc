@@ -221,7 +221,21 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, SharedVec
 
     for (int J = 0; J < ndets_m; ++J) selected_dets.push_back(J);
 
-    bool energy_select = options.get_str("SELECT_TYPE") == "ENERGY" ? true : false;
+    bool aimed_selection = false;
+    bool energy_select = false;
+    if (options.get_str("SELECT_TYPE") == "AIMED_AMP"){
+        aimed_selection = true;
+        energy_select = false;
+    }else if (options.get_str("SELECT_TYPE") == "AIMED_ENERGY"){
+        aimed_selection = true;
+        energy_select = true;
+    }else if(options.get_str("SELECT_TYPE") == "ENERGY"){
+        aimed_selection = false;
+        energy_select = true;
+    }else if(options.get_str("SELECT_TYPE") == "AMP"){
+        aimed_selection = false;
+        energy_select = false;
+    }
 
     if(energy_select) {
         fprintf(outfile,"\n  Building a selected Hamiltonian using the energy criterium");
@@ -235,6 +249,9 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, SharedVec
     std::vector<std::pair<double,double> > kappa_q(nroot,make_pair(0.0,0.0));
     std::vector<std::pair<double,double> > chi_q(nroot,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot,0.0);
+
+    std::vector<std::pair<double,size_t> > aimed_selection_vec;
+    double aimed_selection_sum = 0.0;
 
 //    #pragma omp parallel for schedule(dynamic)
     for (int I = ndets_m; I < ntot_dets; ++I){
@@ -274,16 +291,46 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, SharedVec
 
         double selection_value = energy_select ? max_chi.first : max_kappa.first;
 
-        if (std::fabs(selection_value) > t2_threshold_){
-//            #pragma omp critical
-            selected_dets.push_back(I);
-            ndets_i += 1;
+        // Do not select now, just store the determinant index and the selection criterion
+        if(aimed_selection){
+            if (energy_select){
+                aimed_selection_vec.push_back(std::make_pair(selection_value,I));
+                aimed_selection_sum += selection_value;
+            }else{
+                aimed_selection_vec.push_back(std::make_pair(selection_value * selection_value,I));
+                aimed_selection_sum += selection_value * selection_value;
+            }
         }else{
-            for (int n = 0; n < nroot; ++n) ept2[n] += chi_q[n].second;
+            if (std::fabs(selection_value) > t2_threshold_){
+                //            #pragma omp critical
+                selected_dets.push_back(I);
+                ndets_i += 1;
+            }else{
+                for (int n = 0; n < nroot; ++n) ept2[n] += chi_q[n].second;
+            }
         }
     }
 
-//    pt2_energy_correction_ = ept2;
+    if(aimed_selection){
+        std::sort(aimed_selection_vec.begin(),aimed_selection_vec.end());
+        std::reverse(aimed_selection_vec.begin(),aimed_selection_vec.end());
+        size_t maxI = aimed_selection_vec.size();
+
+        fprintf(outfile,"\n  Initial value of sigma in the aimed selection = %24.14f",aimed_selection_sum);
+        for (size_t I = 0; I < maxI; ++I){
+            if (aimed_selection_sum > t2_threshold_){
+                selected_dets.push_back(aimed_selection_vec[I].second);
+                aimed_selection_sum -= aimed_selection_vec[I].first;
+                ndets_i += 1;
+            }else{
+                break;
+            }
+        }
+        fprintf(outfile,"\n  Final value of sigma in the aimed selection   = %24.14f",aimed_selection_sum);
+        fprintf(outfile,"\n  Selected %zu determinants",selected_dets.size());
+
+    }
+
     multistate_pt2_energy_correction_ = ept2;
 
     // the number of determinants used to form the Hamiltonian matrix
@@ -312,6 +359,7 @@ SharedMatrix Explorer::build_select_hamiltonian_roth(Options& options, SharedVec
         }
         H->set(I,I,determinantI.get<0>());
     }
+    fflush(outfile);
     return H;
 }
 

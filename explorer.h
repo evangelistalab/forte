@@ -148,7 +148,6 @@ private:
     /// The beta occupation numbers
     std::vector<double> Db_;
 
-
     // // The strings are in QT format and are stored using the following structure:
     /// A list of alpha strings in QT format stored as [<string irrep>][<string index>](<string energy>,<string bits>)
     string_list_symm vec_astr_symm_;
@@ -156,7 +155,6 @@ private:
     string_list_symm vec_bstr_symm_;
     /// A list of determinants in the format: [<determinant index>](determinant energy,alpha string exc class,alpha string index,beta string exc class,beta string index)
     std::vector<det_info> determinants_;
-
 
     /// An heuristic search for determinants with energy less than a given threshold (determinant_threshold_)
     void startup(Options& options);

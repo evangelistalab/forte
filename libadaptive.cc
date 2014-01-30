@@ -97,7 +97,7 @@ read_options(std::string name, Options &options)
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("SELECT_TYPE","AMP","ENERGY AMP");
+        options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
 
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
