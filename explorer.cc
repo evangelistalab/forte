@@ -1,5 +1,7 @@
 #include <cmath>
 
+#include <boost/timer.hpp>
+
 #include <libpsio/psio.hpp>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
@@ -14,14 +16,18 @@ namespace psi{ namespace libadaptive{
 Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     : min_energy_(0.0),ints_(ints),pt2_energy_correction_(0.0)
 {
+    boost::timer t;
+
     // Read data and allocate member objects
     startup(options);
 
-    // Explore the space of excited configurations
-    if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
-        explore_original(options);
-    }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
-        explore_singles(options);
+    if(options.get_str("ENERGY_TYPE") != "RMRCISD"){
+        // Explore the space of excited configurations
+        if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
+            explore_original(options);
+        }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
+            explore_singles(options);
+        }
     }
 
     // Optionally diagonalize a small Hamiltonian
@@ -37,8 +43,19 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         }else
         if(options.get_str("ENERGY_TYPE") == "SPARSE"){
             diagonalize_p_space_direct(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "RENORMALIZE"){
+            diagonalize_renormalized_space(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "RENORMALIZE_FIXED"){
+            diagonalize_renormalized_fixed_space(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "RMRCISD"){
+            renormalized_mrcisd(options);
         }
     }
+    fprintf(outfile,"\n  Explorer ran in %f s",t.elapsed());
+    fflush(outfile);
 }
 
 Explorer::~Explorer()

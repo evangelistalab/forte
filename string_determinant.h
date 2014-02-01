@@ -48,17 +48,17 @@ public:
     /// Construct an empty determinant
     StringDeterminant();
     /// Construct a vacuum determinant given the total number of MOs
-    StringDeterminant(int nmo,bool print_det = false);
+    explicit StringDeterminant(int nmo,bool print_det = false);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    StringDeterminant(std::vector<int> occupation,bool print_det = false);
+    explicit StringDeterminant(const std::vector<int>& occupation,bool print_det = false);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    StringDeterminant(std::vector<bool> occupation,bool print_det = false);
+    explicit StringDeterminant(const std::vector<bool>& occupation,bool print_det = false);
     /// Construct an excited determinant of a given reference
-    StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
+    explicit StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
     /// Copy constructor
-    StringDeterminant(const StringDeterminant& det);
+    explicit StringDeterminant(const StringDeterminant& det);
     /// Assignment operator
     StringDeterminant& operator=(const StringDeterminant& rhs);
     /// Destructor
@@ -73,14 +73,22 @@ public:
     bool get_alfa_bit(int n) {return alfa_bits_[n];}
     /// Get a pointer to the beta bits
     bool get_beta_bit(int n) {return beta_bits_[n];}
+    /// Return the value of an alpha bit
+    bool get_alfa_bit(int n) const {return alfa_bits_[n];}
+    /// Get a pointer to the beta bits
+    bool get_beta_bit(int n) const {return beta_bits_[n];}
+    /// Return the value of an alpha bit
+    void set_alfa_bit(int n, bool value) {alfa_bits_[n] = value;}
+    /// Get a pointer to the beta bits
+    void set_beta_bit(int n, bool value) {beta_bits_[n] = value;}
     /// Specify the occupation numbers
     void set_bits(bool*& alfa_bits,bool*& beta_bits);
     /// Specify the occupation numbers
     void set_bits(std::vector<bool>& alfa_bits,std::vector<bool>& beta_bits);
     /// Print the Slater determinant
-    void print();
+    void print() const;
     /// Compute the energy of a Slater determinant
-    double energy();
+    double energy() const;
     /// Compute the one-electron contribution to the energy of a Slater determinant
     double one_electron_energy();
     /// Compute the kinetic energy of a Slater determinant
@@ -90,7 +98,7 @@ public:
     /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_ab_energy(const StringDeterminant& reference);
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
-    double slater_rules(StringDeterminant& rhs);
+    double slater_rules(const StringDeterminant& rhs) const;
     /// Compute the excitation level of a Slater determiant with respect to a given reference
     int excitation_level(const StringDeterminant& reference);
     int excitation_level(const bool* Ia,const bool* Ib);
@@ -104,6 +112,27 @@ public:
     static void SlaterOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb,SharedMatrix Da,SharedMatrix Db,double w);
     /// Compute the diagonal of the one-particle density matrix contribution from a pair of determinants
     static void SlaterdiagOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,std::vector<double>& Da,std::vector<double>& Db,double w);
+
+//    bool operator<(const StringDeterminant& rhs,const StringDeterminant& lhs){
+//        for (int n = 0; n < 2 * rhs.nmo_; ++n){
+//            if (rhs.alfa_bits_[n] and not lhs.alfa_bits_[n])
+//                return false;
+//            if (not rhs.alfa_bits_[n] and lhs.alfa_bits_[n])
+//                return true;
+//        }
+//        return false;
+//    }
+
+    bool operator<(const StringDeterminant& lhs) const{
+        for (int n = 0; n < 2 * nmo_; ++n){
+            if (alfa_bits_[n] and not lhs.alfa_bits_[n])
+                return false;
+            if (not alfa_bits_[n] and lhs.alfa_bits_[n])
+                return true;
+        }
+        return false;
+    }
+
 private:
     // Functions
     /// Used to allocate the memory for the arrays

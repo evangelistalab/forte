@@ -34,7 +34,7 @@ StringDeterminant::StringDeterminant(int nmo,bool print_det)
     if (print_det) print();
 }
 
-StringDeterminant::StringDeterminant(std::vector<int> occupation,bool print_det)
+StringDeterminant::StringDeterminant(const std::vector<int>& occupation,bool print_det)
     : nmo_(occupation.size() / 2)
 {
     allocate();
@@ -45,7 +45,7 @@ StringDeterminant::StringDeterminant(std::vector<int> occupation,bool print_det)
     if (print_det) print();
 }
 
-StringDeterminant::StringDeterminant(std::vector<bool> occupation,bool print_det)
+StringDeterminant::StringDeterminant(const std::vector<bool>& occupation, bool print_det)
     : nmo_(occupation.size() / 2)
 {
     allocate();
@@ -129,7 +129,7 @@ void StringDeterminant::set_bits(std::vector<bool>& alfa_bits,std::vector<bool>&
 /**
  * Print the determinant
  */
-void StringDeterminant::print()
+void StringDeterminant::print() const
 {
     fprintf(outfile,"\n  |");
     for(int p = 0; p < nmo_; ++p){
@@ -147,7 +147,7 @@ void StringDeterminant::print()
  * Compute the energy of this determinant
  * @return the electronic energy (does not include the nuclear repulsion energy)
  */
-double StringDeterminant::energy()
+double StringDeterminant::energy() const
 {
     double matrix_element = 0.0;
     matrix_element = ints_->frozen_core_energy();
@@ -415,7 +415,7 @@ int StringDeterminant::excitation_level(const bool* Ia,const bool* Ib)
  * @param rhs
  * @return
  */
-double StringDeterminant::slater_rules(StringDeterminant& rhs)
+double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
 {
     bool* Ia = alfa_bits_;
     bool* Ib = beta_bits_;

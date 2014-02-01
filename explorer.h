@@ -174,6 +174,11 @@ private:
     void diagonalize_p_space_lowdin(psi::Options& options);
     /// Diagonalize the Hamiltonian in the main space and include only contributions relevant to each state
     void diagonalize_selected_space(psi::Options& options);
+    /// Diagonalize the Hamiltonian using a renormalization procedure that selects determinants
+    void diagonalize_renormalized_space(psi::Options& options);
+    /// Diagonalize the Hamiltonian using a renormalization procedure that selects determinants and keeps only a fixed amount
+    void diagonalize_renormalized_fixed_space(psi::Options& options);
+
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);
     /// Build the Hamiltonian matrix in parallel
@@ -199,6 +204,10 @@ private:
     void examine_all(Options& options);
     /// Compute perturbative corrections to the energy
     void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
+
+    /// A renormalized MRCISD
+    void renormalized_mrcisd(psi::Options& options);
+
 
     // Functions for generating combination
     half_string_list compute_half_strings_screened(bool is_occ,int n,int k,std::vector<double>& weights,std::string label);

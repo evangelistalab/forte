@@ -92,7 +92,7 @@ read_options(std::string name, Options &options)
         options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE");
+        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED RMRCISD");
 
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
@@ -113,6 +113,12 @@ read_options(std::string name, Options &options)
 
         /*- The energy threshold for the intermdiate space -*/
         options.add_double("T2_THRESHOLD",0.000001);
+
+        /*- The number of steps used in the renormalized Lambda CI -*/
+        options.add_int("RENORMALIZATION_STEPS",10);
+
+        /*- The maximum number of determinant in the fixed-size renormalized Lambda CI -*/
+        options.add_int("REN_MAX_NDETS",1000);
 
         /*- The energy threshold for smoothing the Hamiltonian.
          *  Determinants with energy < DET_THRESHOLD - SMO_THRESHOLD will be included in H
