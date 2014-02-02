@@ -48,7 +48,7 @@ public:
     /// Construct an empty determinant
     StringDeterminant();
     /// Construct a vacuum determinant given the total number of MOs
-    explicit StringDeterminant(int nmo,bool print_det = false);
+//    explicit StringDeterminant(int nmo,bool print_det = false);
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit StringDeterminant(const std::vector<int>& occupation,bool print_det = false);
@@ -125,13 +125,22 @@ public:
 
     bool operator<(const StringDeterminant& lhs) const{
         for (int n = 0; n < 2 * nmo_; ++n){
-            if (alfa_bits_[n] and not lhs.alfa_bits_[n])
+            if (alfa_bits_[n] and (not lhs.alfa_bits_[n]))
                 return false;
-            if (not alfa_bits_[n] and lhs.alfa_bits_[n])
+            if ((not alfa_bits_[n]) and lhs.alfa_bits_[n])
                 return true;
         }
         return false;
     }
+
+    bool operator==(const StringDeterminant& lhs) const{
+        for (int n = 0; n < 2 * nmo_; ++n){
+            if (alfa_bits_[n] != lhs.alfa_bits_[n])
+                return false;
+        }
+        return true;
+    }
+
 
 private:
     // Functions

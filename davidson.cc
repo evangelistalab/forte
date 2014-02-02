@@ -91,19 +91,16 @@ int david2(double **A, int N, int M, double *eps, double **v,
     double *lambda, **alpha, **f, *lambda_old;
     double norm, denom, diff;
 
-    maxdim = 25 * M;
+    maxdim = 8 * M;
 
-    b = block_matrix(maxdim, N);  /* current set of guess vectors,
-                   stored by row */
-    bnew = block_matrix(M, N); /* guess vectors formed from old vectors,
-                stored by row*/
+    b = block_matrix(maxdim, N);  /* current set of guess vectors, stored by row */
+    bnew = block_matrix(M, N); /* guess vectors formed from old vectors, stored by row*/
     sigma = block_matrix(N, maxdim); /* sigma vectors, stored by column */
     G = block_matrix(maxdim, maxdim); /* Davidson mini-Hamitonian */
     f = block_matrix(maxdim, N); /* residual eigenvectors, stored by row */
     alpha = block_matrix(maxdim, maxdim); /* eigenvectors of G */
     lambda = init_array(maxdim); /* eigenvalues of G */
-    lambda_old = init_array(maxdim); /* approximate roots from previous
-                      iteration */
+    lambda_old = init_array(maxdim); /* approximate roots from previous iteration */
 
     if(smart_guess) { /* Use eigenvectors of a sub-matrix as initial guesses */
 

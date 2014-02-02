@@ -24,15 +24,15 @@ StringDeterminant::StringDeterminant()
 {
 }
 
-StringDeterminant::StringDeterminant(int nmo,bool print_det)
-    : nmo_(nmo)
-{
-    allocate();
-    for (int n = 0; n < 2 * nmo_; ++n){
-        alfa_bits_[n] = false;
-    }
-    if (print_det) print();
-}
+//StringDeterminant::StringDeterminant(int nmo,bool print_det)
+//    : nmo_(nmo)
+//{
+//    allocate();
+//    for (int n = 0; n < 2 * nmo_; ++n){
+//        alfa_bits_[n] = false;
+//    }
+//    if (print_det) print();
+//}
 
 StringDeterminant::StringDeterminant(const std::vector<int>& occupation,bool print_det)
     : nmo_(occupation.size() / 2)

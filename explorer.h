@@ -207,6 +207,7 @@ private:
 
     /// A renormalized MRCISD
     void renormalized_mrcisd(psi::Options& options);
+    void renormalized_mrcisd_simple(psi::Options& options);
 
 
     // Functions for generating combination
