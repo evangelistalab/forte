@@ -59,6 +59,8 @@ public:
     explicit StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
     /// Copy constructor
     explicit StringDeterminant(const StringDeterminant& det);
+    /// Copy constructor
+    explicit StringDeterminant(StringDeterminant& det);
     /// Assignment operator
     StringDeterminant& operator=(const StringDeterminant& rhs);
     /// Destructor

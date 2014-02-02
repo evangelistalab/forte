@@ -65,6 +65,15 @@ StringDeterminant::StringDeterminant(const StringDeterminant& det)
     }
 }
 
+StringDeterminant::StringDeterminant(StringDeterminant& det)
+    : nmo_(det.nmo_)
+{
+    allocate();
+    for (int n = 0; n < 2 * nmo_; ++n){
+        alfa_bits_[n] = det.alfa_bits_[n];
+    }
+}
+
 StringDeterminant::StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex)
     : nmo_(ref.nmo_)
 {
