@@ -94,6 +94,8 @@ void Explorer::startup(Options& options)
     max_energy_ = min_energy_;
 
     ints_->make_fock_matrix(reference_determinant_.get_alfa_bits(),reference_determinant_.get_beta_bits());
+
+    fprintf(outfile,"\n\n  Starting Explorer.\n\n");
 }
 
 void Explorer::read_info(Options& options)
