@@ -1,6 +1,7 @@
 #include "explorer.h"
 
 #include <cmath>
+#include <ctime>
 #include <functional>
 #include <algorithm>
 
@@ -61,11 +62,35 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
     std::map<StringDeterminant,int> old_dets_map;
     std::vector<double> coefficient;
     std::vector<double> energy;
-    old_dets_vec.push_back(reference_determinant_);
-    old_dets_map[reference_determinant_] = 1;
+
+    StringDeterminant D0(reference_determinant_);
+//    D0.print();
+    srand((unsigned)time(NULL));
+    {
+        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            if (D0.get_alfa_bit(p)){
+                aocc[i] = p;
+                i++;
+            }else{
+                avir[a] = p;
+                a++;
+            }
+        }
+        int ii = aocc[std::rand() % nalpha_];
+        int aa = avir[std::rand() % nvalpha];
+        D0.set_alfa_bit(ii,false);
+        D0.set_beta_bit(ii,false);
+        D0.set_alfa_bit(aa,true);
+        D0.set_beta_bit(aa,true);
+        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
+    }
+    D0.print();
+
+    old_dets_vec.push_back(D0);
+    old_dets_map[D0] = 1;
     coefficient.push_back(1.0);
-    energy.push_back(reference_determinant_.energy());
-    double old_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
+    energy.push_back(D0.energy());
+    double old_energy = D0.energy() + nuclear_repulsion_energy_;
     double new_energy = 0.0;
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
@@ -280,6 +305,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         evals.reset(new Vector("e",nroot));
 
         boost::timer t_h_build;
+        #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < num_mrcisd_dets; ++I){
             const StringDeterminant& detI = refsd_dets_vec[I];
             for (size_t J = I; J < num_mrcisd_dets; ++J){
@@ -326,8 +352,8 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
             dm_det_list.push_back(std::make_pair(max_dm,I));
         }
 
-//        std::sort(dm_det_list.begin(),dm_det_list.end());
-//        std::reverse(dm_det_list.begin(),dm_det_list.end());
+        std::sort(dm_det_list.begin(),dm_det_list.end());
+        std::reverse(dm_det_list.begin(),dm_det_list.end());
 
 
         old_dets_vec.clear();
@@ -344,6 +370,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         H.reset(new Matrix("Hamiltonian Matrix",size_small_ci,size_small_ci));
 
         boost::timer t_h_small_build;
+        #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < size_small_ci; ++I){
             for (size_t J = I; J < size_small_ci; ++J){
                 double HIJ = old_dets_vec[I].slater_rules(old_dets_vec[J]);
@@ -360,7 +387,6 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         // 4) Diagonalize the Hamiltonian
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-//            H->diagonalize(evecs,evals);
             davidson_liu(H,evals,evecs,nroot);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
             fprintf(outfile,"\n  Performing full diagonalization.");
@@ -371,7 +397,6 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
             coefficient.push_back(evecs->get(I,0));
         }
         energy[0] = evals->get(0);
-
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
