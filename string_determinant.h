@@ -58,9 +58,9 @@ public:
     /// Construct an excited determinant of a given reference
     explicit StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
     /// Copy constructor
-    explicit StringDeterminant(const StringDeterminant& det);
+    StringDeterminant(const StringDeterminant& det);
     /// Copy constructor
-    explicit StringDeterminant(StringDeterminant& det);
+    StringDeterminant(StringDeterminant& det);
     /// Assignment operator
     StringDeterminant& operator=(const StringDeterminant& rhs);
     /// Destructor

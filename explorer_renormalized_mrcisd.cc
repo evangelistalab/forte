@@ -3,7 +3,6 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
-#include <unordered_set>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
@@ -580,7 +579,7 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
 
 
         std::vector<StringDeterminant> new_dets_vec;
-        for (auto it = new_dets_map.begin(), endit = new_dets_map.end(); it != endit; ++it){
+        for (std::map<StringDeterminant,int>::iterator it = new_dets_map.begin(), endit = new_dets_map.end(); it != endit; ++it){
             new_dets_vec.push_back(it->first);
         }
 
