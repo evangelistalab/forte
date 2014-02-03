@@ -52,6 +52,9 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         }else
         if(options.get_str("ENERGY_TYPE") == "IMRCISD"){
             renormalized_mrcisd(options);
+        }else
+        if(options.get_str("ENERGY_TYPE") == "LMRCISD"){
+            lambda_mrcisd(options);
         }
     }
     fprintf(outfile,"\n  Explorer ran in %f s",t.elapsed());

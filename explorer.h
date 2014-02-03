@@ -206,6 +206,7 @@ private:
     void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
 
     /// A renormalized MRCISD
+    void lambda_mrcisd(psi::Options& options);
     void renormalized_mrcisd(psi::Options& options);
     void renormalized_mrcisd_simple(psi::Options& options);
 

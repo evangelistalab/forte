@@ -92,7 +92,7 @@ read_options(std::string name, Options &options)
         options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED IMRCISD");
+        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED LMRCISD IMRCISD");
 
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension

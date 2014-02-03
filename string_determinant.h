@@ -56,6 +56,10 @@ public:
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit StringDeterminant(const std::vector<bool>& occupation,bool print_det = false);
     /// Construct an excited determinant of a given reference
+    /// Construct the determinant from two occupation vectors that
+    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    explicit StringDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
+    /// Construct an excited determinant of a given reference
     explicit StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
     /// Copy constructor
     StringDeterminant(const StringDeterminant& det);
