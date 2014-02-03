@@ -425,6 +425,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         fflush(outfile);
     }
 
+    fprintf(outfile,"\n\n   * IMRCISD total energy =  %24.16f\n",new_energy);
 
     fflush(outfile);
 }
