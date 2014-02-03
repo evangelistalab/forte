@@ -35,14 +35,30 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
     fprintf(outfile,"\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
-    size_t ren_ndets = options.get_int("REN_MAX_NDETS");
+    size_t imrcisd_size = options.get_int("IMRCISD_SIZE");
+    size_t imrcisd_test_size = options.get_int("IMRCISD_TEST_SIZE");
+
     double selection_threshold = t2_threshold_;
     double rmrci_threshold = 1.0e-9;
     int maxcycle = 50;
 
+    bool energy_select = (options.get_str("SELECT_TYPE") == "ENERGY");
+
     fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-    fprintf(outfile,"\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
-    fprintf(outfile,"\n  and exciting those with a first-order coefficient greather than %f\n",selection_threshold);
+    fprintf(outfile,"\n  using an iterative procedure keeping %zu determinants\n",imrcisd_size);
+    if(imrcisd_test_size == 0){
+        if(energy_select){
+            fprintf(outfile,"\n  and testing those with a second-order energy contribution greather than %f mEh\n",1000.0 * selection_threshold);
+        }else{
+            fprintf(outfile,"\n  and testing those with a first-order wfn coefficient greather than %f\n",selection_threshold);
+        }
+    }else{
+        if(energy_select){
+            fprintf(outfile,"\n  and testing the first %zu ordered according to the second-order energy contribution\n",imrcisd_test_size );
+        }else{
+            fprintf(outfile,"\n  and testing the first %zu ordered according to the first-order wfn coefficient\n",imrcisd_test_size );
+        }
+    }
     fflush(outfile);
 
     int nmo = reference_determinant_.nmo();
@@ -76,13 +92,13 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                 a++;
             }
         }
-        int ii = aocc[std::rand() % nalpha_];
-        int aa = avir[std::rand() % nvalpha];
-        D0.set_alfa_bit(ii,false);
-        D0.set_beta_bit(ii,false);
-        D0.set_alfa_bit(aa,true);
-        D0.set_beta_bit(aa,true);
-        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
+//        int ii = aocc[std::rand() % nalpha_];
+//        int aa = avir[std::rand() % nvalpha];
+//        D0.set_alfa_bit(ii,false);
+//        D0.set_beta_bit(ii,false);
+//        D0.set_alfa_bit(aa,true);
+//        D0.set_beta_bit(aa,true);
+//        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
     }
     D0.print();
 
@@ -95,7 +111,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
 
-        fprintf(outfile,"\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
+        fprintf(outfile,"\n\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
 
         // Find the SD space out of the reference
         std::vector<StringDeterminant> sd_dets_vec;
@@ -257,41 +273,34 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                 for (size_t J = 0, max_J = old_dets_vec.size(); J < max_J; ++J){
                     V += sd_dets_vec[I].slater_rules(old_dets_vec[J]) * coefficient[J];  // HJI * C_I
                 }
-                double C1 = std::fabs(V * V / (EI - energy[0]));
-                if (C1 > selection_threshold){
-                    refsd_dets_vec.push_back(sd_dets_vec[I]);
-                }
+                double C1 = std::fabs(V / (EI - energy[0]));
+                double E2 = std::fabs(V * V / (EI - energy[0]));
+
+                double select_value = (energy_select ? E2 : C1);
+
+                // Save the importance metrics
+                new_dets_importance_vec.push_back(std::make_pair(select_value,I));
             }
 
+            std::sort(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
+            std::reverse(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
 
+            // Select only those determinants above the threshold
+            if(imrcisd_test_size == 0){
+                fprintf(outfile,"\n  Adding all SD determinants above %f",selection_threshold);
 
-
-//            std::vector<StringDeterminant> new_dets_vec;
-
-
-
-//            std::vector<std::pair<double,size_t> > new_dets_importance_vec;
-
-//            for (size_t I = 0, max_I = sd_dets_vec.size(); I < max_I; ++I){
-//                double V = 0.0;
-//                double ERef = 0.0;
-//                double EI = sd_dets_vec[I].energy();
-//                for (size_t J = 0, max_J = old_dets_vec.size(); J < max_J; ++J){
-//                    V += sd_dets_vec[I].slater_rules(old_dets_vec[J]) * coefficient[J];  // HJI * C_I
-//                }
-//                double C1 = std::fabs(V * V / (EI - energy[0]));
-//                if (C1 > selection_threshold){
-//                    refsd_dets_vec.push_back(sd_dets_vec[I]);
-//                }
-////                new_dets_importance_vec.push_back(std::make_pair(C1,I));
-//            }
-//            std::sort(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
-//            std::reverse(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
-
-//            size_t det_added =  std::min(new_dets_importance_vec.size(),3 * ren_ndets);
-//            for (size_t I = 0; I < det_added; ++I){
-//                refsd_dets_vec.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
-//            }
+                for (size_t I = 0, maxI = new_dets_importance_vec.size(); I < maxI; ++I){
+                    if (new_dets_importance_vec[I].first > selection_threshold){
+                        refsd_dets_vec.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
+                    }
+                }
+            } else {
+                size_t maxI = std::min(imrcisd_test_size,new_dets_importance_vec.size());
+                fprintf(outfile,"\n  Adding the most important %zu SD determinants",maxI);
+                for (size_t I = 0; I < maxI; ++I){
+                    refsd_dets_vec.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
+                }
+            }
         }
 
         size_t num_mrcisd_dets = refsd_dets_vec.size();
@@ -359,10 +368,9 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         old_dets_vec.clear();
         old_dets_map.clear();
         coefficient.clear();
-        size_t size_small_ci = std::min(dm_det_list.size(),ren_ndets);
+        size_t size_small_ci = std::min(dm_det_list.size(),imrcisd_size);
 
         for (size_t I = 0; I < size_small_ci; ++I){
-//        for (size_t I = 0, max_I = std::min(dm_det_list.size(),ren_ndets); I < max_I; ++I){
             old_dets_vec.push_back(refsd_dets_vec[dm_det_list[I].second]);
             old_dets_map[refsd_dets_vec[dm_det_list[I].second]] = 1;
         }
@@ -405,7 +413,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         fflush(outfile);
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
-        fprintf(outfile,"\n ->  %2d  %24.16f  %24.16f",cycle,new_energy,new_energy - old_energy);
+        fprintf(outfile,"\n   @IMRCISD %2d  %24.16f  %24.16f",cycle,new_energy,new_energy - old_energy);
 
         fflush(outfile);
         if (std::fabs(new_energy - old_energy) < rmrci_threshold){
@@ -432,7 +440,7 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
     fprintf(outfile,"\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
-    size_t ren_ndets = options.get_int("REN_MAX_NDETS");
+    size_t ren_ndets = options.get_int("IMRCISD_SIZE");
     double selection_threshold = t2_threshold_;
     double rmrci_threshold = 1.0e-9;
     int maxcycle = 50;
@@ -735,7 +743,7 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
 //    fprintf(outfile,"\n\n  Renormalized MRCISD");
 
 //    int nroot = options.get_int("NROOT");
-//    size_t ren_ndets = options.get_int("REN_MAX_NDETS");
+//    size_t ren_ndets = options.get_int("IMRCISD_SIZE");
 //    double selection_threshold = t2_threshold_;
 //    double rmrci_threshold = 1.0e-9;
 //    int maxcycle = 50;

@@ -21,7 +21,7 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     // Read data and allocate member objects
     startup(options);
 
-    if(options.get_str("ENERGY_TYPE") != "RMRCISD"){
+    if(options.get_str("ENERGY_TYPE") != "IMRCISD"){
         // Explore the space of excited configurations
         if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
             explore_original(options);
@@ -50,7 +50,7 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         if(options.get_str("ENERGY_TYPE") == "RENORMALIZE_FIXED"){
             diagonalize_renormalized_fixed_space(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "RMRCISD"){
+        if(options.get_str("ENERGY_TYPE") == "IMRCISD"){
             renormalized_mrcisd(options);
         }
     }

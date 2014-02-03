@@ -92,12 +92,15 @@ read_options(std::string name, Options &options)
         options.add_str("H_TYPE","FIXED_ENERGY","FIXED_ENERGY FIXED_SIZE");
 
         /*- Determines if this job will compute the energy -*/
-        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED RMRCISD");
+        options.add_str("ENERGY_TYPE","FULL","FULL SELECTED LOWDIN SPARSE RENORMALIZE RENORMALIZE_FIXED IMRCISD");
 
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
         options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
+
+        options.add_int("IMRCISD_TEST_SIZE",0);
+        options.add_int("IMRCISD_SIZE",0);
 
         /*- The number of determinants used to build the Hamiltonian -*/        
         options.add_int("NDETS",100);
