@@ -298,13 +298,8 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
         // Do not select now, just store the determinant index and the selection criterion
         if(aimed_selection){
-            if (energy_select){
-                new_dets_importance_vec.push_back(std::make_pair(select_value,I));
-                aimed_selection_sum += select_value;
-            }else{
-                new_dets_importance_vec.push_back(std::make_pair(select_value,I));
-                aimed_selection_sum += select_value;
-            }
+            new_dets_importance_vec.push_back(std::make_pair(select_value,I));
+            aimed_selection_sum += select_value;
         }else{
             if (std::fabs(select_value) > t2_threshold_){
                 new_dets_importance_vec.push_back(std::make_pair(select_value,I));
@@ -343,36 +338,73 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     fprintf(outfile,"\n  Time spent screening the model space = %f s",t_ms_screen.elapsed());
     fflush(outfile);
 
-    H.reset(new Matrix("Hamiltonian Matrix",dim_ref_sd_dets,dim_ref_sd_dets));
+
     evecs.reset(new Matrix("U",dim_ref_sd_dets,nroot));
     evals.reset(new Vector("e",nroot));
+    // Full algorithm
+    if (options.get_str("ENERGY_TYPE") == "LMRCISD"){
+        H.reset(new Matrix("Hamiltonian Matrix",dim_ref_sd_dets,dim_ref_sd_dets));
 
-    boost::timer t_h_build2;
+        boost::timer t_h_build2;
 #pragma omp parallel for schedule(dynamic)
-    for (size_t I = 0; I < dim_ref_sd_dets; ++I){
-        const StringDeterminant& detI = ref_sd_dets[I];
-        for (size_t J = I; J < dim_ref_sd_dets; ++J){
-            const StringDeterminant& detJ = ref_sd_dets[J];
-            double HIJ = detI.slater_rules(detJ);
-            H->set(I,J,HIJ);
-            H->set(J,I,HIJ);
+        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
+            const StringDeterminant& detI = ref_sd_dets[I];
+            for (size_t J = I; J < dim_ref_sd_dets; ++J){
+                const StringDeterminant& detJ = ref_sd_dets[J];
+                double HIJ = detI.slater_rules(detJ);
+                H->set(I,J,HIJ);
+                H->set(J,I,HIJ);
+            }
         }
-    }
-    fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
-    fflush(outfile);
+        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+        fflush(outfile);
 
-    // 4) Diagonalize the Hamiltonian
-    boost::timer t_hdiag_large2;
-    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        // 4) Diagonalize the Hamiltonian
+        boost::timer t_hdiag_large2;
+        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            davidson_liu(H,evals,evecs,nroot);
+        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+            fprintf(outfile,"\n  Performing full diagonalization.");
+            H->diagonalize(evecs,evals);
+        }
+
+        fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+        fflush(outfile);
+    }
+    // Sparse algorithm
+    else{
+        std::vector<std::vector<std::pair<int,double> > > H_sparse;
+
+        size_t num_nonzero = 0;
+        // Form the Hamiltonian matrix
+        #pragma omp parallel for schedule(dynamic)
+        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
+            std::vector<std::pair<int,double> > H_row;
+            const StringDeterminant& detI = ref_sd_dets[I];
+            double HII = detI.slater_rules(detI);
+            H_row.push_back(make_pair(int(I),HII));
+            for (size_t J = 0; J < dim_ref_sd_dets; ++J){
+                if (I != J){
+                    const StringDeterminant& detJ = ref_sd_dets[J];
+                    double HIJ = detI.slater_rules(detJ);
+                    if (std::fabs(HIJ) >= 1.0e-12){
+                        H_row.push_back(make_pair(int(J),HIJ));
+                        num_nonzero += 1;
+                    }
+                }
+            }
+            #pragma omp critical
+            H_sparse.push_back(H_row);
+        }
+
+        fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(dim_ref_sd_dets * dim_ref_sd_dets),double(num_nonzero)/double(dim_ref_sd_dets * dim_ref_sd_dets));
+
+        // 4) Diagonalize the Hamiltonian
+        boost::timer t_hdiag;
         fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-        davidson_liu(H,evals,evecs,nroot);
-    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-        fprintf(outfile,"\n  Performing full diagonalization.");
-        H->diagonalize(evecs,evals);
+        davidson_liu_sparse(H_sparse,evals,evecs,nroot);
     }
-
-    fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
-    fflush(outfile);
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){

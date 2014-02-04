@@ -32,28 +32,29 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
 
     // Optionally diagonalize a small Hamiltonian
     if(options.get_bool("COMPUTE_ENERGY")){
-        if(options.get_str("ENERGY_TYPE") == "SELECT"){
+        std::string energy_type = options.get_str("ENERGY_TYPE");
+        if(energy_type == "SELECT"){
             diagonalize_selected_space(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "FULL"){
+        if(energy_type == "FULL"){
             diagonalize_p_space(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "LOWDIN"){
+        if(energy_type == "LOWDIN"){
             diagonalize_p_space_lowdin(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "SPARSE"){
+        if(energy_type == "SPARSE"){
             diagonalize_p_space_direct(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "RENORMALIZE"){
+        if(energy_type == "RENORMALIZE"){
             diagonalize_renormalized_space(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "RENORMALIZE_FIXED"){
+        if(energy_type == "RENORMALIZE_FIXED"){
             diagonalize_renormalized_fixed_space(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "IMRCISD"){
+        if(energy_type == "IMRCISD"){
             renormalized_mrcisd(options);
         }else
-        if(options.get_str("ENERGY_TYPE") == "LMRCISD"){
+        if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
             lambda_mrcisd(options);
         }
     }

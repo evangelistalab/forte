@@ -730,7 +730,7 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
     double *lambda, **alpha, **f, *lambda_old;
     double norm, denom, diff;
 
-    maxdim = 20 * M;
+    maxdim = 8 * M; // Set it back to the original value (8)
 
     b = block_matrix(maxdim, N);  /* current set of guess vectors,
                        stored by row */
