@@ -378,7 +378,6 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
         size_t num_nonzero = 0;
         // Form the Hamiltonian matrix
-        #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < dim_ref_sd_dets; ++I){
             std::vector<std::pair<int,double> > H_row;
             const StringDeterminant& detI = ref_sd_dets[I];
@@ -394,7 +393,6 @@ void Explorer::lambda_mrcisd(psi::Options& options)
                     }
                 }
             }
-            #pragma omp critical
             H_sparse.push_back(H_row);
         }
 
