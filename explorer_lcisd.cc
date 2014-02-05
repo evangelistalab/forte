@@ -374,6 +374,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     }
     // Sparse algorithm
     else{
+        boost::timer t_h_build2;
         std::vector<std::vector<std::pair<int,double> > > H_sparse;
 
         size_t num_nonzero = 0;
@@ -397,11 +398,15 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         }
 
         fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(dim_ref_sd_dets * dim_ref_sd_dets),double(num_nonzero)/double(dim_ref_sd_dets * dim_ref_sd_dets));
+        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+        fflush(outfile);
 
         // 4) Diagonalize the Hamiltonian
-        boost::timer t_hdiag;
+        boost::timer t_hdiag_large2;
         fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
         davidson_liu_sparse(H_sparse,evals,evecs,nroot);
+        fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+        fflush(outfile);
     }
 
     // 5) Print the energy
