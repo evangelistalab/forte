@@ -102,6 +102,9 @@ void Explorer::explore_original(psi::Options& options)
     fprintf(outfile,"\n  Time required: %f s",timer_bstr.elapsed());
     fflush(outfile);
 
+    fprintf(outfile,"\n  denominator_threshold_: %f s",denominator_threshold_);
+
+
     ofstream de("det_energy.txt");
     double ref_one_electron_energy = min_energy_determinant_.one_electron_energy();
 
@@ -173,7 +176,7 @@ void Explorer::explore_original(psi::Options& options)
         }
         fprintf(outfile,"\n  %2d   %12ld   %12ld",nex,num_dets_visited_ex,num_dets_accepted_ex);
         fflush(outfile);
-        if (num_dets_accepted_ex == 0){
+        if ((num_dets_accepted_ex == 0) and (nex > 4)){
             fprintf(outfile,"\n\n  Excitation level %d produced no determinants, finishing search",nex);
             fflush(outfile);
             break;
