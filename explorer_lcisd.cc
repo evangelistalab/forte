@@ -370,7 +370,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
     size_t dim_ref_sd_dets = ref_sd_dets.size();
 
-    fprintf(outfile,"\n  The Lambda-CISD space contains %zu determinants",dim_ref_sd_dets);
+    fprintf(outfile,"\n  After screening the Lambda-CISD space contains %zu determinants",dim_ref_sd_dets);
     fprintf(outfile,"\n  Time spent screening the model space = %f s",t_ms_screen.elapsed());
     fflush(outfile);
 
