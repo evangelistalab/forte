@@ -116,18 +116,22 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         //        fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
         //                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
-    fprintf(outfile,"\n  Finished building H");
     fflush(outfile);
 
 
     int nmo = reference_determinant_.nmo();
-    std::vector<int> aocc(nalpha_);
-    std::vector<int> bocc(nbeta_);
-    std::vector<int> avir(nmo_ - nalpha_);
-    std::vector<int> bvir(nmo_ - nbeta_);
+    size_t nfrzc = frzc_.size();
+    size_t nfrzv = frzv_.size();
 
+    std::vector<int> aocc(nalpha_ - nfrzc);
+    std::vector<int> bocc(nbeta_ - nfrzc);
+    std::vector<int> avir(nmo_ - nalpha_ - nfrzv);
+    std::vector<int> bvir(nmo_ - nbeta_ - nfrzv);
+
+    int noalpha = nalpha_ - nfrzc;
+    int nobeta  = nbeta_ - nfrzc;
     int nvalpha = nmo_ - nalpha_;
-    int nvbeta = nmo_ - nbeta_;
+    int nvbeta  = nmo_ - nbeta_;
 
     // Find the SD space out of the reference
     std::vector<StringDeterminant> sd_dets_vec;
@@ -138,25 +142,33 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         const StringDeterminant& det = ref_space[I];
         for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
             if (det.get_alfa_bit(p)){
-                aocc[i] = p;
-                i++;
+                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+                    aocc[i] = p;
+                    i++;
+                }
             }else{
-                avir[a] = p;
-                a++;
+                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+                    avir[a] = p;
+                    a++;
+                }
             }
         }
         for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
             if (det.get_beta_bit(p)){
-                bocc[i] = p;
-                i++;
+                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+                    bocc[i] = p;
+                    i++;
+                }
             }else{
-                bvir[a] = p;
-                a++;
+                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+                    bvir[a] = p;
+                    a++;
+                }
             }
         }
 
         // Generate aa excitations
-        for (int i = 0; i < nalpha_; ++i){
+        for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
@@ -171,7 +183,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
             }
         }
 
-        for (int i = 0; i < nbeta_; ++i){
+        for (int i = 0; i < nobeta; ++i){
             int ii = bocc[i];
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
@@ -187,9 +199,9 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         }
 
         // Generate aa excitations
-        for (int i = 0; i < nalpha_; ++i){
+        for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
-            for (int j = i + 1; j < nalpha_; ++j){
+            for (int j = i + 1; j < noalpha; ++j){
                 int jj = aocc[j];
                 for (int a = 0; a < nvalpha; ++a){
                     int aa = avir[a];
@@ -210,9 +222,9 @@ void Explorer::lambda_mrcisd(psi::Options& options)
             }
         }
 
-        for (int i = 0; i < nalpha_; ++i){
+        for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
-            for (int j = 0; j < nbeta_; ++j){
+            for (int j = 0; j < nobeta; ++j){
                 int jj = bocc[j];
                 for (int a = 0; a < nvalpha; ++a){
                     int aa = avir[a];
@@ -232,9 +244,9 @@ void Explorer::lambda_mrcisd(psi::Options& options)
                 }
             }
         }
-        for (int i = 0; i < nbeta_; ++i){
+        for (int i = 0; i < nobeta; ++i){
             int ii = bocc[i];
-            for (int j = i + 1; j < nbeta_; ++j){
+            for (int j = i + 1; j < nobeta; ++j){
                 int jj = bocc[j];
                 for (int a = 0; a < nvbeta; ++a){
                     int aa = bvir[a];
@@ -277,24 +289,40 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     // Check the coupling between the reference and the SD space
     std::vector<std::pair<double,size_t> > new_dets_importance_vec;
 
-    std::vector<double> V_q(nroot,0.0);
-    std::vector<double> t_q(nroot,0.0);
-    std::vector<std::pair<double,double> > kappa_q(nroot,make_pair(0.0,0.0));
-    std::vector<std::pair<double,double> > chi_q(nroot,make_pair(0.0,0.0));
+    std::vector<double> V(nroot,0.0);
+    std::vector<std::pair<double,double> > C1(nroot,make_pair(0.0,0.0));
+    std::vector<std::pair<double,double> > E2(nroot,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot,0.0);
 
     double aimed_selection_sum = 0.0;
 
     for (size_t I = 0, max_I = sd_dets_vec.size(); I < max_I; ++I){
-        double V = 0.0;
         double EI = sd_dets_vec[I].energy();
-        for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
-            V += sd_dets_vec[I].slater_rules(ref_space[J]) * evecs->get(J,0);  // HIJ * C_J
+        for (int n = 0; n < nroot; ++n){
+            V[n] = 0;
         }
-        double C1 = std::fabs(V / (EI - evals->get(0)));
-        double E2 = std::fabs(V * V / (EI - evals->get(0)));
+        for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
+            double HIJ = sd_dets_vec[I].slater_rules(ref_space[J]);
+            for (int n = 0; n < nroot; ++n){
+                V[n] += evecs->get(J,n) * HIJ;
+            }
+        }
+        for (int n = 0; n < nroot; ++n){
+            double C1_I = -V[n] / (EI - evals->get(n));
+            double E2_I = -V[n] * V[n] / (EI - evals->get(n));
+            C1[n] = make_pair(std::fabs(C1_I),C1_I);
+            E2[n] = make_pair(std::fabs(E2_I),E2_I);
+        }
 
-        double select_value = (energy_select ? E2 : C1);
+        //        double C1 = std::fabs(V / (EI - evals->get(0)));
+        //        double E2 = std::fabs(V * V / (EI - evals->get(0)));
+
+        //        double select_value = (energy_select ? E2 : C1);
+
+        std::pair<double,double> max_C1 = *std::max_element(C1.begin(),C1.end());
+        std::pair<double,double> max_E2 = *std::max_element(E2.begin(),E2.end());
+
+        double select_value = energy_select ? max_E2.first : max_C1.first;
 
         // Do not select now, just store the determinant index and the selection criterion
         if(aimed_selection){
@@ -309,7 +337,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
             if (std::fabs(select_value) > t2_threshold_){
                 new_dets_importance_vec.push_back(std::make_pair(select_value,I));
             }else{
-                //                    for (int n = 0; n < nroot; ++n) ept2[n] += chi_q[n].second;
+                for (int n = 0; n < nroot; ++n) ept2[n] += E2[n].second;
             }
         }
     }
@@ -337,6 +365,8 @@ void Explorer::lambda_mrcisd(psi::Options& options)
             ref_sd_dets.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
         }
     }
+
+    multistate_pt2_energy_correction_ = ept2;
 
     size_t dim_ref_sd_dets = ref_sd_dets.size();
 
@@ -417,9 +447,9 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-        //        fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
-        //                evals->get(i),multistate_pt2_energy_correction_[i]);
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
+                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
     fprintf(outfile,"\n  Finished building H");
     fflush(outfile);
