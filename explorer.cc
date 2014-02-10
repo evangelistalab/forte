@@ -51,8 +51,8 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         if(energy_type == "RENORMALIZE_FIXED"){
             diagonalize_renormalized_fixed_space(options);
         }else
-        if(energy_type == "IMRCISD"){
-            renormalized_mrcisd(options);
+        if((energy_type == "IMRCISD") or (energy_type == "IMRCISD_SPARSE")){
+            iterative_adaptive_mrcisd(options);
         }else
         if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
             lambda_mrcisd(options);

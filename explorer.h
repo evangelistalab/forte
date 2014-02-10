@@ -210,6 +210,9 @@ private:
     void renormalized_mrcisd(psi::Options& options);
     void renormalized_mrcisd_simple(psi::Options& options);
 
+    /// Iterative and adaptive MRCISD
+    void iterative_adaptive_mrcisd(psi::Options& options);
+
 
     // Functions for generating combination
     half_string_list compute_half_strings_screened(bool is_occ,int n,int k,std::vector<double>& weights,std::string label);

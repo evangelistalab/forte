@@ -80,7 +80,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
     std::vector<double> energy;
 
     StringDeterminant D0(reference_determinant_);
-//    D0.print();
+    //    D0.print();
     srand((unsigned)time(NULL));
     {
         for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
@@ -92,13 +92,13 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                 a++;
             }
         }
-//        int ii = aocc[std::rand() % nalpha_];
-//        int aa = avir[std::rand() % nvalpha];
-//        D0.set_alfa_bit(ii,false);
-//        D0.set_beta_bit(ii,false);
-//        D0.set_alfa_bit(aa,true);
-//        D0.set_beta_bit(aa,true);
-//        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
+        //        int ii = aocc[std::rand() % nalpha_];
+        //        int aa = avir[std::rand() % nvalpha];
+        //        D0.set_alfa_bit(ii,false);
+        //        D0.set_beta_bit(ii,false);
+        //        D0.set_alfa_bit(aa,true);
+        //        D0.set_beta_bit(aa,true);
+        //        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
     }
     D0.print();
 
@@ -149,7 +149,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                         new_det.set_alfa_bit(aa,true);
                         if(old_dets_map.find(new_det) == old_dets_map.end()){
                             sd_dets_vec.push_back(new_det);
-//                            new_dets_map[new_det] = 1;
+                            //                            new_dets_map[new_det] = 1;
                         }
                     }
                 }
@@ -165,7 +165,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                         new_det.set_beta_bit(aa,true);
                         if(old_dets_map.find(new_det) == old_dets_map.end()){
                             sd_dets_vec.push_back(new_det);
-//                            new_dets_map[new_det] = 1;
+                            //                            new_dets_map[new_det] = 1;
                         }
                     }
                 }
@@ -188,7 +188,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                                 new_det.set_alfa_bit(bb,true);
                                 if(old_dets_map.find(new_det) == old_dets_map.end()){
                                     sd_dets_vec.push_back(new_det);
-//                                    new_dets_map[new_det] = 2;
+                                    //                                    new_dets_map[new_det] = 2;
                                 }
                             }
                         }
@@ -212,7 +212,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                                 new_det.set_beta_bit(bb,true);
                                 if(old_dets_map.find(new_det) == old_dets_map.end()){
                                     sd_dets_vec.push_back(new_det);
-//                                    new_dets_map[new_det] = 2;
+                                    //                                    new_dets_map[new_det] = 2;
                                 }
                             }
                         }
@@ -235,7 +235,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                                 new_det.set_beta_bit(bb,true);
                                 if(old_dets_map.find(new_det) == old_dets_map.end()){
                                     sd_dets_vec.push_back(new_det);
-//                                    new_dets_map[new_det] = 2;
+                                    //                                    new_dets_map[new_det] = 2;
                                 }
                             }
                         }
@@ -244,9 +244,9 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
             }
         }
 
-//        for (auto it = new_dets_map.begin(), endit = new_dets_map.end(); it != endit; ++it){
-//            sd_dets_vec.push_back(it->first);
-//        }
+        //        for (auto it = new_dets_map.begin(), endit = new_dets_map.end(); it != endit; ++it){
+        //            sd_dets_vec.push_back(it->first);
+        //        }
 
         fprintf(outfile,"\n  The SD excitation space has dimension: %zu",sd_dets_vec.size());
         fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
@@ -305,40 +305,84 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
 
         size_t num_mrcisd_dets = refsd_dets_vec.size();
 
-        fprintf(outfile,"\n  The model space contains %zu determinants",num_mrcisd_dets);
+        fprintf(outfile,"\n  The i-MRCISD full space contains %zu determinants",num_mrcisd_dets);
         fprintf(outfile,"\n  Time spent screening the model space = %f s",t_ms_screen.elapsed());
         fflush(outfile);
 
-        H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
+
         evecs.reset(new Matrix("U",num_mrcisd_dets,nroot));
         evals.reset(new Vector("e",nroot));
 
-        boost::timer t_h_build;
-        #pragma omp parallel for schedule(dynamic)
-        for (size_t I = 0; I < num_mrcisd_dets; ++I){
-            const StringDeterminant& detI = refsd_dets_vec[I];
-            for (size_t J = I; J < num_mrcisd_dets; ++J){
-                const StringDeterminant& detJ = refsd_dets_vec[J];
-                double HIJ = detI.slater_rules(detJ);
-                H->set(I,J,HIJ);
-                H->set(J,I,HIJ);
+        if (options.get_str("ENERGY_TYPE") != "IMRCISD_SPARSE"){
+            H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
+            boost::timer t_h_build;
+#pragma omp parallel for schedule(dynamic)
+            for (size_t I = 0; I < num_mrcisd_dets; ++I){
+                const StringDeterminant& detI = refsd_dets_vec[I];
+                for (size_t J = I; J < num_mrcisd_dets; ++J){
+                    const StringDeterminant& detJ = refsd_dets_vec[J];
+                    double HIJ = detI.slater_rules(detJ);
+                    H->set(I,J,HIJ);
+                    H->set(J,I,HIJ);
+                }
             }
-        }
-        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
-        fflush(outfile);
+            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
+            fflush(outfile);
 
-        // 4) Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
-        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+            // 4) Diagonalize the Hamiltonian
+            boost::timer t_hdiag_large;
+            if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+                fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+                davidson_liu(H,evals,evecs,nroot);
+            }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+                fprintf(outfile,"\n  Performing full diagonalization.");
+                H->diagonalize(evecs,evals);
+            }
+
+            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
+            fflush(outfile);
+        }
+        else
+            // Sparse algorithm
+        {
+            boost::timer t_h_build2;
+            std::vector<std::vector<std::pair<int,double> > > H_sparse;
+
+            size_t num_nonzero = 0;
+            // Form the Hamiltonian matrix
+            for (size_t I = 0; I < num_mrcisd_dets; ++I){
+                std::vector<std::pair<int,double> > H_row;
+                const StringDeterminant& detI = refsd_dets_vec[I];
+                double HII = detI.slater_rules(detI);
+                H_row.push_back(make_pair(int(I),HII));
+                for (size_t J = 0; J < num_mrcisd_dets; ++J){
+                    if (I != J){
+                        const StringDeterminant& detJ = refsd_dets_vec[J];
+                        double HIJ = detI.slater_rules(detJ);
+                        if (std::fabs(HIJ) >= 1.0e-12){
+                            H_row.push_back(make_pair(int(J),HIJ));
+                            num_nonzero += 1;
+                        }
+                    }
+                }
+                H_sparse.push_back(H_row);
+            }
+
+            fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(num_mrcisd_dets * num_mrcisd_dets),double(num_nonzero)/double(num_mrcisd_dets * num_mrcisd_dets));
+            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+            fflush(outfile);
+
+            // 4) Diagonalize the Hamiltonian
+            boost::timer t_hdiag_large2;
             fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-            davidson_liu(H,evals,evecs,nroot);
-        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
-            H->diagonalize(evecs,evals);
+            davidson_liu_sparse(H_sparse,evals,evecs,nroot);
+            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            fflush(outfile);
+
+            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            fflush(outfile);
         }
 
-        fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
-        fflush(outfile);
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
@@ -375,30 +419,70 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
             old_dets_map[refsd_dets_vec[dm_det_list[I].second]] = 1;
         }
 
-        H.reset(new Matrix("Hamiltonian Matrix",size_small_ci,size_small_ci));
-
-        boost::timer t_h_small_build;
-        #pragma omp parallel for schedule(dynamic)
-        for (size_t I = 0; I < size_small_ci; ++I){
-            for (size_t J = I; J < size_small_ci; ++J){
-                double HIJ = old_dets_vec[I].slater_rules(old_dets_vec[J]);
-                H->set(I,J,HIJ);
-                H->set(J,I,HIJ);
-            }
-        }
-        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_small_build.elapsed());
-        fflush(outfile);
-
         evecs.reset(new Matrix("U",size_small_ci,nroot));
         evals.reset(new Vector("e",nroot));
 
-        // 4) Diagonalize the Hamiltonian
-        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        if (options.get_str("ENERGY_TYPE") == "IMRCISD_SPARSE"){
+            H.reset(new Matrix("Hamiltonian Matrix",size_small_ci,size_small_ci));
+
+            boost::timer t_h_small_build;
+#pragma omp parallel for schedule(dynamic)
+            for (size_t I = 0; I < size_small_ci; ++I){
+                for (size_t J = I; J < size_small_ci; ++J){
+                    double HIJ = old_dets_vec[I].slater_rules(old_dets_vec[J]);
+                    H->set(I,J,HIJ);
+                    H->set(J,I,HIJ);
+                }
+            }
+            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_small_build.elapsed());
+            fflush(outfile);
+
+
+            // 4) Diagonalize the Hamiltonian
+            if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+                fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+                davidson_liu(H,evals,evecs,nroot);
+            }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+                fprintf(outfile,"\n  Performing full diagonalization.");
+                H->diagonalize(evecs,evals);
+            }
+        }
+        else
+        // Sparse algorithm
+        {
+            boost::timer t_h_build2;
+            std::vector<std::vector<std::pair<int,double> > > H_sparse;
+
+            size_t num_nonzero = 0;
+            // Form the Hamiltonian matrix
+            for (size_t I = 0; I < size_small_ci; ++I){
+                std::vector<std::pair<int,double> > H_row;
+                const StringDeterminant& detI = old_dets_vec[I];
+                double HII = detI.slater_rules(detI);
+                H_row.push_back(make_pair(int(I),HII));
+                for (size_t J = 0; J < size_small_ci; ++J){
+                    if (I != J){
+                        const StringDeterminant& detJ = old_dets_vec[J];
+                        double HIJ = detI.slater_rules(detJ);
+                        if (std::fabs(HIJ) >= 1.0e-12){
+                            H_row.push_back(make_pair(int(J),HIJ));
+                            num_nonzero += 1;
+                        }
+                    }
+                }
+                H_sparse.push_back(H_row);
+            }
+
+            fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(size_small_ci * size_small_ci),double(num_nonzero)/double(size_small_ci * size_small_ci));
+            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+            fflush(outfile);
+
+            // 4) Diagonalize the Hamiltonian
+            boost::timer t_hdiag_large2;
             fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-            davidson_liu(H,evals,evecs,nroot);
-        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
-            H->diagonalize(evecs,evals);
+            davidson_liu_sparse(H_sparse,evals,evecs,nroot);
+            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            fflush(outfile);
         }
 
         for (size_t I = 0; I < size_small_ci; ++I){
@@ -429,8 +513,6 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
 
     fflush(outfile);
 }
-
-
 
 
 /**
