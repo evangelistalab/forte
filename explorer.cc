@@ -53,6 +53,7 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         }else
         if((energy_type == "IMRCISD") or (energy_type == "IMRCISD_SPARSE")){
             iterative_adaptive_mrcisd(options);
+//            iterative_adaptive_mrcisd_bitset(options);
         }else
         if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
             lambda_mrcisd(options);
@@ -74,6 +75,8 @@ void Explorer::startup(Options& options)
 
     // Connect the integrals to the determinant class
     StringDeterminant::set_ints(ints_);
+    BitsetDeterminant::set_ints(ints_);
+
 
     // Build the reference determinant and compute its energy
     std::vector<int> occupation(2 * nmo_,0);

@@ -1,0 +1,262 @@
+#include <psi4-dec.h>
+#include <libmoinfo/libmoinfo.h>
+#include <libmints/matrix.h>
+
+#include "bitset_determinant.h"
+
+using namespace std;
+using namespace psi;
+
+namespace psi{ namespace libadaptive{
+
+ExplorerIntegrals* BitsetDeterminant::ints_ = nullptr;
+boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
+boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
+
+double SlaterSign(const boost::dynamic_bitset<>& I,int n);
+
+BitsetDeterminant::BitsetDeterminant() : nmo_(0)
+{
+}
+
+BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
+    : nmo_(occupation_a.size())
+{
+    allocate();
+    for(int p = 0; p < nmo_; ++p){
+        alfa_bits_[p] = occupation_a[p];
+        beta_bits_[p] = occupation_b[p];
+    }
+    if (print_det) print();
+}
+
+void BitsetDeterminant::allocate()
+{
+    alfa_bits_.resize(nmo_);
+    beta_bits_.resize(nmo_);
+}
+
+/**
+ * Print the determinant
+ */
+void BitsetDeterminant::print() const
+{
+    fprintf(outfile,"\n  |");
+    for(int p = 0; p < nmo_; ++p){
+        fprintf(outfile,"%d",alfa_bits_[p] ? 1 :0);
+    }
+    fprintf(outfile,"|");
+    for(int p = 0; p < nmo_; ++p){
+        fprintf(outfile,"%d",beta_bits_[p] ? 1 :0);
+    }
+    fprintf(outfile,">");
+    fflush(outfile);
+}
+
+/**
+ * Compute the energy of this determinant
+ * @return the electronic energy (does not include the nuclear repulsion energy)
+ */
+double BitsetDeterminant::energy() const
+{
+    double matrix_element = 0.0;
+    matrix_element = ints_->frozen_core_energy();
+    //    for(int p = 0; p < nmo_; ++p){
+    //        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
+    //        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
+    //        if(alfa_bits_[p]) fprintf(outfile,"\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
+    //        for(int q = 0; q < nmo_; ++q){
+    //            if(alfa_bits_[p] and alfa_bits_[q]){
+    //                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+    //                fprintf(outfile,"\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
+    //            }
+    //            if(alfa_bits_[p] and beta_bits_[q]){
+    //                matrix_element += ints_->diag_c_rtei(p,q);
+    //                fprintf(outfile,"\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_c_rtei(p,q));
+    //            }
+    //            if(beta_bits_[p] and beta_bits_[q]){
+    //                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+    //                fprintf(outfile,"\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
+    //            }
+    //        }
+    //    }
+    for(int p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
+        if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
+        //        if(alfa_bits_[p]) fprintf(outfile,"\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
+        for(int q = 0; q < nmo_; ++q){
+            if(alfa_bits_[p] and alfa_bits_[q]){
+                matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
+                //                fprintf(outfile,"\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_aa(p,q));
+            }
+            if(alfa_bits_[p] and beta_bits_[q]){
+                matrix_element += ints_->diag_aptei_ab(p,q);
+                //                fprintf(outfile,"\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_aptei_ab(p,q));
+            }
+            if(beta_bits_[p] and beta_bits_[q]){
+                matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
+                //                fprintf(outfile,"\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_bb(p,q));
+            }
+        }
+    }
+    return(matrix_element);
+}
+
+/**
+ * Compute the matrix element of the Hamiltonian between this determinant and a given one
+ * @param rhs
+ * @return
+ */
+double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
+{
+    const boost::dynamic_bitset<>& Ia = alfa_bits_;
+    const boost::dynamic_bitset<>& Ib = beta_bits_;
+    const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
+    const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
+
+    int nadiff = 0;
+    int nbdiff = 0;
+    // Count how many differences in mos are there
+    for (int n = 0; n < nmo_; ++n) {
+        if (Ia[n] != Ja[n]) nadiff++;
+        if (Ib[n] != Jb[n]) nbdiff++;
+        if (nadiff + nbdiff > 4) return 0.0; // Get out of this as soon as possible
+    }
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    double matrix_element = 0.0;
+    // Slater rule 1 PhiI = PhiJ
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element = ints_->frozen_core_energy();
+        for(int p = 0; p < nmo_; ++p){
+            if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
+            if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
+            for(int q = 0; q < nmo_; ++q){
+                if(alfa_bits_[p] and alfa_bits_[q])
+                    matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
+                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                if(beta_bits_[p] and beta_bits_[q])
+                    matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
+                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+                if(alfa_bits_[p] and beta_bits_[q])
+                    matrix_element +=   ints_->diag_aptei_ab(p,q);
+                //                    matrix_element += ints_->diag_c_rtei(p,q);
+            }
+        }
+    }
+
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    if ((nadiff == 1) and (nbdiff == 0)) {
+        // Diagonal contribution
+        int i = 0;
+        int j = 0;
+        for(int p = 0; p < nmo_; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+            if((Ia[p] != Ja[p]) and Ja[p]) j = p;
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
+        matrix_element = sign * ints_->oei_a(i,j);
+        for(int p = 0; p < nmo_; ++p){
+            if(Ia[p] and Ja[p]){
+                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
+            }
+            if(Ib[p] and Jb[p]){
+                //                matrix_element += sign * ints_->rtei(i,j,p,p);
+                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
+            }
+        }
+    }
+    // Slater rule 2 PhiI = j_b^+ i_b PhiJ
+    if ((nadiff == 0) and (nbdiff == 1)) {
+        // Diagonal contribution
+        int i = 0;
+        int j = 0;
+        for(int p = 0; p < nmo_; ++p){
+            if((Ib[p] != Jb[p]) and Ib[p]) i = p;
+            if((Ib[p] != Jb[p]) and Jb[p]) j = p;
+        }
+        double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
+        matrix_element = sign * ints_->oei_b(i,j);
+        for(int p = 0; p < nmo_; ++p){
+            if(Ia[p] and Ja[p]){
+                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
+                //                matrix_element += sign * ints_->rtei(p,p,i,j);
+            }
+            if(Ib[p] and Jb[p]){
+                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
+                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
+            }
+        }
+    }
+
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    if ((nadiff == 2) and (nbdiff == 0)) {
+        // Diagonal contribution
+        int i = -1;
+        int j =  0;
+        int k = -1;
+        int l =  0;
+        for(int p = 0; p < nmo_; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]){
+                if (i == -1) { i = p; } else { j = p; }
+            }
+            if((Ia[p] != Ja[p]) and Ja[p]){
+                if (k == -1) { k = p; } else { l = p; }
+            }
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
+        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
+    }
+
+    // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
+    if ((nadiff == 0) and (nbdiff == 2)) {
+        // Diagonal contribution
+        int i,j,k,l;
+        i = -1;
+        j = -1;
+        k = -1;
+        l = -1;
+        for(int p = 0; p < nmo_; ++p){
+            if((Ib[p] != Jb[p]) and Ib[p]){
+                if (i == -1) { i = p; } else { j = p; }
+            }
+            if((Ib[p] != Jb[p]) and Jb[p]){
+                if (k == -1) { k = p; } else { l = p; }
+            }
+        }
+        double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
+        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
+        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
+    }
+
+    // Slater rule 3 PhiI = j_a^+ i_a PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Diagonal contribution
+        int i,j,k,l;
+        i = j = k = l = -1;
+        for(int p = 0; p < nmo_; ++p){
+            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
+            if((Ib[p] != Jb[p]) and Ib[p]) j = p;
+            if((Ia[p] != Ja[p]) and Ja[p]) k = p;
+            if((Ib[p] != Jb[p]) and Jb[p]) l = p;
+        }
+        double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
+        //matrix_element = sign * ints_->rtei(i,k,j,l);
+        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
+    }
+    return(matrix_element);
+}
+
+double SlaterSign(const boost::dynamic_bitset<>& I,int n)
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(I[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+}} // end namespace

@@ -75,6 +75,38 @@ public:
     bool* get_alfa_bits() {return alfa_bits_;}
     /// Get a pointer to the beta bits
     bool* get_beta_bits() {return beta_bits_;}
+    /// Get a pointer to the alpha bits
+    std::vector<bool> get_alfa_bits_vector_bool() {
+        std::vector<bool> result;
+        for (int n = 0; n < nmo_; ++n){
+            result.push_back(alfa_bits_[n]);
+        }
+        return result;
+    }
+    /// Get a pointer to the alpha bits
+    std::vector<bool> get_beta_bits_vector_bool() {
+        std::vector<bool> result;
+        for (int n = 0; n < nmo_; ++n){
+            result.push_back(beta_bits_[n]);
+        }
+        return result;
+    }
+    /// Get a pointer to the alpha bits
+    const std::vector<bool> get_alfa_bits_vector_bool() const {
+        std::vector<bool> result;
+        for (int n = 0; n < nmo_; ++n){
+            result.push_back(alfa_bits_[n]);
+        }
+        return result;
+    }
+    /// Get a pointer to the alpha bits
+    const std::vector<bool> get_beta_bits_vector_bool() const {
+        std::vector<bool> result;
+        for (int n = 0; n < nmo_; ++n){
+            result.push_back(beta_bits_[n]);
+        }
+        return result;
+    }
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) {return alfa_bits_[n];}
     /// Get a pointer to the beta bits

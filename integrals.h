@@ -26,6 +26,8 @@ public:
     ~ExplorerIntegrals();
 
     // Class Interface
+    size_t nmo() const {return nmo_;}
+
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
 

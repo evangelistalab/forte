@@ -31,6 +31,7 @@
 
 #include "integrals.h"
 #include "string_determinant.h"
+#include "bitset_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -212,6 +213,8 @@ private:
 
     /// Iterative and adaptive MRCISD
     void iterative_adaptive_mrcisd(psi::Options& options);
+    /// Iterative and adaptive MRCISD
+    void iterative_adaptive_mrcisd_bitset(psi::Options& options);
 
 
     // Functions for generating combination
