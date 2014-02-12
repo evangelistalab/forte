@@ -3,7 +3,7 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
-#include <unordered_map>
+//#include <unordered_map>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
@@ -489,22 +489,22 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
                 ref_space_map[ref_sd_dets[dm_det_list[I].second]] = 1;
             }
         }
-        unordered_map<std::vector<bool>,int> a_str_hash;
-        unordered_map<std::vector<bool>,int> b_str_hash;
+//        unordered_map<std::vector<bool>,int> a_str_hash;
+//        unordered_map<std::vector<bool>,int> b_str_hash;
 
-        boost::timer t_stringify;
-        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
-            const StringDeterminant& detI = ref_sd_dets[I];
-            const std::vector<bool> a_str = detI.get_alfa_bits_vector_bool();
-            const std::vector<bool> b_str = detI.get_beta_bits_vector_bool();
-            a_str_hash[a_str] = 1;
-            b_str_hash[b_str] = 1;
-        }
-        fprintf(outfile,"\n  Size of the @MRCISD space: %zu",dim_ref_sd_dets);
-        fprintf(outfile,"\n  Size of the alpha strings: %zu",a_str_hash.size());
-        fprintf(outfile,"\n  Size of the beta  strings: %zu",b_str_hash.size());
+//        boost::timer t_stringify;
+//        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
+//            const StringDeterminant& detI = ref_sd_dets[I];
+//            const std::vector<bool> a_str = detI.get_alfa_bits_vector_bool();
+//            const std::vector<bool> b_str = detI.get_beta_bits_vector_bool();
+//            a_str_hash[a_str] = 1;
+//            b_str_hash[b_str] = 1;
+//        }
+//        fprintf(outfile,"\n  Size of the @MRCISD space: %zu",dim_ref_sd_dets);
+//        fprintf(outfile,"\n  Size of the alpha strings: %zu",a_str_hash.size());
+//        fprintf(outfile,"\n  Size of the beta  strings: %zu",b_str_hash.size());
 
-        fprintf(outfile,"\n\n  Time to stringify: %f s",t_stringify.elapsed());
+//        fprintf(outfile,"\n\n  Time to stringify: %f s",t_stringify.elapsed());
 
 
     }
