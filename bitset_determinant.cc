@@ -9,7 +9,7 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-ExplorerIntegrals* BitsetDeterminant::ints_ = nullptr;
+ExplorerIntegrals* BitsetDeterminant::ints_ = 0;
 boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
 boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
 
