@@ -23,6 +23,8 @@
 #ifndef _bitset_determinant_h_
 #define _bitset_determinant_h_
 
+#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS 1
+
 #include "integrals.h"
 #include "excitation_determinant.h"
 #include "boost/dynamic_bitset.hpp"
@@ -60,10 +62,10 @@ public:
     explicit BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
 //    /// Returns the number of non-frozen molecular orbitals
 //    int nmo() {return nmo_;}
-//    /// Get a pointer to the alpha bits
-//    boost::dynamic_bitset<>& get_alfa_bits() {return alfa_bits_;}
-//    /// Get a pointer to the beta bits
-//    boost::dynamic_bitset<>& get_beta_bits() {return beta_bits_;}
+    /// Get a pointer to the alpha bits
+    boost::dynamic_bitset<> alfa_bits() const {return alfa_bits_;}
+    /// Get a pointer to the beta bits
+    boost::dynamic_bitset<> beta_bits() const {return beta_bits_;}
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const {return alfa_bits_[n];}
     /// Return the value of a beta bit
@@ -78,6 +80,7 @@ public:
 //    void set_bits(std::vector<bool>& alfa_bits,std::vector<bool>& beta_bits);
     /// Print the Slater determinant
     void print() const;
+    std::string str() const;
     /// Compute the energy of a Slater determinant
     double energy() const;
 //    /// Compute the one-electron contribution to the energy of a Slater determinant
@@ -110,7 +113,6 @@ public:
         return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
-
 private:
     // Functions
     /// Used to allocate the memory for the arrays
@@ -119,6 +121,7 @@ private:
     // Data
     /// Number of non-frozen molecular orbitals
     size_t nmo_;
+public:
     /// The occupation vector for the alpha electrons (does not include the frozen orbitals)
     boost::dynamic_bitset<> alfa_bits_;
     /// The occupation vector for the beta electrons (does not include the frozen orbitals)
@@ -130,6 +133,8 @@ private:
     static boost::dynamic_bitset<> temp_alfa_bits_;
     static boost::dynamic_bitset<> temp_beta_bits_;
 };
+
+std::size_t hash_value(const BitsetDeterminant& input);
 
 }} // End Namespaces
 

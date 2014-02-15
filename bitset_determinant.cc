@@ -2,12 +2,19 @@
 #include <libmoinfo/libmoinfo.h>
 #include <libmints/matrix.h>
 
+#include <boost/lexical_cast.hpp>
+
 #include "bitset_determinant.h"
 
 using namespace std;
 using namespace psi;
 
 namespace psi{ namespace libadaptive{
+
+std::size_t hash_value(const BitsetDeterminant& input)
+{
+    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
+}
 
 ExplorerIntegrals* BitsetDeterminant::ints_ = 0;
 boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
@@ -51,6 +58,24 @@ void BitsetDeterminant::print() const
     }
     fprintf(outfile,">");
     fflush(outfile);
+}
+
+/**
+ * Print the determinant
+ */
+std::string BitsetDeterminant::str() const
+{
+    std::string s;
+    s += "|";
+    for(int p = 0; p < nmo_; ++p){
+        s += boost::lexical_cast<std::string>(alfa_bits_[p]);
+    }
+    s += "|";
+    for(int p = 0; p < nmo_; ++p){
+        s += boost::lexical_cast<std::string>(beta_bits_[p]);
+    }
+    s += ">";
+    return s;
 }
 
 /**

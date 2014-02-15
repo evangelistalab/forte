@@ -21,18 +21,19 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     // Read data and allocate member objects
     startup(options);
 
-    if(options.get_str("ENERGY_TYPE") != "IMRCISD"){
+    std::string energy_type = options.get_str("ENERGY_TYPE");
+
+//    if((energy_type != "IMRCISD") and (energy_type != "IMRCISD_SPARSE")){
         // Explore the space of excited configurations
         if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
             explore_original(options);
         }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
             explore_singles(options);
         }
-    }
+//    }
 
     // Optionally diagonalize a small Hamiltonian
     if(options.get_bool("COMPUTE_ENERGY")){
-        std::string energy_type = options.get_str("ENERGY_TYPE");
         if(energy_type == "SELECT"){
             diagonalize_selected_space(options);
         }else
@@ -52,8 +53,8 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
             diagonalize_renormalized_fixed_space(options);
         }else
         if((energy_type == "IMRCISD") or (energy_type == "IMRCISD_SPARSE")){
-            iterative_adaptive_mrcisd(options);
-//            iterative_adaptive_mrcisd_bitset(options);
+//            iterative_adaptive_mrcisd(options);
+            iterative_adaptive_mrcisd_bitset(options);
         }else
         if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
             lambda_mrcisd(options);

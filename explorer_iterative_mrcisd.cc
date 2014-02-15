@@ -3,7 +3,7 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
-//#include <unordered_map>
+#include <boost/unordered_map.hpp>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
@@ -87,9 +87,11 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
         fprintf(outfile,"\n\n  Cycle %3d. The model space contains %zu determinants",cycle,dim_ref_space);
         fflush(outfile);
 
+        int num_ref_roots = (cycle == 0 ? std::max(nroot,4) : nroot);
+
         H.reset(new Matrix("Hamiltonian Matrix",dim_ref_space,dim_ref_space));
-        evecs.reset(new Matrix("U",dim_ref_space,nroot));
-        evals.reset(new Vector("e",nroot));
+        evecs.reset(new Matrix("U",dim_ref_space,num_ref_roots));
+        evals.reset(new Vector("e",num_ref_roots));
 
         boost::timer t_h_build;
 #pragma omp parallel for schedule(dynamic)
@@ -107,19 +109,24 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
 
         // Diagonalize the Hamiltonian
         boost::timer t_hdiag_large;
-        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-            davidson_liu(H,evals,evecs,nroot);
-        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+        if (cycle == 0){
             fprintf(outfile,"\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
+        }else{
+            if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+                fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+                davidson_liu(H,evals,evecs,num_ref_roots);
+            }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+                fprintf(outfile,"\n  Performing full diagonalization.");
+                H->diagonalize(evecs,evals);
+            }
         }
 
         fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
         fflush(outfile);
 
         // Print the energy
-        for (int i = 0; i < nroot; ++ i){
+        for (int i = 0; i < num_ref_roots; ++ i){
             fprintf(outfile,"\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
         }
         fflush(outfile);
@@ -142,6 +149,7 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
         // Find the SD space out of the reference
         std::vector<StringDeterminant> sd_dets_vec;
         std::map<StringDeterminant,int> new_dets_map;
+
         boost::timer t_ms_build;
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
@@ -213,7 +221,7 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
                         int aa = avir[a];
                         for (int b = a + 1; b < nvalpha; ++b){
                             int bb = avir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                                 StringDeterminant new_det(det);
                                 new_det.set_alfa_bit(ii,false);
                                 new_det.set_alfa_bit(jj,false);
@@ -236,7 +244,7 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
                         int aa = avir[a];
                         for (int b = 0; b < nvbeta; ++b){
                             int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                                 StringDeterminant new_det(det);
                                 new_det.set_alfa_bit(ii,false);
                                 new_det.set_beta_bit(jj,false);
@@ -258,7 +266,7 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
                         int aa = bvir[a];
                         for (int b = a + 1; b < nvbeta; ++b){
                             int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                                 StringDeterminant new_det(det);
                                 new_det.set_beta_bit(ii,false);
                                 new_det.set_beta_bit(jj,false);
@@ -275,16 +283,19 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
         }
 
         fprintf(outfile,"\n  The SD excitation space has dimension: %zu",sd_dets_vec.size());
-
-        boost::timer t_ms_screen;
-
-        sort( sd_dets_vec.begin(), sd_dets_vec.end() );
-        sd_dets_vec.erase( unique( sd_dets_vec.begin(), sd_dets_vec.end() ), sd_dets_vec.end() );
-
-        fprintf(outfile,"\n  The SD excitation space has dimension: %zu (unique)",sd_dets_vec.size());
         fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
         fflush(outfile);
 
+
+        // Remove the duplicate determinants
+        boost::timer t_ms_unique;
+        sort( sd_dets_vec.begin(), sd_dets_vec.end() );
+        sd_dets_vec.erase( unique( sd_dets_vec.begin(), sd_dets_vec.end() ), sd_dets_vec.end() );
+        fprintf(outfile,"\n  The SD excitation space has dimension: %zu (unique)",sd_dets_vec.size());
+        fprintf(outfile,"\n  Time spent to eliminate duplicate   = %f s",t_ms_unique.elapsed());
+
+
+        boost::timer t_ms_screen;
         // This will contain all the determinants
         std::vector<StringDeterminant> ref_sd_dets;
 
@@ -292,7 +303,6 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
         for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
             ref_sd_dets.push_back(ref_space[J]);
         }
-
 
         // Check the coupling between the reference and the SD space
         std::vector<std::pair<double,size_t> > new_dets_importance_vec;
@@ -309,8 +319,10 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
             for (int n = 0; n < nroot; ++n){
                 V[n] = 0;
             }
+#pragma omp parallel for schedule(dynamic)
             for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
                 double HIJ = sd_dets_vec[I].slater_rules(ref_space[J]);
+#pragma omp critical
                 for (int n = 0; n < nroot; ++n){
                     V[n] += evecs->get(J,n) * HIJ;
                 }
@@ -489,22 +501,22 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
                 ref_space_map[ref_sd_dets[dm_det_list[I].second]] = 1;
             }
         }
-//        unordered_map<std::vector<bool>,int> a_str_hash;
-//        unordered_map<std::vector<bool>,int> b_str_hash;
+        //        unordered_map<std::vector<bool>,int> a_str_hash;
+        //        unordered_map<std::vector<bool>,int> b_str_hash;
 
-//        boost::timer t_stringify;
-//        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
-//            const StringDeterminant& detI = ref_sd_dets[I];
-//            const std::vector<bool> a_str = detI.get_alfa_bits_vector_bool();
-//            const std::vector<bool> b_str = detI.get_beta_bits_vector_bool();
-//            a_str_hash[a_str] = 1;
-//            b_str_hash[b_str] = 1;
-//        }
-//        fprintf(outfile,"\n  Size of the @MRCISD space: %zu",dim_ref_sd_dets);
-//        fprintf(outfile,"\n  Size of the alpha strings: %zu",a_str_hash.size());
-//        fprintf(outfile,"\n  Size of the beta  strings: %zu",b_str_hash.size());
+        //        boost::timer t_stringify;
+        //        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
+        //            const StringDeterminant& detI = ref_sd_dets[I];
+        //            const std::vector<bool> a_str = detI.get_alfa_bits_vector_bool();
+        //            const std::vector<bool> b_str = detI.get_beta_bits_vector_bool();
+        //            a_str_hash[a_str] = 1;
+        //            b_str_hash[b_str] = 1;
+        //        }
+        //        fprintf(outfile,"\n  Size of the @MRCISD space: %zu",dim_ref_sd_dets);
+        //        fprintf(outfile,"\n  Size of the alpha strings: %zu",a_str_hash.size());
+        //        fprintf(outfile,"\n  Size of the beta  strings: %zu",b_str_hash.size());
 
-//        fprintf(outfile,"\n\n  Time to stringify: %f s",t_stringify.elapsed());
+        //        fprintf(outfile,"\n\n  Time to stringify: %f s",t_stringify.elapsed());
 
 
     }
@@ -541,7 +553,6 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
     double ia_mrcisd_threshold = 1.0e-9;
 
-
     bool aimed_selection = false;
     bool energy_select = false;
     if (options.get_str("SELECT_TYPE") == "AIMED_AMP"){
@@ -564,11 +575,64 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
     std::vector<BitsetDeterminant> ref_space;
     std::map<BitsetDeterminant,int> ref_space_map;
-    std::vector<bool> ref_abits = reference_determinant_.get_alfa_bits_vector_bool();
-    std::vector<bool> ref_bbits = reference_determinant_.get_beta_bits_vector_bool();
-    BitsetDeterminant bs_ref_(ref_abits,ref_bbits);
-    ref_space.push_back(bs_ref_);
-    ref_space_map[bs_ref_] = 1;
+
+    // Copy the determinants from the previous Lambda-CI
+    for (size_t I = 0, maxI = determinants_.size(); I < maxI; ++I){
+        boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+        const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+        const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+        const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+        const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+        StringDeterminant det(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>());
+
+        std::vector<bool> alfa_bits = det.get_alfa_bits_vector_bool();
+        std::vector<bool> beta_bits = det.get_beta_bits_vector_bool();
+        BitsetDeterminant bs_det(alfa_bits,beta_bits);
+        ref_space.push_back(bs_det);
+        ref_space_map[bs_det] = 1;
+    }
+
+    size_t dim_ref_space = ref_space.size();
+
+    fprintf(outfile,"\n  The model space contains %zu determinants",dim_ref_space);
+    fflush(outfile);
+
+//    H.reset(new Matrix("Hamiltonian Matrix",dim_ref_space,dim_ref_space));
+//    evecs.reset(new Matrix("U",dim_ref_space,nroot));
+//    evals.reset(new Vector("e",nroot));
+
+//    boost::timer t_h_build;
+//#pragma omp parallel for schedule(dynamic)
+//    for (size_t I = 0; I < dim_ref_space; ++I){
+//        const StringDeterminant& detI = ref_space[I];
+//        for (size_t J = I; J < dim_ref_space; ++J){
+//            const StringDeterminant& detJ = ref_space[J];
+//            double HIJ = detI.slater_rules(detJ);
+//            H->set(I,J,HIJ);
+//            H->set(J,I,HIJ);
+//        }
+//    }
+//    fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
+//    fflush(outfile);
+
+//    // 4) Diagonalize the Hamiltonian
+//    boost::timer t_hdiag_large;
+//    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+//        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+//        davidson_liu(H,evals,evecs,nroot);
+//    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
+//        fprintf(outfile,"\n  Performing full diagonalization.");
+//        H->diagonalize(evecs,evals);
+//    }
+
+//    fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
+//    fflush(outfile);
+
+//    std::vector<bool> ref_abits = reference_determinant_.get_alfa_bits_vector_bool();
+//    std::vector<bool> ref_bbits = reference_determinant_.get_beta_bits_vector_bool();
+//    BitsetDeterminant bs_ref_(ref_abits,ref_bbits);
+//    ref_space.push_back(bs_ref_);
+//    ref_space_map[bs_ref_] = 1;
 
 
     double old_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
@@ -578,14 +642,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // Build the Hamiltonian in the P space
 
-        size_t dim_ref_space = ref_space.size();
+        dim_ref_space = ref_space.size();
 
         fprintf(outfile,"\n\n  Cycle %3d. The model space contains %zu determinants",cycle,dim_ref_space);
+        //        fprintf(outfile,"\n  Solving for %d roots",num_ref_roots);
         fflush(outfile);
 
         H.reset(new Matrix("Hamiltonian Matrix",dim_ref_space,dim_ref_space));
-        evecs.reset(new Matrix("U",dim_ref_space,nroot));
-        evals.reset(new Vector("e",nroot));
 
         boost::timer t_h_build;
 #pragma omp parallel for schedule(dynamic)
@@ -601,21 +664,20 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
         fflush(outfile);
 
-        // Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
-        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-            davidson_liu(H,evals,evecs,nroot);
-        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
-            H->diagonalize(evecs,evals);
-        }
+        // Be careful, we might not have as many reference dets as roots (just in the first cycle)
+        int num_ref_roots = std::min(nroot,int(dim_ref_space));
 
+        // Diagonalize the Hamiltonian
+        evecs.reset(new Matrix("U",dim_ref_space,num_ref_roots));
+        evals.reset(new Vector("e",num_ref_roots));
+        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+        boost::timer t_hdiag_large;
+        davidson_liu(H,evals,evecs,num_ref_roots);
         fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
         fflush(outfile);
 
         // Print the energy
-        for (int i = 0; i < nroot; ++ i){
+        for (int i = 0; i < num_ref_roots; ++i){
             fprintf(outfile,"\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
         }
         fflush(outfile);
@@ -638,7 +700,11 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         // Find the SD space out of the reference
         std::vector<BitsetDeterminant> sd_dets_vec;
         std::map<BitsetDeterminant,int> new_dets_map;
+
         boost::timer t_ms_build;
+
+        // This hash saves the determinant coupling to the model space eigenfunction
+        std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
             const BitsetDeterminant& det = ref_space[I];
@@ -679,7 +745,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(aa,true);
                         if(ref_space_map.find(new_det) == ref_space_map.end()){
-                            sd_dets_vec.push_back(new_det);
+                            double HIJ = det.slater_rules(new_det);
+                            if (V_hash.count(new_det) == 0){
+                                V_hash[new_det] = std::vector<double>(num_ref_roots);
+                            }
+                            for (int n = 0; n < num_ref_roots; ++n){
+                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                            }
                         }
                     }
                 }
@@ -694,7 +766,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(aa,true);
                         if(ref_space_map.find(new_det) == ref_space_map.end()){
-                            sd_dets_vec.push_back(new_det);
+                            double HIJ = det.slater_rules(new_det);
+                            if (V_hash.count(new_det) == 0){
+                                V_hash[new_det] = std::vector<double>(num_ref_roots);
+                            }
+                            for (int n = 0; n < num_ref_roots; ++n){
+                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                            }
                         }
                     }
                 }
@@ -716,7 +794,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                                 new_det.set_alfa_bit(aa,true);
                                 new_det.set_alfa_bit(bb,true);
                                 if(ref_space_map.find(new_det) == ref_space_map.end()){
-                                    sd_dets_vec.push_back(new_det);
+                                    double HIJ = det.slater_rules(new_det);
+                                    if (V_hash.count(new_det) == 0){
+                                        V_hash[new_det] = std::vector<double>(num_ref_roots);
+                                    }
+                                    for (int n = 0; n < num_ref_roots; ++n){
+                                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                                    }
                                 }
                             }
                         }
@@ -739,7 +823,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                                 new_det.set_alfa_bit(aa,true);
                                 new_det.set_beta_bit(bb,true);
                                 if(ref_space_map.find(new_det) == ref_space_map.end()){
-                                    sd_dets_vec.push_back(new_det);
+                                    double HIJ = det.slater_rules(new_det);
+                                    if (V_hash.count(new_det) == 0){
+                                        V_hash[new_det] = std::vector<double>(num_ref_roots);
+                                    }
+                                    for (int n = 0; n < num_ref_roots; ++n){
+                                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                                    }
                                 }
                             }
                         }
@@ -754,14 +844,20 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         int aa = bvir[a];
                         for (int b = a + 1; b < nvbeta; ++b){
                             int bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                                 BitsetDeterminant new_det(det);
                                 new_det.set_beta_bit(ii,false);
                                 new_det.set_beta_bit(jj,false);
                                 new_det.set_beta_bit(aa,true);
                                 new_det.set_beta_bit(bb,true);
                                 if(ref_space_map.find(new_det) == ref_space_map.end()){
-                                    sd_dets_vec.push_back(new_det);
+                                    double HIJ = det.slater_rules(new_det);
+                                    if (V_hash.count(new_det) == 0){
+                                        V_hash[new_det] = std::vector<double>(num_ref_roots);
+                                    }
+                                    for (int n = 0; n < num_ref_roots; ++n){
+                                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                                    }
                                 }
                             }
                         }
@@ -769,15 +865,7 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                 }
             }
         }
-
-        fprintf(outfile,"\n  The SD excitation space has dimension: %zu",sd_dets_vec.size());
-
-        boost::timer t_ms_screen;
-
-        sort( sd_dets_vec.begin(), sd_dets_vec.end() );
-        sd_dets_vec.erase( unique( sd_dets_vec.begin(), sd_dets_vec.end() ), sd_dets_vec.end() );
-
-        fprintf(outfile,"\n  The SD excitation space has dimension: %zu (unique)",sd_dets_vec.size());
+        fprintf(outfile,"\n  The SD excitation space has dimension: %zu (unique)",V_hash.size());
         fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
         fflush(outfile);
 
@@ -789,31 +877,21 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             ref_sd_dets.push_back(ref_space[J]);
         }
 
+        boost::timer t_ms_screen;
 
-        // Check the coupling between the reference and the SD space
-        std::vector<std::pair<double,size_t> > new_dets_importance_vec;
-
-        std::vector<double> V(nroot,0.0);
+        typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
         std::vector<std::pair<double,double> > C1(nroot,make_pair(0.0,0.0));
         std::vector<std::pair<double,double> > E2(nroot,make_pair(0.0,0.0));
         std::vector<double> ept2(nroot,0.0);
 
-        double aimed_selection_sum = 0.0;
+        // Check the coupling between the reference and the SD space
+        for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
+            double EI = it->first.energy();
+            for (int n = 0; n < num_ref_roots; ++n){
+                double V = it->second[n];
+                double C1_I = -V / (EI - evals->get(n));
+                double E2_I = -V * V / (EI - evals->get(n));
 
-        for (size_t I = 0, max_I = sd_dets_vec.size(); I < max_I; ++I){
-            double EI = sd_dets_vec[I].energy();
-            for (int n = 0; n < nroot; ++n){
-                V[n] = 0;
-            }
-            for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
-                double HIJ = sd_dets_vec[I].slater_rules(ref_space[J]);
-                for (int n = 0; n < nroot; ++n){
-                    V[n] += evecs->get(J,n) * HIJ;
-                }
-            }
-            for (int n = 0; n < nroot; ++n){
-                double C1_I = -V[n] / (EI - evals->get(n));
-                double E2_I = -V[n] * V[n] / (EI - evals->get(n));
                 C1[n] = make_pair(std::fabs(C1_I),C1_I);
                 E2[n] = make_pair(std::fabs(E2_I),E2_I);
             }
@@ -823,45 +901,12 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
             double select_value = energy_select ? max_E2.first : max_C1.first;
 
-            // Do not select now, just store the determinant index and the selection criterion
-            if(aimed_selection){
-                if (energy_select){
-                    new_dets_importance_vec.push_back(std::make_pair(select_value,I));
-                    aimed_selection_sum += select_value;
-                }else{
-                    new_dets_importance_vec.push_back(std::make_pair(select_value * select_value,I));
-                    aimed_selection_sum += select_value * select_value;
-                }
+            if (std::fabs(select_value) > tau_q){
+                ref_sd_dets.push_back(it->first);
             }else{
-                if (std::fabs(select_value) > tau_q){
-                    new_dets_importance_vec.push_back(std::make_pair(select_value,I));
-                }else{
-                    for (int n = 0; n < nroot; ++n) ept2[n] += E2[n].second;
+                for (int n = 0; n < num_ref_roots; ++n){
+                    ept2[n] += E2[n].second;
                 }
-            }
-        }
-
-        if(aimed_selection){
-            std::sort(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
-            std::reverse(new_dets_importance_vec.begin(),new_dets_importance_vec.end());
-            size_t maxI = new_dets_importance_vec.size();
-            fprintf(outfile,"\n  The SD space will be generated using the aimed scheme (%s)",energy_select ? "energy" : "amplitude");
-            fprintf(outfile,"\n  Initial value of sigma in the aimed selection = %24.14f",aimed_selection_sum);
-            for (size_t I = 0; I < maxI; ++I){
-                if (aimed_selection_sum > t2_threshold_){
-                    ref_sd_dets.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
-                    aimed_selection_sum -= new_dets_importance_vec[I].first;
-                }else{
-                    break;
-                }
-            }
-            fprintf(outfile,"\n  Final value of sigma in the aimed selection   = %24.14f",aimed_selection_sum);
-            fprintf(outfile,"\n  Selected %zu determinants",ref_sd_dets.size()-ref_space.size());
-        }else{
-            fprintf(outfile,"\n  The SD space will be generated by screening (%s)",energy_select ? "energy" : "amplitude");
-            size_t maxI = new_dets_importance_vec.size();
-            for (size_t I = 0; I < maxI; ++I){
-                ref_sd_dets.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
             }
         }
 
@@ -939,7 +984,7 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             // 4) Diagonalize the Hamiltonian
             boost::timer t_hdiag_large2;
             fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
-            davidson_liu_sparse(H_sparse,evals,evecs,nroot);
+            davidson_liu_sparse(H_sparse,evals,evecs, nroot);
             fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
             fflush(outfile);
         }
@@ -953,11 +998,13 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         fflush(outfile);
 
 
-        // Select the new reference space
-        ref_space.clear();
-        ref_space_map.clear();
 
-        new_energy = evals->get(0) + nuclear_repulsion_energy_;
+
+        new_energy = 0.0;
+        for (int n = 0; n < nroot; ++ n){
+            new_energy += evals->get(n) + nuclear_repulsion_energy_;
+        }
+        new_energy /= static_cast<double>(nroot);
 
         fflush(outfile);
         if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold){
@@ -978,11 +1025,35 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         std::sort(dm_det_list.begin(),dm_det_list.end());
         std::reverse(dm_det_list.begin(),dm_det_list.end());
 
+
+        // Select the new reference space
+        ref_space.clear();
+        ref_space_map.clear();
+
         // Decide which will go in ref_space
         for (size_t I = 0; I < dim_ref_sd_dets; ++I){
             if (dm_det_list[I].first > tau_p){
                 ref_space.push_back(ref_sd_dets[dm_det_list[I].second]);
                 ref_space_map[ref_sd_dets[dm_det_list[I].second]] = 1;
+            }
+        }
+
+        for (int n = 0; n < nroot; ++n){
+            fprintf(outfile,"\n\n  Root %d",n);
+
+            std::vector<std::pair<double,size_t> > det_weight;
+            for (size_t I = 0; I < dim_ref_sd_dets; ++I){
+                det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+            }
+            std::sort(det_weight.begin(),det_weight.end());
+            std::reverse(det_weight.begin(),det_weight.end());
+            for (size_t I = 0; I < 10; ++I){
+                fprintf(outfile,"\n  %3zu  %9.6f %.9f  %10zu %s",
+                        I,
+                        evecs->get(det_weight[I].second,n),
+                        det_weight[I].first * det_weight[I].first,
+                        det_weight[I].second,
+                        ref_sd_dets[det_weight[I].second].str().c_str());
             }
         }
     }
