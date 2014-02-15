@@ -319,10 +319,10 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
             for (int n = 0; n < nroot; ++n){
                 V[n] = 0;
             }
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
             for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
                 double HIJ = sd_dets_vec[I].slater_rules(ref_space[J]);
-#pragma omp critical
+//#pragma omp critical
                 for (int n = 0; n < nroot; ++n){
                     V[n] += evecs->get(J,n) * HIJ;
                 }
