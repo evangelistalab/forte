@@ -1,4 +1,7 @@
-#ifdef _HAS_LIBBTL_
+//#ifdef _HAS_LIBBTL_
+#if 1
+
+#define _MULTIPLE_CONTRACTIONS_
 
 #include <cmath>
 
@@ -413,7 +416,30 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         C4_ab.zero();
         C4_bb.zero();
 
+
         // AAAA case
+#ifdef _MULTIPLE_CONTRACTIONS_
+        // Term I
+        C4_aa("pqrs") +=  0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * CD_a("ac") * CD_a("bd");
+        C4_aa("pqrs") += -0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * D_a("ac") * D_a("bd");
+        C4_aa("pqrs") += -0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * CD_a("ac") * CD_a("bd");
+        C4_aa("pqrs") +=  0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * D_a("ac") * D_a("bd");
+
+        // Term II
+        I4("pqrs")  = +sign * A4_aa("pcrb") * B4_aa("qdsa") * D_a("ac") * CD_a("bd");
+        I4("pqrs") += -sign * A4_aa("pcrb") * B4_aa("qdsa") * CD_a("ac") * D_a("bd");
+        C4_aa("pqrs") += +1.0 * I4("pqrs");
+        C4_aa("pqrs") += -1.0 * I4("qprs");
+        C4_aa("pqrs") += -1.0 * I4("pqsr");
+        C4_aa("pqrs") += +1.0 * I4("qpsr");
+
+        I4("pqrs")  = +sign * A4_ab("pcrb") * B4_ab("qdsa") * D_b("ac") * CD_b("bd");
+        I4("pqrs") += -sign * A4_ab("pcrb") * B4_ab("qdsa") * CD_b("ac") * D_b("bd");
+        C4_aa("pqrs") += +1.0 * I4("pqrs");
+        C4_aa("pqrs") += -1.0 * I4("qprs");
+        C4_aa("pqrs") += -1.0 * I4("pqsr");
+        C4_aa("pqrs") += +1.0 * I4("qpsr");
+#elif
         // Term I
         I4("abcd") = CD_a("ac") * CD_a("bd");
         I4("abcd") += -1.0 * D_a("ac") * D_a("bd");
@@ -442,6 +468,12 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,do
         C4_aa("pqrs") += -1.0 * I4("qprs");
         C4_aa("pqrs") += -1.0 * I4("pqsr");
         C4_aa("pqrs") += +1.0 * I4("qpsr");
+#endif
+
+
+
+
+
 
 
         // ABAB case

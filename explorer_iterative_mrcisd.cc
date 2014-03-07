@@ -634,6 +634,7 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 //    ref_space.push_back(bs_ref_);
 //    ref_space_map[bs_ref_] = 1;
 
+    std::vector<std::vector<double> > energy_history;
 
     double old_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
     double new_energy = 0.0;
@@ -1001,16 +1002,35 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
 
         new_energy = 0.0;
+        std::vector<double> energies;
         for (int n = 0; n < nroot; ++ n){
-            new_energy += evals->get(n) + nuclear_repulsion_energy_;
+            double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
+            energies.push_back(state_n_energy);
+            new_energy += state_n_energy;
         }
         new_energy /= static_cast<double>(nroot);
 
         fflush(outfile);
+
+        // Check for convergence
         if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold){
             break;
         }
+//        // Check the history of energies to avoid cycling in a loop
+//        if(cycle > 3){
+//            bool stuck = true;
+//            for(int cycle_test = cycle - 2; cycle_test < cycle; ++cycle_test){
+//                for (int n = 0; n < nroot; ++n){
+//                    if(std::fabs(energy_history[cycle_test][n] - energies[n]) < 1.0e-12){
+//                        stuck = true;
+//                    }
+//                }
+//            }
+//            if(stuck) break; // exit the cycle
+//        }
+
         old_energy = new_energy;
+        energy_history.push_back(energies);
 
         std::vector<std::pair<double,size_t> > dm_det_list;
 

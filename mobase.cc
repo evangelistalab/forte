@@ -12,8 +12,8 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-MOBase::MOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb):
-    ints_(ints), options_(options)
+MOBase::MOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex G1bb)
+    : ints_(ints), options_(options)
 {
     startup(G1aa,G1bb);
 }

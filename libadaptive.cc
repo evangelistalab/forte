@@ -12,6 +12,7 @@
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
+#include "tensorsrg.h"
 
 #ifdef _HAS_LIBBTL_
 #include "tensor_test.h"
@@ -38,7 +39,7 @@ read_options(std::string name, Options &options)
         options.add_int("PRINT", 0);
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST");
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -210,110 +211,121 @@ read_options(std::string name, Options &options)
 extern "C" PsiReturnType
 libadaptive(Options &options)
 {
-    // Get the one- and two-electron integrals in the MO basis
-    ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
-
-    // The explorer object will do its job
-    if (options.get_str("JOB_TYPE") == "EXPLORER"){
-        Explorer* explorer = new Explorer(options,ints_);
-        delete explorer;
-    }
-    if (options.get_str("JOB_TYPE") == "FCIMC"){
-        FCIMC fcimc(options,ints_);
-    }
-    if (options.get_str("JOB_TYPE") == "SOSRG"){
-        Explorer* explorer = new Explorer(options,ints_);
-        std::vector<double> ONa = explorer->Da();
-        std::vector<double> ONb = explorer->Db();
-        int nmo = explorer->nmo();
-        double** G1;
-        init_matrix<double>(G1,2 * nmo,2 * nmo);
-        for (int p = 0; p < nmo; ++p){
-            G1[p][p] = ONa[p];
-            G1[p + nmo][p + nmo] = ONb[p];
-        }
-        SOSRG sosrg(options,ints_,G1);
-        free_matrix<double>(G1,2 * nmo,2 * nmo);
-
-        delete explorer;
-    }
-#ifdef _HAS_LIBBTL_
-    if (options.get_str("JOB_TYPE") == "SRG"){
-        Explorer* explorer = new Explorer(options,ints_);
-        std::vector<double> ONa = explorer->Da();
-        std::vector<double> ONb = explorer->Db();
-        int nmo = explorer->nmo();
-
-        double** G1aa;
-        double** G1bb;
-        init_matrix<double>(G1aa,nmo,nmo);
-        init_matrix<double>(G1bb,nmo,nmo);
-        for (int p = 0; p < nmo; ++p){
-            G1aa[p][p] = ONa[p];
-            G1bb[p][p] = ONb[p];
-        }
-        Tensor::initialize_class(nmo);
-        MOSRG mosrg(options,ints_,G1aa,G1bb);
-        Tensor::finalize_class();
-        free_matrix<double>(G1aa,nmo,nmo);
-        free_matrix<double>(G1bb,nmo,nmo);
-
-        delete explorer;
-    }
-    if (options.get_str("JOB_TYPE") == "SRG-LCI"){
-        double dett = options.get_double("DET_THRESHOLD");
-        double dent = options.get_double("DEN_THRESHOLD");
-        options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
-        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
-
-        Explorer* explorer = new Explorer(options,ints_);
-        std::vector<double> ONa = explorer->Da();
-        std::vector<double> ONb = explorer->Db();
-        int nmo = explorer->nmo();
-
-        double** G1aa;
-        double** G1bb;
-        init_matrix<double>(G1aa,nmo,nmo);
-        init_matrix<double>(G1bb,nmo,nmo);
-        for (int p = 0; p < nmo; ++p){
-            G1aa[p][p] = ONa[p];
-            G1bb[p][p] = ONb[p];
-        }
-        Tensor::initialize_class(nmo);
-        MOSRG mosrg(options,ints_,G1aa,G1bb);
-        mosrg.transfer_integrals();
-        delete explorer;
-
-        options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
-        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
-
-        explorer = new Explorer(options,ints_);
-
-        free_matrix<double>(G1aa,nmo,nmo);
-        free_matrix<double>(G1bb,nmo,nmo);
-        Tensor::finalize_class();
-
-        delete explorer;
-    }
     if (options.get_str("JOB_TYPE") == "TENSORTEST"){
-        Explorer* explorer = new Explorer(options,ints_);
-        int nmo = explorer->nmo();
-
-
+#ifdef _HAS_LIBBTL_
         test_tensor_class(true);
-//        std::vector<size_t> n4 = {nmo,nmo,nmo,nmo};
-//        Tensor A("A",n4);
-//        Tensor B("B",n4);
-//        Tensor C("C",n4);
-
-//        C("pqrs") += 0.5 * A("pqtu") * B("turs");
-
-        delete explorer;
-    }
 #endif
+    }else{
+        // Get the one- and two-electron integrals in the MO basis
+        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
 
-    // Delete ints_;
-    delete ints_;
+        // The explorer object will do its job
+        if (options.get_str("JOB_TYPE") == "EXPLORER"){
+            Explorer* explorer = new Explorer(options,ints_);
+            delete explorer;
+        }
+        if (options.get_str("JOB_TYPE") == "FCIMC"){
+            FCIMC fcimc(options,ints_);
+        }
+        if (options.get_str("JOB_TYPE") == "SOSRG"){
+            Explorer* explorer = new Explorer(options,ints_);
+            std::vector<double> ONa = explorer->Da();
+            std::vector<double> ONb = explorer->Db();
+            int nmo = explorer->nmo();
+            double** G1;
+            init_matrix<double>(G1,2 * nmo,2 * nmo);
+            for (int p = 0; p < nmo; ++p){
+                G1[p][p] = ONa[p];
+                G1[p + nmo][p + nmo] = ONb[p];
+            }
+            SOSRG sosrg(options,ints_,G1);
+            free_matrix<double>(G1,2 * nmo,2 * nmo);
+
+            delete explorer;
+        }
+#ifdef _HAS_LIBBTL_
+
+        if (options.get_str("JOB_TYPE") == "TENSORSRG"){
+            Explorer* explorer = new Explorer(options,ints_);
+            std::vector<double> ONa = explorer->Da();
+            std::vector<double> ONb = explorer->Db();
+            int nmo = explorer->nmo();
+
+            double** G1aa;
+            double** G1bb;
+            init_matrix<double>(G1aa,nmo,nmo);
+            init_matrix<double>(G1bb,nmo,nmo);
+            for (int p = 0; p < nmo; ++p){
+                G1aa[p][p] = ONa[p];
+                G1bb[p][p] = ONb[p];
+            }
+            TensorSRG srg(options,ints_);
+            free_matrix<double>(G1aa,nmo,nmo);
+            free_matrix<double>(G1bb,nmo,nmo);
+
+            delete explorer;
+        }
+        if (options.get_str("JOB_TYPE") == "SRG"){
+            Explorer* explorer = new Explorer(options,ints_);
+            std::vector<double> ONa = explorer->Da();
+            std::vector<double> ONb = explorer->Db();
+            int nmo = explorer->nmo();
+
+            double** G1aa;
+            double** G1bb;
+            init_matrix<double>(G1aa,nmo,nmo);
+            init_matrix<double>(G1bb,nmo,nmo);
+            for (int p = 0; p < nmo; ++p){
+                G1aa[p][p] = ONa[p];
+                G1bb[p][p] = ONb[p];
+            }
+            Tensor::initialize_class(nmo);
+            MOSRG mosrg(options,ints_,G1aa,G1bb);
+            Tensor::finalize_class();
+            free_matrix<double>(G1aa,nmo,nmo);
+            free_matrix<double>(G1bb,nmo,nmo);
+
+            delete explorer;
+        }
+        if (options.get_str("JOB_TYPE") == "SRG-LCI"){
+            double dett = options.get_double("DET_THRESHOLD");
+            double dent = options.get_double("DEN_THRESHOLD");
+            options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
+            options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
+
+            Explorer* explorer = new Explorer(options,ints_);
+            std::vector<double> ONa = explorer->Da();
+            std::vector<double> ONb = explorer->Db();
+            int nmo = explorer->nmo();
+
+            double** G1aa;
+            double** G1bb;
+            init_matrix<double>(G1aa,nmo,nmo);
+            init_matrix<double>(G1bb,nmo,nmo);
+            for (int p = 0; p < nmo; ++p){
+                G1aa[p][p] = ONa[p];
+                G1bb[p][p] = ONb[p];
+            }
+            Tensor::initialize_class(nmo);
+            MOSRG mosrg(options,ints_,G1aa,G1bb);
+            mosrg.transfer_integrals();
+            delete explorer;
+
+            options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
+            options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
+
+            explorer = new Explorer(options,ints_);
+
+            free_matrix<double>(G1aa,nmo,nmo);
+            free_matrix<double>(G1bb,nmo,nmo);
+            Tensor::finalize_class();
+
+            delete explorer;
+        }
+#endif
+        // Delete ints_;
+        delete ints_;
+    }
 
     return Success;
 }

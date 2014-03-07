@@ -397,6 +397,10 @@ void MOSRG::compute_canonical_transformation_energy()
         fflush(outfile);
     }
     fprintf(outfile,"\n\n      * CCSD-BCH total energy      = %25.15f",old_energy);
+    // Set some environment variables
+    Process::environment.globals["CURRENT ENERGY"] = old_energy;
+    Process::environment.globals["CTSD ENERGY"] = old_energy;
+    Process::environment.globals["LCTSD ENERGY"] = old_energy;
 }
 
 void MOSRG::compute_driven_srg_energy()
