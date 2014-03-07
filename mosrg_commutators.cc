@@ -30,13 +30,13 @@ double t_four = 0;
 namespace psi{ namespace libadaptive{
 
 void MOSRG::commutator_A_B_C(double factor,
-                             MOTwoIndex restrict A1,
-                             MOFourIndex restrict A2,
-                             MOTwoIndex restrict B1,
-                             MOFourIndex restrict B2,
+                             MOTwoIndex A1,
+                             MOFourIndex A2,
+                             MOTwoIndex B1,
+                             MOFourIndex B2,
                              double& C0,
-                             MOTwoIndex restrict C1,
-                             MOFourIndex restrict C2)
+                             MOTwoIndex C1,
+                             MOFourIndex C2)
 {
     commutator_A1_B1_C0(A1,B1,+factor,C0);
     commutator_A1_B2_C0(A1,B2,+factor,C0);
@@ -54,13 +54,13 @@ void MOSRG::commutator_A_B_C(double factor,
 }
 
 void MOSRG::commutator_A_B_C_fourth_order(double factor,
-                                          MOTwoIndex restrict A1,
-                                          MOFourIndex restrict A2,
-                                          MOTwoIndex restrict B1,
-                                          MOFourIndex restrict B2,
+                                          MOTwoIndex A1,
+                                          MOFourIndex A2,
+                                          MOTwoIndex B1,
+                                          MOFourIndex B2,
                                           double& C0,
-                                          MOTwoIndex restrict C1,
-                                          MOFourIndex restrict C2)
+                                          MOTwoIndex C1,
+                                          MOFourIndex C2)
 {
     commutator_A1_B1_C0(A1,B1,+factor,C0);
     commutator_A1_B2_C0(A1,B2,+factor,C0);
@@ -78,13 +78,13 @@ void MOSRG::commutator_A_B_C_fourth_order(double factor,
 }
 
 void MOSRG::commutator_A_B_C_SRG2(double factor,
-                                  MOTwoIndex restrict A1,
-                                  MOFourIndex restrict A2,
-                                  MOTwoIndex restrict B1,
-                                  MOFourIndex restrict B2,
+                                  MOTwoIndex A1,
+                                  MOFourIndex A2,
+                                  MOTwoIndex B1,
+                                  MOFourIndex B2,
                                   double& C0,
-                                  MOTwoIndex restrict C1,
-                                  MOFourIndex restrict C2)
+                                  MOTwoIndex C1,
+                                  MOFourIndex C2)
 {
     //    commutator_A1_B1_C0(A1,B1,+factor,C0);
     //    commutator_A1_B2_C0(A1,B2,+factor,C0);
@@ -101,7 +101,7 @@ void MOSRG::commutator_A_B_C_SRG2(double factor,
     commutator_A2_B2_C2(A2,B2,+factor,C2);
 }
 
-void MOSRG::commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,double& C)
+void MOSRG::commutator_A1_B1_C0(MOTwoIndex A,MOTwoIndex B,double sign,double& C)
 {
     boost::timer t;
     double sum = 0.0;
@@ -126,7 +126,7 @@ void MOSRG::commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,doub
     t_commutator_A1_B1_C0 += t.elapsed();
 }
 
-void MOSRG::commutator_A1_B1_C1(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,MOTwoIndex C)
+void MOSRG::commutator_A1_B1_C1(MOTwoIndex A,MOTwoIndex B,double sign,MOTwoIndex C)
 {
     boost::timer t;
     loop_mo_p loop_mo_q{
@@ -150,7 +150,7 @@ void MOSRG::commutator_A1_B1_C1(MOTwoIndex restrict A,MOTwoIndex restrict B,doub
     t_commutator_A1_B1_C1 += t.elapsed();
 }
 
-void MOSRG::commutator_A1_B2_C0(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,double& C)
+void MOSRG::commutator_A1_B2_C0(MOTwoIndex A,MOFourIndex B,double sign,double& C)
 {
     boost::timer t;
     double sum = 0.0;
@@ -164,7 +164,7 @@ void MOSRG::commutator_A1_B2_C0(MOTwoIndex restrict A,MOFourIndex restrict B,dou
     t_commutator_A1_B2_C0 += t.elapsed();
 }
 
-void MOSRG::commutator_A1_B2_C1(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C)
+void MOSRG::commutator_A1_B2_C1(MOTwoIndex A,MOFourIndex B,double sign,MOTwoIndex C)
 {
     boost::timer t;
     if(srgcomm == SRCommutators){
@@ -201,7 +201,7 @@ void MOSRG::commutator_A1_B2_C1(MOTwoIndex restrict A,MOFourIndex restrict B,dou
     t_commutator_A1_B2_C1 += t.elapsed();
 }
 
-void MOSRG::commutator_A1_B2_C2(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C)
+void MOSRG::commutator_A1_B2_C2(MOTwoIndex A,MOFourIndex B,double sign,MOFourIndex C)
 {
     boost::timer t;
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
@@ -232,7 +232,7 @@ void MOSRG::commutator_A1_B2_C2(MOTwoIndex restrict A,MOFourIndex restrict B,dou
     t_commutator_A1_B2_C2 += t.elapsed();
 }
 
-void MOSRG::commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,double sign,double& C)
+void MOSRG::commutator_A2_B2_C0(MOFourIndex A,MOFourIndex B,double sign,double& C)
 {
     boost::timer t;
     double sum = 0.0;
@@ -253,7 +253,7 @@ void MOSRG::commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,do
     t_commutator_A2_B2_C0 += t.elapsed();
 }
 
-void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C)
+void MOSRG::commutator_A2_B2_C1(MOFourIndex A,MOFourIndex B,double sign,MOTwoIndex C)
 {
     boost::timer t;
     if(use_tensor_class_){
@@ -391,7 +391,7 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,do
     t_commutator_A2_B2_C1 += t.elapsed();
 }
 
-void MOSRG::commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C)
+void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIndex C)
 {
     boost::timer t;
     if(use_tensor_class_){
