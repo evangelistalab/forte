@@ -30,7 +30,7 @@ double t_four = 0;
 namespace psi{ namespace libadaptive{
 
 void MOSRG::commutator_A_B_C(double factor,
-                             MOTwoIndex A1,
+                             MOTwoIndex dA1,
                              MOFourIndex A2,
                              MOTwoIndex B1,
                              MOFourIndex B2,
@@ -439,7 +439,7 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
         C4_aa("pqrs") += -1.0 * I4("qprs");
         C4_aa("pqrs") += -1.0 * I4("pqsr");
         C4_aa("pqrs") += +1.0 * I4("qpsr");
-#elif
+#else
         // Term I
         I4("abcd") = CD_a("ac") * CD_a("bd");
         I4("abcd") += -1.0 * D_a("ac") * D_a("bd");
