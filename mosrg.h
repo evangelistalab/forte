@@ -130,30 +130,30 @@ private:
 
     /// Functions to compute commutators C += factor * [A,B]
     void commutator_A_B_C(double factor,
-                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
-                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
-                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
+                          MOTwoIndex A1,MOFourIndex A2,
+                          MOTwoIndex B1,MOFourIndex B2,
+                          double& C0,MOTwoIndex C1,MOFourIndex C2);
     /// Functions to compute commutators C += factor * [A,B] but the term [A2,B2] -> C1
     /// contains a factor of two to recover the correct prefactor for the fourth-order term
     /// 1/2 [[V,T2],T2] -> R2
     void commutator_A_B_C_fourth_order(double factor,
-                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
-                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
-                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
+                          MOTwoIndex A1,MOFourIndex A2,
+                          MOTwoIndex B1,MOFourIndex B2,
+                          double& C0,MOTwoIndex C1,MOFourIndex C2);
     /// Functions to compute commutators C += factor * [A,B] as done in the SRG(2) approximation
     void commutator_A_B_C_SRG2(double factor,
-                          MOTwoIndex restrict A1,MOFourIndex restrict A2,
-                          MOTwoIndex restrict B1,MOFourIndex restrict B2,
-                          double& C0,MOTwoIndex restrict C1,MOFourIndex restrict C2);
+                          MOTwoIndex A1,MOFourIndex A2,
+                          MOTwoIndex B1,MOFourIndex B2,
+                          double& C0,MOTwoIndex C1,MOFourIndex C2);
     /// The numbers indicate the rank of each operator
-    void commutator_A1_B1_C0(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,double& C);
-    void commutator_A1_B1_C1(MOTwoIndex restrict A,MOTwoIndex restrict B,double sign,MOTwoIndex C);
-    void commutator_A1_B2_C0(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,double& C);
-    void commutator_A1_B2_C1(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C);
-    void commutator_A1_B2_C2(MOTwoIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C);
-    void commutator_A2_B2_C0(MOFourIndex restrict A,MOFourIndex restrict B,double sign,double& C);
-    void commutator_A2_B2_C1(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOTwoIndex C);
-    void commutator_A2_B2_C2(MOFourIndex restrict A,MOFourIndex restrict B,double sign,MOFourIndex C);
+    void commutator_A1_B1_C0(MOTwoIndex A,MOTwoIndex B,double sign,double& C);
+    void commutator_A1_B1_C1(MOTwoIndex A,MOTwoIndex B,double sign,MOTwoIndex C);
+    void commutator_A1_B2_C0(MOTwoIndex A,MOFourIndex B,double sign,double& C);
+    void commutator_A1_B2_C1(MOTwoIndex A,MOFourIndex B,double sign,MOTwoIndex C);
+    void commutator_A1_B2_C2(MOTwoIndex A,MOFourIndex B,double sign,MOFourIndex C);
+    void commutator_A2_B2_C0(MOFourIndex A,MOFourIndex B,double sign,double& C);
+    void commutator_A2_B2_C1(MOFourIndex A,MOFourIndex B,double sign,MOTwoIndex C);
+    void commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIndex C);
     void print_timings();
 
     friend class MOSRG_ODEInterface;
