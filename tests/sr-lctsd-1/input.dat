@@ -1,0 +1,26 @@
+import libbtl
+import libadaptive
+
+refscf = -14.351880476202
+refct  = -14.413735630340293 # From a spin-orbit pilot code
+
+molecule {
+0 1
+Be
+}
+
+set {
+  basis sto-3g
+  reference rhf
+  e_convergence 12
+}
+
+set libadaptive {
+  det_threshold 0.01
+  maxiter 100
+}
+
+energy('sr-lctsd')
+
+compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST

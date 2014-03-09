@@ -20,9 +20,6 @@
  *@END LICENSE
  */
 
-#define _HAS_LIBBTL_
-#ifdef _HAS_LIBBTL_
-
 #ifndef _mosrg_h_
 #define _mosrg_h_
 
@@ -172,5 +169,3 @@ public:
 }} // End Namespaces
 
 #endif // _mosrg_h_
-
-#endif

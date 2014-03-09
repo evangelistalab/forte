@@ -1,6 +1,4 @@
-﻿#ifdef _HAS_LIBBTL_
-
-#include <cmath>
+﻿#include <cmath>
 
 #include <boost/numeric/odeint.hpp>
 
@@ -826,5 +824,3 @@ void MOSRG::transfer_integrals()
 }
 
 }} // EndNamespaces
-
-#endif

@@ -28,6 +28,25 @@ def run_libadaptive(name, **kwargs):
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
+def run_sr_lctsd(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('sr-lctsd')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'SRG')
+    psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
 # Integration with driver routines
 procedures['energy']['libadaptive'] = run_libadaptive
+procedures['energy']['sr-lctsd'] = run_sr_lctsd
 

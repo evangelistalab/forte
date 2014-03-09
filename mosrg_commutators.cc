@@ -1,7 +1,4 @@
-//#ifdef _HAS_LIBBTL_
-#if 1
-
-#define _MULTIPLE_CONTRACTIONS_
+//#define _MULTIPLE_CONTRACTIONS_
 
 #include <cmath>
 
@@ -394,7 +391,10 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex A,MOFourIndex B,double sign,MOTwoInd
 void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIndex C)
 {
     boost::timer t;
+    // DEBUGGING
     if(use_tensor_class_){
+//    if(false){
+    // END DEBUGGING
         boost::timer t1;
         loop_mo_p loop_mo_q{
             D_a(p,q) = (p == q) ? No_.a[p] : 0.0;
@@ -418,28 +418,70 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
 
 
         // AAAA case
-#ifdef _MULTIPLE_CONTRACTIONS_
-        // Term I
-        C4_aa("pqrs") +=  0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * CD_a("ac") * CD_a("bd");
-        C4_aa("pqrs") += -0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * D_a("ac") * D_a("bd");
-        C4_aa("pqrs") += -0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * CD_a("ac") * CD_a("bd");
-        C4_aa("pqrs") +=  0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * D_a("ac") * D_a("bd");
+        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+            double sum = 0.0;
+            loop_mo_t loop_mo_u{
+//                sum += 0.5 * (A.aaaa[p][q][t][u] * B.aaaa[t][u][r][s] - A.aaaa[t][u][r][s] * B.aaaa[p][q][t][u]) * (1.0 - No_.a[t] - No_.a[u]);
+//                sum += (  A.aaaa[p][t][r][u] * B.aaaa[q][u][s][t]
+//                          - A.aaaa[q][t][r][u] * B.aaaa[p][u][s][t]
+//                          - A.aaaa[p][t][s][u] * B.aaaa[q][u][r][t]
+//                          + A.aaaa[q][t][s][u] * B.aaaa[p][u][r][t]) * (No_.a[t] - No_.a[u]);
+//                sum += (  A.abab[p][t][r][u] * B.abab[q][u][s][t]
+//                          - A.abab[q][t][r][u] * B.abab[p][u][s][t]
+//                          - A.abab[p][t][s][u] * B.abab[q][u][r][t]
+//                          + A.abab[q][t][s][u] * B.abab[p][u][r][t]) * (No_.b[t] - No_.b[u]);
+            }
+            C.aaaa[p][q][r][s] += sign * sum;
+        }
+        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+            double sum = 0.0;
+            loop_mo_t loop_mo_u{
+                sum += (A.abab[p][q][t][u] * B.abab[t][u][r][s] - A.abab[t][u][r][s] * B.abab[p][q][t][u]) * (1.0 - No_.a[t] - No_.b[u]);
+                sum += (A.aaaa[p][t][r][u] * B.abab[u][q][t][s] + A.abab[t][q][u][s] * B.aaaa[p][u][r][t]) * (No_.a[t] - No_.a[u]);
+                sum += (A.abab[p][t][r][u] * B.bbbb[q][u][s][t] + A.bbbb[t][q][u][s] * B.abab[p][u][r][t]) * (No_.b[t] - No_.b[u]);
+                sum += -(A.abab[t][q][r][u] * B.abab[p][u][t][s]) * (No_.a[t] - No_.b[u]);
+                sum += -(A.abab[p][t][u][s] * B.abab[u][q][r][t]) * (No_.b[t] - No_.a[u]);
+            }
+            C.abab[p][q][r][s] += sign * sum;
+        }
 
-        // Term II
-        I4("pqrs")  = +sign * A4_aa("pcrb") * B4_aa("qdsa") * D_a("ac") * CD_a("bd");
-        I4("pqrs") += -sign * A4_aa("pcrb") * B4_aa("qdsa") * CD_a("ac") * D_a("bd");
-        C4_aa("pqrs") += +1.0 * I4("pqrs");
-        C4_aa("pqrs") += -1.0 * I4("qprs");
-        C4_aa("pqrs") += -1.0 * I4("pqsr");
-        C4_aa("pqrs") += +1.0 * I4("qpsr");
+        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+            double sum = 0.0;
+            loop_mo_t loop_mo_u{
+                sum += 0.5 * (A.bbbb[p][q][t][u] * B.bbbb[t][u][r][s] - A.bbbb[t][u][r][s] * B.bbbb[p][q][t][u]) * (1.0 - No_.b[t] - No_.b[u]);
+                sum += (  A.bbbb[p][t][r][u] * B.bbbb[q][u][s][t]
+                          - A.bbbb[q][t][r][u] * B.bbbb[p][u][s][t]
+                          - A.bbbb[p][t][s][u] * B.bbbb[q][u][r][t]
+                          + A.bbbb[q][t][s][u] * B.bbbb[p][u][r][t]) * (No_.b[t] - No_.b[u]);
+                sum += (  A.abab[t][p][u][r] * B.abab[u][q][t][s]
+                          - A.abab[t][q][u][r] * B.abab[u][p][t][s]
+                          - A.abab[t][p][u][s] * B.abab[u][q][t][r]
+                          + A.abab[t][q][u][s] * B.abab[u][p][t][r]) * (No_.a[t] - No_.a[u]);
+            }
+            C.bbbb[p][q][r][s] += sign * sum;
+        }
+//#ifdef _MULTIPLE_CONTRACTIONS_
+////        // Term I
+////        C4_aa("pqrs") +=  0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * CD_a("ac") * CD_a("bd");
+////        C4_aa("pqrs") += -0.5 * sign * A4_aa("pqab") * B4_aa("cdrs") * D_a("ac") * D_a("bd");
+////        C4_aa("pqrs") += -0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * CD_a("ac") * CD_a("bd");
+////        C4_aa("pqrs") +=  0.5 * sign * B4_aa("pqab") * A4_aa("cdrs") * D_a("ac") * D_a("bd");
 
-        I4("pqrs")  = +sign * A4_ab("pcrb") * B4_ab("qdsa") * D_b("ac") * CD_b("bd");
-        I4("pqrs") += -sign * A4_ab("pcrb") * B4_ab("qdsa") * CD_b("ac") * D_b("bd");
-        C4_aa("pqrs") += +1.0 * I4("pqrs");
-        C4_aa("pqrs") += -1.0 * I4("qprs");
-        C4_aa("pqrs") += -1.0 * I4("pqsr");
-        C4_aa("pqrs") += +1.0 * I4("qpsr");
-#else
+////        // Term II
+////        I4("pqrs")  = +sign * A4_aa("pcrb") * B4_aa("qdsa") * D_a("ac") * CD_a("bd");
+////        I4("pqrs") += -sign * A4_aa("pcrb") * B4_aa("qdsa") * CD_a("ac") * D_a("bd");
+////        C4_aa("pqrs") += +1.0 * I4("pqrs");
+////        C4_aa("pqrs") += -1.0 * I4("qprs");
+////        C4_aa("pqrs") += -1.0 * I4("pqsr");
+////        C4_aa("pqrs") += +1.0 * I4("qpsr");
+
+////        I4("pqrs")  = +sign * A4_ab("pcrb") * B4_ab("qdsa") * D_b("ac") * CD_b("bd");
+////        I4("pqrs") += -sign * A4_ab("pcrb") * B4_ab("qdsa") * CD_b("ac") * D_b("bd");
+////        C4_aa("pqrs") += +1.0 * I4("pqrs");
+////        C4_aa("pqrs") += -1.0 * I4("qprs");
+////        C4_aa("pqrs") += -1.0 * I4("pqsr");
+////        C4_aa("pqrs") += +1.0 * I4("qpsr");
+//#else
         // Term I
         I4("abcd") = CD_a("ac") * CD_a("bd");
         I4("abcd") += -1.0 * D_a("ac") * D_a("bd");
@@ -454,6 +496,7 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
 
         B4m_aa("qbsc") = I4("abcd") * B4_aa("qdsa");
         I4("pqrs") = sign * A4_aa("pcrb") * B4m_aa("qbsc");
+
         C4_aa("pqrs") += +1.0 * I4("pqrs");
         C4_aa("pqrs") += -1.0 * I4("qprs");
         C4_aa("pqrs") += -1.0 * I4("pqsr");
@@ -462,82 +505,78 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
         I4("abcd") = D_b("ac") * CD_b("bd");
         I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
 
-        B4m_aa("qbsc") = I4("abcd") * B4_ab("qdsa");
-        I4("pqrs") = sign * A4_ab("pcrb") * B4m_aa("qbsc");
+        B4m_ab("qbsc") = I4("abcd") * B4_ab("qdsa");
+        I4("pqrs") = sign * A4_ab("pcrb") * B4m_ab("qbsc");
+
         C4_aa("pqrs") += +1.0 * I4("pqrs");
         C4_aa("pqrs") += -1.0 * I4("qprs");
         C4_aa("pqrs") += -1.0 * I4("pqsr");
         C4_aa("pqrs") += +1.0 * I4("qpsr");
-#endif
+//#endif
 
 
+//        // ABAB case
+//        // Term I
+//        I4("abcd") = CD_a("ac") * CD_b("bd");
+//        I4("abcd") += -1.0 * D_a("ac") * D_b("bd");
+//        B4m_ab("abrs") = I4("abcd") * B4_ab("cdrs");
+//        C4_ab("pqrs") +=  sign * A4_ab("pqab") * B4m_ab("abrs");
+//        A4m_ab("abrs") = I4("abcd") * A4_ab("cdrs");
+//        C4_ab("pqrs") += -sign * B4_ab("pqab") * A4m_ab("abrs");
+
+//        // Term II
+//        I4("abcd") = D_a("ac") * CD_a("bd");
+//        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
+//        B4m_ab("bqcs") = I4("abcd") * B4_ab("dqas");
+//        C4_ab("pqrs") += sign * A4_aa("pcrb") * B4m_ab("bqcs");
+//        B4m_aa("pbrc") = I4("abcd") * B4_aa("pdra");
+//        C4_ab("pqrs") += sign * A4_ab("cqbs") * B4m_aa("pbrc");
+
+//        I4("abcd") = D_b("ac") * CD_b("bd");
+//        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
+//        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
+//        C4_ab("pqrs") += sign * A4_ab("pcrb") * B4m_bb("qbsc");
+//        B4m_ab("pbrc") = I4("abcd") * B4_ab("pdra");
+//        C4_ab("pqrs") += sign * A4_bb("qcsb") * B4m_ab("pbrc");
+
+//        I4("aBcD") = D_a("ac") * CD_b("BD");
+//        I4("aBcD") += -1.0 * CD_a("ac") * D_b("BD");
+//        B4m_ab("pBcS") = I4("aBcD") * B4_ab("pDaS");
+//        C4_ab("pQrS") += -sign * A4_ab("cQrB") * B4m_ab("pBcS");
+
+//        B4m_ab("bQrC") = I4("bAdC") * B4_ab("dQrA");
+//        C4_ab("pQrS") += +sign * A4_ab("pCbS") * B4m_ab("bQrC");
 
 
+//        // BBBB case
+//        // Term I
+//        I4("abcd") = CD_b("ac") * CD_b("bd");
+//        I4("abcd") += -1.0 * D_b("ac") * D_b("bd");
+//        B4m_bb("abrs") = I4("abcd") * B4_bb("cdrs");
+//        C4_bb("pqrs") +=  0.5 * sign * A4_bb("pqab") * B4m_bb("abrs");
+//        A4m_bb("abrs") = I4("abcd") * A4_bb("cdrs");
+//        C4_bb("pqrs") += -0.5 * sign * B4_bb("pqab") * A4m_bb("abrs");
 
+//        // Term II
+//        I4("abcd") = D_b("ac") * CD_b("bd");
+//        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
 
+//        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
+//        I4("pqrs") = sign * A4_bb("pcrb") * B4m_bb("qbsc");
+//        C4_bb("pqrs") += +1.0 * I4("pqrs");
+//        C4_bb("pqrs") += -1.0 * I4("qprs");
+//        C4_bb("pqrs") += -1.0 * I4("pqsr");
+//        C4_bb("pqrs") += +1.0 * I4("qpsr");
 
-        // ABAB case
-        // Term I
-        I4("abcd") = CD_a("ac") * CD_b("bd");
-        I4("abcd") += -1.0 * D_a("ac") * D_b("bd");
-        B4m_ab("abrs") = I4("abcd") * B4_ab("cdrs");
-        C4_ab("pqrs") +=  sign * A4_ab("pqab") * B4m_ab("abrs");
-        A4m_ab("abrs") = I4("abcd") * A4_ab("cdrs");
-        C4_ab("pqrs") += -sign * B4_ab("pqab") * A4m_ab("abrs");
+//        I4("abcd") = D_a("ac") * CD_a("bd");
+//        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
 
-        // Term II
-        I4("abcd") = D_a("ac") * CD_a("bd");
-        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
-        B4m_ab("bqcs") = I4("abcd") * B4_ab("dqas");
-        C4_ab("pqrs") += sign * A4_aa("pcrb") * B4m_ab("bqcs");
-        B4m_aa("pbrc") = I4("abcd") * B4_aa("pdra");
-        C4_ab("pqrs") += sign * A4_ab("cqbs") * B4m_aa("pbrc");
-
-        I4("abcd") = D_b("ac") * CD_b("bd");
-        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
-        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
-        C4_ab("pqrs") += sign * A4_ab("pcrb") * B4m_bb("qbsc");
-        B4m_ab("pbrc") = I4("abcd") * B4_ab("pdra");
-        C4_ab("pqrs") += sign * A4_bb("qcsb") * B4m_ab("pbrc");
-
-        I4("aBcD") = D_a("ac") * CD_b("BD");
-        I4("aBcD") += -1.0 * CD_a("ac") * D_b("BD");
-        B4m_ab("pBcS") = I4("aBcD") * B4_ab("pDaS");
-        C4_ab("pQrS") += -sign * A4_ab("cQrB") * B4m_ab("pBcS");
-
-        B4m_ab("bQrC") = I4("bAdC") * B4_ab("dQrA");
-        C4_ab("pQrS") += +sign * A4_ab("pCbS") * B4m_ab("bQrC");
-
-
-        // BBBB case
-        // Term I
-        I4("abcd") = CD_b("ac") * CD_b("bd");
-        I4("abcd") += -1.0 * D_b("ac") * D_b("bd");
-        B4m_bb("abrs") = I4("abcd") * B4_bb("cdrs");
-        C4_bb("pqrs") +=  0.5 * sign * A4_bb("pqab") * B4m_bb("abrs");
-        A4m_bb("abrs") = I4("abcd") * A4_bb("cdrs");
-        C4_bb("pqrs") += -0.5 * sign * B4_bb("pqab") * A4m_bb("abrs");
-
-        // Term II
-        I4("abcd") = D_b("ac") * CD_b("bd");
-        I4("abcd") += -1.0 * CD_b("ac") * D_b("bd");
-
-        B4m_bb("qbsc") = I4("abcd") * B4_bb("qdsa");
-        I4("pqrs") = sign * A4_bb("pcrb") * B4m_bb("qbsc");
-        C4_bb("pqrs") += +1.0 * I4("pqrs");
-        C4_bb("pqrs") += -1.0 * I4("qprs");
-        C4_bb("pqrs") += -1.0 * I4("pqsr");
-        C4_bb("pqrs") += +1.0 * I4("qpsr");
-
-        I4("abcd") = D_a("ac") * CD_a("bd");
-        I4("abcd") += -1.0 * CD_a("ac") * D_a("bd");
-
-        B4m_bb("qbsc") = I4("abcd") * B4_ab("dqas");
-        I4("pqrs") = sign * A4_ab("cpbr") * B4m_bb("qbsc");
-        C4_bb("pqrs") += +1.0 * I4("pqrs");
-        C4_bb("pqrs") += -1.0 * I4("qprs");
-        C4_bb("pqrs") += -1.0 * I4("pqsr");
-        C4_bb("pqrs") += +1.0 * I4("qpsr");
+//        B4m_bb("qbsc") = I4("abcd") * B4_ab("dqas");
+//        I4("pqrs") = sign * A4_ab("cpbr") * B4m_bb("qbsc");
+//        C4_bb("pqrs") += +1.0 * I4("pqrs");
+//        C4_bb("pqrs") += -1.0 * I4("qprs");
+//        C4_bb("pqrs") += -1.0 * I4("pqsr");
+//        C4_bb("pqrs") += +1.0 * I4("qpsr");
 
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
             C.aaaa[p][q][r][s] += C4_aa(p,q,r,s);
@@ -613,5 +652,3 @@ void MOSRG::print_timings()
 }
 
 }} // EndNamespaces
-
-#endif
