@@ -208,7 +208,12 @@ void MOSRG::compute_similarity_renormalization_group()
 //    {
 //        fprintf(outfile,"\n %20.12f %20.12f",times[i],e_vec[i]);
 //    }
+    double final_energy = e_vec.last();
     fprintf(outfile,"\n\n  The SRG integration required %d evaluations",nstepps);
+
+    fprintf(outfile,"\n\n      * SRGSD total energy      = %25.15f",final_energy);
+    // Set some environment variables
+    Process::environment.globals["CURRENT ENERGY"] = final_energy;
 }
 
 void MOSRG::compute_similarity_renormalization_group_step()
