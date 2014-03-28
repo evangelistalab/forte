@@ -1,5 +1,5 @@
 //#ifdef _HAS_LIBBTL_
-#include "tensor.h"
+#include "tensor_basic.h"
 #include "tensor_labeled.h"
 #include "tensor_product.h"
 #include "tensorsrg.h"
@@ -55,23 +55,37 @@ void TensorSRG::startup()
             vir_mos.push_back(p);
         }
     }
-    BlockedTensor::add_mo_space("O","ijkl",occ_mos);
-    BlockedTensor::add_mo_space("V","abcd",vir_mos);
-    BlockedTensor::add_composite_mo_space("I","pqrs",{"O","V"});
+    BlockedTensor::add_primitive_mo_space("O","ijkl",occ_mos);
+    BlockedTensor::add_primitive_mo_space("V","abcd",vir_mos);
+    BlockedTensor::add_composite_mo_space("I","pqrstu",{"O","V"});
     BlockedTensor::print_mo_spaces();
     BlockedTensor T2("T","OOVV");
-    BlockedTensor V("V","IIII");
-    std::map<std::vector<std::string>,Tensor>& v_blocks = V.blocks();
-    for (block_iterator it = v_blocks.begin(), endit = v_blocks.end(); it != endit; ++it){
-        std::vector<size_t> mos[4];
-        for (int i = 0; i < 4; ++i){
-            fprintf(outfile,"\n  %d %s",i,it->first[i].c_str());
-//            BlockedTensor::mo_label_to_sets[it->first[i]][0].mo();
-        }
-////        for (string s : it->first){
+    BlockedTensor Ha("H","II");
+    BlockedTensor Hb("H","II");
+    BlockedTensor Fa("F","II");
+    BlockedTensor Fb("F","II");
+    BlockedTensor G1a("gamma_1 alpha","OO");
+    BlockedTensor G1b("gamma_1 beta","OO");
+    BlockedTensor Vaa("V","IIII");
+    BlockedTensor Vab("V","IIII");
+    BlockedTensor Vbb("V","IIII");
 
-////        }
-    }
+    // Fill in the one-electron operator (H)
+    Ha.fill_one_electron([&](size_t p,size_t q){return ints_->oei_a(p,q);});
+    Hb.fill_one_electron([&](size_t p,size_t q){return ints_->oei_b(p,q);});
+    // Fill in the two-electron operator (V)
+    Vaa.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_aa(p,q,r,s);});
+    Vab.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_ab(p,q,r,s);});
+    Vbb.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_bb(p,q,r,s);});
+
+    G1a.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
+    G1b.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
+
+    // Form the Fock matrix
+    Fa["pq"]  = Ha["pq"];
+    Fa["pq"] += Vaa["prqs"] * G1a["sr"];
+    Fa["pq"] += Vab["prqs"] * G1b["sr"];
+    Fa.print();
 }
 
 void TensorSRG::cleanup()

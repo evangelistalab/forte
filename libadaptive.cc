@@ -13,10 +13,7 @@
 #include "sosrg.h"
 #include "mosrg.h"
 #include "tensorsrg.h"
-
-#ifdef _HAS_LIBBTL_
 #include "tensor_test.h"
-#endif
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
@@ -212,9 +209,7 @@ extern "C" PsiReturnType
 libadaptive(Options &options)
 {
     if (options.get_str("JOB_TYPE") == "TENSORTEST"){
-#ifdef _HAS_LIBBTL_
         test_tensor_class(true);
-#endif
     }else{
         // Get the one- and two-electron integrals in the MO basis
         ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
@@ -243,8 +238,6 @@ libadaptive(Options &options)
 
             delete explorer;
         }
-#ifdef _HAS_LIBBTL_
-
         if (options.get_str("JOB_TYPE") == "TENSORSRG"){
             Explorer* explorer = new Explorer(options,ints_);
             std::vector<double> ONa = explorer->Da();
@@ -279,9 +272,7 @@ libadaptive(Options &options)
                 G1aa[p][p] = ONa[p];
                 G1bb[p][p] = ONb[p];
             }
-            Tensor::initialize_class(nmo);
             MOSRG mosrg(options,ints_,G1aa,G1bb);
-            Tensor::finalize_class();
             free_matrix<double>(G1aa,nmo,nmo);
             free_matrix<double>(G1bb,nmo,nmo);
 
@@ -306,7 +297,6 @@ libadaptive(Options &options)
                 G1aa[p][p] = ONa[p];
                 G1bb[p][p] = ONb[p];
             }
-            Tensor::initialize_class(nmo);
             MOSRG mosrg(options,ints_,G1aa,G1bb);
             mosrg.transfer_integrals();
             delete explorer;
@@ -318,11 +308,9 @@ libadaptive(Options &options)
 
             free_matrix<double>(G1aa,nmo,nmo);
             free_matrix<double>(G1bb,nmo,nmo);
-            Tensor::finalize_class();
 
             delete explorer;
         }
-#endif
         // Delete ints_;
         delete ints_;
     }

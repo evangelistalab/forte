@@ -75,7 +75,7 @@ protected:
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The number of molecular orbitals
-    int nmo_;
+    size_t nmo_;
     /// The energy of the reference
     double E0_;
 
