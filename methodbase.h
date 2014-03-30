@@ -41,87 +41,92 @@ class Chkpt;
 
 namespace libadaptive{
 
-struct MOTensor2
-{
-    Tensor a;
-    Tensor b;
-};
-
-struct MOTensor4
-{
-    Tensor aa;
-    Tensor ab;
-    Tensor bb;
-};
-
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure
  * pilot codes using the Tensor classes
  */
-class MethodBase
+class MethodBase : public Wavefunction
 {
-public:
-    // Constructor and destructor
-//    MethodBase(Options& options, boost::shared_ptr<PSIO> psio, boost::shared_ptr<Chkpt> chkpt)
-    MethodBase(Options &options, ExplorerIntegrals* ints /*,TwoIndex G1aa,TwoIndex G1bb*/);
-    ~MethodBase();
 protected:
-    /// The print level
-    int print_;
-    /// A reference to the option object
-    Options& options_;
-    /// The number of irriducible representations
-    int nirrep_;
-    /// The wave function symmetry
-    int wavefunction_symmetry_;
-    /// The number of molecular orbitals
-    int nmo_;
-    /// The energy of the reference
-    double E0_;
 
-    /// The number of alpha electrons
-    int nalpha_;
-    /// The number of beta electrons
-    int nbeta_;
-    /// The number of molecular orbitals per irrep
-    Dimension nmopi_;
-    /// The number of molecular orbitals per irrep
-    Dimension doccpi_;
-    /// The number of alpha electrons per irrep
-    Dimension nalphapi_;
-    /// The number of beta electrons per irrep
-    Dimension nbetapi_;
-    /// The nuclear repulsion energy
-    double nuclear_repulsion_energy_;
-    /// The molecular integrals required by SOBase
+    // => Class data <= //
+
+    /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
-    /// The reference occupation numbers
-    MOTensor2 No_;
-    /// The reference complementary occupation numbers (1 - No_)
-    MOTensor2 Nv_;
-    /// The reference one-particle density matrix
-    MOTensor2 G1_;
-    /// The reference one-hole density matrix
-    MOTensor2 E1_;
-    /// The one-electron integrals Fock matrix
-    MOTensor2 H1_;
-    /// The generalized Fock matrix
-    MOTensor2 F_;
-    /// The two electron antisymmetrized integrals storeds as V[p][q][r][s] = <pq||rs>
-    BlockedTensor V_;
+
+//    BlockedTensor Ha;
+//    BlockedTensor Hb;
+//    BlockedTensor Fa;
+//    BlockedTensor Fb;
+
+    // => Class initialization and termination <= //
 
     /// Called in the constructor
     void startup();
     /// Called in the destructor
     void cleanup();
+public:
 
-    /// Build the generalized Fock matrix using the one-particle density matrix
-    void build_fock();
-    /// Sort the molecular integrals
-    void sort_integrals();
+    // => Constructors <= //
+
+    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    ~MethodBase();
+
+//    /// The print level
+//    int print_;
+//    /// A reference to the wavefunction object
+//    boost::shared_ptr<Wavefunction> wfn_;
+//    /// A reference to the option object
+//    Options& options_;
+//    /// The number of irriducible representations
+//    int nirrep_;
+//    /// The wave function symmetry
+//    int wavefunction_symmetry_;
+//    /// The number of molecular orbitals
+//    int nmo_;
+//    /// The energy of the reference
+//    double E0_;
+
+//    /// The number of alpha electrons
+//    int nalpha_;
+//    /// The number of beta electrons
+//    int nbeta_;
+//    /// The number of molecular orbitals per irrep
+//    Dimension nmopi_;
+//    /// The number of molecular orbitals per irrep
+//    Dimension doccpi_;
+//    /// The number of molecular orbitals per irrep
+//    Dimension soccpi_;
+//    /// The number of alpha electrons per irrep
+//    Dimension nalphapi_;
+//    /// The number of beta electrons per irrep
+//    Dimension nbetapi_;
+//    /// The nuclear repulsion energy
+//    double nuclear_repulsion_energy_;
+//    /// The reference occupation numbers
+//    MOTensor2 No_;
+//    /// The reference complementary occupation numbers (1 - No_)
+//    MOTensor2 Nv_;
+//    /// The reference one-particle density matrix
+//    MOTensor2 G1_;
+//    /// The reference one-hole density matrix
+//    MOTensor2 E1_;
+//    /// The one-electron integrals Fock matrix
+//    MOTensor2 H1_;
+//    /// The generalized Fock matrix
+//    MOTensor2 F_;
+//    /// The two electron antisymmetrized integrals storeds as V[p][q][r][s] = <pq||rs>
+//    BlockedTensor V_;
+
+
+
+//    /// Build the generalized Fock matrix using the one-particle density matrix
+//    void build_fock();
+//    /// Sort the molecular integrals
+//    void sort_integrals();
 };
 
 }} // End Namespaces
 
-#endif // _sobase_h_
+#endif // _methodbase_h_

@@ -38,13 +38,20 @@ namespace psi{ namespace libadaptive{
 class TensorSRG : public MethodBase
 {
 public:
-    TensorSRG(Options &options, ExplorerIntegrals* ints/*, TwoIndex G1aa, TwoIndex G1bb*/);
-    ~TensorSRG();
-private:
-    void startup();
-    void cleanup();
+    /// Class constructor
+    TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options& options, ExplorerIntegrals* ints);
 
-    BlockedTensor T2;
+    /// Class destructor
+    ~TensorSRG();
+
+    /// Compute the SRG energy
+    double compute_energy();
+private:
+    /// Called in the constructor
+    void startup();
+
+    /// Called in the destructor
+    void cleanup();
 };
 
 }} // End Namespaces

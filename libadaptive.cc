@@ -239,24 +239,14 @@ libadaptive(Options &options)
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "TENSORSRG"){
-            Explorer* explorer = new Explorer(options,ints_);
-            std::vector<double> ONa = explorer->Da();
-            std::vector<double> ONb = explorer->Db();
-            int nmo = explorer->nmo();
-
-            double** G1aa;
-            double** G1bb;
-            init_matrix<double>(G1aa,nmo,nmo);
-            init_matrix<double>(G1bb,nmo,nmo);
-            for (int p = 0; p < nmo; ++p){
-                G1aa[p][p] = ONa[p];
-                G1bb[p][p] = ONb[p];
-            }
-            TensorSRG srg(options,ints_);
-            free_matrix<double>(G1aa,nmo,nmo);
-            free_matrix<double>(G1bb,nmo,nmo);
-
-            delete explorer;
+//            Explorer* explorer = new Explorer(options,ints_);
+//            std::vector<double> ONa = explorer->Da();
+//            std::vector<double> ONb = explorer->Db();
+//            int nmo = explorer->nmo();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
+            srg->compute_energy();
+//            delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "SRG"){
             Explorer* explorer = new Explorer(options,ints_);
