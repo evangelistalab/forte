@@ -55,10 +55,18 @@ protected:
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
 
-//    BlockedTensor Ha;
-//    BlockedTensor Hb;
-//    BlockedTensor Fa;
-//    BlockedTensor Fb;
+    BlockedTensor Ha;
+    BlockedTensor Hb;
+    BlockedTensor Fa;
+    BlockedTensor Fb;
+    BlockedTensor G1a;
+    BlockedTensor G1b;
+    BlockedTensor Vaa;
+    BlockedTensor Vab;
+    BlockedTensor Vbb;
+    BlockedTensor D2aa;
+    BlockedTensor D2ab;
+    BlockedTensor D2bb;
 
     // => Class initialization and termination <= //
 
