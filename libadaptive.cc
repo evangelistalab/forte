@@ -178,7 +178,7 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- The type of operator to use in the SRG transformation -*/
-        options.add_str("SRG_MODE","SRG","SRG CT");
+        options.add_str("SRG_MODE","SRG","SRG DSRG CT");
         /*- The type of operator to use in the SRG transformation -*/
         options.add_str("SRG_OP","UNITARY","UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/

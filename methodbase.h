@@ -41,6 +41,19 @@ class Chkpt;
 
 namespace libadaptive{
 
+struct TensSpin1
+{
+    BlockedTensor a;
+    BlockedTensor b;
+};
+
+struct TensSpin2
+{
+    BlockedTensor aa;
+    BlockedTensor ab;
+    BlockedTensor bb;
+};
+
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure

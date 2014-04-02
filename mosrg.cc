@@ -5,6 +5,7 @@
 #include <libpsio/psio.hpp>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
+#include <libmints/vector.h>
 
 #include "mosrg.h"
 
@@ -356,6 +357,17 @@ void MOSRG::compute_canonical_transformation_energy()
     double old_energy = 0.0;
     bool   converged  = false;
     int    cycle      = 0;
+
+    int max_diis_vectors = 4;
+    DIISManager diis_manager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore);
+    size_t nmo2 = nmo_ * nmo_;
+    size_t nmo4 = nmo_ * nmo_ * nmo_ * nmo_;
+
+    Vector diis_error("De",3 * nmo4 + 2 * nmo2);
+    Vector diis_var("Dv",3 * nmo4 + 2 * nmo2);
+    diis_manager.set_error_vector_size(1,DIISEntry::Vector,&diis_error);
+    diis_manager.set_vector_size(1,DIISEntry::Vector,&diis_var);
+
     compute_recursive_single_commutator();
     while(!converged){
         fprintf(outfile,"\n  Updating the S amplitudes...");
@@ -364,13 +376,69 @@ void MOSRG::compute_canonical_transformation_energy()
         update_S2();
         fprintf(outfile," done.");
         fflush(outfile);
+        {
+            size_t k = 0;
+            loop_mo_p loop_mo_q{
+                diis_error[k] = O1_.aa[p][q];
+                diis_var[k]   = S1_.aa[p][q];
+                k++;
+            }
+            loop_mo_p loop_mo_q{
+                diis_error[k] = O1_.bb[p][q];
+                diis_var[k]   = S1_.bb[p][q];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.aaaa[p][q][r][s];
+                diis_var[k]   = S2_.aaaa[p][q][r][s];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.abab[p][q][r][s];
+                diis_var[k]   = S2_.abab[p][q][r][s];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.bbbb[p][q][r][s];
+                diis_var[k]   = S2_.bbbb[p][q][r][s];
+                k++;
+            }
+        }
+
+        diis_manager.add_entry(2,&diis_error,&diis_var);
+        if (cycle > max_diis_vectors){
+            if (cycle % max_diis_vectors == 3){
+                fprintf(outfile,"\n\n  Performing DIIS extrapolation\n");
+                diis_manager.extrapolate(1,&diis_var);
+                size_t k = 0;
+                loop_mo_p loop_mo_q{
+                    S1_.aa[p][q] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q{
+                    S1_.bb[p][q] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.aaaa[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.abab[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.bbbb[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+            }
+        }
 
         fprintf(outfile,"\n  Compute recursive single commutator...");
         fflush(outfile);
         double energy = compute_recursive_single_commutator();
         fprintf(outfile," done.");
         fflush(outfile);
-
 
         fprintf(outfile,"\n  --------------------------------------------");
         fprintf(outfile,"\n  nExc           |S|                  |R|");
@@ -419,6 +487,16 @@ void MOSRG::compute_driven_srg_energy()
     one_body_driven_srg();
     two_body_driven_srg();
 
+    int max_diis_vectors = 4;
+    DIISManager diis_manager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore);
+    size_t nmo2 = nmo_ * nmo_;
+    size_t nmo4 = nmo_ * nmo_ * nmo_ * nmo_;
+
+    Vector diis_error("De",3 * nmo4 + 2 * nmo2);
+    Vector diis_var("Dv",3 * nmo4 + 2 * nmo2);
+    diis_manager.set_error_vector_size(1,DIISEntry::Vector,&diis_error);
+    diis_manager.set_vector_size(1,DIISEntry::Vector,&diis_var);
+
     while(!converged){
         fprintf(outfile,"\n  Updating the S amplitudes...");
         fflush(outfile);
@@ -427,6 +505,64 @@ void MOSRG::compute_driven_srg_energy()
         fprintf(outfile," done.");
         fflush(outfile);
 
+        {
+            size_t k = 0;
+            loop_mo_p loop_mo_q{
+                diis_error[k] = O1_.aa[p][q];
+                diis_var[k]   = S1_.aa[p][q];
+                k++;
+            }
+            loop_mo_p loop_mo_q{
+                diis_error[k] = O1_.bb[p][q];
+                diis_var[k]   = S1_.bb[p][q];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.aaaa[p][q][r][s];
+                diis_var[k]   = S2_.aaaa[p][q][r][s];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.abab[p][q][r][s];
+                diis_var[k]   = S2_.abab[p][q][r][s];
+                k++;
+            }
+            loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                diis_error[k] = O2_.bbbb[p][q][r][s];
+                diis_var[k]   = S2_.bbbb[p][q][r][s];
+                k++;
+            }
+        }
+
+        diis_manager.add_entry(2,&diis_error,&diis_var);
+        if (cycle > max_diis_vectors){
+            if (cycle % max_diis_vectors == 3){
+                fprintf(outfile,"\n\n  Performing DIIS extrapolation\n");
+                diis_manager.extrapolate(1,&diis_var);
+                size_t k = 0;
+                loop_mo_p loop_mo_q{
+                    S1_.aa[p][q] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q{
+                    S1_.bb[p][q] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.aaaa[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.abab[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+                loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+                    S2_.bbbb[p][q][r][s] = diis_var[k];
+                    k++;
+                }
+            }
+        }
+
         fprintf(outfile,"\n  Compute recursive single commutator...");
         fflush(outfile);
         double energy = compute_recursive_single_commutator();
@@ -434,7 +570,6 @@ void MOSRG::compute_driven_srg_energy()
         two_body_driven_srg();
         fprintf(outfile," done.");
         fflush(outfile);
-
 
         fprintf(outfile,"\n  --------------------------------------------");
         fprintf(outfile,"\n  nExc           |S|                  |R|");
@@ -454,8 +589,8 @@ void MOSRG::compute_driven_srg_energy()
             fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
             fflush(outfile);
 //            exit(1);
-            converged = true;
-//            break;
+//            converged = true;
+            break;
         }
         fflush(outfile);
         cycle++;
@@ -463,7 +598,14 @@ void MOSRG::compute_driven_srg_energy()
         fprintf(outfile,"\n  NEXT CYCLE");
         fflush(outfile);
     }
+
+    if (not converged){
+        old_energy = 0.0;
+    }
     fprintf(outfile,"\n\n      * DSRG(2) total energy      = %25.15f",old_energy);
+    // Set some environment variables
+    Process::environment.globals["CURRENT ENERGY"] = old_energy;
+    Process::environment.globals["DSRG(2) ENERGY"] = old_energy;
 }
 
 double MOSRG::compute_recursive_single_commutator()
@@ -618,20 +760,26 @@ void MOSRG::mosrg_cleanup()
 void MOSRG::update_S1()
 {
     loop_mo_p loop_mo_q{
+        O1_.aa[p][q] = 0.0;
+        O1_.bb[p][q] = 0.0;
         if (F_.aa[p][p] - F_.aa[q][q] != 0.0){
             S1_.aa[p][q] += - Nv_.a[p] * No_.a[q] * Hbar1_.aa[p][q] / (F_.aa[p][p] - F_.aa[q][q]);
+            O1_.aa[p][q] = - Nv_.a[p] * No_.a[q] * Hbar1_.aa[p][q];
         }
         if (F_.bb[p][p] - F_.bb[q][q] != 0.0){
             S1_.bb[p][q] += - Nv_.b[p] * No_.b[q] * Hbar1_.bb[p][q] / (F_.bb[p][p] - F_.bb[q][q]);
+            O1_.bb[p][q] = - Nv_.b[p] * No_.b[q] * Hbar1_.bb[p][q];
         }
     }
     if (srgop == SRGOpUnitary){
         loop_mo_p loop_mo_q{
             if (F_.aa[p][p] - F_.aa[q][q] != 0.0){
                 S1_.aa[p][q] += - No_.a[p] * Nv_.a[q] * Hbar1_.aa[p][q] / (F_.aa[p][p] - F_.aa[q][q]);
+//                O1_.aa[p][q] += - No_.a[p] * Nv_.a[q] * Hbar1_.aa[p][q];
             }
             if (F_.bb[p][p] - F_.bb[q][q] != 0.0){
                 S1_.bb[p][q] += - No_.b[p] * Nv_.b[q] * Hbar1_.bb[p][q] / (F_.bb[p][p] - F_.bb[q][q]);
+//                O1_.bb[p][q] += - No_.b[p] * Nv_.b[q] * Hbar1_.bb[p][q];
             }
         }
     }
@@ -640,14 +788,20 @@ void MOSRG::update_S1()
 void MOSRG::update_S2()
 {
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        O2_.aaaa[p][q][r][s] = 0.0;
+        O2_.abab[p][q][r][s] = 0.0;
+        O2_.bbbb[p][q][r][s] = 0.0;
         if (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s] != 0.0){
             S2_.aaaa[p][q][r][s] += - Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] * Hbar2_.aaaa[p][q][r][s] / (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s]);
+            O2_.aaaa[p][q][r][s] = - Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] * Hbar2_.aaaa[p][q][r][s];
         }
         if (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s] != 0.0){
             S2_.abab[p][q][r][s] += - Nv_.a[p] * Nv_.b[q] * No_.a[r] * No_.b[s] * Hbar2_.abab[p][q][r][s] / (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s]);
+            O2_.abab[p][q][r][s] = - Nv_.a[p] * Nv_.b[q] * No_.a[r] * No_.b[s] * Hbar2_.abab[p][q][r][s];
         }
         if (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s] != 0.0){
             S2_.bbbb[p][q][r][s] += - Nv_.b[p] * Nv_.b[q] * No_.b[r] * No_.b[s] * Hbar2_.bbbb[p][q][r][s] / (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s]);
+            O2_.bbbb[p][q][r][s] = - Nv_.b[p] * Nv_.b[q] * No_.b[r] * No_.b[s] * Hbar2_.bbbb[p][q][r][s];
         }
     }
 
@@ -655,20 +809,27 @@ void MOSRG::update_S2()
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
             if (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s] != 0.0){
                 S2_.aaaa[p][q][r][s] += - No_.a[p] * No_.a[q] * Nv_.a[r] * Nv_.a[s] * Hbar2_.aaaa[p][q][r][s] / (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s]);
+                O2_.aaaa[p][q][r][s] += - No_.a[p] * No_.a[q] * Nv_.a[r] * Nv_.a[s] * Hbar2_.aaaa[p][q][r][s];
             }
             if (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s] != 0.0){
                 S2_.abab[p][q][r][s] += - No_.a[p] * No_.b[q] * Nv_.a[r] * Nv_.b[s] * Hbar2_.abab[p][q][r][s] / (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s]);
+                O2_.abab[p][q][r][s] += - No_.a[p] * No_.b[q] * Nv_.a[r] * Nv_.b[s] * Hbar2_.abab[p][q][r][s];
             }
             if (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s] != 0.0){
                 S2_.bbbb[p][q][r][s] += - No_.b[p] * No_.b[q] * Nv_.b[r] * Nv_.b[s] * Hbar2_.bbbb[p][q][r][s] / (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s]);
+                O2_.bbbb[p][q][r][s] += - No_.b[p] * No_.b[q] * Nv_.b[r] * Nv_.b[s] * Hbar2_.bbbb[p][q][r][s];
             }
         }
     }
+//    diis_manager.add_entry(2,&(O2_.abab[0][0][0][0]),&(S2_.abab[0][0][0][0]));
+
+//    fprintf(outfile,"\n    A     %15e      %15e",norm(S2_.abab),norm(O2_.abab));
 }
 
 void MOSRG::one_body_driven_srg()
 {
     double end_time = options_.get_double("SRG_SMAX");
+    fprintf(outfile,"\n  Driving the 1-e SRG equations to s = %f",end_time);
     loop_mo_p loop_mo_q{
         double factor = std::exp(- end_time * std::pow(F_.aa[p][p] - F_.aa[q][q],2.0));
         Hbar1_.aa[p][q] -= Nv_.a[p] * No_.a[q] * F_.aa[p][q] * factor;
@@ -684,6 +845,7 @@ void MOSRG::one_body_driven_srg()
 void MOSRG::two_body_driven_srg()
 {
     double end_time = options_.get_double("SRG_SMAX");
+    fprintf(outfile,"\n  Driving the 2-e SRG equations to s = %f",end_time);
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
         double factor = std::exp(- end_time * std::pow(F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s],2.0));
         Hbar2_.aaaa[p][q][r][s] -=  Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] * V_.aaaa[p][q][r][s] * factor;

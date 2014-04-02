@@ -25,6 +25,7 @@
 
 #include <fstream>
 
+#include "libdiis/diismanager.h"
 #include "mobase.h"
 #include "tensor_basic.h"
 #include "tensor_labeled.h"

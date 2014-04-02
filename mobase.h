@@ -129,6 +129,7 @@ protected:
     void zero(MOFourIndex& A);
     double norm(MOTwoIndex& A);
     double norm(MOFourIndex& A);
+    double norm(FourIndex& A);
 
     /// Build the generalized Fock matrix using the one-particle density matrix
     void build_fock();
