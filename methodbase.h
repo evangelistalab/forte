@@ -68,6 +68,19 @@ protected:
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
 
+//    TensSpin1 H;
+//    TensSpin1 F;
+//    TensSpin1 G1;
+//    TensSpin2 V;
+//    TensSpin2 D2;
+    BlockedTensor H;
+    BlockedTensor F;
+    BlockedTensor V;
+    BlockedTensor CG1;
+    BlockedTensor G1;
+    BlockedTensor D1;
+    BlockedTensor D2;
+
     BlockedTensor Ha;
     BlockedTensor Hb;
     BlockedTensor Fa;

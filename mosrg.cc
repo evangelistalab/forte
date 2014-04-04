@@ -353,12 +353,13 @@ void MOSRG::compute_canonical_transformation_energy()
     fprintf(outfile,"\n\n  ######################################");
     fprintf(outfile,"\n  ### Computing the CCSD BCH energy  ###");
     fprintf(outfile,"\n  ######################################");
+
     // Start the CCSD cycle
     double old_energy = 0.0;
     bool   converged  = false;
     int    cycle      = 0;
 
-    int max_diis_vectors = 4;
+    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
     DIISManager diis_manager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore);
     size_t nmo2 = nmo_ * nmo_;
     size_t nmo4 = nmo_ * nmo_ * nmo_ * nmo_;
@@ -367,7 +368,8 @@ void MOSRG::compute_canonical_transformation_energy()
     Vector diis_var("Dv",3 * nmo4 + 2 * nmo2);
     diis_manager.set_error_vector_size(1,DIISEntry::Vector,&diis_error);
     diis_manager.set_vector_size(1,DIISEntry::Vector,&diis_var);
-
+    compute_mp2_guest_S2();
+    fprintf(outfile,"\n\n  norm(S2_) = %15e",norm(S2_));
     compute_recursive_single_commutator();
     while(!converged){
         fprintf(outfile,"\n  Updating the S amplitudes...");
@@ -405,11 +407,12 @@ void MOSRG::compute_canonical_transformation_energy()
             }
         }
 
-        diis_manager.add_entry(2,&diis_error,&diis_var);
+//        diis_manager.add_entry(2,&diis_error,&diis_var);
+        fprintf(outfile,"\n\n  Disabled DIIS extrapolation\n");
         if (cycle > max_diis_vectors){
-            if (cycle % max_diis_vectors == 3){
+            if (cycle % max_diis_vectors == 2){
                 fprintf(outfile,"\n\n  Performing DIIS extrapolation\n");
-                diis_manager.extrapolate(1,&diis_var);
+//                diis_manager.extrapolate(1,&diis_var);
                 size_t k = 0;
                 loop_mo_p loop_mo_q{
                     S1_.aa[p][q] = diis_var[k];
@@ -456,6 +459,7 @@ void MOSRG::compute_canonical_transformation_energy()
 
         if(cycle > options_.get_int("MAXITER")){
             fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
+            print_timings();
             fflush(outfile);
 //            exit(1);
             converged = true;
@@ -487,7 +491,8 @@ void MOSRG::compute_driven_srg_energy()
     one_body_driven_srg();
     two_body_driven_srg();
 
-    int max_diis_vectors = 4;
+    int max_diis_vectors = options_.get_int("DIIS_MAX_VECS");
+
     DIISManager diis_manager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore);
     size_t nmo2 = nmo_ * nmo_;
     size_t nmo4 = nmo_ * nmo_ * nmo_ * nmo_;
@@ -587,6 +592,7 @@ void MOSRG::compute_driven_srg_energy()
 
         if(cycle > options_.get_int("MAXITER")){
             fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
+            print_timings();
             fflush(outfile);
 //            exit(1);
 //            converged = true;
@@ -652,9 +658,11 @@ double MOSRG::compute_recursive_single_commutator()
         add(1.0,C2_,0.0,O2_);
 
         // Check |C|
-        double norm_C2 = norm(C1_);
-        double norm_C1 = norm(C2_);
-        fprintf(outfile,"\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
+        double norm_C1 = norm(C1_);
+        double norm_C2 = norm(C2_);
+        double norm_Hb1 = norm(Hbar1_);
+        double norm_Hb2 = norm(Hbar2_);
+        fprintf(outfile,"\n  %2d %20.12f %20e %20e %20e %20e",n,C0,norm_C1,norm_C2,norm_Hb1,norm_Hb2);
         fflush(outfile);
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             break;
@@ -783,6 +791,38 @@ void MOSRG::update_S1()
             }
         }
     }
+}
+
+void MOSRG::compute_mp2_guest_S2()
+{
+    loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+        if (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s] != 0.0){
+            S2_.aaaa[p][q][r][s] = - Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] * V_.aaaa[p][q][r][s] / (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s]);
+        }
+        if (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s] != 0.0){
+            S2_.abab[p][q][r][s] += - Nv_.a[p] * Nv_.b[q] * No_.a[r] * No_.b[s] * V_.abab[p][q][r][s] / (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s]);
+        }
+        if (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s] != 0.0){
+            S2_.bbbb[p][q][r][s] += - Nv_.b[p] * Nv_.b[q] * No_.b[r] * No_.b[s] * V_.bbbb[p][q][r][s] / (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s]);
+        }
+    }
+
+    if (srgop == SRGOpUnitary){
+        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
+            if (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s] != 0.0){
+                S2_.aaaa[p][q][r][s] += - No_.a[p] * No_.a[q] * Nv_.a[r] * Nv_.a[s] * V_.aaaa[p][q][r][s] / (F_.aa[p][p] + F_.aa[q][q] - F_.aa[r][r] - F_.aa[s][s]);
+            }
+            if (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s] != 0.0){
+                S2_.abab[p][q][r][s] += - No_.a[p] * No_.b[q] * Nv_.a[r] * Nv_.b[s] * V_.abab[p][q][r][s] / (F_.aa[p][p] + F_.bb[q][q] - F_.aa[r][r] - F_.bb[s][s]);
+            }
+            if (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s] != 0.0){
+                S2_.bbbb[p][q][r][s] += - No_.b[p] * No_.b[q] * Nv_.b[r] * Nv_.b[s] * V_.bbbb[p][q][r][s] / (F_.bb[p][p] + F_.bb[q][q] - F_.bb[r][r] - F_.bb[s][s]);
+            }
+        }
+    }
+//    diis_manager.add_entry(2,&(O2_.abab[0][0][0][0]),&(S2_.abab[0][0][0][0]));
+
+//    fprintf(outfile,"\n    A     %15e      %15e",norm(S2_.abab),norm(O2_.abab));
 }
 
 void MOSRG::update_S2()

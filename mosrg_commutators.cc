@@ -40,9 +40,9 @@ void MOSRG::commutator_A_B_C(double factor,
     commutator_A1_B2_C0(B1,A2,-factor,C0);
     commutator_A2_B2_C0(A2,B2,+factor,C0);
 
-    commutator_A1_B1_C1(A1,B1,+factor,C1);
+//    commutator_A1_B1_C1(A1,B1,+factor,C1);
     commutator_A1_B2_C1(A1,B2,+factor,C1);
-    commutator_A1_B2_C1(B1,A2,-factor,C1);
+//    commutator_A1_B2_C1(B1,A2,-factor,C1);
     commutator_A2_B2_C1(A2,B2,+factor,C1);
 
     commutator_A1_B2_C2(A1,B2,+factor,C2);
@@ -435,6 +435,7 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
         C4_aa("pqrs") += -1.0 * I4("pqsr");
         C4_aa("pqrs") += +1.0 * I4("qpsr");
 #else
+        // AAAA case
         // Term I
         I4("abcd") = CD_a("ac") * CD_a("bd");
         I4("abcd") += -1.0 * D_a("ac") * D_a("bd");
@@ -498,7 +499,6 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
 
         B4m_ab("bQrC") = I4("bAdC") * B4_ab("dQrA");
         C4_ab("pQrS") += +sign * A4_ab("pCbS") * B4m_ab("bQrC");
-
 
         // BBBB case
         // Term I

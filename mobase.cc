@@ -201,7 +201,7 @@ double MOBase::norm(MOFourIndex& A)
         norm += std::pow(A.abab[p][q][r][s],2.0);
         norm += std::pow(A.bbbb[p][q][r][s],2.0);
     }
-    return std::sqrt(0.25 * norm);
+    return std::sqrt(norm);
 }
 
 double MOBase::norm(FourIndex& A)
@@ -210,7 +210,7 @@ double MOBase::norm(FourIndex& A)
     loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
         norm += std::pow(A[p][q][r][s],2.0);
     }
-    return std::sqrt(0.25 * norm);
+    return std::sqrt(norm);
 }
 
 void MOBase::zero(MOTwoIndex& A)

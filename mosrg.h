@@ -125,6 +125,8 @@ private:
 
     void update_S1();
     void update_S2();
+    void compute_mp2_guest_S2();
+
 
     /// Functions to compute commutators C += factor * [A,B]
     void commutator_A_B_C(double factor,

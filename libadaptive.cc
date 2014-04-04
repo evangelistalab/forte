@@ -185,10 +185,12 @@ read_options(std::string name, Options &options)
         options.add_str("SRG_ETA","WHITE","WEGNER_BLOCK WEGNER_DIAG WHITE");
         /*- The integrator used to propagate the SRG equations -*/
         options.add_str("SRG_ODEINT","FEHLBERG78","DOPRI5 CASHKARP FEHLBERG78");
-        /*- The end value of s -*/
+        /*- The end value of the integration parameter s -*/
         options.add_double("SRG_SMAX",10.0);
 
-        /////////////////////////EXPERT OPTIONS/////////////////////////
+
+        // --------------------------- SRG EXPERT OPTIONS ---------------------------
+
         /*- The initial time step used by the ode solver -*/
         options.add_double("SRG_DT",0.001);
         /*- The absolute error tollerance for the ode solver -*/

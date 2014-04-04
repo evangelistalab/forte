@@ -43,53 +43,43 @@ protected:
     /// The scalar component of the similarity-transformed Hamiltonian
     double Hbar0;
 
-    /// The one-body component of the similarity-transformed Hamiltonian
-    BlockedTensor Hbar1a;
-    BlockedTensor Hbar1b;
-
-    /// The two-body component of the similarity-transformed Hamiltonian
-    BlockedTensor Hbar2aa;
-    BlockedTensor Hbar2ab;
-    BlockedTensor Hbar2bb;
-
-    /// The one-body component of the flow generator
-    BlockedTensor eta1a;
-    BlockedTensor eta1b;
-
-    /// The two-body component of the flow generator
-    BlockedTensor eta2aa;
-    BlockedTensor eta2ab;
-    BlockedTensor eta2bb;
-
-    /// An intermediate one-body component of the similarity-transformed Hamiltonian
-    BlockedTensor O1a;
-    BlockedTensor O1b;
-
-    /// An intermediate two-body component of the similarity-transformed Hamiltonian
-    BlockedTensor O2aa;
-    BlockedTensor O2ab;
-    BlockedTensor O2bb;
-
-    /// An intermediate one-body component of the similarity-transformed Hamiltonian
-    BlockedTensor C1a;
-    BlockedTensor C1b;
-
-    /// An intermediate two-body component of the similarity-transformed Hamiltonian
-    BlockedTensor C2aa;
-    BlockedTensor C2ab;
-    BlockedTensor C2bb;
-
     /// The scalar component of the operator S
     double S0;
 
     /// The one-body component of the operator S
-    BlockedTensor S1a;
-    BlockedTensor S1b;
+    BlockedTensor S1;
+    /// The two-body component of the operator S
+    BlockedTensor S2;
 
-    /// The one-body component of the operator S
-    BlockedTensor S2aa;
-    BlockedTensor S2ab;
-    BlockedTensor S2bb;
+    /// An intermediate one-body component of the similarity-transformed Hamiltonian
+    BlockedTensor C1;
+    /// An intermediate two-body component of the similarity-transformed Hamiltonian
+    BlockedTensor C2;
+
+    /// An intermediate one-body component of the similarity-transformed Hamiltonian
+    BlockedTensor O1;
+    /// An intermediate two-body component of the similarity-transformed Hamiltonian
+    BlockedTensor O2;
+
+    /// The one-body component of the similarity-transformed Hamiltonian
+    BlockedTensor Hbar1;
+    /// The two-body component of the similarity-transformed Hamiltonian
+    BlockedTensor Hbar2;
+
+    /// An intermediate tensor
+    BlockedTensor I_ioiv;
+
+
+
+//    /// The one-body component of the operator S
+//    TensSpin1 S1;
+//    /// The one-body component of the operator S
+//    TensSpin2 S2;
+
+//    /// An intermediate one-body component of the similarity-transformed Hamiltonian
+//    TensSpin1 O1;
+//    /// An intermediate two-body component of the similarity-transformed Hamiltonian
+//    TensSpin2 O2;
 
     // => Private member functions <= //
 
@@ -105,6 +95,34 @@ protected:
     /// Compute the similarity transformed Hamiltonian using the
     /// single commutator recursive approximation
     double compute_hbar();
+
+    /// Compute the canonical transformation theory energy
+    double compute_ct_energy();
+
+    /// Update the S1 amplitudes
+    void update_S1();
+    /// Update the S2 amplitudes
+    void update_S2();
+
+    void commutator_A_B_C(double factor,
+                          BlockedTensor& A1,BlockedTensor& A2,
+                          BlockedTensor& B1,BlockedTensor& B2,
+                          double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    void commutator_A_B_C_fourth_order(double factor,
+                                       BlockedTensor& A1,BlockedTensor& A2,
+                                       BlockedTensor& B1,BlockedTensor& B2,
+                                       double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    /// The numbers indicate the rank of each operator
+    void commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A1_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+
+    void print_timings();
 
 public:
 
