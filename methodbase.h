@@ -41,19 +41,6 @@ class Chkpt;
 
 namespace libadaptive{
 
-struct TensSpin1
-{
-    BlockedTensor a;
-    BlockedTensor b;
-};
-
-struct TensSpin2
-{
-    BlockedTensor aa;
-    BlockedTensor ab;
-    BlockedTensor bb;
-};
-
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure
@@ -68,11 +55,24 @@ protected:
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
 
-//    TensSpin1 H;
-//    TensSpin1 F;
-//    TensSpin1 G1;
-//    TensSpin2 V;
-//    TensSpin2 D2;
+    /// List of alpha occupied MOs
+    std::vector<size_t> a_occ_mos;
+    /// List of beta occupied MOs
+    std::vector<size_t> b_occ_mos;
+    /// List of alpha virtual MOs
+    std::vector<size_t> a_vir_mos;
+    /// List of beta virtual MOs
+    std::vector<size_t> b_vir_mos;
+
+    /// Map from all the MOs to the alpha occupied
+    std::map<size_t,size_t> mos_to_aocc;
+    /// Map from all the MOs to the beta occupied
+    std::map<size_t,size_t> mos_to_bocc;
+    /// Map from all the MOs to the alpha virtual
+    std::map<size_t,size_t> mos_to_avir;
+    /// Map from all the MOs to the beta virtual
+    std::map<size_t,size_t> mos_to_bvir;
+
     BlockedTensor H;
     BlockedTensor F;
     BlockedTensor V;

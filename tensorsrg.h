@@ -37,14 +37,10 @@ namespace psi{ namespace libadaptive{
  */
 class TensorSRG : public MethodBase
 {
+    friend class TensorSRG_ODEInterface;
 protected:
     // => Tensors <= //
 
-    /// The scalar component of the similarity-transformed Hamiltonian
-    double Hbar0;
-
-    /// The scalar component of the operator S
-    double S0;
 
     /// The one-body component of the operator S
     BlockedTensor S1;
@@ -56,6 +52,7 @@ protected:
     /// The two-body residual
     BlockedTensor R2;
 
+    double C0;
     /// An intermediate one-body component of the similarity-transformed Hamiltonian
     BlockedTensor C1;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
@@ -66,6 +63,8 @@ protected:
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
     BlockedTensor O2;
 
+    /// The scalar component of the similarity-transformed Hamiltonian
+    double Hbar0;
     /// The one-body component of the similarity-transformed Hamiltonian
     BlockedTensor Hbar1;
     /// The two-body component of the similarity-transformed Hamiltonian
@@ -104,6 +103,12 @@ protected:
     /// Compute the canonical transformation theory energy
     double compute_ct_energy();
 
+    /// Compute the similarity renormalization group energy
+    double compute_srg_energy();
+
+    /// Compute the derivative of the Hamiltonian
+    void compute_srg_step();
+
     /// Update the S1 amplitudes
     void update_S1();
     /// Update the S2 amplitudes
@@ -113,10 +118,14 @@ protected:
                           BlockedTensor& A1,BlockedTensor& A2,
                           BlockedTensor& B1,BlockedTensor& B2,
                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
-    void commutator_A_B_C_fourth_order(double factor,
-                                       BlockedTensor& A1,BlockedTensor& A2,
-                                       BlockedTensor& B1,BlockedTensor& B2,
-                                       double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    void commutator_A_B_C_SRC(double factor,
+                              BlockedTensor& A1,BlockedTensor& A2,
+                              BlockedTensor& B1,BlockedTensor& B2,
+                              double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    void commutator_A_B_C_SRC_fourth_order(double factor,
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The numbers indicate the rank of each operator
     void commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
     void commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
@@ -141,6 +150,26 @@ public:
 
     /// Compute the SRG or CT energy
     double compute_energy();
+};
+
+/// The type of container used to hold the state vector used by boost::odeint
+typedef std::vector<double> odeint_state_type;
+
+/// This class helps interface the SRG class to the boost ODE integrator
+class TensorSRG_ODEInterface {   
+protected:
+
+    // => Class data <= //
+
+    TensorSRG& tensorsrg_obj_;
+    int neval_;
+public:
+
+    // => Constructors <= //
+
+    TensorSRG_ODEInterface(TensorSRG& tensorsrg_obj) : tensorsrg_obj_(tensorsrg_obj), neval_(0) { }
+    void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
+    int neval() {return neval_;}
 };
 
 }} // End Namespaces

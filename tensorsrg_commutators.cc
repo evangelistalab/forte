@@ -35,6 +35,22 @@ void TensorSRG::commutator_A_B_C(double factor,
                              BlockedTensor& C1,
                              BlockedTensor& C2)
 {
+    if (options_.get_str("SRG_COMM") == "STANDARD"){
+        commutator_A_B_C_SRC(factor,A1,A2,B1,B2,C0,C1,C2);
+    }else if (options_.get_str("SRG_COMM") == "FO"){
+        commutator_A_B_C_SRC_fourth_order(factor,A1,A2,B1,B2,C0,C1,C2);
+    }
+}
+
+void TensorSRG::commutator_A_B_C_SRC(double factor,
+                             BlockedTensor& A1,
+                             BlockedTensor& A2,
+                             BlockedTensor& B1,
+                             BlockedTensor& B2,
+                             double& C0,
+                             BlockedTensor& C1,
+                             BlockedTensor& C2)
+{
     // => Compute C = [A,B]_12 <= //
 
     commutator_A1_B1_C0(A1,B1,+factor,C0);
@@ -68,7 +84,7 @@ void TensorSRG::commutator_A_B_C(double factor,
 }
 
 
-void TensorSRG::commutator_A_B_C_fourth_order(double factor,
+void TensorSRG::commutator_A_B_C_SRC_fourth_order(double factor,
                              BlockedTensor& A1,
                              BlockedTensor& A2,
                              BlockedTensor& B1,
@@ -77,19 +93,36 @@ void TensorSRG::commutator_A_B_C_fourth_order(double factor,
                              BlockedTensor& C1,
                              BlockedTensor& C2)
 {
+    // => Compute C = [A,B]_12 <= //
+
     commutator_A1_B1_C0(A1,B1,+factor,C0);
-//    commutator_A1_B2_C0(A1,B2,+factor,C0);
-//    commutator_A1_B2_C0(B1,A2,-factor,C0);
-//    commutator_A2_B2_C0(A2,B2,+factor,C0);
+    commutator_A1_B2_C0(A1,B2,+factor,C0);
+    commutator_A1_B2_C0(B1,A2,-factor,C0);
+    commutator_A2_B2_C0(A2,B2,+factor,C0);
 
-//    commutator_A1_B1_C1(A1,B1,+factor,C1);
-//    commutator_A1_B2_C1(A1,B2,+factor,C1);
-//    commutator_A1_B2_C1(B1,A2,-factor,C1);
-//    commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B2_C1(A1,B2,+factor,C1);
+    commutator_A1_B2_C1(B1,A2,+factor,C1);
+    commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
 
-//    commutator_A1_B2_C2(A1,B2,+factor,C2);
-//    commutator_A1_B2_C2(B1,A2,-factor,C2);
-//    commutator_A2_B2_C2(A2,B2,+factor,C2);
+    commutator_A1_B2_C2(A1,B2,+factor,C2);
+    commutator_A1_B2_C2(B1,A2,-factor,C2);
+    commutator_A2_B2_C2(A2,B2,+factor,C2);
+
+    // => Add the term  + [B^+,A] <= //
+    C0 *= 2.0;
+
+    O1["pq"] = C1["pq"];
+    O1["PQ"] = C1["PQ"];
+    C1["pq"] += O1["qp"];
+    C1["PQ"] += O1["QP"];
+
+    O2["pqrs"] = C2["pqrs"];
+    O2["pQrS"] = C2["pQrS"];
+    O2["PQRS"] = C2["PQRS"];
+    C2["pqrs"] += O2["rspq"];
+    C2["pQrS"] += O2["rSpQ"];
+    C2["PQRS"] += O2["RSPQ"];
 }
 
 void TensorSRG::commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)

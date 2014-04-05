@@ -1,9 +1,7 @@
-//#ifdef _HAS_LIBBTL_
 #include "tensor_basic.h"
 #include "tensor_labeled.h"
 #include "tensor_product.h"
 #include "tensorsrg.h"
-
 
 #include <cmath>
 
@@ -88,7 +86,7 @@ double TensorSRG::compute_mp2_guess()
 double TensorSRG::compute_energy()
 {
     if(options_.get_str("SRG_MODE") == "SRG"){
-//        compute_similarity_renormalization_group();
+        compute_srg_energy();
     }else if(options_.get_str("SRG_MODE") == "CT"){
         return compute_ct_energy();
     }else if(options_.get_str("SRG_MODE") == "DSRG"){
@@ -234,7 +232,6 @@ double TensorSRG::compute_hbar()
 
     // Initialize Hbar and O with the normal ordered Hamiltonian
     Hbar0 = reference_energy();
-
     Hbar1["pq"] = F["pq"];
     Hbar1["PQ"] = F["PQ"];
     Hbar2["pqrs"] = V["pqrs"];
@@ -260,11 +257,8 @@ double TensorSRG::compute_hbar()
         C1.zero();
         C2.zero();
 
-        if (options_.get_str("SRG_COMM") == "STANDARD"){
-            commutator_A_B_C(factor,O1,O2,S1,S2,C0,C1,C2);
-        }else if (options_.get_str("SRG_COMM") == "FO"){
-            commutator_A_B_C_fourth_order(factor,O1,O2,S1,S2,C0,C1,C2);
-        }
+        // Compute the commutator C = 1/n [O,S]
+        commutator_A_B_C(factor,O1,O2,S1,S2,C0,C1,C2);
 
         // Hbar += C
         Hbar0 += C0;

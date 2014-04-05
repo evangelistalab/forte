@@ -21,16 +21,6 @@ MethodBase::~MethodBase()
 
 void MethodBase::startup()
 {
-    std::vector<size_t> a_occ_mos;
-    std::vector<size_t> b_occ_mos;
-    std::vector<size_t> a_vir_mos;
-    std::vector<size_t> b_vir_mos;
-
-    std::map<size_t,size_t> mos_to_aocc;
-    std::map<size_t,size_t> mos_to_bocc;
-    std::map<size_t,size_t> mos_to_avir;
-    std::map<size_t,size_t> mos_to_bvir;
-
     for (int h = 0, p = 0; h < nirrep_; ++h){
         for (int i = 0; i < doccpi_[h]; ++i,++p){
             a_occ_mos.push_back(p);
