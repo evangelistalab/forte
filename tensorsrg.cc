@@ -29,6 +29,7 @@ TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, Expl
 
 TensorSRG::~TensorSRG()
 {
+    cleanup();
 }
 
 void TensorSRG::startup()
@@ -65,6 +66,7 @@ void TensorSRG::startup()
 
 void TensorSRG::cleanup()
 {
+    print_timings();
 }
 
 double TensorSRG::compute_mp2_guess()

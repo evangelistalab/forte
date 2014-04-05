@@ -40,9 +40,9 @@ void MOSRG::commutator_A_B_C(double factor,
     commutator_A1_B2_C0(B1,A2,-factor,C0);
     commutator_A2_B2_C0(A2,B2,+factor,C0);
 
-//    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
     commutator_A1_B2_C1(A1,B2,+factor,C1);
-//    commutator_A1_B2_C1(B1,A2,-factor,C1);
+    commutator_A1_B2_C1(B1,A2,-factor,C1);
     commutator_A2_B2_C1(A2,B2,+factor,C1);
 
     commutator_A1_B2_C2(A1,B2,+factor,C2);

@@ -42,9 +42,9 @@ void TensorSRG::commutator_A_B_C(double factor,
     commutator_A1_B2_C0(B1,A2,-factor,C0);
     commutator_A2_B2_C0(A2,B2,+factor,C0);
 
-//    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
     commutator_A1_B2_C1(A1,B2,+factor,C1);
-//    commutator_A1_B2_C1(B1,A2,-factor,C1);
+    commutator_A1_B2_C1(B1,A2,+factor,C1);
     commutator_A2_B2_C1(A2,B2,+factor,C1);
 
     commutator_A1_B2_C2(A1,B2,+factor,C2);
@@ -95,19 +95,9 @@ void TensorSRG::commutator_A_B_C_fourth_order(double factor,
 void TensorSRG::commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
     boost::timer t;
-
-//    BlockedTensor CC("","");
-//    CC.print();
-//    BlockedTensor AB("AB","oo",true);
-//    AB["ij"] = A["aj"] * B["ia"];
-//    AB["IJ"] = A["AJ"] * B["IA"];
-//    C += alpha * dot(AB["ij"],G1["ij"]);
-//    C += alpha * dot(AB["IJ"],G1["IJ"]);
-    double aval = dot(A["ai"],B["ia"]);
     C += alpha * dot(A["ai"],B["ia"]);
     C += alpha * dot(A["AI"],B["IA"]);
 
-    fprintf(outfile,"\n  aval: %.4f",aval);
     if(print_ > 1){
         fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
     }
@@ -118,11 +108,11 @@ void TensorSRG::commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double alp
 {
     boost::timer t;
 
-    C["qp"] += alpha * A["rp"] * B["qr"];
-    C["qp"] -= alpha * B["rp"] * A["qr"];
+    C["ip"] += alpha * A["ap"] * B["ia"];
+    C["qa"] -= alpha * B["ia"] * A["qi"];
 
-    C["QP"] += alpha * A["RP"] * B["QR"];
-    C["QP"] -= alpha * B["RP"] * A["QR"];
+    C["IP"] += alpha * A["AP"] * B["IA"];
+    C["QA"] -= alpha * B["IA"] * A["QI"];
 
     if(print_ > 1){
         fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
@@ -146,6 +136,19 @@ void TensorSRG::commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double alp
     }
     time_comm_A1_B2_C1 += t.elapsed();
 }
+
+//void TensorSRG::commutator_A2_B1_C1(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
+//{
+//    boost::timer t;
+//    C["qp"] += -alpha * B["sr"] * B["qrps"];
+//    C["qp"] += -alpha * B["SR"] * B["qRpS"];
+//    C["QP"] += -alpha * B["SR"] * B["QRPS"];
+//    C["QP"] += -alpha * B["sr"] * B["rQsP"];
+//    if(print_ > 1){
+//        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+//    }
+//    time_comm_A1_B2_C1 += t.elapsed();
+//}
 
 void TensorSRG::commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
