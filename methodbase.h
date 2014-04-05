@@ -36,8 +36,8 @@
 
 namespace psi{
 
-class PSIO;
-class Chkpt;
+//class PSIO;
+//class Chkpt;
 
 namespace libadaptive{
 

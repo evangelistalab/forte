@@ -2,14 +2,6 @@
 
 #include <boost/numeric/odeint.hpp>
 
-#include <libpsio/psio.hpp>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
-#include <libmints/vector.h>
-
-#include "tensor_basic.h"
-#include "tensor_labeled.h"
-#include "tensor_product.h"
 #include "tensorsrg.h"
 
 using namespace std;
@@ -46,19 +38,21 @@ void TensorSRG_ODEInterface::operator() (const odeint_state_type& x,odeint_state
     neval_ += 1;
 }
 
-struct push_back_state_and_time
+struct push_back_state_and_time_srg
 {
     std::vector< double >& m_states;
     std::vector< double >& m_times;
 
-    push_back_state_and_time(std::vector<double> &states,std::vector<double> &times)
+    push_back_state_and_time_srg(std::vector<double> &states,std::vector<double> &times)
     : m_states(states), m_times(times) {}
 
     void operator()(const odeint_state_type& x,double t)
     {
         m_states.push_back( x[0] );
         m_times.push_back( t );
-        fprintf(outfile,"\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
+        fprintf(outfile,"\n    @SRG%4d %24.15f %24.15f",int(m_states.size()),t,x[0]);
+
+//        fprintf(outfile,"\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
         fflush(outfile);
     }
 };
@@ -78,7 +72,6 @@ double TensorSRG::compute_srg_energy()
     Hbar2["pQrS"] = V["pQrS"];
     Hbar2["PQRS"] = V["PQRS"];
 
-    fprintf(outfile,"\n Size of %zu",Hbar2.size());
     x[0] = Hbar0;
     size_t k = 1;
     Hbar1.iterate_over_elements(
@@ -97,50 +90,53 @@ double TensorSRG::compute_srg_energy()
     double absolute_error_tollerance = options_.get_double("SRG_ODEINT_ABSERR");
     double relative_error_tollerance = options_.get_double("SRG_ODEINT_RELERR");
 
-    fprintf(outfile,"\n  Start time:        %f",start_time);
-    fprintf(outfile,"\n  End time:          %f",end_time);
-    fprintf(outfile,"\n  Initial time step: %f",initial_step);
+
+    fprintf(outfile,"\n\n  SRG-SD Computation");
+    fprintf(outfile,"\n  Max s:             %10.6f",end_time);
+    fprintf(outfile,"\n  Initial time step: %10.6f",initial_step);
+    fprintf(outfile,"\n  --------------------------------------------------------------");
+    fprintf(outfile,"\n         Cycle        s (a.u.)                 Energy (a.u.)");
+    fprintf(outfile,"\n  --------------------------------------------------------------");
 
     size_t steps = 0;
     if (srg_odeint == "FEHLBERG78"){
-        fprintf(outfile,"\n\n  Integrating the SRG equations using the Fehlberg 78 algorithm");
+        fprintf(outfile,"\n  Integrating the SRG equations using the Fehlberg 78 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
                                     runge_kutta_fehlberg78<odeint_state_type>()),
                     tensorsrg_flow_computer,
                     x,start_time,end_time,initial_step,
-                    push_back_state_and_time( e_vec , times ));
+                    push_back_state_and_time_srg( e_vec , times ));
     }else if (srg_odeint == "CASHKARP"){
-        fprintf(outfile,"\n\n  Integrating the SRG equations using the Cash-Karp 54 algorithm");
+        fprintf(outfile,"\n  Integrating the SRG equations using the Cash-Karp 54 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
                                     runge_kutta_cash_karp54<odeint_state_type>()),
                     tensorsrg_flow_computer,
                     x,start_time,end_time,initial_step,
-                    push_back_state_and_time( e_vec , times ));
+                    push_back_state_and_time_srg( e_vec , times ));
     }else if (srg_odeint == "DOPRI5"){
-        fprintf(outfile,"\n\n  Integrating the SRG equations using the Dormand-Prince 5 algorithm");
+        fprintf(outfile,"\n  Integrating the SRG equations using the Dormand-Prince 5 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
                                     runge_kutta_dopri5<odeint_state_type>()),
                     tensorsrg_flow_computer,
                     x,start_time,end_time,initial_step,
-                    push_back_state_and_time( e_vec , times ));
+                    push_back_state_and_time_srg( e_vec , times ));
     }
-    //    fprintf(outfile,"\n  Total steps: %d",int(steps));
-    //    for( size_t i=0; i<=steps; i++ )
-    //    {
-    //        fprintf(outfile,"\n %20.12f %20.12f",times[i],e_vec[i]);
-    //    }
     double final_energy = e_vec.back();
-//    fprintf(outfile,"\n\n  The SRG integration required %d evaluations",nstepps);
 
-    fprintf(outfile,"\n\n      * SRGSD total energy      = %25.15f",final_energy);
+    fprintf(outfile,"\n  --------------------------------------------------------------");
+    fprintf(outfile,"\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-reference_energy());
+    fprintf(outfile,"\n  * SRG-SD total energy            = %25.15f\n",final_energy);
+
     // Set some environment variables
     Process::environment.globals["CURRENT ENERGY"] = final_energy;
+    Process::environment.globals["SRG-SD ENERGY"] = final_energy;
+    Process::environment.globals["SRG ENERGY"] = final_energy;
     return final_energy;
 }
 
@@ -148,12 +144,12 @@ double TensorSRG::compute_srg_energy()
 
 ////    size_t steps = integrate(sosrg_flow_computer,
 ////            x , 0.0 , 35.0 , 0.001 ,
-////            push_back_state_and_time( e_vec , times ) );
+////            push_back_state_and_time_srg( e_vec , times ) );
 
 ////    size_t steps = integrate_adaptive(make_dense_output( 1.0e-12 , 1.0e-12 , runge_kutta_dopri5< state_type >() ),
 ////                       sosrg_flow_computer,
 ////                       x,0.0,10.0,0.001,
-////                       push_back_state_and_time( e_vec , times ));
+////                       push_back_state_and_time_srg( e_vec , times ));
 
 
 

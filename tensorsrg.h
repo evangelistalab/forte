@@ -73,18 +73,6 @@ protected:
     /// An intermediate tensor
     BlockedTensor I_ioiv;
 
-
-
-//    /// The one-body component of the operator S
-//    TensSpin1 S1;
-//    /// The one-body component of the operator S
-//    TensSpin2 S2;
-
-//    /// An intermediate one-body component of the similarity-transformed Hamiltonian
-//    TensSpin1 O1;
-//    /// An intermediate two-body component of the similarity-transformed Hamiltonian
-//    TensSpin2 O2;
-
     // => Private member functions <= //
 
     /// Called in the constructor
@@ -114,6 +102,8 @@ protected:
     /// Update the S2 amplitudes
     void update_S2();
 
+    /// Compute the commutator of a general two-body operator A with an excitation operator B
+    /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void commutator_A_B_C(double factor,
                           BlockedTensor& A1,BlockedTensor& A2,
                           BlockedTensor& B1,BlockedTensor& B2,
@@ -155,7 +145,10 @@ public:
 /// The type of container used to hold the state vector used by boost::odeint
 typedef std::vector<double> odeint_state_type;
 
-/// This class helps interface the SRG class to the boost ODE integrator
+/// This class helps interface the SRG class to the boost ODE integrator.
+/// It stores a reference to the TensorSRG object and it is passed to the
+/// ODE solver in boost so that it can compute the derivative of H and
+/// update the value of the Hamiltonian.
 class TensorSRG_ODEInterface {   
 protected:
 

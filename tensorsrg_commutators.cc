@@ -2,16 +2,10 @@
 
 #include <boost/timer.hpp>
 
-#include <libpsio/psio.hpp>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
-
 #include "tensorsrg.h"
 
 using namespace std;
 using namespace psi;
-
-
 
 namespace psi{ namespace libadaptive{
 
@@ -169,19 +163,6 @@ void TensorSRG::commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double alp
     }
     time_comm_A1_B2_C1 += t.elapsed();
 }
-
-//void TensorSRG::commutator_A2_B1_C1(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
-//{
-//    boost::timer t;
-//    C["qp"] += -alpha * B["sr"] * B["qrps"];
-//    C["qp"] += -alpha * B["SR"] * B["qRpS"];
-//    C["QP"] += -alpha * B["SR"] * B["QRPS"];
-//    C["QP"] += -alpha * B["sr"] * B["rQsP"];
-//    if(print_ > 1){
-//        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
-//    }
-//    time_comm_A1_B2_C1 += t.elapsed();
-//}
 
 void TensorSRG::commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
