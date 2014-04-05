@@ -414,18 +414,16 @@ void TensorSRG::commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
 
 void TensorSRG::print_timings()
 {
-    fprintf(outfile,"\n\n  =========== TIMINGS =========");
-    fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",time_comm_A1_B1_C0);
-    fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",time_comm_A1_B1_C1);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",time_comm_A1_B2_C0);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",time_comm_A1_B2_C1);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",time_comm_A1_B2_C2);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",time_comm_A2_B2_C0);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",time_comm_A2_B2_C1);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",time_comm_A2_B2_C2);
-    fprintf(outfile,"\n  =============================\n");
-    fprintf(outfile,"\n  Time for tensor : %.4f",t_tensor);
-    fprintf(outfile,"\n  Time for four   : %.4f",t_four);
+    fprintf(outfile,"\n\n              ============== TIMINGS ============");
+    fprintf(outfile,"\n              Time for [A1,B1] -> C0 : %10.3f",time_comm_A1_B1_C0);
+    fprintf(outfile,"\n              Time for [A1,B1] -> C1 : %10.3f",time_comm_A1_B1_C1);
+    fprintf(outfile,"\n              Time for [A1,B2] -> C0 : %10.3f",time_comm_A1_B2_C0);
+    fprintf(outfile,"\n              Time for [A1,B2] -> C1 : %10.3f",time_comm_A1_B2_C1);
+    fprintf(outfile,"\n              Time for [A1,B2] -> C2 : %10.3f",time_comm_A1_B2_C2);
+    fprintf(outfile,"\n              Time for [A2,B2] -> C0 : %10.3f",time_comm_A2_B2_C0);
+    fprintf(outfile,"\n              Time for [A2,B2] -> C1 : %10.3f",time_comm_A2_B2_C1);
+    fprintf(outfile,"\n              Time for [A2,B2] -> C2 : %10.3f",time_comm_A2_B2_C2);
+    fprintf(outfile,"\n              ===================================\n");
 }
 
 }} // EndNamespaces

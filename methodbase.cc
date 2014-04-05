@@ -67,36 +67,11 @@ void MethodBase::startup()
 
     H.resize_spin_components("H","ii");
     G1.resize_spin_components("G1","oo");
-    CG1.resize_spin_components("CG1","oo");
+    CG1.resize_spin_components("CG1","vv");
     F.resize_spin_components("F","ii");
     V.resize_spin_components("V","iiii");
     D1.resize_spin_components("D1","ov");
     D2.resize_spin_components("D2","oovv");
-//    H.a.resize("Ha","ii");
-//    H.b.resize("Ha","II");
-//    F.a.resize("Fa","ii");
-//    F.b.resize("Fb","II");
-//    G1.a.resize("G1a","oo");
-//    G1.b.resize("G1b","OO");
-//    V.aa.resize("Vaa","iiii");
-//    V.ab.resize("Vab","iIiI");
-//    V.bb.resize("Vbb","IIII");
-//    D2.aa.resize("D2aa","oovv");
-//    D2.ab.resize("D2ab","oOvV");
-//    D2.bb.resize("D2bb","OOVV");
-
-//    Ha.resize("Ha","ii");
-//    Hb.resize("Ha","II");
-//    Fa.resize("Fa","ii");
-//    Fb.resize("Fb","II");
-//    G1a.resize("G1a","oo");
-//    G1b.resize("G1b","OO");
-//    Vaa.resize("Vaa","iiii");
-//    Vab.resize("Vab","iIiI");
-//    Vbb.resize("Vbb","IIII");
-//    D2aa.resize("D2aa","oovv");
-//    D2ab.resize("D2ab","oOvV");
-//    D2bb.resize("D2bb","OOVV");
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -111,9 +86,6 @@ void MethodBase::startup()
         return (p == q ? 1.0 : 0.0);
     });
 
-    G1.print();
-    CG1.print();
-
     // Fill in the two-electron operator (V)
     V.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                            size_t q,MOSetSpinType sq,
@@ -125,27 +97,8 @@ void MethodBase::startup()
         return 0.0;
     });
 
-//    V.ab.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_ab(p,q,r,s);});
-//    V.bb.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_bb(p,q,r,s);});
-
-//    G1.a.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
-//    G1.b.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
-
-//    // Fill in the one-electron operator (H)
-//    H.a.fill_one_electron([&](size_t p,size_t q){return ints_->oei_a(p,q);});
-//    H.b.fill_one_electron([&](size_t p,size_t q){return ints_->oei_b(p,q);});
-//    // Fill in the two-electron operator (V)
-//    V.aa.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_aa(p,q,r,s);});
-//    V.ab.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_ab(p,q,r,s);});
-//    V.bb.fill_two_electron([&](size_t p,size_t q,size_t r,size_t s){return ints_->aptei_bb(p,q,r,s);});
-
-//    G1.a.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
-//    G1.b.fill_one_electron([&](size_t p,size_t q){return (p == q ? 1.0 : 0.0);});
-
-    H.print();
 
     // Form the Fock matrix
-
     F["pq"]  = H["pq"];
     F["pq"] += V["prqs"] * G1["sr"];
     F["pq"] += V["pRqS"] * G1["SR"];
@@ -155,18 +108,12 @@ void MethodBase::startup()
     F["PQ"] += V["PRQS"] * G1["SR"];
 
 
-    F.print();
-
-//    F.a["pq"]  = H.a["pq"];
-//    F.a["pq"] += V.aa["prqs"] * G1.a["sr"];
-//    F.a["pq"] += V.ab["pRqS"] * G1.b["SR"];
-
-//    F.b["PQ"]  = H.b["PQ"];
-//    F.b["PQ"] += V.ab["rPsQ"] * G1.a["sr"];
-//    F.b["PQ"] += V.bb["PRQS"] * G1.b["SR"];
-//    F.b["PQ"]  = H.b["PQ"];
-//    F.b["PQ"] += V.ab["rPsQ"] * G1.a["sr"];
-//    F.b["PQ"] += V.bb["PRQS"] * G1.b["SR"];
+    if (print_ > 2){
+        G1.print();
+        CG1.print();
+        H.print();
+        F.print();
+    }
 
     Tensor& Fa_oo = *F.block("oo");
     Tensor& Fa_vv = *F.block("vv");
@@ -211,28 +158,6 @@ void MethodBase::startup()
         }
         return 0.0;
     });
-
-//    D2.aa.fill_two_electron(
-//                [&](size_t p,size_t q,size_t r,size_t s){
-//        size_t pp = mos_to_aocc[p];
-//        size_t qq = mos_to_aocc[q];
-//        size_t rr = mos_to_avir[r];
-//        size_t ss = mos_to_avir[s];
-//        return Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);});
-//    D2.ab.fill_two_electron(
-//                [&](size_t p,size_t q,size_t r,size_t s){
-//        size_t pp = mos_to_aocc[p];
-//        size_t qq = mos_to_bocc[q];
-//        size_t rr = mos_to_avir[r];
-//        size_t ss = mos_to_bvir[s];
-//        return Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);});
-//    D2.bb.fill_two_electron(
-//                [&](size_t p,size_t q,size_t r,size_t s){
-//        size_t pp = mos_to_bocc[p];
-//        size_t qq = mos_to_bocc[q];
-//        size_t rr = mos_to_bvir[r];
-//        size_t ss = mos_to_bvir[s];
-//        return Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);});
 }
 
 void MethodBase::cleanup()

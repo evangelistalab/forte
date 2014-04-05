@@ -51,6 +51,11 @@ protected:
     /// The two-body component of the operator S
     BlockedTensor S2;
 
+    /// The one-body residual
+    BlockedTensor R1;
+    /// The two-body residual
+    BlockedTensor R2;
+
     /// An intermediate one-body component of the similarity-transformed Hamiltonian
     BlockedTensor C1;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
