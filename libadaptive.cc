@@ -187,6 +187,8 @@ read_options(std::string name, Options &options)
         options.add_str("SRG_ODEINT","FEHLBERG78","DOPRI5 CASHKARP FEHLBERG78");
         /*- The end value of the integration parameter s -*/
         options.add_double("SRG_SMAX",10.0);
+        /*- The end value of the integration parameter s -*/
+        options.add_double("DSRG_S",0.0);
 
 
         // --------------------------- SRG EXPERT OPTIONS ---------------------------

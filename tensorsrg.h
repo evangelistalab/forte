@@ -47,6 +47,11 @@ protected:
     /// The two-body component of the operator S
     BlockedTensor S2;
 
+    /// The one-body component of the operator S
+    BlockedTensor DS1;
+    /// The two-body component of the operator S
+    BlockedTensor DS2;
+
     /// The one-body residual
     BlockedTensor R1;
     /// The two-body residual
@@ -84,6 +89,9 @@ protected:
     /// Compute the MP2 energy and amplitudes
     double compute_mp2_guess();
 
+    /// Compute the SRG-PT2 energy and amplitudes
+    double compute_mp2_guess_driven_srg();
+
     /// Compute the similarity transformed Hamiltonian using the
     /// single commutator recursive approximation
     double compute_hbar();
@@ -101,6 +109,11 @@ protected:
     void update_S1();
     /// Update the S2 amplitudes
     void update_S2();
+
+    /// Update the S1 amplitudes for the DSRG
+    void update_S1_dsrg();
+    /// Update the S2 amplitudes for the DSRG
+    void update_S2_dsrg();
 
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
@@ -164,6 +177,8 @@ public:
     void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
     int neval() {return neval_;}
 };
+
+double one_minus_exp_div_x(double s,double x);
 
 }} // End Namespaces
 
