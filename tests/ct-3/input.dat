@@ -1,0 +1,33 @@
+#! L-CTSD cc-pVDZ energy for the LiH molecule.  This tests the commutator
+#! correct up to fourth-order.  The reference value is from a spin-integrated
+#! code.
+
+import libbtl
+import libadaptive
+
+refscf = -7.983684364189 #TEST
+refct  = -8.015158865116252 # TEST
+
+molecule hf {
+0 1
+Li
+H 1 1.615433
+}
+
+set {
+  reference rhf
+  e_convergence 12
+  freeze_core False
+  scf_type pk
+  df_scf_guess false
+}
+
+set libadaptive {
+  srg_comm fo
+}
+
+set basis cc-pVDZ
+energy('ct')
+
+compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST
