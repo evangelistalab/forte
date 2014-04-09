@@ -51,9 +51,9 @@ double TensorSRG::compute_ct_energy()
     }else{
         fprintf(outfile,"\n  Driven Similarity Renormalization Group with Singles and Doubles (s = %f a.u.)",dsrg_s);
     }
-    fprintf(outfile,"\n  --------------------------------------------------------------");
-    fprintf(outfile,"\n         Cycle        Energy (a.u.)            Delta(E) (a.u.)");
-    fprintf(outfile,"\n  --------------------------------------------------------------");
+    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
+    fprintf(outfile,"\n         Cycle     Energy (a.u.)     Delta(E)   |Hbar1|    |Hbar2|     |S1|    |S2|  max(S1) max(S2)");
+    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
 
     compute_hbar();
 
@@ -154,7 +154,30 @@ double TensorSRG::compute_ct_energy()
         double delta_energy = energy-old_energy;
         old_energy = energy;
 
-        fprintf(outfile,"\n    @CT %4d %24.15f %24.15f",cycle,energy,delta_energy);
+
+        auto max_S1a = S1.block("ov")->max_abs_element();
+        auto max_S1b = S1.block("OV")->max_abs_element();
+        auto max_S2aa = S2.block("oovv")->max_abs_element();
+        auto max_S2ab = S2.block("oOvV")->max_abs_element();
+        auto max_S2bb = S2.block("OOVV")->max_abs_element();
+        std::vector<double> S1_vec = {max_S1b.first,max_S1b.first};
+        std::vector<double> S2_vec = {max_S2aa.first,max_S2ab.first,max_S2bb.first};
+
+        double max_S1 = *max_element(S1_vec.begin(),S1_vec.end());
+        double max_S2 = *max_element(S2_vec.begin(),S2_vec.end());
+
+        double norm_H1a = Hbar1.block("ov")->norm();
+        double norm_H1b  = Hbar1.block("OV")->norm();
+        double norm_H2aa  = Hbar2.block("oovv")->norm();
+        double norm_H2ab = Hbar2.block("oOvV")->norm();
+        double norm_H2bb = Hbar2.block("OOVV")->norm();
+
+        double norm_Hbar1_ex = std::sqrt(norm_H1a * norm_H1a + norm_H1b * norm_H1b);
+        double norm_Hbar2_ex = std::sqrt(norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab + norm_H2bb * norm_H2bb);
+        double norm_S1 = S1.norm();
+        double norm_S2 = S2.norm();
+
+        fprintf(outfile,"\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.3f %7.3f %7.3f %7.3f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
 
         if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
@@ -169,7 +192,7 @@ double TensorSRG::compute_ct_energy()
         fflush(outfile);
         cycle++;
     }
-    fprintf(outfile,"\n  --------------------------------------------------------------");
+    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
 
     if (dsrg_s == 0.0){
         fprintf(outfile,"\n\n\n    L-CTSD correlation energy      = %25.15f",old_energy-reference_energy());
