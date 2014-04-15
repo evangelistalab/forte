@@ -158,10 +158,63 @@ void TensorSRG::compute_srg_step()
     // Step 1. Compute the generator (stored in eta)
     if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
         // a. copy the Hamiltonian
-        R1 = Hbar1;
-        R2 = Hbar2;
+        S1.zero();
+        S2.zero();
+
+        // a. prepare the off-diagonal part
+        R1["pq"] = Hbar1["pq"];
+        R1["PQ"] = Hbar1["pq"];
+        R2["pqrs"] = Hbar2["pqrs"];
+        R2["pQrS"] = Hbar2["pQrS"];
+        R2["PQRS"] = Hbar2["PQRS"];
+
+        // b. zero the diagonal blocks of Hbar
+        Hbar1.block("ov")->zero();
+        Hbar1.block("OV")->zero();
+        Hbar2.block("oovv")->zero();
+        Hbar2.block("oOvV")->zero();
+        Hbar2.block("OOVV")->zero();
+        Hbar1.block("vo")->zero();
+        Hbar1.block("VO")->zero();
+        Hbar2.block("vvoo")->zero();
+        Hbar2.block("vVoO")->zero();
+        Hbar2.block("VVOO")->zero();
+
+//        // a. prepare the off-diagonal part
+//        C1["pq"] = Hbar1["pq"];
+//        C1["PQ"] = Hbar1["pq"];
+//        C2["pqrs"] = Hbar2["pqrs"];
+//        C2["pQrS"] = Hbar2["pQrS"];
+//        C2["PQRS"] = Hbar2["PQRS"];
+
+//        // b. zero the diagonal blocks of Hbar
+//        C1.block("ov")->zero();
+//        C1.block("OV")->zero();
+//        C2.block("oovv")->zero();
+//        C2.block("oOvV")->zero();
+//        C2.block("OOVV")->zero();
+//        C1.block("vo")->zero();
+//        C1.block("VO")->zero();
+//        C2.block("vvoo")->zero();
+//        C2.block("vVoO")->zero();
+//        C2.block("VVOO")->zero();
+
         double S0 = 0.0;
-        commutator_A_B_C(-1.0,Hbar1,Hbar2,R1,R2,S0,S1,S2);
+        // c. compute the commutator [Hd,Hoff]
+        full_commutator_A_B_C_SRC_minus(1.0,Hbar1,Hbar2,R1,R2,S0,S1,S2);
+//        commutator_A_B_C_SRC_minus(1.0,Hbar1,Hbar2,C1,C2,S0,S1,S2);
+
+        // d. copy the off-diagonal part of Hbar back in place
+        Hbar1["ia"] = R1["ia"];
+        Hbar1["ai"] = R1["ia"];
+        Hbar1["IA"] = R1["IA"];
+        Hbar1["AI"] = R1["IA"];
+        Hbar2["ijab"] = R2["ijab"];
+        Hbar2["abij"] = R2["ijab"];
+        Hbar2["iJaB"] = R2["iJaB"];
+        Hbar2["aBiJ"] = R2["iJaB"];
+        Hbar2["IJAB"] = R2["IJAB"];
+        Hbar2["ABIJ"] = R2["IJAB"];
     }else if (options_.get_str("SRG_ETA") == "WHITE"){
 
         Tensor& Hbar1_oo = *Hbar1.block("oo");
@@ -253,63 +306,6 @@ void TensorSRG::compute_srg_step()
     C2.zero();
 
     commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
-
-//    if (options_.get_str("SRG_COMM") == "STANDARD"){
-//        commutator_A_B_C(1.0,eta1_,eta2_,Hbar1_,Hbar2_,S0_,S1_,S2_);
-//    }else if (options_.get_str("SRG_COMM") == "FO"){
-//        commutator_A_B_C_fourth_order(1.0,eta1_,eta2_,Hbar1_,Hbar2_,S0_,S1_,S2_);
-//    }else  if (options_.get_str("SRG_COMM") == "SRG2"){
-//        commutator_A_B_C_SRG2(1.0,eta1_,eta2_,Hbar1_,Hbar2_,S0_,S1_,S2_);
-//    }
-//    commutator_A_B_C(1.0,eta1_,eta2_,Hbar1_,Hbar2_,S0_,S1_,S2_);
 }
-
-
-////        eta1["pq"] =
-
-//        loop_mo_p loop_mo_q{
-//            if (Nv_.a[p] * No_.a[q] == 1.0){
-//                double e1 = Hbar1_.aa[p][q] / (Hbar1_.aa[p][p] - Hbar1_.aa[q][q] - Hbar2_.aaaa[p][q][p][q]);
-//                eta1_.aa[p][q] = e1;
-//                eta1_.aa[q][p] = -e1;
-//            }
-//        }
-//        loop_mo_p loop_mo_q{
-//            if (Nv_.b[p] * No_.b[q] == 1.0){
-//                double e1 = Hbar1_.bb[p][q] / (Hbar1_.bb[p][p] - Hbar1_.bb[q][q] - Hbar2_.bbbb[p][q][p][q]);
-//                eta1_.bb[p][q] = e1;
-//                eta1_.bb[q][p] = -e1;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] == 1.0){
-//                double A = + Hbar2_.aaaa[p][q][p][q] + Hbar2_.aaaa[r][s][r][s]
-//                           - Hbar2_.aaaa[p][r][p][r] - Hbar2_.aaaa[q][s][q][s]
-//                           - Hbar2_.aaaa[p][s][p][s] - Hbar2_.aaaa[q][r][q][r];
-//                double e2 = Hbar2_.aaaa[p][q][r][s] / (Hbar1_.aa[p][p] + Hbar1_.aa[q][q] - Hbar1_.aa[r][r] - Hbar1_.aa[s][s] + A);
-//                eta2_.aaaa[p][q][r][s] = +e2;
-//                eta2_.aaaa[r][s][p][q] = -e2;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.a[p] * Nv_.b[q] * No_.a[r] * No_.b[s] == 1.0){
-//                double A = + Hbar2_.abab[p][q][p][q] + Hbar2_.abab[r][s][r][s]
-//                           - Hbar2_.aaaa[p][r][p][r] - Hbar2_.bbbb[q][s][q][s]
-//                           - Hbar2_.abab[p][s][p][s] - Hbar2_.abab[r][q][r][q];
-//                double e2 = Hbar2_.abab[p][q][r][s] / (Hbar1_.aa[p][p] + Hbar1_.bb[q][q] - Hbar1_.aa[r][r] - Hbar1_.bb[s][s] + A);
-//                eta2_.abab[p][q][r][s] = +e2;
-//                eta2_.abab[r][s][p][q] = -e2;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.b[p] * Nv_.b[q] * No_.b[r] * No_.b[s] == 1.0){
-//                double A = + Hbar2_.bbbb[p][q][p][q] + Hbar2_.bbbb[r][s][r][s]
-//                           - Hbar2_.bbbb[p][r][p][r] - Hbar2_.bbbb[q][s][q][s]
-//                           - Hbar2_.bbbb[p][s][p][s] - Hbar2_.bbbb[q][r][q][r];
-//                double e2 = Hbar2_.bbbb[p][q][r][s] / (Hbar1_.bb[p][p] + Hbar1_.bb[q][q] - Hbar1_.bb[r][r] - Hbar1_.bb[s][s] + A);
-//                eta2_.bbbb[p][q][r][s] = +e2;
-//                eta2_.bbbb[r][s][p][q] = -e2;
-//            }
-//        }
 
 }}

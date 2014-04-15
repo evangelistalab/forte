@@ -50,7 +50,7 @@ void TensorSRG::startup()
     O2.resize_spin_components("O2","iiii");
     C1.resize_spin_components("C1","ii");
     C2.resize_spin_components("C2","iiii");
-    I_ioiv.resize_spin_components("C2","ioiv");
+    I_ioiv.resize_spin_components("I_ioiv","ioiv");
 
     dsrg_power_ = options_.get_double("DSRG_POWER");
 }
