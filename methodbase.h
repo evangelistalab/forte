@@ -119,8 +119,11 @@ public:
 //    int wavefunction_symmetry_;
 //    /// The number of molecular orbitals
 //    int nmo_;
-//    /// The energy of the reference
-//    double E0_;
+    /// The energy of the reference
+    double E0_;
+
+    /// The frozen-core energy
+    double frozen_core_energy_;
 
 //    /// The number of alpha electrons
 //    int nalpha_;

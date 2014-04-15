@@ -21,12 +21,20 @@ MethodBase::~MethodBase()
 
 void MethodBase::startup()
 {
+    double frozen_core_energy = ints_->frozen_core_energy();
+    E0_ = reference_energy();
+
+    Dimension corr_docc(doccpi_);
+    corr_docc -= frzcpi_;
+
     for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < doccpi_[h]; ++i,++p){
+        for (int i = 0; i < frzcpi_[h]; ++i,++p){
+        }
+        for (int i = 0; i < corr_docc[h]; ++i,++p){
             a_occ_mos.push_back(p);
             b_occ_mos.push_back(p);
-            mos_to_aocc[p] = a_occ_mos.size()-1;
-            mos_to_bocc[p] = a_occ_mos.size()-1;
+//            mos_to_aocc[p] = a_occ_mos.size()-1;
+//            mos_to_bocc[p] = a_occ_mos.size()-1;
         }
         for (int i = 0; i < soccpi_[h]; ++i,++p){
             a_occ_mos.push_back(p);

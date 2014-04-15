@@ -32,8 +32,7 @@ void TensorSRG::startup()
     fprintf(outfile,"\n");
     fprintf(outfile,"\n       written by Francesco A. Evangelista");
     fprintf(outfile,"\n      --------------------------------------\n");
-
-    fprintf(outfile,"\n      Debug level = %d\n",debug_);
+    fprintf(outfile,"\n      Debug level = %d",debug_);
     fprintf(outfile,"\n      Print level = %d\n",print_);
     fflush(outfile);
 
@@ -52,6 +51,8 @@ void TensorSRG::startup()
     C1.resize_spin_components("C1","ii");
     C2.resize_spin_components("C2","iiii");
     I_ioiv.resize_spin_components("C2","ioiv");
+
+    dsrg_power_ = options_.get_double("DSRG_POWER");
 }
 
 void TensorSRG::cleanup()
@@ -72,9 +73,14 @@ double TensorSRG::compute_mp2_guess()
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = reference_energy();
     fprintf(outfile,"\n\n    SCF energy                            = %20.15f",ref_energy);
-    fprintf(outfile,"\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
-    fprintf(outfile,"\n  * MP2 total energy                      = %20.15f\n",ref_energy + mp2_correlation_energy);
-    return ref_energy + mp2_correlation_energy;
+    fprintf(outfile,"\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
+    fprintf(outfile,"\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
+
+//    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",E0_);
+//    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",E0_);
+//    fprintf(outfile,"\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
+//    fprintf(outfile,"\n  * MP2 total energy                      = %20.15f\n",E0_ + mp2_correlation_energy);
+    return E0_ + mp2_correlation_energy;
 }
 
 double TensorSRG::compute_mp2_guess_driven_srg()
@@ -100,7 +106,7 @@ double TensorSRG::compute_mp2_guess_driven_srg()
             size_t rr = mos_to_avir[r];
             size_t ss = mos_to_avir[s];
             double denominator = Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return V_oovv(pp,qq,rr,ss) * exp_factor;
         }else if ((sp == Alpha) and (sq == Beta) ){
             size_t pp = mos_to_aocc[p];
@@ -108,7 +114,7 @@ double TensorSRG::compute_mp2_guess_driven_srg()
             size_t rr = mos_to_avir[r];
             size_t ss = mos_to_bvir[s];
             double denominator = Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return V_oOvV(pp,qq,rr,ss) * exp_factor;
         }else if ((sp == Beta)  and (sq == Beta) ){
             size_t pp = mos_to_bocc[p];
@@ -116,7 +122,7 @@ double TensorSRG::compute_mp2_guess_driven_srg()
             size_t rr = mos_to_bvir[r];
             size_t ss = mos_to_bvir[s];
             double denominator = Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return V_OOVV(pp,qq,rr,ss) * exp_factor;
         }
         return 0.0;
@@ -134,9 +140,9 @@ double TensorSRG::compute_mp2_guess_driven_srg()
     return ref_energy + mp2_correlation_energy;
 }
 
-double one_minus_exp_div_x(double s,double x)
+double one_minus_exp_div_x(double s,double x,double power)
 {
-    return ((1.0 - std::exp(-s * x * x)) / x);
+    return ((1.0 - std::exp(-s * std::pow(x,power))) / x);
 }
 
 double TensorSRG::compute_energy()

@@ -144,7 +144,7 @@ double TensorSRG::compute_ct_energy()
         }
 
         // Compute the new similarity-transformed Hamiltonian
-        double energy = compute_hbar();
+        double energy = E0_ + compute_hbar();
 
         if (print_ > 1){
             fprintf(outfile," done.");
@@ -195,10 +195,10 @@ double TensorSRG::compute_ct_energy()
     fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
 
     if (dsrg_s == 0.0){
-        fprintf(outfile,"\n\n\n    L-CTSD correlation energy      = %25.15f",old_energy-reference_energy());
+        fprintf(outfile,"\n\n\n    L-CTSD correlation energy      = %25.15f",old_energy-E0_);
         fprintf(outfile,"\n  * L-CTSD total energy            = %25.15f\n",old_energy);
     }else{
-        fprintf(outfile,"\n\n\n    DSRG-SD correlation energy      = %25.15f",old_energy-reference_energy());
+        fprintf(outfile,"\n\n\n    DSRG-SD correlation energy      = %25.15f",old_energy-E0_);
         fprintf(outfile,"\n  * DSRG-SD total energy            = %25.15f\n",old_energy);
     }
     // Set some environment variables
@@ -218,7 +218,7 @@ double TensorSRG::compute_hbar()
     }
 
     // Initialize Hbar and O with the normal ordered Hamiltonian
-    Hbar0 = reference_energy();
+    Hbar0 = 0.0;
     Hbar1["pq"] = F["pq"];
     Hbar1["PQ"] = F["PQ"];
     Hbar2["pqrs"] = V["pqrs"];
@@ -314,13 +314,13 @@ void TensorSRG::update_S1_dsrg()
             size_t pp = mos_to_aocc[p];
             size_t qq = mos_to_avir[q];
             double denominator = Fa_oo(pp,pp) - Fa_vv(qq,qq);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return (Ha_ov(pp,qq) + S1_ov(pp,qq) * denominator) * exp_factor;
         }else if (sp  == Beta){
             size_t pp = mos_to_bocc[p];
             size_t qq = mos_to_bvir[q];
             double denominator = Fb_OO(pp,pp) - Fb_VV(qq,qq);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return (Hb_OV(pp,qq) + S1_OV(pp,qq) * denominator) * exp_factor;
         }
         return 0.0;
@@ -363,7 +363,7 @@ void TensorSRG::update_S2_dsrg()
             size_t rr = mos_to_avir[r];
             size_t ss = mos_to_avir[s];
             double denominator = Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return (H_oovv(pp,qq,rr,ss) + S2_oovv(pp,qq,rr,ss) * denominator ) * exp_factor;
         }else if ((sp == Alpha) and (sq == Beta) ){
             size_t pp = mos_to_aocc[p];
@@ -371,7 +371,7 @@ void TensorSRG::update_S2_dsrg()
             size_t rr = mos_to_avir[r];
             size_t ss = mos_to_bvir[s];
             double denominator = Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return (H_oOvV(pp,qq,rr,ss) + S2_oOvV(pp,qq,rr,ss) * denominator ) * exp_factor;
         }else if ((sp == Beta)  and (sq == Beta) ){
             size_t pp = mos_to_bocc[p];
@@ -379,7 +379,7 @@ void TensorSRG::update_S2_dsrg()
             size_t rr = mos_to_bvir[r];
             size_t ss = mos_to_bvir[s];
             double denominator = Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator);
+            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
             return (H_OOVV(pp,qq,rr,ss) + S2_OOVV(pp,qq,rr,ss) * denominator ) * exp_factor;
         }
         return 0.0;
@@ -399,225 +399,3 @@ void TensorSRG::update_S2_dsrg()
 }
 
 }} // EndNamespaces
-
-/*
- *
- *
-void TensorSRG::one_body_driven_srg()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_ov = *F.block("ov");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_OV = *F.block("OV");
-    Tensor& Fb_VV = *F.block("VV");
-
-    R1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        if (sp  == Alpha){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_avir[q];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) - Fa_vv(qq,qq),2.0));
-            return -Fa_ov(pp,qq) * exp_factor;
-        }else if (sp  == Beta){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bvir[q];
-            double exp_factor = std::exp(- end_time * std::pow(Fb_OO(pp,pp) - Fb_VV(qq,qq),2.0));
-            return -Fb_OV(pp,qq) * exp_factor;
-        }
-        return 0.0;
-    });
-    Hbar1["ia"] += R1["ia"];
-    Hbar1["IA"] += R1["IA"];
-    Hbar1["ai"] += R1["ia"];
-    Hbar1["AI"] += R1["IA"];
-}
-
-void TensorSRG::two_body_driven_srg()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& V_oovv = *V.block("oovv");
-    Tensor& V_oOvV = *V.block("oOvV");
-    Tensor& V_OOVV = *V.block("OOVV");
-
-    R2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                              size_t q,MOSetSpinType sq,
-                              size_t r,MOSetSpinType sr,
-                              size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_aocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_avir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss),2.0));
-            return -V_oovv(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss),2.0));
-            return -V_oOvV(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_bvir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss),2.0));
-            return -V_OOVV(pp,qq,rr,ss) * exp_factor;
-        }
-        return 0.0;
-    });
-    Hbar2["ijab"] += R2["ijab"];
-    Hbar2["iJaB"] += R2["iJaB"];
-    Hbar2["IJAB"] += R2["IJAB"];
-    Hbar2["abij"] += R2["ijab"];
-    Hbar2["aBiJ"] += R2["iJaB"];
-    Hbar2["ABIJ"] += R2["IJAB"];
-}
-
-
-void TensorSRG::save_one_body_driven_srg()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& Fa_ov = *Hbar1.block("ov");
-    Tensor& Fb_OV = *Hbar1.block("OV");
-
-    R1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        if (sp  == Alpha){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_avir[q];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) - Fa_vv(qq,qq),2.0));
-            return -Fa_ov(pp,qq) * exp_factor;
-        }else if (sp  == Beta){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bvir[q];
-            double exp_factor = std::exp(- end_time * std::pow(Fb_OO(pp,pp) - Fb_VV(qq,qq),2.0));
-            return -Fb_OV(pp,qq) * exp_factor;
-        }
-        return 0.0;
-    });
-}
-
-void TensorSRG::save_two_body_driven_srg()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& V_oovv = *Hbar2.block("oovv");
-    Tensor& V_oOvV = *Hbar2.block("oOvV");
-    Tensor& V_OOVV = *Hbar2.block("OOVV");
-
-    R2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                              size_t q,MOSetSpinType sq,
-                              size_t r,MOSetSpinType sr,
-                              size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_aocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_avir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss),2.0));
-            return -V_oovv(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss),2.0));
-            return -V_oOvV(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_bvir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = std::exp(- end_time * std::pow(Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss),2.0));
-            return -V_OOVV(pp,qq,rr,ss) * exp_factor;
-        }
-        return 0.0;
-    });
-}
-
-void TensorSRG::scale_one_body()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& Fa_ov = *F.block("ov");
-    Tensor& Fb_OV = *F.block("OV");
-
-    R1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        if (sp  == Alpha){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_avir[q];
-            double exp_factor = 1.0 - std::exp(- end_time * std::pow(Fa_oo(pp,pp) - Fa_vv(qq,qq),2.0));
-            return Fa_ov(pp,qq) * exp_factor;
-        }else if (sp  == Beta){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bvir[q];
-            double exp_factor = 1.0 - std::exp(- end_time * std::pow(Fb_OO(pp,pp) - Fb_VV(qq,qq),2.0));
-            return Fb_OV(pp,qq) * exp_factor;
-        }
-        return 0.0;
-    });
-}
-
-void TensorSRG::scale_two_body()
-{
-    double end_time = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& V_oovv = *V.block("oovv");
-    Tensor& V_oOvV = *V.block("oOvV");
-    Tensor& V_OOVV = *V.block("OOVV");
-
-    R2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                              size_t q,MOSetSpinType sq,
-                              size_t r,MOSetSpinType sr,
-                              size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_aocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_avir[s];
-            double exp_factor = 1.0 - std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss),2.0));
-            return V_oovv(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = 1.0 - std::exp(- end_time * std::pow(Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss),2.0));
-            return V_oOvV(pp,qq,rr,ss) * exp_factor;
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_bvir[r];
-            size_t ss = mos_to_bvir[s];
-            double exp_factor = 1.0 - std::exp(- end_time * std::pow(Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss),2.0));
-            return V_OOVV(pp,qq,rr,ss) * exp_factor;
-        }
-        return 0.0;
-    });
-}
-*/

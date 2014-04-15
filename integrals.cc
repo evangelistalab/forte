@@ -379,19 +379,21 @@ void ExplorerIntegrals::freeze_core()
     //  }
 
 
-    //  //Modify the active part of H to include the core effects;
-    //  for(size_t p = 0; p < nmo; ++p){
-    //    for(size_t q = 0; q < nmo; ++q){
-    //      for(int i = 0; i < moinfo->get_nfocc(); ++i){
-    //        size_t i_f = moinfo->get_focc_to_mo()[i];
-    //        oei_aa[p][q] += aaaa(i_f,i_f,p,q) - aaaa(i_f,p,i_f,q);
-    //        oei_aa[p][q] += aabb(p,q,i_f,i_f);
-
-    //        oei_bb[p][q] += bbbb(i_f,i_f,p,q) - bbbb(i_f,p,i_f,q);
-    //        oei_bb[p][q] += aabb(i_f,i_f,p,q);
-    //      }
-    //    }
-    //  }
+    // Modify the active part of H to include the core effects;
+    for(size_t p = 0; p < nmo_; ++p){
+        for(size_t q = 0; q < nmo_; ++q){
+            for (int hi = 0, r = 0; hi < nirrep_; ++hi){
+                for (int i = 0; i < frzcpi[hi]; ++i){
+                    one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
+                    one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+                    if(p == q){
+                        diagonal_one_electron_integrals_a[p] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
+                        diagonal_one_electron_integrals_b[p] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+                    }
+                }
+            }
+        }
+    }
 }
 
 

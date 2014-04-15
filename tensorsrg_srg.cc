@@ -65,7 +65,7 @@ double TensorSRG::compute_srg_energy()
     odeint_state_type x(x_size);
 
     // Initialize Hbar with the normal ordered Hamiltonian
-    Hbar0 = reference_energy();
+    Hbar0 = E0_;
     Hbar1["pq"] = F["pq"];
     Hbar1["PQ"] = F["PQ"];
     Hbar2["pqrs"] = V["pqrs"];
@@ -130,7 +130,7 @@ double TensorSRG::compute_srg_energy()
     double final_energy = e_vec.back();
 
     fprintf(outfile,"\n  --------------------------------------------------------------");
-    fprintf(outfile,"\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-reference_energy());
+    fprintf(outfile,"\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-E0_);
     fprintf(outfile,"\n  * SRG-SD total energy            = %25.15f\n",final_energy);
 
     // Set some environment variables
@@ -157,65 +157,11 @@ void TensorSRG::compute_srg_step()
 {
     // Step 1. Compute the generator (stored in eta)
     if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
-//        // a. copy the Hamiltonian
-//        add(1.0,Hbar1_,0.0,O1_);
-//        add(1.0,Hbar2_,0.0,O2_);
-
-//        // b. zero the off-diagonal blocks of G
-//        loop_mo_p loop_mo_q{
-//            if (Nv_.a[p] * No_.a[q] == 1.0){
-//                O1_.aa[p][q] = 0.0;
-//                O1_.aa[q][p] = 0.0;
-//            }
-//        }
-//        loop_mo_p loop_mo_q{
-//            if (Nv_.b[p] * No_.b[q] == 1.0){
-//                O1_.bb[p][q] = 0.0;
-//                O1_.bb[q][p] = 0.0;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.a[p] * Nv_.a[q] * No_.a[r] * No_.a[s] == 1.0){
-//                O2_.aaaa[p][q][r][s] = 0.0;
-//                O2_.aaaa[r][s][p][q] = 0.0;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.a[p] * Nv_.b[q] * No_.a[r] * No_.b[s] == 1.0){
-//                O2_.abab[p][q][r][s] = 0.0;
-//                O2_.abab[r][s][p][q] = 0.0;
-//            }
-//        }
-//        loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
-//            if (Nv_.b[p] * Nv_.b[q] * No_.b[r] * No_.b[s] == 1.0){
-//                O2_.bbbb[p][q][r][s] = 0.0;
-//                O2_.bbbb[r][s][p][q] = 0.0;
-//            }
-//        }
-
-//        // c. compute the generator as eta = [G,H]
-//        double eta0 = 0.0;
-//        zero(eta1_);
-//        zero(eta2_);
-//        commutator_A_B_C(1.0,O1_,O2_,Hbar1_,Hbar2_,eta0,eta1_,eta2_);
-
-    }else if (options_.get_str("SRG_ETA") == "WEGNER_DIAG"){
-//        // a. Copy the diagonal of Hbar1 to G
-//        zero(O1_);
-//        zero(O2_);
-//        loop_mo_p{
-//            O1_.aa[p][p] = Hbar1_.aa[p][p];
-//        }
-//        loop_mo_p{
-//            O1_.bb[p][p] = Hbar1_.bb[p][p];
-//        }
-
-//        // b. compute the generator as eta = [G,H]
-//        double eta0 = 0.0;
-//        zero(eta1_);
-//        zero(eta2_);
-//        commutator_A_B_C(1.0,O1_,O2_,Hbar1_,Hbar2_,eta0,eta1_,eta2_);
-
+        // a. copy the Hamiltonian
+        R1 = Hbar1;
+        R2 = Hbar2;
+        double S0 = 0.0;
+        commutator_A_B_C(-1.0,Hbar1,Hbar2,R1,R2,S0,S1,S2);
     }else if (options_.get_str("SRG_ETA") == "WHITE"){
 
         Tensor& Hbar1_oo = *Hbar1.block("oo");

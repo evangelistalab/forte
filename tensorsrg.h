@@ -78,6 +78,8 @@ protected:
     /// An intermediate tensor
     BlockedTensor I_ioiv;
 
+    double dsrg_power_;
+
     // => Private member functions <= //
 
     /// Called in the constructor
@@ -183,7 +185,7 @@ public:
     int neval() {return neval_;}
 };
 
-double one_minus_exp_div_x(double s,double x);
+double one_minus_exp_div_x(double s,double x,double power);
 
 }} // End Namespaces
 
