@@ -46,6 +46,10 @@ void TensorSRG::startup()
     R2.resize_spin_components("R2","oovv");
     Hbar1.resize_spin_components("Hbar1","ii");
     Hbar2.resize_spin_components("Hbar2","iiii");
+    eta1.resize_spin_components("eta1","ii");
+    eta2.resize_spin_components("eta2","iiii");
+    g1.resize_spin_components("g1","ii");
+    g2.resize_spin_components("g2","iiii");
     O1.resize_spin_components("O1","ii");
     O2.resize_spin_components("O2","iiii");
     C1.resize_spin_components("C1","ii");

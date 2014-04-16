@@ -133,6 +133,7 @@ double TensorSRG::compute_srg_energy()
     fprintf(outfile,"\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-E0_);
     fprintf(outfile,"\n  * SRG-SD total energy            = %25.15f\n",final_energy);
 
+
     // Set some environment variables
     Process::environment.globals["CURRENT ENERGY"] = final_energy;
     Process::environment.globals["SRG-SD ENERGY"] = final_energy;
@@ -158,51 +159,53 @@ void TensorSRG::compute_srg_step()
     // Step 1. Compute the generator (stored in eta)
     if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
         // a. copy the Hamiltonian
-        S1.zero();
-        S2.zero();
+        eta1.zero();
+        eta2.zero();
 
         // a. prepare the off-diagonal part
+        g1["pq"] = Hbar1["pq"];
+        g1["PQ"] = Hbar1["PQ"];
+        g2["pqrs"] = Hbar2["pqrs"];
+        g2["pQrS"] = Hbar2["pQrS"];
+        g2["PQRS"] = Hbar2["PQRS"];
+
+        // b. zero the diagonal blocks of Hbar
+        g1.block("ov")->zero();
+        g1.block("vo")->zero();
+        g1.block("OV")->zero();
+        g1.block("VO")->zero();
+        g2.block("oovv")->zero();
+        g2.block("vvoo")->zero();
+        g2.block("oOvV")->zero();
+        g2.block("vVoO")->zero();
+        g2.block("OOVV")->zero();
+        g2.block("VVOO")->zero();
+
+        double S0 = 0.0;
+        // c. compute the commutator [Hd,Hoff]
+        full_commutator_A_B_C(-1.0,Hbar1,Hbar2,g1,g2,S0,eta1,eta2);
+    }else if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK2"){
+        S1.zero();
+        S2.zero();
         R1["pq"] = Hbar1["pq"];
-        R1["PQ"] = Hbar1["pq"];
+        R1["PQ"] = Hbar1["PQ"];
         R2["pqrs"] = Hbar2["pqrs"];
         R2["pQrS"] = Hbar2["pQrS"];
         R2["PQRS"] = Hbar2["PQRS"];
 
-        // b. zero the diagonal blocks of Hbar
         Hbar1.block("ov")->zero();
-        Hbar1.block("OV")->zero();
-        Hbar2.block("oovv")->zero();
-        Hbar2.block("oOvV")->zero();
-        Hbar2.block("OOVV")->zero();
         Hbar1.block("vo")->zero();
+        Hbar1.block("OV")->zero();
         Hbar1.block("VO")->zero();
+        Hbar2.block("oovv")->zero();
         Hbar2.block("vvoo")->zero();
+        Hbar2.block("oOvV")->zero();
         Hbar2.block("vVoO")->zero();
+        Hbar2.block("OOVV")->zero();
         Hbar2.block("VVOO")->zero();
 
-//        // a. prepare the off-diagonal part
-//        C1["pq"] = Hbar1["pq"];
-//        C1["PQ"] = Hbar1["pq"];
-//        C2["pqrs"] = Hbar2["pqrs"];
-//        C2["pQrS"] = Hbar2["pQrS"];
-//        C2["PQRS"] = Hbar2["PQRS"];
-
-//        // b. zero the diagonal blocks of Hbar
-//        C1.block("ov")->zero();
-//        C1.block("OV")->zero();
-//        C2.block("oovv")->zero();
-//        C2.block("oOvV")->zero();
-//        C2.block("OOVV")->zero();
-//        C1.block("vo")->zero();
-//        C1.block("VO")->zero();
-//        C2.block("vvoo")->zero();
-//        C2.block("vVoO")->zero();
-//        C2.block("VVOO")->zero();
-
         double S0 = 0.0;
-        // c. compute the commutator [Hd,Hoff]
-        full_commutator_A_B_C_SRC_minus(1.0,Hbar1,Hbar2,R1,R2,S0,S1,S2);
-//        commutator_A_B_C_SRC_minus(1.0,Hbar1,Hbar2,C1,C2,S0,S1,S2);
+        hermitian_commutator_A_B_C(1.0,Hbar1,Hbar2,R1,R2,S0,R1,R2);
 
         // d. copy the off-diagonal part of Hbar back in place
         Hbar1["ia"] = R1["ia"];
@@ -305,7 +308,13 @@ void TensorSRG::compute_srg_step()
     C1.zero();
     C2.zero();
 
-    commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
+    if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
+        full_commutator_A_B_C(-1.0,Hbar1,Hbar2,eta1,eta2,C0,C1,C2);
+    }else if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK2"){
+        modified_commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
+    }else{
+        commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
+    }
 }
 
 }}
