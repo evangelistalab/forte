@@ -255,8 +255,15 @@ void TensorSRG::commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
     C["ijpq"] += 0.5 * alpha * A["abpq"] * B["ijab"];
     C["pqab"] += 0.5 * alpha * A["pqij"] * B["ijab"];
 
-    I_ioiv["rspq"]  = alpha * A["rupv"] * B["svqu"];
-    I_ioiv["rspq"] += alpha * A["rUpV"] * B["sVqU"];
+//    I_ioiv["rspq"]  = alpha * A["rupv"] * B["svqu"];
+//    I_ioiv["rspq"] += alpha * A["rUpV"] * B["sVqU"];
+//    C["rspq"] += I_ioiv["rspq"];
+//    C["rspq"] -= I_ioiv["rsqp"];
+//    C["rspq"] -= I_ioiv["srpq"];
+//    C["rspq"] += I_ioiv["srqp"];
+
+    I_ioiv["rjpb"]  = alpha * A["rapi"] * B["jiba"];
+    I_ioiv["rjpb"] += alpha * A["rApI"] * B["jIbA"];
     C["rspq"] += I_ioiv["rspq"];
     C["rspq"] -= I_ioiv["rsqp"];
     C["rspq"] -= I_ioiv["srpq"];
@@ -280,8 +287,10 @@ void TensorSRG::commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
     C["IJPQ"] += 0.5 * alpha * A["ABPQ"] * B["IJAB"];
     C["PQAB"] += 0.5 * alpha * A["PQIJ"] * B["IJAB"];
 
-    I_ioiv["RSPQ"]  = alpha * A["uRvP"] * B["vSuQ"];
-    I_ioiv["RSPQ"] += alpha * A["RUPV"] * B["SVQU"];
+    I_ioiv["RJPB"]  = alpha * A["RAPI"] * B["JIBA"];
+    I_ioiv["RJPB"] += alpha * A["aRiP"] * B["iJaB"];
+//    I_ioiv["RSPQ"]  = alpha * A["uRvP"] * B["vSuQ"];
+//    I_ioiv["RSPQ"] += alpha * A["RUPV"] * B["SVQU"];
     C["RSPQ"] += I_ioiv["RSPQ"];
     C["RSPQ"] -= I_ioiv["RSQP"];
     C["RSPQ"] -= I_ioiv["SRPQ"];

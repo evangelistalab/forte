@@ -236,6 +236,15 @@ void TensorSRG::full_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,doubl
     C["rspq"] += alpha * A["sipa"] * B["raqi"];
     C["rspq"] -= alpha * A["siqa"] * B["rapi"];
 
+    C["rspq"] += alpha * A["rApI"] * B["sIqA"];
+    C["rspq"] -= alpha * A["rAqI"] * B["sIpA"];
+    C["rspq"] -= alpha * A["sApI"] * B["rIqA"];
+    C["rspq"] += alpha * A["sAqI"] * B["rIpA"];
+    C["rspq"] -= alpha * A["rIpA"] * B["sAqI"];
+    C["rspq"] += alpha * A["rIqA"] * B["sApI"];
+    C["rspq"] += alpha * A["sIpA"] * B["rAqI"];
+    C["rspq"] -= alpha * A["sIqA"] * B["rApI"];
+
     // ABAB case (these work only in the single-reference case)
     // Term I
     C["rSpQ"] += alpha * A["aBpQ"] * B["rSaB"];
@@ -278,6 +287,15 @@ void TensorSRG::full_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,doubl
     C["RSPQ"] += alpha * A["RIQA"] * B["SAPI"];
     C["RSPQ"] += alpha * A["SIPA"] * B["RAQI"];
     C["RSPQ"] -= alpha * A["SIQA"] * B["RAPI"];
+
+    C["RSPQ"] += alpha * A["aRiP"] * B["iSaQ"];
+    C["RSPQ"] -= alpha * A["aRiQ"] * B["iSaP"];
+    C["RSPQ"] -= alpha * A["aSiP"] * B["iRaQ"];
+    C["RSPQ"] += alpha * A["aSiQ"] * B["iRaP"];
+    C["RSPQ"] -= alpha * A["iRaP"] * B["aSiQ"];
+    C["RSPQ"] += alpha * A["iRaQ"] * B["aSiP"];
+    C["RSPQ"] += alpha * A["iSaP"] * B["aRiQ"];
+    C["RSPQ"] -= alpha * A["iSaQ"] * B["aRiP"];
 
     if(print_ > 2){
         fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());

@@ -462,11 +462,10 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
         B4m_ab("qbsc") = I4("abcd") * B4_ab("qdsa");
         I4("pqrs") = sign * A4_ab("pcrb") * B4m_ab("qbsc");
 
-        // Discovered that these are just a repetition of the ones above!
-//        C4_aa("pqrs") += +1.0 * I4("pqrs");
-//        C4_aa("pqrs") += -1.0 * I4("qprs");
-//        C4_aa("pqrs") += -1.0 * I4("pqsr");
-//        C4_aa("pqrs") += +1.0 * I4("qpsr");
+        C4_aa("pqrs") += +1.0 * I4("pqrs");
+        C4_aa("pqrs") += -1.0 * I4("qprs");
+        C4_aa("pqrs") += -1.0 * I4("pqsr");
+        C4_aa("pqrs") += +1.0 * I4("qpsr");
 #endif
 
         // ABAB case
@@ -526,12 +525,10 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
 
         B4m_bb("qbsc") = I4("abcd") * B4_ab("dqas");
         I4("pqrs") = sign * A4_ab("cpbr") * B4m_bb("qbsc");
-
-        // Discovered that these are just a repetition of the ones above!
-//        C4_bb("pqrs") += +1.0 * I4("pqrs");
-//        C4_bb("pqrs") += -1.0 * I4("qprs");
-//        C4_bb("pqrs") += -1.0 * I4("pqsr");
-//        C4_bb("pqrs") += +1.0 * I4("qpsr");
+        C4_bb("pqrs") += +1.0 * I4("pqrs");
+        C4_bb("pqrs") += -1.0 * I4("qprs");
+        C4_bb("pqrs") += -1.0 * I4("pqsr");
+        C4_bb("pqrs") += +1.0 * I4("qpsr");
 
         loop_mo_p loop_mo_q loop_mo_r loop_mo_s{
             C.aaaa[p][q][r][s] += C4_aa(p,q,r,s);
