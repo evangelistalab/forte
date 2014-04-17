@@ -71,19 +71,19 @@ void TensorSRG::full_commutator_A_B_C_SRC_fourth_order(double factor,
 {
     // => Compute C = [A,B]_12 <= //
 
-    commutator_A1_B1_C0(A1,B1,+factor,C0);
+    full_commutator_A1_B1_C0(A1,B1,+factor,C0);
 //    commutator_A1_B2_C0(A1,B2,+factor,C0);
 //    commutator_A1_B2_C0(B1,A2,-factor,C0);
-    commutator_A2_B2_C0(A2,B2,+factor,C0);
+    full_commutator_A2_B2_C0(A2,B2,+factor,C0);
 
-    commutator_A1_B1_C1(A1,B1,+factor,C1);
-    commutator_A1_B2_C1(A1,B2,+factor,C1);
-    commutator_A1_B2_C1(B1,A2,+factor,C1);
-    commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
+    full_commutator_A1_B1_C1(A1,B1,+factor,C1);
+    full_commutator_A1_B2_C1(A1,B2,+factor,C1);
+    full_commutator_A1_B2_C1(B1,A2,+factor,C1);
+    full_commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
 
-    commutator_A1_B2_C2(A1,B2,+factor,C2);
-    commutator_A1_B2_C2(B1,A2,-factor,C2);
-    commutator_A2_B2_C2(A2,B2,+factor,C2);
+    full_commutator_A1_B2_C2(A1,B2,+factor,C2);
+    full_commutator_A1_B2_C2(B1,A2,-factor,C2);
+    full_commutator_A2_B2_C2(A2,B2,+factor,C2);
 }
 
 void TensorSRG::full_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)

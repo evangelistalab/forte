@@ -185,39 +185,39 @@ void TensorSRG::compute_srg_step()
         // c. compute the commutator [Hd,Hoff]
         full_commutator_A_B_C(-1.0,Hbar1,Hbar2,g1,g2,S0,eta1,eta2);
     }else if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK2"){
-        S1.zero();
-        S2.zero();
-        R1["pq"] = Hbar1["pq"];
-        R1["PQ"] = Hbar1["PQ"];
-        R2["pqrs"] = Hbar2["pqrs"];
-        R2["pQrS"] = Hbar2["pQrS"];
-        R2["PQRS"] = Hbar2["PQRS"];
+//        S1.zero();
+//        S2.zero();
+//        R1["pq"] = Hbar1["pq"];
+//        R1["PQ"] = Hbar1["PQ"];
+//        R2["pqrs"] = Hbar2["pqrs"];
+//        R2["pQrS"] = Hbar2["pQrS"];
+//        R2["PQRS"] = Hbar2["PQRS"];
 
-        Hbar1.block("ov")->zero();
-        Hbar1.block("vo")->zero();
-        Hbar1.block("OV")->zero();
-        Hbar1.block("VO")->zero();
-        Hbar2.block("oovv")->zero();
-        Hbar2.block("vvoo")->zero();
-        Hbar2.block("oOvV")->zero();
-        Hbar2.block("vVoO")->zero();
-        Hbar2.block("OOVV")->zero();
-        Hbar2.block("VVOO")->zero();
+//        Hbar1.block("ov")->zero();
+//        Hbar1.block("vo")->zero();
+//        Hbar1.block("OV")->zero();
+//        Hbar1.block("VO")->zero();
+//        Hbar2.block("oovv")->zero();
+//        Hbar2.block("vvoo")->zero();
+//        Hbar2.block("oOvV")->zero();
+//        Hbar2.block("vVoO")->zero();
+//        Hbar2.block("OOVV")->zero();
+//        Hbar2.block("VVOO")->zero();
 
-        double S0 = 0.0;
-        hermitian_commutator_A_B_C(1.0,Hbar1,Hbar2,R1,R2,S0,R1,R2);
+//        double S0 = 0.0;
+//        hermitian_commutator_A_B_C(1.0,Hbar1,Hbar2,R1,R2,S0,R1,R2);
 
-        // d. copy the off-diagonal part of Hbar back in place
-        Hbar1["ia"] = R1["ia"];
-        Hbar1["ai"] = R1["ia"];
-        Hbar1["IA"] = R1["IA"];
-        Hbar1["AI"] = R1["IA"];
-        Hbar2["ijab"] = R2["ijab"];
-        Hbar2["abij"] = R2["ijab"];
-        Hbar2["iJaB"] = R2["iJaB"];
-        Hbar2["aBiJ"] = R2["iJaB"];
-        Hbar2["IJAB"] = R2["IJAB"];
-        Hbar2["ABIJ"] = R2["IJAB"];
+//        // d. copy the off-diagonal part of Hbar back in place
+//        Hbar1["ia"] = R1["ia"];
+//        Hbar1["ai"] = R1["ia"];
+//        Hbar1["IA"] = R1["IA"];
+//        Hbar1["AI"] = R1["IA"];
+//        Hbar2["ijab"] = R2["ijab"];
+//        Hbar2["abij"] = R2["ijab"];
+//        Hbar2["iJaB"] = R2["iJaB"];
+//        Hbar2["aBiJ"] = R2["iJaB"];
+//        Hbar2["IJAB"] = R2["IJAB"];
+//        Hbar2["ABIJ"] = R2["IJAB"];
     }else if (options_.get_str("SRG_ETA") == "WHITE"){
 
         Tensor& Hbar1_oo = *Hbar1.block("oo");
@@ -311,7 +311,7 @@ void TensorSRG::compute_srg_step()
     if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
         full_commutator_A_B_C(-1.0,Hbar1,Hbar2,eta1,eta2,C0,C1,C2);
     }else if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK2"){
-        modified_commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
+//        modified_commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
     }else{
         commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
     }

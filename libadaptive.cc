@@ -182,7 +182,7 @@ read_options(std::string name, Options &options)
         /*- The type of operator to use in the SRG transformation -*/
         options.add_str("SRG_OP","UNITARY","UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/
-        options.add_str("SRG_ETA","WHITE","WEGNER_BLOCK WEGNER_DIAG WHITE");
+        options.add_str("SRG_ETA","WHITE","WEGNER_BLOCK WHITE");
         /*- The integrator used to propagate the SRG equations -*/
         options.add_str("SRG_ODEINT","FEHLBERG78","DOPRI5 CASHKARP FEHLBERG78");
         /*- The end value of the integration parameter s -*/
