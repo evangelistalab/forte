@@ -28,13 +28,12 @@ void MethodBase::startup()
     corr_docc -= frzcpi_;
 
     for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < frzcpi_[h]; ++i,++p){
+        for (int i = 0; i < frzcpi_[h]; ++i){
+            p += 1;
         }
         for (int i = 0; i < corr_docc[h]; ++i,++p){
             a_occ_mos.push_back(p);
             b_occ_mos.push_back(p);
-//            mos_to_aocc[p] = a_occ_mos.size()-1;
-//            mos_to_bocc[p] = a_occ_mos.size()-1;
         }
         for (int i = 0; i < soccpi_[h]; ++i,++p){
             a_occ_mos.push_back(p);
@@ -95,7 +94,6 @@ void MethodBase::startup()
         return 0.0;
     });
 
-
     // Form the Fock matrix
     F["pq"]  = H["pq"];
     F["pq"] += V["prqs"] * G1["sr"];
@@ -104,7 +102,6 @@ void MethodBase::startup()
     F["PQ"] += H["PQ"];
     F["PQ"] += V["rPsQ"] * G1["sr"];
     F["PQ"] += V["PRQS"] * G1["SR"];
-
 
     if (print_ > 2){
         G1.print();

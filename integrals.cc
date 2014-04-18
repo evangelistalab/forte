@@ -378,12 +378,14 @@ void ExplorerIntegrals::freeze_core()
     //    beta_h0_core_energy += oei_bb[i_f][i_f];
     //  }
 
-
     // Modify the active part of H to include the core effects;
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = 0; q < nmo_; ++q){
-            for (int hi = 0, r = 0; hi < nirrep_; ++hi){
-                for (int i = 0; i < frzcpi[hi]; ++i){
+    size_t f = 0;
+    for (int hi = 0; hi < nirrep_; ++hi){
+        for (int i = 0; i < frzcpi[hi]; ++i){
+            size_t r = f + i;
+            fprintf(outfile,"\n  Freezing MO %zu",r);
+            for(size_t p = 0; p < nmo_; ++p){
+                for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
                     one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
                     if(p == q){
@@ -393,6 +395,7 @@ void ExplorerIntegrals::freeze_core()
                 }
             }
         }
+        f += mopi[hi];
     }
 }
 
