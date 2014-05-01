@@ -150,7 +150,8 @@ protected:
     void commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
     void commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
     void commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
-
+    void commutator_A2_B2_C1_simplified(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
+    void commutator_A2_B2_C1_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
 
 
 

@@ -55,7 +55,7 @@ void TensorSRG::commutator_A_B_C_SRC(double factor,
     commutator_A1_B1_C1(A1,B1,+factor,C1);
     commutator_A1_B2_C1(A1,B2,+factor,C1);
     commutator_A1_B2_C1(B1,A2,+factor,C1);
-    commutator_A2_B2_C1(A2,B2,+factor,C1);
+    commutator_A2_B2_C1_simplified(A2,B2,+factor,C1);
 
     commutator_A1_B2_C2(A1,B2,+factor,C2);
     commutator_A1_B2_C2(B1,A2,-factor,C2);
@@ -96,7 +96,7 @@ void TensorSRG::commutator_A_B_C_SRC_fourth_order(double factor,
     commutator_A1_B1_C1(A1,B1,+factor,C1);
     commutator_A1_B2_C1(A1,B2,+factor,C1);
     commutator_A1_B2_C1(B1,A2,+factor,C1);
-    commutator_A2_B2_C1(A2,B2,+2.0 * factor,C1);
+    commutator_A2_B2_C1_fo(A2,B2,factor,C1);
 
     commutator_A1_B2_C2(A1,B2,+factor,C2);
     commutator_A1_B2_C2(B1,A2,-factor,C2);
@@ -239,6 +239,74 @@ void TensorSRG::commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double alp
 
     C["QP"] += -0.5 * alpha * A["AQIJ"] * B["IJAP"];
     C["QP"] += -1.0 * alpha * A["aQiJ"] * B["iJaP"];
+
+    if(print_ > 2){
+        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+    }
+    time_comm_A2_B2_C1 += t.elapsed();
+}
+
+void TensorSRG::commutator_A2_B2_C1_simplified(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
+{
+    boost::timer t;
+
+    C["jk"] += +0.5 * alpha * A["abik"] * B["ijab"];
+    C["jk"] += +1.0 * alpha * A["aBkI"] * B["jIaB"];
+
+    C["jc"] += +0.5 * alpha * A["abic"] * B["ijab"];
+    C["jc"] += +1.0 * alpha * A["aBcI"] * B["jIaB"];
+
+    C["kb"] += -0.5 * alpha * A["akij"] * B["ijab"];
+    C["kb"] += -1.0 * alpha * A["kAiJ"] * B["iJbA"];
+
+    C["cb"] += -0.5 * alpha * A["acij"] * B["ijab"];
+    C["cb"] += -1.0 * alpha * A["cAiJ"] * B["iJbA"];
+
+    C["JK"] += +0.5 * alpha * A["ABIK"] * B["IJAB"];
+    C["JK"] += +1.0 * alpha * A["aBiK"] * B["iJaB"];
+
+    C["JC"] += +0.5 * alpha * A["ABIC"] * B["IJAB"];
+    C["JC"] += +1.0 * alpha * A["aBiC"] * B["iJaB"];
+
+    C["KB"] += -0.5 * alpha * A["AKIJ"] * B["IJAB"];
+    C["KB"] += -1.0 * alpha * A["aKiJ"] * B["iJaB"];
+
+    C["CB"] += -0.5 * alpha * A["ACIJ"] * B["IJAB"];
+    C["CB"] += -1.0 * alpha * A["aCiJ"] * B["iJaB"];
+
+    if(print_ > 2){
+        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+    }
+    time_comm_A2_B2_C1 += t.elapsed();
+}
+
+void TensorSRG::commutator_A2_B2_C1_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
+{
+    boost::timer t;
+
+    C["jk"] += +1.0 * alpha * A["abik"] * B["ijab"];
+    C["jk"] += +2.0 * alpha * A["aBkI"] * B["jIaB"];
+
+    C["jc"] += +0.5 * alpha * A["abic"] * B["ijab"];
+    C["jc"] += +1.0 * alpha * A["aBcI"] * B["jIaB"];
+
+    C["kb"] += -0.5 * alpha * A["akij"] * B["ijab"];
+    C["kb"] += -1.0 * alpha * A["kAiJ"] * B["iJbA"];
+
+    C["cb"] += -1.0 * alpha * A["acij"] * B["ijab"];
+    C["cb"] += -2.0 * alpha * A["cAiJ"] * B["iJbA"];
+
+    C["JK"] += +1.0 * alpha * A["ABIK"] * B["IJAB"];
+    C["JK"] += +2.0 * alpha * A["aBiK"] * B["iJaB"];
+
+    C["JC"] += +0.5 * alpha * A["ABIC"] * B["IJAB"];
+    C["JC"] += +1.0 * alpha * A["aBiC"] * B["iJaB"];
+
+    C["KB"] += -0.5 * alpha * A["AKIJ"] * B["IJAB"];
+    C["KB"] += -1.0 * alpha * A["aKiJ"] * B["iJaB"];
+
+    C["CB"] += -1.0 * alpha * A["ACIJ"] * B["IJAB"];
+    C["CB"] += -2.0 * alpha * A["aCiJ"] * B["iJaB"];
 
     if(print_ > 2){
         fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
