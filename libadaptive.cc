@@ -36,7 +36,7 @@ read_options(std::string name, Options &options)
         options.add_int("PRINT", 0);
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG");
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -245,14 +245,22 @@ libadaptive(Options &options)
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "TENSORSRG"){
-//            Explorer* explorer = new Explorer(options,ints_);
 //            std::vector<double> ONa = explorer->Da();
 //            std::vector<double> ONb = explorer->Db();
 //            int nmo = explorer->nmo();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
             srg->compute_energy();
+//            Explorer* explorer = new Explorer(options,ints_);
 //            delete explorer;
+        }
+        if (options.get_str("JOB_TYPE") == "TENSORSRG-CI"){
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
+            srg->compute_energy();
+            srg->transfer_integrals();
+            Explorer* explorer = new Explorer(options,ints_);
+            delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "SRG"){
             Explorer* explorer = new Explorer(options,ints_);

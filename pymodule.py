@@ -46,6 +46,24 @@ def run_ct(name, **kwargs):
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
+def run_ct_ci(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('ct')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'TENSORSRG-CI')
+    psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
 def run_srg(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -122,6 +140,7 @@ def run_sr_dsrgsd(name, **kwargs):
 procedures['energy']['libadaptive'] = run_libadaptive
 procedures['energy']['ct'] = run_ct
 procedures['energy']['srg'] = run_srg
+procedures['energy']['ct-ci'] = run_ct_ci
 procedures['energy']['sr-lctsd'] = run_sr_lctsd
 procedures['energy']['sr-srgsd'] = run_sr_srgsd
 procedures['energy']['sr-dsrgsd'] = run_sr_dsrgsd

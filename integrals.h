@@ -98,10 +98,19 @@ public:
     /// @param the spin type of the integrals
     void set_oei(double** ints,bool alpha);
 
+    /// Set the value of the one-electron integrals
+    /// @param the spin type of the integrals
+    void set_oei(size_t p, size_t q,double value,bool alpha);
+
     /// Set the value of the two-electron integrals
     /// @param ints pointer to the integrals
     /// @param the spin type of the integrals
     void set_tei(double**** ints,bool alpha1,bool alpha2);
+
+    /// Set the value of the two-electron integrals
+    /// @param the spin type of the integrals
+    void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+
 
     /// Update all integrals after providing one- and two-electron integrals
     /// via the functions set_oei and set_tei

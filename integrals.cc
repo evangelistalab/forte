@@ -410,6 +410,11 @@ void ExplorerIntegrals::set_oei(double** ints,bool alpha)
     }
 }
 
+void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
+{
+    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    p_oei[p * nmo_ + q] = value;
+}
 
 /// This functions receives integrals stored in the format
 /// ints[p][q][r][s] = v_{pq}^{rs}
@@ -434,6 +439,17 @@ void ExplorerIntegrals::set_tei(double**** ints,bool alpha1,bool alpha2)
     }
 }
 
+void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
+{
+    double* p_tei;
+    if (alpha1 == true and alpha2 == true) p_tei = aphys_tei_aa;
+    if (alpha1 == true and alpha2 == false) p_tei = aphys_tei_ab;
+    if (alpha1 == false and alpha2 == false) p_tei = aphys_tei_bb;
+    size_t index = aptei_index(p,q,r,s);
+    p_tei[index] = value;
+//    if (std::fabs(value) > 1.0e-9)
+//        fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,value);
+}
 
 ///**
 // * Make the one electron intermediates

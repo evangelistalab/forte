@@ -224,6 +224,9 @@ public:
 
     /// Compute the SRG or CT energy
     double compute_energy();
+
+    /// Transfer the integrals
+    void transfer_integrals();
 };
 
 /// The type of container used to hold the state vector used by boost::odeint
