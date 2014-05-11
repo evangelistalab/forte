@@ -31,6 +31,9 @@ public:
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
 
+    /// Scalar component of the Hamiltonian
+    double scalar() const {return scalar_;}
+
 //    /// The one-electron integrals
 //    double roei(int p,int q) {return one_electron_integrals[p * nmo_ + q];}
 
@@ -93,6 +96,10 @@ public:
     void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
 
+    /// Set the value of the scalar part of the Hamiltonian
+    /// @param value the new value of the scalar part of the Hamiltonian
+    void set_scalar(double value) {scalar_ = value;}
+
     /// Set the value of the one-electron integrals
     /// @param ints pointer to the integrals
     /// @param the spin type of the integrals
@@ -152,6 +159,7 @@ private:
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
 
+    double scalar_;
     double* one_electron_integrals;
     double* one_electron_integrals_a;
     double* one_electron_integrals_b;

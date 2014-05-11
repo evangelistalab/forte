@@ -2,6 +2,7 @@
 
 #include <boost/numeric/odeint.hpp>
 
+#include <libmints/molecule.h>
 #include <libmints/wavefunction.h>
 
 #include "tensorsrg.h"
@@ -222,9 +223,9 @@ void TensorSRG::transfer_integrals()
             }
         }
     }
-    double scalar = scalar0 + scalar1 + scalar2;
-    fprintf(outfile,"\n  The Hamiltonian scalar term (normal ordered wrt the true vacuum");
-    fprintf(outfile,"\n  E0 = %20.12f + %20.12f + %20.12f = %20.12f",scalar0,scalar1,scalar2,scalar);
+    double scalar = scalar0 + scalar1 + scalar2 - molecule()->nuclear_repulsion_energy();
+    fprintf(outfile,"\n  The Hamiltonian electronic scalar term (normal ordered wrt the true vacuum");
+    fprintf(outfile,"\n  E0 = %20.12f",scalar);
 
     O1["pq"] = Hbar1["pq"];
     O1["PQ"] = Hbar1["PQ"];
@@ -234,7 +235,7 @@ void TensorSRG::transfer_integrals()
     O1["PQ"] -= Hbar2["PRQS"] * G1["RS"];
 
     fprintf(outfile,"\n  Updating all the integrals");
-
+    ints_->set_scalar(scalar);
     O1.iterate_over_elements([&](std::vector<size_t>& m,std::vector<MOSetSpinType>& spin,double& value)
     {
         if ((spin[0] == Alpha) and (spin[1] == Alpha)){
@@ -255,6 +256,67 @@ void TensorSRG::transfer_integrals()
             ints_->set_tei(m[0],m[1],m[2],m[3],value,false,false);
         }
     });
+
+    // As a test compute the current CT energy
+    double Esth = scalar;
+    {
+        Tensor& Hbar_oo = *O1.block("oo");
+        Tensor::iterator it = Hbar_oo.begin();
+        Tensor::iterator endit = Hbar_oo.end();
+        for (; it != endit; ++it){
+            std::vector<size_t>& i = it.address();
+            if (i[0] == i[1]){
+                Esth += *it;
+            }
+        }
+    }
+    {
+        Tensor& Hbar_OO = *O1.block("OO");
+        Tensor::iterator it = Hbar_OO.begin();
+        Tensor::iterator endit = Hbar_OO.end();
+        for (; it != endit; ++it){
+            std::vector<size_t>& i = it.address();
+            if (i[0] == i[1]){
+                Esth += *it;
+            }
+        }
+    }
+    {
+        Tensor& Hbar_oooo = *Hbar2.block("oooo");
+        Tensor::iterator it = Hbar_oooo.begin();
+        Tensor::iterator endit = Hbar_oooo.end();
+        for (; it != endit; ++it){
+            std::vector<size_t>& i = it.address();
+            if ((i[0] == i[2]) and (i[1] == i[3])){
+                Esth += 0.5 * (*it);
+            }
+        }
+    }
+    {
+        Tensor& Hbar_oOoO = *Hbar2.block("oOoO");
+        Tensor::iterator it = Hbar_oOoO.begin();
+        Tensor::iterator endit = Hbar_oOoO.end();
+        for (; it != endit; ++it){
+            std::vector<size_t>& i = it.address();
+            if ((i[0] == i[2]) and (i[1] == i[3])){
+                Esth += (*it);
+            }
+        }
+    }
+    {
+        Tensor& Hbar_OOOO = *Hbar2.block("OOOO");
+        Tensor::iterator it = Hbar_OOOO.begin();
+        Tensor::iterator endit = Hbar_OOOO.end();
+        for (; it != endit; ++it){
+            std::vector<size_t>& i = it.address();
+            if ((i[0] == i[2]) and (i[1] == i[3])){
+                Esth += 0.5 * (*it);
+            }
+        }
+    }
+
+    fprintf(outfile,"\n  <H> = %24.12f",Esth + molecule()->nuclear_repulsion_energy());
+
     ints_->update_integrals();
     fflush(outfile);
 }

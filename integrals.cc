@@ -16,7 +16,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 ExplorerIntegrals::ExplorerIntegrals(psi::Options &options)
-    : options_(options), core_energy_(0.0)
+    : options_(options), core_energy_(0.0), scalar_(0.0)
 {
     startup();
     read_one_electron_integrals();

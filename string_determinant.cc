@@ -170,7 +170,7 @@ void StringDeterminant::print() const
 double StringDeterminant::energy() const
 {
     double matrix_element = 0.0;
-    matrix_element = ints_->frozen_core_energy();
+    matrix_element = ints_->frozen_core_energy() + ints_->scalar();
     //    for(int p = 0; p < nmo_; ++p){
     //        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
     //        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
