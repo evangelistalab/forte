@@ -29,7 +29,7 @@ void TensorSRG::startup()
     fprintf(outfile,"\n          Similarity Renormalization Group");
     fprintf(outfile,"\n                tensor-based code");
     fprintf(outfile,"\n");
-    fprintf(outfile,"\n                Version 0.2.0");
+    fprintf(outfile,"\n                Version 0.2.1");
     fprintf(outfile,"\n");
     fprintf(outfile,"\n       written by Francesco A. Evangelista");
     fprintf(outfile,"\n      --------------------------------------\n");
