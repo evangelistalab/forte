@@ -446,7 +446,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     }
 
     // 5) Print the energy
-    for (int i = 0; i < nroot; ++ i){
+    for (int i = 0; i < nroot; ++ i){        
         fprintf(outfile,"\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
         fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
                 27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
