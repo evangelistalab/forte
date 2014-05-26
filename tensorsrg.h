@@ -138,14 +138,22 @@ protected:
                           BlockedTensor& A1,BlockedTensor& A2,
                           BlockedTensor& B1,BlockedTensor& B2,
                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    /// The commutator [A,B - B+]_1,2
     void commutator_A_B_C_SRC(double factor,
                               BlockedTensor& A1,BlockedTensor& A2,
                               BlockedTensor& B1,BlockedTensor& B2,
                               double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    /// The commutator [A,B - B+]_1,2 with the [V,T1] diagram weights modified
     void commutator_A_B_C_SRC_fourth_order(double factor,
                                            BlockedTensor& A1,BlockedTensor& A2,
                                            BlockedTensor& B1,BlockedTensor& B2,
                                            double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    /// The commutator [A,B - B+]_1,2 using the approximation of Tsukiyama
+    void commutator_A_B_C_SRC_Tsukiyama(double factor,
+                                        BlockedTensor& A1,BlockedTensor& A2,
+                                        BlockedTensor& B1,BlockedTensor& B2,
+                                        double& C0,BlockedTensor& C1,BlockedTensor& C2);
+
     /// The numbers indicate the rank of each operator
     void commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
     void commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
