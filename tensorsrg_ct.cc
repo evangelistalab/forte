@@ -166,9 +166,9 @@ double TensorSRG::compute_ct_energy()
         double max_S1 = *max_element(S1_vec.begin(),S1_vec.end());
         double max_S2 = *max_element(S2_vec.begin(),S2_vec.end());
 
-        double norm_H1a = Hbar1.block("ov")->norm();
+        double norm_H1a  = Hbar1.block("ov")->norm();
         double norm_H1b  = Hbar1.block("OV")->norm();
-        double norm_H2aa  = Hbar2.block("oovv")->norm();
+        double norm_H2aa = Hbar2.block("oovv")->norm();
         double norm_H2ab = Hbar2.block("oOvV")->norm();
         double norm_H2bb = Hbar2.block("OOVV")->norm();
 
@@ -181,8 +181,8 @@ double TensorSRG::compute_ct_energy()
         double norm_S2ab = S2.block("oOvV")->norm();
         double norm_S2bb = S2.block("OOVV")->norm();
 
-        double norm_S1 = norm_S1a + norm_S1b;
-        double norm_S2 = 0.25 * (norm_S2aa + 4.0 * norm_S2ab + norm_S2bb);
+        double norm_S1 = std::sqrt(norm_S1a * norm_S1a + norm_S1b * norm_S1b);
+        double norm_S2 = std::sqrt(0.25 * norm_S2aa * norm_S2aa + norm_S2ab * norm_S2ab + 0.25 * norm_S2bb * norm_S2bb);
 
         fprintf(outfile,"\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
 
