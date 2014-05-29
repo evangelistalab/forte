@@ -177,7 +177,16 @@ double TensorSRG::compute_ct_energy()
         double norm_S1 = S1.norm();
         double norm_S2 = S2.norm();
 
-        fprintf(outfile,"\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.3f %7.3f %7.3f %7.3f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
+        double norm_S1a  = S1.block("ov")->norm();
+        double norm_S1b  = S1.block("OV")->norm();
+        double norm_S2aa = S2.block("oovv")->norm();
+        double norm_S2ab = S2.block("oOvV")->norm();
+        double norm_S2bb = S2.block("OOVV")->norm();
+
+        double norm_S1 = norm_S1a + norm_S1b;
+        double norm_S2 = 0.25 * (norm_S2aa + 4.0 * norm_S2ab + norm_S2bb);
+
+        fprintf(outfile,"\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
 
         if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
