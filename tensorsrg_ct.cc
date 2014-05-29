@@ -173,7 +173,7 @@ double TensorSRG::compute_ct_energy()
         double norm_H2bb = Hbar2.block("OOVV")->norm();
 
         double norm_Hbar1_ex = std::sqrt(norm_H1a * norm_H1a + norm_H1b * norm_H1b);
-        double norm_Hbar2_ex = std::sqrt(norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab + norm_H2bb * norm_H2bb);
+        double norm_Hbar2_ex = std::sqrt(0.25 * norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab + 0.25 * norm_H2bb * norm_H2bb);
 
         double norm_S1a  = S1.block("ov")->norm();
         double norm_S1b  = S1.block("OV")->norm();
