@@ -146,7 +146,7 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        fprintf(outfile,"\n\n  Root %3d.  Determinants contribution to %.0f%% of the wave function:",100.0 * significant_wave_function,i + 1);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -167,6 +167,9 @@ void Explorer::diagonalize_p_space(psi::Options& options)
             if (cum_wfn > significant_wave_function) break;
         }
 
+        // Compute the density matrices
+        std::fill(Da_.begin(), Da_.end(), 0.0);
+        std::fill(Db_.begin(), Db_.end(), 0.0);
         double norm = 0.0;
         for (int I = 0; I < ndets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
