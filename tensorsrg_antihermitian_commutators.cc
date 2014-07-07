@@ -19,6 +19,7 @@ double time_comm_A2_B2_C1 = 0;
 double time_comm_A2_B2_C2 = 0;
 double t_tensor = 0;
 double t_four = 0;
+int ncalls = 0;
 
 void TensorSRG::commutator_A_B_C(double factor,
                              BlockedTensor& A1,
@@ -36,6 +37,7 @@ void TensorSRG::commutator_A_B_C(double factor,
     }else if (options_.get_str("SRG_COMM") == "SRG2"){
         commutator_A_B_C_SRC_Tsukiyama(factor,A1,A2,B1,B2,C0,C1,C2);
     }
+    ncalls += 1;
 }
 
 void TensorSRG::commutator_A_B_C_SRC(double factor,
@@ -529,6 +531,7 @@ void TensorSRG::print_timings()
     fprintf(outfile,"\n              Time for [A2,B2] -> C1 : %10.3f",time_comm_A2_B2_C1);
     fprintf(outfile,"\n              Time for [A2,B2] -> C2 : %10.3f",time_comm_A2_B2_C2);
     fprintf(outfile,"\n              ===================================\n");
+    fprintf(outfile,"\n              The commutator was called %d times\n",ncalls);
 }
 
 }} // EndNamespaces

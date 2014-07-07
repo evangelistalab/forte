@@ -117,7 +117,7 @@ read_options(std::string name, Options &options)
 
         /*- The threshold for the selection of the P space -*/
         options.add_double("TAUP",0.01);
-        /*- The threshold for the selection of the P space -*/
+        /*- The threshold for the selection of the Q space -*/
         options.add_double("TAUQ",0.000001);
 
         /*- The number of steps used in the renormalized Lambda CI -*/
