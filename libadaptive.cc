@@ -207,6 +207,8 @@ read_options(std::string name, Options &options)
         options.add_int("SRG_RSC_NCOMM",20);
         /*- The treshold for terminating the RSC approximation -*/
         options.add_double("SRG_RSC_THRESHOLD",1.0e-12);
+        /*- Save Hbar? -*/
+        options.add_bool("SAVE_HBAR",false);
     }
     return true;
 }

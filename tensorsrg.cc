@@ -39,6 +39,8 @@ void TensorSRG::startup()
 
     BlockedTensor::print_mo_spaces();
 
+    fprintf(outfile,"\n      Energy convergence = %e\n",options_.get_double("E_CONVERGENCE"));
+
     S1.resize_spin_components("S1","ov");
     S2.resize_spin_components("S2","oovv");
     DS1.resize_spin_components("S1","ov");

@@ -133,6 +133,9 @@ protected:
     /// Update the S2 amplitudes for the DSRG
     void update_S2_dsrg_mp2();
 
+    /// Save the similarity-transformed Hamiltonian to a file
+    void save_hbar();
+
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void commutator_A_B_C(double factor,

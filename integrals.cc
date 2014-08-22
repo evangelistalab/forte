@@ -84,16 +84,6 @@ void ExplorerIntegrals::startup()
     diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
-
-//    diagonal_c_integrals_aa = new double[nmo_ * nmo_];
-//    diagonal_c_integrals_ab = new double[nmo_ * nmo_];
-//    diagonal_c_integrals_bb = new double[nmo_ * nmo_];
-//    diagonal_c_integrals = diagonal_c_integrals_aa;
-
-//    diagonal_ce_integrals_aa = new double[nmo_ * nmo_];
-//    diagonal_ce_integrals_ab = new double[nmo_ * nmo_];
-//    diagonal_ce_integrals_bb = new double[nmo_ * nmo_];
-//    diagonal_ce_integrals = diagonal_ce_integrals_aa;
 }
 
 void ExplorerIntegrals::cleanup()
@@ -122,14 +112,6 @@ void ExplorerIntegrals::cleanup()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
-
-//    delete[] diagonal_c_integrals_aa;
-//    delete[] diagonal_c_integrals_ab;
-//    delete[] diagonal_c_integrals_bb;
-
-//    delete[] diagonal_ce_integrals_aa;
-//    delete[] diagonal_ce_integrals_ab;
-//    delete[] diagonal_ce_integrals_bb;
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()

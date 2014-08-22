@@ -212,6 +212,11 @@ double TensorSRG::compute_ct_energy()
     Process::environment.globals["CURRENT ENERGY"] = old_energy;
     Process::environment.globals["CTSD ENERGY"] = old_energy;
     Process::environment.globals["LCTSD ENERGY"] = old_energy;
+
+    if (options_.get_bool("SAVE_HBAR")){
+        save_hbar();
+    }
+
     return old_energy;
 }
 
