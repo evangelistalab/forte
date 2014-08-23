@@ -220,7 +220,7 @@ libadaptive(Options &options)
         test_tensor_class(true);
     }else{
         // Get the one- and two-electron integrals in the MO basis
-        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options);
+        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,true);
 
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){

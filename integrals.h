@@ -22,7 +22,7 @@ enum IntegralOrdering {Pitzer,MOGroup};
 class ExplorerIntegrals{
 public:
     // Class Constructor and Destructor
-    ExplorerIntegrals(psi::Options &options);
+    ExplorerIntegrals(psi::Options &options,bool restricted);
     ~ExplorerIntegrals();
 
     // Class Interface
@@ -133,6 +133,7 @@ public:
 private:
     // Class data
     psi::Options& options_;
+    bool restricted_;
     IntegralTransform* ints_;
     size_t nirrep_;
     size_t nmo_;
@@ -164,7 +165,6 @@ private:
     double* one_electron_integrals_a;
     double* one_electron_integrals_b;
     double* diagonal_kinetic_energy_integrals;
-    double* two_electron_integrals;
 
     /// Antisymmetrized two-electron integrals in physicist notation
     double* aphys_tei_aa;
