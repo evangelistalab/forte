@@ -23,11 +23,19 @@ class ExplorerIntegrals{
 public:
     // ==> Class Constructor and Destructor <==
 
+    /**
+     * Constructor
+     * @param options The main options object
+     * @param restricted Select a restricted or unrestricted transformation (true = restricted, false = unrestricted).
+     */
     ExplorerIntegrals(psi::Options &options,bool restricted);
+
+    /// Destructor
     ~ExplorerIntegrals();
 
     // ==> Class Interface <==
 
+    /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const {return nmo_;}
 
     /// Return the frozen core energy
