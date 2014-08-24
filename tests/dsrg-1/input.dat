@@ -2,7 +2,7 @@ import libbtl
 import libadaptive
 
 refscf  = -108.231992299023318 #TEST
-refdsrg = -108.433785371452998 #TEST
+refdsrg = -108.433328203370323 # -108.433785371452998 #TEST
 
 molecule {
 0 1

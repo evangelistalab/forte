@@ -56,11 +56,11 @@ void ExplorerIntegrals::startup()
     spaces.push_back(MOSpace::all);
 
     // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-//    if (restricted_){
-//    }else{
-//        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-//    }
+    if (restricted_){
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    }else{
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    }
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
@@ -70,11 +70,9 @@ void ExplorerIntegrals::startup()
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals_a = new double[nmo_ * nmo_];
     one_electron_integrals_b = new double[nmo_ * nmo_];
-    one_electron_integrals = one_electron_integrals_a;
 
     diagonal_one_electron_integrals_a = new double[nmo_];
     diagonal_one_electron_integrals_b = new double[nmo_];
-    diagonal_one_electron_integrals = diagonal_one_electron_integrals_a;
 
     diagonal_kinetic_energy_integrals = new double[nmo_];
 
