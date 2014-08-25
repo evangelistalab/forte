@@ -61,6 +61,9 @@ void ExplorerIntegrals::startup()
     }else{
         ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     }
+
+    // Keep the SO integrals on disk in case we want to retransform them
+    ints_->set_keep_iwl_so_ints(true);
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
