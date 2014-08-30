@@ -155,8 +155,8 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element = ints_->frozen_core_energy();
         for(int p = 0; p < nmo_; ++p){
-            if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
-            if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
+            if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
+            if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
             for(int q = 0; q < nmo_; ++q){
                 if(alfa_bits_[p] and alfa_bits_[q])
                     matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);

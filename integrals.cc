@@ -321,14 +321,6 @@ void ExplorerIntegrals::make_diagonal_integrals()
 
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
-            //            diagonal_c_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q);
-            //            diagonal_c_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q);
-            //            diagonal_c_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q);
-
-            //            diagonal_ce_integrals_aa[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
-            //            diagonal_ce_integrals_ab[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
-            //            diagonal_ce_integrals_bb[p * nmo_ + q] = rtei(p,p,q,q) - rtei(p,q,p,q);
-
             diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
             diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
             diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);

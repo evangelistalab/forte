@@ -50,12 +50,6 @@ public:
     /// The beta one-electron integrals
     double oei_b(int p,int q) {return one_electron_integrals_b[p * nmo_ + q];}
 
-    /// The diagonal part of the kinetic energy integrals
-    double diag_rkei(int p) {return diagonal_kinetic_energy_integrals[p];}
-
-    /// The diagonal one-electron integrals
-    double diag_roei(int p) {return diagonal_one_electron_integrals_a[p];}
-
     /// The diagonal fock matrix integrals
     double diag_fock_a(int p) {return fock_matrix_a[p * nmo_ + p];}
 

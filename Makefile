@@ -7,7 +7,7 @@
 # Location of your PSI4 source
 top_srcdir = /Users/francesco/Source/psi4
 # Location of your PSI4 install, by default as listed
-top_objdir = /Users/francesco/Source/psi4-github-compile-c++11-opt
+top_objdir = /Users/francesco/Source/psi4-github-compile-c++11-debug
 
 # Start by figuring out whether we're on Linux or Mac (sorry, Mr. Gates)
 UNAME := $(shell uname)
@@ -18,7 +18,7 @@ include $(top_objdir)/src/bin/MakeVars
 # Location of your PSI4 source
 top_srcdir = /Users/francesco/Source/psi4
 # Location of your PSI4 install, by default as listed
-top_objdir = /Users/francesco/Source/psi4-github-compile-c++11-opt
+top_objdir = /Users/francesco/Source/psi4-github-compile-c++11-debug
 
 PSITARGET = $(shell basename `pwd`).so
 #PSILIBS = -L$(top_objdir)/lib -lPSI_plugin -l/Users/francesco/Source/libbtl/libbtl.so # -lbtl
