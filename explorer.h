@@ -56,6 +56,10 @@ public:
     std::vector<double> Da() {return Da_;}
     std::vector<double> Db() {return Db_;}
 private:
+    /// A reference to the options object
+    Options& options_;
+    /// The molecular integrals required by Explorer
+    ExplorerIntegrals* ints_;
     /// The number of irriducible representations
     int nirrep_;
     /// The wave function symmetry
@@ -134,8 +138,6 @@ private:
     std::vector<int> frzv_;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
-    /// The molecular integrals required by Explorer
-    ExplorerIntegrals* ints_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
     /// The determinant with minimum energy
@@ -179,6 +181,8 @@ private:
     void diagonalize_renormalized_space(psi::Options& options);
     /// Diagonalize the Hamiltonian using a renormalization procedure that selects determinants and keeps only a fixed amount
     void diagonalize_renormalized_fixed_space(psi::Options& options);
+    /// Print the results of a computation
+    void print_results(SharedMatrix evecs,SharedVector evals,int nroots);
 
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);

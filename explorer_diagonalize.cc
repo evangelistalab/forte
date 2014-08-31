@@ -107,61 +107,97 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
     fflush(outfile);
 
-    // 5) Print the energy
-    int nroots_print = std::min(nroots,25);
-    for (int i = 0; i < nroots_print; ++ i){
-        double S2 = 0.0;
-        int num_sig = ndets;
-        double norm = 0.0;
-        double** C_mat = evecs->pointer();
+    // Set some environment variables
+    Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options_.get_int("ROOT"));
 
-//        for (int I = 0; I < num_sig; ++I){
-//            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
-//            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
-//            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
-//            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
-//            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-//            for (int J = 0; J < num_sig; ++J){
-//                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
-//                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
-//                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
-//                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
-//                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
-//                if (std::fabs(C_mat[I][i] * C_mat[J][i]) > 1.0e-12){
-//                    const double S2IJ = StringDeterminant::Spin2(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
-//                    S2 += C_mat[I][i] * S2IJ * C_mat[J][i];
-//                }
-//            }
-//            norm += C_mat[I][i] * C_mat[I][i];
-//        }
-//        S2 /= norm;
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV (S^2 = %f)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2);
+    print_results(evecs,evals,nroots);
+}
+
+void Explorer::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
+{
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet"});
+
+    int nroots_print = std::min(nroots,25);
+
+    for (int i = 0; i < nroots_print; ++ i){
+        // Find the most significant contributions to this root
+        size_t ndets = evecs->nrow();
+        std::vector<std::pair<double,int> > C_J_sorted;
+
+        double significant_threshold = 0.0005;
+        double significant_wave_function = 0.99999;
+
+        double** C_mat = evecs->pointer();      
+        for (int J = 0; J < ndets; ++J){
+            if (std::fabs(C_mat[J][i]) > significant_threshold){
+                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+            }
+        }
+
+        // Sort them and
+        int num_sig = 0;
+        std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
+        double cum_wfn = 0.0;
+        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
+            int J = C_J_sorted[I].second;
+            cum_wfn += C_mat[J][i] * C_mat[J][i];
+            num_sig++;
+            if (cum_wfn > significant_wave_function) break;
+        }
+//        fprintf(outfile,"\nAnalysis on %d out of %zu sorted (%zu total)",num_sig,C_J_sorted.size(),determinants_.size());
+
+        double norm = 0.0;
+        double S2 = 0.0;
+        for (int sI = 0; sI < num_sig; ++sI){
+            int I = C_J_sorted[sI].second;
+            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
+            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
+            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
+            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
+            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
+            for (int sJ = 0; sJ < num_sig; ++sJ){
+                int J = C_J_sorted[sJ].second;
+                boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
+                const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
+                const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
+                const int J_class_b = determinantJ.get<3>(); //std::get<2>(determinantI);
+                const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
+                if (std::fabs(C_mat[I][i] * C_mat[J][i]) > 1.0e-12){
+                    const double S2IJ = StringDeterminant::Spin2(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
+//                    fprintf(outfile,"\nI = %d J = %d S2IJ = %.12f, C_I C_J = %.12f",I,J,S2IJ,C_mat[I][i] * C_mat[J][i]);
+                    S2 += C_mat[I][i] * S2IJ * C_mat[J][i];
+                }
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+        S2 /= norm;
+        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        std::string state_label = s2_labels[std::round(S * 2.0)];
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
         fflush(outfile);
     }
-
-    // Set some environment variables
-    Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options.get_int("ROOT"));
 
     // 6) Print the major contributions to the eigenvector
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n\n  Root %3d.  Determinants contribution to %.0f%% of the wave function:",100.0 * significant_wave_function,i + 1);
+        fprintf(outfile,"\n\n  => Root %3d <=\n\n  Determinants contribution to %.0f%% of the wave function:",i+1,100.0 * significant_wave_function);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
+        size_t ndets = evecs->nrow();
         for (int J = 0; J < ndets; ++J){
             if (std::fabs(C_mat[J][i]) > significant_threshold){
                 C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
             }
-        }        
+        }
         // Sort them and print
         std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
         double cum_wfn = 0.0;
         int num_sig = 0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             num_sig++;
             if (cum_wfn > significant_wave_function) break;
@@ -183,12 +219,12 @@ void Explorer::diagonalize_p_space(psi::Options& options)
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }
-        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
+//        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
         for (int p = 0; p < nmo_; ++p){
             Da_[p] /= norm;
             Db_[p] /= norm;
         }
-        fprintf(outfile,"\n  Occupation numbers");
+        fprintf(outfile,"\n\n  Occupation numbers");
         double na = 0.0;
         double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
@@ -578,65 +614,11 @@ void Explorer::diagonalize_p_space_direct(psi::Options& options)
     fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
     fflush(outfile);
 
-    // 5) Print the energy
-    int nroots_print = std::min(nroots,25);
-    for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-    }
+    // Set some environment variables
+    Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options.get_int("ROOT"));
 
-    // 6) Print the major contributions to the eigenvector
-    double significant_threshold = 0.001;
-    double significant_wave_function = 0.95;
-    for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
-        // Identify all contributions with |C_J| > significant_threshold
-        double** C_mat = evecs->pointer();
-        std::vector<std::pair<double,int> > C_J_sorted;
-        for (int J = 0; J < ndets; ++J){
-            if (std::fabs(C_mat[J][i]) > significant_threshold){
-                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
-            }
-        }
-        // Sort them and print
-        std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
-        double cum_wfn = 0.0;
-        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
-            int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
-            cum_wfn += C_mat[J][i] * C_mat[J][i];
-            if (cum_wfn > significant_wave_function) break;
-        }
+    print_results(evecs,evals,nroots);
 
-        double norm = 0.0;
-        for (int I = 0; I < ndets; ++I){
-            boost::tuple<double,int,int,int,int>& determinantI = determinants_[I];
-            const int I_class_a = determinantI.get<1>();  //std::get<1>(determinantI);
-            const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
-            const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
-            const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-            double w = C_mat[I][i] * C_mat[I][i];
-            if (w > 1.0e-12){
-                StringDeterminant::SlaterdiagOPDM(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),Da_,Db_,w);
-            }
-            norm += C_mat[I][i] * C_mat[I][i];
-        }
-        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
-        for (int p = 0; p < nmo_; ++p){
-            Da_[p] /= norm;
-            Db_[p] /= norm;
-        }
-        fprintf(outfile,"\n  Occupation numbers");
-        double na = 0.0;
-        double nb = 0.0;
-        for (int h = 0, p = 0; h < nirrep_; ++h){
-            for (int n = 0; n < nmopi_[h]; ++n){
-                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
-                na += Da_[p];
-                nb += Db_[p];
-                p += 1;
-            }
-        }
-    }
     fflush(outfile);
 }
 
@@ -722,7 +704,7 @@ bool Explorer::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double>
     double* eps = Eigenvalues->pointer();
     double** v = Eigenvectors->pointer();
     double cutoff = 1.0e-10;
-    int print = 1;
+    int print = 0;
 
     int i, j, k, L, I;
     double minimum;

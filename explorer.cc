@@ -14,7 +14,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
-    : min_energy_(0.0),ints_(ints),pt2_energy_correction_(0.0)
+    : options_(options),ints_(ints),min_energy_(0.0),pt2_energy_correction_(0.0)
 {
     boost::timer t;
 

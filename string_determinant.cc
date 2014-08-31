@@ -451,13 +451,10 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             for(int q = 0; q < nmo_; ++q){
                 if(alfa_bits_[p] and alfa_bits_[q])
                     matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
-                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(beta_bits_[p] and beta_bits_[q])
                     matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
-                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(alfa_bits_[p] and beta_bits_[q])
                     matrix_element +=   ints_->diag_aptei_ab(p,q);
-                //                    matrix_element += ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -475,11 +472,9 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * ints_->rtei(i,j,p,p);
                 matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
@@ -498,10 +493,8 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
                 matrix_element += sign * ints_->aptei_ab(p,i,p,j);
-                //                matrix_element += sign * ints_->rtei(p,p,i,j);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
@@ -523,7 +516,6 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_aa(i,j,k,l);
     }
 
@@ -544,7 +536,6 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
@@ -560,7 +551,6 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        //matrix_element = sign * ints_->rtei(i,k,j,l);
         matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);
@@ -597,13 +587,10 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             for(int q = 0; q < nmo; ++q){
                 if(Ia[p] and Ia[q])
                     matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
-                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(Ib[p] and Ib[q])
                     matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
-                //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(Ia[p] and Ib[q])
                     matrix_element +=   ints_->diag_aptei_ab(p,q);
-                //                    matrix_element += ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -621,11 +608,9 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo; ++p){
             if(Ia[p] and Ja[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * ints_->rtei(i,j,p,p);
                 matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
@@ -643,11 +628,9 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo; ++p){
             if(Ia[p] and Ja[p]){
-                //                matrix_element += sign * ints_->rtei(p,p,i,j);
                 matrix_element += sign * ints_->aptei_ab(p,i,p,j);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
@@ -690,7 +673,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
@@ -706,19 +688,20 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        //        matrix_element = sign * ints_->rtei(i,k,j,l);
         matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);
 }
 
 /**
- * Compute the S^2 matrix element of the Hamiltonian between this determinant and a given one
- * @param rhs
- * @return
+ * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
+ * @return S^2
  */
 double StringDeterminant::Spin2(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb)
 {
+    // Compute the matrix elements of the operator S^2
+    // S^2 = S- S+ + Sz (Sz + 1)
+    //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
     double matrix_element = 0.0;
 
     int nadiff = 0;
@@ -733,30 +716,32 @@ double StringDeterminant::Spin2(const std::vector<bool>& Ia,const std::vector<bo
         if (Ib[n] != Jb[n]) nbdiff++;
         if (Ia[n]) na++;
         if (Ib[n]) nb++;
-        if ((Ia[n] and Ib[n]) and (Ja[n] and Jb[n])) npair += 1;
+        if ((Ia[n] and Ib[n])) npair += 1;
     }
     nadiff /= 2;
     nbdiff /= 2;
 
     double Ms = 0.5 * static_cast<double>(na - nb);
 
-    // Slater rule 1 PhiI = PhiJ
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta + Npairs
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
     }
 
-    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
     if ((nadiff == 1) and (nbdiff == 1)) {
-        // Diagonal contribution
-        int i = 0;
-        int j = 0;
-
+        // Find a pair of spin coupled electrons
+        int i = -1;
+        int j = -1;
+        // The logic here is a bit complex
         for(int p = 0; p < nmo; ++p){
-            if((Ib[p] == Ja[p]) and Ja[p]) i = p;
-            if((Ia[p] == Jb[p]) and Jb[p]) j = p;
+            if(Ja[p] and Ib[p] and (not Jb[p]) and  (not Ia[p])) i = p; //(p)
+            if(Jb[p] and Ia[p] and (not Ja[p]) and  (not Ib[p])) j = p; //(q)
         }
-        double sign = SlaterSign(Ja,i) * SlaterSign(Jb,j) * SlaterSign(Ib,i) * SlaterSign(Ia,j);
-        matrix_element -= sign;
+        if (i != j and i >= 0 and j >= 0){
+            double sign = SlaterSign(Ja,i) * SlaterSign(Jb,j) * SlaterSign(Ib,i) * SlaterSign(Ia,j);
+            matrix_element -= sign;
+        }
     }
     return(matrix_element);
 }
