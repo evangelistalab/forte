@@ -135,11 +135,20 @@ public:
     double excitation_energy(const StringDeterminant& reference);
     /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_ab_energy(const StringDeterminant& reference);
+
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules(const StringDeterminant& rhs) const;
+
+    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    double spin2(const StringDeterminant& rhs) const;
+
+    /// Compute the cotribution of a determinant to the diagonal density matrix (number operator)
+    void diag_opdm(std::vector<double>& Da,std::vector<double>& Db,double w);
+
     /// Compute the excitation level of a Slater determiant with respect to a given reference
     int excitation_level(const StringDeterminant& reference);
     int excitation_level(const bool* Ia,const bool* Ib);
+
     /// Sets the pointer to the integral object
     static void set_ints(ExplorerIntegrals* ints) {ints_ = ints;}
     /// Compute the matrix element of the Hamiltonian between two Slater determinants

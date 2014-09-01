@@ -183,6 +183,10 @@ private:
     void diagonalize_renormalized_fixed_space(psi::Options& options);
     /// Print the results of a computation
     void print_results(SharedMatrix evecs,SharedVector evals,int nroots);
+    void print_results_lambda_sd_ci(std::vector<StringDeterminant>& determinants,
+                                    SharedMatrix evecs,
+                                    SharedVector evals,
+                                    int nroots);
 
     /// Build the Hamiltonian matrix
     SharedMatrix build_hamiltonian(Options &options);

@@ -241,6 +241,8 @@ void Explorer::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
     }
 }
 
+
+
 /**
  * Diagonalize the
  */

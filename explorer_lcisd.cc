@@ -454,9 +454,125 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     fprintf(outfile,"\n  Finished building H");
     fflush(outfile);
 
+
+    print_results_lambda_sd_ci(ref_sd_dets,evecs,evals,nroot);
     fflush(outfile);
 }
 
+void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
+                                          SharedMatrix evecs,
+                                          SharedVector evals,
+                                          int nroots)
+{
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet"});
+
+    int nroots_print = std::min(nroots,25);
+
+    for (int i = 0; i < nroots_print; ++ i){
+        // Find the most significant contributions to this root
+        size_t ndets = evecs->nrow();
+        std::vector<std::pair<double,int> > C_J_sorted;
+
+        double significant_threshold = 0.00001;
+        double significant_wave_function = 0.99999;
+
+        double** C_mat = evecs->pointer();
+        for (int J = 0; J < ndets; ++J){
+            if (std::fabs(C_mat[J][i]) > significant_threshold){
+                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+            }
+        }
+
+        // Sort them and
+        int num_sig = 0;
+        std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
+        double cum_wfn = 0.0;
+        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
+            int J = C_J_sorted[I].second;
+            cum_wfn += C_mat[J][i] * C_mat[J][i];
+            num_sig++;
+            if (cum_wfn > significant_wave_function) break;
+        }
+        fprintf(outfile,"\nAnalysis on %d out of %zu sorted (%zu total)",num_sig,C_J_sorted.size(),determinants.size());
+
+        double norm = 0.0;
+        double S2 = 0.0;
+        for (int sI = 0; sI < num_sig; ++sI){
+            int I = C_J_sorted[sI].second;
+            for (int sJ = 0; sJ < num_sig; ++sJ){
+                int J = C_J_sorted[sJ].second;
+                if (std::fabs(C_mat[I][i] * C_mat[J][i]) > 1.0e-12){
+                    const double S2IJ = determinants[I].spin2(determinants[J]);
+                    S2 += C_mat[I][i] * S2IJ * C_mat[J][i];
+                }
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+        S2 /= norm;
+        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        std::string state_label = s2_labels[std::round(S * 2.0)];
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
+        fflush(outfile);
+    }
+
+    // 6) Print the major contributions to the eigenvector
+    double significant_threshold = 0.001;
+    double significant_wave_function = 0.95;
+    for (int i = 0; i < nroots_print; ++ i){
+        fprintf(outfile,"\n\n  => Root %3d <=\n\n  Determinants contribution to %.0f%% of the wave function:",i+1,100.0 * significant_wave_function);
+        // Identify all contributions with |C_J| > significant_threshold
+        double** C_mat = evecs->pointer();
+        std::vector<std::pair<double,int> > C_J_sorted;
+        size_t ndets = evecs->nrow();
+        for (int J = 0; J < ndets; ++J){
+            if (std::fabs(C_mat[J][i]) > significant_threshold){
+                C_J_sorted.push_back(make_pair(std::fabs(C_mat[J][i]),J));
+            }
+        }
+        // Sort them and print
+        std::sort(C_J_sorted.begin(),C_J_sorted.end(),std::greater<std::pair<double,int> >());
+        double cum_wfn = 0.0;
+        int num_sig = 0;
+        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
+            int J = C_J_sorted[I].second;
+            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
+            cum_wfn += C_mat[J][i] * C_mat[J][i];
+            num_sig++;
+            if (cum_wfn > significant_wave_function) break;
+        }
+
+        // Compute the density matrices
+        std::fill(Da_.begin(), Da_.end(), 0.0);
+        std::fill(Db_.begin(), Db_.end(), 0.0);
+        double norm = 0.0;
+        for (int I = 0; I < ndets; ++I){
+            double w = C_mat[I][i] * C_mat[I][i];
+            if (w > 1.0e-12){
+                determinants[I].diag_opdm(Da_,Db_,w);
+            }
+            norm += C_mat[I][i] * C_mat[I][i];
+        }
+//        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
+        for (int p = 0; p < nmo_; ++p){
+            Da_[p] /= norm;
+            Db_[p] /= norm;
+        }
+        fprintf(outfile,"\n\n  Occupation numbers");
+        double na = 0.0;
+        double nb = 0.0;
+        for (int h = 0, p = 0; h < nirrep_; ++h){
+            for (int n = 0; n < nmopi_[h]; ++n){
+                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
+                na += Da_[p];
+                nb += Db_[p];
+                p += 1;
+            }
+        }
+        fprintf(outfile,"\n  Total number of alpha/beta electrons: %f/%f",na,nb);
+
+        fflush(outfile);
+    }
+}
 
 }} // EndNamespaces
 
