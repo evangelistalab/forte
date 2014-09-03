@@ -4,7 +4,7 @@ import libbtl
 import libadaptive
 
 refscf = -99.983408932712
-reflci = -100.110228739280
+reflci = -100.10744547079
 
 molecule hf{
    F
@@ -24,7 +24,7 @@ set libadaptive {
   den_threshold 6.00
   energy_type lmrcisd
   select_type energy
-  t2_threshold 1.0e-5
+  t2_threshold 1.0e-4
   charge 0
 }
 
