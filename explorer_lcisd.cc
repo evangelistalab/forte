@@ -388,6 +388,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
             for (size_t J = I; J < dim_ref_sd_dets; ++J){
                 const StringDeterminant& detJ = ref_sd_dets[J];
                 double HIJ = detI.slater_rules(detJ);
+                if (I == J) HIJ += nuclear_repulsion_energy_;
                 H->set(I,J,HIJ);
                 H->set(J,I,HIJ);
             }
@@ -418,7 +419,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         for (size_t I = 0; I < dim_ref_sd_dets; ++I){
             std::vector<std::pair<int,double> > H_row;
             const StringDeterminant& detI = ref_sd_dets[I];
-            double HII = detI.slater_rules(detI);
+            double HII = detI.slater_rules(detI) + nuclear_repulsion_energy_;
             H_row.push_back(make_pair(int(I),HII));
             for (size_t J = 0; J < dim_ref_sd_dets; ++J){
                 if (I != J){
@@ -444,16 +445,19 @@ void Explorer::lambda_mrcisd(psi::Options& options)
         fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
         fflush(outfile);
     }
+    fprintf(outfile,"\n  Finished building H");
 
+    fprintf(outfile,"\n\n  => Lambda+SD-CI <=\n");
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
+        fprintf(outfile,"\n  Adaptive CI Energy Root %3d        = %20.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %20.12f Eh = %8.4f eV",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
-    fprintf(outfile,"\n  Finished building H");
     fflush(outfile);
 
+    // Set some environment variables
+    Process::environment.globals["LAMBDA+SD-CI ENERGY"] = evals->get(options_.get_int("ROOT"));
 
     print_results_lambda_sd_ci(ref_sd_dets,evecs,evals,nroot);
     fflush(outfile);
@@ -467,6 +471,9 @@ void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet"});
 
     int nroots_print = std::min(nroots,25);
+
+    fprintf(outfile,"\n\n  => Summary of results <=\n");
+
 
     for (int i = 0; i < nroots_print; ++ i){
         // Find the most significant contributions to this root

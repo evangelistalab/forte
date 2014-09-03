@@ -69,6 +69,7 @@ void Explorer::diagonalize_p_space(psi::Options& options)
     // 1) Build the Hamiltonian
     boost::timer t_hbuild;
     SharedMatrix H = build_hamiltonian_parallel(options);
+    H->print();
     fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
     fflush(outfile);
 
