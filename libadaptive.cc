@@ -1,11 +1,13 @@
-#include <libplugin/plugin.h>
+#include <cmath>
+
 #include "psi4-dec.h"
-#include <libdpd/dpd.h>
 #include "psifiles.h"
+#include <libplugin/plugin.h>
+#include <libdpd/dpd.h>
 #include <libpsio/psio.hpp>
 #include <libtrans/integraltransform.h>
 #include <libmints/wavefunction.h>
-#include <cmath>
+#include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
 
 #include "explorer.h"
@@ -40,15 +42,15 @@ read_options(std::string name, Options &options)
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
-            it overrides the multiplicity of the SCF solution. -*/
-        options.add_int("SYMMETRY",0);
+            it overrides the multiplicity of the SCF solution. (zero based) -*/
+        options.add_int("WFN_SYM",0);
 
         /*- The multiplicity of the electronic state.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
         options.add_int("MULTIPLICITY",0);
 
         /*- The charge of the molecule.  If a value is provided
-            it overrides the multiplicity of the SCF solution. -*/
+            it overrides the charge of the SCF solution. -*/
         options.add_int("CHARGE",0);
 
         /*- The minimum excitation level (Default value: 0) -*/
@@ -57,13 +59,16 @@ read_options(std::string name, Options &options)
         /*- The maximum excitation level (Default value: 0 = number of electrons) -*/
         options.add_int("MAX_EXC_LEVEL",0);
 
-        /*- The frozen doubly occupied orbitals per irrep -*/
+        /*- Number of frozen occupied orbitals per irrep (in Cotton order) -*/
         options.add("FROZEN_DOCC",new ArrayType());
 
-        /*- The frozen unoccupied orbitals per irrep -*/
+        /*- Number of restricted doubly occupied orbitals per irrep (in Cotton order) -*/
+        options.add("RESTRICTED_DOCC", new ArrayType());
+
+        /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
         options.add("FROZEN_UOCC",new ArrayType());
 
-        /*- The active orbitals per irrep.  This input is alternative to FROZEN_UOCC. -*/
+        /*- Number of active orbitals per irrep (in Cotton order) -*/
         options.add("ACTIVE",new ArrayType());
 
         /*- The algorithm used to screen the determinant
@@ -188,7 +193,7 @@ read_options(std::string name, Options &options)
         /*- The end value of the integration parameter s -*/
         options.add_double("SRG_SMAX",10.0);
         /*- The end value of the integration parameter s -*/
-        options.add_double("DSRG_S",0.0);
+        options.add_double("DSRG_S",1.0e10);
         /*- The end value of the integration parameter s -*/
         options.add_double("DSRG_POWER",2.0);
 
@@ -209,7 +214,32 @@ read_options(std::string name, Options &options)
         options.add_double("SRG_RSC_THRESHOLD",1.0e-12);
         /*- Save Hbar? -*/
         options.add_bool("SAVE_HBAR",false);
+
+
+
+        //////////////////////////////////////////////////////////////
+        ///
+        ///              OPTIONS FOR THE MR-DSRG-PT2 MODULE
+        ///
+        //////////////////////////////////////////////////////////////
+        /*- Multiplicity -*/
+        boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+        int multi = molecule->multiplicity();
+        options.add_int("MULTI", multi);
+        /*- Threshold for Printing CI Vectors -*/
+        options.add_double("PRINT_CI_VECTOR", 0.05);
+        /*- DSRG Taylor Expansion Threshold -*/
+        options.add_int("TAYLOR_THRESHOLD", 3);
+        /*- Print N Largest T Amplitudes -*/
+        options.add_int("NTAMP", 15);
+        /*- Intruder State Avoidance b Parameter -*/
+        options.add_double("INTRUDER_B", 0.02);
+        /*- Energy Convergence -*/
+        options.add_int("E_CONV", 15);
+        /*- DSRG Perturbation -*/
+        options.add_bool("DSRGPT", true);
     }
+
     return true;
 }
 

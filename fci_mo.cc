@@ -41,7 +41,7 @@ FCI_MO::FCI_MO(Options &options){
     Evals_->print();
 
     // Store CI Vectors in CI_vec_(vector<vector<double>>)
-    int NState = options.get_int("NSTATE");
+    int NState = options.get_int("NROOT");
     double Print_CI_Vector = options.get_double("PRINT_CI_VECTOR");
     if(NState > Evecs_->coldim()){
         fprintf(outfile, "\n  Too many states of interest! There are only %3d states that satisfy the condition!", Evecs_->coldim());
@@ -159,7 +159,7 @@ void FCI_MO::startup(Options &options){
     nc_ = 0;
     na_ = 0;
     for (int h=0; h<nirrep_; ++h){
-        core_[h] = options["CORE"][h].to_integer();
+        core_[h] = options["RESTRICTED_DOCC"][h].to_integer();
         active_[h] = options["ACTIVE"][h].to_integer();
         nc_ += core_[h];
         na_ += active_[h];

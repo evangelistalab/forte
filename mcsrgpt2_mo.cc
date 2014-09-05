@@ -42,7 +42,7 @@ void MCSRGPT2_MO::cleanup(){
 void MCSRGPT2_MO::startup(Options &options){
 
     // DSRG Parameters
-    s_ = options.get_double("S_PARAMETER");
+    s_ = options.get_double("DSRG_S");
     if(s_ < 0){
         fprintf(outfile, "\n  S parameter for DSRG must >= 0!");
         exit(1);
