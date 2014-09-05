@@ -16,6 +16,7 @@
 #include "mosrg.h"
 #include "tensorsrg.h"
 #include "tensor_test.h"
+#include "mcsrgpt2_mo.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
@@ -38,7 +39,7 @@ read_options(std::string name, Options &options)
         options.add_int("PRINT", 0);
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
+        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
@@ -248,9 +249,12 @@ libadaptive(Options &options)
 {
     if (options.get_str("JOB_TYPE") == "TENSORTEST"){
         test_tensor_class(true);
+    }else if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
+        main::MCSRGPT2_MO mcsrgpt2_mo(options);
     }else{
         // Get the one- and two-electron integrals in the MO basis
-        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,false);
+        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,false);     
+
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){
             Explorer* explorer = new Explorer(options,ints_);
