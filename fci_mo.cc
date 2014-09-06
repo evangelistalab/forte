@@ -196,7 +196,7 @@ void FCI_MO::startup(Options &options){
     nmo_ = wfn->nmo();
     nv_ = nmo_ - nc_ - na_;
 
-    state_sym_ = options.get_int("STATE");  // Electronic State
+    state_sym_ = options.get_int("ROOT_SYM");  // Electronic State
     int na_a = nalfa_ - nc_;             // No. of a electrons in active
     int nb_a = nbeta_ - nc_;             // No. of b electrons in active
 

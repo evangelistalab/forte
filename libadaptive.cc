@@ -44,7 +44,7 @@ read_options(std::string name, Options &options)
         // Options for the Explorer class
         /*- The symmetry of the electronic state.  If a value is provided
             it overrides the multiplicity of the SCF solution. (zero based) -*/
-        options.add_int("WFN_SYM",0);
+        options.add_int("ROOT_SYM",0);
 
         /*- The multiplicity of the electronic state.  If a value is provided
             it overrides the multiplicity of the SCF solution. -*/
@@ -149,6 +149,7 @@ read_options(std::string name, Options &options)
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",4);
+
         /*- The root selected for state-specific computations -*/
         options.add_int("ROOT",0);
 

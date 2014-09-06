@@ -217,8 +217,8 @@ void Explorer::read_info(Options& options)
     Db_.assign(nmo_,0.0);
 
     wavefunction_symmetry_ = 0;
-    if(options["WFN_SYM"].has_changed()){
-        wavefunction_symmetry_ = options.get_int("WFN_SYM");
+    if(options["ROOT_SYM"].has_changed()){
+        wavefunction_symmetry_ = options.get_int("ROOT_SYM");
     }
 
     boost::shared_ptr<Molecule> molecule_ = wfn->molecule();
