@@ -284,40 +284,22 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
     // Initalize the String
-    bool *I_init = new bool[na_];
-    for(size_t i=0; i<na_; ++i) I_init[i] = 0;
-    for(size_t i=na_-active_elec; i<na_; ++i)  I_init[i] = 1;
+    bool *I_init = new bool[nmo_];
+    for(size_t i = 0; i< nmo_; ++i) I_init[i] = 0;
+    for(size_t i = 0; i < nc_; ++i) I_init[i] = 1;
+    for(size_t i = nc_ + na_-active_elec; i< nc_ + na_; ++i)  I_init[i] = 1;
 
     do{
         vector <bool> det;
         int symmetry = 0;
-        for(size_t i=0; i<na_; ++i){
+        for(size_t i=0; i< nmo_; ++i){
             det.push_back(I_init[i]);
             if(I_init[i] == 1){
                 symmetry ^= sym_active_[i];
             }
         }
         String[symmetry].push_back(det);
-    }while(next_permutation(I_init, I_init+na_));
-
-    for(vector<vector<vector<bool>>>::size_type i=0; i != String.size(); ++i){
-        for(vector<vector<bool>>::iterator iter = String[i].begin(); iter != String[i].end(); ++iter){
-            size_t c_a = 0;
-            size_t mopi = 0;
-            vector<bool>::const_iterator it;
-            for(int h=0; h<nirrep_; ++h){
-                vector<bool> temp_c(core_[h], 1);
-                vector<bool> temp_v(nmopi_[h] - core_[h] - active_[h], 0);
-                it = (*iter).begin() + mopi;
-                (*iter).insert(it, temp_c.begin(), temp_c.end());
-                c_a = core_[h] + active_[h] + mopi;
-                //fprintf(outfile, "\n  mopi = %d, c+a = %d ", mopi, c_a);
-                mopi += nmopi_[h];
-                it = (*iter).begin() + c_a;
-                (*iter).insert(it, temp_v.begin(), temp_v.end());
-            }
-        }
-    }
+    }while(next_permutation(I_init + nc_, I_init + nc_ + na_));
 
     if(print == true){
         fprintf(outfile, "\n\n  Possible String \n");
