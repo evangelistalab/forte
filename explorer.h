@@ -214,8 +214,11 @@ private:
     /// Compute perturbative corrections to the energy
     void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
 
-    /// A renormalized MRCISD
+    // Lambda+SD-CI
     void lambda_mrcisd(psi::Options& options);
+    // Lambda+S-CI
+    void lambda_mrcis(psi::Options& options);
+    /// A renormalized MRCISD
     void renormalized_mrcisd(psi::Options& options);
     void renormalized_mrcisd_simple(psi::Options& options);
 

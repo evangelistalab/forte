@@ -46,6 +46,10 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
         if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
             lambda_mrcisd(options);
         }else
+        // Lambda+S-CI
+        if((energy_type == "LMRCIS") or (energy_type == "LMRCIS_SPARSE")){
+            lambda_mrcis(options);
+        }else
         if(energy_type == "LOWDIN"){
             diagonalize_p_space_lowdin(options);
         }else

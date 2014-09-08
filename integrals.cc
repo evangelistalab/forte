@@ -43,6 +43,13 @@ void ExplorerIntegrals::startup()
 
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+    if (not wfn){
+        fprintf(outfile,"\n  No wave function object found!  Run a scf calculation first!\n");
+        fflush(outfile);
+        exit(1);
+    }
+
     nirrep_ = wfn->nirrep();
     nmo_ = wfn->nmo();
     nmo2_ = nmo_ * nmo_;
