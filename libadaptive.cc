@@ -236,8 +236,6 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("INTRUDER_B", 0.02);
-        /*- Energy Convergence -*/
-        options.add_int("E_CONV", 15);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
     }

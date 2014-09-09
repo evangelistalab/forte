@@ -32,8 +32,6 @@ protected:
 
     void cleanup();
 
-//    ExplorerIntegrals *integral_;
-
     // DSRG s Parameter
     double s_;
 

@@ -175,7 +175,6 @@ protected:
     void Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const int &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
-    void BD_Fock_B(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
     void TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew);
     void COPY(const SharedMatrix &Cnew, SharedMatrix &C);
 
@@ -228,11 +227,11 @@ protected:
     }
     double P3DC(const d2 &Density, const d4 &Cumulant, const size_t &p, const size_t &q, const size_t &r, const size_t &s, const size_t &t, const size_t &u){
         double E = 0.0;
-        int idc[] = {0,1,2};
-        int ida[] = {0,1,2};
-        size_t cop[] = {p,q,r};
-        size_t aop[] = {s,t,u};
-        int a = 1;
+        int idc[] = {0,1,2};    // creation index of cop[]
+        int ida[] = {0,1,2};    // annihilation index of aop[]
+        size_t cop[] = {p,q,r}; // abs. creation index
+        size_t aop[] = {s,t,u}; // abs. annihilation index
+        int a = 1;              // a and b decide the sign
         do{
             if(a%2 == 0){
                 ++a;
@@ -246,8 +245,8 @@ protected:
                     continue;
                 }
                 int count2 = b / 2;
-                size_t Didx1 = idx_a_[cop[idc[0]]];
-                size_t Didx2 = idx_a_[aop[ida[0]]];
+                size_t Didx1 = idx_a_[cop[idc[0]]];      // first index (creation) of denisty
+                size_t Didx2 = idx_a_[aop[ida[0]]];      // second index (annihilation) of density
                 double value = Density[Didx1][Didx2];
                 value *= Cumulant[cop[idc[1]]][cop[idc[2]]][aop[ida[1]]][aop[ida[2]]];
                 E += pow(-1.0,(count1+count2)) * value;

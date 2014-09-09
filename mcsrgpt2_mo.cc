@@ -52,19 +52,89 @@ void MCSRGPT2_MO::startup(Options &options){
         fprintf(outfile, "\n  Threshold for Taylor expansion must be an integer greater than 0!");
         exit(1);
     }
-    int e_conv = options.get_int("E_CONV");
+    int e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1)) + 1;
 
+    // Print Original Orbital Indices
     fprintf(outfile, "\n  Subspace Indices:");
     print_idx("Core", idx_c_);
     print_idx("Active", idx_a_);
     print_idx("Virtual", idx_v_);
     print_idx("Hole", idx_h_);
     print_idx("Particle", idx_p_);
-
+    fprintf(outfile, "\n");
 
     // Compute Reference Energy
     compute_ref();
+
+    // Determine the Correlating Orbitals
+    Dimension frozen_c (nirrep_, "FROZEN_DOCC MOs");
+    Dimension frozen_v (nirrep_, "FROZEN_UOCC MOs");
+    if(options["FROZEN_DOCC"].size() != 0){
+        if(options["FROZEN_DOCC"].size() != nirrep_){
+            fprintf(outfile, "\n  The dimension of FROZEN_DOCC is NOT equal to the number of Irrep.");
+            exit(1);
+        }
+        for (int h=0; h<nirrep_; ++h){
+            frozen_c[h] = options["FROZEN_DOCC"][h].to_integer();
+            if(frozen_c[h] > core_[h]){
+                fprintf(outfile, "\n  FROZEN_DOCC[%d] should NOT greater than RESTRICTED_DOCC[%d]", h, h);
+                exit(1);
+            }
+            nc_ -= frozen_c[h];
+        }
+    }
+    if(options["FROZEN_UOCC"].size() != 0){
+        if(options["FROZEN_UOCC"].size() != nirrep_){
+            fprintf(outfile, "\n  The dimension of FROZEN_UOCC is NOT equal to the number of Irrep.");
+            exit(1);
+        }
+        for (int h=0; h<nirrep_; ++h){
+            frozen_v[h] = options["FROZEN_UOCC"][h].to_integer();
+            if(frozen_v[h] > nmopi_[h] - core_[h] - active_[h]){
+                fprintf(outfile, "\n  FROZEN_UOCC[%d] should NOT greater than VIRTUAL[%d]", h, h);
+                exit(1);
+            }
+            nv_ -= frozen_v[h];
+        }
+    }
+
+    // Correlating Cores and Virtuals
+    idx_c_.clear();
+    idx_v_.clear();
+    int nmopi = 0;
+    for(int h=0; h<nirrep_; ++h){
+        size_t c = core_[h];
+        size_t ca = core_[h] + active_[h];
+        size_t fc = frozen_c[h];
+        size_t fv = frozen_v[h];
+        for(size_t i=0; i<nmopi_[h]; ++i){
+            size_t idx = i + nmopi;
+            if(i >= fc && i < c){
+                idx_c_.push_back(idx);
+            }
+            if(i >= ca && i < nmopi_[h] - fv){
+                idx_v_.push_back(idx);
+            }
+        }
+        nmopi += nmopi_[h];
+    }
+
+    // Correlating Hole and Particle Indices
+    nh_ = na_ + nc_;
+    npt_ = na_ + nv_;
+    idx_h_ = vector<size_t> (idx_a_);
+    idx_h_.insert(idx_h_.end(), idx_c_.begin(), idx_c_.end());
+    idx_p_ = vector<size_t> (idx_a_);
+    idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
+
+    // Print Correlating Orbital Indices
+    fprintf(outfile, "\n  Correlating Subspace Indices:");
+    print_idx("Core", idx_c_);
+    print_idx("Active", idx_a_);
+    print_idx("Virtual", idx_v_);
+    print_idx("Hole", idx_h_);
+    print_idx("Particle", idx_p_);
 
     // Form T Amplitudes
     T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
