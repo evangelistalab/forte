@@ -81,7 +81,7 @@ protected:
     void Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt);
 
     // Computes the MC-SRGPT2 energy
-    void compute_energy();
+    double compute_energy();
 
     // Energy Components
     void E_FT1(double &E);

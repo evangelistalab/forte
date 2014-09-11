@@ -26,7 +26,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(Options &options) : FCI_MO(options)
 
     startup(options);
 
-    compute_energy();
+    Process::environment.globals["CURRENT ENERGY"] = compute_energy();
 
 }
 
@@ -36,7 +36,7 @@ MCSRGPT2_MO::~MCSRGPT2_MO()
 }
 
 void MCSRGPT2_MO::cleanup(){
-    delete integral_;
+//    delete integral_;
 }
 
 void MCSRGPT2_MO::startup(Options &options){
@@ -485,7 +485,7 @@ void MCSRGPT2_MO::Check_T1(const d2 &M, double &Norm, vector<tuple<double, size_
     timer_off("Check T1");
 }
 
-void MCSRGPT2_MO::compute_energy(){
+double MCSRGPT2_MO::compute_energy(){
     timer_on("E_MCDSRGPT2");
     double T1max = get<0>(T1Maxa_[0]), T2max = get<0>(T2Maxaa_[0]);
     if(fabs(T1max) < fabs(get<0>(T1Maxb_[0]))) T1max = get<0>(T1Maxb_[0]);
@@ -552,6 +552,7 @@ void MCSRGPT2_MO::compute_energy(){
     fprintf(outfile, "\n    ||T2|| %22c = %22.15lf", ' ', T2norm);
     fprintf(outfile, "\n    ");
     timer_off("E_MCDSRGPT2");
+    return Etotal_;
 }
 
 void MCSRGPT2_MO::E_FT1(double &E){
