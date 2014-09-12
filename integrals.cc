@@ -17,7 +17,7 @@ using namespace psi;
 namespace psi{ namespace libadaptive{
 
 ExplorerIntegrals::ExplorerIntegrals(psi::Options &options,bool restricted)
-    : options_(options), restricted_(restricted), core_energy_(0.0), scalar_(0.0)
+    : options_(options), restricted_(restricted), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
 {
     startup();
     transform_integrals();
@@ -93,7 +93,7 @@ void ExplorerIntegrals::startup()
 
 void ExplorerIntegrals::cleanup()
 {
-    delete ints_;
+    if (ints_ != nullptr) delete ints_;
 
     // Deallocate the memory required to store the one-electron integrals
     delete[] one_electron_integrals_a;
@@ -128,11 +128,16 @@ void ExplorerIntegrals::transform_integrals()
     // TODO: transform only the orbitals within an energy range to save time on this step.
     spaces.push_back(MOSpace::all);
 
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    // If the integral
+    if (ints_ == nullptr){
+        // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
+        if (restricted_){
+            ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+        }else{
+            ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+        }
     }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+        ints_->update_orbitals();
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
