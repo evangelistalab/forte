@@ -20,6 +20,7 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options,bool restricted)
     : options_(options), restricted_(restricted), core_energy_(0.0), scalar_(0.0)
 {
     startup();
+    transform_integrals();
     read_one_electron_integrals();
     read_two_electron_integrals();
     update_integrals();
@@ -34,6 +35,14 @@ void ExplorerIntegrals::update_integrals()
 {
     make_diagonal_integrals();
     freeze_core();
+}
+
+void ExplorerIntegrals::retransform_integrals()
+{
+    transform_integrals();
+    read_one_electron_integrals();
+    read_two_electron_integrals();
+    update_integrals();
 }
 
 void ExplorerIntegrals::startup()
@@ -55,23 +64,6 @@ void ExplorerIntegrals::startup()
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
     nso_ = wfn->nso();
-
-    // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
-
-    // TODO: transform only the orbitals within an energy range to save time on this step.
-    spaces.push_back(MOSpace::all);
-
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }
-
-    // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
@@ -123,6 +115,29 @@ void ExplorerIntegrals::cleanup()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
+}
+
+void ExplorerIntegrals::transform_integrals()
+{
+    // Now we want the reference (SCF) wavefunction
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+    // For now, we'll just transform for closed shells and generate all integrals.
+    std::vector<boost::shared_ptr<MOSpace> > spaces;
+
+    // TODO: transform only the orbitals within an energy range to save time on this step.
+    spaces.push_back(MOSpace::all);
+
+    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
+    if (restricted_){
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    }else{
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    }
+
+    // Keep the SO integrals on disk in case we want to retransform them
+    ints_->set_keep_iwl_so_ints(true);
+    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()

@@ -116,6 +116,9 @@ public:
     ///     ints->update_integrals();
     void update_integrals();
 
+    /// Update the integrals with a new set of MO coefficients
+    void retransform_integrals();
+
 private:
     // Class data
     psi::Options& options_;
@@ -136,8 +139,12 @@ private:
     std::vector<int> pair_index_map;
 
     // Class private functions
+    /// Allocate memory
     void startup();
-    void cleanup();
+    /// Deallocate memory
+    void cleanup();   
+    /// Transform the integrals
+    void transform_integrals();
     void read_one_electron_integrals();
     void read_two_electron_integrals();
     void make_diagonal_integrals();
