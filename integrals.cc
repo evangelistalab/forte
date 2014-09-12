@@ -129,15 +129,13 @@ void ExplorerIntegrals::transform_integrals()
     spaces.push_back(MOSpace::all);
 
     // If the integral
-    if (ints_ == nullptr){
-        // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-        if (restricted_){
-            ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-        }else{
-            ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-        }
+    if (ints_ != nullptr) delete ints_;
+
+    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
+    if (restricted_){
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     }else{
-        ints_->update_orbitals();
+        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them
