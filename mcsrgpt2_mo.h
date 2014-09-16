@@ -23,7 +23,7 @@ namespace psi{ namespace main{
 class MCSRGPT2_MO : public FCI_MO
 {
 public:
-    MCSRGPT2_MO(Options &options);
+    MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
     ~MCSRGPT2_MO();
 
 protected:
@@ -45,29 +45,31 @@ protected:
     // T1 Amplitude
     d2 T1a_;
     d2 T1b_;
-    double T1Na_;
-    double T1Nb_;
-    vector<tuple<double, size_t, size_t>> T1Maxa_;
-    vector<tuple<double, size_t, size_t>> T1Maxb_;
+    double T1Na_;    // Norm T1a
+    double T1Nb_;    // Norm T1b
+    double T1Maxa_;  // Max T1a
+    double T1Maxb_;  // Max T1b
 
     // T2 Amplitude
     d4 T2aa_;
     d4 T2ab_;
     d4 T2bb_;
-    double T2Naa_;
-    double T2Nab_;
-    double T2Nbb_;
-    vector<tuple<double, size_t, size_t, size_t, size_t>> T2Maxaa_;
-    vector<tuple<double, size_t, size_t, size_t, size_t>> T2Maxab_;
-    vector<tuple<double, size_t, size_t, size_t, size_t>> T2Maxbb_;
+    double T2Naa_;   // Norm T2aa
+    double T2Nab_;   // Norm T2ab
+    double T2Nbb_;   // Norm T2bb
+    double T2Maxaa_; // Max T2aa
+    double T2Maxab_; // Max T2ab
+    double T2Maxbb_; // Max T2bb
 
     // Form T Amplitudes
-    void Form_T2(d4 &AA, d4 &AB, d4 &BB);
-    void Form_T1(d2 &A, d2 &B);
+    void Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB);
+    void Form_T1_DSRG(d2 &A, d2 &B);
+    void Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const);
+    void Form_T1_ISA(d2 &A, d2 &B, const double &b_const);
 
     // Check T Amplitudes
-    void Check_T1(const d2 &M, double &Norm, vector<tuple<double, size_t, size_t>> &Max, const int &ntamp, const int &x);
-    void Check_T2(const d4 &M, double &Norm, vector<tuple<double, size_t, size_t, size_t, size_t>> &Max, const int &ntamp, const int &x);
+    void Check_T1(const string &x, const d2 &M, double &Norm, double &MaxT, Options &options);
+    void Check_T2(const string &x, const d4 &M, double &Norm, double &MaxT, Options &options);
 
     // Effective Fock Matrix
     d2 Fa_dsrg_;

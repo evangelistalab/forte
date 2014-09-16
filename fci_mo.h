@@ -26,7 +26,7 @@ namespace psi{ namespace main{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options);
+    FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
     ~FCI_MO();
 
 protected:
@@ -41,6 +41,10 @@ protected:
 
     // Multiplicity
     int multi_;
+
+    // Frozen Orbitals
+    Dimension frzcpi_;
+    Dimension frzvpi_;
 
     // Core Orbitals
     Dimension core_;
