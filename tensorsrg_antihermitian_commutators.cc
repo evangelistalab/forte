@@ -22,18 +22,25 @@ double t_four = 0;
 int ncalls = 0;
 
 void TensorSRG::commutator_A_B_C(double factor,
-                             BlockedTensor& A1,
-                             BlockedTensor& A2,
-                             BlockedTensor& B1,
-                             BlockedTensor& B2,
-                             double& C0,
-                             BlockedTensor& C1,
-                             BlockedTensor& C2)
+                                 BlockedTensor& A1,
+                                 BlockedTensor& A2,
+                                 BlockedTensor& B1,
+                                 BlockedTensor& B2,
+                                 double& C0,
+                                 BlockedTensor& C1,
+                                 BlockedTensor& C2,
+                                 int order)
 {
     if (options_.get_str("SRG_COMM") == "STANDARD"){
         commutator_A_B_C_SRC(factor,A1,A2,B1,B2,C0,C1,C2);
     }else if (options_.get_str("SRG_COMM") == "FO"){
         commutator_A_B_C_SRC_fourth_order(factor,A1,A2,B1,B2,C0,C1,C2);
+    }else if (options_.get_str("SRG_COMM") == "FO2"){
+        if (order < 2){
+            commutator_A_B_C_SRC(factor,A1,A2,B1,B2,C0,C1,C2);
+        }else{
+            commutator_A_B_C_SRC_fourth_order2(factor,A1,A2,B1,B2,C0,C1,C2);
+        }
     }else if (options_.get_str("SRG_COMM") == "SRG2"){
         commutator_A_B_C_SRC_Tsukiyama(factor,A1,A2,B1,B2,C0,C1,C2);
     }
@@ -122,6 +129,46 @@ void TensorSRG::commutator_A_B_C_SRC_fourth_order(double factor,
     C2["PQRS"] += O2["RSPQ"];
 }
 
+void TensorSRG::commutator_A_B_C_SRC_fourth_order2(double factor,
+                             BlockedTensor& A1,
+                             BlockedTensor& A2,
+                             BlockedTensor& B1,
+                             BlockedTensor& B2,
+                             double& C0,
+                             BlockedTensor& C1,
+                             BlockedTensor& C2)
+{
+    // => Compute C = [A,B]_12 <= //
+
+    commutator_A1_B1_C0(A1,B1,+factor,C0);
+    commutator_A1_B2_C0(A1,B2,+factor,C0);
+    commutator_A1_B2_C0(B1,A2,-factor,C0);
+    commutator_A2_B2_C0(A2,B2,+factor,C0);
+
+    commutator_A1_B1_C1(A1,B1,+factor,C1);
+    commutator_A1_B2_C1(A1,B2,+factor,C1);
+    commutator_A1_B2_C1(B1,A2,+factor,C1);
+    commutator_A2_B2_C1(A2,B2,factor,C1);
+
+    commutator_A1_B2_C2_fo(A1,B2,+factor,C2);
+    commutator_A1_B2_C2(B1,A2,-factor,C2);
+    commutator_A2_B2_C2(A2,B2,+factor,C2);
+
+    // => Add the term  + [B^+,A] <= //
+    C0 *= 2.0;
+
+    O1["pq"] = C1["pq"];
+    O1["PQ"] = C1["PQ"];
+    C1["pq"] += O1["qp"];
+    C1["PQ"] += O1["QP"];
+
+    O2["pqrs"] = C2["pqrs"];
+    O2["pQrS"] = C2["pQrS"];
+    O2["PQRS"] = C2["PQRS"];
+    C2["pqrs"] += O2["rspq"];
+    C2["pQrS"] += O2["rSpQ"];
+    C2["PQRS"] += O2["RSPQ"];
+}
 
 void TensorSRG::commutator_A_B_C_SRC_Tsukiyama(double factor,
                              BlockedTensor& A1,
@@ -249,6 +296,68 @@ void TensorSRG::commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
 //    C["RSPQ"] -= alpha * A["TQ"] * B["PTRS"];
 //    C["RSPQ"] += alpha * A["RT"] * B["PQTS"];
 //    C["RSPQ"] += alpha * A["ST"] * B["PQRT"];
+
+    if(print_ > 2){
+        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+    }
+    time_comm_A1_B2_C2 += t.elapsed();
+}
+
+void TensorSRG::commutator_A1_B2_C2_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
+{
+    boost::timer t;
+
+    // The point of this routine is to test a different way to correct for forth order terms missing
+    // in the BCS approximation.  The idea behind commutator_A2_B2_C1_fo is to double the one-body
+    // term [V,T_2]_1 to simulate the contribution of 1/2 [[V,T_2]_3,T_2]_2, namely
+    // [[V,T_2]_1,T_2].
+    // Here we explore another route, where instead of modifying this term, we just add twice of its
+    // contribution directly to the commutator [[V,T_2]_1,T_2].
+
+    C["rspq"] += alpha * A["tp"] * B["rstq"];
+    C["rspq"] += alpha * A["tq"] * B["rspt"];
+    C["rspq"] -= alpha * A["rt"] * B["tspq"];
+    C["rspq"] -= alpha * A["st"] * B["rtpq"];
+
+    C["rSpQ"] += alpha * A["tp"] * B["rStQ"];
+    C["rSpQ"] += alpha * A["TQ"] * B["rSpT"];
+    C["rSpQ"] -= alpha * A["rt"] * B["tSpQ"];
+    C["rSpQ"] -= alpha * A["ST"] * B["rTpQ"];
+
+    C["RSPQ"] += alpha * A["TP"] * B["RSTQ"];
+    C["RSPQ"] += alpha * A["TQ"] * B["RSPT"];
+    C["RSPQ"] -= alpha * A["RT"] * B["TSPQ"];
+    C["RSPQ"] -= alpha * A["ST"] * B["RTPQ"];
+
+    C["rskq"] += alpha * A["jk"] * B["rsjq"];
+    C["rspk"] += alpha * A["jk"] * B["rspj"];
+    C["jspq"] -= alpha * A["jk"] * B["kspq"];
+    C["rjpq"] -= alpha * A["jk"] * B["rkpq"];
+
+    C["rSkQ"] += alpha * A["jk"] * B["rSjQ"];
+    C["rSpK"] += alpha * A["JK"] * B["rSpJ"];
+    C["jSpQ"] -= alpha * A["jk"] * B["kSpQ"];
+    C["rJpQ"] -= alpha * A["JK"] * B["rKpQ"];
+
+    C["RSKQ"] += alpha * A["JK"] * B["RSJQ"];
+    C["RSPK"] += alpha * A["JK"] * B["RSPJ"];
+    C["JSPQ"] -= alpha * A["JK"] * B["KSPQ"];
+    C["RJPQ"] -= alpha * A["JK"] * B["RKPQ"];
+
+    C["rscq"] += alpha * A["bc"] * B["rsbq"];
+    C["rspc"] += alpha * A["bc"] * B["rspb"];
+    C["bspq"] -= alpha * A["bc"] * B["cspq"];
+    C["rbpq"] -= alpha * A["bc"] * B["rcpq"];
+
+    C["rScQ"] += alpha * A["bc"] * B["rSbQ"];
+    C["rSpC"] += alpha * A["BC"] * B["rSpB"];
+    C["bSpQ"] -= alpha * A["bc"] * B["cSpQ"];
+    C["rBpQ"] -= alpha * A["BC"] * B["rCpQ"];
+
+    C["RSCQ"] += alpha * A["BC"] * B["RSBQ"];
+    C["RSPC"] += alpha * A["BC"] * B["RSPB"];
+    C["BSPQ"] -= alpha * A["BC"] * B["CSPQ"];
+    C["RBPQ"] -= alpha * A["BC"] * B["RCPQ"];
 
     if(print_ > 2){
         fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());

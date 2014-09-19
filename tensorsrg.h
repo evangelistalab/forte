@@ -139,16 +139,21 @@ protected:
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void commutator_A_B_C(double factor,
-                          BlockedTensor& A1,BlockedTensor& A2,
-                          BlockedTensor& B1,BlockedTensor& B2,
-                          double& C0,BlockedTensor& C1,BlockedTensor& C2);
+                          BlockedTensor& A1, BlockedTensor& A2,
+                          BlockedTensor& B1, BlockedTensor& B2,
+                          double& C0, BlockedTensor& C1, BlockedTensor& C2, int order);
     /// The commutator [A,B - B+]_1,2
     void commutator_A_B_C_SRC(double factor,
                               BlockedTensor& A1,BlockedTensor& A2,
                               BlockedTensor& B1,BlockedTensor& B2,
                               double& C0,BlockedTensor& C1,BlockedTensor& C2);
-    /// The commutator [A,B - B+]_1,2 with the [V,T1] diagram weights modified
+    /// The commutator [A,B - B+]_1,2 with the [V,T2]_1 diagram weights modified
     void commutator_A_B_C_SRC_fourth_order(double factor,
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    /// The commutator [A,B - B+]_1,2 with the [F,T2]_2 diagram weights modified
+    void commutator_A_B_C_SRC_fourth_order2(double factor,
                                            BlockedTensor& A1,BlockedTensor& A2,
                                            BlockedTensor& B1,BlockedTensor& B2,
                                            double& C0,BlockedTensor& C1,BlockedTensor& C2);
@@ -169,6 +174,7 @@ protected:
     void commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
     void commutator_A2_B2_C1_simplified(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
     void commutator_A2_B2_C1_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
+    void commutator_A1_B2_C2_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
 
 
 

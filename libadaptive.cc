@@ -209,7 +209,7 @@ read_options(std::string name, Options &options)
         /*- The absolute error tollerance for the ode solver -*/
         options.add_double("SRG_ODEINT_RELERR",1.0e-12);
         /*- Select a modified commutator -*/
-        options.add_str("SRG_COMM","STANDARD","STANDARD FO SRG2");
+        options.add_str("SRG_COMM","STANDARD","STANDARD FO FO2 SRG2");
         /*- The maximum number of commutators in the recursive single commutator approximation -*/
         options.add_int("SRG_RSC_NCOMM",20);
         /*- The treshold for terminating the RSC approximation -*/

@@ -257,7 +257,7 @@ double TensorSRG::compute_hbar()
         C2.zero();
 
         // Compute the commutator C = 1/n [O,S]
-        commutator_A_B_C(factor,O1,O2,S1,S2,C0,C1,C2);
+        commutator_A_B_C(factor,O1,O2,S1,S2,C0,C1,C2,n);
 
         // Hbar += C
         Hbar0 += C0;

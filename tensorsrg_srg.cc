@@ -313,7 +313,7 @@ void TensorSRG::compute_srg_step()
     }else if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK2"){
 //        modified_commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
     }else{
-        commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2);
+        commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2,1);
     }
 }
 
