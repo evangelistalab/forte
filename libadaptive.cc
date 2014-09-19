@@ -256,7 +256,7 @@ libadaptive(Options &options)
         test_tensor_class(true);
     }else{
         // Get the one- and two-electron integrals in the MO basis
-        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,false);     
+        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,false,true);
 
         if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
             main::MCSRGPT2_MO mcsrgpt2_mo(options, ints_);

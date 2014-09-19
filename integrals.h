@@ -27,8 +27,10 @@ public:
      * Constructor
      * @param options The main options object
      * @param restricted Select a restricted or unrestricted transformation (true = restricted, false = unrestricted).
+     * @param if the orbitals are frozen, will all the integrals containing at least
+     *        one frozen index be removed? (true = resort, false = keep frozen).
      */
-    ExplorerIntegrals(psi::Options &options,bool restricted);
+    ExplorerIntegrals(psi::Options &options,bool restricted,bool resort_frozen_core);
 
     /// Destructor
     ~ExplorerIntegrals();
@@ -37,6 +39,9 @@ public:
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const {return nmo_;}
+
+    /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
+    size_t ncmo() const {return ncmo_;}
 
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
@@ -125,7 +130,12 @@ private:
     bool restricted_;
     IntegralTransform* ints_;
     size_t nirrep_;
+    /// The number of MOs including the ones that are frozen
     size_t nmo_;
+    /// The number of correlated MOs (non frozen).  This is nmo - nfzc - nfzv.
+    size_t ncmo_;
+    /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
+    Dimension ncmopi_;
     size_t nmo2_;
     size_t nmo3_;
     size_t nso_;
@@ -134,6 +144,8 @@ private:
     size_t num_tei;
     /// The number of antisymmetrized two-electron integrals in physicist notation <pq||rs>
     size_t num_aptei;
+    /// Do we have to resort the integrals to eliminate frozen orbitals?
+    bool resort_frozen_core_;
     double core_energy_;  // Frozen-core energy
     std::vector<int> pair_irrep_map;
     std::vector<int> pair_index_map;
@@ -148,7 +160,22 @@ private:
     void read_one_electron_integrals();
     void read_two_electron_integrals();
     void make_diagonal_integrals();
-    void freeze_core();
+
+    /// This function manages freezing core and virtual orbitals
+    void freeze_core_orbitals();
+
+    /// Compute the frozen core energy
+    void compute_frozen_core_energy();
+
+    /// Compute the one-body operator modified by the frozen core orbitals
+    void compute_frozen_one_body_operator();
+
+    /// Remove the doubly occupied and virtual orbitals and resort the rest so that
+    /// we are left only with ncmo = nmo - nfzc - nfzv
+    void resort_integrals_after_freezing();
+
+    /// Freeze the doubly occupied and virtual orbitals but do not resort the integrals
+    void freeze_core_full();
     int pair_irrep(int p, int q) {return pair_irrep_map[p * nmo_ + q];}
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
@@ -167,10 +194,6 @@ private:
     double* diagonal_aphys_tei_aa;
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
-
-    double* diagonal_one_electron_integrals;
-    double* diagonal_one_electron_integrals_a;
-    double* diagonal_one_electron_integrals_b;
 
     double* fock_matrix_a;
     double* fock_matrix_b;

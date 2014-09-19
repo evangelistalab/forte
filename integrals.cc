@@ -16,8 +16,8 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-ExplorerIntegrals::ExplorerIntegrals(psi::Options &options,bool restricted)
-    : options_(options), restricted_(restricted), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
+ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, bool restricted, bool resort_frozen_core)
+    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
 {
     startup();
     transform_integrals();
@@ -34,7 +34,7 @@ ExplorerIntegrals::~ExplorerIntegrals()
 void ExplorerIntegrals::update_integrals()
 {
     make_diagonal_integrals();
-    freeze_core();
+    freeze_core_orbitals();
 }
 
 void ExplorerIntegrals::retransform_integrals()
@@ -61,6 +61,7 @@ void ExplorerIntegrals::startup()
 
     nirrep_ = wfn->nirrep();
     nmo_ = wfn->nmo();
+    ncmo_ = nmo_;
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
     nso_ = wfn->nso();
@@ -73,8 +74,8 @@ void ExplorerIntegrals::startup()
     one_electron_integrals_a = new double[nmo_ * nmo_];
     one_electron_integrals_b = new double[nmo_ * nmo_];
 
-    diagonal_one_electron_integrals_a = new double[nmo_];
-    diagonal_one_electron_integrals_b = new double[nmo_];
+//    diagonal_one_electron_integrals_a = new double[nmo_];
+//    diagonal_one_electron_integrals_b = new double[nmo_];
 
     diagonal_kinetic_energy_integrals = new double[nmo_];
 
@@ -99,8 +100,8 @@ void ExplorerIntegrals::cleanup()
     delete[] one_electron_integrals_a;
     delete[] one_electron_integrals_b;
 
-    delete[] diagonal_one_electron_integrals_a;
-    delete[] diagonal_one_electron_integrals_b;
+//    delete[] diagonal_one_electron_integrals_a;
+//    delete[] diagonal_one_electron_integrals_b;
 
     delete[] diagonal_kinetic_energy_integrals;
 
@@ -339,10 +340,10 @@ void ExplorerIntegrals::read_two_electron_integrals()
 
 void ExplorerIntegrals::make_diagonal_integrals()
 {
-    for (int p = 0; p < nmo_; ++p){
-        diagonal_one_electron_integrals_a[p] = oei_a(p,p);
-        diagonal_one_electron_integrals_b[p] = oei_b(p,p);
-    }
+//    for (int p = 0; p < nmo_; ++p){
+//        diagonal_one_electron_integrals_a[p] = oei_a(p,p);
+//        diagonal_one_electron_integrals_b[p] = oei_b(p,p);
+//    }
 
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
@@ -451,7 +452,33 @@ void ExplorerIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<
     }
 }
 
-void ExplorerIntegrals::freeze_core()
+
+void ExplorerIntegrals::freeze_core_orbitals()
+{
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    const Dimension& mopi = wfn->nmopi();
+    const Dimension& frzcpi = wfn->frzcpi();
+    const Dimension& frzvpi = wfn->frzvpi();
+
+    ncmopi_ = mopi;
+    for (int h = 0; h < nirrep_; ++h){
+        ncmopi_[h] -= frzcpi[h] + frzvpi[h];
+    }
+    ncmo_ = ncmopi_.sum();
+
+    fprintf(outfile,"\n  Number of molecular orbitals:            %5d",mopi.sum());
+    fprintf(outfile,"\n  Number of correlated molecular orbitals: %5zu",ncmo_);
+    fprintf(outfile,"\n  Number of frozen occupied orbitals:      %5d",frzcpi.sum());
+    fprintf(outfile,"\n  Number of frozen unoccupied orbitals:    %5d",frzvpi.sum());
+
+    compute_frozen_core_energy();
+    compute_frozen_one_body_operator();
+    if (resort_frozen_core_){
+        resort_integrals_after_freezing();
+    }
+}
+
+void ExplorerIntegrals::compute_frozen_core_energy()
 {
     core_energy_ = 0.0;
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -474,21 +501,16 @@ void ExplorerIntegrals::freeze_core()
     }
 
     fprintf(outfile,"\n  Frozen-core energy = %20.12f a.u.",core_energy_);
+}
 
-
-    //  alfa_h0_core_energy = 0.0;
-    //  for(int i = 0; i < moinfo->get_nfocc(); ++i){
-    //    int i_f = moinfo->get_focc_to_mo()[i];
-    //    alfa_h0_core_energy += oei_aa[i_f][i_f];
-    //  }
-
-    //  beta_h0_core_energy = 0.0;
-    //  for(int i = 0; i < moinfo->get_nfocc(); ++i){
-    //    int i_f = moinfo->get_focc_to_mo()[i];
-    //    beta_h0_core_energy += oei_bb[i_f][i_f];
-    //  }
+void ExplorerIntegrals::compute_frozen_one_body_operator()
+{
+    fprintf(outfile,"\n  Creating a modified one-body operator.");
 
     // Modify the active part of H to include the core effects;
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    const Dimension& mopi = wfn->nmopi();
+    const Dimension& frzcpi = wfn->frzcpi();
     size_t f = 0;
     for (int hi = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi[hi]; ++i){
@@ -498,10 +520,10 @@ void ExplorerIntegrals::freeze_core()
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
                     one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
-                    if(p == q){
-                        diagonal_one_electron_integrals_a[p] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
-                        diagonal_one_electron_integrals_b[p] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
-                    }
+//                    if(p == q){
+//                        diagonal_one_electron_integrals_a[p] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
+//                        diagonal_one_electron_integrals_b[p] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+//                    }
                 }
             }
         }
@@ -509,6 +531,41 @@ void ExplorerIntegrals::freeze_core()
     }
 }
 
+void ExplorerIntegrals::resort_integrals_after_freezing()
+{
+    fprintf(outfile,"\n  Resorting integrals after freezing core.");
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    const Dimension& mopi = wfn->nmopi();
+    const Dimension& frzcpi = wfn->frzcpi();
+    const Dimension& frzvpi = wfn->frzvpi();
+
+    // Create a mapping array cmo2mo that tell me (cmo2mo[i]) where to find the i-th cmo.
+    std::vector<int> cmo2mo;
+    for (int h = 0, p = 0, q = 0; h < nirrep_; ++h){
+        q += frzcpi[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r){
+            cmo2mo[p] = q;
+            p++;
+            q++;
+        }
+        q += frzvpi[h]; // skip the frozen virtual
+    }
+
+    // Resort the integrals
+//    resort_two(one_electron_integrals_a,cmo2mo);
+//    resort_two(one_electron_integrals_b,cmo2mo);
+//    resort_two(diagonal_aphys_tei_aa,cmo2mo);
+//    resort_two(diagonal_aphys_tei_ab,cmo2mo);
+//    resort_two(diagonal_aphys_tei_bb,cmo2mo);
+//    resort_four(aphys_tei_aa,cmo2mo);
+//    resort_four(aphys_tei_ab,cmo2mo);
+//    resort_four(aphys_tei_bb,cmo2mo);
+fprintf(outfile,"\n\n____   _____  ____    ___   ____  _____  ___  _   _   ____    ___   _____   _____  ____    ___  _____ _____  _   _   __  __   ___   ____    ___  ____    ____  ___  ____     _     ____   _      _____  ____   _");
+fprintf(outfile,"\n|  _ \ | ____|/ ___|  / _ \ |  _ \|_   _||_ _|| \ | | / ___|  / _ \ |  ___| |  ___||  _ \  / _ \|__  /| ____|| \ | | |  \/  | / _ \ / ___|  |_ _|/ ___|  |  _ \|_ _|/ ___|   / \   | __ ) | |    | ____||  _ \ | |");
+fprintf(outfile,"\n| |_) ||  _|  \___ \ | | | || |_) | | |   | | |  \| || |  _  | | | || |_    | |_   | |_) || | | | / / |  _|  |  \| | | |\/| || | | |\___ \   | | \___ \  | | | || | \___ \  / _ \  |  _ \ | |    |  _|  | | | || |");
+fprintf(outfile,"\n|  _ < | |___  ___) || |_| ||  _ <  | |   | | | |\  || |_| | | |_| ||  _|   |  _|  |  _ < | |_| |/ /_ | |___ | |\  | | |  | || |_| | ___) |  | |  ___) | | |_| || |  ___) |/ ___ \ | |_) || |___ | |___ | |_| ||_|");
+fprintf(outfile,"\n|_| \_\|_____||____/  \___/ |_| \_\ |_|  |___||_| \_| \____|  \___/ |_|     |_|    |_| \_\ \___//____||_____||_| \_| |_|  |_| \___/ |____/  |___||____/  |____/|___||____//_/   \_\|____/ |_____||_____||____/ (_)");
+}
 
 void ExplorerIntegrals::set_oei(double** ints,bool alpha)
 {
