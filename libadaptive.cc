@@ -230,14 +230,20 @@ read_options(std::string name, Options &options)
         options.add_int("MULTI", multi);
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
+        /*- Semicanonicalize Orbitals -*/
+        options.add_bool("SEMI_CANONICAL", true);
         /*- DSRG Taylor Expansion Threshold -*/
         options.add_int("TAYLOR_THRESHOLD", 3);
-        /*- Print N Largest T Amplitudes -*/
-        options.add_int("NTAMP", 15);
-        /*- Intruder State Avoidance b Parameter -*/
-        options.add_double("INTRUDER_B", 0.02);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
+        /*- Print N Largest T Amplitudes -*/
+        options.add_int("NTAMP", 15);
+        /*- T Threshold for Intruder States -*/
+        options.add_double("INTRUDER_TAMP", 0.10);
+        /*- The Algorithm to Form T Amplitudes -*/
+        options.add_str("T_ALGORITHM", "DSRG", "DSRG ISA");
+        /*- Intruder State Avoidance b Parameter -*/
+        options.add_double("ISA_B", 0.02);
     }
 
     return true;
@@ -248,12 +254,13 @@ libadaptive(Options &options)
 {
     if (options.get_str("JOB_TYPE") == "TENSORTEST"){
         test_tensor_class(true);
-    }else if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
-        main::MCSRGPT2_MO mcsrgpt2_mo(options);
     }else{
         // Get the one- and two-electron integrals in the MO basis
         ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,false);     
 
+        if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
+            main::MCSRGPT2_MO mcsrgpt2_mo(options, ints_);
+	}
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){
             Explorer* explorer = new Explorer(options,ints_);

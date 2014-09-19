@@ -12,7 +12,8 @@ using namespace std;
 
 namespace psi{ namespace main{
 
-FCI_MO::FCI_MO(Options &options){
+FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integral_(ints)
+{
     fprintf(outfile,"\n");
     fprintf(outfile,"\n  ***************************************************");
     fprintf(outfile,"\n  *                                                 *");
@@ -25,10 +26,6 @@ FCI_MO::FCI_MO(Options &options){
 
     // Basic Preparation: Form Determinants
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-//    SharedMatrix Ca = wfn->Ca();
-//    SharedMatrix Cb = wfn->Cb();
-//    Cb->copy(Ca);
-    integral_ = new libadaptive::ExplorerIntegrals(options,false);
     startup(options);
     if(determinant_.size() == 0){
         fprintf(outfile, "\n  There is no determinant matching the conditions!");
@@ -69,7 +66,8 @@ FCI_MO::FCI_MO(Options &options){
     print_d2("Fb", Fb_);
 
     // Semi-Canonical Orbitals
-    if(count != 0){
+    if(count != 0 && options.get_bool("SEMI_CANONICAL")){
+        fprintf(outfile, "\n  Use semi-canonical orbitals.");
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
         BD_Fock(Fa_,Fb_,Ua,Ub);
@@ -82,9 +80,7 @@ FCI_MO::FCI_MO(Options &options){
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
 
-        delete integral_;
-        integral_ = new libadaptive::ExplorerIntegrals(options,false);
-        libadaptive::StringDeterminant::set_ints(integral_);
+        integral_->retransform_integrals();
 
         // Form and Diagonalize the CASCI Hamiltonian
         Diagonalize_H(determinant_, Evecs_, Evals_);
@@ -153,9 +149,33 @@ void FCI_MO::startup(Options &options){
     nirrep_  = wfn->nirrep();
     nmopi_ = wfn->nmopi();
 
+    // Frozen Orbitals
+    frzcpi_ = wfn->frzcpi();
+    frzvpi_ = wfn->frzvpi();
+    if(options["FROZEN_DOCC"].has_changed()){
+        if(options["FROZEN_DOCC"].size() != nirrep_){
+            fprintf(outfile, "\n  The dimension of FROZEN_DOCC is NOT equal to the number of Irrep.");
+            exit(1);
+        }else{
+            for (int h=0; h<nirrep_; ++h){
+                frzcpi_[h] = options["FROZEN_DOCC"][h].to_integer();
+            }
+        }
+    }
+    if(options["FROZEN_UOCC"].has_changed()){
+        if(options["FROZEN_UOCC"].size() != nirrep_){
+            fprintf(outfile, "\n  The dimension of FROZEN_UOCC is NOT equal to the number of Irrep.");
+            exit(1);
+        }else{
+            for (int h=0; h<nirrep_; ++h){
+                frzvpi_[h] = options["FROZEN_UOCC"][h].to_integer();
+            }
+        }
+    }
+
     // Core and Active
-    if(options["RESTRICTED_DOCC"].size() == 0 || options["ACTIVE"].size() == 0){
-        fprintf(outfile, "\n  Please specify the CORE and ACTIVE occupations.");
+    if(options["ACTIVE"].size() == 0){
+        fprintf(outfile, "\n  Please specify the ACTIVE occupations.");
         exit(1);
     }
     core_ = Dimension (nirrep_, "Core MOs");
@@ -164,7 +184,7 @@ void FCI_MO::startup(Options &options){
     na_ = 0;
     if (options["RESTRICTED_DOCC"].size() == nirrep_ && options["ACTIVE"].size() == nirrep_){
         for (int h=0; h<nirrep_; ++h){
-            core_[h] = options["RESTRICTED_DOCC"][h].to_integer();
+            core_[h] = options["RESTRICTED_DOCC"][h].to_integer() + frzcpi_[h];
             active_[h] = options["ACTIVE"][h].to_integer();
             nc_ += core_[h];
             na_ += active_[h];
@@ -247,10 +267,10 @@ void FCI_MO::startup(Options &options){
 
     // Form Determinant
     libadaptive::StringDeterminant::set_ints(integral_);
-    for(size_t i = 0; i != a_string.size(); ++i){
+    for(int i = 0; i != nirrep_; ++i){
         int j = i ^ state_sym_;
         size_t sa = a_string[i].size();
-        size_t sb = b_string[i].size();
+        size_t sb = b_string[j].size();
         for(size_t alfa = 0; alfa < sa; ++alfa){
             for(size_t beta = 0; beta < sb; ++beta){
                 determinant_.push_back(libadaptive::StringDeterminant(a_string[i][alfa], b_string[j][beta]));

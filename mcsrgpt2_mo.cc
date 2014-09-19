@@ -13,7 +13,7 @@ using namespace std;
 
 namespace psi{ namespace main{
 
-MCSRGPT2_MO::MCSRGPT2_MO(Options &options) : FCI_MO(options)
+MCSRGPT2_MO::MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : FCI_MO(options, ints)
 {
     fprintf(outfile,"\n");
     fprintf(outfile,"\n  **************************************************");
@@ -68,46 +68,17 @@ void MCSRGPT2_MO::startup(Options &options){
     compute_ref();
 
     // Determine the Correlating Orbitals
-    Dimension frozen_c (nirrep_, "FROZEN_DOCC MOs");
-    Dimension frozen_v (nirrep_, "FROZEN_UOCC MOs");
-    if(options["FROZEN_DOCC"].size() != 0){
-        if(options["FROZEN_DOCC"].size() != nirrep_){
-            fprintf(outfile, "\n  The dimension of FROZEN_DOCC is NOT equal to the number of Irrep.");
-            exit(1);
-        }
-        for (int h=0; h<nirrep_; ++h){
-            frozen_c[h] = options["FROZEN_DOCC"][h].to_integer();
-            if(frozen_c[h] > core_[h]){
-                fprintf(outfile, "\n  FROZEN_DOCC[%d] should NOT greater than RESTRICTED_DOCC[%d]", h, h);
-                exit(1);
-            }
-            nc_ -= frozen_c[h];
-        }
-    }
-    if(options["FROZEN_UOCC"].size() != 0){
-        if(options["FROZEN_UOCC"].size() != nirrep_){
-            fprintf(outfile, "\n  The dimension of FROZEN_UOCC is NOT equal to the number of Irrep.");
-            exit(1);
-        }
-        for (int h=0; h<nirrep_; ++h){
-            frozen_v[h] = options["FROZEN_UOCC"][h].to_integer();
-            if(frozen_v[h] > nmopi_[h] - core_[h] - active_[h]){
-                fprintf(outfile, "\n  FROZEN_UOCC[%d] should NOT greater than VIRTUAL[%d]", h, h);
-                exit(1);
-            }
-            nv_ -= frozen_v[h];
-        }
-    }
+    for (int h=0; h<nirrep_; ++h)  nc_ -= frzcpi_[h];
+    for (int h=0; h<nirrep_; ++h)  nv_ -= frzvpi_[h];
 
-    // Correlating Cores and Virtuals
     idx_c_.clear();
     idx_v_.clear();
     int nmopi = 0;
     for(int h=0; h<nirrep_; ++h){
         size_t c = core_[h];
         size_t ca = core_[h] + active_[h];
-        size_t fc = frozen_c[h];
-        size_t fv = frozen_v[h];
+        size_t fc = frzcpi_[h];
+        size_t fv = frzvpi_[h];
         for(size_t i=0; i<nmopi_[h]; ++i){
             size_t idx = i + nmopi;
             if(i >= fc && i < c){
@@ -140,27 +111,34 @@ void MCSRGPT2_MO::startup(Options &options){
     T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
     T2ab_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
     T2bb_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-    Form_T2(T2aa_,T2ab_,T2bb_);
-
     T1a_ = d2(nh_, d1(npt_));
     T1b_ = d2(nh_, d1(npt_));
-    Form_T1(T1a_,T1b_);
+
+    string t_algorithm = options.get_str("T_ALGORITHM");
+    if(t_algorithm == "DSRG"){
+        fprintf(outfile, "\n");
+        fprintf(outfile, "\n  Form T amplitudes using DSRG formalism.");
+        Form_T2_DSRG(T2aa_,T2ab_,T2bb_);
+        Form_T1_DSRG(T1a_,T1b_);
+    }else if(t_algorithm == "ISA"){
+        fprintf(outfile, "\n");
+        fprintf(outfile, "\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
+        double b = options.get_double("ISA_B");
+        Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
+        Form_T1_ISA(T1a_,T1b_,b);
+    }
 
     // Check T Amplitudes
-    int ntamp = options.get_int("NTAMP");
     T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
-    T2Maxaa_ = vector<tuple<double, size_t, size_t, size_t, size_t>> (ntamp, make_tuple(0.0, 0, 0, 0, 0));
-    T2Maxab_ = vector<tuple<double, size_t, size_t, size_t, size_t>> (ntamp, make_tuple(0.0, 0, 0, 0, 0));
-    T2Maxbb_ = vector<tuple<double, size_t, size_t, size_t, size_t>> (ntamp, make_tuple(0.0, 0, 0, 0, 0));
-    Check_T2(T2aa_,T2Naa_,T2Maxaa_,ntamp,0);
-    Check_T2(T2ab_,T2Nab_,T2Maxab_,ntamp,1);
-    Check_T2(T2bb_,T2Nbb_,T2Maxbb_,ntamp,2);
+    T2Maxaa_ = 0.0, T2Maxab_ = 0.0, T2Maxbb_ = 0.0;
+    Check_T2("AA",T2aa_,T2Naa_,T2Maxaa_,options);
+    Check_T2("AB",T2ab_,T2Nab_,T2Maxab_,options);
+    Check_T2("BB",T2bb_,T2Nbb_,T2Maxbb_,options);
 
     T1Na_ = 0.0, T1Nb_ = 0.0;
-    T1Maxa_ = vector<tuple<double, size_t, size_t>> (ntamp, make_tuple(0.0, 0, 0));
-    T1Maxb_ = vector<tuple<double, size_t, size_t>> (ntamp, make_tuple(0.0, 0, 0));
-    Check_T1(T1a_,T1Na_,T1Maxa_,ntamp,0);
-    Check_T1(T1b_,T1Nb_,T1Maxb_,ntamp,1);
+    T1Maxa_ = 0.0, T1Maxb_ = 0.0;
+    Check_T1("A",T1a_,T1Na_,T1Maxa_,options);
+    Check_T1("B",T1b_,T1Nb_,T1Maxb_,options);
 
     bool dsrgpt = options.get_bool("DSRGPT");
 
@@ -285,7 +263,7 @@ void MCSRGPT2_MO::compute_ref(){
     timer_off("Compute Ref");
 }
 
-void MCSRGPT2_MO::Form_T2(d4 &AA, d4 &AB, d4 &BB){
+void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB){
     timer_on("Form T2");
     for(size_t i=0; i<nh_; ++i){
         size_t ni = idx_h_[i];
@@ -346,7 +324,7 @@ void MCSRGPT2_MO::Form_T2(d4 &AA, d4 &AB, d4 &BB){
     timer_off("Form T2");
 }
 
-void MCSRGPT2_MO::Form_T1(d2 &A, d2 &B){
+void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
     timer_on("Form T1");
     for(size_t i=0; i<nh_; ++i){
         size_t ni = idx_h_[i];
@@ -393,12 +371,98 @@ void MCSRGPT2_MO::Form_T1(d2 &A, d2 &B){
     timer_off("Form T1");
 }
 
+void MCSRGPT2_MO::Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const){
+    timer_on("Form T2");
+    for(size_t i=0; i<nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t j=0; j<nh_; ++j){
+            size_t nj = idx_h_[j];
+            for(size_t a=0; a<npt_; ++a){
+                size_t na = idx_p_[a];
+                for(size_t b=0; b<npt_; ++b){
+                    size_t nb = idx_p_[b];
+
+                    double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                    double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+                    double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+
+                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
+                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
+                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+
+                    AA[i][j][a][b] = scalar_aa / (Daa + b_const / Daa);
+                    AB[i][j][a][b] = scalar_ab / (Dab + b_const / Dab);
+                    BB[i][j][a][b] = scalar_bb / (Dbb + b_const / Dbb);
+                }
+            }
+        }
+    }
+
+    // Zero Internal Excitations
+    for(size_t i=0; i<na_; ++i){
+        for(size_t j=0; j<na_; ++j){
+            for(size_t k=0; k<na_; ++k){
+                for(size_t l=0; l<na_; ++l){
+                    AA[i][j][k][l] = 0.0;
+                    AB[i][j][k][l] = 0.0;
+                    BB[i][j][k][l] = 0.0;
+                }
+            }
+        }
+    }
+    timer_off("Form T2");
+}
+
+void MCSRGPT2_MO::Form_T1_ISA(d2 &A, d2 &B, const double &b_const){
+    timer_on("Form T1");
+    for(size_t i=0; i<nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t a=0; a<npt_; ++a){
+            size_t na = idx_p_[a];
+
+            double scalar_a = Fa_[ni][na];
+            double scalar_b = Fb_[ni][na];
+
+            for(size_t u=0; u<na_; ++u){
+                size_t nu = idx_a_[u];
+                for(size_t x=0; x<na_; ++x){
+                    size_t nx = idx_a_[x];
+
+                    scalar_a += (Fa_[nx][nx] - Fa_[nu][nu]) * T2aa_[i][u][a][x] * Da_[nx][nu];
+                    scalar_a += (Fb_[nx][nx] - Fb_[nu][nu]) * T2ab_[i][u][a][x] * Db_[nx][nu];
+                    scalar_b += (Fa_[nx][nx] - Fa_[nu][nu]) * T2ab_[u][i][x][a] * Da_[nx][nu];
+                    scalar_b += (Fb_[nx][nx] - Fb_[nu][nu]) * T2bb_[i][u][a][x] * Db_[nx][nu];
+                }
+            }
+
+            double delta_a = Fa_[ni][ni] - Fa_[na][na];
+            double delta_b = Fb_[ni][ni] - Fb_[na][na];
+
+            A[i][a] = scalar_a / (delta_a + b_const / delta_a);
+            B[i][a] = scalar_b / (delta_b + b_const / delta_b);
+        }
+    }
+
+    // Zero Internal Excitations
+    for(size_t i=0; i<na_; ++i){
+        for(size_t j=0; j<na_; ++j){
+            A[i][j] = 0.0;
+            B[i][j] = 0.0;
+        }
+    }
+    timer_off("Form T1");
+}
+
 inline bool ReverseSortT2(const tuple<double, size_t, size_t, size_t, size_t> &lhs, const tuple<double, size_t, size_t, size_t, size_t> &rhs){
     return fabs(get<0>(rhs)) < fabs(get<0>(lhs));
 }
 
-void MCSRGPT2_MO::Check_T2(const d4 &M, double &Norm, vector<tuple<double, size_t, size_t, size_t, size_t>> &Max, const int &ntamp, const int &x){
+void MCSRGPT2_MO::Check_T2(const string &x, const d4 &M, double &Norm, double &MaxT, Options &options){
     timer_on("Check T2");
+    int ntamp = options.get_int("NTAMP");
+    double intruder = options.get_double("INTRUDER_TAMP");
+    vector<tuple<double, size_t, size_t, size_t, size_t>> Max;
+    vector<tuple<double, size_t, size_t, size_t, size_t>> Large(ntamp, make_tuple(0.0, 0, 0, 0, 0));
     double value = 0.0;
     size_t count = 0;
     for(size_t i=0; i<nh_; ++i){
@@ -409,37 +473,58 @@ void MCSRGPT2_MO::Check_T2(const d4 &M, double &Norm, vector<tuple<double, size_
                 size_t na = idx_p_[a];
                 for(size_t b=0; b<npt_; ++b){
                     size_t nb = idx_p_[b];
-                    value += pow(M[i][j][a][b], 2.0);
-                    if(fabs(M[i][j][a][b]) > fabs(get<0>(Max[ntamp-1]))){
-                        Max[ntamp-1] = make_tuple(M[i][j][a][b],ni,nj,na,nb);
+                    double m = M[i][j][a][b];
+                    value += pow(m, 2.0);
+                    if(fabs(m) > fabs(get<0>(Large[ntamp-1]))){
+                        Large[ntamp-1] = make_tuple(m,ni,nj,na,nb);
                     }
+                    sort(Large.begin(), Large.end(), ReverseSortT2);
+                    if(fabs(m) > intruder)
+                        Max.push_back(make_tuple(m,ni,nj,na,nb));
                     sort(Max.begin(), Max.end(), ReverseSortT2);
-                    if(fabs(M[i][j][a][b]) > pow(0.1,15)) ++count;
+                    if(fabs(m) > options.get_double("E_CONVERGENCE")) ++count;
                 }
             }
         }
     }
     Norm = sqrt(value);
+    MaxT = get<0>(Large[0]);
 
     // Print
-    vector<string> vec_string;
-    vec_string.push_back("AA");
-    vec_string.push_back("AB");
-    vec_string.push_back("BB");
     fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> Largest T2 amplitudes for spin case %s: <==", vec_string[x].c_str());
-    if(x == 0) fprintf(outfile, "\n");
-    if(x == 1) fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
-    if(x == 2) fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
+    fprintf(outfile, "\n  ==> Largest T2 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "AA") fprintf(outfile, "\n");
+    if(x == "AB") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
+    if(x == "BB") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
     fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ');
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    for(vector<tuple<double, size_t, size_t, size_t, size_t>>::size_type n = 0; n != Max.size(); ++n){
+    for(size_t n = 0; n != ntamp; ++n){
         if(n%3 == 0) fprintf(outfile, "\n  ");
-        fprintf(outfile, "[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Max[n]), get<2>(Max[n]), get<3>(Max[n]), get<4>(Max[n]), get<0>(Max[n]));
+        fprintf(outfile, "[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]), get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
     }
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", vec_string[x].c_str(), count, Norm);
+    fprintf(outfile, "\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", x.c_str(), count, Norm);
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
+    fprintf(outfile, "\n");
+    fprintf(outfile, "\n  ==> T2 intruder states analysis for spin case %s: <==", x.c_str());
+    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
+    fprintf(outfile, "\n      Amplitude        Value   Numerator                   Denominator");
+    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
+    for(size_t n = 0; n != Max.size(); ++n){
+        size_t i = get<1>(Max[n]);
+        size_t j = get<2>(Max[n]);
+        size_t a = get<3>(Max[n]);
+        size_t b = get<4>(Max[n]);
+        double t2 = get<0>(Max[n]);
+        double fi = (x != "BB") ? (Fa_[i][i]) : (Fb_[i][i]);
+        double fj = (x == "AA") ? (Fa_[j][j]) : (Fb_[j][j]);
+        double fa = (x != "BB") ? (Fa_[a][a]) : (Fb_[a][a]);
+        double fb = (x == "AA") ? (Fa_[b][b]) : (Fb_[b][b]);
+        double down = fi + fj - fa - fb;
+        double up = t2 * down;
+        fprintf(outfile, "\n  [%3zu %3zu %3zu %3zu] = %7.4f = %7.4f / (%7.4f + %7.4f - %7.4f - %7.4f = %7.4f)", i, j, a, b, t2, up, fi, fj, fa, fb, down);
+    }
+    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
     timer_off("Check T2");
 }
 
@@ -447,50 +532,72 @@ inline bool ReverseSortT1(const tuple<double, size_t, size_t> &lhs, const tuple<
     return fabs(get<0>(rhs)) < fabs(get<0>(lhs));
 }
 
-void MCSRGPT2_MO::Check_T1(const d2 &M, double &Norm, vector<tuple<double, size_t, size_t>> &Max, const int &ntamp, const int &x){
+void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &MaxT, Options &options){
     timer_on("Check T1");
+    int ntamp = options.get_int("NTAMP");
+    double intruder = options.get_double("INTRUDER_TAMP");
+    vector<tuple<double, size_t, size_t>> Max;
+    vector<tuple<double, size_t, size_t>> Large(ntamp, make_tuple(0.0, 0, 0));
     double value = 0.0;
     size_t count = 0;
     for(size_t i=0; i<nh_; ++i){
         size_t ni = idx_h_[i];
         for(size_t a=0; a<npt_; ++a){
             size_t na = idx_p_[a];
-            value += pow(M[i][a], 2.0);
-            if(fabs(M[i][a]) > fabs(get<0>(Max[ntamp-1]))){
-                Max[ntamp-1] = make_tuple(M[i][a],ni,na);
+            double m = M[i][a];
+            value += pow(m, 2.0);
+            if(fabs(m) > fabs(get<0>(Large[ntamp-1]))){
+                Large[ntamp-1] = make_tuple(m,ni,na);
             }
+            sort(Large.begin(), Large.end(), ReverseSortT1);
+            if(fabs(m) > intruder)
+                Max.push_back(make_tuple(m,ni,na));
             sort(Max.begin(), Max.end(), ReverseSortT1);
-            if(fabs(M[i][a]) > pow(0.1,15))  ++count;
+            if(fabs(m) > options.get_double("E_CONVERGENCE")) ++count;
         }
     }
     Norm = sqrt(value);
+    MaxT = get<0>(Large[0]);
 
     // Print
-    vector<string> vec_string;
-    vec_string.push_back("A");
-    vec_string.push_back("B");
     fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> Largest T1 amplitudes for spin case %s: <==", vec_string[x].c_str());
-    if(x == 0) fprintf(outfile, "\n");
-    else fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
+    fprintf(outfile, "\n  ==> Largest T1 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "A") fprintf(outfile, "\n");
+    if(x == "B") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
     fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ');
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    for(vector<tuple<double, size_t, size_t>>::size_type n = 0; n != Max.size(); ++n){
+    for(size_t n = 0; n != ntamp; ++n){
         if(n%3 == 0) fprintf(outfile, "\n  ");
-        fprintf(outfile, "[%3zu %3c %3zu %3c] %8.5f ", get<1>(Max[n]), ' ', get<2>(Max[n]), ' ', get<0>(Max[n]));
+        fprintf(outfile, "[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ', get<0>(Large[n]));
     }
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", vec_string[x].c_str(), count, Norm);
+    fprintf(outfile, "\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", x.c_str(), count, Norm);
     fprintf(outfile, "\n  --------------------------------------------------------------------------------");
+    fprintf(outfile, "\n");
+    fprintf(outfile, "\n  ==> T1 intruder states analysis for spin case %s: <==", x.c_str());
+    fprintf(outfile, "\n  ---------------------------------------------------------------------");
+    fprintf(outfile, "\n      Amplitude        Value   Numerator          Denominator");
+    fprintf(outfile, "\n  ---------------------------------------------------------------------");
+    for(size_t n = 0; n != Max.size(); ++n){
+        size_t i = get<1>(Max[n]);
+        size_t a = get<2>(Max[n]);
+        double t2 = get<0>(Max[n]);
+        double fi = (x == "A") ? (Fa_[i][i]) : (Fb_[i][i]);
+        double fa = (x == "A") ? (Fa_[a][a]) : (Fb_[a][a]);
+        double down = fi - fa;
+        double up = t2 * down;
+        fprintf(outfile, "\n  [%3zu %3c %3zu %3c] = %7.4f = %7.4f / (%7.4f - %7.4f = %7.4f)", i, ' ', a, ' ', t2, up, fi, fa, down);
+    }
+    fprintf(outfile, "\n  ---------------------------------------------------------------------");
     timer_off("Check T1");
 }
 
 double MCSRGPT2_MO::compute_energy(){
     timer_on("E_MCDSRGPT2");
-    double T1max = get<0>(T1Maxa_[0]), T2max = get<0>(T2Maxaa_[0]);
-    if(fabs(T1max) < fabs(get<0>(T1Maxb_[0]))) T1max = get<0>(T1Maxb_[0]);
-    if(fabs(T2max) < fabs(get<0>(T2Maxab_[0]))) T2max = get<0>(T2Maxab_[0]);
-    if(fabs(T2max) < fabs(get<0>(T2Maxbb_[0]))) T2max = get<0>(T2Maxbb_[0]);
+    double T1max = T1Maxa_, T2max = T2Maxaa_;
+    if(fabs(T1max) < fabs(T1Maxb_)) T1max = T1Maxb_;
+    if(fabs(T2max) < fabs(T2Maxab_)) T2max = T2Maxab_;
+    if(fabs(T2max) < fabs(T2Maxbb_)) T2max = T2Maxbb_;
     double T1norm = sqrt(pow(T1Na_,2) + pow(T1Nb_,2));
     double T2norm = sqrt(pow(T2Naa_,2) + 4 * pow(T2Nab_,2) + pow(T2Nbb_,2));
 
