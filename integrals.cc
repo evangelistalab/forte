@@ -16,7 +16,7 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, bool restricted, bool resort_frozen_core)
+ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
 {
     startup();
@@ -34,7 +34,9 @@ ExplorerIntegrals::~ExplorerIntegrals()
 void ExplorerIntegrals::update_integrals()
 {
     make_diagonal_integrals();
-    freeze_core_orbitals();
+    if (ncmo_ < nmo_){
+        freeze_core_orbitals();
+    }
 }
 
 void ExplorerIntegrals::retransform_integrals()
@@ -60,24 +62,75 @@ void ExplorerIntegrals::startup()
     }
 
     nirrep_ = wfn->nirrep();
-    nmo_ = wfn->nmo();
-    ncmo_ = nmo_;
-    nmo2_ = nmo_ * nmo_;
-    nmo3_ = nmo_ * nmo_ * nmo_;
     nso_ = wfn->nso();
+    nmo_ = wfn->nmo();
+    nmopi_ = wfn->nmopi();
+    frzcpi_ = Dimension(nirrep_,"Frozen core orbitals per irrep");
+    frzvpi_ = Dimension(nirrep_,"Frozen virtual orbitals per irrep");
+
+    if (options_["FROZEN_DOCC"].has_changed() or options_["FROZEN_UOCC"].has_changed()){
+        fprintf(outfile,"\n  Using the input to select the number of frozen core/virtual orbitals.\n");
+        if (options_["FROZEN_DOCC"].size() == nirrep_){
+            for (int h = 0; h < nirrep_; ++h){
+                frzcpi_[h] = options_["FROZEN_DOCC"][h].to_integer();
+            }
+        }else{
+            fprintf(outfile,"\n\n  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["FROZEN_DOCC"].size(),nirrep_);
+            fprintf(outfile,"\n  Exiting the program.\n");
+            printf("  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["FROZEN_DOCC"].size(),nirrep_);
+            printf("\n  Exiting the program.\n");
+
+            exit(Failure);
+        }
+        if (options_["FROZEN_UOCC"].size() == nirrep_){
+            for (int h = 0; h < nirrep_; ++h){
+                frzvpi_[h] = options_["FROZEN_UOCC"][h].to_integer();
+            }
+        }else{
+            fprintf(outfile,"\n\n  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["FROZEN_UOCC"].size(),nirrep_);
+            fprintf(outfile,"\n  Exiting the program.\n");
+            printf("  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["FROZEN_UOCC"].size(),nirrep_);
+            printf("\n  Exiting the program.\n");
+
+            exit(Failure);
+        }
+    }else{
+        fprintf(outfile,"\n  Using the Wavefunction object to select the number of frozen core/virtual orbitals.\n");
+        frzcpi_ = wfn->frzcpi();
+        frzvpi_ = wfn->frzvpi();
+    }
+
+    ncmopi_ = nmopi_;
+    for (int h = 0; h < nirrep_; ++h){
+        ncmopi_[h] -= frzcpi_[h] + frzvpi_[h];
+    }
+    ncmo_ = ncmopi_.sum();
+
+    fprintf(outfile,"\n  ==> Integral Transformation <==\n");
+    fprintf(outfile,"\n  Number of molecular orbitals:            %5d",nmopi_.sum());
+    fprintf(outfile,"\n  Number of correlated molecular orbitals: %5zu",ncmo_);
+    fprintf(outfile,"\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());
+    fprintf(outfile,"\n  Number of frozen unoccupied orbitals:    %5d\n\n",frzvpi_.sum());
+
+    ncmo2_ = ncmo_ * ncmo_;
+    ncmo3_ = ncmo_ * ncmo_ * ncmo_;
 
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
 
+    allocate();
+}
+
+void ExplorerIntegrals::allocate()
+{
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals_a = new double[nmo_ * nmo_];
     one_electron_integrals_b = new double[nmo_ * nmo_];
-
-//    diagonal_one_electron_integrals_a = new double[nmo_];
-//    diagonal_one_electron_integrals_b = new double[nmo_];
-
-    diagonal_kinetic_energy_integrals = new double[nmo_];
 
     fock_matrix_a = new double[nmo_ * nmo_];
     fock_matrix_b = new double[nmo_ * nmo_];
@@ -92,18 +145,13 @@ void ExplorerIntegrals::startup()
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 }
 
-void ExplorerIntegrals::cleanup()
+void ExplorerIntegrals::deallocate()
 {
     if (ints_ != nullptr) delete ints_;
 
     // Deallocate the memory required to store the one-electron integrals
     delete[] one_electron_integrals_a;
     delete[] one_electron_integrals_b;
-
-//    delete[] diagonal_one_electron_integrals_a;
-//    delete[] diagonal_one_electron_integrals_b;
-
-    delete[] diagonal_kinetic_energy_integrals;
 
     delete[] fock_matrix_a;
     delete[] fock_matrix_b;
@@ -116,6 +164,11 @@ void ExplorerIntegrals::cleanup()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
+}
+
+void ExplorerIntegrals::cleanup()
+{
+    deallocate();
 }
 
 void ExplorerIntegrals::transform_integrals()
@@ -179,37 +232,37 @@ void ExplorerIntegrals::read_one_electron_integrals()
     }
     delete[] packed_oei;
 
-    int num_oei_so = INDEX2(nso_ - 1, nso_ - 1) + 1;
-    for (size_t p = 0; p < nmo_; ++p) diagonal_kinetic_energy_integrals[p] = 0.0;
-    double* packed_oei_so = new double[num_oei_so];
+//    int num_oei_so = INDEX2(nso_ - 1, nso_ - 1) + 1;
+//    for (size_t p = 0; p < nmo_; ++p) diagonal_kinetic_energy_integrals[p] = 0.0;
+//    double* packed_oei_so = new double[num_oei_so];
 
-    // Read the kinetic energy integrals (restricted integrals, T)
-    for (size_t pq = 0; pq < num_oei_so; ++pq) packed_oei_so[pq] = 0.0;
-    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,0,outfile);
+//    // Read the kinetic energy integrals (restricted integrals, T)
+//    for (size_t pq = 0; pq < num_oei_so; ++pq) packed_oei_so[pq] = 0.0;
+//    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,0,outfile);
 
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    SharedMatrix Ca = wfn->Ca();
-    Dimension mopi = Ca->colspi();
-    Dimension sopi = Ca->rowspi();
+//    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+//    SharedMatrix Ca = wfn->Ca();
+//    Dimension mopi_ = Ca->colspi();
+//    Dimension sopi = Ca->rowspi();
 
-    // Transform the SO integrals to the MO basis
-    int q = 0;
-    int rho = 0;
-    for (int h = 0; h < nirrep_; ++h){
-        double** c = Ca->pointer(h);
-        for (int p = 0; p < mopi[h]; ++p){
-            double t_int = 0.0;
-            for (int mu = 0; mu < sopi[h]; ++mu){
-                for (int nu = 0; nu < sopi[h]; ++nu){
-                    t_int += packed_oei_so[INDEX2(rho + mu,rho + nu)] * c[mu][p] * c[nu][p];
-                }
-            }
-            diagonal_kinetic_energy_integrals[q] = t_int;
-            q++;
-        }
-        rho += sopi[h];
-    }
-    delete[] packed_oei_so;
+//    // Transform the SO integrals to the MO basis
+//    int q = 0;
+//    int rho = 0;
+//    for (int h = 0; h < nirrep_; ++h){
+//        double** c = Ca->pointer(h);
+//        for (int p = 0; p < mopi_[h]; ++p){
+//            double t_int = 0.0;
+//            for (int mu = 0; mu < sopi[h]; ++mu){
+//                for (int nu = 0; nu < sopi[h]; ++nu){
+//                    t_int += packed_oei_so[INDEX2(rho + mu,rho + nu)] * c[mu][p] * c[nu][p];
+//                }
+//            }
+//            diagonal_kinetic_energy_integrals[q] = t_int;
+//            q++;
+//        }
+//        rho += sopi[h];
+//    }
+//    delete[] packed_oei_so;
 }
 
 void ExplorerIntegrals::read_two_electron_integrals()
@@ -455,25 +508,9 @@ void ExplorerIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<
 
 void ExplorerIntegrals::freeze_core_orbitals()
 {
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    const Dimension& mopi = wfn->nmopi();
-    const Dimension& frzcpi = wfn->frzcpi();
-    const Dimension& frzvpi = wfn->frzvpi();
-
-    ncmopi_ = mopi;
-    for (int h = 0; h < nirrep_; ++h){
-        ncmopi_[h] -= frzcpi[h] + frzvpi[h];
-    }
-    ncmo_ = ncmopi_.sum();
-
-    fprintf(outfile,"\n  Number of molecular orbitals:            %5d",mopi.sum());
-    fprintf(outfile,"\n  Number of correlated molecular orbitals: %5zu",ncmo_);
-    fprintf(outfile,"\n  Number of frozen occupied orbitals:      %5d",frzcpi.sum());
-    fprintf(outfile,"\n  Number of frozen unoccupied orbitals:    %5d",frzvpi.sum());
-
     compute_frozen_core_energy();
     compute_frozen_one_body_operator();
-    if (resort_frozen_core_){
+    if (resort_frozen_core_ == RemoveFrozenMOs){
         resort_integrals_after_freezing();
     }
 }
@@ -481,23 +518,19 @@ void ExplorerIntegrals::freeze_core_orbitals()
 void ExplorerIntegrals::compute_frozen_core_energy()
 {
     core_energy_ = 0.0;
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    const Dimension& mopi = wfn->nmopi();
-    const Dimension& frzcpi = wfn->frzcpi();
-    const Dimension& frzvpi = wfn->frzvpi();
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
-        for (int i = 0; i < frzcpi[hi]; ++i){
+        for (int i = 0; i < frzcpi_[hi]; ++i){
             core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
-                for (int j = 0; j < frzcpi[hj]; ++j){
+                for (int j = 0; j < frzcpi_[hj]; ++j){
                     //                    core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
                     core_energy_ += 0.5 * diag_aptei_aa(p + i,q + i) + 0.5 * diag_aptei_bb(p + i,q + i)  + diag_aptei_ab(p + i,q + i);
                 }
-                q += mopi[hj]; // orbital offset for the irrep hj
+                q += nmopi_[hj]; // orbital offset for the irrep hj
             }
         }
-        p += mopi[hi]; // orbital offset for the irrep hi
+        p += nmopi_[hi]; // orbital offset for the irrep hi
     }
 
     fprintf(outfile,"\n  Frozen-core energy = %20.12f a.u.",core_energy_);
@@ -508,63 +541,88 @@ void ExplorerIntegrals::compute_frozen_one_body_operator()
     fprintf(outfile,"\n  Creating a modified one-body operator.");
 
     // Modify the active part of H to include the core effects;
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    const Dimension& mopi = wfn->nmopi();
-    const Dimension& frzcpi = wfn->frzcpi();
     size_t f = 0;
     for (int hi = 0; hi < nirrep_; ++hi){
-        for (int i = 0; i < frzcpi[hi]; ++i){
+        for (int i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             fprintf(outfile,"\n  Freezing MO %zu",r);
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
                     one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
-//                    if(p == q){
-//                        diagonal_one_electron_integrals_a[p] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
-//                        diagonal_one_electron_integrals_b[p] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
-//                    }
                 }
             }
         }
-        f += mopi[hi];
+        f += nmopi_[hi];
     }
 }
 
 void ExplorerIntegrals::resort_integrals_after_freezing()
 {
     fprintf(outfile,"\n  Resorting integrals after freezing core.");
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    const Dimension& mopi = wfn->nmopi();
-    const Dimension& frzcpi = wfn->frzcpi();
-    const Dimension& frzvpi = wfn->frzvpi();
 
     // Create a mapping array cmo2mo that tell me (cmo2mo[i]) where to find the i-th cmo.
-    std::vector<int> cmo2mo;
+    std::vector<size_t> cmo2mo;
     for (int h = 0, p = 0, q = 0; h < nirrep_; ++h){
-        q += frzcpi[h]; // skip the frozen core
+        q += frzcpi_[h]; // skip the frozen core
         for (int r = 0; r < ncmopi_[h]; ++r){
             cmo2mo[p] = q;
             p++;
             q++;
         }
-        q += frzvpi[h]; // skip the frozen virtual
+        q += frzvpi_[h]; // skip the frozen virtual
     }
 
     // Resort the integrals
-//    resort_two(one_electron_integrals_a,cmo2mo);
-//    resort_two(one_electron_integrals_b,cmo2mo);
-//    resort_two(diagonal_aphys_tei_aa,cmo2mo);
-//    resort_two(diagonal_aphys_tei_ab,cmo2mo);
-//    resort_two(diagonal_aphys_tei_bb,cmo2mo);
-//    resort_four(aphys_tei_aa,cmo2mo);
-//    resort_four(aphys_tei_ab,cmo2mo);
-//    resort_four(aphys_tei_bb,cmo2mo);
-fprintf(outfile,"\n\n____   _____  ____    ___   ____  _____  ___  _   _   ____    ___   _____   _____  ____    ___  _____ _____  _   _   __  __   ___   ____    ___  ____    ____  ___  ____     _     ____   _      _____  ____   _");
-fprintf(outfile,"\n|  _ \ | ____|/ ___|  / _ \ |  _ \|_   _||_ _|| \ | | / ___|  / _ \ |  ___| |  ___||  _ \  / _ \|__  /| ____|| \ | | |  \/  | / _ \ / ___|  |_ _|/ ___|  |  _ \|_ _|/ ___|   / \   | __ ) | |    | ____||  _ \ | |");
-fprintf(outfile,"\n| |_) ||  _|  \___ \ | | | || |_) | | |   | | |  \| || |  _  | | | || |_    | |_   | |_) || | | | / / |  _|  |  \| | | |\/| || | | |\___ \   | | \___ \  | | | || | \___ \  / _ \  |  _ \ | |    |  _|  | | | || |");
-fprintf(outfile,"\n|  _ < | |___  ___) || |_| ||  _ <  | |   | | | |\  || |_| | | |_| ||  _|   |  _|  |  _ < | |_| |/ /_ | |___ | |\  | | |  | || |_| | ___) |  | |  ___) | | |_| || |  ___) |/ ___ \ | |_) || |___ | |___ | |_| ||_|");
-fprintf(outfile,"\n|_| \_\|_____||____/  \___/ |_| \_\ |_|  |___||_| \_| \____|  \___/ |_|     |_|    |_| \_\ \___//____||_____||_| \_| |_|  |_| \___/ |____/  |___||____/  |____/|___||____//_/   \_\|____/ |_____||_____||____/ (_)");
+    resort_two(one_electron_integrals_a,cmo2mo);
+    resort_two(one_electron_integrals_b,cmo2mo);
+    resort_two(diagonal_aphys_tei_aa,cmo2mo);
+    resort_two(diagonal_aphys_tei_ab,cmo2mo);
+    resort_two(diagonal_aphys_tei_bb,cmo2mo);
+    resort_four(aphys_tei_aa,cmo2mo);
+    resort_four(aphys_tei_ab,cmo2mo);
+    resort_four(aphys_tei_bb,cmo2mo);
+}
+
+
+void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
+{
+    // Store the integrals in a temporary array of dimension nmo x nmo
+    double* temp_ints = new double[nmo_ * nmo_];
+    for (size_t p = 0; p < nmo_ * nmo_; ++p){
+        temp_ints[p] = 0.0;
+    }
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            temp_ints[p * ncmo_ + q] = ints[map[p] * nmo_ + map[q]];
+        }
+    }
+    // Delete old integrals and assign the pointer
+    delete[] ints;
+    ints = temp_ints;
+}
+
+void ExplorerIntegrals::resort_four(double*& ints,std::vector<size_t>& map)
+{
+    // Store the integrals in a temporary array
+    double* temp_ints = new double[num_aptei];
+    for (size_t p = 0; p < num_aptei; ++p){
+        temp_ints[p] = 0.0;
+    }
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    size_t pqrs_cmo = ncmo3_ * p + ncmo2_ * q + ncmo_ * r + s;
+                    size_t pqrs_mo  = nmo_ * nmo_ * nmo_ * map[p] + nmo_ * nmo_ * map[q] + nmo_ * map[r] + map[s];
+                    temp_ints[pqrs_cmo] = ints[pqrs_mo];
+                }
+            }
+        }
+    }
+    // Delete old integrals and assign the pointer
+    delete[] ints;
+    ints = temp_ints;
 }
 
 void ExplorerIntegrals::set_oei(double** ints,bool alpha)

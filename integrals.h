@@ -14,10 +14,12 @@
 
 namespace psi{ namespace libadaptive{
 
-enum IntegralOrdering {Pitzer,MOGroup};
+/// This decides the type of transformation: resticted vs. unrestricted
+enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
+enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
 
 /**
- * Integrals: stores the integrals in Pitzer ordering
+ * Integrals: transforms and stores the integrals in Pitzer ordering
  */
 class ExplorerIntegrals{
 public:
@@ -26,11 +28,11 @@ public:
     /**
      * Constructor
      * @param options The main options object
-     * @param restricted Select a restricted or unrestricted transformation (true = restricted, false = unrestricted).
-     * @param if the orbitals are frozen, will all the integrals containing at least
-     *        one frozen index be removed? (true = resort, false = keep frozen).
+     * @param restricted Select a restricted or unrestricted transformation (RestrictedMOs = restricted, UnrestrictedMOs = unrestricted).
+     * @param resort_frozen_core Determines if the the integral with frozen index are removed
+     *        (RemoveFrozenMOs = remove and resort, KeepFrozenMOs = keep all the integrals).
      */
-    ExplorerIntegrals(psi::Options &options,bool restricted,bool resort_frozen_core);
+    ExplorerIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
 
     /// Destructor
     ~ExplorerIntegrals();
@@ -124,37 +126,92 @@ public:
     /// Update the integrals with a new set of MO coefficients
     void retransform_integrals();
 
+    /// Return the number of frozen core orbitals per irrep
+    Dimension& frzcpi() {return frzcpi_;}
+    /// Return the number of frozen virtual orbitals per irrep
+    Dimension& frzvpi() {return frzvpi_;}
+
 private:
-    // Class data
+
+    // ==> Class data <==
+
+    /// The options object
     psi::Options& options_;
-    bool restricted_;
+
+    /// Are we doing a spin-restricted computation?
+    IntegralSpinRestriction restricted_;
+
+    /// Do we have to resort the integrals to eliminate frozen orbitals?
+    IntegralFrozenCore resort_frozen_core_;
+
+    /// The IntegralTransform object used by this class
     IntegralTransform* ints_;
+
+    /// Number of irreps
     size_t nirrep_;
-    /// The number of MOs including the ones that are frozen
+
+    /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
-    /// The number of correlated MOs (non frozen).  This is nmo - nfzc - nfzv.
+
+    /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;
+
+    /// The number of MOs per irrep.
+    Dimension nmopi_;
+    /// The number of frozen core MOs per irrep.
+    Dimension frzcpi_;
+    /// The number of frozen unoccupied MOs per irrep.
+    Dimension frzvpi_;
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension ncmopi_;
-    size_t nmo2_;
-    size_t nmo3_;
+
+    size_t ncmo2_;
+    size_t ncmo3_;
     size_t nso_;
-    size_t num_oei; // Number of one electron integrals
+
+    /// Number of one electron integrals
+    size_t num_oei;
+
     /// Number of two electron integrals in chemist notation (pq|rs)
     size_t num_tei;
+
     /// The number of antisymmetrized two-electron integrals in physicist notation <pq||rs>
     size_t num_aptei;
-    /// Do we have to resort the integrals to eliminate frozen orbitals?
-    bool resort_frozen_core_;
-    double core_energy_;  // Frozen-core energy
+
+    /// Frozen-core energy
+    double core_energy_;
     std::vector<int> pair_irrep_map;
     std::vector<int> pair_index_map;
 
-    // Class private functions
-    /// Allocate memory
+    double scalar_;
+
+    /// One-electron integrals stored as a vector
+    double* one_electron_integrals_a;
+    double* one_electron_integrals_b;
+
+    /// Antisymmetrized two-electron integrals in physicist notation
+    double* aphys_tei_aa;
+    double* aphys_tei_ab;
+    double* aphys_tei_bb;
+
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
+
+    double* fock_matrix_a;
+    double* fock_matrix_b;
+
+    // ==> Class private functions <==
+
     void startup();
+    void cleanup();
+
+    /// Allocate memory
+    void allocate();
+
     /// Deallocate memory
-    void cleanup();   
+    void deallocate();
+
     /// Transform the integrals
     void transform_integrals();
     void read_one_electron_integrals();
@@ -174,29 +231,16 @@ private:
     /// we are left only with ncmo = nmo - nfzc - nfzv
     void resort_integrals_after_freezing();
 
+    void resort_two(double*& ints,std::vector<size_t>& map);
+    void resort_four(double*& ints,std::vector<size_t>& map);
+
     /// Freeze the doubly occupied and virtual orbitals but do not resort the integrals
     void freeze_core_full();
     int pair_irrep(int p, int q) {return pair_irrep_map[p * nmo_ + q];}
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
-    size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
 
-    double scalar_;
-    double* one_electron_integrals;
-    double* one_electron_integrals_a;
-    double* one_electron_integrals_b;
-    double* diagonal_kinetic_energy_integrals;
-
-    /// Antisymmetrized two-electron integrals in physicist notation
-    double* aphys_tei_aa;
-    double* aphys_tei_ab;
-    double* aphys_tei_bb;
-
-    double* diagonal_aphys_tei_aa;
-    double* diagonal_aphys_tei_ab;
-    double* diagonal_aphys_tei_bb;
-
-    double* fock_matrix_a;
-    double* fock_matrix_b;
+    /// An addressing function to retrieve the two-electron integrals
+    size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return ncmo3_ * p + ncmo2_ * q + ncmo_ * r + s;}
 };
 
 }} // End Namespaces

@@ -64,7 +64,7 @@ private:
     int nirrep_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
-    /// The number of molecular orbitals
+    /// The number of correlated molecular orbitals
     int nmo_;
     /// The number of alpha electrons
     int nalpha_;
