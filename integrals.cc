@@ -36,6 +36,7 @@ void ExplorerIntegrals::update_integrals()
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
+        aptei_idx_ = ncmo_;
     }
 }
 
@@ -65,43 +66,42 @@ void ExplorerIntegrals::startup()
     nso_ = wfn->nso();
     nmo_ = wfn->nmo();
     nmopi_ = wfn->nmopi();
-    frzcpi_ = Dimension(nirrep_,"Frozen core orbitals per irrep");
-    frzvpi_ = Dimension(nirrep_,"Frozen virtual orbitals per irrep");
+    frzcpi_ = wfn->frzcpi();
+    frzvpi_ = wfn->frzvpi();
 
-    if (options_["FROZEN_DOCC"].has_changed() or options_["FROZEN_UOCC"].has_changed()){
-        fprintf(outfile,"\n  Using the input to select the number of frozen core/virtual orbitals.\n");
+    if (options_["FROZEN_DOCC"].has_changed()){
+        fprintf(outfile,"\n  Using the input to select the number of frozen core MOs.\n");
         if (options_["FROZEN_DOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
                 frzcpi_[h] = options_["FROZEN_DOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_DOCC"].size(),nirrep_);
+            fprintf(outfile,"\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
+                    options_["FROZEN_DOCC"].size(),nirrep_);
             fprintf(outfile,"\n  Exiting the program.\n");
-            printf("  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_DOCC"].size(),nirrep_);
+            printf("  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
+                    options_["FROZEN_DOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
 
             exit(Failure);
         }
+    }
+    if (options_["FROZEN_UOCC"].has_changed()){
+        fprintf(outfile,"\n  Using the input to select the number of frozen virtual MOs.\n");
         if (options_["FROZEN_UOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
                 frzvpi_[h] = options_["FROZEN_UOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_UOCC"].size(),nirrep_);
+            fprintf(outfile,"\n\n  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
+                    options_["FROZEN_UOCC"].size(),nirrep_);
             fprintf(outfile,"\n  Exiting the program.\n");
-            printf("  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_UOCC"].size(),nirrep_);
+            printf("  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
+                    options_["FROZEN_UOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
 
             exit(Failure);
         }
-    }else{
-        fprintf(outfile,"\n  Using the Wavefunction object to select the number of frozen core/virtual orbitals.\n");
-        frzcpi_ = wfn->frzcpi();
-        frzvpi_ = wfn->frzvpi();
     }
 
     ncmopi_ = nmopi_;
@@ -116,9 +116,9 @@ void ExplorerIntegrals::startup()
     fprintf(outfile,"\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());
     fprintf(outfile,"\n  Number of frozen unoccupied orbitals:    %5d\n\n",frzvpi_.sum());
 
-    ncmo2_ = ncmo_ * ncmo_;
-    ncmo3_ = ncmo_ * ncmo_ * ncmo_;
-
+    // Indexing
+    // This is important!  Set the indexing to work using the number of molecular integrals
+    aptei_idx_ = nmo_;
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
@@ -393,11 +393,6 @@ void ExplorerIntegrals::read_two_electron_integrals()
 
 void ExplorerIntegrals::make_diagonal_integrals()
 {
-//    for (int p = 0; p < nmo_; ++p){
-//        diagonal_one_electron_integrals_a[p] = oei_a(p,p);
-//        diagonal_one_electron_integrals_b[p] = oei_b(p,p);
-//    }
-
     for(size_t p = 0; p < nmo_; ++p){
         for(size_t q = 0; q < nmo_; ++q){
             diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
@@ -524,8 +519,7 @@ void ExplorerIntegrals::compute_frozen_core_energy()
             core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
-                    //                    core_energy_ += diag_ce_rtei(p + i,q + i) + diag_c_rtei(p + i,q + i);
-                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + i) + 0.5 * diag_aptei_bb(p + i,q + i)  + diag_aptei_ab(p + i,q + i);
+                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
                 }
                 q += nmopi_[hj]; // orbital offset for the irrep hj
             }
@@ -533,7 +527,7 @@ void ExplorerIntegrals::compute_frozen_core_energy()
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
 
-    fprintf(outfile,"\n  Frozen-core energy = %20.12f a.u.",core_energy_);
+    fprintf(outfile,"\n  Frozen-core energy        %20.12f a.u.",core_energy_);
 }
 
 void ExplorerIntegrals::compute_frozen_one_body_operator()
@@ -563,11 +557,10 @@ void ExplorerIntegrals::resort_integrals_after_freezing()
 
     // Create a mapping array cmo2mo that tell me (cmo2mo[i]) where to find the i-th cmo.
     std::vector<size_t> cmo2mo;
-    for (int h = 0, p = 0, q = 0; h < nirrep_; ++h){
+    for (int h = 0, q = 0; h < nirrep_; ++h){
         q += frzcpi_[h]; // skip the frozen core
         for (int r = 0; r < ncmopi_[h]; ++r){
-            cmo2mo[p] = q;
-            p++;
+            cmo2mo.push_back(q);
             q++;
         }
         q += frzvpi_[h]; // skip the frozen virtual
@@ -613,7 +606,7 @@ void ExplorerIntegrals::resort_four(double*& ints,std::vector<size_t>& map)
         for (size_t q = 0; q < ncmo_; ++q){
             for (size_t r = 0; r < ncmo_; ++r){
                 for (size_t s = 0; s < ncmo_; ++s){
-                    size_t pqrs_cmo = ncmo3_ * p + ncmo2_ * q + ncmo_ * r + s;
+                    size_t pqrs_cmo = ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;
                     size_t pqrs_mo  = nmo_ * nmo_ * nmo_ * map[p] + nmo_ * nmo_ * map[q] + nmo_ * map[r] + map[s];
                     temp_ints[pqrs_cmo] = ints[pqrs_mo];
                 }

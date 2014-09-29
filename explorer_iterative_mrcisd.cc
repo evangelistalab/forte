@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -18,7 +18,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
@@ -31,7 +31,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
+void AdaptiveCI::iterative_adaptive_mrcisd(psi::Options& options)
 {
     boost::timer t_iamrcisd;
 
@@ -133,18 +133,18 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
 
 
         int nmo = reference_determinant_.nmo();
-        size_t nfrzc = frzc_.size();
-        size_t nfrzv = frzv_.size();
+//        size_t nfrzc = frzc_.size();
+//        size_t nfrzv = frzv_.size();
 
-        std::vector<int> aocc(nalpha_ - nfrzc);
-        std::vector<int> bocc(nbeta_ - nfrzc);
-        std::vector<int> avir(nmo_ - nalpha_ - nfrzv);
-        std::vector<int> bvir(nmo_ - nbeta_ - nfrzv);
+        std::vector<int> aocc(nalpha_);
+        std::vector<int> bocc(nbeta_);
+        std::vector<int> avir(ncmo_ - nalpha_);
+        std::vector<int> bvir(ncmo_ - nbeta_);
 
-        int noalpha = nalpha_ - nfrzc;
-        int nobeta  = nbeta_ - nfrzc;
-        int nvalpha = nmo_ - nalpha_;
-        int nvbeta  = nmo_ - nbeta_;
+        int noalpha = nalpha_;
+        int nobeta  = nbeta_;
+        int nvalpha = ncmo_ - nalpha_;
+        int nvbeta  = ncmo_ - nbeta_;
 
         // Find the SD space out of the reference
         std::vector<StringDeterminant> sd_dets_vec;
@@ -154,30 +154,30 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
             const StringDeterminant& det = ref_space[I];
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_alfa_bit(p)){
-                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                         aocc[i] = p;
                         i++;
-                    }
+//                    }
                 }else{
-                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                         avir[a] = p;
                         a++;
-                    }
+//                    }
                 }
             }
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_beta_bit(p)){
-                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                         bocc[i] = p;
                         i++;
-                    }
+//                    }
                 }else{
-                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                         bvir[a] = p;
                         a++;
-                    }
+//                    }
                 }
             }
 
@@ -537,7 +537,7 @@ void Explorer::iterative_adaptive_mrcisd(psi::Options& options)
 /**
  * Diagonalize the
  */
-void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
+void AdaptiveCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 {
     boost::timer t_iamrcisd;
     fprintf(outfile,"\n\n  Iterative Adaptive MRCISD");
@@ -685,18 +685,18 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
 
         int nmo = reference_determinant_.nmo();
-        size_t nfrzc = frzc_.size();
-        size_t nfrzv = frzv_.size();
+//        size_t nfrzc = frzc_.size();
+//        size_t nfrzv = frzv_.size();
 
-        std::vector<int> aocc(nalpha_ - nfrzc);
-        std::vector<int> bocc(nbeta_ - nfrzc);
-        std::vector<int> avir(nmo_ - nalpha_ - nfrzv);
-        std::vector<int> bvir(nmo_ - nbeta_ - nfrzv);
+        std::vector<int> aocc(nalpha_);
+        std::vector<int> bocc(nbeta_);
+        std::vector<int> avir(ncmo_ - nalpha_);
+        std::vector<int> bvir(ncmo_ - nbeta_);
 
-        int noalpha = nalpha_ - nfrzc;
-        int nobeta  = nbeta_ - nfrzc;
-        int nvalpha = nmo_ - nalpha_;
-        int nvbeta  = nmo_ - nbeta_;
+        int noalpha = nalpha_;
+        int nobeta  = nbeta_;
+        int nvalpha = ncmo_ - nalpha_;
+        int nvbeta  = ncmo_ - nbeta_;
 
         // Find the SD space out of the reference
         std::vector<BitsetDeterminant> sd_dets_vec;
@@ -709,30 +709,30 @@ void Explorer::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
             const BitsetDeterminant& det = ref_space[I];
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_alfa_bit(p)){
-                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                         aocc[i] = p;
                         i++;
-                    }
+//                    }
                 }else{
-                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                         avir[a] = p;
                         a++;
-                    }
+//                    }
                 }
             }
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_beta_bit(p)){
-                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                         bocc[i] = p;
                         i++;
-                    }
+//                    }
                 }else{
-                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                    if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                         bvir[a] = p;
                         a++;
-                    }
+//                    }
                 }
             }
 

@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 
@@ -11,7 +11,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "string_determinant.h"
 
 using namespace std;
@@ -55,22 +55,22 @@ bool compare_screened_string(const string_info& t1, const string_info& t2)
  * @param maxnex - the maximum excitation level
  * @return a list of strings organized by irrep and sorted in increasing energetic order
  */
-string_list_symm Explorer::compute_strings_screened(vector<double>& epsilon,int nocc,int nvir,int maxnex,bool alpha)
+string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,int nocc,int nvir,int maxnex,bool alpha)
 {
     int nact = nocc + nvir;
-    bool* I = new bool[nmo_];
-    bool* Ia = new bool[nmo_];
-    bool* Ib = new bool[nmo_];
+    bool* I = new bool[ncmo_];
+    bool* Ia = new bool[ncmo_];
+    bool* Ib = new bool[ncmo_];
     // copy the reference determinant
     StringDeterminant det(reference_determinant_);
-    for (int p = 0; p < nmo_; ++p){
+    for (int p = 0; p < ncmo_; ++p){
         I[p] = false;
         Ia[p] = det.get_alfa_bits()[p];
         Ib[p] = det.get_beta_bits()[p];
     }
-    // Set the frozen core orbitals
-    for (int i = 0; i < static_cast<int>(frzc_.size()); ++i){
-        I[frzc_[i]] = true;
+    // Set the restricted doubly occupied orbitals
+    for (int i = 0; i < static_cast<int>(rdocc.size()); ++i){
+        I[rdocc[i]] = true;
     }
 
     bool* Im;
@@ -138,12 +138,12 @@ string_list_symm Explorer::compute_strings_screened(vector<double>& epsilon,int 
                     std::vector<bool>& str_sv = vec_vir_str[sv].second;
                     for (int a = 0; a < nvir; ++a) I[qt_to_pitzer_[nocc + a]] = str_sv[a];
 
-                    vector<bool> bits(I,I + nmo_);
+                    vector<bool> bits(I,I + ncmo_);
                     int h = string_symmetry(I);
 
                     // set the alpha/beta strings and compute the energy of this determinant
                     // Copy the string and translate it to Pitzer ordering
-                    for (int p = 0; p < nmo_; ++p) Im[p] = I[p];
+                    for (int p = 0; p < ncmo_; ++p) Im[p] = I[p];
                     det.set_bits(Ia,Ib);
                     double exc_energy = det.excitation_energy(reference_determinant_);
 
@@ -211,7 +211,7 @@ string_list_symm Explorer::compute_strings_screened(vector<double>& epsilon,int 
     return vec_str;
 }
 
-half_string_list Explorer::compute_half_strings_screened(bool is_occ,int n,int k,vector<double>& weights,string label)
+half_string_list AdaptiveCI::compute_half_strings_screened(bool is_occ,int n,int k,vector<double>& weights,string label)
 {
     bool print_debug = false;
     if(print_debug) fprintf(outfile,"\n      number of %14s strings: %ld",label.c_str(),(long int)choose(n,k));
@@ -258,19 +258,19 @@ half_string_list Explorer::compute_half_strings_screened(bool is_occ,int n,int k
     return vec_str;
 }
 
-int Explorer::string_symmetry_qt(bool* I)
+int AdaptiveCI::string_symmetry_qt(bool* I)
 {
     int value = 0;
-    for (int p = 0; p < nmo_; ++p){
+    for (int p = 0; p < ncmo_; ++p){
         if (I[p]) value = value ^ mo_symmetry_qt_[p];
     }
     return value;
 }
 
-int Explorer::string_symmetry(bool* I)
+int AdaptiveCI::string_symmetry(bool* I)
 {
     int value = 0;
-    for (int p = 0; p < nmo_; ++p){
+    for (int p = 0; p < ncmo_; ++p){
         if (I[p]) value = value ^ mo_symmetry_[p];
     }
     return value;
@@ -292,7 +292,7 @@ int Explorer::string_symmetry(bool* I)
 *
 * with the constraint that the sum of a[s[i]] < max_sum
 */
-bool Explorer::next_bound_lex_combination(double max_sum,const std::vector<double>& a,bool* begin,bool* end)
+bool AdaptiveCI::next_bound_lex_combination(double max_sum,const std::vector<double>& a,bool* begin,bool* end)
 {
     // empty vector
     if(begin == end)
@@ -360,7 +360,7 @@ bool Explorer::next_bound_lex_combination(double max_sum,const std::vector<doubl
      * @param num1s number of ones
      * @param ones_first If true the 1s come first in the vector
      */
-void Explorer::make_bitmask(bool*& vec,int n,int num1s,bool ones_first)
+void AdaptiveCI::make_bitmask(bool*& vec,int n,int num1s,bool ones_first)
 {
     if(ones_first){
         for(int i = 0; i < num1s; ++i) vec[i] = true; // 1
@@ -386,7 +386,7 @@ void Explorer::make_bitmask(bool*& vec,int n,int num1s,bool ones_first)
  * @param fock
  * @return
  */
-double Explorer::compute_denominator(bool is_occ, bool *begin, bool *end, std::vector<double>& epsilon)
+double AdaptiveCI::compute_denominator(bool is_occ, bool *begin, bool *end, std::vector<double>& epsilon)
 {
     double sum = 0.0;
     if(is_occ){
@@ -420,7 +420,7 @@ double Explorer::compute_denominator(bool is_occ, bool *begin, bool *end, std::v
  * @param fock
  * @return
  */
-double Explorer::compute_denominator2(bool is_occ, bool *begin, bool *end, std::vector<double>& epsilon)
+double AdaptiveCI::compute_denominator2(bool is_occ, bool *begin, bool *end, std::vector<double>& epsilon)
 {
     double sum = 0.0;
     if(is_occ){
@@ -446,7 +446,7 @@ double Explorer::compute_denominator2(bool is_occ, bool *begin, bool *end, std::
  * @param h - the irrep
  * @return the excitaton class
  */
-int Explorer::excitation_class(int nex, int h)
+int AdaptiveCI::excitation_class(int nex, int h)
 {
     return nex * nirrep_ + h;
 }

@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 #include <set>
@@ -7,7 +7,7 @@
 #include <boost/format.hpp>
 #include <boost/unordered_map.hpp>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 #include "excitation_determinant.h"
@@ -21,7 +21,7 @@ namespace psi{ namespace libadaptive{
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  * by performing single excitations at a time
  */
-void Explorer::explore_singles_sequential(psi::Options& options)
+void AdaptiveCI::explore_singles_sequential(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Exploring the space of Slater determinants using the singles method\n");
     boost::timer t;
@@ -29,12 +29,12 @@ void Explorer::explore_singles_sequential(psi::Options& options)
     // No explorer will succeed without a cartographer
     Cartographer cg(options,min_energy_,min_energy_ + determinant_threshold_);
 
-    int nfrzc = frzcpi_.sum();
-    int nfrzv = frzvpi_.sum();
-    int naocc = nalpha_ - nfrzc;
-    int nbocc = nbeta_ - nfrzc;
-    int navir = nmo_ - naocc - nfrzc - nfrzv;
-    int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
+//    int nfrzc = frzcpi_.sum();
+//    int nfrzv = frzvpi_.sum();
+    int naocc = nalpha_;
+    int nbocc = nbeta_;
+    int navir = ncmo_ - naocc;
+    int nbvir = ncmo_ - nbocc;
 
     ExcitationDeterminant zero_ex;
 
@@ -43,8 +43,8 @@ void Explorer::explore_singles_sequential(psi::Options& options)
 
     boost::unordered_map<std::pair<size_t,size_t>, size_t> good_determinants;
     std::pair<std::vector<double>,std::vector<double> > fock_diagonals;
-    std::vector<double> fock_diagonal_alpha(nmo_,0.0);
-    std::vector<double> fock_diagonal_beta(nmo_,0.0);
+    std::vector<double> fock_diagonal_alpha(ncmo_,0.0);
+    std::vector<double> fock_diagonal_beta(ncmo_,0.0);
     size_t failed_attepts = 0;
 
     // Store energy,irrep,and excitation operator

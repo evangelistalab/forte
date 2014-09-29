@@ -5,15 +5,16 @@
 #include <libpsio/psio.hpp>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
+#include <libmints/pointgrp.h>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 using namespace std;
 using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
+AdaptiveCI::AdaptiveCI(Options &options,ExplorerIntegrals* ints)
     : options_(options),ints_(ints),min_energy_(0.0),pt2_energy_correction_(0.0)
 {
     boost::timer t;
@@ -68,11 +69,11 @@ Explorer::Explorer(Options &options,ExplorerIntegrals* ints)
     fflush(outfile);
 }
 
-Explorer::~Explorer()
+AdaptiveCI::~AdaptiveCI()
 {
 }
 
-void Explorer::startup(Options& options)
+void AdaptiveCI::startup(Options& options)
 {
     read_info(options);
 
@@ -84,16 +85,16 @@ void Explorer::startup(Options& options)
 
 
     // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * nmo_,0);
+    std::vector<int> occupation(2 * ncmo_,0);
     int cumidx = 0;
     for (int h = 0; h < nirrep_; ++h){
         for (int i = 0; i < nalphapi_ref_[h]; ++i){
             occupation[i + cumidx] = 1;
         }
         for (int i = 0; i < nbetapi_ref_[h]; ++i){
-            occupation[nmo_ + i + cumidx] = 1;
+            occupation[ncmo_ + i + cumidx] = 1;
         }
-        cumidx += nmopi_[h];
+        cumidx += ncmopi_[h];
     }
     reference_determinant_ = StringDeterminant(occupation);
 
@@ -110,58 +111,82 @@ void Explorer::startup(Options& options)
     fprintf(outfile,"\n\n  Starting Explorer.\n\n");
 }
 
-void Explorer::read_info(Options& options)
+void AdaptiveCI::read_info(Options& options)
 {
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    epsilon_a_ = wfn->epsilon_a();
-    epsilon_b_ = wfn->epsilon_a();
-    nmo_ = wfn->nmo();
-    nmopi_ = wfn->nmopi();
-    nalphapi_ = wfn->nalphapi();
-    nbetapi_ = wfn->nbetapi();
-    nalpha_ = wfn->nalpha();
-    nbeta_ = wfn->nbeta();
     nirrep_ = wfn->nirrep();
-    frzcpi_ = Dimension(nirrep_);
-    frzvpi_ = Dimension(nirrep_);
+    SharedVector wfn_eps_a_ = wfn->epsilon_a();
+    SharedVector wfn_eps_b_ = wfn->epsilon_b();
 
-    if (options["FROZEN_DOCC"].has_changed()){
-        if (options["FROZEN_DOCC"].size() == nirrep_){
+    // The number of correlated molecular orbitals
+    ncmo_ = ints_->ncmo();
+    ncmopi_ = ints_->ncmopi();
+
+    // Frozen orbitals read from the integral class
+    frzcpi_ = ints_->frzcpi();
+    frzvpi_ = ints_->frzvpi();
+
+    ref_eps_a_ = SharedVector(new Vector("ref_eps_a",ncmopi_));
+    ref_eps_b_ = SharedVector(new Vector("ref_eps_b",ncmopi_));
+    // Sort the orbital energies
+    for (int h = 0; h < nirrep_; ++h){
+        for (int p = 0; p < ncmopi_[h]; ++p){
+            ref_eps_a_->set(h,p,wfn_eps_a_->get(h,frzcpi_[h] + p));
+            ref_eps_b_->set(h,p,wfn_eps_b_->get(h,frzcpi_[h] + p));
+        }
+    }
+
+    // Read the restricted orbitals
+    actvpi_  = Dimension(nirrep_,"Active MOs");
+    rdoccpi_ = Dimension(nirrep_,"Restricted doubly occupied MOs");
+    ruoccpi_ = Dimension(nirrep_,"Restricted unoccupied MOs");
+    if (options["RESTRICTED_DOCC"].has_changed()){
+        if (options["RESTRICTED_DOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
-                frzcpi_[h] = options["FROZEN_DOCC"][h].to_integer();
+                rdoccpi_[h] = options["RESTRICTED_DOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_DOCC"].size(),nirrep_);
+            fprintf(outfile,"\n\n  The input array RESTRICTED_DOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["RESTRICTED_DOCC"].size(),nirrep_);
             fprintf(outfile,"\n  Exiting the program.\n");
-            printf("  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_DOCC"].size(),nirrep_);
+            printf("  The input array RESTRICTED_DOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["RESTRICTED_DOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
 
             exit(Failure);
         }
     }
-
-    if (options["FROZEN_UOCC"].has_changed()){
-        if (options["FROZEN_UOCC"].size() == nirrep_){
+    if (options["RESTRICTED_UOCC"].has_changed()){
+        if (options["RESTRICTED_UOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
-                frzvpi_[h] = options["FROZEN_UOCC"][h].to_integer();
+                ruoccpi_[h]  = options["RESTRICTED_UOCC"][h].to_integer();
+                actvpi_[h] = ncmopi_[h] - rdoccpi_[h] - ruoccpi_[h];
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_UOCC"].size(),nirrep_);
+            fprintf(outfile,"\n\n  The input array RESTRICTED_UOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["RESTRICTED_UOCC"].size(),nirrep_);
             fprintf(outfile,"\n  Exiting the program.\n");
-            printf("  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %d",
-                    options["FROZEN_UOCC"].size(),nirrep_);
+            printf("  The input array RESTRICTED_UOCC has information for %d irreps, this does not match the total number of irreps %d",
+                    options["RESTRICTED_UOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
-
             exit(Failure);
         }
-    } else if (options["ACTIVE"].has_changed()){
+    }
+
+    // Determine the active orbitals as the difference
+
+    if (options["ACTIVE"].has_changed() and options["RESTRICTED_UOCC"].has_changed()){
+        fprintf(outfile,"\n\n  Cannot provide both ACTIVE and RESTRICTED_UOCC arrays");
+        fprintf(outfile,"\n  Exiting the program.\n");
+        printf("\n\n  Cannot provide both ACTIVE and RESTRICTED_UOCC arrays");
+        printf("\n  Exiting the program.\n");
+        exit(Failure);
+    }else if (options["ACTIVE"].has_changed()){
         if (options["ACTIVE"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
-                frzvpi_[h] = nmopi_[h] - frzcpi_[h] - options["ACTIVE"][h].to_integer();
+                actvpi_[h]  = options["ACTIVE"][h].to_integer();
+                ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
             }
         }else{
             fprintf(outfile,"\n\n  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
@@ -170,35 +195,69 @@ void Explorer::read_info(Options& options)
             printf("  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
                     options["ACTIVE"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
-
             exit(Failure);
         }
+    }else{
+        actvpi_ = ncmopi_ - rdoccpi_ - ruoccpi_;
     }
+
+    // Print a summary
+    std::vector<std::pair<std::string,Dimension>> mo_space_info{
+        {"Frozen doubly occupied",frzcpi_},
+        {"Restricted doubly occupied",rdoccpi_},
+        {"Active",actvpi_},
+        {"Restricted unoccupied",rdoccpi_},
+        {"Frozen unoccupied",frzvpi_}};
+
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+
+    // Print some information
+    fprintf(outfile,"\n  ==> Active Space Information <==\n");
+    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
+    fprintf(outfile,"\n%32c",' ');
+    for (int h = 0; h < nirrep_; ++h) fprintf(outfile," %5s",ct.gamma(h).symbol());
+    fprintf(outfile,"  Total");
+    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1)* 6,'-').c_str());
+    for (auto& str_dim : mo_space_info){
+        fprintf(outfile,"\n  %-30s",str_dim.first.c_str());
+        for (int h = 0, p = 0; h < nirrep_; ++h){
+            fprintf(outfile," %5d",str_dim.second[h]);
+        }
+        fprintf(outfile," %6d",str_dim.second.sum());
+    }
+    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
+    fflush(outfile);
+
 
     // Create the vectors of frozen orbitals (in the Pitzer ordering)
     for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < frzcpi_[h]; ++i){
-            frzc_.push_back(p + i);
+        for (int i = 0; i < rdoccpi_[h]; ++i){
+            rdocc.push_back(p + i);
         }
-        p += nmopi_[h];
-        for (int i = 0; i < frzvpi_[h]; ++i){
-            frzv_.push_back(p - frzvpi_[h] + i);
+        p += ncmopi_[h];
+        for (int i = 0; i < ruoccpi_[h]; ++i){
+            ruocc.push_back(p - ruoccpi_[h] + i);
         }
     }
 
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h){
-        for (int p = 0; p < nmopi_[h]; ++p){
+        for (int p = 0; p < ncmopi_[h]; ++p){
             mo_symmetry_.push_back(h);
         }
     }
 
+    wavefunction_symmetry_ = 0;
+    if(options["ROOT_SYM"].has_changed()){
+        wavefunction_symmetry_ = options.get_int("ROOT_SYM");
+    }
     int charge       = Process::environment.molecule()->molecular_charge();
     int multiplicity = Process::environment.molecule()->multiplicity();
-    int nel = nalpha_ + nbeta_;
+    int nel = 0;
 
-    // If the charge has changed recompute the number of electrons
-    if(options["CHARGE"].has_changed()){
+    // If the charge has changed, recompute the number of electrons
+    // Or if you cannot find the number of electrons
+    if((nel == 0) or options["CHARGE"].has_changed()){
         charge = options.get_int("CHARGE");
         nel = 0;
         int natom = Process::environment.molecule()->natom();
@@ -214,16 +273,33 @@ void Explorer::read_info(Options& options)
 
     if( ((nel + 1 - multiplicity) % 2) != 0)
         throw PSIEXCEPTION("\n\n  MOInfoBase: Wrong multiplicity.\n\n");
+    nel -= 2 * frzcpi_.sum();
     nalpha_ = (nel + multiplicity - 1) / 2;
     nbeta_ =  nel - nalpha_;
 
-    Da_.assign(nmo_,0.0);
-    Db_.assign(nmo_,0.0);
+    // Print a summary
+    std::vector<std::pair<std::string,int>> calculation_info{
+        {"Charge",charge},
+        {"Multiplicity",multiplicity},
+        {"Symmetry",wavefunction_symmetry_},
+        {"Number of electrons",nel},
+        {"Number of correlated alpha electrons",nalpha_},
+        {"Number of correlated beta electrons",nbeta_},
+        {"Number of restricted docc electrons",rdoccpi_.sum()},
+        {"Number of active alpha electrons",nalpha_ - rdoccpi_.sum()},
+        {"Number of beta alpha electrons",nbeta_ - rdoccpi_.sum()}};
 
-    wavefunction_symmetry_ = 0;
-    if(options["ROOT_SYM"].has_changed()){
-        wavefunction_symmetry_ = options.get_int("ROOT_SYM");
+    // Print some information
+    fprintf(outfile,"\n\n  ==> Calculation Information <==\n");
+    fprintf(outfile,"\n  %s",string(52,'-').c_str());
+    for (auto& str_dim : calculation_info){
+        fprintf(outfile,"\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
     }
+    fprintf(outfile,"\n  %s",string(52,'-').c_str());
+    fflush(outfile);
+
+    Da_.assign(ncmo_,0.0);
+    Db_.assign(ncmo_,0.0);
 
     boost::shared_ptr<Molecule> molecule_ = wfn->molecule();
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
@@ -257,6 +333,8 @@ void Explorer::read_info(Options& options)
         mp_screening_ = false;
     }
 
+    fprintf(outfile,"\n  Nuclear repulsion energy     = %20.12f a.u.",nuclear_repulsion_energy_);
+    fprintf(outfile,"\n  Scalar energy contribution   = %20.12f a.u.",ints_->scalar());
     fprintf(outfile,"\n  Determinant threshold        = %.3f (Eh)",determinant_threshold_);
     fprintf(outfile,"\n  Denominator threshold        = %.3f (Eh)",denominator_threshold_);
     fprintf(outfile,"\n  Model space threshold        = %.3f (Eh)",space_m_threshold_);
@@ -277,15 +355,15 @@ bool compare_tuples (const boost::tuple<double,int,int>& t1, const boost::tuple<
     return (t1.get<2>() < t2.get<2>());
 }
 
-void Explorer::screen_mos()
+void AdaptiveCI::screen_mos()
 {
     // Determine the best occupation using the orbital energies
     std::vector<boost::tuple<double,int,int> > sorted_ea;
     std::vector<boost::tuple<double,int,int> > sorted_eb;
     for (int h = 0, sump = 0; h < nirrep_; ++h){
-        for (int p = 0; p < nmopi_[h]; ++p, ++sump){
-            sorted_ea.push_back(boost::make_tuple(epsilon_a_->get(h,p),h,sump));
-            sorted_eb.push_back(boost::make_tuple(epsilon_b_->get(h,p),h,sump));
+        for (int p = 0; p < ncmopi_[h]; ++p, ++sump){
+            sorted_ea.push_back(boost::make_tuple(ref_eps_a_->get(h,p),h,sump));
+            sorted_eb.push_back(boost::make_tuple(ref_eps_b_->get(h,p),h,sump));
         }
     }
 
@@ -299,12 +377,12 @@ void Explorer::screen_mos()
     maxalphapi_ = Dimension(nirrep_);
     maxbetapi_ = Dimension(nirrep_);
 
-    fprintf(outfile,"\n\n                Molecular orbitals:");
+    fprintf(outfile,"\n\n  ==> Molecular orbitals <==\n");
     fprintf(outfile,"\n  ====================================================");
     fprintf(outfile,"\n     MO         alpha                  beta");
     fprintf(outfile,"\n           irrep    energy  occ   irrep    energy  occ");
     fprintf(outfile,"\n  ----------------------------------------------------");
-    for (int p = 0; p < nmo_; ++p){
+    for (int p = 0; p < ncmo_; ++p){
         double ea = sorted_ea[p].get<0>();
         double eb = sorted_eb[p].get<0>();
         int ha = sorted_ea[p].get<1>();
@@ -322,17 +400,17 @@ void Explorer::screen_mos()
         //if (std::max(std::fabs(ea),std::fabs(eb)) < denominator_threshold_ * 1.25)
 
 
-        bool frozen = false;
+        bool excluded = false;
         fprintf(outfile,"\n %6d    %3d %12.6f  %1d    %3d %12.6f  %1d",p,ha,ea,p < nalpha_,hb,eb,p < nbeta_);
-        if (std::find(frzc_.begin(), frzc_.end(), pa) != frzc_.end()){
-            frozen = true;
-            fprintf(outfile," <- frozen");
+        if (std::find(rdocc.begin(), rdocc.end(), pa) != rdocc.end()){
+            excluded = true;
+            fprintf(outfile," <- restricted docc");
         }
-        if (std::find(frzv_.begin(), frzv_.end(), pa) != frzv_.end()){
-            fprintf(outfile," <- frozen");
-            frozen = true;
+        if (std::find(ruocc.begin(), ruocc.end(), pa) != ruocc.end()){
+            excluded = true;
+            fprintf(outfile," <- restricted uocc");
         }
-        if (not frozen){
+        if (not excluded){
             epsilon_a_qt_.push_back(ea);
             epsilon_b_qt_.push_back(eb);
             qt_to_pitzer_.push_back(pa);
@@ -371,19 +449,19 @@ void Explorer::screen_mos()
     fprintf(outfile,"\n  Energy of the alpha/beta LUMO: %12.6f %12.6f",e_alumo,e_blumo);
     // Determine the range of MOs to consider
     for (int h = 0; h < nirrep_; ++h){
-        for (int p = nmopi_[h] - 1; p >=0 ; --p){
-            if (e_alumo - epsilon_a_->get(h,p) < denominator_threshold_){
+        for (int p = ncmopi_[h] - 1; p >=0 ; --p){
+            if (e_alumo - ref_eps_a_->get(h,p) < denominator_threshold_){
                 minalphapi_[h] = p;
             }
-            if (e_blumo - epsilon_b_->get(h,p) < denominator_threshold_){
+            if (e_blumo - ref_eps_b_->get(h,p) < denominator_threshold_){
                 minbetapi_[h] = p;
             }
         }
-        for (int p = 0; p < nmopi_[h]; ++p){
-            if (epsilon_a_->get(h,p) - e_ahomo < denominator_threshold_){
+        for (int p = 0; p < ncmopi_[h]; ++p){
+            if (ref_eps_a_->get(h,p) - e_ahomo < denominator_threshold_){
                 maxalphapi_[h] = p + 1;
             }
-            if (epsilon_b_->get(h,p) - e_bhomo < denominator_threshold_){
+            if (ref_eps_b_->get(h,p) - e_bhomo < denominator_threshold_){
                 maxbetapi_[h] = p + 1;
             }
         }
@@ -401,8 +479,5 @@ void Explorer::screen_mos()
     }
     fprintf(outfile," >");
 }
-
-
-
 
 }} // EndNamespaces

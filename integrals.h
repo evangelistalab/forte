@@ -45,6 +45,9 @@ public:
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}
 
+    /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
+    Dimension& ncmopi() {return ncmopi_;}
+
     /// Return the frozen core energy
     double frozen_core_energy() const {return core_energy_;}
 
@@ -165,8 +168,7 @@ private:
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension ncmopi_;
 
-    size_t ncmo2_;
-    size_t ncmo3_;
+    size_t aptei_idx_;
     size_t nso_;
 
     /// Number of one electron integrals
@@ -240,7 +242,7 @@ private:
     int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
 
     /// An addressing function to retrieve the two-electron integrals
-    size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return ncmo3_ * p + ncmo2_ * q + ncmo_ * r + s;}
+    size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
 };
 
 }} // End Namespaces

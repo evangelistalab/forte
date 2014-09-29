@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -17,7 +17,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -29,7 +29,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void Explorer::lambda_mrcisd(psi::Options& options)
+void AdaptiveCI::lambda_mrcisd(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Lambda-MRCISD");
 
@@ -120,18 +120,18 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
 
     int nmo = reference_determinant_.nmo();
-    size_t nfrzc = frzc_.size();
-    size_t nfrzv = frzv_.size();
+//    size_t nfrzc = frzc_.size();
+//    size_t nfrzv = frzv_.size();
 
-    std::vector<int> aocc(nalpha_ - nfrzc);
-    std::vector<int> bocc(nbeta_ - nfrzc);
-    std::vector<int> avir(nmo_ - nalpha_ - nfrzv);
-    std::vector<int> bvir(nmo_ - nbeta_ - nfrzv);
+    std::vector<int> aocc(nalpha_);
+    std::vector<int> bocc(nbeta_);
+    std::vector<int> avir(ncmo_ - nalpha_);
+    std::vector<int> bvir(ncmo_ - nbeta_);
 
-    int noalpha = nalpha_ - nfrzc;
-    int nobeta  = nbeta_ - nfrzc;
-    int nvalpha = nmo_ - nalpha_;
-    int nvbeta  = nmo_ - nbeta_;
+    int noalpha = nalpha_;
+    int nobeta  = nbeta_;
+    int nvalpha = ncmo_ - nalpha_;
+    int nvbeta  = ncmo_ - nbeta_;
 
     // Find the SD space out of the reference
     std::vector<StringDeterminant> sd_dets_vec;
@@ -140,30 +140,30 @@ void Explorer::lambda_mrcisd(psi::Options& options)
 
     for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
         const StringDeterminant& det = ref_space[I];
-        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+        for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (det.get_alfa_bit(p)){
-                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                     aocc[i] = p;
                     i++;
-                }
+//                }
             }else{
-                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                     avir[a] = p;
                     a++;
-                }
+//                }
             }
         }
-        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+        for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (det.get_beta_bit(p)){
-                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                     bocc[i] = p;
                     i++;
-                }
+//                }
             }else{
-                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                     bvir[a] = p;
                     a++;
-                }
+//                }
             }
         }
 
@@ -463,7 +463,7 @@ void Explorer::lambda_mrcisd(psi::Options& options)
     fflush(outfile);
 }
 
-void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
+void AdaptiveCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
                                           SharedMatrix evecs,
                                           SharedVector evals,
                                           int nroots)
@@ -560,7 +560,7 @@ void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
             norm += C_mat[I][i] * C_mat[I][i];
         }
 //        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
-        for (int p = 0; p < nmo_; ++p){
+        for (int p = 0; p < ncmo_; ++p){
             Da_[p] /= norm;
             Db_[p] /= norm;
         }
@@ -568,7 +568,7 @@ void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
         double na = 0.0;
         double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
-            for (int n = 0; n < nmopi_[h]; ++n){
+            for (int n = 0; n < ncmopi_[h]; ++n){
                 fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
                 na += Da_[p];
                 nb += Db_[p];
@@ -585,7 +585,7 @@ void Explorer::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
 /**
  * Diagonalize the
  */
-void Explorer::lambda_mrcis(psi::Options& options)
+void AdaptiveCI::lambda_mrcis(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Lambda-MRCIS");
 
@@ -676,18 +676,18 @@ void Explorer::lambda_mrcis(psi::Options& options)
 
 
     int nmo = reference_determinant_.nmo();
-    size_t nfrzc = frzc_.size();
-    size_t nfrzv = frzv_.size();
+//    size_t nfrzc = frzc_.size();
+//    size_t nfrzv = frzv_.size();
 
-    std::vector<int> aocc(nalpha_ - nfrzc);
-    std::vector<int> bocc(nbeta_ - nfrzc);
-    std::vector<int> avir(nmo_ - nalpha_ - nfrzv);
-    std::vector<int> bvir(nmo_ - nbeta_ - nfrzv);
+    std::vector<int> aocc(nalpha_);
+    std::vector<int> bocc(nbeta_);
+    std::vector<int> avir(ncmo_ - nalpha_);
+    std::vector<int> bvir(ncmo_ - nbeta_);
 
-    int noalpha = nalpha_ - nfrzc;
-    int nobeta  = nbeta_ - nfrzc;
-    int nvalpha = nmo_ - nalpha_;
-    int nvbeta  = nmo_ - nbeta_;
+    int noalpha = nalpha_;
+    int nobeta  = nbeta_;
+    int nvalpha = ncmo_ - nalpha_;
+    int nvbeta  = ncmo_ - nbeta_;
 
     // Find the SD space out of the reference
     std::vector<StringDeterminant> sd_dets_vec;
@@ -696,30 +696,30 @@ void Explorer::lambda_mrcis(psi::Options& options)
 
     for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
         const StringDeterminant& det = ref_space[I];
-        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+        for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (det.get_alfa_bit(p)){
-                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                     aocc[i] = p;
                     i++;
-                }
+//                }
             }else{
-                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                     avir[a] = p;
                     a++;
-                }
+//                }
             }
         }
-        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+        for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (det.get_beta_bit(p)){
-                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
+//                if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
                     bocc[i] = p;
                     i++;
-                }
+//                }
             }else{
-                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
+//                if (std::count (frzv_.begin(),frzv_.end(),p) == 0){
                     bvir[a] = p;
                     a++;
-                }
+//                }
             }
         }
 

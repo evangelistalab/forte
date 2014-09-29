@@ -1,12 +1,12 @@
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 

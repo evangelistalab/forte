@@ -1,11 +1,11 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -40,7 +40,7 @@ bool compare_det_info(const det_info& t1, const det_info& t2)
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
-void Explorer::explore_original(psi::Options& options)
+void AdaptiveCI::explore_original(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Exploring the space of Slater determinants\n");
 
@@ -49,10 +49,10 @@ void Explorer::explore_original(psi::Options& options)
 
     int nfrzc = frzcpi_.sum();
     int nfrzv = frzvpi_.sum();
-    int naocc = nalpha_ - nfrzc;
-    int nbocc = nbeta_ - nfrzc;
-    int navir = nmo_ - naocc - nfrzc - nfrzv;
-    int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
+    int naocc = nalpha_ - rdoccpi_.sum();
+    int nbocc = nbeta_  - rdoccpi_.sum();
+    int navir = ncmo_ - naocc - rdoccpi_.sum() - ruoccpi_.sum();
+    int nbvir = ncmo_ - nbocc - rdoccpi_.sum() - ruoccpi_.sum();
 
     // Calculate the maximum excitation level
     maxnaex_ = std::min(naocc,navir);
@@ -66,8 +66,8 @@ void Explorer::explore_original(psi::Options& options)
     }
 
     // Allocate an array of bits for fast manipulation
-    bool* Ia = new bool[2 * nmo_];
-    bool* Ib = &Ia[nmo_];
+    bool* Ia = new bool[2 * ncmo_];
+    bool* Ib = &Ia[ncmo_];
 
     boost::timer t;
     double time_string = 0.0;
@@ -108,7 +108,7 @@ void Explorer::explore_original(psi::Options& options)
     ofstream de("det_energy.txt");
     double ref_one_electron_energy = min_energy_determinant_.one_electron_energy();
 
-    vector<bool> empty_det(2 * nmo_,false);
+    vector<bool> empty_det(2 * ncmo_,false);
     StringDeterminant det(empty_det);
     boost::timer t_dets;
     // Loop over the excitation level
@@ -133,7 +133,7 @@ void Explorer::explore_original(psi::Options& options)
                     double ea = vec_astr[sa].get<0>();
                     double da = vec_astr[sa].get<1>();
                     std::vector<bool>& str_sa = vec_astr[sa].get<2>();
-                    for (int p = 0; p < nmo_; ++p) Ia[p] = str_sa[p];
+                    for (int p = 0; p < ncmo_; ++p) Ia[p] = str_sa[p];
 
                     // Loop over beta strings
                     for (size_t sb = 0; sb < nsb; ++sb){
@@ -141,7 +141,7 @@ void Explorer::explore_original(psi::Options& options)
                         double db = vec_bstr[sb].get<1>();
                         if (ea + eb < denominator_threshold_){
                             std::vector<bool>& str_sb = vec_bstr[sb].get<2>();
-                            for (int p = 0; p < nmo_; ++p) Ib[p] = str_sb[p];
+                            for (int p = 0; p < ncmo_; ++p) Ib[p] = str_sb[p];
 
                             // set the alpha/beta strings and compute the energy of this determinant
                             det.set_bits(Ia,Ib);
@@ -151,7 +151,7 @@ void Explorer::explore_original(psi::Options& options)
 
                             // check to see if the energy is below a given threshold
                             if (det_energy < min_energy_ + determinant_threshold_){
-                                cg.accumulate_data(nmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
+                                cg.accumulate_data(ncmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
                                 determinants_.push_back(boost::make_tuple(det_energy,exc_class_a,sa,exc_class_b,sb));
                                 double one_electron_energy = det.one_electron_energy() - ref_one_electron_energy;
                                 de << boost::format("%.9f %.9f %.9f\n") % det_energy % (ea + eb) % one_electron_energy;
@@ -209,7 +209,7 @@ void Explorer::explore_original(psi::Options& options)
     fprintf(outfile,"|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
-        for (int i = 0; i < nmopi_[h]; ++i){
+        for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_alfa_bit(p);
             p += 1;
         }
@@ -219,7 +219,7 @@ void Explorer::explore_original(psi::Options& options)
     fprintf(outfile,"|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
-        for (int i = 0; i < nmopi_[h]; ++i){
+        for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_beta_bit(p);
             p += 1;
         }
@@ -242,19 +242,19 @@ void Explorer::explore_original(psi::Options& options)
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
-void Explorer::explore(psi::Options& options)
+void AdaptiveCI::explore(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Exploring the space of Slater determinants\n");
 
     // No explorer will succeed without a cartographer
     Cartographer cg(options,min_energy_,min_energy_ + determinant_threshold_);
 
-    int nfrzc = frzcpi_.sum();
-    int nfrzv = frzvpi_.sum();
+    int nfrzc = ints_->frzcpi().sum();
+    int nfrzv = ints_->frzvpi().sum();
     int naocc = nalpha_ - nfrzc;
     int nbocc = nbeta_ - nfrzc;
-    int navir = nmo_ - naocc - nfrzc - nfrzv;
-    int nbvir = nmo_ - nbocc - nfrzc - nfrzv;
+    int navir = ncmo_ - naocc - nfrzc - nfrzv;
+    int nbvir = ncmo_ - nbocc - nfrzc - nfrzv;
 
     // Calculate the maximum excitation level
     maxnaex_ = std::min(naocc,navir);
@@ -268,8 +268,8 @@ void Explorer::explore(psi::Options& options)
     }
 
     // Allocate an array of bits for fast manipulation
-    bool* Ia = new bool[2 * nmo_];
-    bool* Ib = &Ia[nmo_];
+    bool* Ia = new bool[2 * ncmo_];
+    bool* Ib = &Ia[ncmo_];
 
     boost::timer t;
     double time_string = 0.0;
@@ -305,7 +305,7 @@ void Explorer::explore(psi::Options& options)
     fflush(outfile);
 
 
-    vector<bool> empty_det(2 * nmo_,false);
+    vector<bool> empty_det(2 * ncmo_,false);
     StringDeterminant det(empty_det);
     boost::timer t_dets;
     // Loop over the excitation level
@@ -375,7 +375,7 @@ void Explorer::explore(psi::Options& options)
                             double ea = vec_astr[sa].get<0>();
                             double da = vec_astr[sa].get<1>();
                             std::vector<bool>& str_sa = vec_astr[sa].get<2>();
-                            for (int p = 0; p < nmo_; ++p) Ia[p] = str_sa[p];
+                            for (int p = 0; p < ncmo_; ++p) Ia[p] = str_sa[p];
 
                             // Loop over beta strings
                             for (size_t sb = minsb; sb < maxsb; ++sb){
@@ -383,7 +383,7 @@ void Explorer::explore(psi::Options& options)
                                 double db = vec_bstr[sb].get<1>();
                                 if (ea + eb < denominator_threshold_){
                                     std::vector<bool>& str_sb = vec_bstr[sb].get<2>();
-                                    for (int p = 0; p < nmo_; ++p) Ib[p] = str_sb[p];
+                                    for (int p = 0; p < ncmo_; ++p) Ib[p] = str_sb[p];
 
                                     // set the alpha/beta strings and compute the energy of this determinant
                                     det.set_bits(Ia,Ib);
@@ -393,7 +393,7 @@ void Explorer::explore(psi::Options& options)
 
                                     // check to see if the energy is below a given threshold
                                     if (det_energy < min_energy_ + determinant_threshold_){
-                                        cg.accumulate_data(nmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
+                                        cg.accumulate_data(ncmo_,str_sa,str_sb,det_energy,ea,eb,naex,nbex);
                                         determinants_.push_back(boost::make_tuple(det_energy,exc_class_a,sa,exc_class_b,sb));
                                         if (det_energy < min_energy_){
                                             min_energy_determinant_ = det;
@@ -468,7 +468,7 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
-        for (int i = 0; i < nmopi_[h]; ++i){
+        for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_alfa_bit(p);
             p += 1;
         }
@@ -478,7 +478,7 @@ void Explorer::explore(psi::Options& options)
     fprintf(outfile,"|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
-        for (int i = 0; i < nmopi_[h]; ++i){
+        for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_beta_bit(p);
             p += 1;
         }

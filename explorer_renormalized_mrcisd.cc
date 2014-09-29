@@ -1,4 +1,4 @@
-#include "explorer.h"
+#include "adaptive-ci.h"
 
 #include <cmath>
 #include <ctime>
@@ -18,7 +18,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -30,7 +30,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void Explorer::renormalized_mrcisd(psi::Options& options)
+void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Renormalized MRCISD");
 
@@ -64,15 +64,15 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
     int nmo = reference_determinant_.nmo();
     std::vector<int> aocc(nalpha_);
     std::vector<int> bocc(nbeta_);
-    std::vector<int> avir(nmo_ - nalpha_);
-    std::vector<int> bvir(nmo_ - nbeta_);
+    std::vector<int> avir(ncmo_ - nalpha_);
+    std::vector<int> bvir(ncmo_ - nbeta_);
 
     SharedMatrix H;
     SharedMatrix evecs;
     SharedVector evals;
 
-    int nvalpha = nmo_ - nalpha_;
-    int nvbeta = nmo_ - nbeta_;
+    int nvalpha = ncmo_ - nalpha_;
+    int nvbeta = ncmo_ - nbeta_;
 
     std::vector<StringDeterminant> old_dets_vec;
     std::map<StringDeterminant,int> old_dets_map;
@@ -83,7 +83,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
     //    D0.print();
     srand((unsigned)time(NULL));
     {
-        for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+        for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (D0.get_alfa_bit(p)){
                 aocc[i] = p;
                 i++;
@@ -119,7 +119,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
         boost::timer t_ms_build;
         for (size_t I = 0, max_I = old_dets_vec.size(); I < max_I; ++I){
             const StringDeterminant& det = old_dets_vec[I];
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_alfa_bit(p)){
                     aocc[i] = p;
                     i++;
@@ -128,7 +128,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
                     a++;
                 }
             }
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_beta_bit(p)){
                     bocc[i] = p;
                     i++;
@@ -518,7 +518,7 @@ void Explorer::renormalized_mrcisd(psi::Options& options)
 /**
  * Diagonalize the
  */
-void Explorer::renormalized_mrcisd_simple(psi::Options& options)
+void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 {
     fprintf(outfile,"\n\n  Renormalized MRCISD");
 
@@ -536,15 +536,15 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
     int nmo = reference_determinant_.nmo();
     std::vector<int> aocc(nalpha_);
     std::vector<int> bocc(nbeta_);
-    std::vector<int> avir(nmo_ - nalpha_);
-    std::vector<int> bvir(nmo_ - nbeta_);
+    std::vector<int> avir(ncmo_ - nalpha_);
+    std::vector<int> bvir(ncmo_ - nbeta_);
 
     SharedMatrix H;
     SharedMatrix evecs;
     SharedVector evals;
 
-    int nvalpha = nmo_ - nalpha_;
-    int nvbeta = nmo_ - nbeta_;
+    int nvalpha = ncmo_ - nalpha_;
+    int nvbeta = ncmo_ - nbeta_;
 
     std::vector<StringDeterminant> old_dets_vec;
     std::vector<double> coefficient;
@@ -565,7 +565,7 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
             double Em = det.energy();
 
             new_dets_map[det] = 1;
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_alfa_bit(p)){
                     aocc[i] = p;
                     i++;
@@ -574,7 +574,7 @@ void Explorer::renormalized_mrcisd_simple(psi::Options& options)
                     a++;
                 }
             }
-            for (int p = 0, i = 0, a = 0; p < nmo_; ++p){
+            for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_beta_bit(p)){
                     bocc[i] = p;
                     i++;

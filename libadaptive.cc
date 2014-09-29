@@ -10,7 +10,7 @@
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
 
-#include "explorer.h"
+#include "adaptive-ci.h"
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
@@ -256,33 +256,33 @@ libadaptive(Options &options)
         test_tensor_class(true);
     }else{
         // Get the one- and two-electron integrals in the MO basis
-        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,UnrestrictedMOs,KeepFrozenMOs);
+        ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
         if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
             main::MCSRGPT2_MO mcsrgpt2_mo(options, ints_);
         }
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){
-            Explorer* explorer = new Explorer(options,ints_);
+            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "FCIMC"){
             FCIMC fcimc(options,ints_);
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
-            Explorer* explorer = new Explorer(options,ints_);
-            std::vector<double> ONa = explorer->Da();
-            std::vector<double> ONb = explorer->Db();
-            int nmo = explorer->nmo();
-            double** G1;
-            init_matrix<double>(G1,2 * nmo,2 * nmo);
-            for (int p = 0; p < nmo; ++p){
-                G1[p][p] = ONa[p];
-                G1[p + nmo][p + nmo] = ONb[p];
-            }
-            SOSRG sosrg(options,ints_,G1);
-            free_matrix<double>(G1,2 * nmo,2 * nmo);
+//            Explorer* explorer = new Explorer(options,ints_);
+//            std::vector<double> ONa = explorer->Da();
+//            std::vector<double> ONb = explorer->Db();
+//            int nmo = explorer->nmo();
+//            double** G1;
+//            init_matrix<double>(G1,2 * nmo,2 * nmo);
+//            for (int p = 0; p < nmo; ++p){
+//                G1[p][p] = ONa[p];
+//                G1[p + nmo][p + nmo] = ONb[p];
+//            }
+//            SOSRG sosrg(options,ints_,G1);
+//            free_matrix<double>(G1,2 * nmo,2 * nmo);
 
-            delete explorer;
+//            delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "TENSORSRG"){
 //            std::vector<double> ONa = explorer->Da();
@@ -299,26 +299,26 @@ libadaptive(Options &options)
             boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
             srg->compute_energy();
             srg->transfer_integrals();
-            Explorer* explorer = new Explorer(options,ints_);
+            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "SRG"){
-            Explorer* explorer = new Explorer(options,ints_);
+            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
             std::vector<double> ONa = explorer->Da();
             std::vector<double> ONb = explorer->Db();
-            int nmo = explorer->nmo();
+            int ncmo = explorer->ncmo();
 
             double** G1aa;
             double** G1bb;
-            init_matrix<double>(G1aa,nmo,nmo);
-            init_matrix<double>(G1bb,nmo,nmo);
-            for (int p = 0; p < nmo; ++p){
+            init_matrix<double>(G1aa,ncmo,ncmo);
+            init_matrix<double>(G1bb,ncmo,ncmo);
+            for (int p = 0; p < ncmo; ++p){
                 G1aa[p][p] = ONa[p];
                 G1bb[p][p] = ONb[p];
             }
             MOSRG mosrg(options,ints_,G1aa,G1bb);
-            free_matrix<double>(G1aa,nmo,nmo);
-            free_matrix<double>(G1bb,nmo,nmo);
+            free_matrix<double>(G1aa,ncmo,ncmo);
+            free_matrix<double>(G1bb,ncmo,ncmo);
 
             delete explorer;
         }
@@ -328,16 +328,16 @@ libadaptive(Options &options)
             options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
             options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
 
-            Explorer* explorer = new Explorer(options,ints_);
+            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
             std::vector<double> ONa = explorer->Da();
             std::vector<double> ONb = explorer->Db();
-            int nmo = explorer->nmo();
+            int ncmo = explorer->ncmo();
 
             double** G1aa;
             double** G1bb;
-            init_matrix<double>(G1aa,nmo,nmo);
-            init_matrix<double>(G1bb,nmo,nmo);
-            for (int p = 0; p < nmo; ++p){
+            init_matrix<double>(G1aa,ncmo,ncmo);
+            init_matrix<double>(G1bb,ncmo,ncmo);
+            for (int p = 0; p < ncmo; ++p){
                 G1aa[p][p] = ONa[p];
                 G1bb[p][p] = ONb[p];
             }
@@ -348,10 +348,10 @@ libadaptive(Options &options)
             options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
             options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
 
-            explorer = new Explorer(options,ints_);
+            explorer = new AdaptiveCI(options,ints_);
 
-            free_matrix<double>(G1aa,nmo,nmo);
-            free_matrix<double>(G1bb,nmo,nmo);
+            free_matrix<double>(G1aa,ncmo,ncmo);
+            free_matrix<double>(G1bb,ncmo,ncmo);
 
             delete explorer;
         }

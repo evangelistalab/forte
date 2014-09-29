@@ -46,13 +46,13 @@ typedef std::vector<string_list> string_list_symm;
 // (det energy,exc_class_a,alpha string,exc_class_b,beta string)
 typedef boost::tuple<double,int,int,int,int> det_info;
 
-class Explorer
+class AdaptiveCI
 {
 public:
-    Explorer(Options &options, ExplorerIntegrals* ints);
-    ~Explorer();
+    AdaptiveCI(Options &options, ExplorerIntegrals* ints);
+    ~AdaptiveCI();
 
-    int nmo() {return nmo_;}
+    int ncmo() {return ncmo_;}
     std::vector<double> Da() {return Da_;}
     std::vector<double> Db() {return Db_;}
 private:
@@ -65,17 +65,31 @@ private:
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The number of correlated molecular orbitals
-    int nmo_;
-    /// The number of alpha electrons
+    int ncmo_;
+    /// The number of correlated alpha electrons
     int nalpha_;
-    /// The number of beta electrons
+    /// The number of correlated beta electrons
     int nbeta_;
+//    /// The number of active alpha electrons
+//    int nael_;
+//    /// The number of active beta electrons
+//    int nbel_;
+//    /// The number of unoccupied active alpha MOs
+//    int nauocc_;
+//    /// The number of unoccupied active alpha MOs
+//    int nbuocc_;
     /// The number of molecular orbitals per irrep
-    Dimension nmopi_;
-    /// The number of alpha electrons per irrep
-    Dimension nalphapi_;
-    /// The number of beta electrons per irrep
-    Dimension nbetapi_;
+    Dimension ncmopi_;
+    /// The number of frozen core MOs per irrep.
+    Dimension frzcpi_;
+    /// The number of frozen unoccupied MOs per irrep.
+    Dimension frzvpi_;
+    /// The number of restricted doubly occupied MOs per irrep.
+    Dimension rdoccpi_;
+    /// The number of restricted unoccupied MOs per irrep.
+    Dimension ruoccpi_;
+    /// The number of active MOs per irrep.
+    Dimension actvpi_;
     /// The alpha occupation of the reference determinant
     Dimension nalphapi_ref_;
     /// The beta occupation of the reference determinant
@@ -88,10 +102,6 @@ private:
     Dimension maxalphapi_;
     /// The highest beta molecular orbital
     Dimension maxbetapi_;
-    /// The frozen core orbitals
-    Dimension frzcpi_;
-    /// The frozen virtual orbitals
-    Dimension frzvpi_;
     /// The maximum excitation level for the alpha electrons
     int maxnaex_;
     /// The maximum excitation level for the beta electrons
@@ -123,19 +133,19 @@ private:
     /// The maximum determinant energy (includes the nuclear repulsion term)
     double max_energy_;
     /// The alpha orbital energies
-    SharedVector epsilon_a_;
+    SharedVector ref_eps_a_;
     /// The beta orbital energies
-    SharedVector epsilon_b_;
+    SharedVector ref_eps_b_;
     /// The alpha orbital energies in qt order
     std::vector<double> epsilon_a_qt_;
     /// The beta orbital energies in qt order
     std::vector<double> epsilon_b_qt_;
     /// Mapping vector from QT (energy) to Pitzer (symmetry blocked)
     std::vector<int> qt_to_pitzer_;
-    /// A vector that contains all the frozen core
-    std::vector<int> frzc_;
-    /// A vector that contains all the frozen virtual
-    std::vector<int> frzv_;
+    /// A vector that contains all the restricted doubly occupied MOs
+    std::vector<int> rdocc;
+    /// A vector that contains all the restricted unoccupied MOs
+    std::vector<int> ruocc;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
