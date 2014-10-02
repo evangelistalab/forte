@@ -10,7 +10,6 @@
 #include <string>
 #include "integrals.h"
 #include "string_determinant.h"
-#include "tensor_init.h"
 
 using namespace std;
 
