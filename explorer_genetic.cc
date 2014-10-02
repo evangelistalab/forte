@@ -20,7 +20,7 @@ namespace psi{ namespace libadaptive{
 // */
 //void Explorer::genetic_search(psi::Options& options)
 //{
-//    fprintf(outfile,"\n\n  Searching for the lowest energy Slater determinants using a genetic algorithm\n");
+//    outfile->Printf("\n\n  Searching for the lowest energy Slater determinants using a genetic algorithm\n");
 
 //    int nfrzc = frzcpi_.sum();
 //    int nfrzv = frzvpi_.sum();
@@ -36,19 +36,19 @@ namespace psi{ namespace libadaptive{
 
 
 
-//    fprintf(outfile,"\n\n  The new reference determinant is:");
+//    outfile->Printf("\n\n  The new reference determinant is:");
 //    reference_determinant_.print();
-//    fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+//    outfile->Printf("\n  and its energy: %.12f Eh",min_energy_);
 
-//    fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
+//    outfile->Printf("\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
 
-//    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
-//    fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
-//    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
-//    fprintf(outfile,"\n  Number of permutations visited    = %ld",num_permutations);
-//    fprintf(outfile,"\n  Time spent on generating strings  = %f s",time_string);
-//    fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
-//    fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
+//    outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
+//    outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
+//    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
+//    outfile->Printf("\n  Number of permutations visited    = %ld",num_permutations);
+//    outfile->Printf("\n  Time spent on generating strings  = %f s",time_string);
+//    outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
+//    outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
 //    fflush(outfile);
 //}
 

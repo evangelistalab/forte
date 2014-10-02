@@ -46,9 +46,9 @@ Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
     write_excitation_level_ = options.get_bool("WRITE_EXC_LEVEL");
     restrict_excitation_ = options.get_int("RESTRICT_EXCITATION");
 
-    fprintf(outfile,"\n\n  Cartographer initialized with range [%f,%f]",min_energy_,max_energy_);
-    fprintf(outfile,"\n  The %s bin width is %f Hartree\n", (dod_type_ == GaussianDOD ? "Gaussian" : "histogram"),dod_bin_width_);
-    fprintf(outfile,"\n  The density of determinants will be sampled at %d-points",ndod_bins_center_ + 2 * ndod_bins_margin_);
+    outfile->Printf("\n\n  Cartographer initialized with range [%f,%f]",min_energy_,max_energy_);
+    outfile->Printf("\n  The %s bin width is %f Hartree\n", (dod_type_ == GaussianDOD ? "Gaussian" : "histogram"),dod_bin_width_);
+    outfile->Printf("\n  The density of determinants will be sampled at %d-points",ndod_bins_center_ + 2 * ndod_bins_margin_);
 
     if (dod_type_ == GaussianDOD){
         int gaussian_half_width = int(2.5 * double(ndod_bins_center_) * dod_bin_width_ / (max_energy_ - min_energy_));
@@ -102,7 +102,7 @@ void Cartographer::accumulate_dod(double det_energy)
         if(position >= 0 and position < ndod_bins_total_){
             dod_[position] += 1.0;
         }else{
-            fprintf(outfile,"\n  Cartographer Warning: The datapoint %f is out of the range [%f,%f]",det_energy,min_energy_,max_energy_);
+            outfile->Printf("\n  Cartographer Warning: The datapoint %f is out of the range [%f,%f]",det_energy,min_energy_,max_energy_);
         }
     }
 }
@@ -156,7 +156,7 @@ void Cartographer::accumulate_dettour(int nmo,std::vector<bool>& Ia,std::vector<
 
 void Cartographer::write_dod()
 {
-    fprintf(outfile,"\n  Cartographer is writing the density of determinants to the file: %s\n",dod_fname_.c_str());
+    outfile->Printf("\n  Cartographer is writing the density of determinants to the file: %s\n",dod_fname_.c_str());
     dod_file_ = new ofstream(dod_fname_.c_str());
     double margin_energy_offset = - static_cast<double>(ndod_bins_margin_) * dod_bin_width_;
     for (int i = 0; i < ndod_bins_total_; ++i){
@@ -170,7 +170,7 @@ void Cartographer::write_dod()
 void Cartographer::write_dettour()
 {
     if (write_file_){
-        fprintf(outfile,"\n  Cartographer is writing the dettour output to the file: %s\n",dettour_fname_.c_str());
+        outfile->Printf("\n  Cartographer is writing the dettour output to the file: %s\n",dettour_fname_.c_str());
         dettour_file_->close();
         delete dettour_file_;
     }
@@ -200,7 +200,7 @@ void Cartographer::write_dod_gnuplot_input()
     dod_min = int((dod_min - 0.3) * 10.) / 10.0;
     dod_max = int((dod_max + 0.3) * 10.) / 10.0;
 
-    fprintf(outfile,"\n  Cartographer is preparing a gnuplot file for the range [%.3f,%.3f]",dod_min,dod_max);
+    outfile->Printf("\n  Cartographer is preparing a gnuplot file for the range [%.3f,%.3f]",dod_min,dod_max);
 
     std::string gnuplot_input;
     gnuplot_input += boost::str(boost::format("set xrange [%.3f:%.3f]\n") % dod_min % dod_max);

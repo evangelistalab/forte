@@ -42,7 +42,7 @@ bool compare_det_info(const det_info& t1, const det_info& t2)
  */
 void AdaptiveCI::explore_original(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Exploring the space of Slater determinants\n");
+    outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
 
     // No explorer will succeed without a cartographer
     Cartographer cg(options,min_energy_,min_energy_ + determinant_threshold_);
@@ -90,19 +90,19 @@ void AdaptiveCI::explore_original(psi::Options& options)
     // Generate all alpha and beta strings with energy < threshold
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
-    fprintf(outfile,"\n  +++ Screening the alpha strings +++\n"); fflush(outfile);
+    outfile->Printf("\n  +++ Screening the alpha strings +++\n"); fflush(outfile);
     boost::timer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,navir,maxnaex_,true);
-    fprintf(outfile,"\n  Time required: %f s",timer_astr.elapsed());
+    outfile->Printf("\n  Time required: %f s",timer_astr.elapsed());
     fflush(outfile);
 
-    fprintf(outfile,"\n\n  +++ Screening the beta strings +++\n"); fflush(outfile);
+    outfile->Printf("\n\n  +++ Screening the beta strings +++\n"); fflush(outfile);
     boost::timer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,nbvir,maxnbex_,false);
-    fprintf(outfile,"\n  Time required: %f s",timer_bstr.elapsed());
+    outfile->Printf("\n  Time required: %f s",timer_bstr.elapsed());
     fflush(outfile);
 
-    fprintf(outfile,"\n  denominator_threshold_: %f s",denominator_threshold_);
+    outfile->Printf("\n  denominator_threshold_: %f s",denominator_threshold_);
 
 
     ofstream de("det_energy.txt");
@@ -174,10 +174,10 @@ void AdaptiveCI::explore_original(psi::Options& options)
                 }
             }
         }
-        fprintf(outfile,"\n  %2d   %12ld   %12ld",nex,num_dets_visited_ex,num_dets_accepted_ex);
+        outfile->Printf("\n  %2d   %12ld   %12ld",nex,num_dets_visited_ex,num_dets_accepted_ex);
         fflush(outfile);
         if ((num_dets_accepted_ex == 0) and (nex > 4)){
-            fprintf(outfile,"\n\n  Excitation level %d produced no determinants, finishing search",nex);
+            outfile->Printf("\n\n  Excitation level %d produced no determinants, finishing search",nex);
             fflush(outfile);
             break;
         }
@@ -187,7 +187,7 @@ void AdaptiveCI::explore_original(psi::Options& options)
 
 
     // sort the determinants
-    fprintf(outfile,"\n\n  Sorting the determinants according to their energy.");
+    outfile->Printf("\n\n  Sorting the determinants according to their energy.");
     std::sort(determinants_.begin(),determinants_.end(),compare_det_info);
 
     // delete determinants that lie above the determinant threshold
@@ -198,43 +198,43 @@ void AdaptiveCI::explore_original(psi::Options& options)
         determinants_.pop_back();
         ndets_deleted++;
     }
-    fprintf(outfile,"\n\n  %ld determinants were deleted because their energy is above the determinat threshold.",ndets_deleted);
+    outfile->Printf("\n\n  %ld determinants were deleted because their energy is above the determinat threshold.",ndets_deleted);
 
 
-    fprintf(outfile,"\n\n  The new reference determinant is:");
+    outfile->Printf("\n\n  The new reference determinant is:");
     reference_determinant_.print();
-    fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+    outfile->Printf("\n  and its energy: %.12f Eh",min_energy_);
 
-    fprintf(outfile,"\n  Occupation numbers of the minimum energy determinant:");
-    fprintf(outfile,"|");
+    outfile->Printf("\n  Occupation numbers of the minimum energy determinant:");
+    outfile->Printf("|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
         for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_alfa_bit(p);
             p += 1;
         }
-        fprintf(outfile," %d",n);
+        outfile->Printf(" %d",n);
     }
-    fprintf(outfile," > x ");
-    fprintf(outfile,"|");
+    outfile->Printf(" > x ");
+    outfile->Printf("|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
         for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_beta_bit(p);
             p += 1;
         }
-        fprintf(outfile," %d",n);
+        outfile->Printf(" %d",n);
     }
-    fprintf(outfile," >");
+    outfile->Printf(" >");
 
-    fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
+    outfile->Printf("\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
 
-    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
-    fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(determinants_.size()) / double(num_total_dets));
-    fprintf(outfile,"\n  Time spent on generating strings  = %f s",time_string);
-    fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
-    fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
+    outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
+    outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(determinants_.size()) / double(num_total_dets));
+    outfile->Printf("\n  Time spent on generating strings  = %f s",time_string);
+    outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
+    outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
     fflush(outfile);
 }
 
@@ -244,7 +244,7 @@ void AdaptiveCI::explore_original(psi::Options& options)
  */
 void AdaptiveCI::explore(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Exploring the space of Slater determinants\n");
+    outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
 
     // No explorer will succeed without a cartographer
     Cartographer cg(options,min_energy_,min_energy_ + determinant_threshold_);
@@ -292,16 +292,16 @@ void AdaptiveCI::explore(psi::Options& options)
     // Generate all alpha and beta strings with energy < threshold
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
-    fprintf(outfile,"\n  +++ Screening the alpha strings +++\n"); fflush(outfile);
+    outfile->Printf("\n  +++ Screening the alpha strings +++\n"); fflush(outfile);
     boost::timer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,navir,maxnaex_,true);
-    fprintf(outfile,"\n  Time required: %f s",timer_astr.elapsed());
+    outfile->Printf("\n  Time required: %f s",timer_astr.elapsed());
     fflush(outfile);
 
-    fprintf(outfile,"\n\n  +++ Screening the beta strings +++\n"); fflush(outfile);
+    outfile->Printf("\n\n  +++ Screening the beta strings +++\n"); fflush(outfile);
     boost::timer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,nbvir,maxnbex_,false);
-    fprintf(outfile,"\n  Time required: %f s",timer_bstr.elapsed());
+    outfile->Printf("\n  Time required: %f s",timer_bstr.elapsed());
     fflush(outfile);
 
 
@@ -309,15 +309,15 @@ void AdaptiveCI::explore(psi::Options& options)
     StringDeterminant det(empty_det);
     boost::timer t_dets;
     // Loop over the excitation level
-    fprintf(outfile,"\n\n==================================");
-    fprintf(outfile,"\n Exc. lvl    Tested       Accepted");
-    fprintf(outfile,"\n==================================");
+    outfile->Printf("\n\n==================================");
+    outfile->Printf("\n Exc. lvl    Tested       Accepted");
+    outfile->Printf("\n==================================");
     for (int nex = minnex_; nex <= maxnex_; ++nex){
         size_t num_dets_accepted_ex = 0;
         size_t num_dets_visited_ex = 0;
         for (int naex = std::max(0,nex-maxnbex_); naex <= std::min(maxnaex_,nex); ++naex){
             int nbex = nex - naex;
-//            fprintf(outfile,"\n  (ex,naex,nbex) = (%d,%d,%d)",nex,naex,nbex);
+//            outfile->Printf("\n  (ex,naex,nbex) = (%d,%d,%d)",nex,naex,nbex);
             // Loop over the irreps
             for (int ha = 0; ha < nirrep_; ++ha){
                 int hb = wavefunction_symmetry_ ^ ha;
@@ -353,7 +353,7 @@ void AdaptiveCI::explore(psi::Options& options)
                         size_t minsa = -1,maxsa = -1;
                         for (size_t sa = 0; sa < nsa; ++sa){
                             double ea = vec_astr[sa].get<0>();
-//                            fprintf(outfile,"\n ea[%3ld] = %f (%ld,%ld)",sa,ea,minsa,maxsa);
+//                            outfile->Printf("\n ea[%3ld] = %f (%ld,%ld)",sa,ea,minsa,maxsa);
                             if (ea >= minea and minsa == -1) minsa = sa;
                             if (ea >= maxea and maxsa == -1) maxsa = sa;
                         }
@@ -367,9 +367,9 @@ void AdaptiveCI::explore(psi::Options& options)
                         if (maxsa == -1)  maxsa = nsa;
                         if (maxsb == -1)  maxsb = nsb;
 
-//                        fprintf(outfile,"\n  Ranges (la,lb) = (%d,%d)",la,lb);
-//                        fprintf(outfile,"\n  Ranges ea = [%f,%f]  eb = [%f,%f]",minea,maxea,mineb,maxeb);
-//                        fprintf(outfile,"\n  Ranges sa = [%ld,%ld]  sb = [%ld,%ld]",minsa,maxsa,minsb,maxsb);
+//                        outfile->Printf("\n  Ranges (la,lb) = (%d,%d)",la,lb);
+//                        outfile->Printf("\n  Ranges ea = [%f,%f]  eb = [%f,%f]",minea,maxea,mineb,maxeb);
+//                        outfile->Printf("\n  Ranges sa = [%ld,%ld]  sb = [%ld,%ld]",minsa,maxsa,minsb,maxsb);
                         // Loop over alpha strings
                         for (size_t sa = minsa; sa < maxsa; ++sa){
                             double ea = vec_astr[sa].get<0>();
@@ -417,32 +417,32 @@ void AdaptiveCI::explore(psi::Options& options)
                         }
                         layer_count[la][lb] = num_dets_accepted_la_lb;
                     }
-//                    fprintf(outfile,"\n-->  %2d   %12ld   %12ld  %d",l,num_dets_visited_l,num_dets_accepted_l,empty_layers);
+//                    outfile->Printf("\n-->  %2d   %12ld   %12ld  %d",l,num_dets_visited_l,num_dets_accepted_l,empty_layers);
                     if ((num_dets_visited_l > 0) and (num_dets_accepted_l == 0)){
                         empty_layers += 1;
                     }
                     if (empty_layers > 1){
-//                        fprintf(outfile,"\n  stopping here!");
+//                        outfile->Printf("\n  stopping here!");
                         break;
                     }
                 }
             }
         }
-        fprintf(outfile,"\n  %2d   %12ld   %12ld",nex,num_dets_visited_ex,num_dets_accepted_ex);
+        outfile->Printf("\n  %2d   %12ld   %12ld",nex,num_dets_visited_ex,num_dets_accepted_ex);
         fflush(outfile);
         if (num_dets_accepted_ex == 0){
-            fprintf(outfile,"\n\n  Excitation level %d produced no determinants, finishing search",nex);
+            outfile->Printf("\n\n  Excitation level %d produced no determinants, finishing search",nex);
             fflush(outfile);
             break;
         }
     }
-    fprintf(outfile,"\n==================================\n");
+    outfile->Printf("\n==================================\n");
     time_dets += t_dets.elapsed();
     delete[] Ia;
 
 
     // sort the determinants
-    fprintf(outfile,"\n\n  Sorting the determinants according to their energy.");
+    outfile->Printf("\n\n  Sorting the determinants according to their energy.");
     std::sort(determinants_.begin(),determinants_.end(),compare_det_info);
 
     // delete determinants that lie above the determinant threshold
@@ -450,50 +450,50 @@ void AdaptiveCI::explore(psi::Options& options)
     double det_cutoff = min_energy_ + determinant_threshold_;
     size_t ndets_deleted = 0;
 
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
 
     while((not determinants_.empty()) and (determinants_.back().get<0>() > det_cutoff)){
         determinants_.pop_back();
         ndets_deleted++;
     }
-    fprintf(outfile,"\n\n  %ld determinants were deleted because their energy is above the determinat threshold.",ndets_deleted);
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
+    outfile->Printf("\n\n  %ld determinants were deleted because their energy is above the determinat threshold.",ndets_deleted);
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
 
 
-    fprintf(outfile,"\n\n  The new reference determinant is:");
+    outfile->Printf("\n\n  The new reference determinant is:");
     reference_determinant_.print();
-    fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+    outfile->Printf("\n  and its energy: %.12f Eh",min_energy_);
 
-    fprintf(outfile,"\n  Occupation numbers of the minimum energy determinant:");
-    fprintf(outfile,"|");
+    outfile->Printf("\n  Occupation numbers of the minimum energy determinant:");
+    outfile->Printf("|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
         for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_alfa_bit(p);
             p += 1;
         }
-        fprintf(outfile," %d",n);
+        outfile->Printf(" %d",n);
     }
-    fprintf(outfile," > x ");
-    fprintf(outfile,"|");
+    outfile->Printf(" > x ");
+    outfile->Printf("|");
     for (int h = 0, p = 0; h < nirrep_; ++h){
         int n = 0;
         for (int i = 0; i < ncmopi_[h]; ++i){
             n += min_energy_determinant_.get_beta_bit(p);
             p += 1;
         }
-        fprintf(outfile," %d",n);
+        outfile->Printf(" %d",n);
     }
-    fprintf(outfile," >");
+    outfile->Printf(" >");
 
-    fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
+    outfile->Printf("\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
 
-    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
-    fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
-    fprintf(outfile,"\n  Time spent on generating strings  = %f s",time_string);
-    fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
-    fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
+    outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
+    outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",determinants_.size(),double(num_dets_accepted) / double(num_total_dets));
+    outfile->Printf("\n  Time spent on generating strings  = %f s",time_string);
+    outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
+    outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
     fflush(outfile);
 }
 

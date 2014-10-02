@@ -152,11 +152,11 @@ void MOBase::build_fock()
         }
     }
 
-    fprintf(outfile,"\n  The energy of the reference is: %20.12f Eh",E0_);
-    fprintf(outfile,"\n  Diagonal elements of the Fock matrix:");
-    fprintf(outfile,"\n  SO            Epsilon         ON");
+    outfile->Printf("\n  The energy of the reference is: %20.12f Eh",E0_);
+    outfile->Printf("\n  Diagonal elements of the Fock matrix:");
+    outfile->Printf("\n  SO            Epsilon         ON");
     loop_mo_p {
-        fprintf(outfile,"\n  %2d  %20.12f   %8.6f  %20.12f   %8.6f",p,F_.aa[p][p],G1_.aa[p][p],F_.bb[p][p],G1_.bb[p][p]);
+        outfile->Printf("\n  %2d  %20.12f   %8.6f  %20.12f   %8.6f",p,F_.aa[p][p],G1_.aa[p][p],F_.bb[p][p],G1_.bb[p][p]);
     }
 }
 

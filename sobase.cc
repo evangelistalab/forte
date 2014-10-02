@@ -102,7 +102,7 @@ void SOBase::sort_integrals()
         so_mo.push_back(p % nmo_);
         bool spin = p >= nmo_;
         so_spin.push_back(spin);
-        fprintf(outfile,"\n  so %3d = mo %3d  spin %s",p,so_mo[p],not so_spin[p] ? "a" : "b");
+        outfile->Printf("\n  so %3d = mo %3d  spin %s",p,so_mo[p],not so_spin[p] ? "a" : "b");
     }
     loop_p loop_q{
         H1_[p][q] = 0.0;
@@ -118,7 +118,7 @@ void SOBase::sort_integrals()
 //        if((so_spin[p] == so_spin[s]) and (so_spin[q] == so_spin[r]))
 //            V_[p][q][r][s] -= ints_->rtei(so_mo[p],so_mo[s],so_mo[q],so_mo[r]);
     }
-    fprintf(outfile,"\n\n  WARNING: I had to temporarily disable the SO code! :(");
+    outfile->Printf("\n\n  WARNING: I had to temporarily disable the SO code! :(");
     fflush(outfile);
     exit(1);
 }
@@ -146,13 +146,13 @@ void SOBase::build_fock()
     }
 
 //    loop_p loop_q{
-//        fprintf(outfile,"\nF[%2d][%2d] = %20.12f (ON = %.6f)",p,q,F_[p][q],G1_[p][q]);
+//        outfile->Printf("\nF[%2d][%2d] = %20.12f (ON = %.6f)",p,q,F_[p][q],G1_[p][q]);
 //    }
-    fprintf(outfile,"\n  The energy of the reference is: %20.12f Eh",E0_);
-    fprintf(outfile,"\n  Diagonal elements of the Fock matrix:");
-    fprintf(outfile,"\n  SO            Epsilon         ON");
+    outfile->Printf("\n  The energy of the reference is: %20.12f Eh",E0_);
+    outfile->Printf("\n  Diagonal elements of the Fock matrix:");
+    outfile->Printf("\n  SO            Epsilon         ON");
     loop_p {
-        fprintf(outfile,"\n  %2d  %20.12f   %8.6f",p,F_[p][p],G1_[p][p]);
+        outfile->Printf("\n  %2d  %20.12f   %8.6f",p,F_[p][p],G1_[p][p]);
     }
 }
 

@@ -123,7 +123,7 @@ void TensorSRG::hermitian_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,
     C += alpha * dot(A["AI"],B["IA"]);
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
     }
 //    time_comm_A1_B1_C0 += t.elapsed();
 }
@@ -139,7 +139,7 @@ void TensorSRG::hermitian_commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,
     C["QA"] -= alpha * B["IA"] * A["QI"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
     }
 //    time_comm_A1_B1_C1 += t.elapsed();
 }
@@ -156,7 +156,7 @@ void TensorSRG::hermitian_commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,
     C["QP"] += alpha * A["SR"] * B["QRPS"];
     C["QP"] += alpha * A["sr"] * B["rQsP"];
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
     }
 //    time_comm_A1_B2_C1 += t.elapsed();
 }
@@ -203,7 +203,7 @@ void TensorSRG::hermitian_commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,
 //    C["RSPQ"] += alpha * A["ST"] * B["PQRT"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
     }
 //    time_comm_A1_B2_C2 += t.elapsed();
 }
@@ -217,7 +217,7 @@ void TensorSRG::hermitian_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,
     C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
     }
 //    time_comm_A2_B2_C0 += t.elapsed();
 }
@@ -239,7 +239,7 @@ void TensorSRG::hermitian_commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,
     C["QP"] += -1.0 * alpha * A["aQiJ"] * B["iJaP"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
 //    time_comm_A2_B2_C1 += t.elapsed();
 }
@@ -286,7 +286,7 @@ void TensorSRG::hermitian_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,
     C["RSPQ"] += I_ioiv["SRQP"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
     }
 //    time_comm_A2_B2_C2 += t.elapsed();
 }

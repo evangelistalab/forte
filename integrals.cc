@@ -57,7 +57,7 @@ void ExplorerIntegrals::startup()
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
     if (not wfn){
-        fprintf(outfile,"\n  No wave function object found!  Run a scf calculation first!\n");
+        outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         fflush(outfile);
         exit(1);
     }
@@ -70,15 +70,15 @@ void ExplorerIntegrals::startup()
     frzvpi_ = wfn->frzvpi();
 
     if (options_["FROZEN_DOCC"].has_changed()){
-        fprintf(outfile,"\n  Using the input to select the number of frozen core MOs.\n");
+        outfile->Printf("\n  Using the input to select the number of frozen core MOs.\n");
         if (options_["FROZEN_DOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
                 frzcpi_[h] = options_["FROZEN_DOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
                     options_["FROZEN_DOCC"].size(),nirrep_);
-            fprintf(outfile,"\n  Exiting the program.\n");
+            outfile->Printf("\n  Exiting the program.\n");
             printf("  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
                     options_["FROZEN_DOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
@@ -87,15 +87,15 @@ void ExplorerIntegrals::startup()
         }
     }
     if (options_["FROZEN_UOCC"].has_changed()){
-        fprintf(outfile,"\n  Using the input to select the number of frozen virtual MOs.\n");
+        outfile->Printf("\n  Using the input to select the number of frozen virtual MOs.\n");
         if (options_["FROZEN_UOCC"].size() == nirrep_){
             for (int h = 0; h < nirrep_; ++h){
                 frzvpi_[h] = options_["FROZEN_UOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
                     options_["FROZEN_UOCC"].size(),nirrep_);
-            fprintf(outfile,"\n  Exiting the program.\n");
+            outfile->Printf("\n  Exiting the program.\n");
             printf("  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
                     options_["FROZEN_UOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
@@ -110,11 +110,11 @@ void ExplorerIntegrals::startup()
     }
     ncmo_ = ncmopi_.sum();
 
-    fprintf(outfile,"\n  ==> Integral Transformation <==\n");
-    fprintf(outfile,"\n  Number of molecular orbitals:            %5d",nmopi_.sum());
-    fprintf(outfile,"\n  Number of correlated molecular orbitals: %5zu",ncmo_);
-    fprintf(outfile,"\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());
-    fprintf(outfile,"\n  Number of frozen unoccupied orbitals:    %5d\n\n",frzvpi_.sum());
+    outfile->Printf("\n  ==> Integral Transformation <==\n");
+    outfile->Printf("\n  Number of molecular orbitals:            %5d",nmopi_.sum());
+    outfile->Printf("\n  Number of correlated molecular orbitals: %5zu",ncmo_);
+    outfile->Printf("\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());
+    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %5d\n\n",frzvpi_.sum());
 
     // Indexing
     // This is important!  Set the indexing to work using the number of molecular integrals
@@ -527,19 +527,19 @@ void ExplorerIntegrals::compute_frozen_core_energy()
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
 
-    fprintf(outfile,"\n  Frozen-core energy        %20.12f a.u.",core_energy_);
+    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
 }
 
 void ExplorerIntegrals::compute_frozen_one_body_operator()
 {
-    fprintf(outfile,"\n  Creating a modified one-body operator.");
+    outfile->Printf("\n  Creating a modified one-body operator.");
 
     // Modify the active part of H to include the core effects;
     size_t f = 0;
     for (int hi = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
-            fprintf(outfile,"\n  Freezing MO %zu",r);
+            outfile->Printf("\n  Freezing MO %zu",r);
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
@@ -553,7 +553,7 @@ void ExplorerIntegrals::compute_frozen_one_body_operator()
 
 void ExplorerIntegrals::resort_integrals_after_freezing()
 {
-    fprintf(outfile,"\n  Resorting integrals after freezing core.");
+    outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create a mapping array cmo2mo that tell me (cmo2mo[i]) where to find the i-th cmo.
     std::vector<size_t> cmo2mo;
@@ -649,7 +649,7 @@ void ExplorerIntegrals::set_tei(double**** ints,bool alpha1,bool alpha2)
                     size_t index = aptei_index(p,q,r,s);
                     double integral = ints[p][q][r][s];
                     if (std::fabs(integral) > 1.0e-9)
-                        fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,integral);
+                        outfile->Printf("\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,integral);
                     p_tei[index] = integral;
                 }
             }
@@ -666,7 +666,7 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
     size_t index = aptei_index(p,q,r,s);
     p_tei[index] = value;
     //    if (std::fabs(value) > 1.0e-9)
-    //        fprintf(outfile,"\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,value);
+    //        outfile->Printf("\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,value);
 }
 
 ///**
@@ -726,9 +726,9 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 //      }
 //    }
 //    if(options_.get_int("DEBUG") > 6){
-//      fprintf(outfile,"\n  alfa-alfa fock matrix for reference %d",mu);
+//      outfile->Printf("\n  alfa-alfa fock matrix for reference %d",mu);
 //      mat_print(f_aa[mu],nmo,nmo,outfile);
-//      fprintf(outfile,"\n  beta-beta fock matrix for reference %d",mu);
+//      outfile->Printf("\n  beta-beta fock matrix for reference %d",mu);
 //      mat_print(f_bb[mu],nmo,nmo,outfile);
 //    }
 //  }
@@ -769,9 +769,9 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 //    }
 //  }
 //  if(options_.get_int("DEBUG") > 6){
-//    fprintf(outfile,"\n  alfa-alfa average fock matrix");
+//    outfile->Printf("\n  alfa-alfa average fock matrix");
 //    mat_print(f_avg_aa,nmo,nmo,outfile);
-//    fprintf(outfile,"\n  beta-beta average fock matrix");
+//    outfile->Printf("\n  beta-beta average fock matrix");
 //    mat_print(f_avg_bb,nmo,nmo,outfile);
 //  }
 //}
@@ -956,7 +956,7 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 //                int srel = s - K.params->soff[ssym];
 //                // Print out the absolute orbital numbers, the relative (within irrep)
 //                // numbers, the symmetries, and the integral itself
-////                fprintf(outfile, "(%2d %2d | %2d %2d) = %16.10f, "
+////                outfile->Printf( "(%2d %2d | %2d %2d) = %16.10f, "
 ////                                 "symmetries = (%1d %1d | %1d %1d), "
 ////                                 "relative indices = (%2d %2d | %2d %2d)\n",
 ////                                 p, q, r, s, K.matrix[h][pq][rs],

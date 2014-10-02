@@ -12,7 +12,7 @@ TENSOR_INIT::~TENSOR_INIT()
 
 void TENSOR_INIT::init_matrix4d(double****& matrix, const size_t &size1, const size_t &size2, const size_t &size3, const size_t &size4){
     if ((size1 == 0) || (size2 == 0) || (size3 == 0) || (size4 == 0)){
-        fprintf(outfile,"\n  NULL Matrix Initialization!");
+        outfile->Printf("\n  NULL Matrix Initialization!");
         matrix = NULL;
         exit (1);
     }
@@ -35,7 +35,7 @@ void TENSOR_INIT::init_matrix4d(double****& matrix, const size_t &size1, const s
 
 void TENSOR_INIT::free_matrix4d(double****& matrix, const size_t &size1, const size_t &size2, const size_t &size3, const size_t &size4){
     if ((size1 == 0) || (size2 == 0) || (size3 == 0) || (size4 == 0)){
-        fprintf(outfile,"\n  NULL Matrix Delete!");
+        outfile->Printf("\n  NULL Matrix Delete!");
         exit (1);
     }
     if (matrix != NULL){
@@ -54,7 +54,7 @@ void TENSOR_INIT::free_matrix4d(double****& matrix, const size_t &size1, const s
 
 void TENSOR_INIT::init_matrix6d(double******& matrix, const size_t &size1, const size_t &size2, const size_t &size3, const size_t &size4, const size_t &size5, const size_t &size6){
     if ((size1 == 0) || (size2 == 0) || (size3 == 0) || (size4 == 0) || (size5 == 0) || (size6 == 0)){
-        fprintf(outfile,"\n  NULL Matrix Initialization!");
+        outfile->Printf("\n  NULL Matrix Initialization!");
         matrix = NULL;
         exit (1);
     }
@@ -83,7 +83,7 @@ void TENSOR_INIT::init_matrix6d(double******& matrix, const size_t &size1, const
 
 void TENSOR_INIT::free_matrix6d(double******& matrix, const size_t &size1, const size_t &size2, const size_t &size3, const size_t &size4, const size_t &size5, const size_t &size6){
     if ((size1 == 0) || (size2 == 0) || (size3 == 0) || (size4 == 0) || (size5 == 0) || (size6 == 0)){
-        fprintf(outfile,"\n  NULL Matrix Delete!");
+        outfile->Printf("\n  NULL Matrix Delete!");
         exit (1);
     }
     if (matrix != NULL){

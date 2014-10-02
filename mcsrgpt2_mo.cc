@@ -15,14 +15,14 @@ namespace psi{ namespace main{
 
 MCSRGPT2_MO::MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : FCI_MO(options, ints)
 {
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n  **************************************************");
-    fprintf(outfile,"\n  *        Similarity Renormalization Group        *");
-    fprintf(outfile,"\n  *       Second-Order Perturbative Analysis       *");
-    fprintf(outfile,"\n  *                                                *");
-    fprintf(outfile,"\n  *                 by Chenyang Li                 *");
-    fprintf(outfile,"\n  **************************************************");
-    fprintf(outfile,"\n");
+    outfile->Printf("\n");
+    outfile->Printf("\n  **************************************************");
+    outfile->Printf("\n  *        Similarity Renormalization Group        *");
+    outfile->Printf("\n  *       Second-Order Perturbative Analysis       *");
+    outfile->Printf("\n  *                                                *");
+    outfile->Printf("\n  *                 by Chenyang Li                 *");
+    outfile->Printf("\n  **************************************************");
+    outfile->Printf("\n");
 
     startup(options);
 
@@ -44,25 +44,25 @@ void MCSRGPT2_MO::startup(Options &options){
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
     if(s_ < 0){
-        fprintf(outfile, "\n  S parameter for DSRG must >= 0!");
+        outfile->Printf( "\n  S parameter for DSRG must >= 0!");
         exit(1);
     }
     taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
     if(taylor_threshold_ <= 0){
-        fprintf(outfile, "\n  Threshold for Taylor expansion must be an integer greater than 0!");
+        outfile->Printf( "\n  Threshold for Taylor expansion must be an integer greater than 0!");
         exit(1);
     }
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1)) + 1;
 
     // Print Original Orbital Indices
-    fprintf(outfile, "\n  Subspace Indices:");
+    outfile->Printf( "\n  Subspace Indices:");
     print_idx("Core", idx_c_);
     print_idx("Active", idx_a_);
     print_idx("Virtual", idx_v_);
     print_idx("Hole", idx_h_);
     print_idx("Particle", idx_p_);
-    fprintf(outfile, "\n");
+    outfile->Printf( "\n");
 
     // Compute Reference Energy
     compute_ref();
@@ -100,7 +100,7 @@ void MCSRGPT2_MO::startup(Options &options){
     idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
 
     // Print Correlating Orbital Indices
-    fprintf(outfile, "\n  Correlating Subspace Indices:");
+    outfile->Printf( "\n  Correlating Subspace Indices:");
     print_idx("Core", idx_c_);
     print_idx("Active", idx_a_);
     print_idx("Virtual", idx_v_);
@@ -116,13 +116,13 @@ void MCSRGPT2_MO::startup(Options &options){
 
     string t_algorithm = options.get_str("T_ALGORITHM");
     if(t_algorithm == "DSRG"){
-        fprintf(outfile, "\n");
-        fprintf(outfile, "\n  Form T amplitudes using DSRG formalism.");
+        outfile->Printf( "\n");
+        outfile->Printf( "\n  Form T amplitudes using DSRG formalism.");
         Form_T2_DSRG(T2aa_,T2ab_,T2bb_);
         Form_T1_DSRG(T1a_,T1b_);
     }else if(t_algorithm == "ISA"){
-        fprintf(outfile, "\n");
-        fprintf(outfile, "\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
+        outfile->Printf( "\n");
+        outfile->Printf( "\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
         double b = options.get_double("ISA_B");
         Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
         Form_T1_ISA(T1a_,T1b_,b);
@@ -259,7 +259,7 @@ void MCSRGPT2_MO::compute_ref(){
         }
     }
     Eref_ += e_nuc_;
-//    fprintf(outfile, "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
+//    outfile->Printf( "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
     timer_off("Compute Ref");
 }
 
@@ -491,25 +491,25 @@ void MCSRGPT2_MO::Check_T2(const string &x, const d4 &M, double &Norm, double &M
     MaxT = get<0>(Large[0]);
 
     // Print
-    fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> Largest T2 amplitudes for spin case %s: <==", x.c_str());
-    if(x == "AA") fprintf(outfile, "\n");
-    if(x == "AB") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
-    if(x == "BB") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
-    fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ');
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n");
+    outfile->Printf( "\n  ==> Largest T2 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "AA") outfile->Printf( "\n");
+    if(x == "AB") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
+    if(x == "BB") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
+    outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ');
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
     for(size_t n = 0; n != ntamp; ++n){
-        if(n%3 == 0) fprintf(outfile, "\n  ");
-        fprintf(outfile, "[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]), get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
+        if(n%3 == 0) outfile->Printf( "\n  ");
+        outfile->Printf( "[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]), get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
     }
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", x.c_str(), count, Norm);
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> T2 intruder states analysis for spin case %s: <==", x.c_str());
-    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
-    fprintf(outfile, "\n      Amplitude        Value   Numerator                   Denominator");
-    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", x.c_str(), count, Norm);
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n");
+    outfile->Printf( "\n  ==> T2 intruder states analysis for spin case %s: <==", x.c_str());
+    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf( "\n      Amplitude        Value   Numerator                   Denominator");
+    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
     for(size_t n = 0; n != Max.size(); ++n){
         size_t i = get<1>(Max[n]);
         size_t j = get<2>(Max[n]);
@@ -522,9 +522,9 @@ void MCSRGPT2_MO::Check_T2(const string &x, const d4 &M, double &Norm, double &M
         double fb = (x == "AA") ? (Fa_[b][b]) : (Fb_[b][b]);
         double down = fi + fj - fa - fb;
         double up = t2 * down;
-        fprintf(outfile, "\n  [%3zu %3zu %3zu %3zu] = %7.4f = %7.4f / (%7.4f + %7.4f - %7.4f - %7.4f = %7.4f)", i, j, a, b, t2, up, fi, fj, fa, fb, down);
+        outfile->Printf( "\n  [%3zu %3zu %3zu %3zu] = %7.4f = %7.4f / (%7.4f + %7.4f - %7.4f - %7.4f = %7.4f)", i, j, a, b, t2, up, fi, fj, fa, fb, down);
     }
-    fprintf(outfile, "\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
     timer_off("Check T2");
 }
 
@@ -560,24 +560,24 @@ void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &M
     MaxT = get<0>(Large[0]);
 
     // Print
-    fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> Largest T1 amplitudes for spin case %s: <==", x.c_str());
-    if(x == "A") fprintf(outfile, "\n");
-    if(x == "B") fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
-    fprintf(outfile, "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ');
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n");
+    outfile->Printf( "\n  ==> Largest T1 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "A") outfile->Printf( "\n");
+    if(x == "B") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
+    outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ');
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
     for(size_t n = 0; n != ntamp; ++n){
-        if(n%3 == 0) fprintf(outfile, "\n  ");
-        fprintf(outfile, "[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ', get<0>(Large[n]));
+        if(n%3 == 0) outfile->Printf( "\n  ");
+        outfile->Printf( "[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ', get<0>(Large[n]));
     }
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", x.c_str(), count, Norm);
-    fprintf(outfile, "\n  --------------------------------------------------------------------------------");
-    fprintf(outfile, "\n");
-    fprintf(outfile, "\n  ==> T1 intruder states analysis for spin case %s: <==", x.c_str());
-    fprintf(outfile, "\n  ---------------------------------------------------------------------");
-    fprintf(outfile, "\n      Amplitude        Value   Numerator          Denominator");
-    fprintf(outfile, "\n  ---------------------------------------------------------------------");
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", x.c_str(), count, Norm);
+    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf( "\n");
+    outfile->Printf( "\n  ==> T1 intruder states analysis for spin case %s: <==", x.c_str());
+    outfile->Printf( "\n  ---------------------------------------------------------------------");
+    outfile->Printf( "\n      Amplitude        Value   Numerator          Denominator");
+    outfile->Printf( "\n  ---------------------------------------------------------------------");
     for(size_t n = 0; n != Max.size(); ++n){
         size_t i = get<1>(Max[n]);
         size_t a = get<2>(Max[n]);
@@ -586,9 +586,9 @@ void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &M
         double fa = (x == "A") ? (Fa_[a][a]) : (Fb_[a][a]);
         double down = fi - fa;
         double up = t2 * down;
-        fprintf(outfile, "\n  [%3zu %3c %3zu %3c] = %7.4f = %7.4f / (%7.4f - %7.4f = %7.4f)", i, ' ', a, ' ', t2, up, fi, fa, down);
+        outfile->Printf( "\n  [%3zu %3c %3zu %3c] = %7.4f = %7.4f / (%7.4f - %7.4f = %7.4f)", i, ' ', a, ' ', t2, up, fi, fa, down);
     }
-    fprintf(outfile, "\n  ---------------------------------------------------------------------");
+    outfile->Printf( "\n  ---------------------------------------------------------------------");
     timer_off("Check T1");
 }
 
@@ -631,33 +631,33 @@ double MCSRGPT2_MO::compute_energy(){
     Etotal_ = Eref_ + Ecorr_;
 
     // Print
-    fprintf(outfile, "\n  ");
-    fprintf(outfile, "\n  ==> MC-DSRG-PT2 Energy Summary <==");
-    fprintf(outfile, "\n  ");
-    fprintf(outfile, "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
-    fprintf(outfile, "\n    E([F, T1]) %18c = %22.15lf", ' ', E2);
-    fprintf(outfile, "\n    E([V, T1]) %18c = %22.15lf", ' ', E5);
-    fprintf(outfile, "\n    E([V, T1]: V) %15c = %22.15lf", ' ', E5_1);
-    fprintf(outfile, "\n    E([V, T1]: C) %15c = %22.15lf", ' ', E5_2);
-    fprintf(outfile, "\n    E([F, T2]) %18c = %22.15lf", ' ', E6);
-    fprintf(outfile, "\n    E([F, T2]: V) %15c = %22.15lf", ' ', E6_1);
-    fprintf(outfile, "\n    E([F, T2]: C) %15c = %22.15lf", ' ', E6_2);
-    fprintf(outfile, "\n    E([V, T2] C_2^4) %12c = %22.15lf", ' ', E7);
-    fprintf(outfile, "\n    E([V, T2] C_2^2 * C_4) %6c = %22.15lf", ' ', E8);
-    fprintf(outfile, "\n    E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E8_1);
-    fprintf(outfile, "\n    E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E8_2);
-    fprintf(outfile, "\n    E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E8_3);
-    fprintf(outfile, "\n    E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E10);
-    fprintf(outfile, "\n    E([V, T2] C_2 * C_6: H) %5c = %22.15lf", ' ', E10_1);
-    fprintf(outfile, "\n    E([V, T2] C_2 * C_6: P) %5c = %22.15lf", ' ', E10_2);
-    fprintf(outfile, "\n    E([V, T2]) %18c = %22.15lf", ' ', EVT2);
-    fprintf(outfile, "\n    E(SRGPT2) %19c = %22.15lf", ' ', Ecorr_);
-    fprintf(outfile, "\n  * E(Total) %20c = %22.15lf", ' ', Etotal_);
-    fprintf(outfile, "\n    max(T1) %21c = %22.15lf", ' ', T1max);
-    fprintf(outfile, "\n    max(T2) %21c = %22.15lf", ' ', T2max);
-    fprintf(outfile, "\n    ||T1|| %22c = %22.15lf", ' ', T1norm);
-    fprintf(outfile, "\n    ||T2|| %22c = %22.15lf", ' ', T2norm);
-    fprintf(outfile, "\n    ");
+    outfile->Printf( "\n  ");
+    outfile->Printf( "\n  ==> MC-DSRG-PT2 Energy Summary <==");
+    outfile->Printf( "\n  ");
+    outfile->Printf( "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
+    outfile->Printf( "\n    E([F, T1]) %18c = %22.15lf", ' ', E2);
+    outfile->Printf( "\n    E([V, T1]) %18c = %22.15lf", ' ', E5);
+    outfile->Printf( "\n    E([V, T1]: V) %15c = %22.15lf", ' ', E5_1);
+    outfile->Printf( "\n    E([V, T1]: C) %15c = %22.15lf", ' ', E5_2);
+    outfile->Printf( "\n    E([F, T2]) %18c = %22.15lf", ' ', E6);
+    outfile->Printf( "\n    E([F, T2]: V) %15c = %22.15lf", ' ', E6_1);
+    outfile->Printf( "\n    E([F, T2]: C) %15c = %22.15lf", ' ', E6_2);
+    outfile->Printf( "\n    E([V, T2] C_2^4) %12c = %22.15lf", ' ', E7);
+    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4) %6c = %22.15lf", ' ', E8);
+    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E8_1);
+    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E8_2);
+    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E8_3);
+    outfile->Printf( "\n    E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E10);
+    outfile->Printf( "\n    E([V, T2] C_2 * C_6: H) %5c = %22.15lf", ' ', E10_1);
+    outfile->Printf( "\n    E([V, T2] C_2 * C_6: P) %5c = %22.15lf", ' ', E10_2);
+    outfile->Printf( "\n    E([V, T2]) %18c = %22.15lf", ' ', EVT2);
+    outfile->Printf( "\n    E(SRGPT2) %19c = %22.15lf", ' ', Ecorr_);
+    outfile->Printf( "\n  * E(Total) %20c = %22.15lf", ' ', Etotal_);
+    outfile->Printf( "\n    max(T1) %21c = %22.15lf", ' ', T1max);
+    outfile->Printf( "\n    max(T2) %21c = %22.15lf", ' ', T2max);
+    outfile->Printf( "\n    ||T1|| %22c = %22.15lf", ' ', T1norm);
+    outfile->Printf( "\n    ||T2|| %22c = %22.15lf", ' ', T2norm);
+    outfile->Printf( "\n    ");
     timer_off("E_MCDSRGPT2");
     return Etotal_;
 }

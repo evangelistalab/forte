@@ -64,13 +64,13 @@ inline double smootherstep(double edge0, double edge1, double x)
  */
 void AdaptiveCI::diagonalize_p_space(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian
     boost::timer t_hbuild;
     SharedMatrix H = build_hamiltonian_parallel(options);
     H->print();
-    fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+    outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
     fflush(outfile);
 
     // 2) Smooth out the couplings of the model and intermediate space
@@ -84,7 +84,7 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
         smooth_hamiltonian(H);
     }
 
-    fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+    outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
     fflush(outfile);
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
@@ -99,13 +99,13 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
     // 4) Diagonalize the Hamiltonian
     boost::timer t_hdiag;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H,evals,evecs,nroots);
     }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-        fprintf(outfile,"\n  Performing full diagonalization.");
+        outfile->Printf("\n  Performing full diagonalization.");
         H->diagonalize(evecs,evals);
     }
-    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
     fflush(outfile);
 
     // Set some environment variables
@@ -145,7 +145,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
             num_sig++;
             if (cum_wfn > significant_wave_function) break;
         }
-//        fprintf(outfile,"\nAnalysis on %d out of %zu sorted (%zu total)",num_sig,C_J_sorted.size(),determinants_.size());
+//        outfile->Printf("\nAnalysis on %d out of %zu sorted (%zu total)",num_sig,C_J_sorted.size(),determinants_.size());
 
         double norm = 0.0;
         double S2 = 0.0;
@@ -165,7 +165,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
                 const int Jsb = determinantJ.get<4>();        //std::get<2>(determinantI);
                 if (std::fabs(C_mat[I][i] * C_mat[J][i]) > 1.0e-12){
                     const double S2IJ = StringDeterminant::Spin2(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[J_class_a][Jsa].get<2>(),vec_bstr_symm_[J_class_b][Jsb].get<2>());
-//                    fprintf(outfile,"\nI = %d J = %d S2IJ = %.12f, C_I C_J = %.12f",I,J,S2IJ,C_mat[I][i] * C_mat[J][i]);
+//                    outfile->Printf("\nI = %d J = %d S2IJ = %.12f, C_I C_J = %.12f",I,J,S2IJ,C_mat[I][i] * C_mat[J][i]);
                     S2 += C_mat[I][i] * S2IJ * C_mat[J][i];
                 }
             }
@@ -174,7 +174,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
         S2 /= norm;
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         std::string state_label = s2_labels[std::round(S * 2.0)];
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
         fflush(outfile);
     }
 
@@ -182,7 +182,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n\n  => Root %3d <=\n\n  Determinants contribution to %.0f%% of the wave function:",i+1,100.0 * significant_wave_function);
+        outfile->Printf("\n\n  => Root %3d <=\n\n  Determinants contribution to %.0f%% of the wave function:",i+1,100.0 * significant_wave_function);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -198,7 +198,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
         int num_sig = 0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
+            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             num_sig++;
             if (cum_wfn > significant_wave_function) break;
@@ -220,23 +220,23 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
             }
             norm += C_mat[I][i] * C_mat[I][i];
         }
-//        fprintf(outfile,"\n  2-norm of the CI vector: %f",norm);
+//        outfile->Printf("\n  2-norm of the CI vector: %f",norm);
         for (int p = 0; p < ncmo_; ++p){
             Da_[p] /= norm;
             Db_[p] /= norm;
         }
-        fprintf(outfile,"\n\n  Occupation numbers");
+        outfile->Printf("\n\n  Occupation numbers");
         double na = 0.0;
         double nb = 0.0;
         for (int h = 0, p = 0; h < nirrep_; ++h){
             for (int n = 0; n < ncmopi_[h]; ++n){
-                fprintf(outfile,"\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
+                outfile->Printf("\n  %4d  %1d  %4d   %5.3f    %5.3f",p+1,h,n,Da_[p],Db_[p]);
                 na += Da_[p];
                 nb += Db_[p];
                 p += 1;
             }
         }
-        fprintf(outfile,"\n  Total number of alpha/beta electrons: %f/%f",na,nb);
+        outfile->Printf("\n  Total number of alpha/beta electrons: %f/%f",na,nb);
 
         fflush(outfile);
     }
@@ -249,7 +249,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
  */
 void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the P space with Lowdin's contributions from the Q space\n");
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the P space with Lowdin's contributions from the Q space\n");
     int root = 0;
     double E = 1.0e100;
     double delta_E = 1.0e10;
@@ -257,19 +257,19 @@ void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
         // 1) Build the Hamiltonian
         boost::timer t_hbuild;
         SharedMatrix H = build_hamiltonian_parallel(options);
-        fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+        outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
         fflush(outfile);
 
         // 2) Add the Lowding contribution to H
         boost::timer t_hbuild_lowdin;
         lowdin_hamiltonian(H,E);
-        fprintf(outfile,"\n  Time spent on Lowding corrections = %f s",t_hbuild_lowdin.elapsed());
+        outfile->Printf("\n  Time spent on Lowding corrections = %f s",t_hbuild_lowdin.elapsed());
         fflush(outfile);
 
         // 3) Smooth out the couplings of the model and intermediate space
         boost::timer t_hsmooth;
         smooth_hamiltonian(H);
-        fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+        outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
         fflush(outfile);
 
         // 4) Setup stuff necessary to diagonalize the Hamiltonian
@@ -286,24 +286,24 @@ void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
         // 5) Diagonalize the Hamiltonian
         boost::timer t_hdiag;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroots);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
+            outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
         }
-        fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+        outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
         fflush(outfile);
 
         // 5) Print the energy
         delta_E = evals->get(root) - E;
         E = evals->get(root);
-        fprintf(outfile,"\n  Cycle %3d  E= %.12f  DE = %.12f",cycle,evals->get(root),std::fabs(delta_E) > 10.0 ? 0 : delta_E);
+        outfile->Printf("\n  Cycle %3d  E= %.12f  DE = %.12f",cycle,evals->get(root),std::fabs(delta_E) > 10.0 ? 0 : delta_E);
         fflush(outfile);
 
         if (std::fabs(delta_E) < options.get_double("E_CONVERGENCE")){
-            fprintf(outfile,"\n\n  Adaptive CI Energy Root %3d = %.12f Eh",root + 1,evals->get(root));
-            fprintf(outfile,"\n  Lowdin iterations converged!\n");
+            outfile->Printf("\n\n  Adaptive CI Energy Root %3d = %.12f Eh",root + 1,evals->get(root));
+            outfile->Printf("\n  Lowdin iterations converged!\n");
             break;
         }
     }
@@ -326,14 +326,14 @@ SharedMatrix AdaptiveCI::build_hamiltonian(Options& options)
     // Determine the size of the Hamiltonian matrix
     if (options.get_str("H_TYPE") == "FIXED_SIZE"){
         ndets = std::min(options.get_int("NDETS"),ntot_dets);
-        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
-        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+        outfile->Printf("\n  Building the Hamiltonian using the first %d determinants\n",ndets);
+        outfile->Printf("\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
-        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
+        outfile->Printf("\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",determinant_threshold_);
         int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
         ndets = std::min(max_ndets_fixed_energy,ntot_dets);
         if (ndets == max_ndets_fixed_energy){
-            fprintf(outfile,"\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
+            outfile->Printf("\n\n  WARNING: the number of determinants used to build the Hamiltonian\n"
                     "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",max_ndets_fixed_energy);
         }
     }
@@ -384,8 +384,8 @@ SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
     // Determine the size of the Hamiltonian matrix
     if (options.get_str("H_TYPE") == "FIXED_SIZE"){
         ndets = std::min(options.get_int("NDETS"),ntot_dets);
-        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
-        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+        outfile->Printf("\n  Building the Hamiltonian using the first %d determinants\n",ndets);
+        outfile->Printf("\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
         double E0 = determinants_[0].get<0>();
         for (int I = 0; I < ntot_dets; ++I){
@@ -395,11 +395,11 @@ SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
             }
             ndets++;
         }
-        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
-        fprintf(outfile,"\n  This requires a total of %d determinants",ndets);
+        outfile->Printf("\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
+        outfile->Printf("\n  This requires a total of %d determinants",ndets);
         int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
         if (ndets > max_ndets_fixed_energy){
-            fprintf(outfile,"\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
+            outfile->Printf("\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
                     "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",ndets,max_ndets_fixed_energy);
             ndets = max_ndets_fixed_energy;
         }
@@ -442,7 +442,7 @@ void AdaptiveCI::smooth_hamiltonian(SharedMatrix H)
         }
         ndets_model++;
     }
-    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
+    outfile->Printf("\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
     for (int I = 0; I < ndets; ++I){
         for (int J = 0; J < ndets; ++J){
             if (I != J){
@@ -471,7 +471,7 @@ void AdaptiveCI::select_important_hamiltonian(SharedMatrix H)
         }
         ndets_model++;
     }
-    fprintf(outfile,"\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
+    outfile->Printf("\n\n  The model space of dimension %d will be split into %d (main) + %d (intermediate) states",ndets,ndets_model,ndets - ndets_model);
 
     // Check if any of the determinants in the model space has a large overlap with the model space
     size_t ndiscarded = 0;
@@ -495,7 +495,7 @@ void AdaptiveCI::select_important_hamiltonian(SharedMatrix H)
             ndiscarded += 1;
         }
     }
-    fprintf(outfile,"\n\n  %ld states were discarded because the coupling to the main space is less than %f muE_h",ndiscarded,t2_threshold_ * 1000000.0);
+    outfile->Printf("\n\n  %ld states were discarded because the coupling to the main space is less than %f muE_h",ndiscarded,t2_threshold_ * 1000000.0);
 }
 
 void AdaptiveCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
@@ -506,7 +506,7 @@ void AdaptiveCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatr
     int ntot_dets = static_cast<int>(determinants_.size());
     int ndets_p = evecs->nrow();
 
-    fprintf(outfile,"\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
+    outfile->Printf("\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
 
     // Model space - external space 2nd order correction
     double E_2_PQ = 0.0;
@@ -530,7 +530,7 @@ void AdaptiveCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatr
         }
         E_2_PQ -= coupling * coupling / (EA - E_0);
     }
-    fprintf(outfile,"\n\n Adaptive CI + PT2 Energy Root %3d = %.12f Eh",root + 1,E_0 + E_2_PQ);
+    outfile->Printf("\n\n Adaptive CI + PT2 Energy Root %3d = %.12f Eh",root + 1,E_0 + E_2_PQ);
 }
 
 void AdaptiveCI::lowdin_hamiltonian(SharedMatrix H,double E)
@@ -538,7 +538,7 @@ void AdaptiveCI::lowdin_hamiltonian(SharedMatrix H,double E)
     int ntot_dets = static_cast<int>(determinants_.size());
     int ndets_p = H->nrow();
 
-    fprintf(outfile,"\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
+    outfile->Printf("\n\n  Computing a second-order PT correction from the external (%d) to the model space (%d)",ntot_dets - ndets_p,ndets_p);
 
 #pragma omp parallel for schedule(dynamic)
     for (int I = 0; I < ndets_p; ++I){
@@ -578,13 +578,13 @@ void AdaptiveCI::lowdin_hamiltonian(SharedMatrix H,double E)
  */
 void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian
     boost::timer t_hbuild;
     std::vector<std::vector<std::pair<int,double> > > H_sparse = build_hamiltonian_direct(options);
 
-    fprintf(outfile,"\n  Time spent building H             = %f s",t_hbuild.elapsed());
+    outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
     fflush(outfile);
 
     // 2) Smooth out the couplings of the model and intermediate space
@@ -598,7 +598,7 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
     ////        smooth_hamiltonian(H);
     ////    }
 
-    //    fprintf(outfile,"\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
+    //    outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
     //    fflush(outfile);
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
@@ -612,9 +612,9 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
 
     // 4) Diagonalize the Hamiltonian
     boost::timer t_hdiag;
-    fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+    outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     davidson_liu_sparse(H_sparse,evals,evecs,nroots);
-    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
     fflush(outfile);
 
     // Set some environment variables
@@ -641,8 +641,8 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
     // Determine the size of the Hamiltonian matrix
     if (options.get_str("H_TYPE") == "FIXED_SIZE"){
         ndets = std::min(options.get_int("NDETS"),ntot_dets);
-        fprintf(outfile,"\n  Building the Hamiltonian using the first %d determinants\n",ndets);
-        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+        outfile->Printf("\n  Building the Hamiltonian using the first %d determinants\n",ndets);
+        outfile->Printf("\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
         double E0 = determinants_[0].get<0>();
         for (int I = 0; I < ntot_dets; ++I){
@@ -652,8 +652,8 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
             }
             ndets++;
         }
-        fprintf(outfile,"\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
-        fprintf(outfile,"\n  This requires a total of %d determinants",ndets);
+        outfile->Printf("\n\n  Building the Hamiltonian using determinants with excitation energy less than %f Eh",space_i_threshold_);
+        outfile->Printf("\n  This requires a total of %d determinants",ndets);
     }
 
     std::vector<std::vector<std::pair<int,double> > > H_sparse;
@@ -668,7 +668,7 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
         const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
         const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
         const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-        fprintf(outfile,"\n H[%2d][%2d] = %20.12f",I,I,determinantI.get<0>());
+        outfile->Printf("\n H[%2d][%2d] = %20.12f",I,I,determinantI.get<0>());
         H_row.push_back(make_pair(I,determinantI.get<0>()));
         for (int J = 0; J < ndets; ++J){
             if (I != J){
@@ -682,14 +682,14 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
                     H_row.push_back(make_pair(J,HIJ));
                     num_nonzero += 1;
                 }
-                fprintf(outfile,"\n H[%2d][%2d] = %20.12f",I,J,HIJ);
+                outfile->Printf("\n H[%2d][%2d] = %20.12f",I,J,HIJ);
             }
         }
 //        #pragma omp critical
         H_sparse.push_back(H_row);
     }
 
-    fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(ndets * ndets),double(num_nonzero)/double(ndets * ndets));
+    outfile->Printf("\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(ndets * ndets),double(num_nonzero)/double(ndets * ndets));
     return H_sparse;
 }
 
@@ -979,14 +979,14 @@ bool AdaptiveCI::davidson_liu_sparse(std::vector<std::vector<std::pair<int,doubl
 
 //// BEGIN DEBUGGING
 //// Write the Hamiltonian to disk
-//fprintf(outfile,"\n\n  WRITING FILE TO DISK...");
+//outfile->Printf("\n\n  WRITING FILE TO DISK...");
 //fflush(outfile);
 //ofstream of("ham.dat", ios::binary | ios::out);
 //of.write(reinterpret_cast<char*>(&ndets),sizeof(int));
 //double** H_mat = H->pointer();
 //of.write(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
 //of.close();
-//fprintf(outfile," DONE.");
+//outfile->Printf(" DONE.");
 //fflush(outfile);
 //// END DEBUGGING
 

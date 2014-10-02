@@ -91,20 +91,20 @@ protected:
 
     // Print Size of a Array with Irrep
     void print_irrep(const string &str, const Dimension &array){
-        fprintf(outfile, "\n  %-10s", str.c_str());
+        outfile->Printf( "\n  %-10s", str.c_str());
         for(int h=0; h<nirrep_; ++h){
-            fprintf(outfile, "%3d", array[h]);
+            outfile->Printf( "%3d", array[h]);
         }
     }
 
     // Print Indices
     void print_idx(const string &str, const vector<size_t> &vec){
-        fprintf(outfile, "\n  %-10s", str.c_str());
+        outfile->Printf( "\n  %-10s", str.c_str());
         size_t c = 0;
         for(size_t x: vec){
-            fprintf(outfile, "%3zu ", x);
+            outfile->Printf( "%3zu ", x);
             ++c;
-            if(c % 20 == 0) fprintf(outfile, "\n  %-10c", ' ');
+            if(c % 20 == 0) outfile->Printf( "\n  %-10c", ' ');
         }
     }
 
@@ -116,7 +116,7 @@ protected:
 
     // Print Determinant
     void print_det(const vecdet &dets){
-        fprintf(outfile, "\n  Determinants: |alpha|beta>");
+        outfile->Printf( "\n  Determinants: |alpha|beta>");
         for(libadaptive::StringDeterminant x: dets){
             x.print();
         }

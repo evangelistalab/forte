@@ -32,7 +32,7 @@ namespace psi{ namespace libadaptive{
  */
 void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Renormalized MRCISD");
+    outfile->Printf("\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
     size_t imrcisd_size = options.get_int("IMRCISD_SIZE");
@@ -44,19 +44,19 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 
     bool energy_select = (options.get_str("SELECT_TYPE") == "ENERGY");
 
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-    fprintf(outfile,"\n  using an iterative procedure keeping %zu determinants\n",imrcisd_size);
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
+    outfile->Printf("\n  using an iterative procedure keeping %zu determinants\n",imrcisd_size);
     if(imrcisd_test_size == 0){
         if(energy_select){
-            fprintf(outfile,"\n  and testing those with a second-order energy contribution greather than %f mEh\n",1000.0 * selection_threshold);
+            outfile->Printf("\n  and testing those with a second-order energy contribution greather than %f mEh\n",1000.0 * selection_threshold);
         }else{
-            fprintf(outfile,"\n  and testing those with a first-order wfn coefficient greather than %f\n",selection_threshold);
+            outfile->Printf("\n  and testing those with a first-order wfn coefficient greather than %f\n",selection_threshold);
         }
     }else{
         if(energy_select){
-            fprintf(outfile,"\n  and testing the first %zu ordered according to the second-order energy contribution\n",imrcisd_test_size );
+            outfile->Printf("\n  and testing the first %zu ordered according to the second-order energy contribution\n",imrcisd_test_size );
         }else{
-            fprintf(outfile,"\n  and testing the first %zu ordered according to the first-order wfn coefficient\n",imrcisd_test_size );
+            outfile->Printf("\n  and testing the first %zu ordered according to the first-order wfn coefficient\n",imrcisd_test_size );
         }
     }
     fflush(outfile);
@@ -98,7 +98,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
         //        D0.set_beta_bit(ii,false);
         //        D0.set_alfa_bit(aa,true);
         //        D0.set_beta_bit(aa,true);
-        //        fprintf(outfile,"\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
+        //        outfile->Printf("\n\n  The reference determinant was excited (%d) -> (%d)",ii,aa);
     }
     D0.print();
 
@@ -111,7 +111,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
 
-        fprintf(outfile,"\n\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
+        outfile->Printf("\n\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
 
         // Find the SD space out of the reference
         std::vector<StringDeterminant> sd_dets_vec;
@@ -248,8 +248,8 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
         //            sd_dets_vec.push_back(it->first);
         //        }
 
-        fprintf(outfile,"\n  The SD excitation space has dimension: %zu",sd_dets_vec.size());
-        fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
+        outfile->Printf("\n  The SD excitation space has dimension: %zu",sd_dets_vec.size());
+        outfile->Printf("\n  Time spent building the model space = %f s",t_ms_build.elapsed());
         fflush(outfile);
 
         boost::timer t_ms_screen;
@@ -287,7 +287,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 
             // Select only those determinants above the threshold
             if(imrcisd_test_size == 0){
-                fprintf(outfile,"\n  Adding all SD determinants above %f",selection_threshold);
+                outfile->Printf("\n  Adding all SD determinants above %f",selection_threshold);
 
                 for (size_t I = 0, maxI = new_dets_importance_vec.size(); I < maxI; ++I){
                     if (new_dets_importance_vec[I].first > selection_threshold){
@@ -296,7 +296,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
                 }
             } else {
                 size_t maxI = std::min(imrcisd_test_size,new_dets_importance_vec.size());
-                fprintf(outfile,"\n  Adding the most important %zu SD determinants",maxI);
+                outfile->Printf("\n  Adding the most important %zu SD determinants",maxI);
                 for (size_t I = 0; I < maxI; ++I){
                     refsd_dets_vec.push_back(sd_dets_vec[new_dets_importance_vec[I].second]);
                 }
@@ -305,8 +305,8 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 
         size_t num_mrcisd_dets = refsd_dets_vec.size();
 
-        fprintf(outfile,"\n  The i-MRCISD full space contains %zu determinants",num_mrcisd_dets);
-        fprintf(outfile,"\n  Time spent screening the model space = %f s",t_ms_screen.elapsed());
+        outfile->Printf("\n  The i-MRCISD full space contains %zu determinants",num_mrcisd_dets);
+        outfile->Printf("\n  Time spent screening the model space = %f s",t_ms_screen.elapsed());
         fflush(outfile);
 
 
@@ -326,20 +326,20 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
                     H->set(J,I,HIJ);
                 }
             }
-            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
+            outfile->Printf("\n  Time spent building H               = %f s",t_h_build.elapsed());
             fflush(outfile);
 
             // 4) Diagonalize the Hamiltonian
             boost::timer t_hdiag_large;
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-                fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+                outfile->Printf("\n  Using the Davidson-Liu algorithm.");
                 davidson_liu(H,evals,evecs,nroot);
             }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-                fprintf(outfile,"\n  Performing full diagonalization.");
+                outfile->Printf("\n  Performing full diagonalization.");
                 H->diagonalize(evecs,evals);
             }
 
-            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
+            outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
             fflush(outfile);
         }
         else
@@ -368,29 +368,29 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
                 H_sparse.push_back(H_row);
             }
 
-            fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(num_mrcisd_dets * num_mrcisd_dets),double(num_nonzero)/double(num_mrcisd_dets * num_mrcisd_dets));
-            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+            outfile->Printf("\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(num_mrcisd_dets * num_mrcisd_dets),double(num_nonzero)/double(num_mrcisd_dets * num_mrcisd_dets));
+            outfile->Printf("\n  Time spent building H               = %f s",t_h_build2.elapsed());
             fflush(outfile);
 
             // 4) Diagonalize the Hamiltonian
             boost::timer t_hdiag_large2;
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs,nroot);
-            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
             fflush(outfile);
 
-            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
             fflush(outfile);
         }
 
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-            //        fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
-        fprintf(outfile,"\n  Finished building H");
+        outfile->Printf("\n  Finished building H");
         fflush(outfile);
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
@@ -434,16 +434,16 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
                     H->set(J,I,HIJ);
                 }
             }
-            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_small_build.elapsed());
+            outfile->Printf("\n  Time spent building H               = %f s",t_h_small_build.elapsed());
             fflush(outfile);
 
 
             // 4) Diagonalize the Hamiltonian
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-                fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+                outfile->Printf("\n  Using the Davidson-Liu algorithm.");
                 davidson_liu(H,evals,evecs,nroot);
             }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-                fprintf(outfile,"\n  Performing full diagonalization.");
+                outfile->Printf("\n  Performing full diagonalization.");
                 H->diagonalize(evecs,evals);
             }
         }
@@ -473,15 +473,15 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
                 H_sparse.push_back(H_row);
             }
 
-            fprintf(outfile,"\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(size_small_ci * size_small_ci),double(num_nonzero)/double(size_small_ci * size_small_ci));
-            fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build2.elapsed());
+            outfile->Printf("\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(size_small_ci * size_small_ci),double(num_nonzero)/double(size_small_ci * size_small_ci));
+            outfile->Printf("\n  Time spent building H               = %f s",t_h_build2.elapsed());
             fflush(outfile);
 
             // 4) Diagonalize the Hamiltonian
             boost::timer t_hdiag_large2;
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs,nroot);
-            fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
+            outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
             fflush(outfile);
         }
 
@@ -492,12 +492,12 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
         }
         fflush(outfile);
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
-        fprintf(outfile,"\n   @IMRCISD %2d  %24.16f  %24.16f",cycle,new_energy,new_energy - old_energy);
+        outfile->Printf("\n   @IMRCISD %2d  %24.16f  %24.16f",cycle,new_energy,new_energy - old_energy);
 
         fflush(outfile);
         if (std::fabs(new_energy - old_energy) < rmrci_threshold){
@@ -505,11 +505,11 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
         }
         old_energy = new_energy;
 
-        fprintf(outfile,"\n  After diagonalization there are %zu determinants",old_dets_vec.size());
+        outfile->Printf("\n  After diagonalization there are %zu determinants",old_dets_vec.size());
         fflush(outfile);
     }
 
-    fprintf(outfile,"\n\n   * IMRCISD total energy =  %24.16f\n",new_energy);
+    outfile->Printf("\n\n   * IMRCISD total energy =  %24.16f\n",new_energy);
 
     fflush(outfile);
 }
@@ -520,7 +520,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
  */
 void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Renormalized MRCISD");
+    outfile->Printf("\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
     size_t ren_ndets = options.get_int("IMRCISD_SIZE");
@@ -528,9 +528,9 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
     double rmrci_threshold = 1.0e-9;
     int maxcycle = 50;
 
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-    fprintf(outfile,"\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
-    fprintf(outfile,"\n  and exciting those with a first-order coefficient greather than %f\n",selection_threshold);
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
+    outfile->Printf("\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
+    outfile->Printf("\n  and exciting those with a first-order coefficient greather than %f\n",selection_threshold);
     fflush(outfile);
 
     int nmo = reference_determinant_.nmo();
@@ -555,7 +555,7 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
 
-        fprintf(outfile,"\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
+        outfile->Printf("\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
 
         // Find the SD space out of the reference
         std::map<StringDeterminant,int> new_dets_map;
@@ -702,8 +702,8 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
         size_t num_mrcisd_dets = new_dets_vec.size();
 
 
-        fprintf(outfile,"\n  The model space contains %zu determinants",num_mrcisd_dets);
-        fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
+        outfile->Printf("\n  The model space contains %zu determinants",num_mrcisd_dets);
+        outfile->Printf("\n  Time spent building the model space = %f s",t_ms_build.elapsed());
         fflush(outfile);
 
         H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
@@ -718,29 +718,29 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
                 H->set(J,I,HIJ);
             }
         }
-        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
+        outfile->Printf("\n  Time spent building H               = %f s",t_h_build.elapsed());
         fflush(outfile);
 
         // 4) Diagonalize the Hamiltonian
         boost::timer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
+            outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
         }
 
-        fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
+        outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
         fflush(outfile);
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-            //        fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
-        fprintf(outfile,"\n  Finished building H");
+        outfile->Printf("\n  Finished building H");
         fflush(outfile);
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
@@ -777,15 +777,15 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
                 H->set(J,I,HIJ);
             }
         }
-        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_small_build.elapsed());
+        outfile->Printf("\n  Time spent building H               = %f s",t_h_small_build.elapsed());
         fflush(outfile);
 
         // 4) Diagonalize the Hamiltonian
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
+            outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
         }
 
@@ -796,12 +796,12 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
         }
         fflush(outfile);
 
         new_energy = evals->get(0) + nuclear_repulsion_energy_;
-        fprintf(outfile,"\n ->  %2d  %24.16f",cycle,new_energy);
+        outfile->Printf("\n ->  %2d  %24.16f",cycle,new_energy);
 
         fflush(outfile);
         if (std::fabs(new_energy - old_energy) < rmrci_threshold){
@@ -809,7 +809,7 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
         }
         old_energy = new_energy;
 
-        fprintf(outfile,"\n  After diagonalization there are %zu determinants",old_dets_vec.size());
+        outfile->Printf("\n  After diagonalization there are %zu determinants",old_dets_vec.size());
         fflush(outfile);
     }
 
@@ -823,7 +823,7 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 //void Explorer::renormalized_mrcisd_simple(psi::Options& options)
 //{
 //    typedef boost::shared_ptr<StringDeterminant> shared_det;
-//    fprintf(outfile,"\n\n  Renormalized MRCISD");
+//    outfile->Printf("\n\n  Renormalized MRCISD");
 
 //    int nroot = options.get_int("NROOT");
 //    size_t ren_ndets = options.get_int("IMRCISD_SIZE");
@@ -831,9 +831,9 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 //    double rmrci_threshold = 1.0e-9;
 //    int maxcycle = 50;
 
-//    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-//    fprintf(outfile,"\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
-//    fprintf(outfile,"\n  and exciting those with a first-order coefficient greather than %f\n",selection_threshold);
+//    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
+//    outfile->Printf("\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
+//    outfile->Printf("\n  and exciting those with a first-order coefficient greather than %f\n",selection_threshold);
 //    fflush(outfile);
 
 //    int nmo = reference_determinant_.nmo();
@@ -871,11 +871,11 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 
 //    for (int cycle = 0; cycle < maxcycle; ++cycle){
 
-//        fprintf(outfile,"\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
+//        outfile->Printf("\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
 
 //        std::map<shared_det,int> new_dets_map;
 //        boost::timer t_ms_build;
-////        fprintf(outfile,"\n  Processing determinants:\n");
+////        outfile->Printf("\n  Processing determinants:\n");
 //        for (size_t I = 0, max_I = old_dets_vec.size(); I < max_I; ++I){
 //            const shared_det& det = old_dets_vec[I];
 
@@ -1020,8 +1020,8 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 
 //        size_t num_mrcisd_dets = new_dets_vec.size();
 
-//        fprintf(outfile,"\n  The model space contains %zu determinants",num_mrcisd_dets);
-//        fprintf(outfile,"\n  Time spent building the model space = %f s",t_ms_build.elapsed());
+//        outfile->Printf("\n  The model space contains %zu determinants",num_mrcisd_dets);
+//        outfile->Printf("\n  Time spent building the model space = %f s",t_ms_build.elapsed());
 //        fflush(outfile);
 
 //        H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
@@ -1036,33 +1036,33 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 //                H->set(I,J,HIJ);
 //                H->set(J,I,HIJ);
 //                if(std::fabs(HIJ) > 150.0)
-//                    fprintf(outfile,"\n  H(%5zu,%5zu) = %26.16f",I,J,H->get(I,J));
+//                    outfile->Printf("\n  H(%5zu,%5zu) = %26.16f",I,J,H->get(I,J));
 //            }
 
 //        }
-//        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_build.elapsed());
+//        outfile->Printf("\n  Time spent building H               = %f s",t_h_build.elapsed());
 //        fflush(outfile);
 
 //        // 4) Diagonalize the Hamiltonian
 //        boost::timer t_hdiag_large;
 //        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-//            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+//            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
 //            davidson_liu(H,evals,evecs,nroot);
 //        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-//            fprintf(outfile,"\n  Performing full diagonalization.");
+//            outfile->Printf("\n  Performing full diagonalization.");
 //            H->diagonalize(evecs,evals);
 //        }
 
-//        fprintf(outfile,"\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
+//        outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
 //        fflush(outfile);
 
 //        // 5) Print the energy
 //        for (int i = 0; i < nroot; ++ i){
-//            fprintf(outfile,"\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-//            //        fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+//            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+//            //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
 //            //                evals->get(i),multistate_pt2_energy_correction_[i]);
 //        }
-//        fprintf(outfile,"\n  Finished building H");
+//        outfile->Printf("\n  Finished building H");
 //        fflush(outfile);
 
 //        new_energy = evals->get(0) + nuclear_repulsion_energy_;
@@ -1087,7 +1087,7 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 
 //        size_small_ci = std::min(old_dets_vec.size(),ren_ndets);
 
-//        fprintf(outfile,"\n  Solving a %zu x %zu eigensystem",size_small_ci,size_small_ci);
+//        outfile->Printf("\n  Solving a %zu x %zu eigensystem",size_small_ci,size_small_ci);
 //        H.reset(new Matrix("Hamiltonian Matrix",size_small_ci,size_small_ci));
 //        evecs.reset(new Matrix("U",size_small_ci,nroot));
 //        evals.reset(new Vector("e",nroot));
@@ -1099,33 +1099,33 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 //                H_small->set(I,J,HIJ);
 //                H_small->set(J,I,HIJ);
 
-//                fprintf(outfile,"\n  H(%5zu,%5zu) = %26.16f (%26.16f)",I,J,H->get(I,J),HIJ);
+//                outfile->Printf("\n  H(%5zu,%5zu) = %26.16f (%26.16f)",I,J,H->get(I,J),HIJ);
 //                new_dets_vec[I]->print();
 //                new_dets_vec[J]->print();
 
 //            }
 //        }
-//        fprintf(outfile,"\n  Time spent building H               = %f s",t_h_small_build.elapsed());
+//        outfile->Printf("\n  Time spent building H               = %f s",t_h_small_build.elapsed());
 //        H_small->print();
 //        fflush(outfile);
 
 //        // 4) Diagonalize the Hamiltonian
 //        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-//            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+//            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
 //            davidson_liu(H_small,evals_small,evecs_small,nroot);
 ////            H->diagonalize(evecs,evals);
 //        }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-//            fprintf(outfile,"\n  Performing full diagonalization.");
+//            outfile->Printf("\n  Performing full diagonalization.");
 //        }
 
 //        // 5) Print the energy
 //        for (int i = 0; i < nroot; ++ i){
-//            fprintf(outfile,"\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_small->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+//            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_small->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
 //        }
 //        fflush(outfile);
 
 //        new_energy = evals_small->get(0) + nuclear_repulsion_energy_;
-//        fprintf(outfile,"\n ->  %2d  %24.16f",cycle,new_energy);
+//        outfile->Printf("\n ->  %2d  %24.16f",cycle,new_energy);
 
 //        fflush(outfile);
 //        if (std::fabs(new_energy - old_energy) < rmrci_threshold){
@@ -1133,7 +1133,7 @@ void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
 //        }
 //        old_energy = new_energy;
 
-//        fprintf(outfile,"\n  After diagonalization there are %zu determinants",old_dets_vec.size());
+//        outfile->Printf("\n  After diagonalization there are %zu determinants",old_dets_vec.size());
 //        fflush(outfile);
 //    }
 

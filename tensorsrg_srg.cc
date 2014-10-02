@@ -50,9 +50,9 @@ struct push_back_state_and_time_srg
     {
         m_states.push_back( x[0] );
         m_times.push_back( t );
-        fprintf(outfile,"\n    @SRG%4d %24.15f %24.15f",int(m_states.size()),t,x[0]);
+        outfile->Printf("\n    @SRG%4d %24.15f %24.15f",int(m_states.size()),t,x[0]);
 
-//        fprintf(outfile,"\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
+//        outfile->Printf("\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
         fflush(outfile);
     }
 };
@@ -91,16 +91,16 @@ double TensorSRG::compute_srg_energy()
     double relative_error_tollerance = options_.get_double("SRG_ODEINT_RELERR");
 
 
-    fprintf(outfile,"\n\n  SRG-SD Computation");
-    fprintf(outfile,"\n  Max s:             %10.6f",end_time);
-    fprintf(outfile,"\n  Initial time step: %10.6f",initial_step);
-    fprintf(outfile,"\n  --------------------------------------------------------------");
-    fprintf(outfile,"\n         Cycle        s (a.u.)                 Energy (a.u.)");
-    fprintf(outfile,"\n  --------------------------------------------------------------");
+    outfile->Printf("\n\n  SRG-SD Computation");
+    outfile->Printf("\n  Max s:             %10.6f",end_time);
+    outfile->Printf("\n  Initial time step: %10.6f",initial_step);
+    outfile->Printf("\n  --------------------------------------------------------------");
+    outfile->Printf("\n         Cycle        s (a.u.)                 Energy (a.u.)");
+    outfile->Printf("\n  --------------------------------------------------------------");
 
     size_t steps = 0;
     if (srg_odeint == "FEHLBERG78"){
-        fprintf(outfile,"\n  Integrating the SRG equations using the Fehlberg 78 algorithm");
+        outfile->Printf("\n  Integrating the SRG equations using the Fehlberg 78 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
@@ -109,7 +109,7 @@ double TensorSRG::compute_srg_energy()
                     x,start_time,end_time,initial_step,
                     push_back_state_and_time_srg( e_vec , times ));
     }else if (srg_odeint == "CASHKARP"){
-        fprintf(outfile,"\n  Integrating the SRG equations using the Cash-Karp 54 algorithm");
+        outfile->Printf("\n  Integrating the SRG equations using the Cash-Karp 54 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
@@ -118,7 +118,7 @@ double TensorSRG::compute_srg_energy()
                     x,start_time,end_time,initial_step,
                     push_back_state_and_time_srg( e_vec , times ));
     }else if (srg_odeint == "DOPRI5"){
-        fprintf(outfile,"\n  Integrating the SRG equations using the Dormand-Prince 5 algorithm");
+        outfile->Printf("\n  Integrating the SRG equations using the Dormand-Prince 5 algorithm");
         integrate_adaptive(
                     make_controlled(absolute_error_tollerance,
                                     relative_error_tollerance,
@@ -129,9 +129,9 @@ double TensorSRG::compute_srg_energy()
     }
     double final_energy = e_vec.back();
 
-    fprintf(outfile,"\n  --------------------------------------------------------------");
-    fprintf(outfile,"\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-E0_);
-    fprintf(outfile,"\n  * SRG-SD total energy            = %25.15f\n",final_energy);
+    outfile->Printf("\n  --------------------------------------------------------------");
+    outfile->Printf("\n\n\n    SRG-SD correlation energy      = %25.15f",final_energy-E0_);
+    outfile->Printf("\n  * SRG-SD total energy            = %25.15f\n",final_energy);
 
 
     // Set some environment variables
@@ -299,7 +299,7 @@ void TensorSRG::compute_srg_step()
             return 0.0;
         });
     }else{
-        fprintf(outfile,"\n\n  Please specify a valid option for the parameter SRG_ETA\n");
+        outfile->Printf("\n\n  Please specify a valid option for the parameter SRG_ETA\n");
         exit(1);
     }
 

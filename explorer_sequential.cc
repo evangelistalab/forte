@@ -23,7 +23,7 @@ namespace psi{ namespace libadaptive{
  */
 void AdaptiveCI::explore_singles_sequential(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Exploring the space of Slater determinants using the singles method\n");
+    outfile->Printf("\n\n  Exploring the space of Slater determinants using the singles method\n");
     boost::timer t;
 
     // No explorer will succeed without a cartographer
@@ -122,7 +122,7 @@ void AdaptiveCI::explore_singles_sequential(psi::Options& options)
                 failed_attepts += 1;
             }
         }
-        fprintf(outfile,"\n  %2d   %12ld   %12ld   %12ld",level + 1,num_dets_visited_ex,num_dets_accepted_ex,failed_attepts);
+        outfile->Printf("\n  %2d   %12ld   %12ld   %12ld",level + 1,num_dets_visited_ex,num_dets_accepted_ex,failed_attepts);
 
         to_be_processed_elements = new_elements;
         level += 1;
@@ -194,7 +194,7 @@ void AdaptiveCI::explore_singles_sequential(psi::Options& options)
                 failed_attepts += 1;
             }
         }
-        fprintf(outfile,"\n  %2d   %12ld   %12ld   %12ld",level + 1,num_dets_visited_ex,num_dets_accepted_ex,failed_attepts);
+        outfile->Printf("\n  %2d   %12ld   %12ld   %12ld",level + 1,num_dets_visited_ex,num_dets_accepted_ex,failed_attepts);
 
         to_be_processed_elements = new_elements;
         level += 1;
@@ -224,12 +224,12 @@ void AdaptiveCI::explore_singles_sequential(psi::Options& options)
     //        vec_str[exc_class].push_back(boost::make_tuple(eo + ev,exc_energy,bits));
 
 
-    fprintf(outfile,"\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
-    //    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
-    fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,0.0);
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",selected_determinants.size(),0.0);
-    fprintf(outfile,"\n  Time spent on generating dets     = %f s",time_dets);
-    fprintf(outfile,"\n  Precompute algorithm time elapsed = %f s",t.elapsed());
+    outfile->Printf("\n\n  The determinants visited fall in the range [%f,%f]",min_energy_,max_energy_);
+    //    outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
+    outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,0.0);
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",selected_determinants.size(),0.0);
+    outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
+    outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
     fflush(outfile);
 }
 

@@ -65,7 +65,7 @@ AdaptiveCI::AdaptiveCI(Options &options,ExplorerIntegrals* ints)
             iterative_adaptive_mrcisd_bitset(options);
         }
     }
-    fprintf(outfile,"\n  Explorer ran in %f s",t.elapsed());
+    outfile->Printf("\n  Explorer ran in %f s",t.elapsed());
     fflush(outfile);
 }
 
@@ -100,15 +100,15 @@ void AdaptiveCI::startup(Options& options)
 
     min_energy_ = ref_energy_ = reference_determinant_.energy() + nuclear_repulsion_energy_;
     min_energy_determinant_ = reference_determinant_;
-    fprintf(outfile,"\n  The tentative reference determinant is:");
+    outfile->Printf("\n  The tentative reference determinant is:");
     reference_determinant_.print();
-    fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+    outfile->Printf("\n  and its energy: %.12f Eh",min_energy_);
 
     max_energy_ = min_energy_;
 
     ints_->make_fock_matrix(reference_determinant_.get_alfa_bits(),reference_determinant_.get_beta_bits());
 
-    fprintf(outfile,"\n\n  Starting Explorer.\n\n");
+    outfile->Printf("\n\n  Starting Explorer.\n\n");
 }
 
 void AdaptiveCI::read_info(Options& options)
@@ -147,9 +147,9 @@ void AdaptiveCI::read_info(Options& options)
                 rdoccpi_[h] = options["RESTRICTED_DOCC"][h].to_integer();
             }
         }else{
-            fprintf(outfile,"\n\n  The input array RESTRICTED_DOCC has information for %d irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array RESTRICTED_DOCC has information for %d irreps, this does not match the total number of irreps %d",
                     options["RESTRICTED_DOCC"].size(),nirrep_);
-            fprintf(outfile,"\n  Exiting the program.\n");
+            outfile->Printf("\n  Exiting the program.\n");
             printf("  The input array RESTRICTED_DOCC has information for %d irreps, this does not match the total number of irreps %d",
                     options["RESTRICTED_DOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
@@ -164,9 +164,9 @@ void AdaptiveCI::read_info(Options& options)
                 actvpi_[h] = ncmopi_[h] - rdoccpi_[h] - ruoccpi_[h];
             }
         }else{
-            fprintf(outfile,"\n\n  The input array RESTRICTED_UOCC has information for %d irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array RESTRICTED_UOCC has information for %d irreps, this does not match the total number of irreps %d",
                     options["RESTRICTED_UOCC"].size(),nirrep_);
-            fprintf(outfile,"\n  Exiting the program.\n");
+            outfile->Printf("\n  Exiting the program.\n");
             printf("  The input array RESTRICTED_UOCC has information for %d irreps, this does not match the total number of irreps %d",
                     options["RESTRICTED_UOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
@@ -177,8 +177,8 @@ void AdaptiveCI::read_info(Options& options)
     // Determine the active orbitals as the difference
 
     if (options["ACTIVE"].has_changed() and options["RESTRICTED_UOCC"].has_changed()){
-        fprintf(outfile,"\n\n  Cannot provide both ACTIVE and RESTRICTED_UOCC arrays");
-        fprintf(outfile,"\n  Exiting the program.\n");
+        outfile->Printf("\n\n  Cannot provide both ACTIVE and RESTRICTED_UOCC arrays");
+        outfile->Printf("\n  Exiting the program.\n");
         printf("\n\n  Cannot provide both ACTIVE and RESTRICTED_UOCC arrays");
         printf("\n  Exiting the program.\n");
         exit(Failure);
@@ -189,9 +189,9 @@ void AdaptiveCI::read_info(Options& options)
                 ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
             }
         }else{
-            fprintf(outfile,"\n\n  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
                     options["ACTIVE"].size(),nirrep_);
-            fprintf(outfile,"\n  Exiting the program.\n");
+            outfile->Printf("\n  Exiting the program.\n");
             printf("  The input array ACTIVE has information for %d irreps, this does not match the total number of irreps %d",
                     options["ACTIVE"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
@@ -212,20 +212,20 @@ void AdaptiveCI::read_info(Options& options)
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
 
     // Print some information
-    fprintf(outfile,"\n  ==> Active Space Information <==\n");
-    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
-    fprintf(outfile,"\n%32c",' ');
-    for (int h = 0; h < nirrep_; ++h) fprintf(outfile," %5s",ct.gamma(h).symbol());
-    fprintf(outfile,"  Total");
-    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1)* 6,'-').c_str());
+    outfile->Printf("\n  ==> Active Space Information <==\n");
+    outfile->Printf("\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
+    outfile->Printf("\n%32c",' ');
+    for (int h = 0; h < nirrep_; ++h) outfile->Printf(" %5s",ct.gamma(h).symbol());
+    outfile->Printf("  Total");
+    outfile->Printf("\n  %s",string(31 + (nirrep_ + 1)* 6,'-').c_str());
     for (auto& str_dim : mo_space_info){
-        fprintf(outfile,"\n  %-30s",str_dim.first.c_str());
+        outfile->Printf("\n  %-30s",str_dim.first.c_str());
         for (int h = 0, p = 0; h < nirrep_; ++h){
-            fprintf(outfile," %5d",str_dim.second[h]);
+            outfile->Printf(" %5d",str_dim.second[h]);
         }
-        fprintf(outfile," %6d",str_dim.second.sum());
+        outfile->Printf(" %6d",str_dim.second.sum());
     }
-    fprintf(outfile,"\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
+    outfile->Printf("\n  %s",string(31 + (nirrep_ + 1) * 6,'-').c_str());
     fflush(outfile);
 
 
@@ -290,12 +290,12 @@ void AdaptiveCI::read_info(Options& options)
         {"Number of beta alpha electrons",nbeta_ - rdoccpi_.sum()}};
 
     // Print some information
-    fprintf(outfile,"\n\n  ==> Calculation Information <==\n");
-    fprintf(outfile,"\n  %s",string(52,'-').c_str());
+    outfile->Printf("\n\n  ==> Calculation Information <==\n");
+    outfile->Printf("\n  %s",string(52,'-').c_str());
     for (auto& str_dim : calculation_info){
-        fprintf(outfile,"\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
     }
-    fprintf(outfile,"\n  %s",string(52,'-').c_str());
+    outfile->Printf("\n  %s",string(52,'-').c_str());
     fflush(outfile);
 
     Da_.assign(ncmo_,0.0);
@@ -315,14 +315,14 @@ void AdaptiveCI::read_info(Options& options)
     if (space_m_threshold_ > determinant_threshold_){
         space_m_threshold_ = determinant_threshold_;
         space_i_threshold_ = determinant_threshold_;
-        fprintf(outfile,"\n  The model space comprises all the determinants.\n  Modifying the model and intermediate space thresholds.\n");
+        outfile->Printf("\n  The model space comprises all the determinants.\n  Modifying the model and intermediate space thresholds.\n");
     }
     if (space_m_threshold_ > space_i_threshold_){
         space_i_threshold_ = space_m_threshold_;
     }
     if (space_i_threshold_ > determinant_threshold_){
         space_i_threshold_ = determinant_threshold_;
-        fprintf(outfile,"\n  Changing the value of the intermediate space threshold.\n");
+        outfile->Printf("\n  Changing the value of the intermediate space threshold.\n");
     }
 
     t2_threshold_ = options.get_double("T2_THRESHOLD");
@@ -333,15 +333,15 @@ void AdaptiveCI::read_info(Options& options)
         mp_screening_ = false;
     }
 
-    fprintf(outfile,"\n  Nuclear repulsion energy     = %20.12f a.u.",nuclear_repulsion_energy_);
-    fprintf(outfile,"\n  Scalar energy contribution   = %20.12f a.u.",ints_->scalar());
-    fprintf(outfile,"\n  Determinant threshold        = %.3f (Eh)",determinant_threshold_);
-    fprintf(outfile,"\n  Denominator threshold        = %.3f (Eh)",denominator_threshold_);
-    fprintf(outfile,"\n  Model space threshold        = %.3f (Eh)",space_m_threshold_);
-    fprintf(outfile,"\n  Intermediate space threshold = %.3f (Eh)",space_i_threshold_);
-    fprintf(outfile,"\n  Coupling threshold           = %.3f (muEh)",t2_threshold_ * 1000000.0);
+    outfile->Printf("\n  Nuclear repulsion energy     = %20.12f a.u.",nuclear_repulsion_energy_);
+    outfile->Printf("\n  Scalar energy contribution   = %20.12f a.u.",ints_->scalar());
+    outfile->Printf("\n  Determinant threshold        = %.3f (Eh)",determinant_threshold_);
+    outfile->Printf("\n  Denominator threshold        = %.3f (Eh)",denominator_threshold_);
+    outfile->Printf("\n  Model space threshold        = %.3f (Eh)",space_m_threshold_);
+    outfile->Printf("\n  Intermediate space threshold = %.3f (Eh)",space_i_threshold_);
+    outfile->Printf("\n  Coupling threshold           = %.3f (muEh)",t2_threshold_ * 1000000.0);
 
-    fprintf(outfile,"\n  String screening: %s (%s)",mp_screening_ ? "Moller-Plesset denominators" : "excited determinants",options.get_str("SCREENING_TYPE").c_str());
+    outfile->Printf("\n  String screening: %s (%s)",mp_screening_ ? "Moller-Plesset denominators" : "excited determinants",options.get_str("SCREENING_TYPE").c_str());
 }
 
 bool compare_tuples (const boost::tuple<double,int,int>& t1, const boost::tuple<double,int,int>& t2)
@@ -377,11 +377,11 @@ void AdaptiveCI::screen_mos()
     maxalphapi_ = Dimension(nirrep_);
     maxbetapi_ = Dimension(nirrep_);
 
-    fprintf(outfile,"\n\n  ==> Molecular orbitals <==\n");
-    fprintf(outfile,"\n  ====================================================");
-    fprintf(outfile,"\n     MO         alpha                  beta");
-    fprintf(outfile,"\n           irrep    energy  occ   irrep    energy  occ");
-    fprintf(outfile,"\n  ----------------------------------------------------");
+    outfile->Printf("\n\n  ==> Molecular orbitals <==\n");
+    outfile->Printf("\n  ====================================================");
+    outfile->Printf("\n     MO         alpha                  beta");
+    outfile->Printf("\n           irrep    energy  occ   irrep    energy  occ");
+    outfile->Printf("\n  ----------------------------------------------------");
     for (int p = 0; p < ncmo_; ++p){
         double ea = sorted_ea[p].get<0>();
         double eb = sorted_eb[p].get<0>();
@@ -401,14 +401,14 @@ void AdaptiveCI::screen_mos()
 
 
         bool excluded = false;
-        fprintf(outfile,"\n %6d    %3d %12.6f  %1d    %3d %12.6f  %1d",p,ha,ea,p < nalpha_,hb,eb,p < nbeta_);
+        outfile->Printf("\n %6d    %3d %12.6f  %1d    %3d %12.6f  %1d",p,ha,ea,p < nalpha_,hb,eb,p < nbeta_);
         if (std::find(rdocc.begin(), rdocc.end(), pa) != rdocc.end()){
             excluded = true;
-            fprintf(outfile," <- restricted docc");
+            outfile->Printf(" <- restricted docc");
         }
         if (std::find(ruocc.begin(), ruocc.end(), pa) != ruocc.end()){
             excluded = true;
-            fprintf(outfile," <- restricted uocc");
+            outfile->Printf(" <- restricted uocc");
         }
         if (not excluded){
             epsilon_a_qt_.push_back(ea);
@@ -416,24 +416,24 @@ void AdaptiveCI::screen_mos()
             qt_to_pitzer_.push_back(pa);
         }
     }
-    fprintf(outfile,"\n  ----------------------------------------------------");
+    outfile->Printf("\n  ----------------------------------------------------");
 
     for (int p = 0; p < nalpha_; ++p) nalphapi_ref_[sorted_ea[p].get<1>()] += 1;
     for (int p = 0; p < nbeta_; ++p) nbetapi_ref_[sorted_eb[p].get<1>()] += 1;
 //    for (int p = 0; p < nalpha_; ++p) nalphapi_ref_[std::get<1>(sorted_ea[p])] += 1;
 //    for (int p = 0; p < nbeta_; ++p) nbetapi_ref_[ std::get<1>(sorted_eb[p])] += 1;
 
-    fprintf(outfile,"\n  Occupation numbers of the refence determinant:");
-    fprintf(outfile,"|");
+    outfile->Printf("\n  Occupation numbers of the refence determinant:");
+    outfile->Printf("|");
     for (int h = 0; h < nirrep_; ++h){
-        fprintf(outfile," %d",nalphapi_ref_[h]);
+        outfile->Printf(" %d",nalphapi_ref_[h]);
     }
-    fprintf(outfile," > x ");
-    fprintf(outfile,"|");
+    outfile->Printf(" > x ");
+    outfile->Printf("|");
     for (int h = 0; h < nirrep_; ++h){
-        fprintf(outfile," %d",nbetapi_ref_[h]);
+        outfile->Printf(" %d",nbetapi_ref_[h]);
     }
-    fprintf(outfile," >");
+    outfile->Printf(" >");
 
     double e_ahomo = sorted_ea[nalpha_ - 1].get<0>();
     double e_bhomo = sorted_eb[nbeta_ - 1].get<0>();
@@ -445,8 +445,8 @@ void AdaptiveCI::screen_mos()
 //    double e_alumo = std::get<0>(sorted_ea[nalpha_]);
 //    double e_blumo = std::get<0>(sorted_eb[nbeta_]);
 
-    fprintf(outfile,"\n  Energy of the alpha/beta HOMO: %12.6f %12.6f",e_ahomo,e_bhomo);
-    fprintf(outfile,"\n  Energy of the alpha/beta LUMO: %12.6f %12.6f",e_alumo,e_blumo);
+    outfile->Printf("\n  Energy of the alpha/beta HOMO: %12.6f %12.6f",e_ahomo,e_bhomo);
+    outfile->Printf("\n  Energy of the alpha/beta LUMO: %12.6f %12.6f",e_alumo,e_blumo);
     // Determine the range of MOs to consider
     for (int h = 0; h < nirrep_; ++h){
         for (int p = ncmopi_[h] - 1; p >=0 ; --p){
@@ -467,17 +467,17 @@ void AdaptiveCI::screen_mos()
         }
     }
 
-    fprintf(outfile,"\n  Orbital ranges:");
-    fprintf(outfile,"|");
+    outfile->Printf("\n  Orbital ranges:");
+    outfile->Printf("|");
     for (int h = 0; h < nirrep_; ++h){
-        fprintf(outfile," %d/%d",minalphapi_[h],maxalphapi_[h]);
+        outfile->Printf(" %d/%d",minalphapi_[h],maxalphapi_[h]);
     }
-    fprintf(outfile," > x ");
-    fprintf(outfile,"|");
+    outfile->Printf(" > x ");
+    outfile->Printf("|");
     for (int h = 0; h < nirrep_; ++h){
-        fprintf(outfile," %d/%d",minbetapi_[h],maxbetapi_[h]);
+        outfile->Printf(" %d/%d",minbetapi_[h],maxbetapi_[h]);
     }
-    fprintf(outfile," >");
+    outfile->Printf(" >");
 }
 
 }} // EndNamespaces

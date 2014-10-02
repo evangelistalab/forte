@@ -25,21 +25,21 @@ TensorSRG::~TensorSRG()
 
 void TensorSRG::startup()
 {
-    fprintf(outfile,"\n\n      --------------------------------------");
-    fprintf(outfile,"\n          Similarity Renormalization Group");
-    fprintf(outfile,"\n                tensor-based code");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n                Version 0.2.2");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n       written by Francesco A. Evangelista");
-    fprintf(outfile,"\n      --------------------------------------\n");
-    fprintf(outfile,"\n      Debug level = %d",debug_);
-    fprintf(outfile,"\n      Print level = %d\n",print_);
+    outfile->Printf("\n\n      --------------------------------------");
+    outfile->Printf("\n          Similarity Renormalization Group");
+    outfile->Printf("\n                tensor-based code");
+    outfile->Printf("\n");
+    outfile->Printf("\n                Version 0.2.2");
+    outfile->Printf("\n");
+    outfile->Printf("\n       written by Francesco A. Evangelista");
+    outfile->Printf("\n      --------------------------------------\n");
+    outfile->Printf("\n      Debug level = %d",debug_);
+    outfile->Printf("\n      Print level = %d\n",print_);
     fflush(outfile);
 
     BlockedTensor::print_mo_spaces();
 
-    fprintf(outfile,"\n      Energy convergence = %e\n",options_.get_double("E_CONVERGENCE"));
+    outfile->Printf("\n      Energy convergence = %e\n",options_.get_double("E_CONVERGENCE"));
 
     S1.resize_spin_components("S1","ov");
     S2.resize_spin_components("S2","oovv");
@@ -79,14 +79,14 @@ double TensorSRG::compute_mp2_guess()
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = reference_energy();
-    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",ref_energy);
-    fprintf(outfile,"\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
-    fprintf(outfile,"\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f",ref_energy);
+    outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
+    outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
 
-//    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",E0_);
-//    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",E0_);
-//    fprintf(outfile,"\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
-//    fprintf(outfile,"\n  * MP2 total energy                      = %20.15f\n",E0_ + mp2_correlation_energy);
+//    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
+//    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
+//    outfile->Printf("\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
+//    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n",E0_ + mp2_correlation_energy);
     return E0_ + mp2_correlation_energy;
 }
 
@@ -141,9 +141,9 @@ double TensorSRG::compute_mp2_guess_driven_srg()
 
     double mp2_correlation_energy = Eaa + Eab + Ebb;
     double ref_energy = reference_energy();
-    fprintf(outfile,"\n\n    SCF energy                            = %20.15f",ref_energy);
-    fprintf(outfile,"\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
-    fprintf(outfile,"\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
+    outfile->Printf("\n\n    SCF energy                            = %20.15f",ref_energy);
+    outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
+    outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
     return ref_energy + mp2_correlation_energy;
 }
 
@@ -226,8 +226,8 @@ void TensorSRG::transfer_integrals()
         }
     }
     double scalar = scalar0 + scalar1 + scalar2 - molecule()->nuclear_repulsion_energy();
-    fprintf(outfile,"\n  The Hamiltonian electronic scalar term (normal ordered wrt the true vacuum");
-    fprintf(outfile,"\n  E0 = %20.12f",scalar);
+    outfile->Printf("\n  The Hamiltonian electronic scalar term (normal ordered wrt the true vacuum");
+    outfile->Printf("\n  E0 = %20.12f",scalar);
 
     O1["pq"] = Hbar1["pq"];
     O1["PQ"] = Hbar1["PQ"];
@@ -236,7 +236,7 @@ void TensorSRG::transfer_integrals()
     O1["PQ"] -= Hbar2["rPsQ"] * G1["rs"];
     O1["PQ"] -= Hbar2["PRQS"] * G1["RS"];
 
-    fprintf(outfile,"\n  Updating all the integrals");
+    outfile->Printf("\n  Updating all the integrals");
     ints_->set_scalar(scalar);
     O1.iterate_over_elements([&](std::vector<size_t>& m,std::vector<MOSetSpinType>& spin,double& value)
     {
@@ -317,7 +317,7 @@ void TensorSRG::transfer_integrals()
         }
     }
 
-    fprintf(outfile,"\n  <H> = %24.12f",Esth + molecule()->nuclear_repulsion_energy());
+    outfile->Printf("\n  <H> = %24.12f",Esth + molecule()->nuclear_repulsion_energy());
 
     ints_->update_integrals();
     fflush(outfile);

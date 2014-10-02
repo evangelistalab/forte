@@ -18,14 +18,14 @@ namespace psi{ namespace libadaptive{
 SOSRG::SOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1)
     : SOBase(options,ints,G1), srgop(SRGOpUnitary), srgcomm(SRCommutators)
 {
-    fprintf(outfile,"\n\n      --------------------------------------");
-    fprintf(outfile,"\n          Similarity Renormalization Group");
-    fprintf(outfile,"\n                Spin-orbital code");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n                Version 0.1.0");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n       written by Francesco A. Evangelista");
-    fprintf(outfile,"\n      --------------------------------------\n");
+    outfile->Printf("\n\n      --------------------------------------");
+    outfile->Printf("\n          Similarity Renormalization Group");
+    outfile->Printf("\n                Spin-orbital code");
+    outfile->Printf("\n");
+    outfile->Printf("\n                Version 0.1.0");
+    outfile->Printf("\n");
+    outfile->Printf("\n       written by Francesco A. Evangelista");
+    outfile->Printf("\n      --------------------------------------\n");
     fflush(outfile);
     sosrg_startup();
     if(options_.get_str("SRG_MODE") == "SRG"){
@@ -42,7 +42,7 @@ SOSRG::~SOSRG()
 /* The rhs of x' = f(x) */
 void SOSRG_ODEInterface::operator() (const state_type &x , state_type &dxdt , const double t)
 {
-//    fprintf(outfile,"\n  Computing the Hamiltonian flow at time %f",t);
+//    outfile->Printf("\n  Computing the Hamiltonian flow at time %f",t);
 
     // Step 1. Read the Hamiltonian from the vector x
     int nso_ = sosrg_obj_.nso_;
@@ -73,7 +73,7 @@ void SOSRG_ODEInterface::operator() (const state_type &x , state_type &dxdt , co
         i += 1;
     }
     neval_ += 1;
-//    fprintf(outfile,"\n  %20.12f %20.12f %20.12f",t,sosrg_obj_.Hbar0_ ,sosrg_obj_.S0_);
+//    outfile->Printf("\n  %20.12f %20.12f %20.12f",t,sosrg_obj_.Hbar0_ ,sosrg_obj_.S0_);
 }
 
 struct push_back_state_and_time
@@ -88,7 +88,7 @@ struct push_back_state_and_time
     {
         m_states.push_back( x[0] );
         m_times.push_back( t );
-        fprintf(outfile,"\n %20.12f %20.12f",t,x[0]);
+        outfile->Printf("\n %20.12f %20.12f",t,x[0]);
     }
 };
 
@@ -137,15 +137,15 @@ void SOSRG::compute_similarity_renormalization_group()
     /* output */
     for( size_t i=0; i<=steps; i++ )
     {
-        fprintf(outfile,"\n %20.12f %20.12f",times[i],e_vec[i]);
+        outfile->Printf("\n %20.12f %20.12f",times[i],e_vec[i]);
     }
-    fprintf(outfile,"\n\n  The SRG integration required %d evaluations",sosrg_flow_computer.neval());
+    outfile->Printf("\n\n  The SRG integration required %d evaluations",sosrg_flow_computer.neval());
 }
 
 void SOSRG::compute_similarity_renormalization_group_step()
 {
 
-//    fprintf(outfile,"\n  |Hbar1| = %20e |Hbar2| = %20e",norm(Hbar1_),norm(Hbar2_));
+//    outfile->Printf("\n  |Hbar1| = %20e |Hbar2| = %20e",norm(Hbar1_),norm(Hbar2_));
 
 
     // Step 1. Compute the generator (stored in eta)
@@ -217,45 +217,45 @@ void SOSRG::compute_similarity_renormalization_group_step()
 
 void SOSRG::compute_canonical_transformation_energy()
 {
-    fprintf(outfile,"\n\n  ######################################");
-    fprintf(outfile,"\n  ### Computing the CCSD BCH energy  ###");
-    fprintf(outfile,"\n  ######################################");
+    outfile->Printf("\n\n  ######################################");
+    outfile->Printf("\n  ### Computing the CCSD BCH energy  ###");
+    outfile->Printf("\n  ######################################");
     // Start the CCSD cycle
     double old_energy = 0.0;
     bool   converged  = false;
     int    cycle      = 0;
     compute_recursive_single_commutator();
     while(!converged){
-        fprintf(outfile,"\n  Updating the S amplitudes...");
+        outfile->Printf("\n  Updating the S amplitudes...");
         fflush(outfile);
         update_S1();
         update_S2();
-        fprintf(outfile," done.");
+        outfile->Printf(" done.");
         fflush(outfile);
 
-        fprintf(outfile,"\n  Compute recursive single commutator...");
+        outfile->Printf("\n  Compute recursive single commutator...");
         fflush(outfile);
         double energy = compute_recursive_single_commutator();
-        fprintf(outfile," done.");
+        outfile->Printf(" done.");
         fflush(outfile);
 
 
-        fprintf(outfile,"\n  --------------------------------------------");
-        fprintf(outfile,"\n  nExc           |S|                  |R|");
-        fprintf(outfile,"\n  --------------------------------------------");
-        fprintf(outfile,"\n    1     %15e      %15e",norm(S1_),norm(S1_));
-        fprintf(outfile,"\n    2     %15e      %15e",norm(S2_),norm(S2_));
-        fprintf(outfile,"\n  --------------------------------------------");
+        outfile->Printf("\n  --------------------------------------------");
+        outfile->Printf("\n  nExc           |S|                  |R|");
+        outfile->Printf("\n  --------------------------------------------");
+        outfile->Printf("\n    1     %15e      %15e",norm(S1_),norm(S1_));
+        outfile->Printf("\n    2     %15e      %15e",norm(S2_),norm(S2_));
+        outfile->Printf("\n  --------------------------------------------");
         double delta_energy = energy-old_energy;
         old_energy = energy;
-        fprintf(outfile,"\n  @CC %4d %25.15f %25.15f",cycle,energy,delta_energy);
+        outfile->Printf("\n  @CC %4d %25.15f %25.15f",cycle,energy,delta_energy);
 
         if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
         }
 
         if(cycle > options_.get_int("MAXITER")){
-            fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
+            outfile->Printf("\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
             fflush(outfile);
 //            exit(1);
             converged = true;
@@ -263,21 +263,21 @@ void SOSRG::compute_canonical_transformation_energy()
         fflush(outfile);
         cycle++;
 
-        fprintf(outfile,"\n  NEXT CYCLE");
+        outfile->Printf("\n  NEXT CYCLE");
         fflush(outfile);
     }
-    fprintf(outfile,"\n\n      * CCSD-BCH total energy      = %25.15f",old_energy);
+    outfile->Printf("\n\n      * CCSD-BCH total energy      = %25.15f",old_energy);
 }
 
 double SOSRG::compute_recursive_single_commutator()
 {
-    fprintf(outfile,"\n\n  Computing the BCH expansion using the");
+    outfile->Printf("\n\n  Computing the BCH expansion using the");
     if (srgcomm == SRCommutators){
-        fprintf(outfile," single-reference normal ordering formalism.");
+        outfile->Printf(" single-reference normal ordering formalism.");
     }
-    fprintf(outfile,"\n  -----------------------------------------------------------------");
-    fprintf(outfile,"\n  nComm          |C1|                 |C2|                  E" );
-    fprintf(outfile,"\n  -----------------------------------------------------------------");
+    outfile->Printf("\n  -----------------------------------------------------------------");
+    outfile->Printf("\n  nComm          |C1|                 |C2|                  E" );
+    outfile->Printf("\n  -----------------------------------------------------------------");
 
     // Initialize Hbar and O with the Hamiltonian
     loop_p loop_q{
@@ -290,7 +290,7 @@ double SOSRG::compute_recursive_single_commutator()
     }
     double E0 = E0_;
 
-    fprintf(outfile,"\n  %2d %20e %20e %20.12f",0,norm(Hbar1_),norm(Hbar2_),E0);
+    outfile->Printf("\n  %2d %20e %20e %20.12f",0,norm(Hbar1_),norm(Hbar2_),E0);
     for (int n = 1; n < 20; ++n) {
         double factor = 1.0 / static_cast<double>(n);
 
@@ -304,12 +304,12 @@ double SOSRG::compute_recursive_single_commutator()
 
         double norm_O2 = norm(O1_);
         double norm_O1 = norm(O2_);
-        fprintf(outfile,"\n  %2d %20e %20e %20.12f",n,norm_O1,norm_O2,E0);
+        outfile->Printf("\n  %2d %20e %20e %20.12f",n,norm_O1,norm_O2,E0);
         if (std::sqrt(norm_O2 * norm_O2 + norm_O1 * norm_O1) < 1.0e-12){
             break;
         }
     }
-    fprintf(outfile,"\n  -----------------------------------------------------------------");
+    outfile->Printf("\n  -----------------------------------------------------------------");
     fflush(outfile);
     return E0;
 }
@@ -328,16 +328,16 @@ void SOSRG::sosrg_startup()
     }
 
 
-    fprintf(outfile,"\n\n  emp2 = %20.12f",emp2);
+    outfile->Printf("\n\n  emp2 = %20.12f",emp2);
 
 
     if (options_.get_str("SRG_OP") == "UNITARY"){
         srgop = SRGOpUnitary;
-        fprintf(outfile,"\n\n  Using a unitary operator\n");
+        outfile->Printf("\n\n  Using a unitary operator\n");
     }
     if (options_.get_str("SRG_OP") == "CC"){
         srgop = SRGOpCC;
-        fprintf(outfile,"\n\n  Using an excitation operator\n");
+        outfile->Printf("\n\n  Using an excitation operator\n");
     }
 
     allocate(Hbar1_);

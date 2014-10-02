@@ -13,14 +13,14 @@ namespace psi{ namespace libadaptive{
 
 FCIMC::FCIMC(Options &options, ExplorerIntegrals* ints)
 {
-    fprintf(outfile,"\n\n      --------------------------------------");
-    fprintf(outfile,"\n          Full Configuration Interaction");
-    fprintf(outfile,"\n             Quantum Monte Carlo");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n                Version 0.1.0");
-    fprintf(outfile,"\n");
-    fprintf(outfile,"\n       written by Francesco A. Evangelista");
-    fprintf(outfile,"\n      --------------------------------------\n");
+    outfile->Printf("\n\n      --------------------------------------");
+    outfile->Printf("\n          Full Configuration Interaction");
+    outfile->Printf("\n             Quantum Monte Carlo");
+    outfile->Printf("\n");
+    outfile->Printf("\n                Version 0.1.0");
+    outfile->Printf("\n");
+    outfile->Printf("\n       written by Francesco A. Evangelista");
+    outfile->Printf("\n      --------------------------------------\n");
 
     int nwalkers = 10;
     std::vector<StringDeterminant> dets;

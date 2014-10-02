@@ -118,7 +118,7 @@ void MOSRG::commutator_A1_B1_C0(MOTwoIndex A,MOTwoIndex B,double sign,double& C)
     }
     C += sign * sum;
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
     }
     t_commutator_A1_B1_C0 += t.elapsed();
 }
@@ -142,7 +142,7 @@ void MOSRG::commutator_A1_B1_C1(MOTwoIndex A,MOTwoIndex B,double sign,MOTwoIndex
     }
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
     }
     t_commutator_A1_B1_C1 += t.elapsed();
 }
@@ -156,7 +156,7 @@ void MOSRG::commutator_A1_B2_C0(MOTwoIndex A,MOFourIndex B,double sign,double& C
     C += sign * sum;
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C0 : %.4f",t.elapsed());
     }
     t_commutator_A1_B2_C0 += t.elapsed();
 }
@@ -193,7 +193,7 @@ void MOSRG::commutator_A1_B2_C1(MOTwoIndex A,MOFourIndex B,double sign,MOTwoInde
     }
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
     }
     t_commutator_A1_B2_C1 += t.elapsed();
 }
@@ -224,7 +224,7 @@ void MOSRG::commutator_A1_B2_C2(MOTwoIndex A,MOFourIndex B,double sign,MOFourInd
     }
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
     }
     t_commutator_A1_B2_C2 += t.elapsed();
 }
@@ -245,7 +245,7 @@ void MOSRG::commutator_A2_B2_C0(MOFourIndex A,MOFourIndex B,double sign,double& 
     C += sign * sum;
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
     }
     t_commutator_A2_B2_C0 += t.elapsed();
 }
@@ -383,7 +383,7 @@ void MOSRG::commutator_A2_B2_C1(MOFourIndex A,MOFourIndex B,double sign,MOTwoInd
         }
     }
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
     t_commutator_A2_B2_C1 += t.elapsed();
 }
@@ -582,25 +582,25 @@ void MOSRG::commutator_A2_B2_C2(MOFourIndex A,MOFourIndex B,double sign,MOFourIn
     }
 
     if(print_ > 1){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
     }
     t_commutator_A2_B2_C2 += t.elapsed();
 }
 
 void MOSRG::print_timings()
 {
-    fprintf(outfile,"\n\n  =========== TIMINGS =========");
-    fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t_commutator_A1_B1_C0);
-    fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t_commutator_A1_B1_C1);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C0 : %.4f",t_commutator_A1_B2_C0);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t_commutator_A1_B2_C1);
-    fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t_commutator_A1_B2_C2);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t_commutator_A2_B2_C0);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t_commutator_A2_B2_C1);
-    fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t_commutator_A2_B2_C2);
-    fprintf(outfile,"\n  =============================\n");
-    fprintf(outfile,"\n  Time for tensor : %.4f",t_tensor);
-    fprintf(outfile,"\n  Time for four   : %.4f",t_four);
+    outfile->Printf("\n\n  =========== TIMINGS =========");
+    outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t_commutator_A1_B1_C0);
+    outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f",t_commutator_A1_B1_C1);
+    outfile->Printf("\n  Time for [A1,B2] -> C0 : %.4f",t_commutator_A1_B2_C0);
+    outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f",t_commutator_A1_B2_C1);
+    outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f",t_commutator_A1_B2_C2);
+    outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t_commutator_A2_B2_C0);
+    outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t_commutator_A2_B2_C1);
+    outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f",t_commutator_A2_B2_C2);
+    outfile->Printf("\n  =============================\n");
+    outfile->Printf("\n  Time for tensor : %.4f",t_tensor);
+    outfile->Printf("\n  Time for four   : %.4f",t_four);
 }
 
 }} // EndNamespaces

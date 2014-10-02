@@ -218,7 +218,7 @@ void TensorSRG::commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alp
     C += alpha * dot(A["AI"],B["IA"]);
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
     }
     time_comm_A1_B1_C0 += t.elapsed();
 }
@@ -234,7 +234,7 @@ void TensorSRG::commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double alp
     C["QA"] -= alpha * B["IA"] * A["QI"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B1] -> C1 : %.4f",t.elapsed());
     }
     time_comm_A1_B1_C1 += t.elapsed();
 }
@@ -251,7 +251,7 @@ void TensorSRG::commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double alp
     C["QP"] += alpha * A["SR"] * B["QRPS"];
     C["QP"] += alpha * A["sr"] * B["rQsP"];
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C1 : %.4f",t.elapsed());
     }
     time_comm_A1_B2_C1 += t.elapsed();
 }
@@ -298,7 +298,7 @@ void TensorSRG::commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
 //    C["RSPQ"] += alpha * A["ST"] * B["PQRT"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
     }
     time_comm_A1_B2_C2 += t.elapsed();
 }
@@ -360,7 +360,7 @@ void TensorSRG::commutator_A1_B2_C2_fo(BlockedTensor& A,BlockedTensor& B,double 
     C["RBPQ"] -= alpha * A["BC"] * B["RCPQ"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A1,B2] -> C2 : %.4f",t.elapsed());
     }
     time_comm_A1_B2_C2 += t.elapsed();
 }
@@ -374,7 +374,7 @@ void TensorSRG::commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double alp
     C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C0 += t.elapsed();
 }
@@ -396,7 +396,7 @@ void TensorSRG::commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double alp
     C["QP"] += -1.0 * alpha * A["aQiJ"] * B["iJaP"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C1 += t.elapsed();
 }
@@ -430,7 +430,7 @@ void TensorSRG::commutator_A2_B2_C1_simplified(BlockedTensor& A,BlockedTensor& B
     C["CB"] += -1.0 * alpha * A["aCiJ"] * B["iJaB"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C1 += t.elapsed();
 }
@@ -464,7 +464,7 @@ void TensorSRG::commutator_A2_B2_C1_fo(BlockedTensor& A,BlockedTensor& B,double 
     C["CB"] += -2.0 * alpha * A["aCiJ"] * B["iJaB"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C1 += t.elapsed();
 }
@@ -520,7 +520,7 @@ void TensorSRG::commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
     C["RSPQ"] += I_ioiv["SRQP"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C2 += t.elapsed();
 }
@@ -576,7 +576,7 @@ void TensorSRG::modified_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,d
     C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C0 += t.elapsed();
 }
@@ -623,24 +623,24 @@ void TensorSRG::modified_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,d
     C["RSPQ"] += I_ioiv["SRQP"];
 
     if(print_ > 2){
-        fprintf(outfile,"\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
+        outfile->Printf("\n  Time for [A2,B2] -> C2 : %.4f",t.elapsed());
     }
     time_comm_A2_B2_C2 += t.elapsed();
 }
 
 void TensorSRG::print_timings()
 {
-    fprintf(outfile,"\n\n              ============== TIMINGS ============");
-    fprintf(outfile,"\n              Time for [A1,B1] -> C0 : %10.3f",time_comm_A1_B1_C0);
-    fprintf(outfile,"\n              Time for [A1,B1] -> C1 : %10.3f",time_comm_A1_B1_C1);
-    fprintf(outfile,"\n              Time for [A1,B2] -> C0 : %10.3f",time_comm_A1_B2_C0);
-    fprintf(outfile,"\n              Time for [A1,B2] -> C1 : %10.3f",time_comm_A1_B2_C1);
-    fprintf(outfile,"\n              Time for [A1,B2] -> C2 : %10.3f",time_comm_A1_B2_C2);
-    fprintf(outfile,"\n              Time for [A2,B2] -> C0 : %10.3f",time_comm_A2_B2_C0);
-    fprintf(outfile,"\n              Time for [A2,B2] -> C1 : %10.3f",time_comm_A2_B2_C1);
-    fprintf(outfile,"\n              Time for [A2,B2] -> C2 : %10.3f",time_comm_A2_B2_C2);
-    fprintf(outfile,"\n              ===================================\n");
-    fprintf(outfile,"\n              The commutator was called %d times\n",ncalls);
+    outfile->Printf("\n\n              ============== TIMINGS ============");
+    outfile->Printf("\n              Time for [A1,B1] -> C0 : %10.3f",time_comm_A1_B1_C0);
+    outfile->Printf("\n              Time for [A1,B1] -> C1 : %10.3f",time_comm_A1_B1_C1);
+    outfile->Printf("\n              Time for [A1,B2] -> C0 : %10.3f",time_comm_A1_B2_C0);
+    outfile->Printf("\n              Time for [A1,B2] -> C1 : %10.3f",time_comm_A1_B2_C1);
+    outfile->Printf("\n              Time for [A1,B2] -> C2 : %10.3f",time_comm_A1_B2_C2);
+    outfile->Printf("\n              Time for [A2,B2] -> C0 : %10.3f",time_comm_A2_B2_C0);
+    outfile->Printf("\n              Time for [A2,B2] -> C1 : %10.3f",time_comm_A2_B2_C1);
+    outfile->Printf("\n              Time for [A2,B2] -> C2 : %10.3f",time_comm_A2_B2_C2);
+    outfile->Printf("\n              ===================================\n");
+    outfile->Printf("\n              The commutator was called %d times\n",ncalls);
 }
 
 }} // EndNamespaces
@@ -780,7 +780,7 @@ void TensorSRG::print_timings()
 //        }
 //    }
 //    if(print_ > 2){
-//        fprintf(outfile,"\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
+//        outfile->Printf("\n  Time for [A2,B2] -> C1 : %.4f",t.elapsed());
 //    }
 //    time_comm_A2_B2_C1 += t.elapsed();
 //}

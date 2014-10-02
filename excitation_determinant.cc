@@ -36,23 +36,23 @@ ExcitationDeterminant& ExcitationDeterminant::operator=(const ExcitationDetermin
  */
 void ExcitationDeterminant::print()
 {
-    fprintf(outfile,"\n  {");
+    outfile->Printf("\n  {");
     for(int p = 0; p < nbex_; ++p){
-        fprintf(outfile," %d",bann(p));
+        outfile->Printf(" %d",bann(p));
     }
-    fprintf(outfile,"->");
+    outfile->Printf("->");
     for(int p = 0; p < nbex_; ++p){
-        fprintf(outfile," %d",bcre(p));
+        outfile->Printf(" %d",bcre(p));
     }
-    fprintf(outfile,"}{");
+    outfile->Printf("}{");
     for(int p = 0; p < naex_; ++p){
-        fprintf(outfile," %d",aann(p));
+        outfile->Printf(" %d",aann(p));
     }
-    fprintf(outfile,"->");
+    outfile->Printf("->");
     for(int p = 0; p < naex_; ++p){
-        fprintf(outfile," %d",acre(p));
+        outfile->Printf(" %d",acre(p));
     }
-    fprintf(outfile,"}");
+    outfile->Printf("}");
     fflush(outfile);
 }
 

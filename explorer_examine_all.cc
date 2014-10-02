@@ -30,7 +30,7 @@ double compute_mp_energy(bool *begin, bool *end, const std::vector<double>& epsi
  */
 void AdaptiveCI::examine_all(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Exploring the space of Slater determinants\n");
+    outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
     StringDeterminant det(reference_determinant_);
 
     // No explorer will succeed without a cartographer
@@ -90,7 +90,7 @@ void AdaptiveCI::examine_all(psi::Options& options)
         }
     } while (std::next_permutation(Ia,Ia + ncmo_));
 
-    fprintf(outfile,"\n Number of alpha strings accepted: %d",int(ea_vec.size()));
+    outfile->Printf("\n Number of alpha strings accepted: %d",int(ea_vec.size()));
 
     // Generate the beta strings
     bool* Ib_ref = det.get_beta_bits();
@@ -140,13 +140,13 @@ void AdaptiveCI::examine_all(psi::Options& options)
 
     delete[] Ia;
 
-    fprintf(outfile,"\n\n  The new reference determinant is:");
+    outfile->Printf("\n\n  The new reference determinant is:");
     reference_determinant_.print();
-    fprintf(outfile,"\n  and its energy: %.12f Eh",min_energy_);
+    outfile->Printf("\n  and its energy: %.12f Eh",min_energy_);
 
-    fprintf(outfile,"\n\n  Number of full ci determinants    = %llu",num_total_dets);
-    fprintf(outfile,"\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
-    fprintf(outfile,"\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
+    outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
+    outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
+    outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
     fflush(outfile);
 }
 

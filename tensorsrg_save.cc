@@ -20,7 +20,7 @@ void set_elements(Matrix &M, Tensor& T, pair_map_t& A_map, pair_map_t& B_map);
 void TensorSRG::save_hbar()
 {
     std::string filename;
-    fprintf(outfile,"\n  Saving Hbar\n");
+    outfile->Printf("\n  Saving Hbar\n");
 
     pair_t oO;
     pair_t oV;
@@ -76,7 +76,7 @@ void TensorSRG::save_hbar()
     }
 
     for (size_t n = 0; n < oO.size(); ++n){
-        fprintf(outfile,"%f %zu %zu\n",oO[n].first,oO[n].second.first,oO[n].second.second);
+        outfile->Printf("%f %zu %zu\n",oO[n].first,oO[n].second.first,oO[n].second.second);
     }
 
     int dim = oO.size() + oV.size() + vV.size() + 2;

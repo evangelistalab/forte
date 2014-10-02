@@ -98,30 +98,30 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
         vir_weights.push_back(epsilon[nocc + a]);
     }
 
-    fprintf(outfile,"\n  Maximum excitation level = %d",maxnex);
+    outfile->Printf("\n  Maximum excitation level = %d",maxnex);
     // Loop over excitation level
     for (int nex = 0; nex <= maxnex; ++nex){
-        fprintf(outfile,"\n  Excitation level %2d.",nex); fflush(outfile);
+        outfile->Printf("\n  Excitation level %2d.",nex); fflush(outfile);
         half_string_list vec_occ_str = compute_half_strings_screened(true,nocc,nex,occ_weights,"occupied");
         size_t nso = vec_occ_str.size();
-        fprintf(outfile," occupied: %ld",nso); fflush(outfile);
+        outfile->Printf(" occupied: %ld",nso); fflush(outfile);
 
         if (nso == 0){
-            fprintf(outfile,"\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
+            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
             break;
         }
 
         half_string_list vec_vir_str = compute_half_strings_screened(false,nvir,nex,vir_weights,"virtual");
         size_t nsv = vec_vir_str.size();
-        fprintf(outfile,", virtual: %ld",nsv); fflush(outfile);
-        fprintf(outfile,", total: %ld.",nso * nsv); fflush(outfile);
+        outfile->Printf(", virtual: %ld",nsv); fflush(outfile);
+        outfile->Printf(", total: %ld.",nso * nsv); fflush(outfile);
 
         if (nso * nsv == 0){
-            fprintf(outfile,"\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
+            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
             break;
         }
 
-        fprintf(outfile," Screening strings..."); fflush(outfile);
+        outfile->Printf(" Screening strings..."); fflush(outfile);
         // Loop over the occupied strings
         for (size_t so = 0; so < nso; ++so){
             double eo = vec_occ_str[so].first;
@@ -159,7 +159,7 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
                 }
             }
         }
-        fprintf(outfile," done."); fflush(outfile);
+        outfile->Printf(" done."); fflush(outfile);
         // N.B. The vectors of strings are sorted.  This is critical for the algorithm that generates determinants
     }
 
@@ -173,9 +173,9 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
     CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
 
     // Print some information
-    fprintf(outfile,"\n  Strings per excitation level and irrep:\n");
-    for (int h = 0; h < nirrep_; ++h) fprintf(outfile,"     %5s",ct.gamma(h).symbol());
-    fprintf(outfile,"     %5s","Total");
+    outfile->Printf("\n  Strings per excitation level and irrep:\n");
+    for (int h = 0; h < nirrep_; ++h) outfile->Printf("     %5s",ct.gamma(h).symbol());
+    outfile->Printf("     %5s","Total");
 
     for (int nex = 0; nex <= maxnex; ++nex){
         size_t ns_total = 0;
@@ -185,23 +185,23 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
             ns_total += ns;
         }
         if (ns_total > 0){
-            fprintf(outfile,"\n  %2d",nex);
+            outfile->Printf("\n  %2d",nex);
             for (int h = 0; h < nirrep_; ++h){
                 int exc_class = excitation_class(nex,h);
                 size_t ns = vec_str[exc_class].size();
-                fprintf(outfile," %9ld",ns);
+                outfile->Printf(" %9ld",ns);
             }
-            fprintf(outfile," %9ld",ns_total);
+            outfile->Printf(" %9ld",ns_total);
         }
     }
-    fprintf(outfile,"\n Sum");
+    outfile->Printf("\n Sum");
     for (int h = 0; h < nirrep_; ++h){
         size_t ns = 0;
         for (int nex = 0; nex <= maxnex; ++nex){
             int exc_class = excitation_class(nex,h);
             ns += vec_str[exc_class].size();
         }
-        fprintf(outfile," %9ld",ns);
+        outfile->Printf(" %9ld",ns);
     }
     fflush(outfile);
 
@@ -214,7 +214,7 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
 half_string_list AdaptiveCI::compute_half_strings_screened(bool is_occ,int n,int k,vector<double>& weights,string label)
 {
     bool print_debug = false;
-    if(print_debug) fprintf(outfile,"\n      number of %14s strings: %ld",label.c_str(),(long int)choose(n,k));
+    if(print_debug) outfile->Printf("\n      number of %14s strings: %ld",label.c_str(),(long int)choose(n,k));
     half_string_list vec_str;
 
     // create the first string
@@ -238,11 +238,11 @@ half_string_list AdaptiveCI::compute_half_strings_screened(bool is_occ,int n,int
             vec_str.push_back(make_pair(mp_energy,bits));
         }
         if(print_debug){
-            fprintf(outfile,"\n          %6d: ",nstr);
+            outfile->Printf("\n          %6d: ",nstr);
             for(int i = 0; i < n; ++i){
-                fprintf(outfile,"%1d",str[i]);
+                outfile->Printf("%1d",str[i]);
             }
-            fprintf(outfile," %10.4f",mp_energy);
+            outfile->Printf(" %10.4f",mp_energy);
         }
         if(is_occ){
             std::reverse(str,str+n); // reverse the string
@@ -252,7 +252,7 @@ half_string_list AdaptiveCI::compute_half_strings_screened(bool is_occ,int n,int
     } while (next_bound_lex_combination(denominator_threshold_,weights,str,str+n));
 
     size_t nvec_str = vec_str.size();
-    if(print_debug) fprintf(outfile,", of these %ld are below the denominator threshold",nvec_str);
+    if(print_debug) outfile->Printf(", of these %ld are below the denominator threshold",nvec_str);
     delete[] str;
     sort(vec_str.begin(),vec_str.end());
     return vec_str;

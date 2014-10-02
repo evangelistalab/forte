@@ -31,12 +31,12 @@ namespace psi{ namespace libadaptive{
  */
 void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",space_m_threshold_);
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",space_m_threshold_);
 
     // 1) Build the Hamiltonian
     boost::timer t_hbuild;
     SharedMatrix H_m = build_model_space_hamiltonian(options);
-    fprintf(outfile,"\n  Time spent building H model       = %f s",t_hbuild.elapsed());
+    outfile->Printf("\n  Time spent building H model       = %f s",t_hbuild.elapsed());
     fflush(outfile);
 
     // 2) Setup stuff necessary to diagonalize the Hamiltonian
@@ -51,25 +51,25 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
     // 3) Diagonalize the model space Hamiltonian
     boost::timer t_hdiag;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H_m,evals_m,evecs_m,nroots);
     }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-        fprintf(outfile,"\n  Performing full diagonalization.");
+        outfile->Printf("\n  Performing full diagonalization.");
         H_m->diagonalize(evecs_m,evals_m);
     }
-    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
+    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
     fflush(outfile);
 
     // 4) Print the energy
     int nroots_print = std::min(nroots,25);
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_m->get(i),27.211 * (evals_m->get(i) - evals_m->get(0)));
+        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_m->get(i),27.211 * (evals_m->get(i) - evals_m->get(0)));
     }
 
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs_m->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -83,7 +83,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
         double cum_wfn = 0.0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H_m->get(J,J),J);
+            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H_m->get(J,J),J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
         }
@@ -91,7 +91,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
     fflush(outfile);
 
     int num_roots = options.get_int("NROOT");
-    fprintf(outfile,"\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
+    outfile->Printf("\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
     SharedMatrix H = build_select_hamiltonian_roth(options,evals_m,evecs_m);
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
@@ -102,25 +102,25 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
     // 4) Diagonalize the Hamiltonian
     boost::timer t_hdiag_large;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H,evals,evecs,nroots);
     }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-        fprintf(outfile,"\n  Performing full diagonalization.");
+        outfile->Printf("\n  Performing full diagonalization.");
         H->diagonalize(evecs,evals);
     }
-    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
+    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
     fflush(outfile);
 
     // 5) Print the energy
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
 
     // 6) Print the major contributions to the eigenvector
     for (int i = 0; i < nroots_print; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -134,7 +134,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
         double cum_wfn = 0.0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
         }
@@ -158,8 +158,8 @@ SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
     // Determine the size of the Hamiltonian matrix
     if (options.get_str("H_TYPE") == "FIXED_SIZE"){
         ndets = std::min(options.get_int("NDETS"),ntot_dets);
-        fprintf(outfile,"\n  Building the model space Hamiltonian using the first %d determinants\n",ndets);
-        fprintf(outfile,"\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
+        outfile->Printf("\n  Building the model space Hamiltonian using the first %d determinants\n",ndets);
+        outfile->Printf("\n  The energy range spanned is [%f,%f]\n",determinants_[0].get<0>(),determinants_[ndets-1].get<0>());
     }else if (options.get_str("H_TYPE") == "FIXED_ENERGY"){
         double E0 = determinants_[0].get<0>();
         for (int I = 0; I < ntot_dets; ++I){
@@ -169,11 +169,11 @@ SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
             }
             ndets++;
         }
-        fprintf(outfile,"\n\n  Building the model Hamiltonian using determinants with excitation energy less than %f Eh",space_m_threshold_);
-        fprintf(outfile,"\n  This requires a total of %d determinants",ndets);
+        outfile->Printf("\n\n  Building the model Hamiltonian using determinants with excitation energy less than %f Eh",space_m_threshold_);
+        outfile->Printf("\n  This requires a total of %d determinants",ndets);
         int max_ndets_fixed_energy = options.get_int("MAX_NDETS");
         if (ndets > max_ndets_fixed_energy){
-            fprintf(outfile,"\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
+            outfile->Printf("\n\n  WARNING: the number of determinants required to build the Hamiltonian (%d)\n"
                     "  exceeds the maximum number allowed (%d).  Reducing the size of H.\n\n",ndets,max_ndets_fixed_energy);
             ndets = max_ndets_fixed_energy;
         }
@@ -238,9 +238,9 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
     }
 
     if(energy_select) {
-        fprintf(outfile,"\n  Building a selected Hamiltonian using the energy criterium");
+        outfile->Printf("\n  Building a selected Hamiltonian using the energy criterium");
     }else{
-        fprintf(outfile,"\n  Building a selected Hamiltonian using the amplitude criterium");
+        outfile->Printf("\n  Building a selected Hamiltonian using the amplitude criterium");
     }
 
     int nroot = options.get_int("NROOT");
@@ -316,7 +316,7 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
         std::reverse(aimed_selection_vec.begin(),aimed_selection_vec.end());
         size_t maxI = aimed_selection_vec.size();
 
-        fprintf(outfile,"\n  Initial value of sigma in the aimed selection = %24.14f",aimed_selection_sum);
+        outfile->Printf("\n  Initial value of sigma in the aimed selection = %24.14f",aimed_selection_sum);
         for (size_t I = 0; I < maxI; ++I){
             if (aimed_selection_sum > t2_threshold_){
                 selected_dets.push_back(aimed_selection_vec[I].second);
@@ -326,8 +326,8 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
                 break;
             }
         }
-        fprintf(outfile,"\n  Final value of sigma in the aimed selection   = %24.14f",aimed_selection_sum);
-        fprintf(outfile,"\n  Selected %zu determinants",selected_dets.size());
+        outfile->Printf("\n  Final value of sigma in the aimed selection   = %24.14f",aimed_selection_sum);
+        outfile->Printf("\n  Selected %zu determinants",selected_dets.size());
 
     }
 
@@ -335,8 +335,8 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
 
     // the number of determinants used to form the Hamiltonian matrix
     int ndets = ndets_i + ndets_m;
-    fprintf(outfile,"\n\n  %d total states: %d (main) + %d (intermediate)",ntot_dets,ndets_m,ndets_i);
-    fprintf(outfile,"\n  %d states were discarded because the coupling to the main space is less than %f muE_h",ntot_dets - ndets_m - ndets_i,t2_threshold_ * 1000000.0);
+    outfile->Printf("\n\n  %d total states: %d (main) + %d (intermediate)",ntot_dets,ndets_m,ndets_i);
+    outfile->Printf("\n  %d states were discarded because the coupling to the main space is less than %f muE_h",ntot_dets - ndets_m - ndets_i,t2_threshold_ * 1000000.0);
     fflush(outfile);
     SharedMatrix H(new Matrix("Hamiltonian Matrix",ndets,ndets));
     // Form the Hamiltonian matrix
@@ -365,8 +365,8 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
 
 void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
 {
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-    fprintf(outfile,"\n  using a renormalization procedure (Lambda = %.2f Eh)\n",space_m_threshold_);
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
+    outfile->Printf("\n  using a renormalization procedure (Lambda = %.2f Eh)\n",space_m_threshold_);
 
     int nroot = options.get_int("NROOT");
 
@@ -393,7 +393,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
         double max_range = min_range + delta_lambda;
 
         boost::timer t_select;
-        fprintf(outfile,"\n\n  Finding dets in the range : [%f,%f), starting from %zu",min_range,max_range,search_from);
+        outfile->Printf("\n\n  Finding dets in the range : [%f,%f), starting from %zu",min_range,max_range,search_from);
         std::vector<size_t> det_in_range;
         for (int I = search_from; I < ntot_dets; ++I){
             double EI = determinants_[I].get<0>();
@@ -405,7 +405,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
             }
         }
         size_t num_det_in_range = det_in_range.size();
-        fprintf(outfile,"\n  Found %zu",num_det_in_range);
+        outfile->Printf("\n  Found %zu",num_det_in_range);
 
         std::vector<double> V_q(nroot,0.0);
         std::vector<double> t_q(nroot,0.0);
@@ -462,10 +462,10 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
                 selected_test_dets.push_back(det_in_range[n]);
             }
         }
-        fprintf(outfile,".  Of these %zu passed a screening.  Total dets. %zu.",
+        outfile->Printf(".  Of these %zu passed a screening.  Total dets. %zu.",
                 selected_test_dets.size() - selected_dets.size(),
                 selected_test_dets.size());
-        fprintf(outfile,"\n  Time spent selecting the new dets = %f s",t_select.elapsed());
+        outfile->Printf("\n  Time spent selecting the new dets = %f s",t_select.elapsed());
         fflush(outfile);
 
         multistate_pt2_energy_correction_ = ept2;
@@ -497,24 +497,24 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
             }
             H->set(I,I,determinantI.get<0>());
         }
-        fprintf(outfile,"\n  Time spent forming H              = %f s",t_h.elapsed());
+        outfile->Printf("\n  Time spent forming H              = %f s",t_h.elapsed());
         fflush(outfile);
 
         // 4) Diagonalize the Hamiltonian
         boost::timer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
+            outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
         }
 
-        fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
+        outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-            fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+            outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                     evals->get(i),multistate_pt2_energy_correction_[i]);
         }
 
@@ -531,7 +531,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
                 num_added += 1;
             }
         }
-        fprintf(outfile,"\n  After diagonalization added %zu determinants",num_added);
+        outfile->Printf("\n  After diagonalization added %zu determinants",num_added);
     }
 
     size_t num_selected_dets = selected_dets.size();
@@ -539,19 +539,19 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
     //    // 4) Print the energy
     //    int nroots_print = std::min(nroot,25);
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
     //    }
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
 
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -565,7 +565,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
         double cum_wfn = 0.0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
         }
@@ -573,7 +573,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
     fflush(outfile);
 
     //    int num_roots = options.get_int("NROOT");
-    //    fprintf(outfile,"\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
+    //    outfile->Printf("\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
     //    SharedMatrix H = build_select_hamiltonian_roth(options,evals_m,evecs_m);
 
     //    // 3) Setup stuff necessary to diagonalize the Hamiltonian
@@ -584,25 +584,25 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
     //    // 4) Diagonalize the Hamiltonian
     //    boost::timer t_hdiag_large;
     //    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-    //        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+    //        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     //        davidson_liu(H,evals,evecs,nroots);
     //    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-    //        fprintf(outfile,"\n  Performing full diagonalization.");
+    //        outfile->Printf("\n  Performing full diagonalization.");
     //        H->diagonalize(evecs,evals);
     //    }
-    //    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
+    //    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
     //    fflush(outfile);
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-    //        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
     //                evals->get(i),multistate_pt2_energy_correction_[i]);
     //    }
 
     //    // 6) Print the major contributions to the eigenvector
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+    //        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
     //        // Identify all contributions with |C_J| > significant_threshold
     //        double** C_mat = evecs->pointer();
     //        std::vector<std::pair<double,int> > C_J_sorted;
@@ -616,7 +616,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
     //        double cum_wfn = 0.0;
     //        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
     //            int J = C_J_sorted[I].second;
-    //            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+    //            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
     //            cum_wfn += C_mat[J][i] * C_mat[J][i];
     //            if (cum_wfn > significant_wave_function) break;
     //        }
@@ -631,8 +631,8 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     int nroot = options.get_int("NROOT");
     size_t ren_ndets = options.get_int("REN_MAX_NDETS");
 
-    fprintf(outfile,"\n\n  Diagonalizing the Hamiltonian in the model space");
-    fprintf(outfile,"\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
+    outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
+    outfile->Printf("\n  using a renormalization procedure keeping %zu determinants\n",ren_ndets);
 
     bool energy_select = (options.get_str("SELECT_TYPE") == "ENERGY");
 
@@ -658,8 +658,8 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     evals.reset(new Vector("e",nroot));
 
 
-    fprintf(outfile,"\n\n  Determinants added each step: %zu",dets_per_step);
-    fprintf(outfile,"\n\n  Number of steps             : %zu",renomalization_steps);
+    outfile->Printf("\n\n  Determinants added each step: %zu",dets_per_step);
+    outfile->Printf("\n\n  Number of steps             : %zu",renomalization_steps);
     fflush(outfile);
     //    for (int step = 0; step < renomalization_steps; ++step){
     for (int step = 0; step < renomalization_steps + 1; ++step){
@@ -677,7 +677,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         search_from += num_det_in_range;
         double max_range = determinants_[search_from - 1].get<0>();
 
-        fprintf(outfile,"\n\n  Adding dets in the range : [%f,%f), starting from %zu",min_range - determinants_[0].get<0>(),max_range - determinants_[0].get<0>(),search_from);
+        outfile->Printf("\n\n  Adding dets in the range : [%f,%f), starting from %zu",min_range - determinants_[0].get<0>(),max_range - determinants_[0].get<0>(),search_from);
 
 
         //        // Find all the determinants within the range [0,DL)
@@ -685,7 +685,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         //        double max_range = min_range + delta_lambda;
 
 
-        //        fprintf(outfile,"\n\n  Finding dets in the range : [%f,%f), starting from %zu",min_range,max_range,search_from);
+        //        outfile->Printf("\n\n  Finding dets in the range : [%f,%f), starting from %zu",min_range,max_range,search_from);
         //        std::vector<size_t> det_in_range;
         //        for (int I = search_from; I < ntot_dets; ++I){
         //            double EI = determinants_[I].get<0>();
@@ -697,7 +697,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         //            }
         //        }
         //        size_t num_det_in_range = det_in_range.size();
-        //        fprintf(outfile,"\n  Found %zu",num_det_in_range);
+        //        outfile->Printf("\n  Found %zu",num_det_in_range);
 
         std::vector<double> V_q(nroot,0.0);
         std::vector<double> t_q(nroot,0.0);
@@ -754,10 +754,10 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
                 selected_test_dets.push_back(det_in_range[n]);
             }
         }
-        fprintf(outfile,".  Of these %zu passed a screening.  Total dets. %zu.",
+        outfile->Printf(".  Of these %zu passed a screening.  Total dets. %zu.",
                 selected_test_dets.size() - selected_dets.size(),
                 selected_test_dets.size());
-        fprintf(outfile,"\n  Time spent selecting the new dets = %f s",t_select.elapsed());
+        outfile->Printf("\n  Time spent selecting the new dets = %f s",t_select.elapsed());
         fflush(outfile);
 
         multistate_pt2_energy_correction_ = ept2;
@@ -793,24 +793,24 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
             }
             H->set(I,I,determinantI.get<0>());
         }
-        fprintf(outfile,"\n  Time spent forming H              = %f s",t_h.elapsed());
+        outfile->Printf("\n  Time spent forming H              = %f s",t_h.elapsed());
         fflush(outfile);
 
         // 4) Diagonalize the Hamiltonian
         boost::timer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
         }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-            fprintf(outfile,"\n  Performing full diagonalization.");
+            outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
         }
 
-        fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
+        outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            fprintf(outfile,"\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-            fprintf(outfile,"\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                     evals->get(i),multistate_pt2_energy_correction_[i]);
         }
 
@@ -833,7 +833,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         for (size_t I = 0, max_I = std::min(dm_det_list.size(),ren_ndets); I < max_I; ++I){
             selected_dets.push_back(dm_det_list[I].second);
         }
-        fprintf(outfile,"\n  After diagonalization there are %zu determinants",selected_dets.size());
+        outfile->Printf("\n  After diagonalization there are %zu determinants",selected_dets.size());
     }
 
     size_t num_selected_dets = selected_dets.size();
@@ -841,19 +841,19 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     //    // 4) Print the energy
     //    int nroots_print = std::min(nroot,25);
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
     //    }
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
 
     double significant_threshold = 0.001;
     double significant_wave_function = 0.95;
     for (int i = 0; i < nroot; ++ i){
-        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
         // Identify all contributions with |C_J| > significant_threshold
         double** C_mat = evecs->pointer();
         std::vector<std::pair<double,int> > C_J_sorted;
@@ -867,7 +867,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         double cum_wfn = 0.0;
         for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
             int J = C_J_sorted[I].second;
-            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
             cum_wfn += C_mat[J][i] * C_mat[J][i];
             if (cum_wfn > significant_wave_function) break;
         }
@@ -875,7 +875,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     fflush(outfile);
 
     //    int num_roots = options.get_int("NROOT");
-    //    fprintf(outfile,"\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
+    //    outfile->Printf("\n\n  Building a selected Hamiltonian using the criterium by Roth (kappa) for %d roots",num_roots);
     //    SharedMatrix H = build_select_hamiltonian_roth(options,evals_m,evecs_m);
 
     //    // 3) Setup stuff necessary to diagonalize the Hamiltonian
@@ -886,25 +886,25 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     //    // 4) Diagonalize the Hamiltonian
     //    boost::timer t_hdiag_large;
     //    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-    //        fprintf(outfile,"\n  Using the Davidson-Liu algorithm.");
+    //        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     //        davidson_liu(H,evals,evecs,nroots);
     //    }else if (options.get_str("DIAG_ALGORITHM") == "FULL"){
-    //        fprintf(outfile,"\n  Performing full diagonalization.");
+    //        outfile->Printf("\n  Performing full diagonalization.");
     //        H->diagonalize(evecs,evals);
     //    }
-    //    fprintf(outfile,"\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
+    //    outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
     //    fflush(outfile);
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-    //        fprintf(outfile,"\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
+    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
     //                evals->get(i),multistate_pt2_energy_correction_[i]);
     //    }
 
     //    // 6) Print the major contributions to the eigenvector
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        fprintf(outfile,"\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
+    //        outfile->Printf("\n  The most important determinants (%.0f%% of the wave functions) for root %d:",100.0 * significant_wave_function,i + 1);
     //        // Identify all contributions with |C_J| > significant_threshold
     //        double** C_mat = evecs->pointer();
     //        std::vector<std::pair<double,int> > C_J_sorted;
@@ -918,7 +918,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     //        double cum_wfn = 0.0;
     //        for (size_t I = 0, max_I = C_J_sorted.size(); I < max_I; ++I){
     //            int J = C_J_sorted[I].second;
-    //            fprintf(outfile,"\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
+    //            outfile->Printf("\n %3ld   %+9.6f   %9.6f   %.6f   %d",I,C_mat[J][i],C_mat[J][i] * C_mat[J][i],H->get(J,J),J);
     //            cum_wfn += C_mat[J][i] * C_mat[J][i];
     //            if (cum_wfn > significant_wave_function) break;
     //        }

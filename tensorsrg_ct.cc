@@ -47,19 +47,19 @@ double TensorSRG::compute_ct_energy()
     }
 
     if (dsrg_s == 0.0){
-        fprintf(outfile,"\n  Linearized Canonical Transformation Theory with Singles and Doubles");
+        outfile->Printf("\n  Linearized Canonical Transformation Theory with Singles and Doubles");
     }else{
-        fprintf(outfile,"\n  Driven Similarity Renormalization Group with Singles and Doubles (s = %f a.u.)",dsrg_s);
+        outfile->Printf("\n  Driven Similarity Renormalization Group with Singles and Doubles (s = %f a.u.)",dsrg_s);
     }
-    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
-    fprintf(outfile,"\n         Cycle     Energy (a.u.)     Delta(E)   |Hbar1|    |Hbar2|     |S1|    |S2|  max(S1) max(S2)");
-    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n  --------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n         Cycle     Energy (a.u.)     Delta(E)   |Hbar1|    |Hbar2|     |S1|    |S2|  max(S1) max(S2)");
+    outfile->Printf("\n  --------------------------------------------------------------------------------------------------");
 
     compute_hbar();
 
     while(!converged){
         if (print_ > 1){
-            fprintf(outfile,"\n  Updating the S amplitudes...");
+            outfile->Printf("\n  Updating the S amplitudes...");
             fflush(outfile);
         }
 
@@ -72,32 +72,32 @@ double TensorSRG::compute_ct_energy()
         }
 
         if (print_ > 1){
-            fprintf(outfile,"\n  --------------------------------------------");
-            fprintf(outfile,"\n  nExc           |S|                  |R|");
-            fprintf(outfile,"\n  --------------------------------------------");
-            fprintf(outfile,"\n    1     %15e      %15e",S1.norm(),0.0);
-            fprintf(outfile,"\n    2     %15e      %15e",S2.norm(),0.0);
-            fprintf(outfile,"\n  --------------------------------------------");
+            outfile->Printf("\n  --------------------------------------------");
+            outfile->Printf("\n  nExc           |S|                  |R|");
+            outfile->Printf("\n  --------------------------------------------");
+            outfile->Printf("\n    1     %15e      %15e",S1.norm(),0.0);
+            outfile->Printf("\n    2     %15e      %15e",S2.norm(),0.0);
+            outfile->Printf("\n  --------------------------------------------");
 
             auto max_S2aa = S2.block("oovv")->max_abs_element();
             auto max_S2ab = S2.block("oOvV")->max_abs_element();
             auto max_S2bb = S2.block("OOVV")->max_abs_element();
-            fprintf(outfile,"\n  Largest S2 (aa): %20.12f  ",max_S2aa.first);
+            outfile->Printf("\n  Largest S2 (aa): %20.12f  ",max_S2aa.first);
             for (size_t index: max_S2aa.second){
-                fprintf(outfile," %zu",index);
+                outfile->Printf(" %zu",index);
             }
-            fprintf(outfile,"\n  Largest S2 (ab): %20.12f  ",max_S2ab.first);
+            outfile->Printf("\n  Largest S2 (ab): %20.12f  ",max_S2ab.first);
             for (size_t index: max_S2ab.second){
-                fprintf(outfile," %zu",index);
+                outfile->Printf(" %zu",index);
             }
-            fprintf(outfile,"\n  Largest S2 (bb): %20.12f  ",max_S2bb.first);
+            outfile->Printf("\n  Largest S2 (bb): %20.12f  ",max_S2bb.first);
             for (size_t index: max_S2bb.second){
-                fprintf(outfile," %zu",index);
+                outfile->Printf(" %zu",index);
             }
         }
 
         if (print_ > 1){
-            fprintf(outfile," done.");
+            outfile->Printf(" done.");
             fflush(outfile);
         }
         if(diis_manager){
@@ -128,7 +128,7 @@ double TensorSRG::compute_ct_energy()
             }
             if (cycle > max_diis_vectors){
                 if (cycle % max_diis_vectors == 2){
-                    fprintf(outfile," -> DIIS");
+                    outfile->Printf(" -> DIIS");
                     diis_manager->extrapolate(5,
                                              S1.block("ov")->t(),
                                              S1.block("OV")->t(),
@@ -139,7 +139,7 @@ double TensorSRG::compute_ct_energy()
             }
         }
         if (print_ > 1){
-            fprintf(outfile,"\n  Compute recursive single commutator...");
+            outfile->Printf("\n  Compute recursive single commutator...");
             fflush(outfile);
         }
 
@@ -147,7 +147,7 @@ double TensorSRG::compute_ct_energy()
         double energy = E0_ + compute_hbar();
 
         if (print_ > 1){
-            fprintf(outfile," done.");
+            outfile->Printf(" done.");
             fflush(outfile);
         }
 
@@ -184,14 +184,14 @@ double TensorSRG::compute_ct_energy()
         double norm_S1 = std::sqrt(norm_S1a * norm_S1a + norm_S1b * norm_S1b);
         double norm_S2 = std::sqrt(0.25 * norm_S2aa * norm_S2aa + norm_S2ab * norm_S2ab + 0.25 * norm_S2bb * norm_S2bb);
 
-        fprintf(outfile,"\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
+        outfile->Printf("\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
 
         if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
         }
 
         if(cycle > options_.get_int("MAXITER")){
-            fprintf(outfile,"\n\n\tThe calculation did not converge in %d cycles\n\tQuitting.\n",options_.get_int("MAXITER"));
+            outfile->Printf("\n\n\tThe calculation did not converge in %d cycles\n\tQuitting.\n",options_.get_int("MAXITER"));
             fflush(outfile);
             converged = true;
             old_energy = 0.0;
@@ -199,14 +199,14 @@ double TensorSRG::compute_ct_energy()
         fflush(outfile);
         cycle++;
     }
-    fprintf(outfile,"\n  --------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n  --------------------------------------------------------------------------------------------------");
 
     if (dsrg_s == 0.0){
-        fprintf(outfile,"\n\n\n    L-CTSD correlation energy      = %25.15f",old_energy-E0_);
-        fprintf(outfile,"\n  * L-CTSD total energy            = %25.15f\n",old_energy);
+        outfile->Printf("\n\n\n    L-CTSD correlation energy      = %25.15f",old_energy-E0_);
+        outfile->Printf("\n  * L-CTSD total energy            = %25.15f\n",old_energy);
     }else{
-        fprintf(outfile,"\n\n\n    DSRG-SD correlation energy      = %25.15f",old_energy-E0_);
-        fprintf(outfile,"\n  * DSRG-SD total energy            = %25.15f\n",old_energy);
+        outfile->Printf("\n\n\n    DSRG-SD correlation energy      = %25.15f",old_energy-E0_);
+        outfile->Printf("\n  * DSRG-SD total energy            = %25.15f\n",old_energy);
     }
     // Set some environment variables
     Process::environment.globals["CURRENT ENERGY"] = old_energy;
@@ -223,10 +223,10 @@ double TensorSRG::compute_ct_energy()
 double TensorSRG::compute_hbar()
 {
     if (print_ > 1){
-        fprintf(outfile,"\n\n  Computing the similarity-transformed Hamiltonian");
-        fprintf(outfile,"\n  -----------------------------------------------------------------");
-        fprintf(outfile,"\n  nComm           C0                 |C1|                  |C2|" );
-        fprintf(outfile,"\n  -----------------------------------------------------------------");
+        outfile->Printf("\n\n  Computing the similarity-transformed Hamiltonian");
+        outfile->Printf("\n  -----------------------------------------------------------------");
+        outfile->Printf("\n  nComm           C0                 |C1|                  |C2|" );
+        outfile->Printf("\n  -----------------------------------------------------------------");
     }
 
     // Initialize Hbar and O with the normal ordered Hamiltonian
@@ -244,7 +244,7 @@ double TensorSRG::compute_hbar()
     O2["PQRS"] = V["PQRS"];
 
     if (print_ > 1){
-        fprintf(outfile,"\n  %2d %20.12f %20e %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
+        outfile->Printf("\n  %2d %20.12f %20e %20e",0,Hbar0,Hbar1.norm(),Hbar2.norm());
     }
 
     int maxn = options_.get_int("SRG_RSC_NCOMM");
@@ -279,7 +279,7 @@ double TensorSRG::compute_hbar()
         double norm_C2 = C2.norm();
 
         if (print_ > 1){
-            fprintf(outfile,"\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
+            outfile->Printf("\n  %2d %20.12f %20e %20e",n,C0,norm_C1,norm_C2);
             fflush(outfile);
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
@@ -287,7 +287,7 @@ double TensorSRG::compute_hbar()
         }
     }
     if (print_ > 1){
-        fprintf(outfile,"\n  -----------------------------------------------------------------");
+        outfile->Printf("\n  -----------------------------------------------------------------");
         fflush(outfile);
     }
     return Hbar0;
