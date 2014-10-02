@@ -71,7 +71,7 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
     SharedMatrix H = build_hamiltonian_parallel(options);
     H->print();
     outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 
     // 2) Smooth out the couplings of the model and intermediate space
     boost::timer t_hsmooth;
@@ -85,7 +85,7 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
     }
 
     outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
     int ndets = H->nrow();
@@ -106,7 +106,7 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
         H->diagonalize(evecs,evals);
     }
     outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 
     // Set some environment variables
     Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options_.get_int("ROOT"));
@@ -175,7 +175,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         std::string state_label = s2_labels[std::round(S * 2.0)];
         outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
-        fflush(outfile);
+        outfile->Flush();
     }
 
     // 6) Print the major contributions to the eigenvector
@@ -238,7 +238,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
         }
         outfile->Printf("\n  Total number of alpha/beta electrons: %f/%f",na,nb);
 
-        fflush(outfile);
+        outfile->Flush();
     }
 }
 
@@ -258,19 +258,19 @@ void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
         boost::timer t_hbuild;
         SharedMatrix H = build_hamiltonian_parallel(options);
         outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
-        fflush(outfile);
+        outfile->Flush();
 
         // 2) Add the Lowding contribution to H
         boost::timer t_hbuild_lowdin;
         lowdin_hamiltonian(H,E);
         outfile->Printf("\n  Time spent on Lowding corrections = %f s",t_hbuild_lowdin.elapsed());
-        fflush(outfile);
+        outfile->Flush();
 
         // 3) Smooth out the couplings of the model and intermediate space
         boost::timer t_hsmooth;
         smooth_hamiltonian(H);
         outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
-        fflush(outfile);
+        outfile->Flush();
 
         // 4) Setup stuff necessary to diagonalize the Hamiltonian
         int ndets = H->nrow();
@@ -293,13 +293,13 @@ void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
             H->diagonalize(evecs,evals);
         }
         outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
-        fflush(outfile);
+        outfile->Flush();
 
         // 5) Print the energy
         delta_E = evals->get(root) - E;
         E = evals->get(root);
         outfile->Printf("\n  Cycle %3d  E= %.12f  DE = %.12f",cycle,evals->get(root),std::fabs(delta_E) > 10.0 ? 0 : delta_E);
-        fflush(outfile);
+        outfile->Flush();
 
         if (std::fabs(delta_E) < options.get_double("E_CONVERGENCE")){
             outfile->Printf("\n\n  Adaptive CI Energy Root %3d = %.12f Eh",root + 1,evals->get(root));
@@ -585,7 +585,7 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
     std::vector<std::vector<std::pair<int,double> > > H_sparse = build_hamiltonian_direct(options);
 
     outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 
     // 2) Smooth out the couplings of the model and intermediate space
     boost::timer t_hsmooth;
@@ -599,7 +599,7 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
     ////    }
 
     //    outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
-    //    fflush(outfile);
+    //    outfile->Flush();
 
     // 3) Setup stuff necessary to diagonalize the Hamiltonian
     int ndets = H_sparse.size();
@@ -615,14 +615,14 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
     outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     davidson_liu_sparse(H_sparse,evals,evecs,nroots);
     outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 
     // Set some environment variables
     Process::environment.globals["LAMBDA-CI ENERGY"] = evals->get(options.get_int("ROOT"));
 
     print_results(evecs,evals,nroots);
 
-    fflush(outfile);
+    outfile->Flush();
 }
 
 /**
@@ -980,14 +980,14 @@ bool AdaptiveCI::davidson_liu_sparse(std::vector<std::vector<std::pair<int,doubl
 //// BEGIN DEBUGGING
 //// Write the Hamiltonian to disk
 //outfile->Printf("\n\n  WRITING FILE TO DISK...");
-//fflush(outfile);
+//outfile->Flush();
 //ofstream of("ham.dat", ios::binary | ios::out);
 //of.write(reinterpret_cast<char*>(&ndets),sizeof(int));
 //double** H_mat = H->pointer();
 //of.write(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
 //of.close();
 //outfile->Printf(" DONE.");
-//fflush(outfile);
+//outfile->Flush();
 //// END DEBUGGING
 
 

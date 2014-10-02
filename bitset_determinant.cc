@@ -57,7 +57,7 @@ void BitsetDeterminant::print() const
         outfile->Printf("%d",beta_bits_[p] ? 1 :0);
     }
     outfile->Printf(">");
-    fflush(outfile);
+    outfile->Flush();
 }
 
 /**

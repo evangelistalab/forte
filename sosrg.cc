@@ -26,7 +26,7 @@ SOSRG::SOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1)
     outfile->Printf("\n");
     outfile->Printf("\n       written by Francesco A. Evangelista");
     outfile->Printf("\n      --------------------------------------\n");
-    fflush(outfile);
+    outfile->Flush();
     sosrg_startup();
     if(options_.get_str("SRG_MODE") == "SRG"){
         compute_similarity_renormalization_group();
@@ -227,17 +227,17 @@ void SOSRG::compute_canonical_transformation_energy()
     compute_recursive_single_commutator();
     while(!converged){
         outfile->Printf("\n  Updating the S amplitudes...");
-        fflush(outfile);
+        outfile->Flush();
         update_S1();
         update_S2();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
 
         outfile->Printf("\n  Compute recursive single commutator...");
-        fflush(outfile);
+        outfile->Flush();
         double energy = compute_recursive_single_commutator();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
 
 
         outfile->Printf("\n  --------------------------------------------");
@@ -256,15 +256,15 @@ void SOSRG::compute_canonical_transformation_energy()
 
         if(cycle > options_.get_int("MAXITER")){
             outfile->Printf("\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
-            fflush(outfile);
+            outfile->Flush();
 //            exit(1);
             converged = true;
         }
-        fflush(outfile);
+        outfile->Flush();
         cycle++;
 
         outfile->Printf("\n  NEXT CYCLE");
-        fflush(outfile);
+        outfile->Flush();
     }
     outfile->Printf("\n\n      * CCSD-BCH total energy      = %25.15f",old_energy);
 }
@@ -310,7 +310,7 @@ double SOSRG::compute_recursive_single_commutator()
         }
     }
     outfile->Printf("\n  -----------------------------------------------------------------");
-    fflush(outfile);
+    outfile->Flush();
     return E0;
 }
 

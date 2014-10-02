@@ -27,7 +27,7 @@ MOSRG::MOSRG(Options &options, ExplorerIntegrals* ints, TwoIndex G1aa, TwoIndex 
     outfile->Printf("\n");
     outfile->Printf("\n       written by Francesco A. Evangelista");
     outfile->Printf("\n      --------------------------------------\n");
-    fflush(outfile);
+    outfile->Flush();
     mosrg_startup();
     if(options_.get_str("SRG_MODE") == "SRG"){
         compute_similarity_renormalization_group();
@@ -120,7 +120,7 @@ struct push_back_state_and_time
         m_states.push_back( x[0] );
         m_times.push_back( t );
         outfile->Printf("\n %9d %20.12f %20.12f",int(m_states.size()),t,x[0]);
-        fflush(outfile);
+        outfile->Flush();
     }
 };
 
@@ -373,11 +373,11 @@ void MOSRG::compute_canonical_transformation_energy()
     compute_recursive_single_commutator();
     while(!converged){
         outfile->Printf("\n  Updating the S amplitudes...");
-        fflush(outfile);
+        outfile->Flush();
         update_S1();
         update_S2();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
         {
             size_t k = 0;
             loop_mo_p loop_mo_q{
@@ -438,10 +438,10 @@ void MOSRG::compute_canonical_transformation_energy()
         }
 
         outfile->Printf("\n  Compute recursive single commutator...");
-        fflush(outfile);
+        outfile->Flush();
         double energy = compute_recursive_single_commutator();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
 
         outfile->Printf("\n  --------------------------------------------");
         outfile->Printf("\n  nExc           |S|                  |R|");
@@ -460,16 +460,16 @@ void MOSRG::compute_canonical_transformation_energy()
         if(cycle > options_.get_int("MAXITER")){
             outfile->Printf("\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
             print_timings();
-            fflush(outfile);
+            outfile->Flush();
 //            exit(1);
             converged = true;
 //            break;
         }
-        fflush(outfile);
+        outfile->Flush();
         cycle++;
 
         outfile->Printf("\n  NEXT CYCLE");
-        fflush(outfile);
+        outfile->Flush();
     }
     outfile->Printf("\n\n      * CCSD-BCH total energy      = %25.15f",old_energy);
     // Set some environment variables
@@ -504,11 +504,11 @@ void MOSRG::compute_driven_srg_energy()
 
     while(!converged){
         outfile->Printf("\n  Updating the S amplitudes...");
-        fflush(outfile);
+        outfile->Flush();
         update_S1();
         update_S2();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
 
         {
             size_t k = 0;
@@ -569,12 +569,12 @@ void MOSRG::compute_driven_srg_energy()
         }
 
         outfile->Printf("\n  Compute recursive single commutator...");
-        fflush(outfile);
+        outfile->Flush();
         double energy = compute_recursive_single_commutator();
         one_body_driven_srg();
         two_body_driven_srg();
         outfile->Printf(" done.");
-        fflush(outfile);
+        outfile->Flush();
 
         outfile->Printf("\n  --------------------------------------------");
         outfile->Printf("\n  nExc           |S|                  |R|");
@@ -593,16 +593,16 @@ void MOSRG::compute_driven_srg_energy()
         if(cycle > options_.get_int("MAXITER")){
             outfile->Printf("\n\n\tThe calculation did not converge in %d cycles\n\tQuitting PSIMRCC\n",options_.get_int("MAXITER"));
             print_timings();
-            fflush(outfile);
+            outfile->Flush();
 //            exit(1);
 //            converged = true;
             break;
         }
-        fflush(outfile);
+        outfile->Flush();
         cycle++;
 
         outfile->Printf("\n  NEXT CYCLE");
-        fflush(outfile);
+        outfile->Flush();
     }
 
     if (not converged){
@@ -663,13 +663,13 @@ double MOSRG::compute_recursive_single_commutator()
         double norm_Hb1 = norm(Hbar1_);
         double norm_Hb2 = norm(Hbar2_);
         outfile->Printf("\n  %2d %20.12f %20e %20e %20e %20e",n,C0,norm_C1,norm_C2,norm_Hb1,norm_Hb2);
-        fflush(outfile);
+        outfile->Flush();
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             break;
         }
     }
     outfile->Printf("\n  -----------------------------------------------------------------");
-    fflush(outfile);
+    outfile->Flush();
     return Hbar0_;
 }
 
@@ -1027,7 +1027,7 @@ void MOSRG::transfer_integrals()
 //    outfile->Printf("\n (10|01): %20.12f",Hbar2_.abab[1][0][0][1]);
 //    outfile->Printf("\n (01|10): %20.12f",Hbar2_.abab[0][1][1][0]);
 //    outfile->Printf("\n (10|10): %20.12f",Hbar2_.abab[1][1][0][0]);
-    fflush(outfile);
+    outfile->Flush();
 }
 
 }} // EndNamespaces

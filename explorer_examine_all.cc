@@ -147,7 +147,7 @@ void AdaptiveCI::examine_all(psi::Options& options)
     outfile->Printf("\n\n  Number of full ci determinants    = %llu",num_total_dets);
     outfile->Printf("\n\n  Number of determinants visited    = %ld (%e)",num_dets_visited,double(num_dets_visited) / double(num_total_dets));
     outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",num_dets_accepted,double(num_dets_accepted) / double(num_total_dets));
-    fflush(outfile);
+    outfile->Flush();
 }
 
 }} // EndNamespaces

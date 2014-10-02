@@ -230,7 +230,7 @@ void AdaptiveCI::explore_singles_sequential(psi::Options& options)
     outfile->Printf("\n  Number of determinants accepted   = %ld (%e)",selected_determinants.size(),0.0);
     outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
     outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
-    fflush(outfile);
+    outfile->Flush();
 }
 
 

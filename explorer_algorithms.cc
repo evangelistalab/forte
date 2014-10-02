@@ -101,27 +101,27 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
     outfile->Printf("\n  Maximum excitation level = %d",maxnex);
     // Loop over excitation level
     for (int nex = 0; nex <= maxnex; ++nex){
-        outfile->Printf("\n  Excitation level %2d.",nex); fflush(outfile);
+        outfile->Printf("\n  Excitation level %2d.",nex); outfile->Flush();
         half_string_list vec_occ_str = compute_half_strings_screened(true,nocc,nex,occ_weights,"occupied");
         size_t nso = vec_occ_str.size();
-        outfile->Printf(" occupied: %ld",nso); fflush(outfile);
+        outfile->Printf(" occupied: %ld",nso); outfile->Flush();
 
         if (nso == 0){
-            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
+            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); outfile->Flush();
             break;
         }
 
         half_string_list vec_vir_str = compute_half_strings_screened(false,nvir,nex,vir_weights,"virtual");
         size_t nsv = vec_vir_str.size();
-        outfile->Printf(", virtual: %ld",nsv); fflush(outfile);
-        outfile->Printf(", total: %ld.",nso * nsv); fflush(outfile);
+        outfile->Printf(", virtual: %ld",nsv); outfile->Flush();
+        outfile->Printf(", total: %ld.",nso * nsv); outfile->Flush();
 
         if (nso * nsv == 0){
-            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); fflush(outfile);
+            outfile->Printf("\n  Zero strings at excitation level %d, stopping here.",nex); outfile->Flush();
             break;
         }
 
-        outfile->Printf(" Screening strings..."); fflush(outfile);
+        outfile->Printf(" Screening strings..."); outfile->Flush();
         // Loop over the occupied strings
         for (size_t so = 0; so < nso; ++so){
             double eo = vec_occ_str[so].first;
@@ -159,7 +159,7 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
                 }
             }
         }
-        outfile->Printf(" done."); fflush(outfile);
+        outfile->Printf(" done."); outfile->Flush();
         // N.B. The vectors of strings are sorted.  This is critical for the algorithm that generates determinants
     }
 
@@ -203,7 +203,7 @@ string_list_symm AdaptiveCI::compute_strings_screened(vector<double>& epsilon,in
         }
         outfile->Printf(" %9ld",ns);
     }
-    fflush(outfile);
+    outfile->Flush();
 
     delete[] I;
     delete[] Ia;

@@ -52,7 +52,7 @@ void test_davidson()
     // BEGIN DEBUGGING
     // Write the Hamiltonian to disk
     outfile->Printf("\n\n  READING FILE FROM DISK...");
-    fflush(outfile);
+    outfile->Flush();
     ifstream ifs("ham.dat", ios::binary | ios::in);
     int ndets;
     ifs.read(reinterpret_cast<char*>(&ndets),sizeof(int));
@@ -61,7 +61,7 @@ void test_davidson()
     ifs.read(reinterpret_cast<char*>(&(H_mat[0][0])),ndets * ndets * sizeof(double));
     ifs.close();
     outfile->Printf(" DONE.");
-    fflush(outfile);
+    outfile->Flush();
 
     int nroots = 4;
 
@@ -74,7 +74,7 @@ void test_davidson()
     int nroots_print = std::min(nroots,25);
     for (int i = 0; i < nroots_print; ++ i){
         outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
-        fflush(outfile);
+        outfile->Flush();
     }
     // END DEBUGGING
 }

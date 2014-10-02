@@ -49,7 +49,7 @@ namespace psi{ namespace libadaptive{
 //    outfile->Printf("\n  Time spent on generating strings  = %f s",time_string);
 //    outfile->Printf("\n  Time spent on generating dets     = %f s",time_dets);
 //    outfile->Printf("\n  Precompute algorithm time elapsed = %f s",t.elapsed());
-//    fflush(outfile);
+//    outfile->Flush();
 //}
 
 }} // EndNamespaces

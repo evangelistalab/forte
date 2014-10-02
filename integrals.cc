@@ -58,7 +58,7 @@ void ExplorerIntegrals::startup()
 
     if (not wfn){
         outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
-        fflush(outfile);
+        outfile->Flush();
         exit(1);
     }
 
@@ -206,7 +206,7 @@ void ExplorerIntegrals::read_one_electron_integrals()
     if(restricted_){
         // Read the one-electron integrals (T + V, restricted)
         for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,outfile);
+        iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,"outfile");
         for (int p = 0; p < nmo_; ++p){
             for (int q = p; q < nmo_; ++q){
                 one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
@@ -216,14 +216,14 @@ void ExplorerIntegrals::read_one_electron_integrals()
     }else{
         // Read the alpha-alpha one-electron integrals (T + V)
         for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_A_OEI,packed_oei,num_oei,0,0,outfile);
+        iwl_rdone(PSIF_OEI,PSIF_MO_A_OEI,packed_oei,num_oei,0,0,"outfile");
         for (int p = 0; p < nmo_; ++p){
             for (int q = p; q < nmo_; ++q){
                 one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
             }
         }
         for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_B_OEI,packed_oei,num_oei,0,0,outfile);
+        iwl_rdone(PSIF_OEI,PSIF_MO_B_OEI,packed_oei,num_oei,0,0,"outfile");
         for (int p = 0; p < nmo_; ++p){
             for (int q = p; q < nmo_; ++q){
                 one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_b[q * nmo_ + p] = packed_oei[p + ioff[q]];
@@ -238,7 +238,7 @@ void ExplorerIntegrals::read_one_electron_integrals()
 
 //    // Read the kinetic energy integrals (restricted integrals, T)
 //    for (size_t pq = 0; pq < num_oei_so; ++pq) packed_oei_so[pq] = 0.0;
-//    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,0,outfile);
+//    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,0,"outfile");
 
 //    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 //    SharedMatrix Ca = wfn->Ca();
@@ -285,7 +285,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         // Read the integrals
         struct iwlbuf V_AAAA;
         iwl_buf_init(&V_AAAA,PSIF_MO_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
+        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
         iwl_buf_close(&V_AAAA, 1);
 
         // Store the integrals
@@ -316,7 +316,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         // Read the integrals
         struct iwlbuf V_AAAA;
         iwl_buf_init(&V_AAAA,PSIF_MO_AA_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
+        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
         iwl_buf_close(&V_AAAA, 1);
 
         for (size_t p = 0; p < nmo_; ++p){
@@ -340,7 +340,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         // Read the integrals
         struct iwlbuf V_BBBB;
         iwl_buf_init(&V_BBBB,PSIF_MO_BB_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_BBBB, two_electron_integrals, myioff, myioff, 0, myioff, 0, outfile);
+        iwl_buf_rd_all(&V_BBBB, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
         iwl_buf_close(&V_BBBB, 1);
 
         for (size_t p = 0; p < nmo_; ++p){
@@ -372,7 +372,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         // Read the integrals
         struct iwlbuf V_AABB;
         iwl_buf_init(&V_AABB,PSIF_MO_AB_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all2(&V_AABB, two_electron_integrals_ab, myioff, myioff, 0, myioff, 0, outfile);
+        iwl_buf_rd_all2(&V_AABB, two_electron_integrals_ab, myioff, myioff, 0, myioff, 0, "outfile");
         iwl_buf_close(&V_AABB, 1);
 
         for (size_t p = 0; p < nmo_; ++p){
@@ -727,9 +727,9 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 //    }
 //    if(options_.get_int("DEBUG") > 6){
 //      outfile->Printf("\n  alfa-alfa fock matrix for reference %d",mu);
-//      mat_print(f_aa[mu],nmo,nmo,outfile);
+//      mat_print(f_aa[mu],nmo,nmo,"outfile");
 //      outfile->Printf("\n  beta-beta fock matrix for reference %d",mu);
-//      mat_print(f_bb[mu],nmo,nmo,outfile);
+//      mat_print(f_bb[mu],nmo,nmo,"outfile");
 //    }
 //  }
 //}
@@ -770,9 +770,9 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 //  }
 //  if(options_.get_int("DEBUG") > 6){
 //    outfile->Printf("\n  alfa-alfa average fock matrix");
-//    mat_print(f_avg_aa,nmo,nmo,outfile);
+//    mat_print(f_avg_aa,nmo,nmo,"outfile");
 //    outfile->Printf("\n  beta-beta average fock matrix");
-//    mat_print(f_avg_bb,nmo,nmo,outfile);
+//    mat_print(f_avg_bb,nmo,nmo,"outfile");
 //  }
 //}
 
