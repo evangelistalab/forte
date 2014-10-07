@@ -55,16 +55,16 @@ public:
     double scalar() const {return scalar_;}
 
     /// The alpha one-electron integrals
-    double oei_a(int p,int q) {return one_electron_integrals_a[p * nmo_ + q];}
+    double oei_a(int p,int q) {return one_electron_integrals_a[p * aptei_idx_ + q];}
 
     /// The beta one-electron integrals
-    double oei_b(int p,int q) {return one_electron_integrals_b[p * nmo_ + q];}
+    double oei_b(int p,int q) {return one_electron_integrals_b[p * aptei_idx_ + q];}
 
     /// The diagonal fock matrix integrals
-    double diag_fock_a(int p) {return fock_matrix_a[p * nmo_ + p];}
+    double diag_fock_a(int p) {return fock_matrix_a[p * aptei_idx_ + p];}
 
     /// The diagonal fock matrix integrals
-    double diag_fock_b(int p) {return fock_matrix_b[p * nmo_ + p];}
+    double diag_fock_b(int p) {return fock_matrix_b[p * aptei_idx_ + p];}
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
     double aptei_aa(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_aa[aptei_index(p,q,r,s)];}
@@ -76,13 +76,13 @@ public:
     double aptei_bb(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_bb[aptei_index(p,q,r,s)];}
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
-    double diag_aptei_aa(size_t p,size_t q) {return diagonal_aphys_tei_aa[p * nmo_ + q];}
+    double diag_aptei_aa(size_t p,size_t q) {return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
 
     /// The diagonal antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||pq>
-    double diag_aptei_ab(size_t p,size_t q) {return diagonal_aphys_tei_ab[p * nmo_ + q];}
+    double diag_aptei_ab(size_t p,size_t q) {return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
 
     /// The diagonal antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||pq>
-    double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * nmo_ + q];}
+    double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
 
     /// Make Fock matrix with respect to a given determinant
     void make_fock_matrix(bool* Ia, bool* Ib);
@@ -238,8 +238,6 @@ private:
 
     /// Freeze the doubly occupied and virtual orbitals but do not resort the integrals
     void freeze_core_full();
-    int pair_irrep(int p, int q) {return pair_irrep_map[p * nmo_ + q];}
-    int pair_index(int p, int q) {return pair_index_map[p * nmo_ + q];}
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}

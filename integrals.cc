@@ -566,6 +566,10 @@ void ExplorerIntegrals::resort_integrals_after_freezing()
         q += frzvpi_[h]; // skip the frozen virtual
     }
 
+    for (size_t n = 0; n < cmo2mo.size(); ++n){
+        outfile->Printf("\n  cmo: %2d -> mo: %2d",n,cmo2mo[n]);
+    }
+
     // Resort the integrals
     resort_two(one_electron_integrals_a,cmo2mo);
     resort_two(one_electron_integrals_b,cmo2mo);
