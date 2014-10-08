@@ -23,7 +23,12 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     transform_integrals();
     read_one_electron_integrals();
     read_two_electron_integrals();
-    update_integrals();
+    make_diagonal_integrals();
+    if (ncmo_ < nmo_){
+        freeze_core_orbitals();
+        // Set the new value of the number of orbitals to be used in indexing routines
+        aptei_idx_ = ncmo_;
+    }
 }
 
 ExplorerIntegrals::~ExplorerIntegrals()
@@ -404,30 +409,30 @@ void ExplorerIntegrals::make_diagonal_integrals()
 
 void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = 0; q < nmo_; ++q){
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = 0; q < ncmo_; ++q){
             // Builf Fock Diagonal alpha-alpha
-            fock_matrix_a[p * nmo_ + q] = oei_a(p,q);
+            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < nmo_; ++k) {
+            for (int k = 0; k < ncmo_; ++k) {
                 if (Ia[k]) {
-                    //                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
-                    fock_matrix_a[p * nmo_ + q] += aptei_aa(p,k,q,k);// -  rtei(p,q,k,k) - rtei(p,k,q,k);
+                    //                    fock_matrix_a[p * ncmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,k,q,k);// -  rtei(p,q,k,k) - rtei(p,k,q,k);
                 }
                 if (Ib[k]) {
-                    //                    fock_matrix_a[p * nmo_ + q] += rtei(p,q,k,k);
-                    fock_matrix_a[p * nmo_ + q] += aptei_ab(p,k,q,k);
+                    //                    fock_matrix_a[p * ncmo_ + q] += rtei(p,q,k,k);
+                    fock_matrix_a[p * ncmo_ + q] += aptei_ab(p,k,q,k);
                 }
             }
-            fock_matrix_b[p * nmo_ + q] = oei_b(p,q);
+            fock_matrix_b[p * ncmo_ + q] = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < nmo_; ++k) {
+            for (int k = 0; k < ncmo_; ++k) {
                 if (Ib[k]) {
-                    //                    fock_matrix_b[p * nmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
-                    fock_matrix_b[p * nmo_ + q] += aptei_bb(p,k,q,k);
+                    //                    fock_matrix_b[p * ncmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,k,q,k);
                 }
                 if (Ia[k]) {
-                    fock_matrix_b[p * nmo_ + q] += aptei_ab(p,k,q,k);//rtei(p,q,k,k);
+                    fock_matrix_b[p * ncmo_ + q] += aptei_ab(p,k,q,k);//rtei(p,q,k,k);
                 }
             }
         }
@@ -438,11 +443,11 @@ void ExplorerIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
 {
     std::vector<double>& fock_diagonal_alpha = fock_diagonals.first;
     std::vector<double>& fock_diagonal_beta = fock_diagonals.second;
-    for(size_t p = 0; p < nmo_; ++p){
+    for(size_t p = 0; p < ncmo_; ++p){
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal_alpha[p] =  oei_a(p,p);// roei(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < nmo_; ++k) {
+        for (int k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 //                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_alpha[p] += diag_aptei_aa(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -454,7 +459,7 @@ void ExplorerIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
         }
         fock_diagonal_beta[p] =  oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < nmo_; ++k) {
+        for (int k = 0; k < ncmo_; ++k) {
             if (Ib[k]) {
                 //                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_beta[p] += diag_aptei_bb(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -469,11 +474,11 @@ void ExplorerIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
 
 void ExplorerIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double> &fock_diagonal)
 {
-    for(size_t p = 0; p < nmo_; ++p){
+    for(size_t p = 0; p < ncmo_; ++p){
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal[p] = oei_a(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < nmo_; ++k) {
+        for (int k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonal[p] += diag_aptei_aa(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
@@ -486,10 +491,10 @@ void ExplorerIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<
 
 void ExplorerIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<double> &fock_diagonals)
 {
-    for(size_t p = 0; p < nmo_; ++p){
+    for(size_t p = 0; p < ncmo_; ++p){
         fock_diagonals[p] = oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < nmo_; ++k) {
+        for (int k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonals[p] += diag_aptei_ab(p,k);  //diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
@@ -555,7 +560,7 @@ void ExplorerIntegrals::resort_integrals_after_freezing()
 {
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
-    // Create a mapping array cmo2mo that tell me (cmo2mo[i]) where to find the i-th cmo.
+    // Create an array that maps the CMOs to the MOs (cmo2mo).
     std::vector<size_t> cmo2mo;
     for (int h = 0, q = 0; h < nirrep_; ++h){
         q += frzcpi_[h]; // skip the frozen core
@@ -564,10 +569,6 @@ void ExplorerIntegrals::resort_integrals_after_freezing()
             q++;
         }
         q += frzvpi_[h]; // skip the frozen virtual
-    }
-
-    for (size_t n = 0; n < cmo2mo.size(); ++n){
-        outfile->Printf("\n  cmo: %2d -> mo: %2d",n,cmo2mo[n]);
     }
 
     // Resort the integrals

@@ -416,6 +416,7 @@ SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
         const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
         const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
         for (int J = I + 1; J < ndets; ++J){
+//        for (int J = I + 1; J < ndets; ++J){
             boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
             const int J_class_a = determinantJ.get<1>();  //std::get<1>(determinantI);
             const int Jsa = determinantJ.get<2>();        //std::get<1>(determinantI);
@@ -425,7 +426,8 @@ SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
             H->set(I,J,HIJ);
             H->set(J,I,HIJ);
         }
-        H->set(I,I,determinantI.get<0>());
+        const double HII = nuclear_repulsion_energy_ + StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>());
+        H->set(I,I,HII);
     }
     return H;
 }
@@ -668,8 +670,8 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
         const int Isa = determinantI.get<2>();        //std::get<1>(determinantI);
         const int I_class_b = determinantI.get<3>(); //std::get<2>(determinantI);
         const int Isb = determinantI.get<4>();        //std::get<2>(determinantI);
-        outfile->Printf("\n H[%2d][%2d] = %20.12f",I,I,determinantI.get<0>());
-        H_row.push_back(make_pair(I,determinantI.get<0>()));
+        const double HII = nuclear_repulsion_energy_ + StringDeterminant::SlaterRules(vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>(),vec_astr_symm_[I_class_a][Isa].get<2>(),vec_bstr_symm_[I_class_b][Isb].get<2>());
+        H_row.push_back(make_pair(I,determinantI.get<0>()/*HII*/));
         for (int J = 0; J < ndets; ++J){
             if (I != J){
                 boost::tuple<double,int,int,int,int>& determinantJ = determinants_[J];
@@ -682,14 +684,13 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
                     H_row.push_back(make_pair(J,HIJ));
                     num_nonzero += 1;
                 }
-                outfile->Printf("\n H[%2d][%2d] = %20.12f",I,J,HIJ);
             }
         }
 //        #pragma omp critical
         H_sparse.push_back(H_row);
     }
 
-    outfile->Printf("\n  %ld nonzero elements out of %ld (%e)",num_nonzero,size_t(ndets * ndets),double(num_nonzero)/double(ndets * ndets));
+    outfile->Printf("\n  %zu nonzero elements out of %zu (%e)",num_nonzero,size_t(ndets * ndets),double(num_nonzero)/double(ndets * ndets));
     return H_sparse;
 }
 

@@ -23,8 +23,8 @@ set libadaptive {
   det_threshold 100.00
   den_threshold 100.00
   energy_type full
-  frozen_docc [2,0,0,0]
-  active      [3,0,2,2]
+  restricted_docc [2,0,0,0]
+  active          [3,0,2,2]
   charge 0
   nroot 6
 }

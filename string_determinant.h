@@ -133,7 +133,7 @@ public:
     double kinetic_energy();
     /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_energy(const StringDeterminant& reference);
-    /// Compute the energy of a Slater determinant with respect to a given reference
+//    /// Compute the energy of a Slater determinant with respect to a given reference
     double excitation_ab_energy(const StringDeterminant& reference);
 
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one

@@ -23,7 +23,7 @@ set libadaptive {
   det_threshold 10.00
   den_threshold 10.00
   energy_type sparse
-  restricted_docc [2,0,1,1]
+  frozen_docc [2,0,1,1]
   active      [2,0,0,0]
   charge 0
 }

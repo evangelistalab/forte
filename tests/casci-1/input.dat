@@ -20,12 +20,11 @@ set {
 }
 
 set libadaptive {
-  det_threshold 2.00
-  den_threshold 2.00
-  energy_type full
-  frozen_docc [2,0,1,1]
-  active      [2,0,0,0]
-  charge 0
+  det_threshold   2.00
+  den_threshold   2.00
+  energy_type     full
+  restricted_docc [2,0,1,1]
+  active          [2,0,0,0]
 }
 
 energy('mcscf')

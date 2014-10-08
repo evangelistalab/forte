@@ -649,19 +649,14 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         for(int p = 0; p < nmo; ++p){
             if(Ia[p]) matrix_element += ints_->oei_a(p,p);
             if(Ib[p]) matrix_element += ints_->oei_b(p,p);
-            if(Ia[p]) outfile->Printf("\n  One-electron terms: %20.12f",ints_->oei_a(p,p));
-            if(Ib[p]) outfile->Printf("\n  One-electron terms: %20.12f",ints_->oei_b(p,p));
             for(int q = 0; q < nmo; ++q){
                 if(Ia[p] and Ia[q]){
                     matrix_element += 0.5 * ints_->diag_aptei_aa(p,q);
-                    outfile->Printf("\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_aa(p,q));
                 }
                 if(Ib[p] and Ib[q]){
                     matrix_element += 0.5 * ints_->diag_aptei_bb(p,q);
-                    outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_bb(p,q));
                 }
                 if(Ia[p] and Ib[q]){
-                    outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_aptei_ab(p,q));
                     matrix_element += ints_->diag_aptei_ab(p,q);
                 }
             }
@@ -687,7 +682,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
                 matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
-        outfile->Printf("\n i,j = %d %d = %f",i,j,matrix_element);
     }
     // Slater rule 2 PhiI = j_b^+ i_b PhiJ
     if ((nadiff == 0) and (nbdiff == 1)) {
@@ -708,7 +702,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
                 matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
-        outfile->Printf("\n i,j = %d %d = %f",i,j,matrix_element);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -729,7 +722,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
         //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_aa(i,j,k,l);
-        outfile->Printf("\n i,j,k,l = %d %d %d %d = %f",i,j,k,l,matrix_element);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -750,7 +742,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
         matrix_element = sign * ints_->aptei_bb(i,j,k,l);
-        outfile->Printf("\n i,j,k,l = %d %d %d %d = %f",i,j,k,l,matrix_element);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -766,7 +757,6 @@ double StringDeterminant::SlaterRules(const std::vector<bool>& Ia,const std::vec
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
         matrix_element = sign * ints_->aptei_ab(i,j,k,l);
-        outfile->Printf("\n i,j,k,l = %d %d %d %d = %f",i,j,k,l,matrix_element);
     }
     return(matrix_element);
 }
