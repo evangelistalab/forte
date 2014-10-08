@@ -47,6 +47,7 @@ void ExplorerIntegrals::update_integrals()
 
 void ExplorerIntegrals::retransform_integrals()
 {
+    aptei_idx_ = nmo_;
     transform_integrals();
     read_one_electron_integrals();
     read_two_electron_integrals();

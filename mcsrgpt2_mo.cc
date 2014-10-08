@@ -56,7 +56,7 @@ void MCSRGPT2_MO::startup(Options &options){
     taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1)) + 1;
 
     // Print Original Orbital Indices
-    outfile->Printf( "\n  Subspace Indices:");
+    outfile->Printf( "\n  Correlating Subspace Indices:");
     print_idx("Core", idx_c_);
     print_idx("Active", idx_a_);
     print_idx("Virtual", idx_v_);
@@ -66,46 +66,6 @@ void MCSRGPT2_MO::startup(Options &options){
 
     // Compute Reference Energy
     compute_ref();
-
-    // Determine the Correlating Orbitals
-    for (int h=0; h<nirrep_; ++h)  nc_ -= frzcpi_[h];
-    for (int h=0; h<nirrep_; ++h)  nv_ -= frzvpi_[h];
-
-    idx_c_.clear();
-    idx_v_.clear();
-    int nmopi = 0;
-    for(int h=0; h<nirrep_; ++h){
-        size_t c = core_[h];
-        size_t ca = core_[h] + active_[h];
-        size_t fc = frzcpi_[h];
-        size_t fv = frzvpi_[h];
-        for(size_t i=0; i<nmopi_[h]; ++i){
-            size_t idx = i + nmopi;
-            if(i >= fc && i < c){
-                idx_c_.push_back(idx);
-            }
-            if(i >= ca && i < nmopi_[h] - fv){
-                idx_v_.push_back(idx);
-            }
-        }
-        nmopi += nmopi_[h];
-    }
-
-    // Correlating Hole and Particle Indices
-    nh_ = na_ + nc_;
-    npt_ = na_ + nv_;
-    idx_h_ = vector<size_t> (idx_a_);
-    idx_h_.insert(idx_h_.end(), idx_c_.begin(), idx_c_.end());
-    idx_p_ = vector<size_t> (idx_a_);
-    idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
-
-    // Print Correlating Orbital Indices
-    outfile->Printf( "\n  Correlating Subspace Indices:");
-    print_idx("Core", idx_c_);
-    print_idx("Active", idx_a_);
-    print_idx("Virtual", idx_v_);
-    print_idx("Hole", idx_h_);
-    print_idx("Particle", idx_p_);
 
     // Form T Amplitudes
     T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
@@ -143,21 +103,21 @@ void MCSRGPT2_MO::startup(Options &options){
     bool dsrgpt = options.get_bool("DSRGPT");
 
     // Effective Fock Matrix
-    Fa_dsrg_ = d2(nmo_, d1(nmo_));
-    Fb_dsrg_ = d2(nmo_, d1(nmo_));
+    Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
+    Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
     Form_Fock_DSRG(Fa_dsrg_,Fb_dsrg_,dsrgpt);
 
     // Effective Two Electron Integrals
-    vaa_dsrg_ = d4(nmo_, d3(nmo_, d2(nmo_, d1(nmo_))));
-    vab_dsrg_ = d4(nmo_, d3(nmo_, d2(nmo_, d1(nmo_))));
-    vbb_dsrg_ = d4(nmo_, d3(nmo_, d2(nmo_, d1(nmo_))));
+    vaa_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
+    vab_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
+    vbb_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
     Form_APTEI_DSRG(vaa_dsrg_,vab_dsrg_,vbb_dsrg_,dsrgpt);
 }
 
 void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
     timer_on("Fock_DSRG");
-    for(size_t p=0; p<nmo_; ++p){
-        for(size_t q=0; q<nmo_; ++q){            
+    for(size_t p=0; p<ncmo_; ++p){
+        for(size_t q=0; q<ncmo_; ++q){            
             A[p][q] = Fa_[p][q];
             B[p][q] = Fb_[p][q];
         }
@@ -194,10 +154,10 @@ void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
 
 void MCSRGPT2_MO::Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt){
     timer_on("APTEI_DSRG");
-    for(size_t p=0; p<nmo_; ++p){
-        for(size_t q=0; q<nmo_; ++q){
-            for(size_t r=0; r<nmo_; ++r){
-                for(size_t s=0; s<nmo_; ++s){
+    for(size_t p=0; p<ncmo_; ++p){
+        for(size_t q=0; q<ncmo_; ++q){
+            for(size_t r=0; r<ncmo_; ++r){
+                for(size_t s=0; s<ncmo_; ++s){
                     AA[p][q][r][s] = integral_->aptei_aa(p,q,r,s);
                     AB[p][q][r][s] = integral_->aptei_ab(p,q,r,s);
                     BB[p][q][r][s] = integral_->aptei_bb(p,q,r,s);
@@ -258,7 +218,7 @@ void MCSRGPT2_MO::compute_ref(){
             }
         }
     }
-    Eref_ += e_nuc_;
+    Eref_ += e_nuc_ + integral_->frozen_core_energy();
 //    outfile->Printf( "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
     timer_off("Compute Ref");
 }
