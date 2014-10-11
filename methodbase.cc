@@ -24,13 +24,12 @@ void MethodBase::startup()
     double frozen_core_energy = ints_->frozen_core_energy();
     E0_ = reference_energy();
 
+    Dimension ncmopi_ = ints_->ncmopi();
+
     Dimension corr_docc(doccpi_);
     corr_docc -= frzcpi_;
 
     for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < frzcpi_[h]; ++i){
-            p += 1;
-        }
         for (int i = 0; i < corr_docc[h]; ++i,++p){
             a_occ_mos.push_back(p);
             b_occ_mos.push_back(p);
@@ -39,7 +38,7 @@ void MethodBase::startup()
             a_occ_mos.push_back(p);
             b_vir_mos.push_back(p);
         }
-        for (int a = 0; a < nmopi_[h] - doccpi_[h] - soccpi_[h]; ++a,++p){
+        for (int a = 0; a < ncmopi_[h] - corr_docc[h] - soccpi_[h]; ++a,++p){
             a_vir_mos.push_back(p);
             b_vir_mos.push_back(p);
         }
