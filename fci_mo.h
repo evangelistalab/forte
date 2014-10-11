@@ -41,9 +41,22 @@ protected:
     // Multiplicity
     int multi_;
 
+    // Number of Irrep
+    int nirrep_;
+
+    // Total MOs
+    size_t nmo_;
+    Dimension nmopi_;
+
+    // Correlating MOs
+    size_t ncmo_;
+    Dimension ncmopi_;
+
     // Frozen Orbitals
     Dimension frzcpi_;
     Dimension frzvpi_;
+    size_t nfrzc_;
+    size_t nfrzv_;
 
     // Core Orbitals
     Dimension core_;
@@ -55,8 +68,9 @@ protected:
     size_t na_;
     vector<size_t> idx_a_;
 
-    // Number of Virtuals
+    // Number of Nonfrozen Virtuals
     size_t nv_;
+    Dimension virtual_;
     vector<size_t> idx_v_;
 
     // Hole
@@ -67,20 +81,11 @@ protected:
     size_t npt_;
     vector<size_t> idx_p_;
 
-    // Number of Irrep
-    int nirrep_;
-
     // Number of Alpha Electrons
     long int nalfa_;
 
     // Number of Beta Electrons
     long int nbeta_;
-
-    // Number of MOs
-    size_t nmo_;
-
-    // Number of MO per Irrep
-    Dimension nmopi_;
 
     // Symmetry of the state
     int state_sym_;
@@ -90,20 +95,20 @@ protected:
 
     // Print Size of a Array with Irrep
     void print_irrep(const string &str, const Dimension &array){
-        outfile->Printf( "\n  %-10s", str.c_str());
+        outfile->Printf("\n  %-15s", str.c_str());
         for(int h=0; h<nirrep_; ++h){
-            outfile->Printf( "%3d", array[h]);
+            outfile->Printf("%3d", array[h]);
         }
     }
 
     // Print Indices
     void print_idx(const string &str, const vector<size_t> &vec){
-        outfile->Printf( "\n  %-10s", str.c_str());
+        outfile->Printf("\n  %-15s", str.c_str());
         size_t c = 0;
         for(size_t x: vec){
-            outfile->Printf( "%3zu ", x);
+            outfile->Printf("%3zu ", x);
             ++c;
-            if(c % 20 == 0) outfile->Printf( "\n  %-10c", ' ');
+            if(c % 20 == 0) outfile->Printf("\n  %-10c", ' ');
         }
     }
 
@@ -115,7 +120,7 @@ protected:
 
     // Print Determinant
     void print_det(const vecdet &dets){
-        outfile->Printf( "\n  Determinants: |alpha|beta>");
+        outfile->Printf("\n  Determinants: |alpha|beta>");
         for(libadaptive::StringDeterminant x: dets){
             x.print();
         }
