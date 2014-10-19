@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 
+import sys
 import os
 import subprocess
 
-psi4command = "/Users/francesco/Source/psi4-github-compile-c++11-debug/bin/psi4"
+psi4command = ""
+
+if len(sys.argv) == 1:
+    cmd = ["which","psi4"]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    res = p.stdout.readlines()
+    psi4command = res[0][:-1]
+elif len(sys.argv) == 2:
+    psi4command = sys.argv[1]
 
 print "Running test using psi4 executable found in:\n%s" % psi4command
 
