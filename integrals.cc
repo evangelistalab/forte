@@ -82,10 +82,10 @@ void ExplorerIntegrals::startup()
                 frzcpi_[h] = options_["FROZEN_DOCC"][h].to_integer();
             }
         }else{
-            outfile->Printf("\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
+            outfile->Printf("\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %zu",
                     options_["FROZEN_DOCC"].size(),nirrep_);
             outfile->Printf("\n  Exiting the program.\n");
-            printf("  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %d",
+            printf("  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %zu",
                     options_["FROZEN_DOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
 
@@ -102,7 +102,7 @@ void ExplorerIntegrals::startup()
             outfile->Printf("\n\n  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
                     options_["FROZEN_UOCC"].size(),nirrep_);
             outfile->Printf("\n  Exiting the program.\n");
-            printf("  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
+            printf("  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %zu",
                     options_["FROZEN_UOCC"].size(),nirrep_);
             printf("\n  Exiting the program.\n");
 
