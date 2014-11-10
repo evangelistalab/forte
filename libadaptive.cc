@@ -241,7 +241,11 @@ read_options(std::string name, Options &options)
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
         /*- The Algorithm to Form T Amplitudes -*/
-        options.add_str("T_ALGORITHM", "DSRG", "DSRG ISA");
+        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI ISA");
+        /*- Two-Particle Density Cumulant -*/
+        options.add_str("TWOPDC", "MK", "MK ZERO");
+        /*- Three-Particle Density Cumulant -*/
+        options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
     }

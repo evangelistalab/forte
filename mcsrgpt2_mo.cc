@@ -3,6 +3,7 @@
 #include <numeric>
 #include <algorithm>
 #include <ctype.h>
+#include <boost/algorithm/string/predicate.hpp>
 #include "tensor_basic.h"
 #include "tensor_blocked.h"
 #include "mcsrgpt2_mo.h"
@@ -44,28 +45,36 @@ void MCSRGPT2_MO::startup(Options &options){
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
     if(s_ < 0){
-        outfile->Printf( "\n  S parameter for DSRG must >= 0!");
+        outfile->Printf("\n  S parameter for DSRG must >= 0!");
         exit(1);
     }
     taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
     if(taylor_threshold_ <= 0){
-        outfile->Printf( "\n  Threshold for Taylor expansion must be an integer greater than 0!");
+        outfile->Printf("\n  Threshold for Taylor expansion must be an integer greater than 0!");
         exit(1);
     }
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1)) + 1;
 
     // Print Original Orbital Indices
-    outfile->Printf( "\n  Correlating Subspace Indices:");
+    outfile->Printf("\n  Correlating Subspace Indices:");
     print_idx("Core", idx_c_);
     print_idx("Active", idx_a_);
     print_idx("Virtual", idx_v_);
     print_idx("Hole", idx_h_);
     print_idx("Particle", idx_p_);
-    outfile->Printf( "\n");
+    outfile->Printf("\n");
 
     // Compute Reference Energy
     compute_ref();
+
+    // 2-Particle Density Cumulant
+    string twopdc = options.get_str("TWOPDC");
+    if(twopdc == "ZERO"){
+        L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+        L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+        L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    }
 
     // Form T Amplitudes
     T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
@@ -75,14 +84,14 @@ void MCSRGPT2_MO::startup(Options &options){
     T1b_ = d2(nh_, d1(npt_));
 
     string t_algorithm = options.get_str("T_ALGORITHM");
-    if(t_algorithm == "DSRG"){
-        outfile->Printf( "\n");
-        outfile->Printf( "\n  Form T amplitudes using DSRG formalism.");
-        Form_T2_DSRG(T2aa_,T2ab_,T2bb_);
+    if(boost::starts_with(t_algorithm, "DSRG")){
+        outfile->Printf("\n");
+        outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
+        Form_T2_DSRG(T2aa_,T2ab_,T2bb_,t_algorithm);
         Form_T1_DSRG(T1a_,T1b_);
     }else if(t_algorithm == "ISA"){
-        outfile->Printf( "\n");
-        outfile->Printf( "\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
+        outfile->Printf("\n");
+        outfile->Printf("\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
         double b = options.get_double("ISA_B");
         Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
         Form_T1_ISA(T1a_,T1b_,b);
@@ -117,7 +126,7 @@ void MCSRGPT2_MO::startup(Options &options){
 void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
     timer_on("Fock_DSRG");
     for(size_t p=0; p<ncmo_; ++p){
-        for(size_t q=0; q<ncmo_; ++q){            
+        for(size_t q=0; q<ncmo_; ++q){
             A[p][q] = Fa_[p][q];
             B[p][q] = Fb_[p][q];
         }
@@ -219,11 +228,11 @@ void MCSRGPT2_MO::compute_ref(){
         }
     }
     Eref_ += e_nuc_ + integral_->frozen_core_energy();
-//    outfile->Printf( "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
+//    outfile->Printf("\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
     timer_off("Compute Ref");
 }
 
-void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB){
+void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR){
     timer_on("Form T2");
     for(size_t i=0; i<nh_; ++i){
         size_t ni = idx_h_[i];
@@ -277,6 +286,34 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB){
                     AA[i][j][k][l] = 0.0;
                     AB[i][j][k][l] = 0.0;
                     BB[i][j][k][l] = 0.0;
+                }
+            }
+        }
+    }
+
+    // Zero Semi-Internal Excitations
+    if(T_ALGOR == "DSRG_NOSEMI"){
+        for(size_t x=0; x<na_; ++x){
+            for(size_t y=0; y<na_; ++y){
+                for(size_t z=0; z<na_; ++z){
+                    for(size_t nm=0; nm<nc_; ++nm){
+                        size_t m = nm + na_;
+                        AA[m][z][y][x] = 0.0;
+                        AA[z][m][y][x] = 0.0;
+                        AB[m][z][y][x] = 0.0;
+                        AB[z][m][y][x] = 0.0;
+                        BB[m][z][y][x] = 0.0;
+                        BB[z][m][y][x] = 0.0;
+                    }
+                    for(size_t ne=0; ne<nv_; ++ne){
+                        size_t e = ne + na_;
+                        AA[x][y][z][e] = 0.0;
+                        AA[x][y][e][z] = 0.0;
+                        AB[x][y][z][e] = 0.0;
+                        AB[x][y][e][z] = 0.0;
+                        BB[x][y][z][e] = 0.0;
+                        BB[x][y][e][z] = 0.0;
+                    }
                 }
             }
         }
@@ -451,25 +488,25 @@ void MCSRGPT2_MO::Check_T2(const string &x, const d4 &M, double &Norm, double &M
     MaxT = get<0>(Large[0]);
 
     // Print
-    outfile->Printf( "\n");
-    outfile->Printf( "\n  ==> Largest T2 amplitudes for spin case %s: <==", x.c_str());
-    if(x == "AA") outfile->Printf( "\n");
-    if(x == "AB") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
-    if(x == "BB") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
-    outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ');
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n");
+    outfile->Printf("\n  ==> Largest T2 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "AA") outfile->Printf("\n");
+    if(x == "AB") outfile->Printf("\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ');
+    if(x == "BB") outfile->Printf("\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ', '_', '_', '_', '_', ' ');
+    outfile->Printf("\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ', 'i', 'j', 'a', 'b', ' ');
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
     for(size_t n = 0; n != ntamp; ++n){
-        if(n%3 == 0) outfile->Printf( "\n  ");
-        outfile->Printf( "[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]), get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
+        if(n%3 == 0) outfile->Printf("\n  ");
+        outfile->Printf("[%3zu %3zu %3zu %3zu] %8.5f ", get<1>(Large[n]), get<2>(Large[n]), get<3>(Large[n]), get<4>(Large[n]), get<0>(Large[n]));
     }
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
-    outfile->Printf( "\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", x.c_str(), count, Norm);
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
-    outfile->Printf( "\n");
-    outfile->Printf( "\n  ==> T2 intruder states analysis for spin case %s: <==", x.c_str());
-    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
-    outfile->Printf( "\n      Amplitude        Value   Numerator                   Denominator");
-    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n  Norm of T2%s vector: (nonzero elements: %12zu) %25.15lf.", x.c_str(), count, Norm);
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n");
+    outfile->Printf("\n  ==> T2 intruder states analysis for spin case %s: <==", x.c_str());
+    outfile->Printf("\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf("\n      Amplitude        Value   Numerator                   Denominator");
+    outfile->Printf("\n  -----------------------------------------------------------------------------------------");
     for(size_t n = 0; n != Max.size(); ++n){
         size_t i = get<1>(Max[n]);
         size_t j = get<2>(Max[n]);
@@ -482,9 +519,9 @@ void MCSRGPT2_MO::Check_T2(const string &x, const d4 &M, double &Norm, double &M
         double fb = (x == "AA") ? (Fa_[b][b]) : (Fb_[b][b]);
         double down = fi + fj - fa - fb;
         double up = t2 * down;
-        outfile->Printf( "\n  [%3zu %3zu %3zu %3zu] = %7.4f = %7.4f / (%7.4f + %7.4f - %7.4f - %7.4f = %7.4f)", i, j, a, b, t2, up, fi, fj, fa, fb, down);
+        outfile->Printf("\n  [%3zu %3zu %3zu %3zu] = %7.4f = %7.4f / (%7.4f + %7.4f - %7.4f - %7.4f = %7.4f)", i, j, a, b, t2, up, fi, fj, fa, fb, down);
     }
-    outfile->Printf( "\n  -----------------------------------------------------------------------------------------");
+    outfile->Printf("\n  -----------------------------------------------------------------------------------------");
     timer_off("Check T2");
 }
 
@@ -520,24 +557,24 @@ void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &M
     MaxT = get<0>(Large[0]);
 
     // Print
-    outfile->Printf( "\n");
-    outfile->Printf( "\n  ==> Largest T1 amplitudes for spin case %s: <==", x.c_str());
-    if(x == "A") outfile->Printf( "\n");
-    if(x == "B") outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
-    outfile->Printf( "\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ');
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n");
+    outfile->Printf("\n  ==> Largest T1 amplitudes for spin case %s: <==", x.c_str());
+    if(x == "A") outfile->Printf("\n");
+    if(x == "B") outfile->Printf("\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ', '_', ' ', '_', ' ', ' ');
+    outfile->Printf("\n   %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c  %3c %3c %3c %3c %9c", 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ', 'i', ' ', 'a', ' ', ' ');
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
     for(size_t n = 0; n != ntamp; ++n){
-        if(n%3 == 0) outfile->Printf( "\n  ");
-        outfile->Printf( "[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ', get<0>(Large[n]));
+        if(n%3 == 0) outfile->Printf("\n  ");
+        outfile->Printf("[%3zu %3c %3zu %3c] %8.5f ", get<1>(Large[n]), ' ', get<2>(Large[n]), ' ', get<0>(Large[n]));
     }
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
-    outfile->Printf( "\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", x.c_str(), count, Norm);
-    outfile->Printf( "\n  --------------------------------------------------------------------------------");
-    outfile->Printf( "\n");
-    outfile->Printf( "\n  ==> T1 intruder states analysis for spin case %s: <==", x.c_str());
-    outfile->Printf( "\n  ---------------------------------------------------------------------");
-    outfile->Printf( "\n      Amplitude        Value   Numerator          Denominator");
-    outfile->Printf( "\n  ---------------------------------------------------------------------");
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n  Norm of T1%s vector: (nonzero elements: %12zu) %26.15lf.", x.c_str(), count, Norm);
+    outfile->Printf("\n  --------------------------------------------------------------------------------");
+    outfile->Printf("\n");
+    outfile->Printf("\n  ==> T1 intruder states analysis for spin case %s: <==", x.c_str());
+    outfile->Printf("\n  ---------------------------------------------------------------------");
+    outfile->Printf("\n      Amplitude        Value   Numerator          Denominator");
+    outfile->Printf("\n  ---------------------------------------------------------------------");
     for(size_t n = 0; n != Max.size(); ++n){
         size_t i = get<1>(Max[n]);
         size_t a = get<2>(Max[n]);
@@ -546,9 +583,9 @@ void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &M
         double fa = (x == "A") ? (Fa_[a][a]) : (Fb_[a][a]);
         double down = fi - fa;
         double up = t2 * down;
-        outfile->Printf( "\n  [%3zu %3c %3zu %3c] = %7.4f = %7.4f / (%7.4f - %7.4f = %7.4f)", i, ' ', a, ' ', t2, up, fi, fa, down);
+        outfile->Printf("\n  [%3zu %3c %3zu %3c] = %7.4f = %7.4f / (%7.4f - %7.4f = %7.4f)", i, ' ', a, ' ', t2, up, fi, fa, down);
     }
-    outfile->Printf( "\n  ---------------------------------------------------------------------");
+    outfile->Printf("\n  ---------------------------------------------------------------------");
     timer_off("Check T1");
 }
 
@@ -591,33 +628,33 @@ double MCSRGPT2_MO::compute_energy(){
     Etotal_ = Eref_ + Ecorr_;
 
     // Print
-    outfile->Printf( "\n  ");
-    outfile->Printf( "\n  ==> MC-DSRG-PT2 Energy Summary <==");
-    outfile->Printf( "\n  ");
-    outfile->Printf( "\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
-    outfile->Printf( "\n    E([F, T1]) %18c = %22.15lf", ' ', E2);
-    outfile->Printf( "\n    E([V, T1]) %18c = %22.15lf", ' ', E5);
-    outfile->Printf( "\n    E([V, T1]: V) %15c = %22.15lf", ' ', E5_1);
-    outfile->Printf( "\n    E([V, T1]: C) %15c = %22.15lf", ' ', E5_2);
-    outfile->Printf( "\n    E([F, T2]) %18c = %22.15lf", ' ', E6);
-    outfile->Printf( "\n    E([F, T2]: V) %15c = %22.15lf", ' ', E6_1);
-    outfile->Printf( "\n    E([F, T2]: C) %15c = %22.15lf", ' ', E6_2);
-    outfile->Printf( "\n    E([V, T2] C_2^4) %12c = %22.15lf", ' ', E7);
-    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4) %6c = %22.15lf", ' ', E8);
-    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E8_1);
-    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E8_2);
-    outfile->Printf( "\n    E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E8_3);
-    outfile->Printf( "\n    E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E10);
-    outfile->Printf( "\n    E([V, T2] C_2 * C_6: H) %5c = %22.15lf", ' ', E10_1);
-    outfile->Printf( "\n    E([V, T2] C_2 * C_6: P) %5c = %22.15lf", ' ', E10_2);
-    outfile->Printf( "\n    E([V, T2]) %18c = %22.15lf", ' ', EVT2);
-    outfile->Printf( "\n    E(SRGPT2) %19c = %22.15lf", ' ', Ecorr_);
-    outfile->Printf( "\n  * E(Total) %20c = %22.15lf", ' ', Etotal_);
-    outfile->Printf( "\n    max(T1) %21c = %22.15lf", ' ', T1max);
-    outfile->Printf( "\n    max(T2) %21c = %22.15lf", ' ', T2max);
-    outfile->Printf( "\n    ||T1|| %22c = %22.15lf", ' ', T1norm);
-    outfile->Printf( "\n    ||T2|| %22c = %22.15lf", ' ', T2norm);
-    outfile->Printf( "\n    ");
+    outfile->Printf("\n  ");
+    outfile->Printf("\n  ==> MC-DSRG-PT2 Energy Summary <==");
+    outfile->Printf("\n  ");
+    outfile->Printf("\n    E0 (cumulant) %15c = %22.15f", ' ', Eref_);
+    outfile->Printf("\n    E([F, T1]) %18c = %22.15lf", ' ', E2);
+    outfile->Printf("\n    E([V, T1]) %18c = %22.15lf", ' ', E5);
+    outfile->Printf("\n    E([V, T1]: V) %15c = %22.15lf", ' ', E5_1);
+    outfile->Printf("\n    E([V, T1]: C) %15c = %22.15lf", ' ', E5_2);
+    outfile->Printf("\n    E([F, T2]) %18c = %22.15lf", ' ', E6);
+    outfile->Printf("\n    E([F, T2]: V) %15c = %22.15lf", ' ', E6_1);
+    outfile->Printf("\n    E([F, T2]: C) %15c = %22.15lf", ' ', E6_2);
+    outfile->Printf("\n    E([V, T2] C_2^4) %12c = %22.15lf", ' ', E7);
+    outfile->Printf("\n    E([V, T2] C_2^2 * C_4) %6c = %22.15lf", ' ', E8);
+    outfile->Printf("\n    E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E8_1);
+    outfile->Printf("\n    E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E8_2);
+    outfile->Printf("\n    E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E8_3);
+    outfile->Printf("\n    E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E10);
+    outfile->Printf("\n    E([V, T2] C_2 * C_6: H) %5c = %22.15lf", ' ', E10_1);
+    outfile->Printf("\n    E([V, T2] C_2 * C_6: P) %5c = %22.15lf", ' ', E10_2);
+    outfile->Printf("\n    E([V, T2]) %18c = %22.15lf", ' ', EVT2);
+    outfile->Printf("\n    E(SRGPT2) %19c = %22.15lf", ' ', Ecorr_);
+    outfile->Printf("\n  * E(Total) %20c = %22.15lf", ' ', Etotal_);
+    outfile->Printf("\n    max(T1) %21c = %22.15lf", ' ', T1max);
+    outfile->Printf("\n    max(T2) %21c = %22.15lf", ' ', T2max);
+    outfile->Printf("\n    ||T1|| %22c = %22.15lf", ' ', T1norm);
+    outfile->Printf("\n    ||T2|| %22c = %22.15lf", ' ', T2norm);
+    outfile->Printf("\n    ");
     timer_off("E_MCDSRGPT2");
     return Etotal_;
 }

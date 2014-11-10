@@ -35,6 +35,8 @@ protected:
 
     libadaptive::ExplorerIntegrals *integral_;
 
+    int print_;
+
     // Nucear Repulsion Energy
     double e_nuc_;
 
@@ -156,8 +158,8 @@ protected:
 
     // Print Functions
     void print_d2(const string &str, const d2 &OnePD);
-    void print2PDC(const string &str, const d4 &TwoPDC, const bool &PRINT);
-    void print3PDC(const string &str, const d6 &ThreePDC, const bool &PRINT);
+    void print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT);
+    void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     // Form Density Matrix
     void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d2 &Da, d2 &Db);
@@ -167,7 +169,7 @@ protected:
     void FormCumulant2_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d4 &AA, d4 &AB, d4 &BB);
 
     // Form 3-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
 
     // N-Particle Operator

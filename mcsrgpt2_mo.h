@@ -62,7 +62,7 @@ protected:
     double T2Maxbb_; // Max T2bb
 
     // Form T Amplitudes
-    void Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB);
+    void Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR);
     void Form_T1_DSRG(d2 &A, d2 &B);
     void Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const);
     void Form_T1_ISA(d2 &A, d2 &B, const double &b_const);
