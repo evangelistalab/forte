@@ -66,6 +66,7 @@ protected:
     void Form_T1_DSRG(d2 &A, d2 &B);
     void Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const);
     void Form_T1_ISA(d2 &A, d2 &B, const double &b_const);
+    void Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB);
 
     // Check T Amplitudes
     void Check_T1(const string &x, const d2 &M, double &Norm, double &MaxT, Options &options);

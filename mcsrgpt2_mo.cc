@@ -84,17 +84,29 @@ void MCSRGPT2_MO::startup(Options &options){
     T1b_ = d2(nh_, d1(npt_));
 
     string t_algorithm = options.get_str("T_ALGORITHM");
+    bool t1_zero = options.get_bool("T1_ZERO");
     if(boost::starts_with(t_algorithm, "DSRG")){
         outfile->Printf("\n");
         outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
         Form_T2_DSRG(T2aa_,T2ab_,T2bb_,t_algorithm);
-        Form_T1_DSRG(T1a_,T1b_);
+        if(!t1_zero){
+            Form_T1_DSRG(T1a_,T1b_);
+        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
+    }else if(t_algorithm == "SELEC"){
+        outfile->Printf("\n");
+        outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. (c->a, c->v, a->v)");
+        Form_T2_SELEC(T2aa_,T2ab_,T2bb_);
+        if(!t1_zero){
+            Form_T1_DSRG(T1a_,T1b_);
+        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
     }else if(t_algorithm == "ISA"){
         outfile->Printf("\n");
         outfile->Printf("\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
         double b = options.get_double("ISA_B");
         Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
-        Form_T1_ISA(T1a_,T1b_,b);
+        if(!t1_zero){
+            Form_T1_ISA(T1a_,T1b_,b);
+        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
     }
 
     // Check T Amplitudes
@@ -293,6 +305,7 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR){
 
     // Zero Semi-Internal Excitations
     if(T_ALGOR == "DSRG_NOSEMI"){
+        outfile->Printf("\n  Exclude excitations of (active, active -> active, virtual) and (core, active -> active, active).");
         for(size_t x=0; x<na_; ++x){
             for(size_t y=0; y<na_; ++y){
                 for(size_t z=0; z<na_; ++z){
@@ -366,6 +379,153 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
         }
     }
     timer_off("Form T1");
+}
+
+void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
+    timer_on("Form T2");
+    for(size_t i=0; i<nc_; ++i){
+        size_t ni = idx_c_[i];
+        for(size_t j=0; j<nc_; ++j){
+            size_t nj = idx_c_[j];
+            for(size_t a=0; a<na_; ++a){
+                size_t na = idx_a_[a];
+                for(size_t b=0; b<na_; ++b){
+                    size_t nb = idx_a_[b];
+
+                    double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                    double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+                    double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+
+                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
+                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
+                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+
+                    double Zaa = sqrt(s_) * Daa;
+                    double Zab = sqrt(s_) * Dab;
+                    double Zbb = sqrt(s_) * Dbb;
+
+                    i += na_;
+                    j += na_;
+                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
+                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
+                    }else{
+                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
+                    }
+
+                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
+                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
+                    }else{
+                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
+                    }
+
+                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
+                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
+                    }else{
+                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
+                    }
+                    i -= na_;
+                    j -= na_;
+                }
+            }
+        }
+    }
+    for(size_t i=0; i<nc_; ++i){
+        size_t ni = idx_c_[i];
+        for(size_t j=0; j<nc_; ++j){
+            size_t nj = idx_c_[j];
+            for(size_t a=0; a<nv_; ++a){
+                size_t na = idx_v_[a];
+                for(size_t b=0; b<nv_; ++b){
+                    size_t nb = idx_v_[b];
+
+                    double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                    double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+                    double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+
+                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
+                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
+                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+
+                    double Zaa = sqrt(s_) * Daa;
+                    double Zab = sqrt(s_) * Dab;
+                    double Zbb = sqrt(s_) * Dbb;
+
+                    i += na_;
+                    j += na_;
+                    a += na_;
+                    b += na_;
+                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
+                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
+                    }else{
+                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
+                    }
+
+                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
+                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
+                    }else{
+                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
+                    }
+
+                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
+                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
+                    }else{
+                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
+                    }
+                    i -= na_;
+                    j -= na_;
+                    a -= na_;
+                    b -= na_;
+                }
+            }
+        }
+    }
+    for(size_t i=0; i<na_; ++i){
+        size_t ni = idx_a_[i];
+        for(size_t j=0; j<na_; ++j){
+            size_t nj = idx_a_[j];
+            for(size_t a=0; a<nv_; ++a){
+                size_t na = idx_v_[a];
+                for(size_t b=0; b<nv_; ++b){
+                    size_t nb = idx_v_[b];
+
+                    double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                    double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+                    double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+
+                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
+                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
+                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+
+                    double Zaa = sqrt(s_) * Daa;
+                    double Zab = sqrt(s_) * Dab;
+                    double Zbb = sqrt(s_) * Dbb;
+
+                    a += na_;
+                    b += na_;
+                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
+                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
+                    }else{
+                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
+                    }
+
+                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
+                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
+                    }else{
+                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
+                    }
+
+                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
+                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
+                    }else{
+                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
+                    }
+                    a -= na_;
+                    b -= na_;
+                }
+            }
+        }
+    }
+    timer_off("Form T2");
 }
 
 void MCSRGPT2_MO::Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const){

@@ -240,8 +240,10 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- Zero T1 Amplitudes -*/
+        options.add_bool("T1_ZERO", false);
         /*- The Algorithm to Form T Amplitudes -*/
-        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI ISA");
+        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Two-Particle Density Cumulant -*/
         options.add_str("TWOPDC", "MK", "MK ZERO");
         /*- Three-Particle Density Cumulant -*/
