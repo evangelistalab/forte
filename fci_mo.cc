@@ -215,6 +215,10 @@ void FCI_MO::startup(Options &options){
     if(options["CHARGE"].has_changed()){
         charge = options.get_int("CHARGE");
     }
+    ms_ = options.get_int("MS");
+    if(multi_ < 0){
+        outfile->Printf("\n  MS must be no less than 0.");
+    }
     multi_ = molecule->multiplicity();
     if(options["MULTI"].has_changed()){
         multi_ = options.get_int("MULTI");
@@ -222,8 +226,8 @@ void FCI_MO::startup(Options &options){
     if(multi_ < 1){
         outfile->Printf("\n  MULTI must be no less than 1. Check Multiplicity!");
     }
-    nalfa_ = (nelec - charge + multi_ -1) / 2;
-    nbeta_ = (nelec - charge - multi_ + 1) / 2;
+    nalfa_ = (nelec - charge + ms_ * (ms_ + 1)) / 2;
+    nbeta_ = (nelec - charge - ms_ * (ms_ + 1)) / 2;
     if(nalfa_ < 0 || nbeta_ < 0){
         outfile->Printf("\n  Check the Charge and Multiplicity! \n");
         exit(1);

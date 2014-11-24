@@ -42,6 +42,7 @@ protected:
 
     // Multiplicity
     int multi_;
+    int ms_;
 
     // Number of Irrep
     int nirrep_;
