@@ -66,7 +66,11 @@ void MCSRGPT2_MO::startup(Options &options){
     outfile->Printf("\n");
 
     // Compute Reference Energy
+    outfile->Printf("\n  Computing reference energy using density cumulant ...");
+    outfile->Flush();
     compute_ref();
+    outfile->Printf("\t\t\tDone.");
+    outfile->Flush();
 
     // 2-Particle Density Cumulant
     string twopdc = options.get_str("TWOPDC");
@@ -85,22 +89,22 @@ void MCSRGPT2_MO::startup(Options &options){
 
     string t_algorithm = options.get_str("T_ALGORITHM");
     bool t1_zero = options.get_bool("T1_ZERO");
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
+    outfile->Flush();
     if(boost::starts_with(t_algorithm, "DSRG")){
-        outfile->Printf("\n");
         outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
         Form_T2_DSRG(T2aa_,T2ab_,T2bb_,t_algorithm);
         if(!t1_zero){
             Form_T1_DSRG(T1a_,T1b_);
         }else{outfile->Printf("\n  Zero T1 amplitudes.");}
     }else if(t_algorithm == "SELEC"){
-        outfile->Printf("\n");
         outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. (c->a, c->v, a->v)");
         Form_T2_SELEC(T2aa_,T2ab_,T2bb_);
         if(!t1_zero){
             Form_T1_DSRG(T1a_,T1b_);
         }else{outfile->Printf("\n  Zero T1 amplitudes.");}
     }else if(t_algorithm == "ISA"){
-        outfile->Printf("\n");
         outfile->Printf("\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
         double b = options.get_double("ISA_B");
         Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
@@ -108,6 +112,8 @@ void MCSRGPT2_MO::startup(Options &options){
             Form_T1_ISA(T1a_,T1b_,b);
         }else{outfile->Printf("\n  Zero T1 amplitudes.");}
     }
+    outfile->Printf("\n  Done.");
+    outfile->Flush();
 
     // Check T Amplitudes
     T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
@@ -126,13 +132,22 @@ void MCSRGPT2_MO::startup(Options &options){
     // Effective Fock Matrix
     Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
     Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
+    outfile->Flush();
     Form_Fock_DSRG(Fa_dsrg_,Fb_dsrg_,dsrgpt);
+    outfile->Printf("\t\t\tDone.");
+    outfile->Flush();
 
     // Effective Two Electron Integrals
     vaa_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
     vab_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
     vbb_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
+    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
+    outfile->Flush();
     Form_APTEI_DSRG(vaa_dsrg_,vab_dsrg_,vbb_dsrg_,dsrgpt);
+    outfile->Printf("\tDone.");
+    outfile->Flush();
 }
 
 void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
@@ -770,13 +785,38 @@ double MCSRGPT2_MO::compute_energy(){
     double E10_1 = 0.0;
     double E10_2 = 0.0;
 
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing energy of [F, T1] ...");
+    outfile->Flush();
     E_FT1(E2);
+    outfile->Printf("\t\t\t\t\tDone.");
+    outfile->Flush();
+
+    outfile->Printf("\n  Computing energy of [V, T1] and [F, T2] ...");
+    outfile->Flush();
     E_VT1_FT2(E6_1,E6_2,E5_1,E5_2);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+
+    outfile->Printf("\n  Computing energy of [V, T2] C_2^4 ...");
+    outfile->Flush();
     E_VT2_2(E7);
+    outfile->Printf("\t\t\t\t\tDone.");
+    outfile->Flush();
+
+    outfile->Printf("\n  Computing energy of [V, T2] C_2^2 * C_4 ...");
+    outfile->Flush();
     E_VT2_4PP(E8_1);
     E_VT2_4HH(E8_2);
     E_VT2_4PH(E8_3);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+
+    outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
+    outfile->Flush();
     E_VT2_6(E10_1,E10_2);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
 
     double E5 = E5_1 + E5_2;
     double E6 = E6_1 + E6_2;

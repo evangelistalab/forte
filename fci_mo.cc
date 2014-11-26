@@ -57,10 +57,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    outfile->Printf("\n  Forming one-particle density matrix...");
+    outfile->Printf("\n  Forming one-particle density matrix ...");
     outfile->Flush();
     FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
-    outfile->Printf("\t\tDone.");
+    outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 2){
         print_d2("Da", Da_);
@@ -72,12 +72,12 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     size_t count = 0;
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
-    outfile->Printf("\n  Forming generalized Fock matrix...");
+    outfile->Printf("\n  Forming generalized Fock matrix ...\t");
     outfile->Flush();
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,e_conv-1,count);
-    outfile->Printf("\t\tDone.");
+    outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
+    Check_Fock(Fa_,Fb_,e_conv-1,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -113,10 +113,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
-        outfile->Printf("\n  Forming one-particle density matrix...");
+        outfile->Printf("\n  Forming one-particle density matrix ...");
         outfile->Flush();
         FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
-        outfile->Printf("\t\tDone.");
+        outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
         if(print_ > 2){
             print_d2("Da", Da_);
@@ -127,10 +127,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         count = 0;
         Fa_ = d2(ncmo_, d1(ncmo_));
         Fb_ = d2(ncmo_, d1(ncmo_));
-        outfile->Printf("\n  Forming generalized Fock matrix...");
+        outfile->Printf("\n  Forming generalized Fock matrix ...\t");
         outfile->Flush();
         Form_Fock(Fa_,Fb_);
-        outfile->Printf("\t\tDone.");
+        outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
         Check_Fock(Fa_,Fb_,e_conv-1,count);
         if(print_ > 1){
@@ -143,10 +143,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    outfile->Printf("\n  Forming two-particle density cumulant...");
+    outfile->Printf("\n  Forming two-particle density cumulant ...");
     outfile->Flush();
     FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
-    outfile->Printf("\t\tDone.");
+    outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 3){
         print2PDC("L2aa", L2aa_, print_);
@@ -161,12 +161,12 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     string threepdc = options.get_str("THREEPDC");
     string t_algorithm = options.get_str("T_ALGORITHM");
-    outfile->Printf("\n  Forming three-particle density cumulant...");
+    outfile->Printf("\n  Forming three-particle density cumulant ...");
     outfile->Flush();
     if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
         FormCumulant3_A(determinant_, CI_vec_, ground_state, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
     }
-    outfile->Printf("\t\tDone.");
+    outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 4){
         print3PDC("L3aaa", L3aaa_, print_);
