@@ -90,8 +90,8 @@ protected:
     // Number of Beta Electrons
     long int nbeta_;
 
-    // Symmetry of the state
-    int state_sym_;
+    // Symmetry of the wavefunction
+    int root_sym_;
 
     // Symmetry of Active Orbitals
     vector<int> sym_active_;
@@ -140,7 +140,7 @@ protected:
     vector<vector<double>> CI_vec_;
 
     // Store and Print the CI Vectors and Configurations
-    void Store_CI(const int &Nstate, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det);
+    void Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det);
 
     // Density Matrix
     d2 Da_;
@@ -163,15 +163,15 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     // Form Density Matrix
-    void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d2 &Da, d2 &Db);
+    void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &Da, d2 &Db);
 
     // Form 2-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant2_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d4 &AA, d4 &AB, d4 &BB);
-    void FormCumulant2_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
 
     // Form 3-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
-    void FormCumulant3_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
 
     // N-Particle Operator
     double TwoOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
