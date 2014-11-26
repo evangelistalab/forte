@@ -81,7 +81,7 @@ protected:
     d4 vaa_dsrg_;
     d4 vab_dsrg_;
     d4 vbb_dsrg_;
-    void Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt);
+    void Form_APTEI_DSRG(const bool &dsrgpt);
 
     // Computes the MC-SRGPT2 energy
     double compute_energy();

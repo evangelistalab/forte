@@ -140,12 +140,9 @@ void MCSRGPT2_MO::startup(Options &options){
     outfile->Flush();
 
     // Effective Two Electron Integrals
-    vaa_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
-    vab_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
-    vbb_dsrg_ = d4(ncmo_, d3(ncmo_, d2(ncmo_, d1(ncmo_))));
     outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
     outfile->Flush();
-    Form_APTEI_DSRG(vaa_dsrg_,vab_dsrg_,vbb_dsrg_,dsrgpt);
+    Form_APTEI_DSRG(dsrgpt);
     outfile->Printf("\tDone.");
     outfile->Flush();
 }
@@ -188,19 +185,9 @@ void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
     timer_off("Fock_DSRG");
 }
 
-void MCSRGPT2_MO::Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt){
+void MCSRGPT2_MO::Form_APTEI_DSRG(const bool &dsrgpt){
     timer_on("APTEI_DSRG");
-    for(size_t p=0; p<ncmo_; ++p){
-        for(size_t q=0; q<ncmo_; ++q){
-            for(size_t r=0; r<ncmo_; ++r){
-                for(size_t s=0; s<ncmo_; ++s){
-                    AA[p][q][r][s] = integral_->aptei_aa(p,q,r,s);
-                    AB[p][q][r][s] = integral_->aptei_ab(p,q,r,s);
-                    BB[p][q][r][s] = integral_->aptei_bb(p,q,r,s);
-                }
-            }
-        }
-    }
+
     if(dsrgpt){
         for(size_t i=0; i<nh_; ++i){
             size_t ni = idx_h_[i];
@@ -213,12 +200,30 @@ void MCSRGPT2_MO::Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt){
                         double daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
                         double dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
                         double dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
-                        AA[ni][nj][na][nb] *= (1 + exp(-s_ * daa * daa));
-                        AB[ni][nj][na][nb] *= (1 + exp(-s_ * dab * dab));
-                        BB[ni][nj][na][nb] *= (1 + exp(-s_ * dbb * dbb));
-                        AA[na][nb][ni][nj] *= (1 + exp(-s_ * daa * daa));
-                        AB[na][nb][ni][nj] *= (1 + exp(-s_ * dab * dab));
-                        BB[na][nb][ni][nj] *= (1 + exp(-s_ * dbb * dbb));
+
+                        double value = integral_->aptei_aa(ni,nj,na,nb) * (1 + exp(-s_ * daa * daa));
+                        integral_->set_tei(ni,nj,na,nb,value,true,true);
+//                        integral_->aptei_aa(ni,nj,na,nb) *= (1 + exp(-s_ * daa * daa));
+
+                        value = integral_->aptei_ab(ni,nj,na,nb) * (1 + exp(-s_ * dab * dab));
+                        integral_->set_tei(ni,nj,na,nb,value,true,false);
+//                        integral_->aptei_ab(ni,nj,na,nb) *= (1 + exp(-s_ * dab * dab));
+
+                        value = integral_->aptei_bb(ni,nj,na,nb) * (1 + exp(-s_ * dbb * dbb));
+                        integral_->set_tei(ni,nj,na,nb,value,false,false);
+//                        integral_->aptei_bb(ni,nj,na,nb) *= (1 + exp(-s_ * dbb * dbb));
+
+                        value = integral_->aptei_aa(na,nb,ni,nj) * (1 + exp(-s_ * daa * daa));
+                        integral_->set_tei(na,nb,ni,nj,value,true,true);
+//                        integral_->aptei_aa(na,nb,ni,nj) *= (1 + exp(-s_ * daa * daa));
+
+                        value = integral_->aptei_ab(na,nb,ni,nj) * (1 + exp(-s_ * dab * dab));
+                        integral_->set_tei(na,nb,ni,nj,value,true,false);
+//                        integral_->aptei_ab(na,nb,ni,nj) *= (1 + exp(-s_ * dab * dab));
+
+                        value = integral_->aptei_bb(na,nb,ni,nj) * (1 + exp(-s_ * dbb * dbb));
+                        integral_->set_tei(na,nb,ni,nj,value,false,false);
+//                        integral_->aptei_bb(na,nb,ni,nj) *= (1 + exp(-s_ * dbb * dbb));
                     }
                 }
             }
@@ -897,10 +902,10 @@ void MCSRGPT2_MO::E_VT1_FT2(double &EF1, double &EF2, double &EV1, double &EV2){
                     for(size_t e=0; e<nv_; ++e){
                         size_t ne = idx_v_[e];
                         size_t te = e + na_;
-                        EV1 += vaa_dsrg_[nx][ny][ne][nv] * T1a_[u][te] * L2aa_[x][y][u][v];
-                        EV1 += vbb_dsrg_[nx][ny][ne][nv] * T1b_[u][te] * L2bb_[x][y][u][v];
-                        EV1 += 2 * vab_dsrg_[nx][ny][ne][nv] * T1a_[u][te] * L2ab_[x][y][u][v];
-                        EV1 += 2 * vab_dsrg_[ny][nx][nv][ne] * T1b_[u][te] * L2ab_[y][x][v][u];
+                        EV1 += integral_->aptei_aa(nx,ny,ne,nv) * T1a_[u][te] * L2aa_[x][y][u][v];
+                        EV1 += integral_->aptei_bb(nx,ny,ne,nv) * T1b_[u][te] * L2bb_[x][y][u][v];
+                        EV1 += 2 * integral_->aptei_ab(nx,ny,ne,nv) * T1a_[u][te] * L2ab_[x][y][u][v];
+                        EV1 += 2 * integral_->aptei_ab(ny,nx,nv,ne) * T1b_[u][te] * L2ab_[y][x][v][u];
 
                         EF1 += Fa_dsrg_[ne][nx] * T2aa_[u][v][te][y] * L2aa_[x][y][u][v];
                         EF1 += Fb_dsrg_[ne][nx] * T2bb_[u][v][te][y] * L2bb_[x][y][u][v];
@@ -911,10 +916,10 @@ void MCSRGPT2_MO::E_VT1_FT2(double &EF1, double &EF2, double &EV1, double &EV2){
                     for(size_t m=0; m<nc_; ++m){
                         size_t nm = idx_c_[m];
                         size_t tm = m + na_;
-                        EV2 -= vaa_dsrg_[nm][ny][nu][nv] * T1a_[tm][x] * L2aa_[x][y][u][v];
-                        EV2 -= vbb_dsrg_[nm][ny][nu][nv] * T1b_[tm][x] * L2bb_[x][y][u][v];
-                        EV2 -= 2 * vab_dsrg_[nm][ny][nu][nv] * T1a_[tm][x] * L2ab_[x][y][u][v];
-                        EV2 -= 2 * vab_dsrg_[ny][nm][nv][nu] * T1b_[tm][x] * L2ab_[y][x][v][u];
+                        EV2 -= integral_->aptei_aa(nm,ny,nu,nv) * T1a_[tm][x] * L2aa_[x][y][u][v];
+                        EV2 -= integral_->aptei_bb(nm,ny,nu,nv) * T1b_[tm][x] * L2bb_[x][y][u][v];
+                        EV2 -= 2 * integral_->aptei_ab(nm,ny,nu,nv) * T1a_[tm][x] * L2ab_[x][y][u][v];
+                        EV2 -= 2 * integral_->aptei_ab(ny,nm,nv,nu) * T1b_[tm][x] * L2ab_[y][x][v][u];
 
                         EF2 -= Fa_dsrg_[nv][nm] * T2aa_[u][tm][x][y] * L2aa_[x][y][u][v];
                         EF2 -= Fb_dsrg_[nv][nm] * T2bb_[u][tm][x][y] * L2bb_[x][y][u][v];
@@ -948,9 +953,9 @@ void MCSRGPT2_MO::E_VT2_2(double &E){
                     size_t nd = idx_p_[d];
                     for(size_t c=0; c<npt_; ++c){
                         size_t nc = idx_p_[c];
-                        C1aa[a][d][k][l] += vaa_dsrg_[nk][nl][nc][nd] * (Delta(na,nc) - Da_[na][nc]);
-                        C1ab[a][d][k][l] += vab_dsrg_[nk][nl][nc][nd] * (Delta(na,nc) - Da_[na][nc]);
-                        C1bb[a][d][k][l] += vbb_dsrg_[nk][nl][nc][nd] * (Delta(na,nc) - Db_[na][nc]);
+                        C1aa[a][d][k][l] += integral_->aptei_aa(nk,nl,nc,nd) * (Delta(na,nc) - Da_[na][nc]);
+                        C1ab[a][d][k][l] += integral_->aptei_ab(nk,nl,nc,nd) * (Delta(na,nc) - Da_[na][nc]);
+                        C1bb[a][d][k][l] += integral_->aptei_bb(nk,nl,nc,nd) * (Delta(na,nc) - Db_[na][nc]);
                     }
                 }
             }
@@ -1041,9 +1046,9 @@ void MCSRGPT2_MO::E_VT2_4PP(double &E){
                     size_t na = idx_p_[a];
                     for(size_t c=0; c<npt_; ++c){
                         size_t nc = idx_p_[c];
-                        C1aa[a][d][x][y] += vaa_dsrg_[nx][ny][nc][nd] * (Delta(na,nc) - Da_[na][nc]);
-                        C1ab[a][d][x][y] += vab_dsrg_[nx][ny][nc][nd] * (Delta(na,nc) - Da_[na][nc]);
-                        C1bb[a][d][x][y] += vbb_dsrg_[nx][ny][nc][nd] * (Delta(na,nc) - Db_[na][nc]);
+                        C1aa[a][d][x][y] += integral_->aptei_aa(nx,ny,nc,nd) * (Delta(na,nc) - Da_[na][nc]);
+                        C1ab[a][d][x][y] += integral_->aptei_ab(nx,ny,nc,nd) * (Delta(na,nc) - Da_[na][nc]);
+                        C1bb[a][d][x][y] += integral_->aptei_bb(nx,ny,nc,nd) * (Delta(na,nc) - Db_[na][nc]);
                     }
                 }
             }
@@ -1116,9 +1121,9 @@ void MCSRGPT2_MO::E_VT2_4HH(double &E){
                     size_t nk = idx_h_[k];
                     for(size_t i=0; i<nh_; ++i){
                         size_t ni = idx_h_[i];
-                        C1aa[u][v][i][l] += vaa_dsrg_[nk][nl][nu][nv] * Da_[nk][ni];
-                        C1ab[u][v][i][l] += vab_dsrg_[nk][nl][nu][nv] * Da_[nk][ni];
-                        C1bb[u][v][i][l] += vbb_dsrg_[nk][nl][nu][nv] * Db_[nk][ni];
+                        C1aa[u][v][i][l] += integral_->aptei_aa(nk,nl,nu,nv) * Da_[nk][ni];
+                        C1ab[u][v][i][l] += integral_->aptei_ab(nk,nl,nu,nv) * Da_[nk][ni];
+                        C1bb[u][v][i][l] += integral_->aptei_bb(nk,nl,nu,nv) * Db_[nk][ni];
                     }
                 }
             }
@@ -1194,12 +1199,12 @@ void MCSRGPT2_MO::E_VT2_4PH(double &E){
                     size_t na = idx_p_[a];
                     for(size_t b=0; b<npt_; ++b){
                         size_t nb = idx_p_[b];
-                        C11[v][a][j][x] += vaa_dsrg_[nj][nx][nv][nb] * (Delta(na,nb) - Da_[na][nb]);
-                        C12[v][a][j][x] -= vab_dsrg_[nx][nj][nv][nb] * (Delta(na,nb) - Db_[na][nb]);
-                        C13[v][a][j][x] += vbb_dsrg_[nj][nx][nv][nb] * (Delta(na,nb) - Db_[na][nb]);
-                        C14[v][a][j][x] -= vab_dsrg_[nj][nx][nb][nv] * (Delta(na,nb) - Da_[na][nb]);
-                        C19[v][a][j][x] += vab_dsrg_[nx][nj][nb][nv] * (Delta(na,nb) - Da_[na][nb]);
-                        C110[v][a][j][x] += vab_dsrg_[nj][nx][nv][nb] * (Delta(na,nb) - Db_[na][nb]);
+                        C11[v][a][j][x] += integral_->aptei_aa(nj,nx,nv,nb) * (Delta(na,nb) - Da_[na][nb]);
+                        C12[v][a][j][x] -= integral_->aptei_ab(nx,nj,nv,nb) * (Delta(na,nb) - Db_[na][nb]);
+                        C13[v][a][j][x] += integral_->aptei_bb(nj,nx,nv,nb) * (Delta(na,nb) - Db_[na][nb]);
+                        C14[v][a][j][x] -= integral_->aptei_ab(nj,nx,nb,nv) * (Delta(na,nb) - Da_[na][nb]);
+                        C19[v][a][j][x] += integral_->aptei_ab(nx,nj,nb,nv) * (Delta(na,nb) - Da_[na][nb]);
+                        C110[v][a][j][x] += integral_->aptei_ab(nj,nx,nv,nb) * (Delta(na,nb) - Db_[na][nb]);
                     }
                 }
             }
@@ -1301,34 +1306,34 @@ void MCSRGPT2_MO::E_VT2_6(double &E1, double &E2){
                             for(size_t i=0; i<nh_; ++i){
                                 size_t ni = idx_h_[i];
                                 // L3aaa & L3bbb
-                                E1 += vaa_dsrg_[ni][nz][nu][nv] * T2aa_[i][w][x][y] * L3aaa_[x][y][z][u][v][w];
-                                E1 += vbb_dsrg_[ni][nz][nu][nv] * T2bb_[i][w][x][y] * L3bbb_[x][y][z][u][v][w];
+                                E1 += integral_->aptei_aa(ni,nz,nu,nv) * T2aa_[i][w][x][y] * L3aaa_[x][y][z][u][v][w];
+                                E1 += integral_->aptei_bb(ni,nz,nu,nv) * T2bb_[i][w][x][y] * L3bbb_[x][y][z][u][v][w];
                                 // L3aab
-                                E1 -= 2 * L3aab_[x][z][y][u][v][w] * T2ab_[i][w][x][y] * vaa_dsrg_[ni][nz][nu][nv];
+                                E1 -= 2 * L3aab_[x][z][y][u][v][w] * T2ab_[i][w][x][y] * integral_->aptei_aa(ni,nz,nu,nv);
                                 // L3aba & L3baa
-                                E1 -= 2 * L3aab_[x][y][z][u][w][v] * T2aa_[i][w][x][y] * vab_dsrg_[ni][nz][nu][nv];
-                                E1 += 4 * L3aab_[x][z][y][u][w][v] * T2ab_[w][i][x][y] * vab_dsrg_[nz][ni][nu][nv];
+                                E1 -= 2 * L3aab_[x][y][z][u][w][v] * T2aa_[i][w][x][y] * integral_->aptei_ab(ni,nz,nu,nv);
+                                E1 += 4 * L3aab_[x][z][y][u][w][v] * T2ab_[w][i][x][y] * integral_->aptei_ab(nz,ni,nu,nv);
                                 // L3abb & L3bab
-                                E1 += 4 * L3abb_[x][y][z][u][v][w] * T2ab_[i][w][x][y] * vab_dsrg_[ni][nz][nu][nv];
-                                E1 -= 2 * L3abb_[z][x][y][u][v][w] * T2bb_[i][w][x][y] * vab_dsrg_[nz][ni][nu][nv];
+                                E1 += 4 * L3abb_[x][y][z][u][v][w] * T2ab_[i][w][x][y] * integral_->aptei_ab(ni,nz,nu,nv);
+                                E1 -= 2 * L3abb_[z][x][y][u][v][w] * T2bb_[i][w][x][y] * integral_->aptei_ab(nz,ni,nu,nv);
                                 // L3bba
-                                E1 -= 2 * L3abb_[x][y][z][w][u][v] * T2ab_[w][i][x][y] * vbb_dsrg_[ni][nz][nu][nv];
+                                E1 -= 2 * L3abb_[x][y][z][w][u][v] * T2ab_[w][i][x][y] * integral_->aptei_bb(ni,nz,nu,nv);
                             }
                             for(size_t a=0; a<npt_; ++a){
                                 size_t na = idx_p_[a];
                                 // L3aaa & L3bbb
-                                E2 += vaa_dsrg_[nx][ny][nw][na] * T2aa_[u][v][a][z] * L3aaa_[x][y][z][u][v][w];
-                                E2 += vbb_dsrg_[nx][ny][nw][na] * T2bb_[u][v][a][z] * L3bbb_[x][y][z][u][v][w];
+                                E2 += integral_->aptei_aa(nx,ny,nw,na) * T2aa_[u][v][a][z] * L3aaa_[x][y][z][u][v][w];
+                                E2 += integral_->aptei_bb(nx,ny,nw,na) * T2bb_[u][v][a][z] * L3bbb_[x][y][z][u][v][w];
                                 // L3aab
-                                E2 += 2 * L3aab_[x][z][y][u][v][w] * T2aa_[u][v][a][z] * vab_dsrg_[nx][ny][na][nw];
+                                E2 += 2 * L3aab_[x][z][y][u][v][w] * T2aa_[u][v][a][z] * integral_->aptei_ab(nx,ny,na,nw);
                                 // L3aba & L3baa
-                                E2 -= 4 * L3aab_[x][z][y][u][w][v] * T2ab_[u][v][z][a] * vab_dsrg_[nx][ny][nw][na];
-                                E2 -= 2 * L3aab_[x][y][z][u][w][v] * T2ab_[u][v][a][z] * vaa_dsrg_[nx][ny][nw][na];
+                                E2 -= 4 * L3aab_[x][z][y][u][w][v] * T2ab_[u][v][z][a] * integral_->aptei_ab(nx,ny,nw,na);
+                                E2 -= 2 * L3aab_[x][y][z][u][w][v] * T2ab_[u][v][a][z] * integral_->aptei_aa(nx,ny,nw,na);
                                 // L3abb & L3bab
-                                E2 -= 4 * L3abb_[x][y][z][u][v][w] * T2ab_[u][v][a][z] * vab_dsrg_[nx][ny][na][nw];
-                                E2 -= 2 * L3abb_[z][x][y][u][v][w] * T2ab_[u][v][z][a] * vbb_dsrg_[nx][ny][nw][na];
+                                E2 -= 4 * L3abb_[x][y][z][u][v][w] * T2ab_[u][v][a][z] * integral_->aptei_ab(nx,ny,na,nw);
+                                E2 -= 2 * L3abb_[z][x][y][u][v][w] * T2ab_[u][v][z][a] * integral_->aptei_bb(nx,ny,nw,na);
                                 // L3bba
-                                E2 += 2 * L3abb_[x][y][z][w][u][v] * T2bb_[u][v][a][z] * vab_dsrg_[nx][ny][nw][na];
+                                E2 += 2 * L3abb_[x][y][z][w][u][v] * T2bb_[u][v][a][z] * integral_->aptei_ab(nx,ny,nw,na);
                             }
                         }
                     }
