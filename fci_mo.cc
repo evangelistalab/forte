@@ -63,7 +63,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
-    if(print_ > 2){
+    if(print_ > 1){
         print_d2("Da", Da_);
         print_d2("Db", Db_);
     }
@@ -120,7 +120,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
         outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
-        if(print_ > 2){
+        if(print_ > 1){
             print_d2("Da", Da_);
             print_d2("Db", Db_);
         }
