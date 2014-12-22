@@ -24,45 +24,42 @@ AdaptiveCI::AdaptiveCI(Options &options,ExplorerIntegrals* ints)
 
     std::string energy_type = options.get_str("ENERGY_TYPE");
 
-    if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
-        explore_original(options);
-    }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
-        explore_singles(options);
-    }
+    if(energy_type == "FACTORIZED_CI"){
+        factorized_ci(options);
+    }else{
 
-    // Optionally diagonalize a small Hamiltonian
-    if(options.get_bool("COMPUTE_ENERGY")){
-        if(energy_type == "SELECT"){
-            diagonalize_selected_space(options);
-        }else
-        // Lambda-CI (store the full Hamiltonian)
-        if(energy_type == "FULL"){
-            diagonalize_p_space(options);
-        }else
-        // Lambda-CI (store only the non-zero elements of the Hamiltonian)
-        if(energy_type == "SPARSE"){
-            diagonalize_p_space_direct(options);
-        }else
-        // Lambda+SD-CI
-        if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
-            lambda_mrcisd(options);
-        }else
-        // Lambda+S-CI
-        if((energy_type == "LMRCIS") or (energy_type == "LMRCIS_SPARSE")){
-            lambda_mrcis(options);
-        }else
-        if(energy_type == "LOWDIN"){
-            diagonalize_p_space_lowdin(options);
-        }else
-        if(energy_type == "RENORMALIZE"){
-            diagonalize_renormalized_space(options);
-        }else
-        if(energy_type == "RENORMALIZE_FIXED"){
-            diagonalize_renormalized_fixed_space(options);
-        }else
-        if((energy_type == "IMRCISD") or (energy_type == "IMRCISD_SPARSE")){
-//            iterative_adaptive_mrcisd(options);
-            iterative_adaptive_mrcisd_bitset(options);
+        if(options.get_str("EXPLORER_ALGORITHM") == "DENOMINATORS"){
+            explore_original(options);
+        }else if(options.get_str("EXPLORER_ALGORITHM") == "SINGLES"){
+            explore_singles(options);
+        }
+
+        // Optionally diagonalize a small Hamiltonian
+        if(options.get_bool("COMPUTE_ENERGY")){
+            if(energy_type == "SELECT"){
+                diagonalize_selected_space(options);
+            }else if(energy_type == "FULL"){
+                // Lambda-CI (store the full Hamiltonian)
+                diagonalize_p_space(options);
+            }else if(energy_type == "SPARSE"){
+                // Lambda-CI (store only the non-zero elements of the Hamiltonian)
+                diagonalize_p_space_direct(options);
+            }else if((energy_type == "LMRCISD") or (energy_type == "LMRCISD_SPARSE")){
+                // Lambda+SD-CI
+                lambda_mrcisd(options);
+            }else if((energy_type == "LMRCIS") or (energy_type == "LMRCIS_SPARSE")){
+                // Lambda+S-CI
+                lambda_mrcis(options);
+            }else if(energy_type == "LOWDIN"){
+                diagonalize_p_space_lowdin(options);
+            }else if(energy_type == "RENORMALIZE"){
+                diagonalize_renormalized_space(options);
+            }else if(energy_type == "RENORMALIZE_FIXED"){
+                diagonalize_renormalized_fixed_space(options);
+            }else if((energy_type == "IMRCISD") or (energy_type == "IMRCISD_SPARSE")){
+                //            iterative_adaptive_mrcisd(options);
+                iterative_adaptive_mrcisd_bitset(options);
+            }
         }
     }
     outfile->Printf("\n  Explorer ran in %f s",t.elapsed());

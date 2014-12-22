@@ -237,6 +237,9 @@ private:
     /// Iterative and adaptive MRCISD
     void iterative_adaptive_mrcisd_bitset(psi::Options& options);
 
+    /// Factorized CI multireference wave functions
+    void factorized_ci(psi::Options& options);
+
 
     // Functions for generating combination
     half_string_list compute_half_strings_screened(bool is_occ,int n,int k,std::vector<double>& weights,std::string label);
