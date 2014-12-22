@@ -62,10 +62,11 @@ protected:
     double T2Maxbb_; // Max T2bb
 
     // Form T Amplitudes
-    void Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB);
+    void Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR);
     void Form_T1_DSRG(d2 &A, d2 &B);
     void Form_T2_ISA(d4 &AA, d4 &AB, d4 &BB, const double &b_const);
     void Form_T1_ISA(d2 &A, d2 &B, const double &b_const);
+    void Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB);
 
     // Check T Amplitudes
     void Check_T1(const string &x, const d2 &M, double &Norm, double &MaxT, Options &options);
@@ -80,7 +81,7 @@ protected:
     d4 vaa_dsrg_;
     d4 vab_dsrg_;
     d4 vbb_dsrg_;
-    void Form_APTEI_DSRG(d4 &AA, d4 &AB, d4 &BB, const bool &dsrgpt);
+    void Form_APTEI_DSRG(const bool &dsrgpt);
 
     // Computes the MC-SRGPT2 energy
     double compute_energy();

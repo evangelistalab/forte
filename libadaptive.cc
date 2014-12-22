@@ -227,7 +227,8 @@ read_options(std::string name, Options &options)
         /*- Multiplicity -*/
         boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
         int multi = molecule->multiplicity();
-        options.add_int("MULTI", multi);
+        options.add_int("MULTI", multi);            /* multiplicity */
+        options.add_int("MS", 0);                   /* Ms value */
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/
@@ -240,8 +241,14 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- Zero T1 Amplitudes -*/
+        options.add_bool("T1_ZERO", false);
         /*- The Algorithm to Form T Amplitudes -*/
-        options.add_str("T_ALGORITHM", "DSRG", "DSRG ISA");
+        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- Two-Particle Density Cumulant -*/
+        options.add_str("TWOPDC", "MK", "MK ZERO");
+        /*- Three-Particle Density Cumulant -*/
+        options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
     }

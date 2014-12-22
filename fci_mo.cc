@@ -6,6 +6,7 @@
 #include <tuple>
 #include <numeric>
 #include <algorithm>
+#include <boost/algorithm/string/predicate.hpp>
 #include "fci_mo.h"
 
 using namespace std;
@@ -23,6 +24,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     outfile->Printf("\n  *                                                 *");
     outfile->Printf("\n  ***************************************************");
     outfile->Printf("\n");
+    outfile->Flush();
+
+    // Print Level
+    print_ = options.get_int("PRINT");
 
     // Basic Preparation: Form Determinants
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -34,40 +39,55 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
 
     // Form and Diagonalize the CASCI Hamiltonian
     Diagonalize_H(determinant_, Evecs_, Evals_);
-    Evecs_->print();
-    Evals_->print();
+    if(print_ > 2){
+        Evecs_->print();
+        Evals_->print();
+    }
 
     // Store CI Vectors in CI_vec_(vector<vector<double>>)
-    int NState = options.get_int("NROOT");
+    int nroot = options.get_int("NROOT");
     double Print_CI_Vector = options.get_double("PRINT_CI_VECTOR");
-    if(NState > Evecs_->coldim()){
-        outfile->Printf("\n  Too many states of interest! There are only %3d states that satisfy the condition!", Evecs_->coldim());
+    if(nroot > Evecs_->coldim()){
+        outfile->Printf("\n  Too many roots of interest! There are only %3d roots that satisfy the condition!", Evecs_->coldim());
         exit(1);
     }
-    Store_CI(NState, Print_CI_Vector, Evecs_, Evals_, determinant_);
+    Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
 
     int ground_state = 0;
 
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
+    outfile->Printf("\n  Forming one-particle density matrix ...");
+    outfile->Flush();
     FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
-    print_d2("Da", Da_);
-    print_d2("Db", Db_);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+    if(print_ > 1){
+        print_d2("Da", Da_);
+        print_d2("Db", Db_);
+    }
 
     // Fock Matrix
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));
     size_t count = 0;
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
+    outfile->Printf("\n  Forming generalized Fock matrix ...\t");
+    outfile->Flush();
     Form_Fock(Fa_,Fb_);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
     Check_Fock(Fa_,Fb_,e_conv-1,count);
-    print_d2("Fa", Fa_);
-    print_d2("Fb", Fb_);
+    if(print_ > 1){
+        print_d2("Fa", Fa_);
+        print_d2("Fb", Fb_);
+    }
 
     // Semi-Canonical Orbitals
     if(count != 0 && options.get_bool("SEMI_CANONICAL")){
         outfile->Printf("\n  Use semi-canonical orbitals.");
+        outfile->Flush();
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
         BD_Fock(Fa_,Fb_,Ua,Ub);
@@ -84,49 +104,78 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
 
         // Form and Diagonalize the CASCI Hamiltonian
         Diagonalize_H(determinant_, Evecs_, Evals_);
-        Evecs_->print();
-        Evals_->print();
+        if(print_ > 2){
+            Evecs_->print();
+            Evals_->print();
+        }
 
         // Store CI Vectors in CI_vec_(vector<vector<double>>)
-        Store_CI(NState, Print_CI_Vector, Evecs_, Evals_, determinant_);
+        Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
 
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
+        outfile->Printf("\n  Forming one-particle density matrix ...");
+        outfile->Flush();
         FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
-//        print_d2("Da", Da_);
-//        print_d2("Db", Db_);
+        outfile->Printf("\t\t\t\tDone.");
+        outfile->Flush();
+        if(print_ > 1){
+            print_d2("Da", Da_);
+            print_d2("Db", Db_);
+        }
 
         // Fock Matrix
         count = 0;
         Fa_ = d2(ncmo_, d1(ncmo_));
         Fb_ = d2(ncmo_, d1(ncmo_));
+        outfile->Printf("\n  Forming generalized Fock matrix ...\t");
+        outfile->Flush();
         Form_Fock(Fa_,Fb_);
+        outfile->Printf("\t\t\t\tDone.");
+        outfile->Flush();
         Check_Fock(Fa_,Fb_,e_conv-1,count);
-        print_d2("Fa", Fa_);
-        print_d2("Fb", Fb_);
+        if(print_ > 1){
+            print_d2("Fa", Fa_);
+            print_d2("Fb", Fb_);
+        }
     }
 
     // Form 2-PDC
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    outfile->Printf("\n  Forming two-particle density cumulant ...");
+    outfile->Flush();
     FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
-    bool Print = 1;
-    print2PDC("L2aa", L2aa_, Print);
-    print2PDC("L2ab", L2ab_, Print);
-    print2PDC("L2bb", L2bb_, Print);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+    if(print_ > 3){
+        print2PDC("L2aa", L2aa_, print_);
+        print2PDC("L2ab", L2ab_, print_);
+        print2PDC("L2bb", L2bb_, print_);
+    }
 
     // Form 3-PDC
     L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    FormCumulant3_A(determinant_, CI_vec_, ground_state, L3aaa_, L3aab_, L3abb_, L3bbb_);
-    print3PDC("L3aaa", L3aaa_, Print);
-    print3PDC("L3aab", L3aab_, Print);
-    print3PDC("L3abb", L3abb_, Print);
-    print3PDC("L3bbb", L3bbb_, Print);
+    string threepdc = options.get_str("THREEPDC");
+    string t_algorithm = options.get_str("T_ALGORITHM");
+    outfile->Printf("\n  Forming three-particle density cumulant ...");
+    outfile->Flush();
+    if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
+        FormCumulant3_A(determinant_, CI_vec_, ground_state, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+    }
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+    if(print_ > 4){
+        print3PDC("L3aaa", L3aaa_, print_);
+        print3PDC("L3aab", L3aab_, print_);
+        print3PDC("L3abb", L3abb_, print_);
+        print3PDC("L3bbb", L3bbb_, print_);
+    }
 }
 
 FCI_MO::~FCI_MO()
@@ -192,15 +241,21 @@ void FCI_MO::startup(Options &options){
     if(options["CHARGE"].has_changed()){
         charge = options.get_int("CHARGE");
     }
+    ms_ = options.get_int("MS");
+    if(multi_ < 0){
+        outfile->Printf("\n  MS must be no less than 0.");
+        exit(1);
+    }
     multi_ = molecule->multiplicity();
     if(options["MULTI"].has_changed()){
         multi_ = options.get_int("MULTI");
     }
     if(multi_ < 1){
         outfile->Printf("\n  MULTI must be no less than 1. Check Multiplicity!");
+        exit(1);
     }
-    nalfa_ = (nelec - charge + multi_ -1) / 2;
-    nbeta_ = (nelec - charge - multi_ + 1) / 2;
+    nalfa_ = (nelec - charge + ms_ * (ms_ + 1)) / 2;
+    nbeta_ = (nelec - charge - ms_ * (ms_ + 1)) / 2;
     if(nalfa_ < 0 || nbeta_ < 0){
         outfile->Printf("\n  Check the Charge and Multiplicity! \n");
         exit(1);
@@ -211,7 +266,7 @@ void FCI_MO::startup(Options &options){
         exit(1);
     }
 
-    state_sym_ = options.get_int("ROOT_SYM");  // Electronic State
+    root_sym_ = options.get_int("ROOT_SYM");  // wavefunction symmetry
     int na_a = nalfa_ - nc_ - nfrzc_;             // No. of a electrons in active
     int nb_a = nbeta_ - nc_ - nfrzc_;             // No. of b electrons in active
 
@@ -247,31 +302,16 @@ void FCI_MO::startup(Options &options){
     idx_p_ = vector<size_t> (idx_a_);
     idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
 
-    // Alpha and Beta Strings
-    vector<vector<vector<bool>>> a_string = Form_String(na_a,0);
-    vector<vector<vector<bool>>> b_string = Form_String(nb_a,0);
-
-    // Form Determinant
-    libadaptive::StringDeterminant::set_ints(integral_);
-    for(int i = 0; i != nirrep_; ++i){
-        int j = i ^ state_sym_;
-        size_t sa = a_string[i].size();
-        size_t sb = b_string[j].size();
-        for(size_t alfa = 0; alfa < sa; ++alfa){
-            for(size_t beta = 0; beta < sb; ++beta){
-                determinant_.push_back(libadaptive::StringDeterminant(a_string[i][alfa], b_string[j][beta]));
-            }
-        }
-    }
-
     // Print
     options.print();
 
+    outfile->Printf("\n");
     outfile->Printf("\n  Number of Atoms   = %10d,   Number of Electrons  = %10zu", natom, nelec);
     outfile->Printf("\n  Molecular Charge  = %10d,   Multiplicity         = %10d", charge, multi_);
     outfile->Printf("\n  Number of alpha   = %10zu,   Number of beta       = %10zu", nalfa_, nbeta_);
     outfile->Printf("\n  Number of MO      = %10zu,   Number of Virtual    = %10zu", nmo_, nv_+nfrzv_);
     outfile->Printf("\n");
+    outfile->Flush();
 
     outfile->Printf("\n  Irrep:");
     print_irrep("Basis", nmopi_);
@@ -290,13 +330,39 @@ void FCI_MO::startup(Options &options){
     print_idx("Hole", idx_h_);
     print_idx("Particle", idx_p_);
     outfile->Printf("\n");
+    outfile->Flush();
 
-    outfile->Printf("\n  State Symmetry: %d", state_sym_);
+    // Alpha and Beta Strings
+    outfile->Printf("\n  Forming the alpha and beta strings ...");
+    outfile->Flush();
+    vector<vector<vector<bool>>> a_string = Form_String(na_a,0);
+    vector<vector<vector<bool>>> b_string = Form_String(nb_a,0);
+    outfile->Printf("\t\t\t\tDone.");
+    outfile->Flush();
+
+    // Form Determinant
+    outfile->Printf("\n  Forming the determinants with correct symmetry ...");
+    outfile->Flush();
+    libadaptive::StringDeterminant::set_ints(integral_);
+    for(int i = 0; i != nirrep_; ++i){
+        int j = i ^ root_sym_;
+        size_t sa = a_string[i].size();
+        size_t sb = b_string[j].size();
+        for(size_t alfa = 0; alfa < sa; ++alfa){
+            for(size_t beta = 0; beta < sb; ++beta){
+                determinant_.push_back(libadaptive::StringDeterminant(a_string[i][alfa], b_string[j][beta]));
+            }
+        }
+    }
+    outfile->Printf("\t\t\tDone.");
+    outfile->Flush();
+
+    outfile->Printf("\n  Wavefunction symmetry: %d", root_sym_);
     outfile->Printf("\n  Number of active electrons: %5d (a = %d, b = %d)", na_a+nb_a, na_a, nb_a);
     outfile->Printf("\n  Number of determinants:     %5lu", determinant_.size());
-    print_det(determinant_);
+    if(print_ > 2)  print_det(determinant_);
     outfile->Printf("\n");
-
+    outfile->Flush();
 }
 
 vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const bool& print){
@@ -387,11 +453,15 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
     }
     S2->diagonalize(Us, Vs);
     H->diagonalize(HU, HV);
-    H->print();
-    HV->print();
-    S2->print();
-    Us->print();
-    Vs->print();
+    if(print_ > 2){
+        H->print();
+        HV->print();
+    }
+    if(print_ > 4){
+        S2->print();
+        Us->print();
+        Vs->print();
+    }
 
     // spin selection according to multiplicity
     size_t n = 0, start = 0;
@@ -411,7 +481,10 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
         }
     }
     H_ss = Matrix::triplet(Us_ss,H,Us_ss,true,false,false);
-    H_ss->print();
+    if(print_ > 2){
+        outfile->Printf("\n  Spin selected CASCI Hamiltonian");
+        H_ss->print();
+    }
 
     SharedMatrix vec_ss (new Matrix("Spin selected CI vectors", n, n));
     val = SharedVector (new Vector("Spin selected Hamiltonian eigen values", n));
@@ -425,18 +498,19 @@ inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, in
     return abs(get<0>(rhs)) < abs(get<0>(lhs));
 }
 
-void FCI_MO::Store_CI(const int &Nstate, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det){
+void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det){
 
     timer_on("STORE CI Vectors");
     outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
     outfile->Printf("\n  *  CI Vectors & Configurations  *");
     outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
     outfile->Printf("\n");
+    outfile->Flush();
 
-    CI_vec_ = vector<vector<double>> (Nstate, vector<double>());
+    CI_vec_ = vector<vector<double>> (nroot, vector<double>());
     vector<tuple<double, int>> vec_tuple;
 
-    for(int i=0; i<Nstate; ++i){
+    for(int i=0; i<nroot; ++i){
         for(size_t j=0; j<det.size(); ++j){
             double value = Evecs->get(j,i);
             CI_vec_[i].push_back(value);
@@ -445,7 +519,7 @@ void FCI_MO::Store_CI(const int &Nstate, const double &CI_threshold, const Share
         }
         sort(vec_tuple.begin(), vec_tuple.end(), ReverseAbsSort);
 
-        outfile->Printf("\n  ==> State No. %d <==", i+1);
+        outfile->Printf("\n  ==> Root No. %d <==", i+1);
         outfile->Printf("\n");
         for(int j=0; j<vec_tuple.size(); ++j){
             outfile->Printf("\n    ");
@@ -471,12 +545,13 @@ void FCI_MO::Store_CI(const int &Nstate, const double &CI_threshold, const Share
         outfile->Printf("\n");
         outfile->Printf("\n    Total Energy:   %.15lf", Evals->get(i));
         outfile->Printf("\n\n");
+        outfile->Flush();
         vec_tuple.clear();
     }
     timer_off("STORE CI Vectors");
 }
 
-void FCI_MO::FormDensity(const vector<libadaptive::StringDeterminant> &dets, const vector<vector<double>> &CI_vector, const int &state, d2 &Da, d2 &Db){
+void FCI_MO::FormDensity(const vector<libadaptive::StringDeterminant> &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &Da, d2 &Db){
 
     timer_on("FORM Density");
     size_t size = dets.size();
@@ -484,7 +559,7 @@ void FCI_MO::FormDensity(const vector<libadaptive::StringDeterminant> &dets, con
     for(size_t bra = 0; bra != size; ++bra){
         for(size_t ket = 0; ket != size; ++ket){
 
-            double value = CI_vector[state][bra] * CI_vector[state][ket];
+            double value = CI_vector[root][bra] * CI_vector[root][ket];
 
             libadaptive::StringDeterminant I = dets[bra];
             libadaptive::StringDeterminant J = dets[ket];
@@ -558,7 +633,7 @@ void FCI_MO::print_d2(const string &str, const d2 &OnePD){
     timer_off("PRINT Density");
 }
 
-void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &state, d4 &AA, d4 &AB, d4 &BB){
+void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB){
     timer_on("FORM 2-Cumulant");
     for(size_t p=0; p<na_; ++p){
         size_t np = idx_a_[p];
@@ -575,14 +650,14 @@ void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &C
                     for(size_t ket = 0; ket != size; ++ket){
                         libadaptive::StringDeterminant Jaa(vector<bool> (2*ncmo_)), Jab(vector<bool> (2*ncmo_)), Jbb(vector<bool> (2*ncmo_));
                         double aa = 1.0, ab = 1.0, bb = 1.0;
-                        aa *= TwoOP(dets[ket],Jaa,np,0,nq,0,nr,0,ns,0) * CI_vector[state][ket];
-                        ab *= TwoOP(dets[ket],Jab,np,0,nq,1,nr,0,ns,1) * CI_vector[state][ket];
-                        bb *= TwoOP(dets[ket],Jbb,np,1,nq,1,nr,1,ns,1) * CI_vector[state][ket];
+                        aa *= TwoOP(dets[ket],Jaa,np,0,nq,0,nr,0,ns,0) * CI_vector[root][ket];
+                        ab *= TwoOP(dets[ket],Jab,np,0,nq,1,nr,0,ns,1) * CI_vector[root][ket];
+                        bb *= TwoOP(dets[ket],Jbb,np,1,nq,1,nr,1,ns,1) * CI_vector[root][ket];
 
                         for(size_t bra = 0; bra != size; ++bra){
-                            AA[p][q][r][s] += aa * (dets[bra] == Jaa) * CI_vector[state][bra];
-                            AB[p][q][r][s] += ab * (dets[bra] == Jab) * CI_vector[state][bra];
-                            BB[p][q][r][s] += bb * (dets[bra] == Jbb) * CI_vector[state][bra];
+                            AA[p][q][r][s] += aa * (dets[bra] == Jaa) * CI_vector[root][bra];
+                            AB[p][q][r][s] += ab * (dets[bra] == Jab) * CI_vector[root][bra];
+                            BB[p][q][r][s] += bb * (dets[bra] == Jbb) * CI_vector[root][bra];
                         }
                     }
 
@@ -600,7 +675,7 @@ void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &C
     timer_off("FORM 2-Cumulant");
 }
 
-void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const bool &PRINT){
+void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT){
     timer_on("PRINT 2-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
@@ -610,7 +685,7 @@ void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const bool &PRINT){
                 for(size_t l = 0; l != TwoPDC[i][j][k].size(); ++l){
                     if(fabs(TwoPDC[i][j][k][l]) > 1.0e-15){
                         ++count;
-                        if(PRINT)
+                        if(PRINT > 3)
                             outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i, j, k, l, TwoPDC[i][j][k][l]);
                     }
                 }
@@ -688,7 +763,7 @@ double FCI_MO::TwoOP(const libadaptive::StringDeterminant &J, libadaptive::Strin
     }else{timer_off("2PO"); return 0.0;}
 }
 
-void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
+void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC){
     timer_on("FORM 3-Cumulant");
     for(size_t p=0; p<na_; ++p){
         size_t np = idx_a_[p];
@@ -705,20 +780,22 @@ void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &
 
                             if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0) continue;
 
-                            size_t size = dets.size();
-                            for(size_t ket = 0; ket != size; ++ket){
-                                libadaptive::StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
-                                double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
-                                aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[state][ket];
-                                aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[state][ket];
-                                abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[state][ket];
-                                bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[state][ket];
+                            if(DC == "MK"){
+                                size_t size = dets.size();
+                                for(size_t ket = 0; ket != size; ++ket){
+                                    libadaptive::StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
+                                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
+                                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[root][ket];
+                                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[root][ket];
+                                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[root][ket];
+                                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[root][ket];
 
-                                for(size_t bra = 0; bra != size; ++bra){
-                                    AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[state][bra];
-                                    AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[state][bra];
-                                    ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[state][bra];
-                                    BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[state][bra];
+                                    for(size_t bra = 0; bra != size; ++bra){
+                                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
+                                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
+                                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
+                                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
+                                    }
                                 }
                             }
 
@@ -746,7 +823,7 @@ void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::FormCumulant3_B(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &state, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
+void FCI_MO::FormCumulant3_B(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
     timer_on("FORM 3-Cumulant");
     vector<vector<vector<size_t>>> vec_tuple (nirrep_, vector<vector<size_t>>());
     for(size_t p=0; p<na_; ++p){
@@ -782,16 +859,16 @@ void FCI_MO::FormCumulant3_B(const vecdet &dets, const vector<vector<double> > &
                 for(size_t ket = 0; ket != size; ++ket){
                     libadaptive::StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                     double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
-                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[state][ket];
-                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[state][ket];
-                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[state][ket];
-                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[state][ket];
+                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[root][ket];
+                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[root][ket];
+                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[root][ket];
+                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[root][ket];
 
                     for(size_t bra = 0; bra != size; ++bra){
-                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[state][bra];
-                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[state][bra];
-                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[state][bra];
-                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[state][bra];
+                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
+                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
+                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
+                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
                     }
                 }
 
@@ -816,7 +893,7 @@ void FCI_MO::FormCumulant3_B(const vecdet &dets, const vector<vector<double> > &
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const bool &PRINT){
+void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT){
     timer_on("PRINT 3-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
     size_t count = 0;
@@ -828,7 +905,7 @@ void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const bool &PRINT)
                         for(size_t n = 0; n != ThreePDC[i][j][k][l][m].size(); ++n){
                             if(fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15){
                                 ++count;
-                                if(PRINT)
+                                if(PRINT > 4)
                                     outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i, j, k, l, m, n, ThreePDC[i][j][k][l][m][n]);
                             }
                         }
@@ -959,6 +1036,7 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count){
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "virtual");
     outfile->Printf("\n  Done checking Fock matrices.");
     outfile->Printf("\n");
+    outfile->Flush();
     timer_off("Check Fock");
 }
 
@@ -994,6 +1072,7 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const int &E, size_t &cou
         outfile->Printf("\n  Warning: Fb_%-7s NOT diagonal!", str.c_str());
         outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b, maxb);
     }
+    outfile->Flush();
 }
 
 void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub){
