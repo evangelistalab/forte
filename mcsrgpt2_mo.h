@@ -83,6 +83,9 @@ protected:
     d4 vbb_dsrg_;
     void Form_APTEI_DSRG(const bool &dsrgpt);
 
+    // Print Delta
+    void PrintDelta();
+
     // Computes the MC-SRGPT2 energy
     double compute_energy();
 

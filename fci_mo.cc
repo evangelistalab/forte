@@ -277,6 +277,13 @@ void FCI_MO::startup(Options &options){
         }
     }
 
+    // Symmetry Index of Correlated Orbitals
+    for(int h=0; h<nirrep_; ++h){
+        for(size_t i=0; i<ncmopi_[h]; ++i){
+            sym_ncmo_.push_back(h);
+        }
+    }
+
     // Index of Core, Active and Virtual
     int ncmopi = 0;
     for(int h=0; h<nirrep_; ++h){
