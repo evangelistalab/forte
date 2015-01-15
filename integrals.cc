@@ -681,6 +681,51 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 
 void ExplorerIntegrals::compute_df_integrals()
 {
+    boost::shared_ptr<Wavefunction> wfn = Process::enviroment.wavefunction();
+    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+    boost::shared_ptr<BasisSetParser> parser (new Gaussian94BasisSetParser());
+    boost::shared_ptr<BasisSet> auxiliary = BasisSet::construct(parser, primary->molecule(), "DF_BASIS_MP2");
+   
+    int nprim = primary->nbf();
+    int naux  = auxiliary->nbf();
+    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options, wfn);
+    df->add_pair_space("B", "ACTIVE_ALL", "ACTIVE_ALL");
+
+    df->set_memory(memory / 8L);
+    df->print_header();
+    df->compute();
+
+    boost::shared_ptr<Tensor> B = df->ints()["B"];
+    df.reset();
+    FILE* Bf = B->file_pointer();
+    SharedMatrix Bpq(new Matrix("Bpq", nmo, nmo*naux));
+    fseek(Bf,0, SEEK_SET);
+    fread(Bpqp[0], sizeof(double),nQ*(nmo)*(nmo), Bf);
+    
+    for(int p = 0; p < nmo; p++){
+      for(int q = 0; q < nmo; q++){
+         for(int r = 0; r < nmo; r++){
+            for(int s = 0; s < nmo; s++){
+                for(int B = 0; B < naux; B++){
+                    int qB = q*nQ + B;
+                    int sB = s*nQ + B;
+                    val+=Bpq->get(p,qB)*Bpq->get(r,sB);
+                    //This is done to resort my integrals into pq by B.  
+                    //Makes GEMM call very trival(contract the B index)
+                    pqB->set(p*nmo+q,B,Bpq->get(p,qB));
+                    //val+=L->get(B,p*nmo+q)*L->get(B,r*nmo + s); 
+
+                }
+                int pq = p*nmo + q;
+                int rs = r*nmo + s;
+                //pqrs->set(pq,rs,val);
+
+                val = 0.0;
+             }
+          }
+       }
+    }
+
 
 }
 
