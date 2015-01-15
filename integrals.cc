@@ -706,35 +706,74 @@ void ExplorerIntegrals::compute_df_integrals()
     fseek(Bf,0, SEEK_SET);
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
 
-    for(int p = 0; p < nmo_; p++){
-      for(int q = 0; q < nmo_; q++){
-         for(int r = 0; r < nmo_; r++){
-            for(int s = 0; s < nmo_; s++){
-                aphys_tei_aa[aptei_index(p,r,q,s)] = 0.0;
-                aphys_tei_bb[aptei_index(p,r,q,s)] = 0.0;
-            }
-         }
-      }
-    }
-    for(int p = 0; p < nmo_; p++){
-      for(int q = 0; q < nmo_; q++){
-         for(int r = 0; r < nmo_; r++){
-            for(int s = 0; s < nmo_; s++){
-                double val = 0.0;
-                for(int B = 0; B < naux; B++){
-                    int qB = q*naux + B;
-                    int sB = s*naux + B;
-                    val += Bpq->get(p,qB) * Bpq->get(r,sB);
+
+    double* two_electron_integrals = new double[num_tei];
+
+    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
+
+    // Store the integrals
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+            for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+                    double val = 0.0;
+                    for(int B = 0; B < naux; B++){
+                        int qB = q*naux + B;
+                        int sB = s*naux + B;
+                        val += Bpq->get(p,qB) * Bpq->get(r,sB);
+                    }
+                    two_electron_integrals[INDEX4(p,q,r,s)] = val;
                 }
-                aphys_tei_aa[aptei_index(p,r,q,s)] += val;
-                aphys_tei_aa[aptei_index(p,r,s,q)] -= val;
-                aphys_tei_ab[aptei_index(p,r,q,s)]  = val;
-                aphys_tei_bb[aptei_index(p,r,q,s)] += val;
-                aphys_tei_bb[aptei_index(p,r,s,q)] -= val;
-             }
-          }
-       }
+            }
+        }
     }
+
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+            for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
+                    double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
+                    size_t index = aptei_index(p,q,r,s);
+                    aphys_tei_aa[index] = direct - exchange;
+                    aphys_tei_ab[index] = direct;
+                    aphys_tei_bb[index] = direct - exchange;
+                }
+            }
+        }
+    }
+    delete[] two_electron_integrals;
+
+//    for(int p = 0; p < nmo_; p++){
+//      for(int q = 0; q < nmo_; q++){
+//         for(int r = 0; r < nmo_; r++){
+//            for(int s = 0; s < nmo_; s++){
+//                aphys_tei_aa[aptei_index(p,r,q,s)] = 0.0;
+//                aphys_tei_bb[aptei_index(p,r,q,s)] = 0.0;
+//            }
+//         }
+//      }
+//    }
+//    for(int p = 0; p < nmo_; p++){
+//      for(int q = 0; q < nmo_; q++){
+//         for(int r = 0; r < nmo_; r++){
+//            for(int s = 0; s < nmo_; s++){
+//                double val = 0.0;
+//                for(int B = 0; B < naux; B++){
+//                    int qB = q*naux + B;
+//                    int sB = s*naux + B;
+//                    val += Bpq->get(p,qB) * Bpq->get(r,sB);
+//                }
+//                aphys_tei_aa[aptei_index(p,r,q,s)] += val;
+//                aphys_tei_aa[aptei_index(p,r,s,q)] -= val;
+//                aphys_tei_ab[aptei_index(p,r,q,s)]  = val;
+//                aphys_tei_bb[aptei_index(p,r,q,s)] += val;
+//                aphys_tei_bb[aptei_index(p,r,s,q)] -= val;
+//             }
+//          }
+//       }
+//    }
 
 
 }
