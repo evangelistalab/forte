@@ -4,6 +4,9 @@
 #include <algorithm>
 #include <ctype.h>
 #include <boost/algorithm/string/predicate.hpp>
+#include <fstream>
+#include <iostream>
+#include <boost/format.hpp>
 #include "tensor_basic.h"
 #include "tensor_blocked.h"
 #include "mcsrgpt2_mo.h"
@@ -41,6 +44,9 @@ void MCSRGPT2_MO::cleanup(){
 }
 
 void MCSRGPT2_MO::startup(Options &options){
+
+    // Print Delta
+    if(print_ > 1)  PrintDelta();
 
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
@@ -290,21 +296,20 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR){
                     if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
                         AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
                     }else{
-                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
+                        AA[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Daa, 2.0))) / Daa * scalar_aa;
                     }
 
                     if(fabs(Zab) < pow(0.1,taylor_threshold_)){
                         AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
                     }else{
-                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
+                        AB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Dab, 2.0))) / Dab * scalar_ab;
                     }
 
                     if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
                         BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
                     }else{
-                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
+                        BB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Dbb, 2.0))) / Dbb * scalar_bb;
                     }
-
                 }
             }
         }
@@ -382,11 +387,23 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
             double Za = sqrt(s_) * delta_a;
             double Zb = sqrt(s_) * delta_b;
 
-            A[i][a] = fabs(Za) < pow(0.1,taylor_threshold_) ? Taylor_Exp(Za,taylor_order_) : ((1 - exp(-1.0 * pow(Za, 2.0))) / Za);
-            A[i][a] *= (sqrt(s_) * scalar_a);
+            if(fabs(Za) < pow(0.1,taylor_threshold_)){
+                A[i][a] = Taylor_Exp(Za,taylor_order_) * sqrt(s_) * scalar_a;
+            }else{
+                A[i][a] = (1 - exp(-1.0 * s_ * pow(delta_a, 2.0))) / delta_a * scalar_a;
+            }
 
-            B[i][a] = fabs(Zb) < pow(0.1,taylor_threshold_) ? Taylor_Exp(Zb,taylor_order_) : ((1 - exp(-1.0 * pow(Zb, 2.0))) / Zb);
-            B[i][a] *= (sqrt(s_) * scalar_b);
+            if(fabs(Zb) < pow(0.1,taylor_threshold_)){
+                B[i][a] = Taylor_Exp(Zb,taylor_order_) * sqrt(s_) * scalar_b;
+            }else{
+                B[i][a] = (1 - exp(-1.0 * s_ * pow(delta_b, 2.0))) / delta_b * scalar_b;
+            }
+
+//            A[i][a] = fabs(Za) < pow(0.1,taylor_threshold_) ? Taylor_Exp(Za,taylor_order_) : ((1 - exp(-1.0 * pow(Za, 2.0))) / Za);
+//            A[i][a] *= (sqrt(s_) * scalar_a);
+//
+//            B[i][a] = fabs(Zb) < pow(0.1,taylor_threshold_) ? Taylor_Exp(Zb,taylor_order_) : ((1 - exp(-1.0 * pow(Zb, 2.0))) / Zb);
+//            B[i][a] *= (sqrt(s_) * scalar_b);
 
         }
     }
@@ -767,6 +784,59 @@ void MCSRGPT2_MO::Check_T1(const string &x, const d2 &M, double &Norm, double &M
     }
     outfile->Printf("\n  ---------------------------------------------------------------------");
     timer_off("Check T1");
+}
+
+void MCSRGPT2_MO::PrintDelta(){
+    ofstream out_delta;
+    out_delta.open("Delta_ijab");
+    for(size_t i=0; i<nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t j=i; j<nh_; ++j){
+            size_t nj = idx_h_[j];
+            for(size_t a=0; a<npt_; ++a){
+                size_t na = idx_p_[a];
+                for(size_t b=a; b<npt_; ++b){
+                    size_t nb = idx_p_[b];
+
+                    if(ni == nj && ni == na && ni == nb) continue;
+                    if((sym_ncmo_[ni] ^ sym_ncmo_[nj] ^ sym_ncmo_[na] ^ sym_ncmo_[nb]) != 0) continue;
+                    if(std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), nj) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), nb) != idx_a_.end())
+                    {continue;}else{
+                        double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+//                        double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+//                        double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+
+                        out_delta << boost::format("%3d %3d %3d %3d %20.15f\n") % ni % nj % na % nb % Daa;
+//                        out_delta << boost::format("%3d %3d %3d %3d %20.15f\n") % ni % nj % na % nb % Dab;
+//                        out_delta << boost::format("%3d %3d %3d %3d %20.15f\n") % ni % nj % na % nb % Dbb;
+                    }
+                }
+            }
+        }
+    }
+    out_delta.close();
+    out_delta.clear();
+    out_delta.open("Delta_ia");
+    for(size_t i=0; i<nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t a=0; a<npt_; ++a){
+            size_t na = idx_p_[a];
+            if(ni == na) continue;
+            if((sym_ncmo_[ni] ^ sym_ncmo_[na]) != 0) continue;
+            if(std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
+               std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end())
+            {continue;}else{
+                double delta_a = Fa_[ni][ni] - Fa_[na][na];
+//                double delta_b = Fb_[ni][ni] - Fb_[na][na];
+                out_delta << boost::format("%3d %3d %20.15f\n") % ni % na % delta_a;
+//                out_delta << boost::format("%3d %3d %20.15f\n") % ni % na % delta_b;
+            }
+        }
+    }
+    out_delta.close();
 }
 
 double MCSRGPT2_MO::compute_energy(){

@@ -93,8 +93,9 @@ protected:
     // Symmetry of the wavefunction
     int root_sym_;
 
-    // Symmetry of Active Orbitals
-    vector<int> sym_active_;
+    // Symmetry of Orbitals
+    vector<int> sym_active_; // active
+    vector<int> sym_ncmo_;   // correlated mo
 
     // Print Size of a Array with Irrep
     void print_irrep(const string &str, const Dimension &array){
