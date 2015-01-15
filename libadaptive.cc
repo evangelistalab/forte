@@ -38,6 +38,12 @@ read_options(std::string name, Options &options)
             to the output file -*/
         options.add_int("PRINT", 0);
 
+        /*- The algorithm used to screen the determinant
+         *  - CONVENTIONAL Conventional two-electron integrals
+         *  - DF Density fitted two-electron integrals
+         *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY");
+
         /*- The job type -*/
         options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
 

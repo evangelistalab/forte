@@ -5,6 +5,10 @@
 #include <libtrans/integraltransform.h>
 #include <libpsio/psio.hpp>
 #include <libmints/matrix.h>
+#include <libmints/basisset.h>
+#include <libthce/thce.h>
+#include <libthce/thcew.h>
+#include <libthce/lreri.h>
 
 #include "integrals.h"
 #include "memory.h"
@@ -20,13 +24,12 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
 {
     startup();
-    if (int_type_ == ConventionalInts){
-        transform_integrals();
-    }else{
-        compute_df_integrals();
-    }
+    transform_integrals();
     read_one_electron_integrals();
     read_two_electron_integrals();
+    if (options.get_str("INT_TYPE") == "DF"){
+        compute_df_integrals();
+    }
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
@@ -681,16 +684,17 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 
 void ExplorerIntegrals::compute_df_integrals()
 {
-    boost::shared_ptr<Wavefunction> wfn = Process::enviroment.wavefunction();
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
-    boost::shared_ptr<BasisSetParser> parser (new Gaussian94BasisSetParser());
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::construct(parser, primary->molecule(), "DF_BASIS_MP2");
+    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
    
     int nprim = primary->nbf();
     int naux  = auxiliary->nbf();
-    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options, wfn);
-    df->add_pair_space("B", "ACTIVE_ALL", "ACTIVE_ALL");
+    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_,wfn);
+//    df->add_pair_space("B", "ACTIVE_ALL", "ACTIVE_ALL");
+    df->add_pair_space("B", "ALL", "ALL");
 
+    long int memory = Process::environment.get_memory();
     df->set_memory(memory / 8L);
     df->print_header();
     df->compute();
@@ -698,29 +702,35 @@ void ExplorerIntegrals::compute_df_integrals()
     boost::shared_ptr<Tensor> B = df->ints()["B"];
     df.reset();
     FILE* Bf = B->file_pointer();
-    SharedMatrix Bpq(new Matrix("Bpq", nmo, nmo*naux));
+    SharedMatrix Bpq(new Matrix("Bpq", nmo_, nmo_ * naux));
     fseek(Bf,0, SEEK_SET);
-    fread(Bpqp[0], sizeof(double),nQ*(nmo)*(nmo), Bf);
-    
-    for(int p = 0; p < nmo; p++){
-      for(int q = 0; q < nmo; q++){
-         for(int r = 0; r < nmo; r++){
-            for(int s = 0; s < nmo; s++){
+    fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
+
+    for(int p = 0; p < nmo_; p++){
+      for(int q = 0; q < nmo_; q++){
+         for(int r = 0; r < nmo_; r++){
+            for(int s = 0; s < nmo_; s++){
+                aphys_tei_aa[aptei_index(p,r,q,s)] = 0.0;
+                aphys_tei_bb[aptei_index(p,r,q,s)] = 0.0;
+            }
+         }
+      }
+    }
+    for(int p = 0; p < nmo_; p++){
+      for(int q = 0; q < nmo_; q++){
+         for(int r = 0; r < nmo_; r++){
+            for(int s = 0; s < nmo_; s++){
+                double val = 0.0;
                 for(int B = 0; B < naux; B++){
-                    int qB = q*nQ + B;
-                    int sB = s*nQ + B;
-                    val+=Bpq->get(p,qB)*Bpq->get(r,sB);
-                    //This is done to resort my integrals into pq by B.  
-                    //Makes GEMM call very trival(contract the B index)
-                    pqB->set(p*nmo+q,B,Bpq->get(p,qB));
-                    //val+=L->get(B,p*nmo+q)*L->get(B,r*nmo + s); 
-
+                    int qB = q*naux + B;
+                    int sB = s*naux + B;
+                    val += Bpq->get(p,qB) * Bpq->get(r,sB);
                 }
-                int pq = p*nmo + q;
-                int rs = r*nmo + s;
-                //pqrs->set(pq,rs,val);
-
-                val = 0.0;
+                aphys_tei_aa[aptei_index(p,r,q,s)] += val;
+                aphys_tei_aa[aptei_index(p,r,s,q)] -= val;
+                aphys_tei_ab[aptei_index(p,r,q,s)]  = val;
+                aphys_tei_bb[aptei_index(p,r,q,s)] += val;
+                aphys_tei_bb[aptei_index(p,r,s,q)] -= val;
              }
           }
        }
