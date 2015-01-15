@@ -20,7 +20,11 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
 {
     startup();
-    transform_integrals();
+    if (int_type_ == ConventionalInts){
+        transform_integrals();
+    }else{
+        compute_df_integrals();
+    }
     read_one_electron_integrals();
     read_two_electron_integrals();
     make_diagonal_integrals();
@@ -673,6 +677,11 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
     p_tei[index] = value;
     //    if (std::fabs(value) > 1.0e-9)
     //        outfile->Printf("\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,value);
+}
+
+void ExplorerIntegrals::compute_df_integrals()
+{
+
 }
 
 ///**

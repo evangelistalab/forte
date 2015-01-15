@@ -17,6 +17,7 @@ namespace psi{ namespace libadaptive{
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
+enum IntegralType {ConventionalInts,DFInts,CholeskyInts};
 
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering
@@ -133,6 +134,9 @@ public:
     Dimension& frzcpi() {return frzcpi_;}
     /// Return the number of frozen virtual orbitals per irrep
     Dimension& frzvpi() {return frzvpi_;}
+
+    /// Compute df integrals
+    void compute_df_integrals();
 
 private:
 

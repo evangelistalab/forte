@@ -42,8 +42,7 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
 
         // Options for the Explorer class
-        /*- The symmetry of the electronic state.  If a value is provided
-            it overrides the multiplicity of the SCF solution. (zero based) -*/
+        /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
 
         /*- The multiplicity of the electronic state.  If a value is provided
