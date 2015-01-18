@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -17,7 +17,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -29,7 +29,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::factorized_ci(psi::Options& options)
+void LambdaCI::factorized_ci(psi::Options& options)
 {
     outfile->Printf("  ==> Factorization of the wave function <==\n");
 

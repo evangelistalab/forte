@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <set>
@@ -7,7 +7,7 @@
 #include <boost/format.hpp>
 #include <boost/unordered_map.hpp>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 #include "excitation_determinant.h"
@@ -21,7 +21,7 @@ namespace psi{ namespace libadaptive{
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  * by performing single excitations at a time
  */
-void AdaptiveCI::explore_singles_sequential(psi::Options& options)
+void LambdaCI::explore_singles_sequential(psi::Options& options)
 {
     outfile->Printf("\n\n  Exploring the space of Slater determinants using the singles method\n");
     boost::timer t;

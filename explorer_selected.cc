@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -17,7 +17,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -29,7 +29,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
+void LambdaCI::diagonalize_selected_space(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",space_m_threshold_);
 
@@ -148,7 +148,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
+SharedMatrix LambdaCI::build_model_space_hamiltonian(Options& options)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -210,7 +210,7 @@ SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs)
+SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -363,7 +363,7 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
     return H;
 }
 
-void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
+void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
     outfile->Printf("\n  using a renormalization procedure (Lambda = %.2f Eh)\n",space_m_threshold_);
@@ -625,7 +625,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
 }
 
 
-void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
+void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
 {
 
     int nroot = options.get_int("NROOT");

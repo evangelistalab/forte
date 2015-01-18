@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -17,7 +17,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -29,7 +29,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::lambda_mrcisd(psi::Options& options)
+void LambdaCI::lambda_mrcisd(psi::Options& options)
 {
     outfile->Printf("\n\n  Lambda-MRCISD");
 
@@ -463,7 +463,7 @@ void AdaptiveCI::lambda_mrcisd(psi::Options& options)
     outfile->Flush();
 }
 
-void AdaptiveCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
+void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinants,
                                           SharedMatrix evecs,
                                           SharedVector evals,
                                           int nroots)
@@ -585,7 +585,7 @@ void AdaptiveCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determina
 /**
  * Diagonalize the
  */
-void AdaptiveCI::lambda_mrcis(psi::Options& options)
+void LambdaCI::lambda_mrcis(psi::Options& options)
 {
     outfile->Printf("\n\n  Lambda-MRCIS");
 

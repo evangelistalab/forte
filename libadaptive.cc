@@ -11,6 +11,7 @@
 #include "multidimensional_arrays.h"
 
 #include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
@@ -45,7 +46,7 @@ read_options(std::string name, Options &options)
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY");
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
+        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -274,11 +275,16 @@ libadaptive(Options &options)
         }
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){
-            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
+            LambdaCI* explorer = new LambdaCI(options,ints_);
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "FCIMC"){
             FCIMC fcimc(options,ints_);
+        }
+        if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
+                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+                boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
+                aci->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);
@@ -297,25 +303,20 @@ libadaptive(Options &options)
 //            delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "TENSORSRG"){
-//            std::vector<double> ONa = explorer->Da();
-//            std::vector<double> ONb = explorer->Db();
-//            int nmo = explorer->nmo();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
             srg->compute_energy();
-//            Explorer* explorer = new Explorer(options,ints_);
-//            delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "TENSORSRG-CI"){
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
             srg->compute_energy();
             srg->transfer_integrals();
-            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
+            LambdaCI* explorer = new LambdaCI(options,ints_);
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "SRG"){
-            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
+            LambdaCI* explorer = new LambdaCI(options,ints_);
             std::vector<double> ONa = explorer->Da();
             std::vector<double> ONb = explorer->Db();
             int ncmo = explorer->ncmo();
@@ -340,7 +341,7 @@ libadaptive(Options &options)
             options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
             options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
 
-            AdaptiveCI* explorer = new AdaptiveCI(options,ints_);
+            LambdaCI* explorer = new LambdaCI(options,ints_);
             std::vector<double> ONa = explorer->Da();
             std::vector<double> ONb = explorer->Db();
             int ncmo = explorer->ncmo();
@@ -360,7 +361,7 @@ libadaptive(Options &options)
             options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
             options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
 
-            explorer = new AdaptiveCI(options,ints_);
+            explorer = new LambdaCI(options,ints_);
 
             free_matrix<double>(G1aa,ncmo,ncmo);
             free_matrix<double>(G1bb,ncmo,ncmo);

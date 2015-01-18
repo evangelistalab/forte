@@ -18,7 +18,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
@@ -31,7 +31,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::iterative_adaptive_mrcisd(psi::Options& options)
+void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
 {
     boost::timer t_iamrcisd;
 
@@ -537,7 +537,7 @@ void AdaptiveCI::iterative_adaptive_mrcisd(psi::Options& options)
 /**
  * Diagonalize the
  */
-void AdaptiveCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
+void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 {
     boost::timer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive MRCISD");
@@ -1013,7 +1013,7 @@ void AdaptiveCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         outfile->Flush();
 
         // Check for convergence
-        if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold){
+        if (std::fabs(new_energy - old_energy) < ia_mrcisd_threshold and cycle > 1){
             break;
         }
 //        // Check the history of energies to avoid cycling in a loop
@@ -1089,5 +1089,4 @@ void AdaptiveCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
 
 }} // EndNamespaces
-
 

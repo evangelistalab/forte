@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <ctime>
@@ -18,7 +18,7 @@
 #include <libciomr/libciomr.h>
 //#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -30,7 +30,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
+void LambdaCI::renormalized_mrcisd(psi::Options& options)
 {
     outfile->Printf("\n\n  Renormalized MRCISD");
 
@@ -518,7 +518,7 @@ void AdaptiveCI::renormalized_mrcisd(psi::Options& options)
 /**
  * Diagonalize the
  */
-void AdaptiveCI::renormalized_mrcisd_simple(psi::Options& options)
+void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 {
     outfile->Printf("\n\n  Renormalized MRCISD");
 
