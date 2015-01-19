@@ -95,6 +95,8 @@ private:
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
+    /// A vector of determinants in the P + Q space
+    std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
 
@@ -104,8 +106,27 @@ private:
     /// All that happens before we compute the energy
     void startup();
 
+    /// Print information about this calculation
+    void print_info();
+
+    /// Print a wave function
+    void print_wfn(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot);
+
     /// Diagonalize the Hamiltonian in a space of determinants
     void diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+
+    /// Diagonalize the Hamiltonian in a space of determinants
+    void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+
+    /// Find all the relevant SD excitations out of the P space.
+    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
+
+    /// Prune the space of determinants
+    void prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
+                                   std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
+
+    /// Check if the procedure has converged
+    bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
 
     int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
     /// Perform a Davidson-Liu diagonalization
