@@ -79,7 +79,6 @@ void AdaptiveCI::startup()
         }
         for (int i = 0; i < soccpi_[h]; ++i){
             occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
         }
         cumidx += ncmopi_[h];
     }
@@ -199,7 +198,7 @@ double AdaptiveCI::compute_energy()
         outfile->Flush();
 
 
-        // Step 2. Find determinants in the Q space
+        // Step 2. Find determinants in the Q space        
         find_q_space(num_ref_roots,P_evals,P_evecs);
 
 

@@ -279,12 +279,14 @@ libadaptive(Options &options)
             delete explorer;
         }
         if (options.get_str("JOB_TYPE") == "FCIMC"){
-            FCIMC fcimc(options,ints_);
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<FCIMC> fcimc(new FCIMC(wfn,options,ints_));
+            fcimc->compute_energy();
         }
         if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
-                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-                boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
-                aci->compute_energy();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
+            aci->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);
