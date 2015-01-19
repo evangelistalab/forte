@@ -7,15 +7,9 @@
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
+#include "physconst.h"
 #include <libqt/qt.h>
-
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
 #include <libciomr/libciomr.h>
-//#include <libqt/qt.h>
 
 #include "lambda-ci.h"
 #include "cartographer.h"
@@ -112,7 +106,7 @@ void LambdaCI::lambda_mrcisd(psi::Options& options)
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
         //                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
@@ -450,9 +444,9 @@ void LambdaCI::lambda_mrcisd(psi::Options& options)
     outfile->Printf("\n\n  => Lambda+SD-CI <=\n");
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d        = %20.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d        = %20.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %20.12f Eh = %8.4f eV",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
     outfile->Flush();
 
@@ -518,7 +512,7 @@ void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
         S2 /= norm;
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         std::string state_label = s2_labels[std::round(S * 2.0)];
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
         outfile->Flush();
     }
 
@@ -668,7 +662,7 @@ void LambdaCI::lambda_mrcis(psi::Options& options)
 
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
         //                evals->get(i),multistate_pt2_energy_correction_[i]);
     }
@@ -937,9 +931,9 @@ void LambdaCI::lambda_mrcis(psi::Options& options)
     outfile->Printf("\n\n  => Lambda+S-CI <=\n");
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d        = %20.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d        = %20.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %20.12f Eh = %8.4f eV",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
     outfile->Flush();
 

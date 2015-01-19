@@ -127,7 +127,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
 
         // Print the energy
         for (int i = 0; i < num_ref_roots; ++ i){
-            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
         outfile->Flush();
 
@@ -462,9 +462,9 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
 
         //
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
             outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                    27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                    pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
         outfile->Flush();
 
@@ -522,9 +522,9 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
     }
 
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  * IA-MRCISD total energy (%3d) + EPT2 = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
 
     outfile->Printf("\n\n  iterative_adaptive_mrcisd        ran in %f s",t_iamrcisd.elapsed());
@@ -679,7 +679,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         // Print the energy
         for (int i = 0; i < num_ref_roots; ++i){
-            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
         outfile->Flush();
 
@@ -992,9 +992,9 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         //
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
             outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                    27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                    pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
         outfile->Flush();
 
@@ -1079,9 +1079,9 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
     }
 
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  * IA-MRCISD total energy (%3d) + EPT2 = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
     outfile->Printf("\n\n  iterative_adaptive_mrcisd_bitset ran in %f s",t_iamrcisd.elapsed());
     outfile->Flush();

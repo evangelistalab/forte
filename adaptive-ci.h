@@ -27,6 +27,7 @@
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
+#include <physconst.h>
 
 #include "integrals.h"
 #include "string_determinant.h"

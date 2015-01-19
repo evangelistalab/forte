@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "psi4-dec.h"
+#include "physconst.h"
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 #include <libmints/matrix.h>
@@ -73,7 +74,7 @@ void test_davidson()
 
     int nroots_print = std::min(nroots,25);
     for (int i = 0; i < nroots_print; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Flush();
     }
     // END DEBUGGING

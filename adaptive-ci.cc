@@ -156,8 +156,10 @@ double AdaptiveCI::compute_energy()
     outfile->Printf("\n\n  Iterative Adaptive CI");
 
     SharedMatrix H;
-    SharedMatrix evecs;
-    SharedVector evals;
+    SharedMatrix P_evecs;
+    SharedMatrix PQ_evecs;
+    SharedVector P_evals;
+    SharedVector PQ_evals;
 
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
@@ -184,57 +186,64 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
 
-        diagonalize_hamiltonian(P_space_,evals,evecs,nroot_);
+        diagonalize_hamiltonian2(P_space_,P_evals,P_evecs,nroot_);
 
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < num_ref_roots; ++i){
-            outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_;
+            double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
+            outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
         }
         outfile->Printf("\n");
         outfile->Flush();
 
 
         // Step 2. Find determinants in the Q space
-        find_q_space(num_ref_roots,evals,evecs);
+        find_q_space(num_ref_roots,P_evals,P_evecs);
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        diagonalize_hamiltonian2(PQ_space_,evals,evecs,nroot_);
+        diagonalize_hamiltonian2(PQ_space_,PQ_evals,PQ_evecs,nroot_);
 
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < nroot_; ++ i){
-            outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                    27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
+            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+            outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                            exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
         outfile->Printf("\n");
         outfile->Flush();
 
 
         // Step 4. Check convergence and break if needed
-        bool converged = check_convergence(energy_history,evals);
+        bool converged = check_convergence(energy_history,PQ_evals);
         if (converged) break;
 
 
-        // Step 5. Prune the P + Q space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,evecs,nroot_);
+        // Step 5. Prune the P + Q space to get an update P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
 
-        // Print information about an excited state
-        print_wfn(P_space_,evecs,nroot_);
+        // Print information about the wave function
+        print_wfn(PQ_space_,PQ_evecs,nroot_);
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     for (int i = 0; i < nroot_; ++ i){
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
+        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
-    outfile->Printf("\n\n  iterative_adaptive_mrcisd_bitset ran in %f s",t_iamrcisd.elapsed());
+    outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
+    outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
 
-    return evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
 }
 
 
@@ -663,7 +672,8 @@ void AdaptiveCI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix eve
         }
         std::sort(det_weight.begin(),det_weight.end());
         std::reverse(det_weight.begin(),det_weight.end());
-        for (size_t I = 0; I < 10; ++I){
+        size_t max_dets = std::min(10,evecs->nrow());
+        for (size_t I = 0; I < max_dets; ++I){
             outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
                     I,
                     evecs->get(det_weight[I].second,n),
@@ -1267,7 +1277,7 @@ double AdaptiveCI::compute_energy2()
 
         // Print the energy
         for (int i = 0; i < num_ref_roots; ++ i){
-            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  P-space CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
         outfile->Flush();
 
@@ -1602,9 +1612,9 @@ double AdaptiveCI::compute_energy2()
 
         //
         for (int i = 0; i < nroot_; ++ i){
-            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Adaptive CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
             outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                    27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                    pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
         outfile->Flush();
 
@@ -1662,9 +1672,9 @@ double AdaptiveCI::compute_energy2()
     }
 
     for (int i = 0; i < nroot_; ++ i){
-        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  * IA-MRCISD total energy (%3d)        = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  * IA-MRCISD total energy (%3d) + EPT2 = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_ + multistate_pt2_energy_correction_[i],
-                27.211 * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                pc_hartree2ev * (evals->get(i) - evals->get(0) + multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
 
     outfile->Printf("\n\n  iterative_adaptive_mrcisd        ran in %f s",t_iamrcisd.elapsed());

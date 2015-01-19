@@ -1,22 +1,15 @@
 #include "lambda-ci.h"
 
 #include <cmath>
-#include <ctime>
 #include <functional>
 #include <algorithm>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
+#include "physconst.h"
 #include <libqt/qt.h>
-
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
 #include <libciomr/libciomr.h>
-//#include <libqt/qt.h>
 
 #include "lambda-ci.h"
 #include "cartographer.h"
@@ -386,7 +379,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
             //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
@@ -492,7 +485,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
         outfile->Flush();
 
@@ -736,7 +729,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
             //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
             //                evals->get(i),multistate_pt2_energy_correction_[i]);
         }
@@ -796,7 +789,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
         }
         outfile->Flush();
 
@@ -1058,7 +1051,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 
 //        // 5) Print the energy
 //        for (int i = 0; i < nroot; ++ i){
-//            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+//            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
 //            //        outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
 //            //                evals->get(i),multistate_pt2_energy_correction_[i]);
 //        }
@@ -1120,7 +1113,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 
 //        // 5) Print the energy
 //        for (int i = 0; i < nroot; ++ i){
-//            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_small->get(i) + nuclear_repulsion_energy_,27.211 * (evals->get(i) - evals->get(0)));
+//            outfile->Printf("\n  Ren. step (small) CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_small->get(i) + nuclear_repulsion_energy_,pc_hartree2ev * (evals->get(i) - evals->get(0)));
 //        }
 //        outfile->Flush();
 
