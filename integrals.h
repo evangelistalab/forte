@@ -77,6 +77,7 @@ public:
     double aptei_bb(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_bb[aptei_index(p,q,r,s)];}
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
+
     double diag_aptei_aa(size_t p,size_t q) {return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
 
     /// The diagonal antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||pq>
@@ -137,6 +138,12 @@ public:
 
     /// Compute df integrals
     void compute_df_integrals();
+    /// Compute cholesky integrals
+    void compute_chol_integrals();
+    std::vector<std::pair<std::vector<int>, std::vector<double> >  >chol_ints;
+    std::vector<std::pair<std::vector<int>, std::vector<double> > > df_ints;
+    std::vector<std::pair<std::vector<int>, std::vector<double> > > conv_ints;
+    void debug_ints();
 
 private:
 
