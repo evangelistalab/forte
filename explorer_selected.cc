@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -7,17 +7,11 @@
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
+#include "physconst.h"
 #include <libqt/qt.h>
-
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
 #include <libciomr/libciomr.h>
-//#include <libqt/qt.h>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -29,7 +23,7 @@ namespace psi{ namespace libadaptive{
 /**
  * Diagonalize the
  */
-void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
+void LambdaCI::diagonalize_selected_space(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",space_m_threshold_);
 
@@ -63,7 +57,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
     // 4) Print the energy
     int nroots_print = std::min(nroots,25);
     for (int i = 0; i < nroots_print; ++ i){
-        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_m->get(i),27.211 * (evals_m->get(i) - evals_m->get(0)));
+        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals_m->get(i),pc_hartree2ev * (evals_m->get(i) - evals_m->get(0)));
     }
 
     double significant_threshold = 0.001;
@@ -113,7 +107,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
 
     // 5) Print the energy
     for (int i = 0; i < nroots_print; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
@@ -148,7 +142,7 @@ void AdaptiveCI::diagonalize_selected_space(psi::Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
+SharedMatrix LambdaCI::build_model_space_hamiltonian(Options& options)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -210,7 +204,7 @@ SharedMatrix AdaptiveCI::build_model_space_hamiltonian(Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs)
+SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVector evals, SharedMatrix evecs)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -363,7 +357,7 @@ SharedMatrix AdaptiveCI::build_select_hamiltonian_roth(Options& options, SharedV
     return H;
 }
 
-void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
+void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
     outfile->Printf("\n  using a renormalization procedure (Lambda = %.2f Eh)\n",space_m_threshold_);
@@ -513,7 +507,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
         outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
             outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                     evals->get(i),multistate_pt2_energy_correction_[i]);
         }
@@ -539,11 +533,11 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
     //    // 4) Print the energy
     //    int nroots_print = std::min(nroot,25);
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
     //    }
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
@@ -595,7 +589,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
     //        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
     //                evals->get(i),multistate_pt2_energy_correction_[i]);
     //    }
@@ -625,7 +619,7 @@ void AdaptiveCI::diagonalize_renormalized_space(psi::Options& options)
 }
 
 
-void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
+void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
 {
 
     int nroot = options.get_int("NROOT");
@@ -809,7 +803,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag_large.elapsed());
         // 5) Print the energy
         for (int i = 0; i < nroot; ++ i){
-            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+            outfile->Printf("\n  Ren. step CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
             outfile->Printf("\n  Ren. step CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                     evals->get(i),multistate_pt2_energy_correction_[i]);
         }
@@ -841,11 +835,11 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     //    // 4) Print the energy
     //    int nroots_print = std::min(nroot,25);
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Small CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
     //    }
     // 5) Print the energy
     for (int i = 0; i < nroot; ++ i){
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
         outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
                 evals->get(i),multistate_pt2_energy_correction_[i]);
     }
@@ -897,7 +891,7 @@ void AdaptiveCI::diagonalize_renormalized_fixed_space(psi::Options& options)
 
     //    // 5) Print the energy
     //    for (int i = 0; i < nroots_print; ++ i){
-    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)));
+    //        outfile->Printf("\n  Adaptive CI Energy Root %3d = %.12f Eh = %8.4f eV",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)));
     //        outfile->Printf("\n  Adaptive CI Energy + EPT2 Root %3d = %.12f = %.12f + %.12f",i + 1,evals->get(i) + multistate_pt2_energy_correction_[i],
     //                evals->get(i),multistate_pt2_energy_correction_[i]);
     //    }

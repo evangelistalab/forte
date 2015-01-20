@@ -1,4 +1,4 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 #include <functional>
@@ -7,15 +7,12 @@
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
+#include "physconst.h"
 #include <libqt/qt.h>
 #include <libciomr/libciomr.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -62,7 +59,7 @@ inline double smootherstep(double edge0, double edge1, double x)
 /**
  * Diagonalize the Hamiltonian in the model and intermediate space, the external space is ignored
  */
-void AdaptiveCI::diagonalize_p_space(psi::Options& options)
+void LambdaCI::diagonalize_p_space(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
@@ -114,7 +111,7 @@ void AdaptiveCI::diagonalize_p_space(psi::Options& options)
     print_results(evecs,evals,nroots);
 }
 
-void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
+void LambdaCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
 {
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet"});
 
@@ -174,7 +171,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
         S2 /= norm;
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         std::string state_label = s2_labels[std::round(S * 2.0)];
-        outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),27.211 * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
+        outfile->Printf("\n  Adaptive CI Energy Root %3d = %20.12f Eh = %8.4f eV (S^2 = %5.3f, S = %5.3f, %s)",i + 1,evals->get(i),pc_hartree2ev * (evals->get(i) - evals->get(0)),S2,S,state_label.c_str());
         outfile->Flush();
     }
 
@@ -247,7 +244,7 @@ void AdaptiveCI::print_results(SharedMatrix evecs,SharedVector evals,int nroots)
 /**
  * Diagonalize the
  */
-void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
+void LambdaCI::diagonalize_p_space_lowdin(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the P space with Lowdin's contributions from the Q space\n");
     int root = 0;
@@ -316,7 +313,7 @@ void AdaptiveCI::diagonalize_p_space_lowdin(psi::Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_hamiltonian(Options& options)
+SharedMatrix LambdaCI::build_hamiltonian(Options& options)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -374,7 +371,7 @@ SharedMatrix AdaptiveCI::build_hamiltonian(Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
+SharedMatrix LambdaCI::build_hamiltonian_parallel(Options& options)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -432,7 +429,7 @@ SharedMatrix AdaptiveCI::build_hamiltonian_parallel(Options& options)
     return H;
 }
 
-void AdaptiveCI::smooth_hamiltonian(SharedMatrix H)
+void LambdaCI::smooth_hamiltonian(SharedMatrix H)
 {
     int ndets = H->nrow();
 
@@ -461,7 +458,7 @@ void AdaptiveCI::smooth_hamiltonian(SharedMatrix H)
     }
 }
 
-void AdaptiveCI::select_important_hamiltonian(SharedMatrix H)
+void LambdaCI::select_important_hamiltonian(SharedMatrix H)
 {
     int ndets = H->nrow();
 
@@ -500,7 +497,7 @@ void AdaptiveCI::select_important_hamiltonian(SharedMatrix H)
     outfile->Printf("\n\n  %ld states were discarded because the coupling to the main space is less than %f muE_h",ndiscarded,t2_threshold_ * 1000000.0);
 }
 
-void AdaptiveCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
+void LambdaCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs)
 {
     int root = 0;
     double E_0 = evals->get(root);
@@ -535,7 +532,7 @@ void AdaptiveCI::evaluate_perturbative_corrections(SharedVector evals,SharedMatr
     outfile->Printf("\n\n Adaptive CI + PT2 Energy Root %3d = %.12f Eh",root + 1,E_0 + E_2_PQ);
 }
 
-void AdaptiveCI::lowdin_hamiltonian(SharedMatrix H,double E)
+void LambdaCI::lowdin_hamiltonian(SharedMatrix H,double E)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
     int ndets_p = H->nrow();
@@ -578,7 +575,7 @@ void AdaptiveCI::lowdin_hamiltonian(SharedMatrix H,double E)
 /**
  * Diagonalize the Hamiltonian in the model and intermediate space, the external space is ignored
  */
-void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
+void LambdaCI::diagonalize_p_space_direct(psi::Options& options)
 {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
@@ -633,7 +630,7 @@ void AdaptiveCI::diagonalize_p_space_direct(psi::Options& options)
  * @param ndets
  * @return a SharedMatrix object that contains the Hamiltonian
  */
-std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_direct(Options& options)
+std::vector<std::vector<std::pair<int,double> > > LambdaCI::build_hamiltonian_direct(Options& options)
 {
     int ntot_dets = static_cast<int>(determinants_.size());
 
@@ -696,12 +693,12 @@ std::vector<std::vector<std::pair<int,double> > > AdaptiveCI::build_hamiltonian_
 
 
 
-void AdaptiveCI::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
+void LambdaCI::davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
 {
     david2(H->pointer(),H->nrow(),nroots,Eigenvalues->pointer(),Eigenvectors->pointer(),1.0e-10,0);
 }
 
-bool AdaptiveCI::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
+bool LambdaCI::davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots)
 {
 //    david2(H->pointer(),H->nrow(),nroots,Eigenvalues->pointer(),Eigenvectors->pointer(),1.0e-10,0);
 

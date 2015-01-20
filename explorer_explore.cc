@@ -1,11 +1,11 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -40,7 +40,7 @@ bool compare_det_info(const det_info& t1, const det_info& t2)
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
-void AdaptiveCI::explore_original(psi::Options& options)
+void LambdaCI::explore_original(psi::Options& options)
 {
     outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
 
@@ -242,7 +242,7 @@ void AdaptiveCI::explore_original(psi::Options& options)
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  */
-void AdaptiveCI::explore(psi::Options& options)
+void LambdaCI::explore(psi::Options& options)
 {
     outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
 

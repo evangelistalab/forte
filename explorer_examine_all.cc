@@ -1,11 +1,11 @@
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 
@@ -28,7 +28,7 @@ double compute_mp_energy(bool *begin, bool *end, const std::vector<double>& epsi
 /**
  * Examine all the Slater determinant in the FCI space
  */
-void AdaptiveCI::examine_all(psi::Options& options)
+void LambdaCI::examine_all(psi::Options& options)
 {
     outfile->Printf("\n\n  Exploring the space of Slater determinants\n");
     StringDeterminant det(reference_determinant_);

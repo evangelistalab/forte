@@ -1,12 +1,12 @@
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 
 #include <cmath>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
-#include "adaptive-ci.h"
+#include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
 

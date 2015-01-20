@@ -28,58 +28,53 @@
 #include <liboptions/liboptions.h>
 #include <libmints/vector.h>
 #include <libmints/matrix.h>
+#include <libmints/wavefunction.h>
 
 #include "integrals.h"
 #include "string_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
-class FCIMC
+class FCIMC : public Wavefunction
 {
 public:
-    FCIMC(Options &options, ExplorerIntegrals* ints);
+    // ==> Class Constructor and Destructor <==
+
+    /**
+     * Constructor
+     * @param wfn The main wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     */
+    FCIMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+
+    /// Destructor
     ~FCIMC();
+
+    // ==> Class Interface <==
+
+    /// Compute the energy
+    double compute_energy();
+
 private:
-    /// The number of irriducible representations
-    int nirrep_;
-    /// The wave function symmetry
-    int wavefunction_symmetry_;
-    /// The number of molecular orbitals
-    int nmo_;
-    /// The number of alpha electrons
-    int nalpha_;
-    /// The number of beta electrons
-    int nbeta_;
-    /// The number of molecular orbitals per irrep
-    Dimension nmopi_;
-    /// The number of alpha electrons per irrep
-    Dimension nalphapi_;
-    /// The number of beta electrons per irrep
-    Dimension nbetapi_;
-    /// The alpha occupation of the reference determinant
-    Dimension nalphapi_ref_;
-    /// The beta occupation of the reference determinant
-    Dimension nbetapi_ref_;
-    /// The frozen core orbitals
-    Dimension frzcpi_;
-    /// The frozen virtual orbitals
-    Dimension frzvpi_;
-    /// The symmetry of each orbital in Pitzer ordering
-    std::vector<int> mo_symmetry_;
-    /// The symmetry of each orbital in the qt ordering
-    std::vector<int> mo_symmetry_qt_;
-    /// A vector that contains all the frozen core
-    std::vector<int> frzc_;
-    /// A vector that contains all the frozen virtual
-    std::vector<int> frzv_;
-    /// The nuclear repulsion energy
-    double nuclear_repulsion_energy_;
-    /// The molecular integrals required by fcimc
-    ExplorerIntegrals* ints_;
-    /// The reference determinant
-    StringDeterminant reference_determinant_;
-    /// The determinant with minimum energy
-    StringDeterminant min_energy_determinant_;
+//    /// The wave function symmetry
+//    int wavefunction_symmetry_;
+//    /// The symmetry of each orbital in Pitzer ordering
+//    std::vector<int> mo_symmetry_;
+//    /// The symmetry of each orbital in the qt ordering
+//    std::vector<int> mo_symmetry_qt_;
+//    /// A vector that contains all the frozen core
+//    std::vector<int> frzc_;
+//    /// A vector that contains all the frozen virtual
+//    std::vector<int> frzv_;
+//    /// The nuclear repulsion energy
+//    double nuclear_repulsion_energy_;
+//    /// The molecular integrals required by fcimc
+//    ExplorerIntegrals* ints_;
+//    /// The reference determinant
+//    StringDeterminant reference_determinant_;
+//    /// The determinant with minimum energy
+//    StringDeterminant min_energy_determinant_;
 
     void startup(Options& options);
     void read_info(Options& options);
