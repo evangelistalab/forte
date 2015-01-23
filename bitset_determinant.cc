@@ -26,21 +26,38 @@ BitsetDeterminant::BitsetDeterminant() : nmo_(0)
 {
 }
 
-BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
-    : nmo_(occupation_a.size())
+/// Construct the determinant from an occupation vector that
+/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+BitsetDeterminant::BitsetDeterminant(const std::vector<int>& occupation,bool print_det)
+    : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
 {
-    allocate();
+    for(int p = 0; p < nmo_; ++p){
+        alfa_bits_[p] = occupation[p];
+        beta_bits_[p] = occupation[p + nmo_];
+    }
+    if (print_det) print();
+}
+
+/// Construct the determinant from an occupation vector that
+/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation,bool print_det)
+    : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
+{
+    for(int p = 0; p < nmo_; ++p){
+        alfa_bits_[p] = occupation[p];
+        beta_bits_[p] = occupation[p + nmo_];
+    }
+    if (print_det) print();
+}
+
+BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
+    : nmo_(occupation_a.size()), alfa_bits_(nmo_), beta_bits_(nmo_)
+{
     for(int p = 0; p < nmo_; ++p){
         alfa_bits_[p] = occupation_a[p];
         beta_bits_[p] = occupation_b[p];
     }
     if (print_det) print();
-}
-
-void BitsetDeterminant::allocate()
-{
-    alfa_bits_.resize(nmo_);
-    beta_bits_.resize(nmo_);
 }
 
 /**

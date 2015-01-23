@@ -19,6 +19,7 @@
 
 #include "adaptive-ci.h"
 #include "cartographer.h"
+#include "sparse_ci_solver.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
 
@@ -175,7 +176,7 @@ double AdaptiveCI::compute_energy()
     double new_avg_energy = 0.0;
 
     std::vector<std::vector<double> > energy_history;
-
+    SparseCISolver sparse_solver;
     int maxcycle = 20;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // Step 1. Diagonalize the Hamiltonian in the P space
@@ -185,7 +186,8 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
 
-        diagonalize_hamiltonian2(P_space_,P_evals,P_evecs,nroot_);
+
+        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
 
         // Print the energy
         outfile->Printf("\n");
@@ -203,7 +205,7 @@ double AdaptiveCI::compute_energy()
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        diagonalize_hamiltonian2(PQ_space_,PQ_evals,PQ_evecs,nroot_);
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
 
         // Print the energy
         outfile->Printf("\n");

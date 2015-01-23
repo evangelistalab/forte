@@ -36,7 +36,7 @@ namespace psi{ namespace libadaptive{
  *
  * The determinant is represented by a pair of alpha/beta strings
  * that specify the occupation of each molecular orbital
- * (including frozen core and virtual orbitals).
+ * (excluding frozen core and virtual orbitals).
  *
  * |Det> = |Ia> x |Ib>
  *
@@ -50,58 +50,19 @@ public:
     // Class Constructor and Destructor
     /// Construct an empty determinant
     BitsetDeterminant();
+
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-//    explicit BitsetDeterminant(const std::vector<int>& occupation,bool print_det = false);
+    explicit BitsetDeterminant(const std::vector<int>& occupation,bool print_det = false);
+
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-//    explicit BitsetDeterminant(const std::vector<bool>& occupation,bool print_det = false);
+    explicit BitsetDeterminant(const std::vector<bool>& occupation,bool print_det = false);
+
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
-//    /// Returns the number of non-frozen molecular orbitals
-//    int nmo() {return nmo_;}
-    /// Get a pointer to the alpha bits
-    boost::dynamic_bitset<> alfa_bits() const {return alfa_bits_;}
-    /// Get a pointer to the beta bits
-    boost::dynamic_bitset<> beta_bits() const {return beta_bits_;}
-    /// Return the value of an alpha bit
-    bool get_alfa_bit(int n) const {return alfa_bits_[n];}
-    /// Return the value of a beta bit
-    bool get_beta_bit(int n) const {return beta_bits_[n];}
-    /// Set the value of an alpha bit
-    void set_alfa_bit(int n, bool value) {alfa_bits_[n] = value;}
-    /// Set the value of a beta bit
-    void set_beta_bit(int n, bool value) {beta_bits_[n] = value;}
-//    /// Specify the occupation numbers
-//    void set_bits(bool*& alfa_bits,bool*& beta_bits);
-//    /// Specify the occupation numbers
-//    void set_bits(std::vector<bool>& alfa_bits,std::vector<bool>& beta_bits);
-    /// Print the Slater determinant
-    void print() const;
-    std::string str() const;
-    /// Compute the energy of a Slater determinant
-    double energy() const;
-//    /// Compute the one-electron contribution to the energy of a Slater determinant
-//    double one_electron_energy();
-//    /// Compute the kinetic energy of a Slater determinant
-//    double kinetic_energy();
-//    /// Compute the energy of a Slater determinant with respect to a given reference
-//    double excitation_energy(const StringDeterminant& reference);
-//    /// Compute the energy of a Slater determinant with respect to a given reference
-//    double excitation_ab_energy(const StringDeterminant& reference);
-    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
-    double slater_rules(const BitsetDeterminant& rhs) const;
-//    /// Compute the excitation level of a Slater determiant with respect to a given reference
-//    int excitation_level(const StringDeterminant& reference);
-//    int excitation_level(const bool* Ia,const bool* Ib);
-    /// Sets the pointer to the integral object
-    static void set_ints(ExplorerIntegrals* ints) {
-        ints_ = ints;
-        temp_alfa_bits_.resize(ints_->nmo());
-        temp_beta_bits_.resize(ints_->nmo());
-    }
 
     bool operator<(const BitsetDeterminant& lhs) const{
         if (alfa_bits_ > lhs.alfa_bits_) return false;
@@ -113,11 +74,44 @@ public:
         return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
-private:
-    // Functions
-    /// Used to allocate the memory for the arrays
-    void allocate();
+    /// Get a pointer to the alpha bits
+    boost::dynamic_bitset<> alfa_bits() const {return alfa_bits_;}
 
+    /// Get a pointer to the beta bits
+    boost::dynamic_bitset<> beta_bits() const {return beta_bits_;}
+
+    /// Return the value of an alpha bit
+    bool get_alfa_bit(int n) const {return alfa_bits_[n];}
+    /// Return the value of a beta bit
+    bool get_beta_bit(int n) const {return beta_bits_[n];}
+
+    /// Set the value of an alpha bit
+    void set_alfa_bit(int n, bool value) {alfa_bits_[n] = value;}
+    /// Set the value of a beta bit
+    void set_beta_bit(int n, bool value) {beta_bits_[n] = value;}
+
+    /// Specify the occupation numbers
+    void set_alfa_bits(boost::dynamic_bitset<>& alfa_bits) {alfa_bits_ = alfa_bits;}
+    /// Specify the occupation numbers
+    void set_beta_bits(boost::dynamic_bitset<>& beta_bits) {beta_bits_ = beta_bits;}
+
+    /// Print the Slater determinant
+    void print() const;
+    /// Save the Slater determinant as a string
+    std::string str() const;
+
+    /// Compute the energy of a Slater determinant
+    double energy() const;
+    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    double slater_rules(const BitsetDeterminant& rhs) const;
+
+    /// Sets the pointer to the integral object
+    static void set_ints(ExplorerIntegrals* ints) {
+        ints_ = ints;
+        temp_alfa_bits_.resize(ints_->nmo());
+        temp_beta_bits_.resize(ints_->nmo());
+    }
+private:
     // Data
     /// Number of non-frozen molecular orbitals
     size_t nmo_;
