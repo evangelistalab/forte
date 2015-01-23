@@ -1,5 +1,8 @@
 #include <cmath>
 
+#include <boost/timer.hpp>
+#include <boost/format.hpp>
+
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
@@ -72,7 +75,9 @@ void SparseCISolver::diagonalize_full(const std::vector<BitsetDeterminant>& spac
     evals.reset(new Vector("e",dim_space));
 
     // Diagonalize H
+    boost::timer t_diag;
     H->diagonalize(evecs,evals);
+    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_diag.elapsed());
 }
 
 
@@ -131,7 +136,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
 
 std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<BitsetDeterminant> &space)
 {
-//    boost::timer t_h_build2;
+    boost::timer t_h_build2;
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse;
     size_t dim_space = space.size();
 
@@ -157,8 +162,8 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
         }
         H_sparse.push_back(make_pair(index_row,H_row));
     }
-    outfile->Printf("\n  %zu nonzero elements out of %zu (%e)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
-//    outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
+    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
+    outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
     outfile->Flush();
     return H_sparse;
 }
@@ -167,9 +172,13 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 
 bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot_s)
 {
+    // Start a timer
+    boost::timer t_davidson;
+
     int maxiter = 100;
     bool print = false;
-    /* Use unit vectors as initial guesses */
+
+    // Use unit vectors as initial guesses
     int N = sigma_vector->size();
     int M = nroot_s;
     int maxdim = 12 * M;
@@ -195,6 +204,8 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     // Davidson mini-Hamitonian
     Matrix G("G",maxdim, maxdim);
+    // A metric matrix
+    Matrix S("S",maxdim, maxdim);
     // Eigenvectors of the Davidson mini-Hamitonian
     Matrix alpha("alpha",maxdim, maxdim);
     // Eigenvalues of the Davidson mini-Hamitonian
@@ -232,8 +243,46 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
         G.gemm(false,false,1.0,b,sigma,0.0);
 
+//        if (L == M) G.print();
+
         // diagonalize mini-matrix
         G.diagonalize(alpha,lambda);
+
+        // Davidson mini-Hamitonian
+        S.gemm(false,true,1.0,b,b,0.0);
+
+        bool printed_S = false;
+        // Check for orthogonality
+        for (int i = 0; i < L; ++i){
+            double diag = S.get(i,i);
+            double zero = false;
+            double one = false;
+            if (std::fabs(diag - 1.0) < 1.e-6){
+                one = true;
+            }
+            if (std::fabs(diag) < 1.e-6){
+                zero = true;
+            }
+            if ((not zero) and (not one)){
+                if (not printed_S) {
+                    S.print();
+                    printed_S = true;
+                }
+                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero");
+            }
+            double offdiag = 0.0;
+            for (int j = i + 1; j < L; ++j){
+                offdiag += std::fabs(S.get(i,j));
+            }
+            if (offdiag > 1.0e-6){
+                if (not printed_S) {
+                    S.print();
+                    printed_S = true;
+                }
+                outfile->Printf("\n  WARNING: The vectors are not orthogonal");
+
+            }
+        }
 
         // Step #3: Build the Correction Vectors
         // form preconditioned residue vectors
@@ -273,7 +322,10 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
         // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
         for(int k = 0,numf = 0; k < M; k++)
-            if(schmidt_add(b_p, L, N, f_p[k])) { L++; numf++; }
+            if(schmidt_add(b_p, L, N, f_p[k])) {
+                L++;  // <- Increase L if we add one more basis vector
+                numf++;
+            }
 
         // If L is close to maxdim, collapse to one guess per root */
         if(maxdim - L < M) {
@@ -291,7 +343,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
                 }
             }
 
-            // copy new vectors into place
+            // normalize new vectors
             for(int i = 0; i < M; i++){
                 double norm = 0.0;
                 for(int k = 0; k < N; k++){
@@ -299,7 +351,15 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
                 }
                 norm = std::sqrt(norm);
                 for(int k = 0; k < N; k++){
-                    b_p[i][k] = bnew_p[i][k] / norm;
+                    bnew_p[i][k] = bnew_p[i][k] / norm;
+                }
+            }
+            // Copy them into place
+            b.zero();
+            for(int k = 0,numf = 0; k < M; k++){
+                if(schmidt_add(b_p,k, N, bnew_p[k])) {
+                    L++;  // <- Increase L if we add one more basis vector
+                    numf++;
                 }
             }
 
@@ -359,8 +419,8 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             v[I][i] /= norm;
         }
     }
-    outfile->Printf("\n  Davidson algorithm converged in %d iterations.\n", iter);
-
+    outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
+    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
     return true;
 }
 
