@@ -1,8 +1,5 @@
 #include "lambda-ci.h"
 
-//#include <cstdio>
-//#include <cstdlib>
-//#include <cstring>
 #include <cmath>
 #include <functional>
 #include <algorithm>
@@ -128,7 +125,8 @@ void AdaptiveCI::print_info()
         {"Q-threshold",tau_q_},
         {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
 
-
+    std::vector<std::pair<std::string,std::string>> calculation_info_string{
+        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
 //    {"Number of correlated beta electrons",nbeta_},
@@ -144,6 +142,9 @@ void AdaptiveCI::print_info()
     }
     for (auto& str_dim : calculation_info_double){
         outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_string){
+        outfile->Printf("\n    %-39s %s",str_dim.first.c_str(),str_dim.second.c_str());
     }
     outfile->Printf("\n  %s",string(52,'-').c_str());
     outfile->Flush();
@@ -383,6 +384,12 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+//        bool relevant = false;
+//        for (int n = 0; n < nroot; ++n){
+//            if (std::fabs(evecs->get(I,n)) >= 10.0 * tau_p_) relevant = true;
+//        }
+//        if (not relevant) continue;
+
         const BitsetDeterminant& det = P_space_[I];
         for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
             if (det.get_alfa_bit(p)){

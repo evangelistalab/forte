@@ -10,6 +10,7 @@
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
 
+#include "ga-ci.h"
 #include "adaptive-ci.h"
 #include "lambda-ci.h"
 #include "fcimc.h"
@@ -46,7 +47,7 @@ read_options(std::string name, Options &options)
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY");
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI");
+        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -185,6 +186,15 @@ read_options(std::string name, Options &options)
         /*- The energy threshold for the determinant energy in Hartree -*/
         options.add_int("MAXITER",100);
 
+
+        // Options for the Genetic Algorithm CI //
+        /*- The size of the population -*/
+        options.add_int("NPOP",100);
+
+
+
+
+
         //////////////////////////////////////////////////////////////
         ///
         ///              OPTIONS FOR THE SRG MODULE
@@ -287,6 +297,11 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
             aci->compute_energy();
+        }
+        if (options.get_str("JOB_TYPE") == "GACI"){
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<GeneticAlgorithmCI> gaci(new GeneticAlgorithmCI(wfn,options,ints_));
+            gaci->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);

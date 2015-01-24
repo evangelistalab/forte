@@ -130,6 +130,8 @@ public:
 
 std::size_t hash_value(const BitsetDeterminant& input);
 
+typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;
+
 }} // End Namespaces
 
 #endif // _bitset_determinant_h_
