@@ -101,7 +101,7 @@ public:
     /**
      * Constructor
      */
-    SparseCISolver() {};
+    SparseCISolver() : print_details_(false) {};
 
     /// Destructor
     ~SparseCISolver() {};
@@ -183,6 +183,9 @@ private:
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
+
+
+    bool print_details_;
 };
 
 

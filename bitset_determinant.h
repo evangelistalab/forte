@@ -95,6 +95,15 @@ public:
     /// Specify the occupation numbers
     void set_beta_bits(boost::dynamic_bitset<>& beta_bits) {beta_bits_ = beta_bits;}
 
+    /// Return a vector of occupied alpha orbitals
+    std::vector<int> get_alfa_occ();
+    /// Return a vector of occupied beta orbitals
+    std::vector<int> get_beta_occ();
+    /// Return a vector of virtual alpha orbitals
+    std::vector<int> get_alfa_vir();
+    /// Return a vector of virtual beta orbitals
+    std::vector<int> get_beta_vir();
+
     /// Print the Slater determinant
     void print() const;
     /// Save the Slater determinant as a string

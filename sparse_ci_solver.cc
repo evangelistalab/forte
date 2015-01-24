@@ -114,7 +114,7 @@ void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<BitsetDete
 
 void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
-    outfile->Printf("\n  Using <diagonalize_davidson_liu_sparse>");
+    outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H = build_sparse_hamiltonian(space);
@@ -218,7 +218,7 @@ void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<SharedBits
 
 void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
-    outfile->Printf("\n  Using <diagonalize_davidson_liu_sparse>");
+    outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H = build_sparse_hamiltonian(space);
@@ -305,8 +305,9 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     double cutoff = 1.0e-10;
 
-    outfile->Printf("\n  Davidson-Liu Algorithm",N,N);
-    outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
+    if (print_details_){
+        outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
+    }
 
     // current set of guess vectors stored by row
     Matrix b("b",maxdim,N);
