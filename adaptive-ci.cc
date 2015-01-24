@@ -364,15 +364,17 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     int nmo = reference_determinant_.nmo();
 
-    std::vector<int> aocc(nalpha_);
-    std::vector<int> bocc(nbeta_);
-    std::vector<int> avir(ncmo_ - nalpha_);
-    std::vector<int> bvir(ncmo_ - nbeta_);
+    int ncalpha = nalpha_ - frzcpi_.sum();
+    int ncbeta  = nbeta_  - frzcpi_.sum();
+    std::vector<int> aocc(ncalpha);
+    std::vector<int> bocc(ncbeta);
+    std::vector<int> avir(ncmo_ - ncalpha);
+    std::vector<int> bvir(ncmo_ - ncbeta);
 
-    int noalpha = nalpha_;
-    int nobeta  = nbeta_;
-    int nvalpha = ncmo_ - nalpha_;
-    int nvbeta  = ncmo_ - nbeta_;
+    int noalpha = ncalpha;
+    int nobeta  = ncbeta;
+    int nvalpha = ncmo_ - ncalpha;
+    int nvbeta  = ncmo_ - ncbeta;
 
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -467,7 +469,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                             new_det.set_alfa_bit(ii,false);
                             new_det.set_alfa_bit(jj,false);
                             new_det.set_alfa_bit(aa,true);
-                            new_det.set_alfa_bit(bb,true);
+                            new_det.set_alfa_bit(bb,true);                                                       
                             if(P_space_map_.find(new_det) == P_space_map_.end()){
                                 double HIJ = det.slater_rules(new_det);
                                 if (V_hash.count(new_det) == 0){

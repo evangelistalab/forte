@@ -126,7 +126,7 @@ private:
     void generate_initial_pop(std::vector<SharedBitsetDeterminant>& population,int size,std::unordered_map<std::vector<bool>,bool>& unique_list);
 
     /// Weed out the population
-    void weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness);
+    void weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);
 
     /// Crossover the population
     void crossover(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);

@@ -146,31 +146,36 @@ double GeneticAlgorithmCI::compute_energy()
     // Step 1.  Generate an initial population
     generate_initial_pop(population,npop_,unique_list);
     population.push_back(reference_determinant_);
+    std::vector<bool> occupation_ab(2 * ncmo_,false);
+    for (int i = 0; i < ncmo_; ++i){
+        occupation_ab[i] = reference_determinant_->get_alfa_bit(i);
+        occupation_ab[i + ncmo_] = reference_determinant_->get_beta_bit(i);
+    }
+    unique_list[occupation_ab] = true;
 
 
-
-    for (int cycle = 0; cycle < 5; ++cycle){
+    for (int cycle = 0; cycle < 20; ++cycle){
         int total_pop = population.size();
         SharedMatrix evecs(new Matrix("Eigenvectors",total_pop,nroot_));
         SharedVector evals(new Vector("Eigenvalues",nroot_));
         sparse_solver.diagonalize_hamiltonian(population,evals,evecs,nroot_,Full);
-        evecs->print();
 
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < nroot_; ++i){
             double abs_energy = evals->get(i) + nuclear_repulsion_energy_;
             double exc_energy = pc_hartree2ev * (evals->get(i) - evals->get(0));
-            outfile->Printf("\n    Population CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+            outfile->Printf("\n    Population CI Energy Root %3d        = %.12f Eh = %8.4f eV (%d)",i + 1,abs_energy,exc_energy,total_pop);
         }
         outfile->Printf("\n");
         outfile->Flush();
+        fitness.clear();
 
         for (int I = 0; I < total_pop; ++I){
             fitness.push_back(evecs->get(I,root_) * evecs->get(I,root_));
         }
 
-        weed_out(population,fitness);
+        weed_out(population,fitness,unique_list);
 
         crossover(population,fitness,unique_list);
     }
@@ -314,7 +319,7 @@ void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedBitsetDeterminan
                 }
                 if (unique_list.count(occupation_ab) == 0){
                     unique_list[occupation_ab] = true;
-                    SharedBitsetDeterminant det(new BitsetDeterminant(occupation_a,occupation_b,true));
+                    SharedBitsetDeterminant det(new BitsetDeterminant(occupation_a,occupation_b));
                     population.push_back(det);
                     break;
                 }
@@ -323,16 +328,28 @@ void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedBitsetDeterminan
     }
 }
 
-void GeneticAlgorithmCI::weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness)
+void GeneticAlgorithmCI::weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
 {
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,population.size() - 1);
     auto rand_int = std::bind ( distribution, generator );
 
+    int ndel = double(population.size()) * 0.2;
 
-//    for (int K = 0; K < ndel; ++K){
-
-//    }
+    for (int K = 0; K < ndel; ++K){
+        int I = rand_int() % population.size();
+        if (fitness[I] < 0.0001){
+            SharedBitsetDeterminant detI = population[I];
+            std::vector<bool> occupation_ab(2 * ncmo_,false);
+            for (int i = 0; i < ncmo_; ++i){
+                occupation_ab[i] = detI->get_alfa_bit(i);
+                occupation_ab[i + ncmo_] = detI->get_beta_bit(i);
+            }
+            population.erase(population.begin() + I);
+            fitness.erase(fitness.begin() + I);
+            unique_list.erase(occupation_ab);
+        }
+    }
 }
 
 void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
@@ -344,7 +361,7 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
     std::uniform_int_distribution<int> distribution_cmo(0,ncmo_ - 1);
     auto rand_cmo = std::bind ( distribution_cmo, generator );
 
-    std::uniform_real_distribution<double> distribution_real(0.0,1.0);
+    std::uniform_real_distribution<double> distribution_real(-0.001,0.001);
     auto rand_real = std::bind ( distribution_real, generator );
 
     std::vector<bool> occupation_ab(2 * ncmo_,false);
@@ -354,14 +371,13 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
             int I = rand_int();
             int J = rand_int();
             double importance = fitness[I] + fitness[J];
-            if (true) { // importance > rand_real())
+            if (importance > rand_real()){
                 SharedBitsetDeterminant detI = population[I];
                 SharedBitsetDeterminant detJ = population[J];
                 std::vector<bool> occupation_a(ncmo_,false);
                 std::vector<bool> occupation_b(ncmo_,false);
                 std::vector<bool> unoccupied_a(ncmo_,false);
                 std::vector<bool> unoccupied_b(ncmo_,false);
-
 
                 int symmetry = 0;
 
@@ -412,10 +428,6 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
                     if (unique_list.count(occupation_ab) == 0){
                         unique_list[occupation_ab] = true;
                         SharedBitsetDeterminant det(new BitsetDeterminant(occupation_a,occupation_b));
-                        detI->print();
-                        detJ->print();
-                        outfile->Printf("\n  nafix = %d, nbfix = %d, ncbeta_ - nbfix = %d",nafix,nbfix,ncbeta_ - nbfix);
-                        det->print();
                         population.push_back(det);
                         break;
                     }
@@ -423,8 +435,15 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
             }
         }
     }
-}
 
+    for (int I = 0; I < population.size(); ++I){
+        for (int J = I + 1; J < population.size(); ++J){
+            if (*population[I] == *population[J]){
+                outfile->Printf("\n  Determinants %d and %d are identical",I,J);
+            }
+        }
+    }
+}
 
 }} // EndNamespaces
 

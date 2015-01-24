@@ -293,7 +293,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     boost::timer t_davidson;
 
     int maxiter = 100;
-    bool print = true;
+    bool print = false;
 
     // Use unit vectors as initial guesses
     int N = sigma_vector->size();
@@ -359,8 +359,18 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
         // Step #2: Build and Diagonalize the Subspace Hamiltonian
         sigma_vector->compute_sigma(sigma,b,maxdim);
 
+
         G.gemm(false,false,1.0,b,sigma,0.0);
 
+//        G.print();
+
+//        for (int r = 0; r < L; ++r){
+//            for (int I = 0; I < N; ++I){
+//                if (std::fabs(b.get(r,I)) > 0.05){
+//                    outfile->Printf("\n  sol = %d, N = %d, c = %f",r,I,b.get(r,I));
+//                }
+//            }
+//        }
 //        if (L == M) G.print();
 
         // diagonalize mini-matrix
@@ -368,6 +378,8 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
         // Davidson mini-Hamitonian
         S.gemm(false,true,1.0,b,b,0.0);
+
+//        S.print();
 
         bool printed_S = false;
         // Check for orthogonality
@@ -432,9 +444,13 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             norm = std::sqrt(norm);
             if(norm < 1.0e-6){
                 outfile->Printf("\n  WARNING norm of Davidson residual is less than 1.0e-6");
-            }
-            for(int I = 0; I < N; I++) {
-                f_p[k][I] /= norm;
+                for(int I = 0; I < N; I++) {
+                    f_p[k][I] = 0.0;
+                }
+            }else{
+                for(int I = 0; I < N; I++) {
+                    f_p[k][I] /= norm;
+                }
             }
         }
 
