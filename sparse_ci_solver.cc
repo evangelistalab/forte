@@ -192,7 +192,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 
     size_t num_nonzero = 0;
 
-    outfile->Printf("\n  Building H using OpenMP");
+    outfile->Printf("\n  Building H using OpenMP-take2");
     outfile->Flush();
 
     // Form the Hamiltonian matrix
