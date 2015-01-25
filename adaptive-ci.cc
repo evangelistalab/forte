@@ -244,27 +244,18 @@ double AdaptiveCI::compute_energy()
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
 
+    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+    double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
+    Process::environment.globals["CURRENT ENERGY"] = root_energy;
+    Process::environment.globals["ACI ENERGY"] = root_energy;
+    Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
 }
 
 
 void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
-
-    int nmo = reference_determinant_.nmo();
-
-//    int ncalpha = nalpha_ - frzcpi_.sum();
-//    int ncbeta  = nbeta_  - frzcpi_.sum();
-//    std::vector<int> aocc(ncalpha);
-//    std::vector<int> bocc(ncbeta);
-//    std::vector<int> avir(ncmo_ - ncalpha);
-//    std::vector<int> bvir(ncmo_ - ncbeta);
-
-//    int noalpha = ncalpha;
-//    int nobeta  = ncbeta;
-//    int nvalpha = ncmo_ - ncalpha;
-//    int nvbeta  = ncmo_ - ncbeta;
-
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
     std::map<BitsetDeterminant,int> new_dets_map;
@@ -275,15 +266,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-//        bool relevant = false;
-//        for (int n = 0; n < nroot; ++n){
-//            if (std::fabs(evecs->get(I,n)) >= 10.0 * tau_p_) relevant = true;
-//        }
-//        if (not relevant) continue;
-
         BitsetDeterminant& det = P_space_[I];
-
-//        generate_pair_excited_determinants(nroot,I,evecs,det,V_hash);
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());

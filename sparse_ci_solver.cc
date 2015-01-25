@@ -211,13 +211,13 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
                 if (std::fabs(HIJ) >= 1.0e-12){
                     H_row.push_back(HIJ);
                     index_row.push_back(J);
-                    //                    num_nonzero += 1;
                 }
             }
         }
 #pragma omp critical(save_h_row)
         {
             H_sparse[I] = make_pair(index_row,H_row);
+            num_nonzero += index_row.size();
         }
     }
     outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
