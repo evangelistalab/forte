@@ -117,7 +117,7 @@ void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<BitsetDet
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> H = build_sparse_hamiltonian(space);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> H = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
 
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U",dim_space,nroot));
@@ -182,6 +182,46 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     return H_sparse;
 }
 
+
+std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian_parallel(const std::vector<BitsetDeterminant> &space)
+{
+    boost::timer t_h_build2;
+    // Allocate as many elements as we need
+    size_t dim_space = space.size();
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse(dim_space);
+
+    size_t num_nonzero = 0;
+
+    outfile->Printf("\n  Building H using OpenMP");
+    outfile->Flush();
+
+    // Form the Hamiltonian matrix
+#pragma omp parallel for schedule(dynamic)
+    for (size_t I = 0; I < dim_space; ++I){
+        std::vector<double> H_row;
+        std::vector<int> index_row;
+        const BitsetDeterminant& detI = space[I];
+        double HII = detI.slater_rules(detI);
+        H_row.push_back(HII);
+        index_row.push_back(I);
+        for (size_t J = 0; J < dim_space; ++J){
+            if (I != J){
+                const BitsetDeterminant detJ = space[J];
+                double HIJ = detI.slater_rules(detJ);
+                if (std::fabs(HIJ) >= 1.0e-12){
+                    H_row.push_back(HIJ);
+                    index_row.push_back(J);
+                    num_nonzero += 1;
+                }
+            }
+        }
+        H_sparse[I] = make_pair(index_row,H_row);
+    }
+    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
+    outfile->Printf("\n  %s: %f s","Time spent building H (openmp)",t_h_build2.elapsed());
+    outfile->Flush();
+    return H_sparse;
+}
 
 void SparseCISolver::diagonalize_full(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
@@ -279,6 +319,41 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
             }
         }
         H_sparse.push_back(make_pair(index_row,H_row));
+    }
+    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
+    outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
+    outfile->Flush();
+    return H_sparse;
+}
+
+
+std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_sparse_hamiltonian2(const std::vector<SharedBitsetDeterminant> &space)
+{
+    boost::timer t_h_build2;
+    std::vector<std::pair<std::vector<int>,SharedVector>> H_sparse;
+    size_t dim_space = space.size();
+
+    size_t num_nonzero = 0;
+    // Form the Hamiltonian matrix
+    for (size_t I = 0; I < dim_space; ++I){
+        std::vector<double> H_row;
+        std::vector<int> index_row;
+        SharedBitsetDeterminant detI = space[I];
+        double HII = detI->slater_rules(*detI);
+        H_row.push_back(HII);
+        index_row.push_back(I);
+        for (size_t J = 0; J < dim_space; ++J){
+            if (I != J){
+                SharedBitsetDeterminant detJ = space[J];
+                double HIJ = detI->slater_rules(*detJ);
+                if (std::fabs(HIJ) >= 1.0e-12){
+                    H_row.push_back(HIJ);
+                    index_row.push_back(J);
+                    num_nonzero += 1;
+                }
+            }
+        }
+//        H_sparse.push_back(make_pair(index_row,H_row));
     }
     outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
     outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());

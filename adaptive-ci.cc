@@ -175,6 +175,8 @@ double AdaptiveCI::compute_energy()
 
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
+    sparse_solver.set_parallel(true);
+
     int maxcycle = 20;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // Step 1. Diagonalize the Hamiltonian in the P space

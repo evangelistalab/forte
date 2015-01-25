@@ -88,6 +88,22 @@ protected:
 };
 
 /**
+ * @brief The SigmaVectorSparse class
+ * Computes the sigma vector from a sparse Hamiltonian.
+ */
+class SigmaVectorSparse2 : public SigmaVector
+{
+public:
+    SigmaVectorSparse2(std::vector<std::pair<std::vector<int>,SharedVector>>& H) : SigmaVector(H.size()), H_(H) {};
+
+    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(Vector& diag);
+
+protected:
+    std::vector<std::pair<std::vector<int>,SharedVector>>& H_;
+};
+
+/**
  * @brief The SparseCISolver class
  * This class diagonalizes the Hamiltonian in a basis
  * of determinants.
@@ -101,7 +117,7 @@ public:
     /**
      * Constructor
      */
-    SparseCISolver() : print_details_(false) {};
+    SparseCISolver() : parallel_(false), print_details_(false) {};
 
     /// Destructor
     ~SparseCISolver() {};
@@ -132,6 +148,9 @@ public:
                                    int nroot,
                                    DiagonalizationMethod diag_method = DavidsonLiuSparse);
 
+    /// Enable or disable the parallel algorithms
+    void set_parallel(bool parallel) {parallel_ = parallel;}
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<BitsetDeterminant>& space,
@@ -156,6 +175,7 @@ private:
 
     /// Build a sparse Hamiltonian matrix
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<BitsetDeterminant> &space);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian_parallel(const std::vector<BitsetDeterminant> &space);
 
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<SharedBitsetDeterminant>& space,
@@ -181,10 +201,16 @@ private:
     /// Build a sparse Hamiltonian matrix
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<SharedBitsetDeterminant> &space);
 
+    /// Build a sparse Hamiltonian matrix and store a row of H in a SharedVector
+    std::vector<std::pair<std::vector<int>,SharedVector>> build_sparse_hamiltonian2(const std::vector<SharedBitsetDeterminant> &space);
+
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
 
 
+    /// Use a OMP parallel algorithm?
+    bool parallel_;
+    /// Print details?
     bool print_details_;
 };
 
