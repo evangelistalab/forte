@@ -250,7 +250,7 @@ double AdaptivePathIntegralCI::compute_energy()
     Process::environment.globals["APICI ENERGY"] = apici_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,apici_energy);
+    outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",1,apici_energy);
 
     outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
     outfile->Flush();
