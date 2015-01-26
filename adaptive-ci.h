@@ -119,8 +119,14 @@ private:
     /// Diagonalize the Hamiltonian in a space of determinants
     void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
-    /// Find all the relevant SD excitations out of the P space.
+    /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
+
+    /// Generate excited determinants
+    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+
+    /// Experimental
+    void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
     void prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
