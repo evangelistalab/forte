@@ -339,7 +339,11 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
                         size_t index = aptei_index(p,q,r,s);
+                       
+                        if(options_.get_int("PRINT") > 3){ 
                         outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
+                        }
+                       
                         integrals.push_back(direct - exchange);
                         integrals.push_back(direct);
                         integrals.push_back(direct - exchange);
@@ -795,7 +799,10 @@ void ExplorerIntegrals::compute_df_integrals()
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
+                    if(options_.get_int("PRINT") > 3){       
                     outfile->Printf("\n direct = %20.12f  exchange = %20.12f   index = %d", direct, exchange, index);
+                    }
+
                     value.push_back(direct - exchange);
                     value.push_back(direct);
                     value.push_back(direct - exchange);
@@ -932,9 +939,9 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
 
-    for(int i = 0; i < eigind.size(); i++){
-       outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
-    }
+    //for(int i = 0; i < eigind.size(); i++){
+    //   outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
+    //}
     
     Cpq->print();
     for(int l = 0; l < nL; l++){
@@ -980,10 +987,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     //   }
     //}
 
-    outfile->Printf("\n -----Cholesky integrals are done \n");
-
-    
-
     outfile->Printf("nmo = %d", nmo_);
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
@@ -1000,7 +1003,9 @@ void ExplorerIntegrals::compute_chol_integrals()
                     pqrs.push_back(q);
                     pqrs.push_back(r);
                     pqrs.push_back(s);
+                    if(options_.get_int("PRINT") > 3){
                     outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d %d %d %d %d", direct, exchange, index,p,q,r,s);
+                    }
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
@@ -1105,7 +1110,7 @@ void ExplorerIntegrals::debug_ints()
 //        }
 //      }
 //    }
-//    if(options_.get_int("DEBUG") > 6){
+//    if(options_.get_int("PRINT") > 6){
 //      outfile->Printf("\n  alfa-alfa fock matrix for reference %d",mu);
 //      mat_print(f_aa[mu],nmo,nmo,"outfile");
 //      outfile->Printf("\n  beta-beta fock matrix for reference %d",mu);
@@ -1148,7 +1153,7 @@ void ExplorerIntegrals::debug_ints()
 //      }
 //    }
 //  }
-//  if(options_.get_int("DEBUG") > 6){
+//  if(options_.get_int("PRINT") > 6){
 //    outfile->Printf("\n  alfa-alfa average fock matrix");
 //    mat_print(f_avg_aa,nmo,nmo,"outfile");
 //    outfile->Printf("\n  beta-beta average fock matrix");
