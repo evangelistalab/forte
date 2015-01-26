@@ -11,6 +11,7 @@
 #include <libthce/lreri.h>
 #include <lib3index/cholesky.h>
 #include <libmints/mints.h>
+#include <algorithm>
 
 #include "integrals.h"
 #include "memory.h"
@@ -164,6 +165,8 @@ void ExplorerIntegrals::allocate()
     diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
+    
+    //qt_pitzer_ = new int[nmo_];
 }
 
 void ExplorerIntegrals::deallocate()
@@ -185,6 +188,7 @@ void ExplorerIntegrals::deallocate()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
+    //delete[] qt_pitzer_;
 }
 
 void ExplorerIntegrals::cleanup()
@@ -216,6 +220,14 @@ void ExplorerIntegrals::transform_integrals()
     // Keep the SO integrals on disk in case we want to retransform them
     ints_->set_keep_iwl_so_ints(true);
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+
+
+    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
+    
+    //for(int p = 0; p < nmo_; p++){
+     //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
+    //}
+
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
@@ -327,7 +339,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
                         size_t index = aptei_index(p,q,r,s);
-                        outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d",direct, exchange, index);
+                        outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
                         integrals.push_back(direct - exchange);
                         integrals.push_back(direct);
                         integrals.push_back(direct - exchange);
@@ -758,6 +770,7 @@ void ExplorerIntegrals::compute_df_integrals()
     }
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
+    outfile->Printf("\n DENSITY FITTED");
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             for (size_t r = 0; r < nmo_; ++r){
@@ -845,25 +858,93 @@ void ExplorerIntegrals::compute_chol_integrals()
     Lao->print();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
     SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
+    SharedMatrix Cpq_so = wfn->Ca_subset("SO", "ALL");
+
+    boost::shared_ptr<SOBasisSet> SO(new SOBasisSet(primary, integral));
+    
+ //   Cpq->zero();
+ //   for(int h =0; h < nirrep_; h++){
+ //      int pmax = Cpq_so->rowspi(h);
+ //      int qmax = Cpq_so->colspi(h);
+ //      int poff = SO->function_offset_for_irrep(h);
+ //      int qoff = SO->function_offset_for_irrep(h);
+ //      for(int p =0; p < pmax; p++){
+ //         for(int q = 0; q < qmax; q++){
+ //            Cpq->set(p + poff,q + qoff,Cpq_so->get(h,p,q));
+ //         }
+ //      }
+ //   }
+     
+    //for(int h = 0; h < nirrep_; h++){
+    //   int pmax = Cpq_so->rowspi(h);
+    //   int qmax = Cpq_so->colspi(h);
+    //   int poff = SO->function_offset_for_irrep(h);
+    //   int qoff = SO->function_offset_for_irrep(h);
+    //   for(int l = 0; l < nL; l++){
+    //      for(int p = 0; p < pmax; p++){
+    //         for(int q = 0; q < qmax; q++){
+    //            for(int mu = poff; mu < poff +pmax; mu++){
+    //               for(int nu = 0; nu < poff + pmax; nu++){
+    //                  outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
+    //                  L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
+    //               }
+    //            }
+    //         }
+    //      }
+    //   }
+    //}
+    Cpq->print();
+    Cpq->zero();
+    Cpq = wfn->Ca_subset("AO","ALL");
+    SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
+    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
+    eps_ao->print();
+    eps_so->print();
+    //Cpq_so->print();
+    std::vector<int> order;
+    std::vector<double> eval;
+    for(int h = 0; h < nirrep_; h++){
+       for(int i = 0; i < eps_so->dim(h); i++){
+         eval.push_back(eps_so->get(h,i)); 
+       }
+    }
+    std::vector<std::pair<double, int> > eigind;
+    for(int e = 0; e < eval.size(); e++){
+       std::pair<double, int> EI;
+       EI = std::make_pair(eval[e],e); 
+       eigind.push_back(EI);
+    }
+    std::sort(eigind.begin(), eigind.end());
+
+    for(int i = 0; i < eigind.size(); i++){
+       outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
+    }
+    
+    
+    
     Cpq->print();
     for(int l = 0; l < nL; l++){
        for(int p = 0; p < nmo_; p++){
           for(int q = 0; q < nmo_; q++){
              for(int mu = 0; mu < nbf; mu++){
                 for(int nu = 0; nu < nbf; nu++){
-                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,p)*Cpq->get(nu,q));
+                   //outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
+                   //L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
+                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,eigind[p].second)*Cpq->get(nu,eigind[q].second));
                 }
              }
           }
        }
     }
+
+    L->print(); 
+
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
 
     //Computes L_pq^B * L_{rs}^B - in chemist notation
     //ie  (p(1)q(1) | r(2) s(2))
     //stores (pq | rs) ->val
-pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
-    pqrs->print();
+    pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
     //for(int p = 0; p < nmo_; p++){
     //  for(int q = 0; q < nmo_; q++){
     //     for(int r = 0; r < nmo_; r++){
@@ -904,7 +985,7 @@ pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(
                     pqrs.push_back(q);
                     pqrs.push_back(r);
                     pqrs.push_back(s);
-                    outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d", direct, exchange, index);
+                    outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d %d %d %d %d", direct, exchange, index,p,q,r,s);
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
