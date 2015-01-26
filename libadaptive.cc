@@ -197,15 +197,19 @@ read_options(std::string name, Options &options)
 
         // Options for the Adaptive Path-Integral CI //
         /*- The determinant importance threshold -*/
-        options.add_double("TAU",0.01);
+        options.add_double("SPAWNING_THRESHOLD",0.001);
+        /*- The determinant importance threshold -*/
+        options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
         /*- The time step in imaginary time (a.u.) -*/
         options.add_double("BETA",0.01);
         /*- Estimate the variational energy of the wave function? -*/
         options.add_bool("VAR_ESTIMATE",false);
         /*- Estimate the variational energy of the wave function? -*/
-        options.add_int("VAR_ESTIMATE_FREQ",10);
+        options.add_int("ENERGY_ESTIMATE_FREQ",20);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
+        /*- Use a shift in the exponential -*/
+        options.add_bool("USE_SHIFT",false);
 
         //////////////////////////////////////////////////////////////
         ///

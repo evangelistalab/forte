@@ -84,7 +84,9 @@ private:
     std::vector<double> multistate_pt2_energy_correction_;
 
     /// The threshold applied to the primary space
-    double tau_;
+    double spawning_threshold_;
+    /// The threshold applied during the initial guess
+    double initial_guess_spawning_threshold_;
     /// The threshold applied to the secondary space
     double beta_;
     /// The number of roots computed
@@ -95,10 +97,14 @@ private:
     /// Estimate the energy via a variational procedure?
     bool variational_estimate_;
     /// The frequency of variational estimation of the energy
-    int var_estimate_freq_;
+    int energy_estimate_freq_;
 
-    /// Use an adaptive shift?
+    /// Use an adaptive time step?
     bool adaptive_beta_;
+    /// Shift the Hamiltonian?
+    bool do_shift_;
+    ///
+    bool do_adaptive_initial_guess_;
 
     /// The energy convergence criterium
     double e_convergence_;
@@ -115,8 +121,11 @@ private:
     /// Print a wave function
     void print_wfn(std::vector<BitsetDeterminant> space, std::vector<double> C);
 
+    /// Initial wave function guess
+    double initial_guess(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+
     /// Perform a time step
-    double time_step(BitsetDeterminant& detI,double CI,std::map<BitsetDeterminant,double>& new_space_C,double E0);
+    double time_step(double spawning_threshold, BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 };
 
 }} // End Namespaces
