@@ -731,8 +731,10 @@ void ExplorerIntegrals::compute_df_integrals()
    
     int nprim = primary->nbf();
     int naux  = auxiliary->nbf();
+    //Constructor for building DFERI in MO basis from libthce/lreri.h
     boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_,wfn);
 //    df->add_pair_space("B", "ACTIVE_ALL", "ACTIVE_ALL");
+    //B_{pq}^Q -> MO without frozen core
     df->add_pair_space("B", "ALL", "ALL");
 
     long int memory = Process::environment.get_memory();
@@ -744,17 +746,21 @@ void ExplorerIntegrals::compute_df_integrals()
     df.reset();
     FILE* Bf = B->file_pointer();
     SharedMatrix Bpq(new Matrix("Bpq", nmo_, nmo_ * naux));
+    //Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
     fseek(Bf,0, SEEK_SET);
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
 
-
+    //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
+   //This is because francesco reads only the nonzero integrals
+   //I store all of them into this array.  
     double* two_electron_integrals = new double[num_aptei];
     SharedMatrix pqB(new Matrix("pqB", nmo_*nmo_, naux));
     SharedMatrix full_int(new Matrix("pq|rs", nmo_*nmo_, nmo_*nmo_));
 
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
 
-    // Store the integrals
+    // Store the integrals in the form of nmo*nmo by B
+    //Makes a gemm call very easy
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             for (size_t r = 0; r < nmo_; ++r){
@@ -768,6 +774,7 @@ void ExplorerIntegrals::compute_df_integrals()
             }
         }
     }
+    //Forms the (pq | B) (B | rs)
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
     outfile->Printf("\n DENSITY FITTED");
@@ -903,24 +910,31 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Cpq_so->print();
     std::vector<int> order;
     std::vector<double> eval;
+
+    //Try and figure out a mapping from SO to AO.  
+    //One idea I had was to grab the epsilon for SO which is 
+    //arranged by irrep. 
+  
+    //This code pushes back all the eigenvalues from SO in pitzer ordering
     for(int h = 0; h < nirrep_; h++){
        for(int i = 0; i < eps_so->dim(h); i++){
          eval.push_back(eps_so->get(h,i)); 
        }
     }
+    //A vector of pairs for eval, index
     std::vector<std::pair<double, int> > eigind;
     for(int e = 0; e < eval.size(); e++){
        std::pair<double, int> EI;
        EI = std::make_pair(eval[e],e); 
        eigind.push_back(EI);
     }
+    //Sorts the eigenvalues by ascending order, but keeps the same index
+    //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
 
     for(int i = 0; i < eigind.size(); i++){
        outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
     }
-    
-    
     
     Cpq->print();
     for(int l = 0; l < nL; l++){
@@ -930,13 +944,14 @@ void ExplorerIntegrals::compute_chol_integrals()
                 for(int nu = 0; nu < nbf; nu++){
                    //outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
                    //L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
-                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,eigind[p].second)*Cpq->get(nu,eigind[q].second));
+                   //The funky eigind[p].second is used to grab index of my sorted array
+                   L->add(l,eigind[p].second*(nmo_)+eigind[q].second,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,eigind[p].second)*Cpq->get(nu,eigind[q].second));
                 }
              }
           }
        }
     }
-
+   
     L->print(); 
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
@@ -999,7 +1014,6 @@ void ExplorerIntegrals::compute_chol_integrals()
             }
         }
     }
-    outfile->Printf("Yo! I am out of chol loop");
 }
 void ExplorerIntegrals::debug_ints()
 {
