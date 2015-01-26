@@ -9,6 +9,9 @@
 #include <libthce/thce.h>
 #include <libthce/thcew.h>
 #include <libthce/lreri.h>
+#include <lib3index/cholesky.h>
+#include <libmints/mints.h>
+#include <algorithm>
 
 #include "integrals.h"
 #include "memory.h"
@@ -27,8 +30,14 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     transform_integrals();
     read_one_electron_integrals();
     read_two_electron_integrals();
-    if (options.get_str("INT_TYPE") == "DF"){
+    if (options_.get_str("INT_TYPE") == "DF" || options_.get_str("INT_TYPE")=="ALL"){
         compute_df_integrals();
+    }
+    if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
+        compute_chol_integrals();
+    }
+    if(options_.get_str("INT_TYPE")=="ALL"){
+        debug_ints();
     }
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -156,6 +165,8 @@ void ExplorerIntegrals::allocate()
     diagonal_aphys_tei_aa = new double[nmo_ * nmo_];
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
+    
+    //qt_pitzer_ = new int[nmo_];
 }
 
 void ExplorerIntegrals::deallocate()
@@ -177,6 +188,7 @@ void ExplorerIntegrals::deallocate()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
+    //delete[] qt_pitzer_;
 }
 
 void ExplorerIntegrals::cleanup()
@@ -208,6 +220,14 @@ void ExplorerIntegrals::transform_integrals()
     // Keep the SO integrals on disk in case we want to retransform them
     ints_->set_keep_iwl_so_ints(true);
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+
+
+    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
+    
+    //for(int p = 0; p < nmo_; p++){
+     //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
+    //}
+
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
@@ -302,17 +322,33 @@ void ExplorerIntegrals::read_two_electron_integrals()
         iwl_buf_close(&V_AAAA, 1);
 
         // Store the integrals
+        outfile->Printf("\n CONVENTIONAL INTEGRALS\n");
+        outfile->Printf("\n p  q   r  s  aa  ab bb\n");
         for (size_t p = 0; p < nmo_; ++p){
             for (size_t q = 0; q < nmo_; ++q){
                 for (size_t r = 0; r < nmo_; ++r){
                     for (size_t s = 0; s < nmo_; ++s){
+                        std::vector<int> pqrs;
+                        std::vector<double> integrals;
+                        std::pair<std::vector<int>, std::vector<double> > conv_int;
                         // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+                        pqrs.push_back(p);
+                        pqrs.push_back(q);
+                        pqrs.push_back(r);
+                        pqrs.push_back(s);
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
                         size_t index = aptei_index(p,q,r,s);
+                        outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
+                        integrals.push_back(direct - exchange);
+                        integrals.push_back(direct);
+                        integrals.push_back(direct - exchange);
                         aphys_tei_aa[index] = direct - exchange;
                         aphys_tei_ab[index] = direct;
                         aphys_tei_bb[index] = direct - exchange;
+                        conv_int = std::make_pair(pqrs,integrals);
+                        conv_ints.push_back(conv_int);
+                        
                     }
                 }
             }
@@ -667,6 +703,7 @@ void ExplorerIntegrals::set_tei(double**** ints,bool alpha1,bool alpha2)
                 }
             }
         }
+
     }
 }
 
@@ -684,7 +721,11 @@ void ExplorerIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double val
 
 void ExplorerIntegrals::compute_df_integrals()
 {
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
    
@@ -707,9 +748,11 @@ void ExplorerIntegrals::compute_df_integrals()
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
 
 
-    double* two_electron_integrals = new double[num_tei];
+    double* two_electron_integrals = new double[num_aptei];
+    SharedMatrix pqB(new Matrix("pqB", nmo_*nmo_, naux));
+    SharedMatrix full_int(new Matrix("pq|rs", nmo_*nmo_, nmo_*nmo_));
 
-    for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
 
     // Store the integrals
     for (size_t p = 0; p < nmo_; ++p){
@@ -717,28 +760,40 @@ void ExplorerIntegrals::compute_df_integrals()
             for (size_t r = 0; r < nmo_; ++r){
                 for (size_t s = 0; s < nmo_; ++s){
                     // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                    double val = 0.0;
                     for(int B = 0; B < naux; B++){
                         int qB = q*naux + B;
-                        int sB = s*naux + B;
-                        val += Bpq->get(p,qB) * Bpq->get(r,sB);
+                        pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
                     }
-                    two_electron_integrals[INDEX4(p,q,r,s)] = val;
                 }
             }
         }
     }
+    full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
+    outfile->Printf("\n DENSITY FITTED");
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             for (size_t r = 0; r < nmo_; ++r){
                 for (size_t s = 0; s < nmo_; ++s){
-                    double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
-                    double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
+                    double direct   = full_int->get(p*nmo_ + r, q*nmo_ + s);
+                    double exchange = full_int->get(p*nmo_ + s, q*nmo_ + r);
                     size_t index = aptei_index(p,q,r,s);
+                    std::vector<int> pqrs;
+                    std::vector<double> value;
+                    std::pair<std::vector<int>, std::vector<double> > df_int;
+                    pqrs.push_back(p);
+                    pqrs.push_back(q);
+                    pqrs.push_back(r);
+                    pqrs.push_back(s);
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
+                    outfile->Printf("\n direct = %20.12f  exchange = %20.12f   index = %d", direct, exchange, index);
+                    value.push_back(direct - exchange);
+                    value.push_back(direct);
+                    value.push_back(direct - exchange);
+                    df_int = std::make_pair(pqrs,value);
+                    df_ints.push_back(df_int);
                 }
             }
         }
@@ -774,6 +829,208 @@ void ExplorerIntegrals::compute_df_integrals()
 //          }
 //       }
 //    }
+
+
+}
+void ExplorerIntegrals::compute_chol_integrals()
+{
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs)
+    {
+    aphys_tei_aa[pqrs] = 0.0;
+    aphys_tei_ab[pqrs] = 0.0;
+    aphys_tei_bb[pqrs] = 0.0;
+    }
+
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+    int nbf = primary->nbf();
+
+    boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
+    double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
+    //This is creates the cholesky decomposed AO integrals
+    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
+    //Computes the cholesky integrals
+    Ch->choleskify();
+    //The number of vectors required to do cholesky factorization
+    int nL = Ch->Q();
+    outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
+    SharedMatrix Lao = Ch->L();
+    Lao->print();
+    SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
+    SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
+    SharedMatrix Cpq_so = wfn->Ca_subset("SO", "ALL");
+
+    boost::shared_ptr<SOBasisSet> SO(new SOBasisSet(primary, integral));
+    
+ //   Cpq->zero();
+ //   for(int h =0; h < nirrep_; h++){
+ //      int pmax = Cpq_so->rowspi(h);
+ //      int qmax = Cpq_so->colspi(h);
+ //      int poff = SO->function_offset_for_irrep(h);
+ //      int qoff = SO->function_offset_for_irrep(h);
+ //      for(int p =0; p < pmax; p++){
+ //         for(int q = 0; q < qmax; q++){
+ //            Cpq->set(p + poff,q + qoff,Cpq_so->get(h,p,q));
+ //         }
+ //      }
+ //   }
+     
+    //for(int h = 0; h < nirrep_; h++){
+    //   int pmax = Cpq_so->rowspi(h);
+    //   int qmax = Cpq_so->colspi(h);
+    //   int poff = SO->function_offset_for_irrep(h);
+    //   int qoff = SO->function_offset_for_irrep(h);
+    //   for(int l = 0; l < nL; l++){
+    //      for(int p = 0; p < pmax; p++){
+    //         for(int q = 0; q < qmax; q++){
+    //            for(int mu = poff; mu < poff +pmax; mu++){
+    //               for(int nu = 0; nu < poff + pmax; nu++){
+    //                  outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
+    //                  L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
+    //               }
+    //            }
+    //         }
+    //      }
+    //   }
+    //}
+    Cpq->print();
+    Cpq->zero();
+    Cpq = wfn->Ca_subset("AO","ALL");
+    SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
+    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
+    eps_ao->print();
+    eps_so->print();
+    //Cpq_so->print();
+    std::vector<int> order;
+    std::vector<double> eval;
+    for(int h = 0; h < nirrep_; h++){
+       for(int i = 0; i < eps_so->dim(h); i++){
+         eval.push_back(eps_so->get(h,i)); 
+       }
+    }
+    std::vector<std::pair<double, int> > eigind;
+    for(int e = 0; e < eval.size(); e++){
+       std::pair<double, int> EI;
+       EI = std::make_pair(eval[e],e); 
+       eigind.push_back(EI);
+    }
+    std::sort(eigind.begin(), eigind.end());
+
+    for(int i = 0; i < eigind.size(); i++){
+       outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
+    }
+    
+    
+    
+    Cpq->print();
+    for(int l = 0; l < nL; l++){
+       for(int p = 0; p < nmo_; p++){
+          for(int q = 0; q < nmo_; q++){
+             for(int mu = 0; mu < nbf; mu++){
+                for(int nu = 0; nu < nbf; nu++){
+                   //outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
+                   //L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
+                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,eigind[p].second)*Cpq->get(nu,eigind[q].second));
+                }
+             }
+          }
+       }
+    }
+
+    L->print(); 
+
+    SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
+
+    //Computes L_pq^B * L_{rs}^B - in chemist notation
+    //ie  (p(1)q(1) | r(2) s(2))
+    //stores (pq | rs) ->val
+    pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
+    //for(int p = 0; p < nmo_; p++){
+    //  for(int q = 0; q < nmo_; q++){
+    //     for(int r = 0; r < nmo_; r++){
+    //        for(int s = 0; s < nmo_; s++){
+    //            double val = 0.0;
+    //            for(int B = 0; B < nL; B++){
+    //                val += L->get(B,p*nmo_ + q)* L->get(B,r*nmo_ + s);
+    //            }
+    //            //aphys_tei_aa[aptei_index(p,r,q,s)] += val;
+    //            //aphys_tei_aa[aptei_index(p,r,s,q)] -= val;
+    //            //aphys_tei_ab[aptei_index(p,r,q,s)]  = val;
+    //            //aphys_tei_bb[aptei_index(p,r,q,s)] += val;
+    //            //aphys_tei_bb[aptei_index(p,r,s,q)] -= val;
+    //            
+    ////            two_electron_integrals[aptei_index(p,q,r,s)] = val;
+    //         }
+    //      }
+    //   }
+    //}
+
+    outfile->Printf("\n -----Cholesky integrals are done \n");
+
+    
+
+    outfile->Printf("nmo = %d", nmo_);
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+             for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    double direct   = pqrs->get(p*nmo_+r,q*nmo_+s);
+                    double exchange = pqrs->get(p*nmo_+s,q*nmo_+r);
+                    size_t index = aptei_index(p,q,r,s);
+                    std::vector<int> pqrs;
+                    std::vector<double> value;
+                    std::pair<std::vector<int>, std::vector<double>> chol_int;
+                   
+                    pqrs.push_back(p);
+                    pqrs.push_back(q);
+                    pqrs.push_back(r);
+                    pqrs.push_back(s);
+                    outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d %d %d %d %d", direct, exchange, index,p,q,r,s);
+                    aphys_tei_aa[index] = direct - exchange;
+                    aphys_tei_ab[index] = direct;
+                    aphys_tei_bb[index] = direct - exchange;
+                    value.push_back(direct - exchange);
+                    value.push_back(direct);
+                    value.push_back(direct - exchange);
+                    chol_int = std::make_pair(pqrs,value);
+                    chol_ints.push_back(chol_int);
+                    
+                }
+            }
+        }
+    }
+    outfile->Printf("Yo! I am out of chol loop");
+}
+void ExplorerIntegrals::debug_ints()
+{
+     outfile->Printf("\n num_aptei = %d\n num_tei = %d\n", num_aptei, num_tei);
+     outfile->Printf("conv_ints = %d\n chol_ints = %d \n df_ints = %d\n", conv_ints.size(), chol_ints.size(), df_ints.size());
+     int size_conv = conv_ints.size();
+     int count = 0;
+     // This function is used to debug all these annoying integrals.  
+     outfile->Printf("\n p q r s aa_conv ab bb\n");
+     for(int i = 0; i < conv_ints.size(); i++){
+        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > -1e-3)) 
+            outfile->Printf("\n %d %d %d %d %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
+        count++;
+        }
+
+     outfile->Printf("\n The number of integrals that are not equivalent is %d", count);
+     outfile->Printf("\n PRINTING good ints");
+     for(int i = 0; i < conv_ints.size(); i++){
+        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) < 1e-3)) {
+            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
+       }
+        
+     }    
+       
+     outfile->Printf("\n Printing direct and exchange integrals\n"); 
+//     for(int i = 0; i < conv_ints.size(); i++){
+//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > 1e-6)) {
+//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f  %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], conv_ints[i].second[1], chol_ints[i].second[0], chol_ints[i].second[1]);
+//       }
+//        
+//     }    
 
 
 }
