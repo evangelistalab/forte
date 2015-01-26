@@ -12,6 +12,7 @@
 
 #include "ga-ci.h"
 #include "adaptive-ci.h"
+#include "adaptive_pici.h"
 #include "lambda-ci.h"
 #include "fcimc.h"
 #include "sosrg.h"
@@ -47,7 +48,7 @@ read_options(std::string name, Options &options)
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY");
 
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI");
+        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -183,17 +184,28 @@ read_options(std::string name, Options &options)
         /*- The energy buffer for building the Hamiltonian matrix in Hartree -*/
         options.add_double("H_BUFFER",0.0);
 
-        /*- The energy threshold for the determinant energy in Hartree -*/
+        /*- The maximum number of iterations -*/
         options.add_int("MAXITER",100);
-
 
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
         options.add_int("NPOP",100);
 
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
+        //////////////////////////////////////////////////////////////
 
-
-
+        // Options for the Adaptive Path-Integral CI //
+        /*- The determinant importance threshold -*/
+        options.add_double("TAU",0.01);
+        /*- The time step in imaginary time (a.u.) -*/
+        options.add_double("BETA",0.01);
+        /*- Estimate the variational energy of the wave function? -*/
+        options.add_bool("VAR_ESTIMATE",false);
+        /*- Estimate the variational energy of the wave function? -*/
+        options.add_int("VAR_ESTIMATE_FREQ",10);
+        /*- Use an adaptive time step? -*/
+        options.add_bool("ADAPTIVE_TAU",false);
 
         //////////////////////////////////////////////////////////////
         ///
@@ -302,6 +314,11 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<GeneticAlgorithmCI> gaci(new GeneticAlgorithmCI(wfn,options,ints_));
             gaci->compute_energy();
+        }
+        if (options.get_str("JOB_TYPE") == "APICI"){
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
+            apici->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);

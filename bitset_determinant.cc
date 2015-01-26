@@ -268,11 +268,9 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * ints_->rtei(i,j,p,p);
                 matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
@@ -291,10 +289,8 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
                 matrix_element += sign * ints_->aptei_ab(p,i,p,j);
-                //                matrix_element += sign * ints_->rtei(p,p,i,j);
             }
             if(Ib[p] and Jb[p]){
-                //                matrix_element += sign * (ints_->rtei(i,j,p,p) - ints_->rtei(i,p,p,j));
                 matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
@@ -316,7 +312,6 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_aa(i,j,k,l);
     }
 
@@ -337,7 +332,6 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        //        matrix_element = sign * (ints_->rtei(i,k,j,l) - ints_->rtei(i,l,j,k));
         matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
@@ -353,7 +347,6 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        //matrix_element = sign * ints_->rtei(i,k,j,l);
         matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);

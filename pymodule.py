@@ -32,7 +32,7 @@ def run_adaptive_ci(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> energy('libadaptive')
+    >>> energy('aci')
 
     """
     lowername = name.lower()
@@ -58,6 +58,25 @@ def run_ga_ci(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'GACI')
+    returnvalue = psi4.plugin('libadaptive.so')
+    psi4.set_variable('CURRENT ENERGY', returnvalue)
+    return returnvalue
+
+
+# Adaptive Path-Integral CI
+def run_adaptive_pici(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('apici')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'APICI')
     returnvalue = psi4.plugin('libadaptive.so')
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
@@ -189,6 +208,7 @@ def run_mrdsrgpt2(name, **kwargs):
 # Integration with driver routines
 procedures['energy']['libadaptive'] = run_libadaptive
 procedures['energy']['aci'] = run_adaptive_ci
+procedures['energy']['apici'] = run_adaptive_pici
 procedures['energy']['gaci'] = run_ga_ci
 procedures['energy']['ct'] = run_ct
 procedures['energy']['srg'] = run_srg
