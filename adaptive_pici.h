@@ -100,6 +100,9 @@ private:
     /// Use an adaptive shift?
     bool adaptive_beta_;
 
+    /// The energy convergence criterium
+    double e_convergence_;
+
 
     // ==> Class functions <==
 

@@ -90,6 +90,7 @@ void AdaptivePathIntegralCI::startup()
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
     var_estimate_freq_ = options_.get_int("VAR_ESTIMATE_FREQ");
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
+    e_convergence_ = options_.get_double("E_CONVERGENCE");
 }
 
 AdaptivePathIntegralCI::~AdaptivePathIntegralCI()
@@ -108,7 +109,7 @@ void AdaptivePathIntegralCI::print_info()
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"Time step (beta)",beta_},
         {"C-threshold (tau)",tau_},
-        {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
+        {"Convergence threshold",e_convergence_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"Compute variational estimate",variational_estimate_ ? "YES" : "NO"},
@@ -167,6 +168,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
     double apici_energy = bs_det.energy();
 
+    double old_apici_energy = 0.0;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // The number of determinants visited in this iteration
         size_t ndet_visited = 0;
@@ -204,7 +206,7 @@ double AdaptivePathIntegralCI::compute_energy()
             old_C[I] /= norm_C;
         }
 
-        outfile->Printf("\n  Cycle %3d: %10zu determinants accepted, %10zu visited",cycle,wfn_size,ndet_visited);
+        outfile->Printf("\n  Cycle %9d: %10zu determinants accepted, %10zu visited",cycle,wfn_size,ndet_visited);
         outfile->Printf("\n  Gradient norm: %f (%f)",gradient_norm,initial_gradient_norm);
         outfile->Printf("\n  Beta: %f",beta_);
 
@@ -239,11 +241,19 @@ double AdaptivePathIntegralCI::compute_energy()
         outfile->Printf("\n  Estimated energy   = %20.12f",energy_estimator);
 
 
+
+        if (std::fabs(apici_energy - old_apici_energy) < e_convergence_){
+            outfile->Printf("\n\n  Calculation converged.\n");
+            print_wfn(old_space,old_C);
+            break;
+        }
+
+        old_apici_energy = apici_energy;
+
         if (adaptive_beta_){
             if (initial_gradient_norm / gradient_norm > 1.0)
                 beta_ *= initial_gradient_norm / gradient_norm;
         }
-        print_wfn(old_space,old_C);
         outfile->Flush();
     }
 
