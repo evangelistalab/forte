@@ -89,7 +89,7 @@ void AdaptivePathIntegralCI::startup()
     beta_ = options_.get_double("BETA");
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
     var_estimate_freq_ = options_.get_int("VAR_ESTIMATE_FREQ");
-    adaptive_shift_ = options_.get_bool("ADAPTIVE_TAU");
+    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
 }
 
 AdaptivePathIntegralCI::~AdaptivePathIntegralCI()
@@ -111,7 +111,8 @@ void AdaptivePathIntegralCI::print_info()
         {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Compute variational estimate",variational_estimate_ ? "YES" : "NO"}
+        {"Compute variational estimate",variational_estimate_ ? "YES" : "NO"},
+        {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"}
     };
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
@@ -162,9 +163,11 @@ double AdaptivePathIntegralCI::compute_energy()
 
     int maxcycle = maxiter_;
     double shift = bs_det.energy();
+    double initial_gradient_norm = 0.0;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // The number of determinants visited in this iteration
         size_t ndet_visited = 0;
+        double gradient_norm = 0.0;
 
         std::map<BitsetDeterminant,double> new_space_map;
 
@@ -173,8 +176,10 @@ double AdaptivePathIntegralCI::compute_energy()
         for (size_t I = 0; I < max_I; ++I){
             BitsetDeterminant& detI = old_space[I];
             double CI = old_C[I];
-            ndet_visited += time_step(detI,CI,new_space_map,shift);
+            gradient_norm += time_step(detI,CI,new_space_map,shift);
         }
+
+        if (cycle == 0) initial_gradient_norm = gradient_norm;
 
         size_t wfn_size = new_space_map.size();
         old_space.resize(wfn_size);
@@ -197,6 +202,8 @@ double AdaptivePathIntegralCI::compute_energy()
         }
 
         outfile->Printf("\n  Cycle %3d: %10zu determinants accepted, %10zu visited",cycle,wfn_size,ndet_visited);
+        outfile->Printf("\n  Gradient norm: %f (%f)",gradient_norm,initial_gradient_norm);
+        outfile->Printf("\n  Beta: %f",beta_);
 
         if (variational_estimate_ and (cycle % var_estimate_freq_ == 0)){
             SharedMatrix evecs(new Matrix("Eigenvectors",wfn_size,1));
@@ -225,6 +232,9 @@ double AdaptivePathIntegralCI::compute_energy()
         energy_estimator += nuclear_repulsion_energy_;
         outfile->Printf("\n  Estimated energy   = %20.12f",energy_estimator);
 
+        if (adaptive_beta_){
+            beta_ *= initial_gradient_norm / gradient_norm;
+        }
         print_wfn(old_space,old_C);
     }
 
@@ -320,7 +330,7 @@ double AdaptivePathIntegralCI::compute_energy()
 }
 
 
-size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
+double AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -333,6 +343,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
     int nvbeta  = bvir.size();
 
     size_t ndet_visited = 0.0;
+    double gradient_norm = 0.0;
 
     // Contribution of this determinant
     new_space_C[detI] += (1.0 - beta_ * (detI.energy() - E0)) * CI;
@@ -349,6 +360,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= tau_){
                     new_space_C[detJ] += -beta_ * HJI * CI;
+                    gradient_norm += std::fabs(-beta_ * HJI * CI);
                     ndet_visited++;
                 }
             }
@@ -366,6 +378,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= tau_){
                     new_space_C[detJ] += -beta_ * HJI * CI;
+                    gradient_norm += std::fabs(-beta_ * HJI * CI);
                     ndet_visited++;
                 }
             }
@@ -390,6 +403,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= tau_){
                             new_space_C[detJ] += -beta_ * HJI * CI;
+                            gradient_norm += std::fabs(-beta_ * HJI * CI);
                             ndet_visited++;
                         }
                     }
@@ -415,6 +429,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= tau_){
                             new_space_C[detJ] += -beta_ * HJI * CI;
+                            gradient_norm += std::fabs(-beta_ * HJI * CI);
                             ndet_visited++;
                         }
                     }
@@ -439,6 +454,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= tau_){
                             new_space_C[detJ] += -beta_ * HJI * CI;
+                            gradient_norm += std::fabs(-beta_ * HJI * CI);
                             ndet_visited++;
                         }
                     }
@@ -446,7 +462,7 @@ size_t AdaptivePathIntegralCI::time_step(BitsetDeterminant& detI, double CI, std
             }
         }
     }
-    return ndet_visited;
+    return gradient_norm;
 }
 
 void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std::vector<double> C)

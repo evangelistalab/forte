@@ -205,7 +205,7 @@ read_options(std::string name, Options &options)
         /*- Estimate the variational energy of the wave function? -*/
         options.add_int("VAR_ESTIMATE_FREQ",10);
         /*- Use an adaptive time step? -*/
-        options.add_bool("ADAPTIVE_TAU",false);
+        options.add_bool("ADAPTIVE_BETA",false);
 
         //////////////////////////////////////////////////////////////
         ///

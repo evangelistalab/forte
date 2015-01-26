@@ -98,7 +98,7 @@ private:
     int var_estimate_freq_;
 
     /// Use an adaptive shift?
-    bool adaptive_tau_;
+    bool adaptive_beta_;
 
 
     // ==> Class functions <==
@@ -113,7 +113,7 @@ private:
     void print_wfn(std::vector<BitsetDeterminant> space, std::vector<double> C);
 
     /// Perform a time step
-    size_t time_step(BitsetDeterminant& detI,double CI,std::map<BitsetDeterminant,double>& new_space_C,double E0);
+    double time_step(BitsetDeterminant& detI,double CI,std::map<BitsetDeterminant,double>& new_space_C,double E0);
 };
 
 }} // End Namespaces
