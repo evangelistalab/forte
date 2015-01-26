@@ -140,7 +140,7 @@ void AdaptivePathIntegralCI::print_info()
 
 double AdaptivePathIntegralCI::compute_energy()
 {
-    boost::timer t_iamrcisd;
+    boost::timer t_apici;
     outfile->Printf("\n\n  Adaptive Path-Integral CI");
 
     /// A vector of determinants in the P space
@@ -164,6 +164,9 @@ double AdaptivePathIntegralCI::compute_energy()
     int maxcycle = maxiter_;
     double shift = bs_det.energy();
     double initial_gradient_norm = 0.0;
+
+    double apici_energy = bs_det.energy();
+
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // The number of determinants visited in this iteration
         size_t ndet_visited = 0;
@@ -209,7 +212,9 @@ double AdaptivePathIntegralCI::compute_energy()
             SharedMatrix evecs(new Matrix("Eigenvectors",wfn_size,1));
             SharedVector evals(new Vector("Eigenvalues",wfn_size));
             sparse_solver.diagonalize_hamiltonian(old_space,evals,evecs,1);
-            outfile->Printf("\n  Variational energy = %20.12f",evals->get(0) + nuclear_repulsion_energy_);
+            double var_energy = evals->get(0) + nuclear_repulsion_energy_;
+            outfile->Printf("\n  Variational energy = %20.12f",var_energy);
+            Process::environment.globals["APICI-VAR ENERGY"] = var_energy;
         }
 
         // find the determinant with the largest value of C
@@ -230,103 +235,27 @@ double AdaptivePathIntegralCI::compute_energy()
         }
         shift = energy_estimator;
         energy_estimator += nuclear_repulsion_energy_;
+        apici_energy = energy_estimator;
         outfile->Printf("\n  Estimated energy   = %20.12f",energy_estimator);
 
+
         if (adaptive_beta_){
-            beta_ *= initial_gradient_norm / gradient_norm;
+            if (initial_gradient_norm / gradient_norm > 1.0)
+                beta_ *= initial_gradient_norm / gradient_norm;
         }
         print_wfn(old_space,old_C);
+        outfile->Flush();
     }
 
-//    P_space_.push_back(bs_det);
-//    P_space_map_[bs_det] = 1;
+    Process::environment.globals["APICI ENERGY"] = apici_energy;
 
+    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+    outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,apici_energy);
 
-//    outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
-//    outfile->Flush();
+    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
+    outfile->Flush();
 
-//    double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
-//    double new_avg_energy = 0.0;
-
-//    std::vector<std::vector<double> > energy_history;
-//    SparseCISolver sparse_solver;
-//    sparse_solver.set_parallel(true);
-
-//    int maxcycle = 20;
-//    for (int cycle = 0; cycle < maxcycle; ++cycle){
-//        // Step 1. Diagonalize the Hamiltonian in the P space
-//        int num_ref_roots = std::min(nroot_,int(P_space_.size()));
-
-//        outfile->Printf("\n\n  Cycle %3d",cycle);
-//        outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
-//        outfile->Flush();
-
-
-//        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
-
-//        // Print the energy
-//        outfile->Printf("\n");
-//        for (int i = 0; i < num_ref_roots; ++i){
-//            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_;
-//            double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
-//            outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-//        }
-//        outfile->Printf("\n");
-//        outfile->Flush();
-
-
-//        // Step 2. Find determinants in the Q space
-//        find_q_space(num_ref_roots,P_evals,P_evecs);
-
-
-//        // Step 3. Diagonalize the Hamiltonian in the P + Q space
-//        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
-
-//        // Print the energy
-//        outfile->Printf("\n");
-//        for (int i = 0; i < nroot_; ++ i){
-//            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
-//            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-//            outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-//            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-//                            exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-//        }
-//        outfile->Printf("\n");
-//        outfile->Flush();
-
-
-//        // Step 4. Check convergence and break if needed
-//        bool converged = check_convergence(energy_history,PQ_evals);
-//        if (converged) break;
-
-
-//        // Step 5. Prune the P + Q space to get an update P space
-//        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
-
-//        // Print information about the wave function
-//        print_wfn(PQ_space_,PQ_evecs,nroot_);
-//    }
-
-//    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-//    for (int i = 0; i < nroot_; ++ i){
-//        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
-//        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-//        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-//        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-//                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-//    }
-//    outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
-//    outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
-//    outfile->Flush();
-
-//    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
-//    double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
-//    Process::environment.globals["CURRENT ENERGY"] = root_energy;
-//    Process::environment.globals["ACI ENERGY"] = root_energy;
-//    Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
-
-//    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
-    return 0.0;
+    return apici_energy;
 }
 
 
