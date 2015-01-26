@@ -204,7 +204,7 @@ read_options(std::string name, Options &options)
         /*- The determinant importance threshold -*/
         options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
         /*- The time step in imaginary time (a.u.) -*/
-        options.add_double("BETA",0.01);
+        options.add_double("TAU",0.01);
         /*- Estimate the variational energy of the wave function? -*/
         options.add_bool("VAR_ESTIMATE",false);
         /*- Estimate the variational energy of the wave function? -*/

@@ -87,7 +87,7 @@ void AdaptivePathIntegralCI::startup()
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
-    beta_ = options_.get_double("BETA");
+    time_step_ = options_.get_double("TAU");
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
@@ -110,7 +110,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Energy estimation frequency",energy_estimate_freq_}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
-        {"Time step (beta)",beta_},
+        {"Time step (beta)",time_step_},
         {"Spawning threshold",spawning_threshold_},
         {"Initial guess spawning threshold",initial_guess_spawning_threshold_},
         {"Convergence threshold",e_convergence_}};
@@ -272,11 +272,11 @@ double AdaptivePathIntegralCI::compute_energy()
 
             if (adaptive_beta_){
                 if (initial_gradient_norm / gradient_norm > 1.0)
-                    beta_ *= initial_gradient_norm / gradient_norm;
+                    time_step_ *= initial_gradient_norm / gradient_norm;
             }
         }
 
-        beta += beta_;
+        beta += time_step_;
         outfile->Flush();
     }
 
@@ -347,7 +347,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
     double gradient_norm = 0.0;
 
     // Contribution of this determinant
-    new_space_C[detI] += (1.0 - beta_ * (detI.energy() - E0)) * CI;
+    new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
 
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
@@ -360,8 +360,8 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                 detJ.set_alfa_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += -beta_ * HJI * CI;
-                    gradient_norm += std::fabs(-beta_ * HJI * CI);
+                    new_space_C[detJ] += -time_step_ * HJI * CI;
+                    gradient_norm += std::fabs(-time_step_ * HJI * CI);
                     ndet_visited++;
                 }
             }
@@ -378,8 +378,8 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                 detJ.set_beta_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += -beta_ * HJI * CI;
-                    gradient_norm += std::fabs(-beta_ * HJI * CI);
+                    new_space_C[detJ] += -time_step_ * HJI * CI;
+                    gradient_norm += std::fabs(-time_step_ * HJI * CI);
                     ndet_visited++;
                 }
             }
@@ -403,8 +403,8 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                         detJ.set_alfa_bit(bb,true);
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            new_space_C[detJ] += -beta_ * HJI * CI;
-                            gradient_norm += std::fabs(-beta_ * HJI * CI);
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+                            gradient_norm += std::fabs(-time_step_ * HJI * CI);
                             ndet_visited++;
                         }
                     }
@@ -429,8 +429,8 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                         detJ.set_beta_bit(bb,true);
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            new_space_C[detJ] += -beta_ * HJI * CI;
-                            gradient_norm += std::fabs(-beta_ * HJI * CI);
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+                            gradient_norm += std::fabs(-time_step_ * HJI * CI);
                             ndet_visited++;
                         }
                     }
@@ -454,8 +454,8 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                         detJ.set_beta_bit(bb,true);
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            new_space_C[detJ] += -beta_ * HJI * CI;
-                            gradient_norm += std::fabs(-beta_ * HJI * CI);
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+                            gradient_norm += std::fabs(-time_step_ * HJI * CI);
                             ndet_visited++;
                         }
                     }

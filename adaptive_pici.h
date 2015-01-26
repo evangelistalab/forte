@@ -87,8 +87,8 @@ private:
     double spawning_threshold_;
     /// The threshold applied during the initial guess
     double initial_guess_spawning_threshold_;
-    /// The threshold applied to the secondary space
-    double beta_;
+    /// The size of the time step (TAU)
+    double time_step_;
     /// The number of roots computed
     int nroot_;
     /// The maximum number of iterations
