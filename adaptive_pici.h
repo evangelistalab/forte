@@ -109,6 +109,18 @@ private:
     /// The energy convergence criterium
     double e_convergence_;
 
+    //
+    /// Maximum value of the one-electron coupling
+    double new_max_one_HJI_;
+    double old_max_one_HJI_;
+    /// Maximum value of the two-electron coupling
+    double new_max_two_HJI_;
+    double old_max_two_HJI_;
+    /// Number of determinants visited during a time step
+    size_t ndet_visited_;
+    /// Number of determinants accepted during a time step
+    size_t ndet_accepted_;
+
 
     // ==> Class functions <==
 
