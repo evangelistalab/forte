@@ -147,7 +147,7 @@ void AdaptivePathIntegralCI::print_info()
 double AdaptivePathIntegralCI::compute_energy()
 {
     boost::timer t_apici;
-    outfile->Printf("\n\n  Adaptive Path-Integral CI");
+    outfile->Printf("\n\n  Adaptive Path-Integral Configuration Interaction");
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> dets;
@@ -361,7 +361,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
     // Contribution of this determinant
     new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
 
-    if(std::fabs(old_max_one_HJI_ * CI) >= spawning_threshold){
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
@@ -372,7 +371,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                 detJ.set_alfa_bit(ii,false);
                 detJ.set_alfa_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
-                new_max_one_HJI_ = std::max(std::fabs(HJI),new_max_one_HJI_);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
                     new_space_C[detJ] += -time_step_ * HJI * CI;
                     gradient_norm += std::fabs(-time_step_ * HJI * CI);
@@ -392,7 +390,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                 detJ.set_beta_bit(ii,false);
                 detJ.set_beta_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
-                new_max_one_HJI_ = std::max(std::fabs(HJI),new_max_one_HJI_);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
                     new_space_C[detJ] += -time_step_ * HJI * CI;
                     gradient_norm += std::fabs(-time_step_ * HJI * CI);
@@ -402,9 +399,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
             }
         }
     }
-    }
 
-    if(std::fabs(old_max_two_HJI_ * CI) >= spawning_threshold){
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
@@ -423,7 +418,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                             detJ.set_alfa_bit(aa,true);
                             detJ.set_alfa_bit(bb,true);
                             double HJI = detJ.slater_rules(detI);
-                            new_max_two_HJI_ = std::max(std::fabs(HJI),new_max_two_HJI_);
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 new_space_C[detJ] += -time_step_ * HJI * CI;
                                 gradient_norm += std::fabs(-time_step_ * HJI * CI);
@@ -454,7 +448,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                             detJ.set_alfa_bit(aa,true);
                             detJ.set_beta_bit(bb,true);
                             double HJI = detJ.slater_rules(detI);
-                            new_max_two_HJI_ = std::max(std::fabs(HJI),new_max_two_HJI_);
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 new_space_C[detJ] += -time_step_ * HJI * CI;
                                 gradient_norm += std::fabs(-time_step_ * HJI * CI);
@@ -484,7 +477,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                             detJ.set_beta_bit(aa,true);
                             detJ.set_beta_bit(bb,true);
                             double HJI = detJ.slater_rules(detI);
-                            new_max_two_HJI_ = std::max(std::fabs(HJI),new_max_two_HJI_);
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 new_space_C[detJ] += -time_step_ * HJI * CI;
                                 gradient_norm += std::fabs(-time_step_ * HJI * CI);
@@ -496,7 +488,6 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
                 }
             }
         }
-    }
     }
     return gradient_norm;
 }
