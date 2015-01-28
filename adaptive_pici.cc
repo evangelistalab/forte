@@ -1,4 +1,3 @@
-
 #include <cmath>
 #include <functional>
 #include <algorithm>
@@ -16,6 +15,13 @@
 #include "cartographer.h"
 #include "adaptive_pici.h"
 #include "sparse_ci_solver.h"
+
+#ifdef _OPENMP
+   #include <omp.h>
+#else
+   #define omp_get_num_threads() 1
+   #define omp_get_thread_num() 0
+#endif
 
 using namespace std;
 using namespace psi;
@@ -313,6 +319,189 @@ double AdaptivePathIntegralCI::compute_energy()
     timer_off("APICI: compute_energy");
     return apici_energy;
 }
+
+
+double AdaptivePathIntegralCI::compute_energy_parallel()
+{
+    timer_on("APICI: compute_energy");
+    boost::timer t_apici;
+    outfile->Printf("\n\n  Adaptive Path-Integral Configuration Interaction");
+
+    /// A vector of determinants in the P space
+    std::vector<BitsetDeterminant> dets;
+    std::vector<double> C;
+
+    SparseCISolver sparse_solver;
+    sparse_solver.set_parallel(true);
+
+    // Initialize statistics
+    double apici_energy = initial_guess(dets,C);
+
+    old_max_one_HJI_ = 1e100;
+    old_max_two_HJI_ = 1e100;
+    new_max_one_HJI_ = 1e100;
+    new_max_two_HJI_ = 1e100;
+    ndet_visited_ = 0;
+    ndet_accepted_ = 0;
+
+
+    print_wfn(dets,C);
+
+    int num_threads = omp_get_num_threads();
+
+    outfile->Printf("\n\n  Number of threads: %d",num_threads);
+
+    outfile->Printf("\n\n  ------------------------------------------------------------------------------------------");
+    outfile->Printf("\n    Cycle      Ndets         Proj. Energy          Var. Energy   Delta E     beta   |grad|");
+    outfile->Printf("\n  ------------------------------------------------------------------------------------------");
+
+    double projective_energy_estimator = 0.0;
+    double variational_energy_estimator = 0.0;
+
+    int maxcycle = maxiter_;
+    double shift = do_shift_ ? apici_energy : 0.0;
+    double initial_gradient_norm = 0.0;
+    double old_apici_energy = 0.0;
+    double beta = 0.0;
+    for (int cycle = 0; cycle < maxcycle; ++cycle){
+        // The number of determinants visited in this iteration
+        double gradient_norm = 0.0;
+
+        std::map<BitsetDeterminant,double> new_space_map;
+        std::vector<std::map<BitsetDeterminant,double> > partial_space_map(num_threads);
+
+        // Evaluate (1-beta H) |old>
+        timer_on("APICI: (1-beta H)");
+        size_t max_I = dets.size();
+
+#pragma omp parallel for (dynamic)
+        for (size_t I = 0; I < max_I; ++I){
+            int thread_id = omp_get_thread_num();
+            BitsetDeterminant& detI = dets[I];
+            double CI = C[I];
+            gradient_norm += time_step_optimized(spawning_threshold_,detI,CI,partial_space_map[thread_id],shift);
+        }
+        timer_off("APICI: (1-beta H)");
+
+        if (cycle == 0) initial_gradient_norm = gradient_norm;
+
+        // Update the wave function
+        timer_on("APICI: combine");
+        size_t I = 0;
+        double norm_C = 0.0;
+        for (int t = 0; t < num_threads; ++t){
+            for (bsmap_it it = partial_space_map[t].begin(), endit = partial_space_map[t].end(); it != endit; ++it){
+                new_space_map[it->first] += it->second;
+            }
+        }
+        timer_off("APICI: combine");
+
+        size_t wfn_size = new_space_map.size();
+        dets.resize(wfn_size);
+        C.resize(wfn_size);
+
+        timer_on("APICI: collect C");
+        for (bsmap_it it = new_space_map.begin(), endit = new_space_map.end(); it != endit; ++it){
+            dets[I] = it->first;
+            C[I] = it->second;
+            norm_C += (it->second) * (it->second);
+            I++;
+        }
+        timer_off("APICI: collect C");
+
+        // Normalize C
+        norm_C = std::sqrt(norm_C);
+        for (int I = 0; I < wfn_size; ++I){
+            C[I] /= norm_C;
+        }
+
+        // find the determinant with the largest value of C
+        double maxC = 0.0;
+        size_t maxI = 0;
+        for (size_t I = 0; I < wfn_size; ++I){
+            if (std::fabs(C[I]) > maxC){
+                maxI = I;
+                maxC = std::fabs(C[I]);
+            }
+        }
+
+        // Compute the energy
+        timer_on("APICI: energy");
+        if (cycle % energy_estimate_freq_ == 0){
+            // Compute a perturbative estimator of the energy
+            projective_energy_estimator = 0.0;
+            for (int I = 0; I < wfn_size; ++I){
+                const BitsetDeterminant& detI = dets[I];
+                double HI0 = detI.slater_rules(dets[maxI]);
+                projective_energy_estimator += HI0 * C[I] / C[maxI];
+            }
+            projective_energy_estimator += nuclear_repulsion_energy_;
+
+            // Compute a variational estimator of the energy
+            variational_energy_estimator = 0.0;
+            for (int I = 0; I < wfn_size; ++I){
+                const BitsetDeterminant& detI = dets[I];
+                for (int J = I; J < wfn_size; ++J){
+                    const BitsetDeterminant& detJ = dets[J];
+                    double HIJ = detI.slater_rules(detJ);
+                    variational_energy_estimator += (I == J) ? C[I] * HIJ * C[J] : 2.0 * C[I] * HIJ * C[J];
+                }
+            }
+            variational_energy_estimator += nuclear_repulsion_energy_;
+
+            // Update the shift
+            if (do_shift_){
+                shift = projective_energy_estimator;
+            }
+
+            outfile->Printf("\n%9d %10zu %20.12f %20.12f %.3e %8.4f %.6f %10zu %10zu",cycle,wfn_size,projective_energy_estimator,
+                            variational_energy_estimator,std::fabs(variational_energy_estimator - old_apici_energy),beta,gradient_norm,ndet_visited_,ndet_accepted_);
+
+            apici_energy = variational_energy_estimator;
+
+            // Check for convergence
+            if (std::fabs(apici_energy - old_apici_energy) < e_convergence_){
+                break;
+            }
+
+            old_apici_energy = apici_energy;
+
+            if (adaptive_beta_){
+                if (initial_gradient_norm / gradient_norm > 1.0)
+                    time_step_ *= initial_gradient_norm / gradient_norm;
+            }
+        }
+        timer_off("APICI: energy");
+
+        if (do_prescreen_spawning_){
+            old_max_one_HJI_ = new_max_one_HJI_;
+            old_max_two_HJI_ = new_max_two_HJI_;
+            new_max_one_HJI_ = 0.0;
+            new_max_two_HJI_ = 0.0;
+        }
+        ndet_visited_ = 0;
+        ndet_accepted_ = 0;
+
+        beta += time_step_;
+        outfile->Flush();
+    }
+
+    outfile->Printf("\n  ------------------------------------------------------------------------------------------");
+    outfile->Printf("\n\n  Calculation converged.\n");
+    print_wfn(dets,C);
+
+    Process::environment.globals["APICI ENERGY"] = apici_energy;
+
+    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+    outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",1,apici_energy);
+
+    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
+    outfile->Flush();
+
+    timer_off("APICI: compute_energy");
+    return apici_energy;
+}
+
 
 double AdaptivePathIntegralCI::initial_guess(std::vector<BitsetDeterminant>& dets,std::vector<double>& C)
 {

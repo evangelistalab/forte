@@ -207,13 +207,13 @@ read_options(std::string name, Options &options)
         options.add_double("TAU",0.01);
         /*- Estimate the variational energy of the wave function? -*/
         options.add_bool("VAR_ESTIMATE",false);
-        /*- Estimate the variational energy of the wave function? -*/
+        /*- Iterations in between variational estimation of the energy -*/
         options.add_int("ENERGY_ESTIMATE_FREQ",25);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
-        /*- Use a shift in the exponential -*/
+        /*- Prescreen the spawning of single excitations -*/
         options.add_bool("PRESCREEN_SPAWNING",false);
 
         //////////////////////////////////////////////////////////////
@@ -327,7 +327,7 @@ libadaptive(Options &options)
         if (options.get_str("JOB_TYPE") == "APICI"){
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
-            apici->compute_energy();
+            apici->compute_energy_parallel();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);

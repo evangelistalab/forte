@@ -60,6 +60,8 @@ public:
     /// Compute the energy
     double compute_energy();
 
+    double compute_energy_parallel();
+
 private:
 
     // ==> Class data <==
