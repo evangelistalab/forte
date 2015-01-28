@@ -106,6 +106,11 @@ private:
     ///
     bool do_adaptive_initial_guess_;
 
+    /// Prescreen the spawning step of single excitations?
+    bool do_prescreen_spawning_;
+    /// The tollerance factor applied when prescreening singles
+    double prescreening_tollerance_factor_;
+
     /// The energy convergence criterium
     double e_convergence_;
 
@@ -138,6 +143,9 @@ private:
 
     /// Perform a time step
     double time_step(double spawning_threshold, BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+
+    double time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+
 };
 
 }} // End Namespaces

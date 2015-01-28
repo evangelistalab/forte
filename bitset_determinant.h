@@ -74,11 +74,24 @@ public:
         return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
+//    BitsetDeterminant& operator=(const BitsetDeterminant &rhs)
+//    {
+//       alfa_bits_ = rhs.alfa_bits_;
+//       beta_bits_ = rhs.beta_bits_;
+//       return *this;
+//    }
+
+    void copy(const BitsetDeterminant &rhs)
+    {
+       alfa_bits_ = rhs.alfa_bits_;
+       beta_bits_ = rhs.beta_bits_;
+    }
+
     /// Get a pointer to the alpha bits
-    boost::dynamic_bitset<> alfa_bits() const {return alfa_bits_;}
+    const boost::dynamic_bitset<>& alfa_bits() const {return alfa_bits_;}
 
     /// Get a pointer to the beta bits
-    boost::dynamic_bitset<> beta_bits() const {return beta_bits_;}
+    const boost::dynamic_bitset<>& beta_bits() const {return beta_bits_;}
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const {return alfa_bits_[n];}
@@ -91,9 +104,9 @@ public:
     void set_beta_bit(int n, bool value) {beta_bits_[n] = value;}
 
     /// Specify the occupation numbers
-    void set_alfa_bits(boost::dynamic_bitset<>& alfa_bits) {alfa_bits_ = alfa_bits;}
+    void set_alfa_bits(const boost::dynamic_bitset<>& alfa_bits) {alfa_bits_ = alfa_bits;}
     /// Specify the occupation numbers
-    void set_beta_bits(boost::dynamic_bitset<>& beta_bits) {beta_bits_ = beta_bits;}
+    void set_beta_bits(const boost::dynamic_bitset<>& beta_bits) {beta_bits_ = beta_bits;}
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -138,6 +151,8 @@ public:
 };
 
 std::size_t hash_value(const BitsetDeterminant& input);
+
+double SlaterSign(const boost::dynamic_bitset<>& I,int n);
 
 typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;
 

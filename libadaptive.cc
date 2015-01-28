@@ -208,11 +208,13 @@ read_options(std::string name, Options &options)
         /*- Estimate the variational energy of the wave function? -*/
         options.add_bool("VAR_ESTIMATE",false);
         /*- Estimate the variational energy of the wave function? -*/
-        options.add_int("ENERGY_ESTIMATE_FREQ",20);
+        options.add_int("ENERGY_ESTIMATE_FREQ",25);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
+        /*- Use a shift in the exponential -*/
+        options.add_bool("PRESCREEN_SPAWNING",false);
 
         //////////////////////////////////////////////////////////////
         ///

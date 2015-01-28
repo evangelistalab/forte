@@ -25,7 +25,11 @@ namespace psi{ namespace libadaptive{
 typedef std::map<BitsetDeterminant,double>::iterator bsmap_it;
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints), variational_estimate_(false)
+    : Wavefunction(options,_default_psio_lib_),
+      options_(options),
+      ints_(ints),
+      variational_estimate_(false),
+      prescreening_tollerance_factor_(1.5)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -93,6 +97,7 @@ void AdaptivePathIntegralCI::startup()
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     do_shift_ = options_.get_bool("USE_SHIFT");
+    do_prescreen_spawning_ = options_.get_bool("PRESCREEN_SPAWNING");
 }
 
 AdaptivePathIntegralCI::~AdaptivePathIntegralCI()
@@ -113,12 +118,14 @@ void AdaptivePathIntegralCI::print_info()
         {"Time step (beta)",time_step_},
         {"Spawning threshold",spawning_threshold_},
         {"Initial guess spawning threshold",initial_guess_spawning_threshold_},
-        {"Convergence threshold",e_convergence_}};
+        {"Convergence threshold",e_convergence_},
+        {"Prescreening tollerance factor",prescreening_tollerance_factor_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"Compute variational estimate",variational_estimate_ ? "YES" : "NO"},
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
-        {"Shift the energy",do_shift_ ? "YES" : "NO"}
+        {"Shift the energy",do_shift_ ? "YES" : "NO"},
+        {"Prescreen singles spawning",do_prescreen_spawning_ ? "YES" : "NO"}
     };
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
@@ -146,6 +153,7 @@ void AdaptivePathIntegralCI::print_info()
 
 double AdaptivePathIntegralCI::compute_energy()
 {
+    timer_on("APICI: compute_energy");
     boost::timer t_apici;
     outfile->Printf("\n\n  Adaptive Path-Integral Configuration Interaction");
 
@@ -157,12 +165,15 @@ double AdaptivePathIntegralCI::compute_energy()
     sparse_solver.set_parallel(true);
 
     // Initialize statistics
+    double apici_energy = initial_guess(dets,C);
+
     old_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;
+    new_max_one_HJI_ = 1e100;
+    new_max_two_HJI_ = 1e100;
     ndet_visited_ = 0;
     ndet_accepted_ = 0;
 
-    double apici_energy = initial_guess(dets,C);
 
     print_wfn(dets,C);
 
@@ -185,12 +196,14 @@ double AdaptivePathIntegralCI::compute_energy()
         std::map<BitsetDeterminant,double> new_space_map;
 
         // Evaluate (1-beta H) |old>
+        timer_on("APICI: (1-beta H)");
         size_t max_I = dets.size();
         for (size_t I = 0; I < max_I; ++I){
             BitsetDeterminant& detI = dets[I];
             double CI = C[I];
-            gradient_norm += time_step(spawning_threshold_,detI,CI,new_space_map,shift);
+            gradient_norm += time_step_optimized(spawning_threshold_,detI,CI,new_space_map,shift);
         }
+        timer_off("APICI: (1-beta H)");
 
         if (cycle == 0) initial_gradient_norm = gradient_norm;
 
@@ -214,15 +227,6 @@ double AdaptivePathIntegralCI::compute_energy()
             C[I] /= norm_C;
         }
 
-        if (variational_estimate_ and (cycle % energy_estimate_freq_ == 0)){
-            SharedMatrix evecs(new Matrix("Eigenvectors",wfn_size,1));
-            SharedVector evals(new Vector("Eigenvalues",wfn_size));
-            sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,1);
-            double var_energy = evals->get(0) + nuclear_repulsion_energy_;
-            outfile->Printf("\n  Variational energy = %20.12f",var_energy);
-            Process::environment.globals["APICI-VAR ENERGY"] = var_energy;
-        }
-
         // find the determinant with the largest value of C
         double maxC = 0.0;
         size_t maxI = 0;
@@ -233,10 +237,8 @@ double AdaptivePathIntegralCI::compute_energy()
             }
         }
 
-//        outfile->Printf("\n  Max(H1) = %f, Max(H2) = %f",old_max_one_HJI_,old_max_two_HJI_);
-
-
         // Compute the energy
+        timer_on("APICI: energy");
         if (cycle % energy_estimate_freq_ == 0){
             // Compute a perturbative estimator of the energy
             projective_energy_estimator = 0.0;
@@ -264,7 +266,7 @@ double AdaptivePathIntegralCI::compute_energy()
                 shift = projective_energy_estimator;
             }
 
-            outfile->Printf("\n%9d %10zu %20.12f %20.12f %.3e %.6f %.6f %10zu %10zu",cycle,wfn_size,projective_energy_estimator,
+            outfile->Printf("\n%9d %10zu %20.12f %20.12f %.3e %8.4f %.6f %10zu %10zu",cycle,wfn_size,projective_energy_estimator,
                             variational_energy_estimator,std::fabs(variational_energy_estimator - old_apici_energy),beta,gradient_norm,ndet_visited_,ndet_accepted_);
 
             apici_energy = variational_energy_estimator;
@@ -281,11 +283,14 @@ double AdaptivePathIntegralCI::compute_energy()
                     time_step_ *= initial_gradient_norm / gradient_norm;
             }
         }
+        timer_off("APICI: energy");
 
-        old_max_one_HJI_ = new_max_one_HJI_;
-        old_max_two_HJI_ = new_max_two_HJI_;
-        new_max_one_HJI_ = 0.0;
-        new_max_two_HJI_ = 0.0;
+        if (do_prescreen_spawning_){
+            old_max_one_HJI_ = new_max_one_HJI_;
+            old_max_two_HJI_ = new_max_two_HJI_;
+            new_max_one_HJI_ = 0.0;
+            new_max_two_HJI_ = 0.0;
+        }
         ndet_visited_ = 0;
         ndet_accepted_ = 0;
 
@@ -305,6 +310,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
     outfile->Flush();
 
+    timer_off("APICI: compute_energy");
     return apici_energy;
 }
 
@@ -491,6 +497,190 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
     }
     return gradient_norm;
 }
+
+
+double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
+{
+    std::vector<int> aocc = detI.get_alfa_occ();
+    std::vector<int> bocc = detI.get_beta_occ();
+    std::vector<int> avir = detI.get_alfa_vir();
+    std::vector<int> bvir = detI.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    double gradient_norm = 0.0;
+
+    // Contribution of this determinant
+    new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
+
+    timer_on("APICI: S");
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
+                    BitsetDeterminant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    new_max_one_HJI_ = std::max(new_max_one_HJI_,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += -time_step_ * HJI * CI;
+                        gradient_norm += std::fabs(-time_step_ * HJI * CI);
+                        ndet_accepted_++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
+                    BitsetDeterminant detJ(detI);
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    new_max_one_HJI_ = std::max(new_max_one_HJI_,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += -time_step_ * HJI * CI;
+                        gradient_norm += std::fabs(-time_step_ * HJI * CI);
+                        ndet_accepted_++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+    }
+    timer_off("APICI: S");
+
+    timer_on("APICI: D");
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = a + 1; b < nvalpha; ++b){
+                    int bb = avir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            BitsetDeterminant detJ(detI);
+                            detJ.set_alfa_bit(ii,false);
+                            detJ.set_alfa_bit(jj,false);
+                            detJ.set_alfa_bit(aa,true);
+                            detJ.set_alfa_bit(bb,true);
+
+                            // grap the alpha bits of both determinants
+                            const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
+                            const boost::dynamic_bitset<>& Ja = detJ.alfa_bits();
+
+                            // compute the sign of the matrix element
+                            HJI *= SlaterSign(Ia,ii) * SlaterSign(Ia,jj) * SlaterSign(Ja,aa) * SlaterSign(Ja,bb);
+
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+
+                            gradient_norm += std::fabs(time_step_ * HJI * CI);
+                            ndet_accepted_++;
+                        }
+                        ndet_visited_++;
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = 0; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            BitsetDeterminant detJ(detI);
+                            detJ.set_alfa_bit(ii,false);
+                            detJ.set_beta_bit(jj,false);
+                            detJ.set_alfa_bit(aa,true);
+                            detJ.set_beta_bit(bb,true);
+
+                            // grap the alpha bits of both determinants
+                            const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
+                            const boost::dynamic_bitset<>& Ib = detI.beta_bits();
+                            const boost::dynamic_bitset<>& Ja = detJ.alfa_bits();
+                            const boost::dynamic_bitset<>& Jb = detJ.beta_bits();
+
+                            // compute the sign of the matrix element
+                            HJI *= SlaterSign(Ia,ii) * SlaterSign(Ib,jj) * SlaterSign(Ja,aa) * SlaterSign(Jb,bb);
+
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+
+                            gradient_norm += std::fabs(-time_step_ * HJI * CI);
+                            ndet_accepted_++;
+                        }
+                        ndet_visited_++;
+                    }
+                }
+            }
+        }
+    }
+    BitsetDeterminant detJ(detI);
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                for (int b = a + 1; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            detJ.copy(detI);
+                            detJ.set_beta_bit(ii,false);
+                            detJ.set_beta_bit(jj,false);
+                            detJ.set_beta_bit(aa,true);
+                            detJ.set_beta_bit(bb,true);
+
+                            // grap the alpha bits of both determinants
+                            const boost::dynamic_bitset<>& Ib = detI.beta_bits();
+                            const boost::dynamic_bitset<>& Jb = detJ.beta_bits();
+
+                            // compute the sign of the matrix element
+                            HJI *= SlaterSign(Ib,ii) * SlaterSign(Ib,jj) * SlaterSign(Jb,aa) * SlaterSign(Jb,bb);
+
+                            new_space_C[detJ] += -time_step_ * HJI * CI;
+
+                            gradient_norm += std::fabs(time_step_ * HJI * CI);
+                            ndet_accepted_++;
+                        }
+                        ndet_visited_++;
+                    }
+                }
+            }
+        }
+    }
+    timer_off("APICI: D");
+    return gradient_norm;
+}
+
+// Notes: sign 1s
+// new_space_C[detJ] += -time_step_ * HJI * CI; + 1s
+
 
 void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std::vector<double> C)
 {
