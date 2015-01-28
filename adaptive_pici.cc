@@ -18,9 +18,11 @@
 
 #ifdef _OPENMP
    #include <omp.h>
+   bool have_omp = true;
 #else
    #define omp_get_num_threads() 1
    #define omp_get_thread_num() 0
+   bool have_omp = false;
 #endif
 
 using namespace std;
@@ -347,9 +349,9 @@ double AdaptivePathIntegralCI::compute_energy_parallel()
 
     print_wfn(dets,C);
 
-    int num_threads = omp_get_num_threads();
+    int num_threads = Process::environment.get_n_threads();//omp_get_num_threads();
 
-    outfile->Printf("\n\n  Number of threads: %d",num_threads);
+    outfile->Printf("\n\n  Number of threads: %d (%s)",num_threads,have_omp ? "HAVE OMP" : "NO OMP");
 
     outfile->Printf("\n\n  ------------------------------------------------------------------------------------------");
     outfile->Printf("\n    Cycle      Ndets         Proj. Energy          Var. Energy   Delta E     beta   |grad|");
@@ -374,12 +376,12 @@ double AdaptivePathIntegralCI::compute_energy_parallel()
         timer_on("APICI: (1-beta H)");
         size_t max_I = dets.size();
 
-#pragma omp parallel for (dynamic)
+#pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
             BitsetDeterminant& detI = dets[I];
             double CI = C[I];
-            gradient_norm += time_step_optimized(spawning_threshold_,detI,CI,partial_space_map[thread_id],shift);
+            time_step_optimized(spawning_threshold_,detI,CI,partial_space_map[thread_id],shift);
         }
         timer_off("APICI: (1-beta H)");
 
@@ -439,15 +441,17 @@ double AdaptivePathIntegralCI::compute_energy_parallel()
 
             // Compute a variational estimator of the energy
             variational_energy_estimator = 0.0;
+            double sum = 0.0;
+#pragma omp parallel for reduction(+:sum)
             for (int I = 0; I < wfn_size; ++I){
                 const BitsetDeterminant& detI = dets[I];
                 for (int J = I; J < wfn_size; ++J){
                     const BitsetDeterminant& detJ = dets[J];
                     double HIJ = detI.slater_rules(detJ);
-                    variational_energy_estimator += (I == J) ? C[I] * HIJ * C[J] : 2.0 * C[I] * HIJ * C[J];
+                    sum += (I == J) ? C[I] * HIJ * C[J] : 2.0 * C[I] * HIJ * C[J];
                 }
             }
-            variational_energy_estimator += nuclear_repulsion_energy_;
+            variational_energy_estimator = sum + nuclear_repulsion_energy_;
 
             // Update the shift
             if (do_shift_){
@@ -705,7 +709,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
     // Contribution of this determinant
     new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
 
-    timer_on("APICI: S");
+    //timer_on("APICI: S");
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
@@ -750,9 +754,9 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
             }
         }
     }
-    timer_off("APICI: S");
+    //timer_off("APICI: S");
 
-    timer_on("APICI: D");
+    //timer_on("APICI: D");
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
@@ -862,7 +866,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
             }
         }
     }
-    timer_off("APICI: D");
+    //timer_off("APICI: D");
     return gradient_norm;
 }
 
