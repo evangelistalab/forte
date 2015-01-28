@@ -709,6 +709,9 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
     // Contribution of this determinant
     new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
 
+    double my_new_max_one_HJI_ = 0.0;
+    size_t my_ndet_accepted = 0;
+    size_t my_ndet_visited = 0;
     //timer_on("APICI: S");
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
@@ -721,13 +724,13 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
-                    new_max_one_HJI_ = std::max(new_max_one_HJI_,std::fabs(HJI));
+                    my_new_max_one_HJI_ = std::max(my_new_max_one_HJI_,std::fabs(HJI));
                     if (std::fabs(HJI * CI) >= spawning_threshold){
                         new_space_C[detJ] += -time_step_ * HJI * CI;
                         gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                        ndet_accepted_++;
+                        my_ndet_accepted++;
                     }
-                    ndet_visited_++;
+                    my_ndet_visited++;
                 }
             }
         }
@@ -743,17 +746,18 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
-                    new_max_one_HJI_ = std::max(new_max_one_HJI_,std::fabs(HJI));
+                    my_new_max_one_HJI_ = std::max(my_new_max_one_HJI_,std::fabs(HJI));
                     if (std::fabs(HJI * CI) >= spawning_threshold){
                         new_space_C[detJ] += -time_step_ * HJI * CI;
                         gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                        ndet_accepted_++;
+                        my_ndet_accepted++;
                     }
-                    ndet_visited_++;
+                    my_ndet_visited++;
                 }
             }
         }
     }
+
     //timer_off("APICI: S");
 
     //timer_on("APICI: D");
@@ -785,9 +789,9 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
                             gradient_norm += std::fabs(time_step_ * HJI * CI);
-                            ndet_accepted_++;
+                            my_ndet_accepted++;
                         }
-                        ndet_visited_++;
+                        my_ndet_visited++;
                     }
                 }
             }
@@ -823,9 +827,9 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
                             gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                            ndet_accepted_++;
+                            my_ndet_accepted++;
                         }
-                        ndet_visited_++;
+                        my_ndet_visited++;
                     }
                 }
             }
@@ -858,15 +862,21 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
                             gradient_norm += std::fabs(time_step_ * HJI * CI);
-                            ndet_accepted_++;
+                            my_ndet_accepted++;
                         }
-                        ndet_visited_++;
+                        my_ndet_visited++;
                     }
                 }
             }
         }
     }
     //timer_off("APICI: D");
+
+    // Reduce race condition
+    new_max_one_HJI_ = std::max(my_new_max_one_HJI_,new_max_one_HJI_);
+    ndet_accepted_ += my_ndet_accepted;
+    ndet_visited_ += my_ndet_visited;
+
     return gradient_norm;
 }
 
