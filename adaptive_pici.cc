@@ -638,7 +638,6 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
             }
         }
     }
-    BitsetDeterminant detJ(detI);
     for (int i = 0; i < nobeta; ++i){
         int ii = bocc[i];
         for (int j = i + 1; j < nobeta; ++j){
@@ -650,7 +649,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                         double HJI = ints_->aptei_bb(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            detJ.copy(detI);
+                            BitsetDeterminant detJ(detI);
                             detJ.set_beta_bit(ii,false);
                             detJ.set_beta_bit(jj,false);
                             detJ.set_beta_bit(aa,true);
