@@ -20,7 +20,7 @@
    #include <omp.h>
    bool have_omp = true;
 #else
-   #define omp_get_num_threads() 1
+   #define omp_get_max_threads() 1
    #define omp_get_thread_num() 0
    bool have_omp = false;
 #endif
@@ -349,7 +349,7 @@ double AdaptivePathIntegralCI::compute_energy_parallel()
 
     print_wfn(dets,C);
 
-    int num_threads = Process::environment.get_n_threads();//omp_get_num_threads();
+    int num_threads = omp_get_max_threads();
 
     outfile->Printf("\n\n  Number of threads: %d (%s)",num_threads,have_omp ? "HAVE OMP" : "NO OMP");
 
