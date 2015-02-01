@@ -1051,9 +1051,12 @@ double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant
 #pragma omp parallel for reduction(+:variational_energy_estimator)
     for (int I = 0; I < size; ++I){
         const BitsetDeterminant& detI = dets[I];
-        for (int J = I; J < size; ++J){
-            double HIJ = dets[I].slater_rules(dets[J]);
-            variational_energy_estimator += (I == J) ? C[I] * HIJ * C[J] : 2.0 * C[I] * HIJ * C[J];
+        variational_energy_estimator += C[I] * C[I] * detI.energy();
+        for (int J = I + 1; J < size; ++J){
+            if (std::fabs(C[I] * C[J]) > 1.0e-12){
+                double HIJ = dets[I].slater_rules(dets[J]);
+                variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
+            }
         }
     }
     return variational_energy_estimator + nuclear_repulsion_energy_;
@@ -1070,23 +1073,23 @@ double AdaptivePathIntegralCI::estimate_var_energy2(std::vector<BitsetDeterminan
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_,0.0);
 
-    // Propagate the wave function for one time step using |n+1> = (1 - tau (H-S))|n>
-    // Term 1. |n>
     size_t max_I = dets.size();
     for (size_t I = 0; I < max_I; ++I){
         dets_C_map[dets[I]] = C[I];
     }
-// * (1.0 - tau * dets[I].energy());
 
-    // Term 2. -tau (H-S)|n>
+    std::pair<double,double> zero(0.0,0.0);
 #pragma omp parallel for
     for (size_t I = 0; I < max_I; ++I){
         int thread_id = omp_get_thread_num();
         // Update the list of couplings
-        std::pair<double,double> max_coupling(1.0,1.0);
+        std::pair<double,double> max_coupling;
 #pragma omp critical
         {
-//            max_coupling = dets_max_couplings_[dets[I]];
+            max_coupling = dets_max_couplings_[dets[I]];
+        }
+        if (max_coupling == zero){
+            max_coupling = {1.0,1.0};
         }
         energy[thread_id] += form_H_C(1.0,spawning_threshold2,dets[I],C[I],dets_C_map,max_coupling);
     }

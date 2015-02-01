@@ -185,6 +185,8 @@ private:
 
     double estimate_var_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
+    double estimate_var_energy2(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+
     /// Perform a time step
     double time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
@@ -192,6 +194,9 @@ private:
     size_t apply_tau_H(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
     size_t apply_tau_H_spawning(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+
+    double form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling);
+
 };
 
 }} // End Namespaces
