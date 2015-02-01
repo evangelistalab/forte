@@ -199,6 +199,8 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
 
         // Options for the Adaptive Path-Integral CI //
+        /*- The propagation algorithm -*/
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The determinant importance threshold -*/
@@ -215,6 +217,8 @@ read_options(std::string name, Options &options)
         options.add_bool("USE_SHIFT",false);
         /*- Prescreen the spawning of single excitations -*/
         options.add_bool("PRESCREEN_SPAWNING",false);
+        /*- Prescreen the spawning of single excitations -*/
+        options.add_bool("DYNAMIC_PRESCREENING",false);
 
         //////////////////////////////////////////////////////////////
         ///
@@ -327,7 +331,7 @@ libadaptive(Options &options)
         if (options.get_str("JOB_TYPE") == "APICI"){
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
-            apici->compute_energy_parallel();
+            apici->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);

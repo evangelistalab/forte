@@ -35,6 +35,8 @@
 
 namespace psi{ namespace libadaptive{
 
+enum PropagatorType {LinearPropagator,QuadraticPropagator};
+
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
@@ -70,6 +72,12 @@ private:
     Options& options_;
     /// The molecular integrals required by Explorer
     ExplorerIntegrals* ints_;
+    /// The maximum number of threads
+    int num_threads_;
+    /// The type of propagator used
+    PropagatorType propagator_;
+    /// A string that describes the propagator type
+    std::string propagator_description_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
@@ -108,6 +116,8 @@ private:
     ///
     bool do_adaptive_initial_guess_;
 
+
+
     /// Prescreen the spawning step of single excitations?
     bool do_prescreen_spawning_;
     /// The tollerance factor applied when prescreening singles
@@ -116,17 +126,27 @@ private:
     /// The energy convergence criterium
     double e_convergence_;
 
-    //
     /// Maximum value of the one-electron coupling
     double new_max_one_HJI_;
     double old_max_one_HJI_;
+
     /// Maximum value of the two-electron coupling
     double new_max_two_HJI_;
     double old_max_two_HJI_;
+
+    /// Number of determinants v
     /// Number of determinants visited during a time step
     size_t ndet_visited_;
     /// Number of determinants accepted during a time step
     size_t ndet_accepted_;
+    /// Number of determinants spawned during a time step
+    size_t nspawned_;
+    /// Number of determinants that don't spawn
+    size_t nzerospawn_;
+
+    ///
+    bool do_dynamic_prescreening_;
+    std::map<BitsetDeterminant,std::pair<double,double>> dets_max_couplings_;
 
 
     // ==> Class functions <==
@@ -143,11 +163,35 @@ private:
     /// Initial wave function guess
     double initial_guess(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
-    /// Perform a time step
-    double time_step(double spawning_threshold, BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+    ///
+    /**
+    * Propagate the wave function by a step of length tau
+    * @param dets The set of determinants that form the wave function at time n
+    * @param C The wave function coefficients at time n
+    * @param order The order of the integration algorithm
+    * @param tau The time step in a.u.
+    * @param spawning_threshold The threshold used to accept or reject spawning events
+    * @param S An energy shift subtracted from the Hamiltonian
+    */
+    void propagate(PropagatorType propagator,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold_,double S);
 
+    void propagate_first_order(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    void propagate_second_order(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+
+    double estimate_proj_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+
+    double estimate_var_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+
+    /// Perform a time step
     double time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
+    /// Apply tau x H to a determinant
+    size_t apply_tau_H(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+
+    size_t apply_tau_H_spawning(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 };
 
 }} // End Namespaces

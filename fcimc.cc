@@ -90,4 +90,85 @@ double FCIMC::compute_energy()
     return 0.0;
 }
 
+/*
+int FCIMC::compute_pgen(BitsetDeterminant& detI)
+{
+    std::vector<int> aocc = detI.get_alfa_occ();
+    std::vector<int> bocc = detI.get_beta_occ();
+    std::vector<int> avir = detI.get_alfa_vir();
+    std::vector<int> bvir = detI.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    int pgen = 0;
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                pgen++;
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                pgen++;
+            }
+        }
+    }
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = a + 1; b < nvalpha; ++b){
+                    int bb = avir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        pgen++;
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = 0; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        pgen++;
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                for (int b = a + 1; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        pgen++;
+                    }
+                }
+            }
+        }
+    }
+    return pgen;
+}
+*/
+
 }} // EndNamespaces
