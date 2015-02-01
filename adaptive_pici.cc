@@ -388,7 +388,7 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<BitsetDeterminant
             dets_C_map[dets[I]] = C[I];
         }
 #pragma omp parallel for
-        for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
             apply_tau_H(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
 //            time_step_optimized(spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
@@ -1048,7 +1048,7 @@ double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant
     // Compute a variational estimator of the energy
     size_t size = dets.size();
     double variational_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+:sum)
+#pragma omp parallel for reduction(+:variational_energy_estimator)
     for (int I = 0; I < size; ++I){
         const BitsetDeterminant& detI = dets[I];
         for (int J = I; J < size; ++J){
