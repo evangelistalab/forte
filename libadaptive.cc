@@ -194,6 +194,7 @@ read_options(std::string name, Options &options)
         /*- The size of the population -*/
         options.add_int("NPOP",100);
 
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
@@ -205,20 +206,27 @@ read_options(std::string name, Options &options)
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The determinant importance threshold -*/
         options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
+        /*- The threshold with which we estimate the variational energy.
+            Note that the final energy is always estimated exactly. -*/
+        options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
         /*- The time step in imaginary time (a.u.) -*/
         options.add_double("TAU",0.01);
-        /*- Estimate the variational energy of the wave function? -*/
-        options.add_bool("VAR_ESTIMATE",false);
+        /*- Use a fast (sparse) estimate of the energy -*/
+        options.add_bool("FAST_EVAR",false);
         /*- Iterations in between variational estimation of the energy -*/
         options.add_int("ENERGY_ESTIMATE_FREQ",25);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
-        /*- Prescreen the spawning of single excitations -*/
-        options.add_bool("PRESCREEN_SPAWNING",false);
-        /*- Prescreen the spawning of single excitations -*/
+        /*- Prescreen the spawning of excitations -*/
+        options.add_bool("SIMPLE_PRESCREENING",false);
+        /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
+        /*- The maximum value of beta -*/
+        options.add_double("MAXBETA",1000.0);
+
+
 
         //////////////////////////////////////////////////////////////
         ///

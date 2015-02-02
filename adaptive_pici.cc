@@ -41,7 +41,7 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
-      variational_estimate_(false),
+      fast_variational_estimate_(false),
       prescreening_tollerance_factor_(1.5)
 {
     // Copy the wavefunction information
@@ -99,17 +99,20 @@ void AdaptivePathIntegralCI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-    maxiter_ = options_.get_int("MAXITER");
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
     time_step_ = options_.get_double("TAU");
-    variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
-    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
-    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
+    maxiter_ = options_.get_int("MAXBETA") / time_step_;
     e_convergence_ = options_.get_double("E_CONVERGENCE");
+    energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
+
+    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
+
+    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
+    fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
     do_shift_ = options_.get_bool("USE_SHIFT");
-    do_prescreen_spawning_ = options_.get_bool("PRESCREEN_SPAWNING");
+    do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
@@ -142,15 +145,16 @@ void AdaptivePathIntegralCI::print_info()
         {"Spawning threshold",spawning_threshold_},
         {"Initial guess spawning threshold",initial_guess_spawning_threshold_},
         {"Convergence threshold",e_convergence_},
-        {"Prescreening tollerance factor",prescreening_tollerance_factor_}};
+        {"Prescreening tollerance factor",prescreening_tollerance_factor_},
+        {"Energy estimate tollerance",energy_estimate_threshold_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Propagator type",propagator_description_},
-        {"Compute variational estimate",variational_estimate_ ? "YES" : "NO"},
+        {"Propagator type",propagator_description_},        
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy",do_shift_ ? "YES" : "NO"},
-        {"Prescreen singles spawning",do_prescreen_spawning_ ? "YES" : "NO"},
+        {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
         {"Dynamic prescreening",do_dynamic_prescreening_ ? "YES" : "NO"},
+        {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
         {"Using OpenMP", have_omp ? "YES" : "NO"},
     };
 //    {"Number of electrons",nel},
@@ -162,17 +166,15 @@ void AdaptivePathIntegralCI::print_info()
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
-//    outfile->Printf("\n  %s",string(52,'-').c_str());
     for (auto& str_dim : calculation_info){
-        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-39s %10d",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_double){
-        outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-39s %10.3e",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_string){
-        outfile->Printf("\n    %-39s %8s",str_dim.first.c_str(),str_dim.second.c_str());
+        outfile->Printf("\n    %-39s %10s",str_dim.first.c_str(),str_dim.second.c_str());
     }
-//    outfile->Printf("\n  %s",string(52,'-').c_str());
     outfile->Flush();
 }
 
@@ -199,7 +201,8 @@ double AdaptivePathIntegralCI::compute_energy()
 
     // Initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
-    double apici_energy = initial_guess(dets,C);
+    double var_energy = initial_guess(dets,C);
+    double proj_energy = var_energy;
 
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
@@ -212,18 +215,20 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
+    // Main iterations
+    outfile->Printf("\n\n  ==> APIFCI Iterations <==");
+
     outfile->Printf("\n\n  ------------------------------------------------------------------------------------------");
-    outfile->Printf("\n    Cycle      Ndets     Beta         Proj. Energy          Var. Energy        DE    |dE/dt|");
+    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh  |dEp/dt|      Var. Energy/Eh   |dEv/dt|");
     outfile->Printf("\n  ------------------------------------------------------------------------------------------");
 
-    double projective_energy_estimator = 0.0;
-    double variational_energy_estimator = 0.0;
-
     int maxcycle = maxiter_;
-    double shift = do_shift_ ? apici_energy : 0.0;
+    double shift = do_shift_ ? var_energy : 0.0;
     double initial_gradient_norm = 0.0;
-    double old_apici_energy = 0.0;
+    double old_var_energy = 0.0;
+    double old_proj_energy = 0.0;
     double beta = 0.0;
+    bool converged = false;
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // Compute |n+1> = exp(-tau H)|n>
@@ -233,22 +238,25 @@ double AdaptivePathIntegralCI::compute_energy()
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0){
-            old_apici_energy = apici_energy;
-
             timer_on("PIFCI:<E>");
             std::map<std::string,double> results = estimate_energy(dets,C);
             timer_off("PIFCI:<E>");
 
-            std::string energy_type = "VARIATIONAL ENERGY";
-            apici_energy = results[energy_type];
-            double energy_gradient = std::fabs((apici_energy - old_apici_energy) / (time_step_ * energy_estimate_freq_));
+            var_energy = results["VARIATIONAL ENERGY"];
+            proj_energy = results["PROJECTIVE ENERGY"];
 
-            outfile->Printf("\n%9d %10zu %8.4f %20.12f %20.12f %20.12f %.3e %.3e %10zu %10zu",cycle,beta,C.size(),
-                            results["PROJECTIVE ENERGY"],results["VARIATIONAL ENERGY"],
-                            results["VARIATIONAL ENERGY 2"],
-                            std::fabs(apici_energy - old_apici_energy),energy_gradient,ndet_visited_,ndet_accepted_);
+            double var_energy_gradient = std::fabs((var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_));
+            double proj_energy_gradient = std::fabs((proj_energy - old_proj_energy) / (time_step_ * energy_estimate_freq_));
 
-            if (std::fabs(energy_gradient) < e_convergence_){
+            outfile->Printf("\n%9d %8.4f %10zu %20.12f %.3e %20.12f %.3e",cycle,beta,C.size(),
+                            proj_energy,proj_energy_gradient,
+                            var_energy,var_energy_gradient);
+
+            old_var_energy = var_energy;
+            old_proj_energy = proj_energy;
+
+            if (std::fabs(var_energy_gradient) < e_convergence_){
+                converged = true;
                 break;
             }
         }
@@ -257,23 +265,31 @@ double AdaptivePathIntegralCI::compute_energy()
     }
 
     outfile->Printf("\n  ------------------------------------------------------------------------------------------");
-    outfile->Printf("\n\n  Calculation converged.\n");
-    print_wfn(dets,C);
+    outfile->Printf("\n\n  Calculation %s",converged ? "converged." : "did not converge!");
 
-    Process::environment.globals["APICI ENERGY"] = apici_energy;
+    if (fast_variational_estimate_){
+        var_energy = estimate_var_energy_sparse(dets,C,1.0e-14);
+    }else{
+        var_energy = estimate_var_energy(dets,C,1.0e-14);
+    }
+
+    Process::environment.globals["APIFCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",1,apici_energy);
+    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %.12f Eh",1,var_energy);
+    outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %.12f Eh",1,proj_energy);
 
-    outfile->Printf("\n  * Size of CI space                   = %zu",C.size());
-    outfile->Printf("\n  * Determinants spawned/cycle         = %zu",nspawned_);
+    outfile->Printf("\n\n  * Size of CI space                   = %zu",C.size());
+    outfile->Printf("\n  * Spawning events/iteration          = %zu",nspawned_);
     outfile->Printf("\n  * Determinants that do not spawn     = %zu",nzerospawn_);
 
     outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
     outfile->Flush();
 
+    print_wfn(dets,C);
+
     timer_off("PIFCI:Energy");
-    return apici_energy;
+    return var_energy;
 }
 
 
@@ -316,7 +332,7 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
     ndet_accepted_ = 0;
 
     // Reset prescreening boundary
-    if (do_prescreen_spawning_){
+    if (do_simple_prescreening_){
         new_max_one_HJI_ = 0.0;
         new_max_two_HJI_ = 0.0;
     }
@@ -329,7 +345,7 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
     }
 
     // Update prescreening boundary
-    if (do_prescreen_spawning_){
+    if (do_simple_prescreening_){
         old_max_one_HJI_ = new_max_one_HJI_;
         old_max_two_HJI_ = new_max_two_HJI_;
     }
@@ -344,18 +360,18 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<BitsetDeterminant
     // A vector of maps that hold (determinant,coefficient)
     std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
 
+    nspawned_ = 0;
+    nzerospawn_ = 0;
+
     // Propagate the wave function for one time step using |n+1> = (1 - tau (H-S))|n>
     if(do_dynamic_prescreening_){
         // Term 1. |n>
-        std::map<size_t,size_t> stats;
         size_t max_I = dets.size();
         for (size_t I = 0; I < max_I; ++I){
-            dets_C_map[dets[I]] = C[I] * (1.0 - tau * (dets[I].energy() - S));
+            dets_C_map[dets[I]] = C[I];
         }
 
         // Term 2. -tau (H-S)|n>
-        nspawned_ = 0;
-        nzerospawn_ = 0;
         std::pair<double,double> zero_pair;
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
@@ -379,7 +395,7 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<BitsetDeterminant
             #pragma omp critical
             {
                 nspawned_ += spawned;
-                ndet_accepted_ += spawned;
+                if (spawned == 0) nzerospawn_++;
             }
         }
     }else{
@@ -390,8 +406,12 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<BitsetDeterminant
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
-            apply_tau_H(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            time_step_optimized(spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            size_t spawned = apply_tau_H(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            #pragma omp critical
+            {
+                nspawned_ += spawned;
+                if (spawned == 0) nzerospawn_++;
+            }
         }
     }
 
@@ -656,9 +676,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 
     // Diagonal contributions
     double det_energy = detI.energy();
-//    if (std::fabs((det_energy - E0) * CI) >= spawning_threshold){
-        new_space_C[detI] += tau * (det_energy - E0) * CI;
-//    }
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
 
     size_t spawned = 0;
 
@@ -678,6 +696,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
                         new_space_C[detJ] += tau * HJI * CI;
                         spawned++;
                     }
+                    ndet_visited_++;
                 }
             }
         }
@@ -696,6 +715,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
                         new_space_C[detJ] += tau * HJI * CI;
                         spawned++;
                     }
+                    ndet_visited_++;
                 }
             }
         }
@@ -734,6 +754,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 
                                 spawned++;
                             }
+                            ndet_visited_++;
                         }
                     }
                 }
@@ -773,6 +794,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 
                                 spawned++;
                             }
+                            ndet_visited_++;
                         }
                     }
                 }
@@ -809,6 +831,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 
                                 spawned++;
                             }
+                            ndet_visited_++;
                         }
                     }
                 }
@@ -839,6 +862,8 @@ size_t AdaptivePathIntegralCI::apply_tau_H_spawning(double tau,double spawning_t
     size_t spawned = 0;
 
     // No diagonal contributions
+    double det_energy = detI.energy();
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
 
     if ((max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold)){
         // Generate aa excitations
@@ -1009,15 +1034,21 @@ size_t AdaptivePathIntegralCI::apply_tau_H_spawning(double tau,double spawning_t
 std::map<std::string,double> AdaptivePathIntegralCI::estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C)
 {
     std::map<std::string,double> results;
+
+    timer_on("PIFCI:<E>p");
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets,C);
+    timer_off("PIFCI:<E>p");
 
-    timer_on("PIFCI:<Evar1>");
-    results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C);
-    timer_off("PIFCI:<Evar1>");
+    if (fast_variational_estimate_){
+        timer_on("PIFCI:<E>vs");
+        results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(dets,C,energy_estimate_threshold_);
+        timer_off("PIFCI:<E>vs");
+    }else{
+        timer_on("PIFCI:<E>v");
+        results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C,energy_estimate_threshold_);
+        timer_off("PIFCI:<E>v");
+    }
 
-    timer_on("PIFCI:<Evar2>");
-    results["VARIATIONAL ENERGY 2"] = estimate_var_energy2(dets,C);
-    timer_off("PIFCI:<Evar2>");
     return results;
 }
 
@@ -1043,7 +1074,7 @@ double AdaptivePathIntegralCI::estimate_proj_energy(std::vector<BitsetDeterminan
 }
 
 
-double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant> &dets, std::vector<double> &C)
+double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant> &dets, std::vector<double> &C,double tollerance)
 {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
@@ -1053,7 +1084,7 @@ double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant
         const BitsetDeterminant& detI = dets[I];
         variational_energy_estimator += C[I] * C[I] * detI.energy();
         for (int J = I + 1; J < size; ++J){
-            if (std::fabs(C[I] * C[J]) > 1.0e-12){
+            if (std::fabs(C[I] * C[J]) > tollerance){
                 double HIJ = dets[I].slater_rules(dets[J]);
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
             }
@@ -1063,13 +1094,12 @@ double AdaptivePathIntegralCI::estimate_var_energy(std::vector<BitsetDeterminant
 }
 
 
-double AdaptivePathIntegralCI::estimate_var_energy2(std::vector<BitsetDeterminant> &dets, std::vector<double> &C)
+double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<BitsetDeterminant> &dets, std::vector<double> &C,double tollerance)
 {
     // A map that contains the pair (determinant,coefficient)
     std::map<BitsetDeterminant,double> dets_C_map;
 
     double tau = time_step_;
-    double spawning_threshold2 = 1.0e-9;
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_,0.0);
 
@@ -1091,7 +1121,7 @@ double AdaptivePathIntegralCI::estimate_var_energy2(std::vector<BitsetDeterminan
         if (max_coupling == zero){
             max_coupling = {1.0,1.0};
         }
-        energy[thread_id] += form_H_C(1.0,spawning_threshold2,dets[I],C[I],dets_C_map,max_coupling);
+        energy[thread_id] += form_H_C(1.0,tollerance,dets[I],C[I],dets_C_map,max_coupling);
     }
 
     for (size_t I = 0; I < max_I; ++I){
@@ -1103,6 +1133,66 @@ double AdaptivePathIntegralCI::estimate_var_energy2(std::vector<BitsetDeterminan
 
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
+
+
+void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std::vector<double> C)
+{
+    outfile->Printf("\n\n  Most important contributions to the wave function:\n");
+
+    std::vector<std::pair<double,size_t> > det_weight;
+    for (size_t I = 0; I < space.size(); ++I){
+        det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
+    }
+    std::sort(det_weight.begin(),det_weight.end());
+    std::reverse(det_weight.begin(),det_weight.end());
+    size_t max_dets = std::min(10,int(C.size()));
+    for (size_t I = 0; I < max_dets; ++I){
+        outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
+                        I,
+                        C[det_weight[I].second],
+                        det_weight[I].first * det_weight[I].first,
+                        det_weight[I].second,
+                        space[det_weight[I].second].str().c_str());
+    }
+}
+
+void combine_maps(std::vector<bsmap>& thread_det_C_map,bsmap& dets_C_map)
+{
+    // Combine the content of varius wave functions stored as maps
+    for (size_t t = 0; t < thread_det_C_map.size(); ++t){
+        for (bsmap_it it = thread_det_C_map[t].begin(), endit = thread_det_C_map[t].end(); it != endit; ++it){
+            dets_C_map[it->first] += it->second;
+        }
+    }
+}
+
+void copy_map_to_vec(bsmap& dets_C_map,std::vector<BitsetDeterminant>& dets,std::vector<double>& C)
+{
+    size_t size = dets_C_map.size();
+    dets.resize(size);
+    C.resize(size);
+
+    size_t I = 0;
+    for (bsmap_it it = dets_C_map.begin(), endit = dets_C_map.end(); it != endit; ++it){
+        dets[I] = it->first;
+        C[I] = it->second;
+        I++;
+    }
+}
+
+void normalize(std::vector<double>& C)
+{
+    size_t size = C.size();
+    double norm = 0.0;
+    for (size_t I = 0; I < size; ++I){
+        norm += C[I] * C[I];
+    }
+    norm = std::sqrt(norm);
+    for (size_t I = 0; I < size; ++I){
+        C[I] /= norm;
+    }
+}
+
 
 double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling)
 {
@@ -1286,63 +1376,8 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Bit
     return result;
 }
 
-void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std::vector<double> C)
-{
-    outfile->Printf("\n\n  Most important contributions to the wave function:");
 
-    std::vector<std::pair<double,size_t> > det_weight;
-    for (size_t I = 0; I < space.size(); ++I){
-        det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-    }
-    std::sort(det_weight.begin(),det_weight.end());
-    std::reverse(det_weight.begin(),det_weight.end());
-    size_t max_dets = std::min(10,int(C.size()));
-    for (size_t I = 0; I < max_dets; ++I){
-        outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
-                        I,
-                        C[det_weight[I].second],
-                        det_weight[I].first * det_weight[I].first,
-                        det_weight[I].second,
-                        space[det_weight[I].second].str().c_str());
-    }
-}
 
-void combine_maps(std::vector<bsmap>& thread_det_C_map,bsmap& dets_C_map)
-{
-    // Combine the content of varius wave functions stored as maps
-    for (size_t t = 0; t < thread_det_C_map.size(); ++t){
-        for (bsmap_it it = thread_det_C_map[t].begin(), endit = thread_det_C_map[t].end(); it != endit; ++it){
-            dets_C_map[it->first] += it->second;
-        }
-    }
-}
-
-void copy_map_to_vec(bsmap& dets_C_map,std::vector<BitsetDeterminant>& dets,std::vector<double>& C)
-{
-    size_t size = dets_C_map.size();
-    dets.resize(size);
-    C.resize(size);
-
-    size_t I = 0;
-    for (bsmap_it it = dets_C_map.begin(), endit = dets_C_map.end(); it != endit; ++it){
-        dets[I] = it->first;
-        C[I] = it->second;
-        I++;
-    }
-}
-
-void normalize(std::vector<double>& C)
-{
-    size_t size = C.size();
-    double norm = 0.0;
-    for (size_t I = 0; I < size; ++I){
-        norm += C[I] * C[I];
-    }
-    norm = std::sqrt(norm);
-    for (size_t I = 0; I < size; ++I){
-        C[I] /= norm;
-    }
-}
 
 //    size_t wfn_size = det_C_map.size();
 //    dets.resize(wfn_size);

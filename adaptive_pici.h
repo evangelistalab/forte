@@ -20,8 +20,8 @@
  *@END LICENSE
  */
 
-#ifndef _pi_fci_h_
-#define _pi_fci_h_
+#ifndef _adaptive_pifci_h_
+#define _adaptive_pifci_h_
 
 #include <fstream>
 
@@ -68,6 +68,7 @@ private:
 
     // ==> Class data <==
 
+    // * Calculation data
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
@@ -90,51 +91,60 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
-    /// The PT2 energy correction
-    std::vector<double> multistate_pt2_energy_correction_;
 
+
+    // * Calculation info
     /// The threshold applied to the primary space
     double spawning_threshold_;
     /// The threshold applied during the initial guess
     double initial_guess_spawning_threshold_;
     /// The size of the time step (TAU)
     double time_step_;
-    /// The number of roots computed
-    int nroot_;
-    /// The maximum number of iterations
-    int maxiter_;
-
-    /// Estimate the energy via a variational procedure?
-    bool variational_estimate_;
-    /// The frequency of variational estimation of the energy
-    int energy_estimate_freq_;
-
     /// Use an adaptive time step?
     bool adaptive_beta_;
     /// Shift the Hamiltonian?
     bool do_shift_;
-    ///
-    bool do_adaptive_initial_guess_;
-
-
-
-    /// Prescreen the spawning step of single excitations?
-    bool do_prescreen_spawning_;
-    /// The tollerance factor applied when prescreening singles
-    double prescreening_tollerance_factor_;
-
+    /// The number of roots computed
+    int nroot_;
     /// The energy convergence criterium
     double e_convergence_;
+    /// The maximum number of iterations
+    int maxiter_;
 
+
+    // * Simple Prescreening
+    /// Prescreen spawning using general integral upper bounds
+    bool do_simple_prescreening_;
     /// Maximum value of the one-electron coupling
     double new_max_one_HJI_;
     double old_max_one_HJI_;
-
     /// Maximum value of the two-electron coupling
     double new_max_two_HJI_;
     double old_max_two_HJI_;
+    /// The tollerance factor applied when prescreening singles
+    double prescreening_tollerance_factor_;
 
-    /// Number of determinants v
+
+    // * Dynamics Prescreening
+    /// Prescreen spawning using a dynamic integral upper bounds
+    bool do_dynamic_prescreening_;
+    /// A map used to store the largest absolute value of the couplings of a
+    /// determinant to all of its singly and doubly excited states.
+    /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
+    /// the couplings to the singles and doubles, respectively.
+    std::map<BitsetDeterminant,std::pair<double,double>> dets_max_couplings_;
+
+
+    // * Energy estimation
+    /// Estimate the variational energy via a fast procedure?
+    bool fast_variational_estimate_;
+    /// The frequency of approximate variational estimation of the energy
+    int energy_estimate_freq_;
+    /// The threshold with which we estimate the energy during the iterations
+    double energy_estimate_threshold_;
+
+
+    // * Calculation statistics
     /// Number of determinants visited during a time step
     size_t ndet_visited_;
     /// Number of determinants accepted during a time step
@@ -143,10 +153,6 @@ private:
     size_t nspawned_;
     /// Number of determinants that don't spawn
     size_t nzerospawn_;
-
-    ///
-    bool do_dynamic_prescreening_;
-    std::map<BitsetDeterminant,std::pair<double,double>> dets_max_couplings_;
 
 
     // ==> Class functions <==
@@ -163,42 +169,54 @@ private:
     /// Initial wave function guess
     double initial_guess(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
-    ///
     /**
     * Propagate the wave function by a step of length tau
+    * @param propagator The type of propagator used
     * @param dets The set of determinants that form the wave function at time n
     * @param C The wave function coefficients at time n
-    * @param order The order of the integration algorithm
     * @param tau The time step in a.u.
     * @param spawning_threshold The threshold used to accept or reject spawning events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(PropagatorType propagator,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold_,double S);
+    void propagate(PropagatorType propagator,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
+    /// A first-order propagator
     void propagate_first_order(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
+    /// An experimental second-order propagator
     void propagate_second_order(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
+    /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
+    /// Estimates the projective energy
     double estimate_proj_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
-    double estimate_var_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+    /// Estimates the variational energy
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
+    double estimate_var_energy(std::vector<BitsetDeterminant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
-    double estimate_var_energy2(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
+    /// Estimates the variational energy using a sparse algorithm
+    /// @param dets The set of determinants that form the wave function
+    /// @param C The wave function coefficients
+    /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
+    double estimate_var_energy_sparse(std::vector<BitsetDeterminant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
     /// Perform a time step
     double time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
-    /// Apply tau x H to a determinant
+    /// Apply tau H to a determinant
     size_t apply_tau_H(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
+    /// Apply tau H to a determinant using dynamic screening
     size_t apply_tau_H_spawning(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
+    /// Form the product H c
     double form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling);
-
 };
 
 }} // End Namespaces
 
-#endif // _pi_fci_h_
+#endif // _adaptive_pifci_h_
