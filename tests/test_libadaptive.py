@@ -19,11 +19,14 @@ print "Running test using psi4 executable found in:\n%s" % psi4command
 adaptive_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
                      "lambda+sd-ci-1","lambda+sd-ci-2","adaptive-ci-1"]
+
+apifci_tests = ["apifci-1","apifci-2","apifci-3"]
+
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 srg_tests = ["srg-1","srg-2"]
 dsrg_tests = ["dsrg-1","dsrg-2","mr-dsrg-pt2-1"]
 
-tests = adaptive_ci_tests + ct_tests + srg_tests + dsrg_tests
+tests = adaptive_ci_tests + apifci_tests + ct_tests + srg_tests + dsrg_tests
 maindir = os.getcwd()
 for d in tests:
     print "\nRunning test %s" % d

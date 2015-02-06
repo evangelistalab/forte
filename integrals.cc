@@ -490,11 +490,9 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < ncmo_; ++k) {
                 if (Ia[k]) {
-                    //                    fock_matrix_a[p * ncmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
-                    fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,k,q,k);// -  rtei(p,q,k,k) - rtei(p,k,q,k);
+                    fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,k,q,k);
                 }
                 if (Ib[k]) {
-                    //                    fock_matrix_a[p * ncmo_ + q] += rtei(p,q,k,k);
                     fock_matrix_a[p * ncmo_ + q] += aptei_ab(p,k,q,k);
                 }
             }
@@ -502,13 +500,44 @@ void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
             // Add the non-frozen alfa part, the forzen core part is already included in oei
             for (int k = 0; k < ncmo_; ++k) {
                 if (Ib[k]) {
-                    //                    fock_matrix_b[p * ncmo_ + q] += rtei(p,q,k,k) - rtei(p,k,q,k);
                     fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,k,q,k);
                 }
                 if (Ia[k]) {
-                    fock_matrix_b[p * ncmo_ + q] += aptei_ab(p,k,q,k);//rtei(p,q,k,k);
+                    fock_matrix_b[p * ncmo_ + q] += aptei_ab(p,k,q,k);
                 }
             }
+        }
+    }
+}
+
+void ExplorerIntegrals::make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib)
+{
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = p; q < ncmo_; ++q){
+            // Builf Fock Diagonal alpha-alpha
+            double fock_a_pq = oei_a(p,q);
+//            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
+            // Add the non-frozen alfa part, the forzen core part is already included in oei
+            for (int k = 0; k < ncmo_; ++k) {
+                if (Ia[k]) {
+                    fock_a_pq += aptei_aa(p,k,q,k);
+                }
+                if (Ib[k]) {
+                    fock_a_pq += aptei_ab(p,k,q,k);
+                }
+            }
+            fock_matrix_a[p * ncmo_ + q] = fock_matrix_a[q * ncmo_ + p] = fock_a_pq;
+            double fock_b_pq = oei_b(p,q);
+            // Add the non-frozen alfa part, the forzen core part is already included in oei
+            for (int k = 0; k < ncmo_; ++k) {
+                if (Ib[k]) {
+                    fock_b_pq += aptei_bb(p,k,q,k);
+                }
+                if (Ia[k]) {
+                    fock_b_pq += aptei_ab(p,k,q,k);
+                }
+            }
+            fock_matrix_b[p * ncmo_ + q] = fock_matrix_b[q * ncmo_ + p] = fock_b_pq;
         }
     }
 }

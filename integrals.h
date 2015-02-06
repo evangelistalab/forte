@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <boost/shared_ptr.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
@@ -62,6 +63,12 @@ public:
     double oei_b(int p,int q) {return one_electron_integrals_b[p * aptei_idx_ + q];}
 
     /// The diagonal fock matrix integrals
+    double fock_a(int p,int q) {return fock_matrix_a[p * aptei_idx_ + q];}
+
+    /// The diagonal fock matrix integrals
+    double fock_b(int p,int q) {return fock_matrix_b[p * aptei_idx_ + q];}
+
+    /// The diagonal fock matrix integrals
     double diag_fock_a(int p) {return fock_matrix_a[p * aptei_idx_ + p];}
 
     /// The diagonal fock matrix integrals
@@ -86,8 +93,11 @@ public:
     /// The diagonal antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||pq>
     double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
 
-    /// Make Fock matrix with respect to a given determinant
+    /// Make a Fock matrix computed with respect to a given determinant
     void make_fock_matrix(bool* Ia, bool* Ib);
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
 
     /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
     void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);

@@ -75,6 +75,7 @@ private:
 //    StringDeterminant reference_determinant_;
 //    /// The determinant with minimum energy
 //    StringDeterminant min_energy_determinant_;
+//    int compute_pgen(BitsetDeterminant& detI);
 
     void startup(Options& options);
     void read_info(Options& options);

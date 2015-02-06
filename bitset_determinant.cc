@@ -20,8 +20,6 @@ ExplorerIntegrals* BitsetDeterminant::ints_ = 0;
 boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
 boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
 
-double SlaterSign(const boost::dynamic_bitset<>& I,int n);
-
 BitsetDeterminant::BitsetDeterminant() : nmo_(0)
 {
 }
