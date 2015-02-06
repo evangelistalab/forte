@@ -322,8 +322,12 @@ void ExplorerIntegrals::read_two_electron_integrals()
         iwl_buf_close(&V_AAAA, 1);
 
         // Store the integrals
-        outfile->Printf("\n CONVENTIONAL INTEGRALS\n");
-        outfile->Printf("\n p  q   r  s  aa  ab bb\n");
+        
+        if(options_.get_int("PRINT") > 3){ 
+           outfile->Printf("\n CONVENTIONAL INTEGRALS\n");
+           outfile->Printf("\n p  q   r  s  aa  ab bb\n");
+        }
+        SharedMatrix teiAM(new Matrix("teiAM",nmo_*nmo_,nmo_*nmo_)); 
         for (size_t p = 0; p < nmo_; ++p){
             for (size_t q = 0; q < nmo_; ++q){
                 for (size_t r = 0; r < nmo_; ++r){
@@ -338,6 +342,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         pqrs.push_back(s);
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
+                        teiAM->set(p*nmo_ + q, r*nmo_ + s,direct - exchange);
                         size_t index = aptei_index(p,q,r,s);
                        
                         if(options_.get_int("PRINT") > 3){ 
@@ -357,7 +362,28 @@ void ExplorerIntegrals::read_two_electron_integrals()
                 }
             }
         }
+        teiAM->print();
+        SharedMatrix Aeigvec(new Matrix("Aeigvec", nmo_*nmo_, nmo_*nmo_));
+        SharedVector Aeigval(new Vector("Aeigvec", nmo_*nmo_));
+        teiAM->diagonalize(Aeigvec,Aeigval);
+        Aeigval->print();
+        for(int i = 0; i < nmo_*nmo_; i++){
+           if(Aeigval->get(i) < 1e-10){
+             outfile->Printf("eigval = %20.12f\n", Aeigval->get(i));
+           } 
+        }
+        boost::shared_ptr<CholeskyMatrix> ChMatrix (new CholeskyMatrix(teiAM,1e-6, Process::environment.get_memory()));
+        
+        ChMatrix->choleskify();
+        SharedMatrix AM_chol = ChMatrix->L(); 
+        int nA = ChMatrix->Q();
 
+        SharedMatrix pqrs_conv(new Matrix("pqrs",nmo_*nmo_,nmo_*nmo_)); 
+        pqrs_conv->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nA,1.0,AM_chol,(nmo_)*(nmo_),AM_chol,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
+        pqrs_conv->subtract(teiAM);
+        pqrs_conv->print();
+        
+        
         // Deallocate temp memory
         delete[] two_electron_integrals;
     }else{
@@ -907,13 +933,15 @@ void ExplorerIntegrals::compute_chol_integrals()
     //      }
     //   }
     //}
-    Cpq->print();
+    //Cpq->print();
     Cpq->zero();
     Cpq = wfn->Ca_subset("AO","ALL");
+    SharedMatrix Cpqso = wfn->Ca_subset("SO","ALL");
+    //Cpqso->print();
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-    eps_ao->print();
-    eps_so->print();
+    //eps_ao->print();
+    //eps_so->print();
     //Cpq_so->print();
     std::vector<int> order;
     std::vector<double> eval;
@@ -939,9 +967,9 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
 
-    //for(int i = 0; i < eigind.size(); i++){
-    //   outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
-    //}
+    for(int i = 0; i < eigind.size(); i++){
+       outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
+    }
     
     Cpq->print();
     for(int l = 0; l < nL; l++){
