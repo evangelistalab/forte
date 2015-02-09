@@ -242,7 +242,7 @@ void FCI_MO::startup(Options &options){
         charge = options.get_int("CHARGE");
     }
     ms_ = options.get_int("MS");
-    if(multi_ < 0){
+    if(ms_ < 0){
         outfile->Printf("\n  MS must be no less than 0.");
         exit(1);
     }

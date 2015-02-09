@@ -31,13 +31,19 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     read_one_electron_integrals();
     read_two_electron_integrals();
     if (options_.get_str("INT_TYPE") == "DF" || options_.get_str("INT_TYPE")=="ALL"){
+        if(nirrep_ > 1){
+           outfile->Printf("WARNING! DF is not functioning with symmetry");
+        }
         compute_df_integrals();
     }
     if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
+        if(nirrep_ > 1){
+           outfile->Printf("WARNING! Cholesky integrals are not working with symmetry"); 
+        }
         compute_chol_integrals();
     }
     if(options_.get_str("INT_TYPE")=="ALL"){
-        debug_ints();
+        //debug_ints();
     }
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -342,7 +348,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         pqrs.push_back(s);
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
-                        teiAM->set(p*nmo_ + q, r*nmo_ + s,direct - exchange);
+       //                 teiAM->set(p*nmo_ + q, r*nmo_ + s,direct - exchange);
                         size_t index = aptei_index(p,q,r,s);
                        
                         if(options_.get_int("PRINT") > 3){ 
@@ -362,26 +368,8 @@ void ExplorerIntegrals::read_two_electron_integrals()
                 }
             }
         }
-        teiAM->print();
-        SharedMatrix Aeigvec(new Matrix("Aeigvec", nmo_*nmo_, nmo_*nmo_));
-        SharedVector Aeigval(new Vector("Aeigvec", nmo_*nmo_));
-        teiAM->diagonalize(Aeigvec,Aeigval);
-        Aeigval->print();
-        for(int i = 0; i < nmo_*nmo_; i++){
-           if(Aeigval->get(i) < 1e-10){
-             outfile->Printf("eigval = %20.12f\n", Aeigval->get(i));
-           } 
-        }
-        boost::shared_ptr<CholeskyMatrix> ChMatrix (new CholeskyMatrix(teiAM,1e-6, Process::environment.get_memory()));
         
-        ChMatrix->choleskify();
-        SharedMatrix AM_chol = ChMatrix->L(); 
-        int nA = ChMatrix->Q();
 
-        SharedMatrix pqrs_conv(new Matrix("pqrs",nmo_*nmo_,nmo_*nmo_)); 
-        pqrs_conv->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nA,1.0,AM_chol,(nmo_)*(nmo_),AM_chol,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
-        pqrs_conv->subtract(teiAM);
-        pqrs_conv->print();
         
         
         // Deallocate temp memory
@@ -844,13 +832,6 @@ void ExplorerIntegrals::compute_df_integrals()
                     double direct   = full_int->get(p*nmo_ + r, q*nmo_ + s);
                     double exchange = full_int->get(p*nmo_ + s, q*nmo_ + r);
                     size_t index = aptei_index(p,q,r,s);
-                    std::vector<int> pqrs;
-                    std::vector<double> value;
-                    std::pair<std::vector<int>, std::vector<double> > df_int;
-                    pqrs.push_back(p);
-                    pqrs.push_back(q);
-                    pqrs.push_back(r);
-                    pqrs.push_back(s);
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
@@ -858,11 +839,6 @@ void ExplorerIntegrals::compute_df_integrals()
                     outfile->Printf("\n direct = %20.12f  exchange = %20.12f   index = %d", direct, exchange, index);
                     }
 
-                    value.push_back(direct - exchange);
-                    value.push_back(direct);
-                    value.push_back(direct - exchange);
-                    df_int = std::make_pair(pqrs,value);
-                    df_ints.push_back(df_int);
                 }
             }
         }
@@ -969,18 +945,22 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Cpqso->print();
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-    //eps_ao->print();
-    //eps_so->print();
-    //Cpq_so->print();
+    eps_ao->print();
+    eps_so->print();
+    Cpq_so->print();
     std::vector<int> order;
     std::vector<double> eval;
+    std::vector<double> evalao;
+    for(int i = 0; i < nmo_; i++){evalao.push_back(eps_ao->get(i));}
 
     //Try and figure out a mapping from SO to AO.  
     //One idea I had was to grab the epsilon for SO which is 
     //arranged by irrep. 
   
     //This code pushes back all the eigenvalues from SO in pitzer ordering
+    std::vector<int> aotoso;
     for(int h = 0; h < nirrep_; h++){
+  
        for(int i = 0; i < eps_so->dim(h); i++){
          eval.push_back(eps_so->get(h,i)); 
        }
@@ -992,14 +972,47 @@ void ExplorerIntegrals::compute_chol_integrals()
        EI = std::make_pair(eval[e],e); 
        eigind.push_back(EI);
     }
+    std::vector<int> aotoso_ind;
     //Sorts the eigenvalues by ascending order, but keeps the same index
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
+    //std::vector<double>::iterator evalIterator;
+    //std::vector<int> so2ao;
+    
+    //This uses an iterator to find at what index does my aoeval array euqal the so array
+    //for(int e = 0; e < eval.size(); e++){
+    //   int nume = std::count(evalao.begin(), evalao.end(), eval[e]);
+    //   if(nume > 1){
+    //      outfile->Printf("\n Eval[%d] = %8.6f has %d repeating\n", e, eval[e], nume);
+    //   }
+
+    //   evalIterator = std::find(evalao.begin(), evalao.end(), eval[e]);
+    //   //Iterator stops when it finds when two points are equal
+    //   if(evalIterator != evalao.end()){
+    //     
+    //     so2ao.push_back(std::distance(evalao.begin(), evalIterator));
+    //   }
+    //   //  evalao.erase(std::remove(evalao.begin(), evalao.end(),eval[e]),evalao.end());
+    //   
+    //}
+    //Now, i need to figure out if there are any duplicate elements in my array.  
 
     for(int i = 0; i < eigind.size(); i++){
-       outfile->Printf("(%20.12f, %d)", eigind[i].first, eigind[i].second);
+       outfile->Printf("(%20.12f, %d): ", eigind[i].first, eigind[i].second);
+    //   outfile->Printf("%d", so2ao[i]);
     }
+     
     
+    Cpq->print();
+    SharedMatrix Cpq_new(Cpq->clone());
+    for(int p = 0; p < nmo_; p++){
+       for(int mu = 0; mu < nbf; mu++){
+          if(options_.get_int("PRINT") > 4){
+              outfile->Printf("\nCpq[%d][%d] = Cpq[%d][%d] = %20.12f", mu, eigind[p].second, mu, p, Cpq->get(mu,p));
+          }
+          Cpq->set(mu,eigind[p].second,Cpq_new->get(mu,p));
+       }
+    }
     Cpq->print();
     for(int l = 0; l < nL; l++){
        for(int p = 0; p < nmo_; p++){
@@ -1009,7 +1022,7 @@ void ExplorerIntegrals::compute_chol_integrals()
                    //outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
                    //L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
                    //The funky eigind[p].second is used to grab index of my sorted array
-                   L->add(l,eigind[p].second*(nmo_)+eigind[q].second,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,eigind[p].second)*Cpq->get(nu,eigind[q].second));
+                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,p)*Cpq->get(nu,q));
                 }
              }
           }
@@ -1044,7 +1057,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     //   }
     //}
 
-    outfile->Printf("nmo = %d", nmo_);
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
              for (size_t r = 0; r < nmo_; ++r){
@@ -1052,64 +1064,52 @@ void ExplorerIntegrals::compute_chol_integrals()
                     double direct   = pqrs->get(p*nmo_+r,q*nmo_+s);
                     double exchange = pqrs->get(p*nmo_+s,q*nmo_+r);
                     size_t index = aptei_index(p,q,r,s);
-                    std::vector<int> pqrs;
-                    std::vector<double> value;
-                    std::pair<std::vector<int>, std::vector<double>> chol_int;
                    
-                    pqrs.push_back(p);
-                    pqrs.push_back(q);
-                    pqrs.push_back(r);
-                    pqrs.push_back(s);
                     if(options_.get_int("PRINT") > 3){
                     outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d %d %d %d %d", direct, exchange, index,p,q,r,s);
                     }
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
-                    value.push_back(direct - exchange);
-                    value.push_back(direct);
-                    value.push_back(direct - exchange);
-                    chol_int = std::make_pair(pqrs,value);
-                    chol_ints.push_back(chol_int);
                     
                 }
             }
         }
     }
 }
-void ExplorerIntegrals::debug_ints()
-{
-     outfile->Printf("\n num_aptei = %d\n num_tei = %d\n", num_aptei, num_tei);
-     outfile->Printf("conv_ints = %d\n chol_ints = %d \n df_ints = %d\n", conv_ints.size(), chol_ints.size(), df_ints.size());
-     int size_conv = conv_ints.size();
-     int count = 0;
-     // This function is used to debug all these annoying integrals.  
-     outfile->Printf("\n p q r s aa_conv ab bb\n");
-     for(int i = 0; i < conv_ints.size(); i++){
-        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > -1e-3)) 
-            outfile->Printf("\n %d %d %d %d %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
-        count++;
-        }
-
-     outfile->Printf("\n The number of integrals that are not equivalent is %d", count);
-     outfile->Printf("\n PRINTING good ints");
-     for(int i = 0; i < conv_ints.size(); i++){
-        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) < 1e-3)) {
-            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
-       }
-        
-     }    
-       
-     outfile->Printf("\n Printing direct and exchange integrals\n"); 
+//void ExplorerIntegrals::debug_ints()
+//{
+//     outfile->Printf("\n num_aptei = %d\n num_tei = %d\n", num_aptei, num_tei);
+//     outfile->Printf("conv_ints = %d\n chol_ints = %d \n df_ints = %d\n", conv_ints.size(), chol_ints.size(), df_ints.size());
+//     int size_conv = conv_ints.size();
+//     int count = 0;
+//     // This function is used to debug all these annoying integrals.  
+//     outfile->Printf("\n p q r s aa_conv ab bb\n");
 //     for(int i = 0; i < conv_ints.size(); i++){
-//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > 1e-6)) {
-//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f  %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], conv_ints[i].second[1], chol_ints[i].second[0], chol_ints[i].second[1]);
+//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > -1e-3)) 
+//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
+//        count++;
+//        }
+//
+//     outfile->Printf("\n The number of integrals that are not equivalent is %d", count);
+//     outfile->Printf("\n PRINTING good ints");
+//     for(int i = 0; i < conv_ints.size(); i++){
+//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) < 1e-3)) {
+//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
 //       }
 //        
 //     }    
-
-
-}
+//       
+//     outfile->Printf("\n Printing direct and exchange integrals\n"); 
+////     for(int i = 0; i < conv_ints.size(); i++){
+////        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > 1e-6)) {
+////            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f  %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], conv_ints[i].second[1], chol_ints[i].second[0], chol_ints[i].second[1]);
+////       }
+////        
+////     }    
+//
+//
+//}
 
 ///**
 // * Make the one electron intermediates
