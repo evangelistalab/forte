@@ -37,9 +37,6 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
         compute_df_integrals();
     }
     if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
-        if(nirrep_ > 1){
-           outfile->Printf("WARNING! Cholesky integrals are not working with symmetry"); 
-        }
         compute_chol_integrals();
     }
     if(options_.get_str("INT_TYPE")=="ALL"){
