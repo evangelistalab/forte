@@ -31,9 +31,6 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     read_one_electron_integrals();
     read_two_electron_integrals();
     if (options_.get_str("INT_TYPE") == "DF" || options_.get_str("INT_TYPE")=="ALL"){
-        if(nirrep_ > 1){
-           outfile->Printf("WARNING! DF is not functioning with symmetry");
-        }
         compute_df_integrals();
     }
     if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
@@ -776,23 +773,62 @@ void ExplorerIntegrals::compute_df_integrals()
     int nprim = primary->nbf();
     int naux  = auxiliary->nbf();
     //Constructor for building DFERI in MO basis from libthce/lreri.h
-    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_,wfn);
-//    df->add_pair_space("B", "ACTIVE_ALL", "ACTIVE_ALL");
+    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
+  
+    std::vector<double> eval;
+    for(int h = 0; h < nirrep_; h++){
+       for(int i = 0; i < eps_so->dim(h); i++){
+         eval.push_back(eps_so->get(h,i)); 
+       }
+    }
+    //A vector of pairs for eval, index
+    std::vector<std::pair<double, int> > eigind;
+    for(int e = 0; e < eval.size(); e++){
+       std::pair<double, int> EI;
+       EI = std::make_pair(eval[e],e); 
+       eigind.push_back(EI);
+    }
+    //Sorts the eigenvalues by ascending order, but keeps the same index
+    //Hence, this is now QT ordering like my Cpq matrix
+    std::sort(eigind.begin(), eigind.end());
+    SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
+    SharedMatrix C_ord(Cpq->clone());
+    int nbf = primary->nbf();
+    for(int p = 0; p < nmo_; p++){
+       for(int mu = 0; mu < nbf; mu++){
+          C_ord->set(mu,eigind[p].second,Cpq->get(mu,p));
+       }
+    }
+    C_ord->print();
+    
     //B_{pq}^Q -> MO without frozen core
+    
+    //Constructs the DF function
+    //I used this version of build as this doesn't build all the apces and assume a RHF/UHF reference
+    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+    //Pushes a C matrix that is ordered in pitzer ordering 
+    //into the C_matrix object
+    df->set_C(C_ord);
+    //set_C clears all the orbital spaces, so this creates the space
+    //This space creates the total nmo_.  
+    //This assumes that everything is correlated.  
+    df->add_space("ALL", 0, nmo_);
+    //Does not add the pair_space, but says which one is should use
     df->add_pair_space("B", "ALL", "ALL");
+    df->set_memory(Process::environment.get_memory()/8L);
+    df->print_header(3);
 
-    long int memory = Process::environment.get_memory();
-    df->set_memory(memory / 8L);
-    df->print_header();
+    //Finally computes the df integrals
     df->compute();
-
     boost::shared_ptr<Tensor> B = df->ints()["B"];
     df.reset();
+
     FILE* Bf = B->file_pointer();
     SharedMatrix Bpq(new Matrix("Bpq", nmo_, nmo_ * naux));
     //Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
     fseek(Bf,0, SEEK_SET);
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
+    Bpq->print();
 
     //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
    //This is because francesco reads only the nonzero integrals
