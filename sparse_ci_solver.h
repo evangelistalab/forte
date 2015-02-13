@@ -87,6 +87,7 @@ protected:
     std::vector<std::pair<std::vector<int>,std::vector<double>>>& H_;
 };
 
+
 /**
  * @brief The SigmaVectorSparse class
  * Computes the sigma vector from a sparse Hamiltonian.
@@ -102,6 +103,31 @@ public:
 protected:
     std::vector<std::pair<std::vector<int>,SharedVector>>& H_;
 };
+
+
+/**
+ * @brief The SigmaVectorSparse class
+ * Computes the sigma vector from a sparse Hamiltonian.
+ */
+class SigmaVectorList : public SigmaVector
+{
+public:
+    SigmaVectorList(const std::vector<BitsetDeterminant>& space,ExplorerIntegrals* ints);
+
+    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(Vector& diag);
+
+protected:
+    ExplorerIntegrals* ints_;
+    // Create the list of a_p|N>
+    std::vector<std::vector<std::pair<size_t,bool>>> a_ann_list;
+    std::vector<std::vector<std::pair<size_t,bool>>> b_ann_list;
+    // Create the list of a+_q |N-1>
+    std::vector<std::vector<std::pair<size_t,bool>>> a_cre_list;
+    std::vector<std::vector<std::pair<size_t,bool>>> b_cre_list;
+
+};
+
 
 /**
  * @brief The SparseCISolver class

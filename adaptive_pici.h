@@ -35,7 +35,7 @@
 
 namespace psi{ namespace libadaptive{
 
-enum PropagatorType {LinearPropagator,QuadraticPropagator};
+enum PropagatorType {LinearPropagator,QuadraticPropagator,CubicPropagator,QuarticPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -185,6 +185,12 @@ private:
 
     /// An experimental second-order propagator
     void propagate_second_order(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// An experimental arbitrary-order Taylor series propagator
+    void propagate_Taylor(int order,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// An experimental arbitrary-order Chebyshev series propagator
+    void propagate_Chebyshev(int order,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);

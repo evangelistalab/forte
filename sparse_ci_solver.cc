@@ -49,6 +49,114 @@ void SigmaVectorSparse::get_diagonal(Vector& diag){
     }
 }
 
+SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space, ExplorerIntegrals *ints)
+    : SigmaVector(space.size()), ints_(ints)
+{
+
+    typedef std::map<BitsetDeterminant,size_t>::iterator bstmap_it;
+
+    size_t max_I = space.size();
+
+    size_t na_ann = 0;
+    size_t nb_ann = 0;
+    std::map<BitsetDeterminant,size_t> map_a_ann;
+    std::map<BitsetDeterminant,size_t> map_b_ann;
+
+    a_ann_list.resize(max_I);
+    b_ann_list.resize(max_I);
+
+    outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
+    for (size_t I = 0; I < max_I; ++I){
+        BitsetDeterminant detI = space[I];
+
+        std::vector<int> aocc = detI.get_alfa_occ();
+        std::vector<int> bocc = detI.get_beta_occ();
+
+        int noalpha = aocc.size();
+        int nobeta  = bocc.size();
+
+        std::vector<std::pair<size_t,bool>> a_ann(noalpha);
+        std::vector<std::pair<size_t,bool>> b_ann(nobeta);
+
+        // Generate alpha annihilation
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            BitsetDeterminant detJ(detI);
+            detJ.set_alfa_bit(ii,false);
+
+            const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
+            double sign = SlaterSign(Ia,ii);
+
+            bstmap_it it = map_a_ann.find(detJ);
+            size_t detJ_add;
+            // detJ is not in the map, add it
+            if (it == map_a_ann.end()){
+                detJ_add = na_ann;
+                map_a_ann[detJ] = na_ann;
+                na_ann++;
+            }else{
+                detJ_add = it->second;
+            }
+            a_ann[i] = std::make_pair(detJ_add,(sign > 0.5));
+        }
+        a_ann_list[I] = a_ann;
+        // Generate beta annihilation
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            BitsetDeterminant detJ(detI);
+            detJ.set_beta_bit(ii,false);
+
+            const boost::dynamic_bitset<>& Ib = detI.beta_bits();
+            double sign = SlaterSign(Ib,ii);
+
+            bstmap_it it = map_b_ann.find(detJ);
+            size_t detJ_add;
+            // detJ is not in the map, add it
+            if (it == map_b_ann.end()){
+                detJ_add = nb_ann;
+                map_b_ann[detJ] = nb_ann;
+                nb_ann++;
+            }else{
+                detJ_add = it->second;
+            }
+            b_ann[i] = std::make_pair(detJ_add,(sign > 0.5));
+        }
+        b_ann_list[I] = b_ann;
+    }
+
+    a_cre_list.resize(map_a_ann.size());
+    b_cre_list.resize(map_b_ann.size());
+
+
+    for (size_t I = 0; I < max_I; ++I){
+        const std::vector<std::pair<size_t,bool>>& a_ann = a_ann_list[I];
+        for (const std::pair<size_t,bool>& J_sign : a_ann){
+            size_t J = J_sign.first;
+            bool sign = J_sign.second;
+            a_cre_list[J].push_back(std::make_pair(I,sign));
+        }
+        const std::vector<std::pair<size_t,bool>>& b_ann = b_ann_list[I];
+        for (const std::pair<size_t,bool>& J_sign : b_ann){
+            size_t J = J_sign.first;
+            bool sign = J_sign.second;
+            b_cre_list[J].push_back(std::make_pair(I,sign));
+        }
+    }
+    outfile->Printf("\n  Size of lists:");
+    outfile->Printf("\n  |I> ->  a_p |I>: %zu",a_ann_list.size());
+    outfile->Printf("\n  |I> ->  a_p |I>: %zu",b_ann_list.size());
+    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
+    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
+}
+
+void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
+{
+}
+
+void SigmaVectorList::get_diagonal(Vector& diag)
+{
+}
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
 {
     if (space.size() < 50){

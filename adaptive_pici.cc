@@ -34,6 +34,7 @@ typedef std::map<BitsetDeterminant,double> bsmap;
 typedef std::map<BitsetDeterminant,double>::iterator bsmap_it;
 
 void combine_maps(std::vector<bsmap>& thread_det_C_map, bsmap& dets_C_map);
+void combine_maps(bsmap& dets_C_map_A,bsmap& dets_C_map_B);
 void copy_map_to_vec(bsmap& dets_C_map,std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 void normalize(std::vector<double>& C);
 
@@ -121,6 +122,12 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "QUADRATIC"){
         propagator_ = QuadraticPropagator;
         propagator_description_ = "Quadratic";
+    }else if (options_.get_str("PROPAGATOR") == "CUBIC"){
+        propagator_ = CubicPropagator;
+        propagator_description_ = "Cubic";
+    }else if (options_.get_str("PROPAGATOR") == "QUARTIC"){
+        propagator_ = QuarticPropagator;
+        propagator_description_ = "Quartic";
     }
     num_threads_ = omp_get_max_threads();
 }
@@ -230,7 +237,9 @@ double AdaptivePathIntegralCI::compute_energy()
     double beta = 0.0;
     bool converged = false;
 
-    for (int cycle = 0; cycle < maxcycle; ++cycle){
+    for (int cycle = 0; cycle < maxcycle; ++cycle){        
+        double shift = do_shift_ ? var_energy : 0.0;
+
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
         propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
@@ -341,7 +350,12 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
     if (propagator == LinearPropagator){
         propagate_first_order(dets,C,tau,spawning_threshold,S);
     }else if (propagator == QuadraticPropagator){
-        propagate_second_order(dets,C,tau,spawning_threshold,S);
+//        propagate_second_order(dets,C,tau,spawning_threshold,S);
+        propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
+    }else if (propagator == CubicPropagator){
+        propagate_Taylor(3,dets,C,tau,spawning_threshold,S);
+    }else if (propagator == QuarticPropagator){
+        propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
     }
 
     // Update prescreening boundary
@@ -372,7 +386,7 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<BitsetDeterminant
         }
 
         // Term 2. -tau (H-S)|n>
-        std::pair<double,double> zero_pair;
+        std::pair<double,double> zero_pair(0.0,0.0);
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
@@ -427,6 +441,7 @@ void AdaptivePathIntegralCI::propagate_second_order(std::vector<BitsetDeterminan
 {
     // A map that contains the pair (determinant,coefficient)
     std::map<BitsetDeterminant,double> dets_C_map;
+    std::map<BitsetDeterminant,double> dets_sum_map;
     // A vector of maps that hold (determinant,coefficient)
     std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
 
@@ -435,7 +450,8 @@ void AdaptivePathIntegralCI::propagate_second_order(std::vector<BitsetDeterminan
 
     // Term 1. |n>
     for (size_t I = 0; I < max_I; ++I){
-        dets_C_map[dets[I]] = C[I];
+        dets_sum_map[dets[I]] = C[I];
+//        dets_C_map[dets[I]] = C[I]; //old
     }
 
     // Term 2. -tau (H-S)|n>
@@ -447,10 +463,13 @@ void AdaptivePathIntegralCI::propagate_second_order(std::vector<BitsetDeterminan
 
     // Cobine the results of all the threads
     combine_maps(thread_det_C_map,dets_C_map);
+    combine_maps(dets_C_map,dets_sum_map);
+
     // Reset the maps
     for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
     // Copy the wave function to a vector
     copy_map_to_vec(dets_C_map,dets,C);
+    dets_C_map.clear();
 
     // Term 3. -tau/2 H(-tau H|old>) = tau^2/2 H^2 |old>
 #pragma omp parallel for
@@ -460,13 +479,75 @@ void AdaptivePathIntegralCI::propagate_second_order(std::vector<BitsetDeterminan
     }
 
     // Cobine the results of all the threads
-    combine_maps(thread_det_C_map,dets_C_map);
+//    combine_maps(thread_det_C_map,dets_C_map);
+    combine_maps(thread_det_C_map,dets_sum_map);
+
     // Reset the maps
-    for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
+//    for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
     // Copy the wave function to a vector
-    copy_map_to_vec(dets_C_map,dets,C);
+//    copy_map_to_vec(dets_C_map,dets,C);
+    copy_map_to_vec(dets_sum_map,dets,C);
 }
 
+
+void AdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    std::map<BitsetDeterminant,double> dets_C_map;
+    std::map<BitsetDeterminant,double> dets_sum_map;
+    // A vector of maps that hold (determinant,coefficient)
+    std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
+
+    // Propagate the wave function for one time step using |n+1> = (1 - tau (H-S) + tau^2 (H-S)^2 / 2)|n>
+    size_t max_I = dets.size();
+
+    // Term 1. |n>
+    for (size_t I = 0; I < max_I; ++I){
+        dets_sum_map[dets[I]] = C[I];
+//        dets_C_map[dets[I]] = C[I];
+    }
+
+    for (int j = 1; j <= order; ++j){
+        // Term 2. (-tau/j (H-S)) |n>
+        std::pair<double,double> zero_pair(0.0,0.0);
+
+#pragma omp parallel for
+        for (size_t I = 0; I < max_I; ++I){
+            int thread_id = omp_get_thread_num();
+            size_t spawned = 0;
+            // Update the list of couplings
+            std::pair<double,double> max_coupling;
+            #pragma omp critical
+            {
+                max_coupling = dets_max_couplings_[dets[I]];
+            }
+            if (max_coupling == zero_pair){
+                spawned = apply_tau_H_spawning(-tau / double(j),spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
+                #pragma omp critical
+                {
+                    dets_max_couplings_[dets[I]] = max_coupling;
+                }
+            }else{
+                spawned = apply_tau_H_spawning(-tau / double(j),spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
+            }
+            #pragma omp critical
+            {
+                nspawned_ += spawned;
+                if (spawned == 0) nzerospawn_++;
+            }
+        }
+
+        // Cobine the results of all the threads
+        dets_C_map.clear();
+        combine_maps(thread_det_C_map,dets_C_map);
+        combine_maps(dets_C_map,dets_sum_map);
+        // Reset the maps
+        for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
+        // Copy the wave function to a vector
+        copy_map_to_vec(dets_C_map,dets,C);
+    }
+    copy_map_to_vec(dets_sum_map,dets,C);
+}
 
 
 
@@ -861,7 +942,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_spawning(double tau,double spawning_t
 
     size_t spawned = 0;
 
-    // No diagonal contributions
+    // Diagonal contributions
     double det_energy = detI.energy();
     new_space_C[detI] += tau * (det_energy - E0) * CI;
 
@@ -1163,6 +1244,14 @@ void combine_maps(std::vector<bsmap>& thread_det_C_map,bsmap& dets_C_map)
         for (bsmap_it it = thread_det_C_map[t].begin(), endit = thread_det_C_map[t].end(); it != endit; ++it){
             dets_C_map[it->first] += it->second;
         }
+    }
+}
+
+void combine_maps(bsmap& dets_C_map_A,bsmap& dets_C_map_B)
+{
+    // Combine the content of varius wave functions stored as maps
+    for (bsmap_it it = dets_C_map_A.begin(), endit = dets_C_map_A.end(); it != endit; ++it){
+        dets_C_map_B[it->first] += it->second;
     }
 }
 
