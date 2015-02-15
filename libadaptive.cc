@@ -201,7 +201,7 @@ read_options(std::string name, Options &options)
 
         // Options for the Adaptive Path-Integral CI //
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The determinant importance threshold -*/
@@ -211,6 +211,8 @@ read_options(std::string name, Options &options)
         options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
         /*- The time step in imaginary time (a.u.) -*/
         options.add_double("TAU",0.01);
+        /*- The energy convergence criterion -*/
+        options.add_double("E_CONVERGENCE",1.0e-8);
         /*- Use a fast (sparse) estimate of the energy -*/
         options.add_bool("FAST_EVAR",false);
         /*- Iterations in between variational estimation of the energy -*/

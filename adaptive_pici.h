@@ -35,7 +35,7 @@
 
 namespace psi{ namespace libadaptive{
 
-enum PropagatorType {LinearPropagator,QuadraticPropagator,CubicPropagator,QuarticPropagator};
+enum PropagatorType {LinearPropagator,QuadraticPropagator,CubicPropagator,QuarticPropagator,PowerPropagator,PositivePropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -110,6 +110,7 @@ private:
     double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
+    int iter_;
 
 
     // * Simple Prescreening
@@ -192,6 +193,12 @@ private:
     /// An experimental arbitrary-order Chebyshev series propagator
     void propagate_Chebyshev(int order,std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
+    /// The power propagator
+    void propagate_power(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// The +tau propagator
+    void propagate_positive(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
 
@@ -213,11 +220,15 @@ private:
     /// Perform a time step
     double time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
+    /// Apply tau H to a determinant using dynamic screening
+    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<BitsetDeterminant> &dets, const std::vector<double>& C, std::map<BitsetDeterminant,double>& dets_C_map, double S);
+
     /// Apply tau H to a determinant
-    size_t apply_tau_H(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_spawning(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
     double form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling);
