@@ -148,6 +148,7 @@ void DSRG_MRPT2::startup()
     F.resize_spin_components("Fock","gg");
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
+    //DFL.resize_spin_components("DF/Cholesky Vectors","dgg");
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -187,6 +188,9 @@ void DSRG_MRPT2::startup()
     F["PQ"] += H["PQ"];
     F["PQ"] += V["rPsQ"] * Gamma1["sr"];
     F["PQ"] += V["PRQS"] * Gamma1["SR"];
+  
+   
+    //outfile->Printf("Number of cholesky vectors: %zu", nL);
 
     F.print();
 //    if (print_ > 2){
@@ -250,7 +254,8 @@ void DSRG_MRPT2::print_summary()
         {"Flow parameter",s_},
         {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
 
-    std::vector<std::pair<std::string,std::string>> calculation_info_string;
+    std::vector<std::pair<std::string,std::string>> calculation_info_string{
+        {"int_type", options_.get_str("INT_TYPE")}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
