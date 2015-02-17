@@ -925,8 +925,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
     std::vector<size_t> spawned(num_threads_,0);
 
     if(do_dynamic_prescreening_){
+        size_t max_I = dets.size();
 #pragma omp parallel for
-        for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        for (size_t I = 0; I < max_I; ++I){
             std::pair<double,double> zero_pair(0.0,0.0);
             int thread_id = omp_get_thread_num();
             // Update the list of couplings
@@ -946,8 +947,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
             }
         }
     }else{
+        size_t max_I = dets.size();
 #pragma omp parallel for
-        for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
             spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
         }
