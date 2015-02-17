@@ -617,11 +617,19 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
     pruned_space.clear();
     pruned_space_map.clear();
 
-    // Decide which will go in pruned_space
-    for (size_t I = 0; I < large_space.size(); ++I){
-        if (dm_det_list[I].first > tau_p_){
-            pruned_space.push_back(large_space[dm_det_list[I].second]);
-            pruned_space_map[large_space[dm_det_list[I].second]] = 1;
+    // Decide which determinants will go in pruned_space
+    // Include all determinants such that
+    // sum_I |C_I| < tau_p, where the sum runs over all the excluded determinants
+    if (aimed_selection_){
+
+    }
+    // Include all determinants such that |C_I| > tau_p
+    else{
+        for (size_t I = 0; I < large_space.size(); ++I){
+            if (dm_det_list[I].first > tau_p_){
+                pruned_space.push_back(large_space[dm_det_list[I].second]);
+                pruned_space_map[large_space[dm_det_list[I].second]] = 1;
+            }
         }
     }
 }

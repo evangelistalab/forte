@@ -20,8 +20,8 @@
  *@END LICENSE
  */
 
-#ifndef _methodbase_h_
-#define _methodbase_h_
+#ifndef _dsrg_mrpt2_h_
+#define _dsrg_mrpt2_h_
 
 #include <fstream>
 
@@ -46,7 +46,7 @@ namespace libadaptive{
  * This class provides basic functions to write electronic structure
  * pilot codes using the Tensor classes
  */
-class MethodBase : public Wavefunction
+class DSRG_MRPT2 : public Wavefunction
 {
 protected:
 
@@ -55,44 +55,62 @@ protected:
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
 
-    /// List of alpha occupied MOs
-    std::vector<size_t> a_occ_mos;
-    /// List of beta occupied MOs
-    std::vector<size_t> b_occ_mos;
-    /// List of alpha virtual MOs
-    std::vector<size_t> a_vir_mos;
-    /// List of beta virtual MOs
-    std::vector<size_t> b_vir_mos;
+    /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
+    Dimension ncmopi_;
+    /// The number of restricted doubly occupied orbitals per irrep (core)
+    Dimension rdoccpi_;
+    /// The number of active orbitals per irrep (active)
+    Dimension actvpi_;
+    /// The number of restricted unoccupied orbitals per irrep (virtual)
+    Dimension ruoccpi_;
 
-    /// Map from all the MOs to the alpha occupied
-    std::map<size_t,size_t> mos_to_aocc;
-    /// Map from all the MOs to the beta occupied
-    std::map<size_t,size_t> mos_to_bocc;
+    /// List of alpha core MOs
+    std::vector<size_t> acore_mos;
+    /// List of alpha active MOs
+    std::vector<size_t> aactv_mos;
+    /// List of alpha virtual MOs
+    std::vector<size_t> avirt_mos;
+
+    /// List of beta core MOs
+    std::vector<size_t> bcore_mos;
+    /// List of beta active MOs
+    std::vector<size_t> bactv_mos;
+    /// List of beta virtual MOs
+    std::vector<size_t> bvirt_mos;
+
+    /// Map from all the MOs to the alpha core
+    std::map<size_t,size_t> mos_to_acore;
+    /// Map from all the MOs to the alpha active
+    std::map<size_t,size_t> mos_to_aactv;
     /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avir;
+    std::map<size_t,size_t> mos_to_avirt;
+
+    /// Map from all the MOs to the beta core
+    std::map<size_t,size_t> mos_to_bcore;
+    /// Map from all the MOs to the beta active
+    std::map<size_t,size_t> mos_to_bactv;
     /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvir;
+    std::map<size_t,size_t> mos_to_bvirt;
+
+    /// The flow parameter
+    double s_;
+
+    /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
+    double taylor_threshold_;
+    /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
+    int taylor_order_;
+
+    // => Tensors <= //
 
     BlockedTensor H;
     BlockedTensor F;
     BlockedTensor V;
-    BlockedTensor CG1;
-    BlockedTensor G1;
-    BlockedTensor D1;
-    BlockedTensor D2;
-
-    BlockedTensor Ha;
-    BlockedTensor Hb;
-    BlockedTensor Fa;
-    BlockedTensor Fb;
-    BlockedTensor G1a;
-    BlockedTensor G1b;
-    BlockedTensor Vaa;
-    BlockedTensor Vab;
-    BlockedTensor Vbb;
-    BlockedTensor D2aa;
-    BlockedTensor D2ab;
-    BlockedTensor D2bb;
+    BlockedTensor Gamma1;
+    BlockedTensor Eta1;
+    BlockedTensor Lambda2;
+    BlockedTensor Lambda3;
+    BlockedTensor Delta1;
+    BlockedTensor Delta2;
 
     // => Class initialization and termination <= //
 
@@ -100,12 +118,18 @@ protected:
     void startup();
     /// Called in the destructor
     void cleanup();
+    /// Print a summary of the options
+    void print_summary();
 public:
 
     // => Constructors <= //
 
-    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
-    ~MethodBase();
+    DSRG_MRPT2(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+
+    ~DSRG_MRPT2();
+
+    /// Compute the DSRG-MRPT2 energy
+    double compute_energy();
 
     /// The energy of the reference
     double E0_;
@@ -116,4 +140,4 @@ public:
 
 }} // End Namespaces
 
-#endif // _methodbase_h_
+#endif // _dsrg_mrpt2_h_

@@ -17,6 +17,7 @@
 #include "fcimc.h"
 #include "sosrg.h"
 #include "mosrg.h"
+#include "dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "tensor_test.h"
 #include "mcsrgpt2_mo.h"
@@ -51,7 +52,9 @@ read_options(std::string name, Options &options)
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI");
+        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE"
+                        " EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI"
+                        " DSRG-MRPT2");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -342,6 +345,11 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
             apici->compute_energy();
+        }
+        if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(wfn,options,ints_));
+            dsrg_mrpt2->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);
