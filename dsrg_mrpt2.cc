@@ -121,12 +121,6 @@ void DSRG_MRPT2::startup()
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
 
-    //DFL.resize_spin_components("DF/Cholesky Vectors","dgg");
-
-//    Tensor Lambda1_aa("Lambda1_aa",{2,2});
-//    Lambda1_aa(0,0) = 0.03743697688361;
-//    Lambda1_aa(1,1) = 0.96256302311636;
-
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         return (sp == Alpha) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
@@ -242,6 +236,17 @@ void DSRG_MRPT2::startup()
         return 0.0;
     });
 
+    // Things to do: add renormalized denominator
+
+//    RDelta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+//        if (sp  == Alpha){
+//            return renormalized_denominator(Fa[p] - Fa[q]);
+//        }else if (sp  == Beta){
+//            return Fb[p] - Fb[q];
+//        }
+//        return 0.0;
+//    });
+
     Delta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                       size_t q,MOSetSpinType sq,
                                       size_t r,MOSetSpinType sr,
@@ -289,7 +294,33 @@ void DSRG_MRPT2::cleanup()
 
 double DSRG_MRPT2::compute_energy()
 {
+    // Compute T2
 
+    // T2.block("aaaa")->zero();  // < zero internal amplitudes
+    // T2.block("aAaA")->zero();  // < zero internal amplitudes
+    // T2.block("AAAA")->zero();  // < zero internal amplitudes
+    // T2.norm();
+
+
+//    S2["ijab"] = V["ijab"] / D2["ijab"];
+//    S2["iJaB"] = V["iJaB"] / D2["iJaB"];
+//    S2["IJAB"] = V["IJAB"] / D2["IJAB"];
+
+//    double Eaa = 0.25 * BlockedTensor::dot(S2["ijab"],V["ijab"]);
+//    double Eab = BlockedTensor::dot(S2["iJaB"],V["iJaB"]);
+//    double Ebb = 0.25 * BlockedTensor::dot(S2["IJAB"],V["IJAB"]);
+
+//    double mp2_correlation_energy = Eaa + Eab + Ebb;
+//    double ref_energy = reference_energy();
+//    outfile->Printf("\n\n    SCF energy                            = %20.15f",ref_energy);
+//    outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
+//    outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
+
+////    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
+////    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
+////    outfile->Printf("\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
+////    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n",E0_ + mp2_correlation_energy);
+//    return E0_ + mp2_correlation_energy;
     return 0.0;
 }
 
