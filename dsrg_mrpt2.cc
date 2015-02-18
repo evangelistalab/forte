@@ -170,44 +170,11 @@ void DSRG_MRPT2::startup()
         *it = i[0] == i[1] ? 1.0 : 0.0;
     }
 
-
     Gamma1_aa["pq"] = (*reference_.L1a())["pq"];
     Gamma1_AA["pq"] = (*reference_.L1b())["pq"];
 
     Eta1_aa["pq"] -= (*reference_.L1a())["pq"];
     Eta1_AA["pq"] -= (*reference_.L1b())["pq"];
-
-    outfile->Printf("\n nel (Gamma1_aa) = %zu",Gamma1_aa.nelements());
-//    outfile->Printf("\n nel (Lambda1_aa) = %zu",Lambda1_aa.nelements());
-//    Gamma1_aa(0,0) = 0.03743697688361;
-//    Gamma1_aa(1,1) = 0.96256302311636;
-//    Gamma1_AA(0,0) = 0.03743697688361;
-//    Gamma1_AA(1,1) = 0.96256302311636;
-
-//    Eta1_aa(0,0) = 1.0 - 0.03743697688361;
-//    Eta1_aa(1,1) = 1.0 - 0.96256302311636;
-//    Eta1_AA(0,0) = 1.0 - 0.03743697688361;
-//    Eta1_AA(1,1) = 1.0 - 0.96256302311636;
-
-//    Gamma1_aa.pointwise_addition(Lambda1_aa);
-//    Gamma1_AA.pointwise_addition(Lambda1_aa);
-    Gamma1.print();
-    Eta1.print();
-
-//    Gamma1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        return (p == q ? 1.0 : 0.0);
-//    });
-
-//    Eta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        return (p == q ? 1.0 : 0.0);
-//    });
-
-
-    // DC1 dc1 = fci->get_lambda_1({3,4,5});  // Return lambda_1 in the range 3-5
-    // DC2 dc2 = fci->get_lambda_2({3,4,5});  // Return lambda_1 in the range 3-5
-    // dsrg_mrpt2->set_lambda_1(dc1);
-    // dsrg_mrpt2->set_lambda_2(dc2);
-
 
     // Fill in the two-electron operator (V)
     V.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
@@ -229,16 +196,7 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["rPsQ"] * Gamma1["sr"];
     F["PQ"] += V["PRQS"] * Gamma1["SR"];
   
-   
-    //outfile->Printf("Number of cholesky vectors: %zu", nL);
-
     F.print();
-//    if (print_ > 2){
-//        G1.print();
-//        CG1.print();
-//        H.print();
-//        F.print();
-//    }
 
     Tensor& Fa_cc = *F.block("cc");
     Tensor& Fa_aa = *F.block("aa");
@@ -248,47 +206,55 @@ void DSRG_MRPT2::startup()
     Tensor& Fb_VV = *F.block("VV");
 
     std::vector<double> Fa;
+    std::vector<double> Fb;
     for (Tensor::iterator it = Fa_cc.begin(),endit = Fa_cc.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
         if(i[0] == i[1]) Fa.push_back(*it);
     }
+    for (Tensor::iterator it = Fa_aa.begin(),endit = Fa_aa.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fa.push_back(*it);
+    }
+    for (Tensor::iterator it = Fa_vv.begin(),endit = Fa_vv.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fa.push_back(*it);
+    }
+    for (Tensor::iterator it = Fb_CC.begin(),endit = Fb_CC.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fb.push_back(*it);
+    }
+    for (Tensor::iterator it = Fb_AA.begin(),endit = Fb_AA.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fb.push_back(*it);
+    }
+    for (Tensor::iterator it = Fb_VV.begin(),endit = Fb_VV.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fb.push_back(*it);
+    }
 
-//    D1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        if (sp  == Alpha){
-//            return Fa[p] - Fa[q];
-//        }else if (sp  == Beta){
-//            size_t pp = mos_to_bocc[p];
-//            size_t qq = mos_to_bvir[q];
-//            return Fb_OO(pp,pp) - Fb_VV(qq,qq);
-//        }
-//        return 0.0;
-//    });
 
-//    D2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-//                                           size_t q,MOSetSpinType sq,
-//                                           size_t r,MOSetSpinType sr,
-//                                           size_t s,MOSetSpinType ss){
-//        if ((sp == Alpha) and (sq == Alpha)){
-//            size_t pp = mos_to_aocc[p];
-//            size_t qq = mos_to_aocc[q];
-//            size_t rr = mos_to_avir[r];
-//            size_t ss = mos_to_avir[s];
-//            return Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);
-//        }else if ((sp == Alpha) and (sq == Beta) ){
-//            size_t pp = mos_to_aocc[p];
-//            size_t qq = mos_to_bocc[q];
-//            size_t rr = mos_to_avir[r];
-//            size_t ss = mos_to_bvir[s];
-//            return Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);
-//        }else if ((sp == Beta)  and (sq == Beta) ){
-//            size_t pp = mos_to_bocc[p];
-//            size_t qq = mos_to_bocc[q];
-//            size_t rr = mos_to_bvir[r];
-//            size_t ss = mos_to_bvir[s];
-//            return Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);
-//        }
-//        return 0.0;
-//    });
+    Delta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+        if (sp  == Alpha){
+            return Fa[p] - Fa[q];
+        }else if (sp  == Beta){
+            return Fb[p] - Fb[q];
+        }
+        return 0.0;
+    });
+
+    Delta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
+                                      size_t q,MOSetSpinType sq,
+                                      size_t r,MOSetSpinType sr,
+                                      size_t s,MOSetSpinType ss){
+        if ((sp == Alpha) and (sq == Alpha)){
+            return Fa[p] + Fa[q] - Fa[r] - Fa[s];
+        }else if ((sp == Alpha) and (sq == Beta) ){
+            return Fa[p] + Fb[q] - Fa[r] - Fb[s];
+        }else if ((sp == Beta)  and (sq == Beta) ){
+            return Fb[p] + Fb[q] - Fb[r] - Fb[s];
+        }
+        return 0.0;
+    });
 }
 
 void DSRG_MRPT2::print_summary()
@@ -323,6 +289,7 @@ void DSRG_MRPT2::cleanup()
 
 double DSRG_MRPT2::compute_energy()
 {
+
     return 0.0;
 }
 
