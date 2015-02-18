@@ -43,6 +43,12 @@ public:
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const {return nmo_;}
+    
+    /// Return the number of auxiliary basis functions if density fitting
+    size_t naux() const {return naux_;}
+
+    /// Return the number of cholesky vectors if integrals are cholesky factorized    
+    size_t nL() const {return nL_;}
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}
@@ -177,6 +183,11 @@ private:
 
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
+  
+    /// The number of auxiliary basis functions if DF
+    size_t naux_;
+    /// The number of cholesky vectors
+    size_t nL_;
 
     /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;

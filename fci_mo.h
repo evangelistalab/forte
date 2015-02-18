@@ -10,6 +10,11 @@
 #include <string>
 #include "integrals.h"
 #include "string_determinant.h"
+#include "tensor_basic.h"
+#include "tensor_labeled.h"
+#include "tensor_product.h"
+#include "tensor_blocked.h"
+#include "reference.h"
 
 using namespace std;
 
@@ -21,12 +26,14 @@ typedef vector<d4> d5;
 typedef vector<d5> d6;
 typedef vector<psi::libadaptive::StringDeterminant> vecdet;
 
-namespace psi{ namespace main{
+namespace psi{ namespace libadaptive{
 class FCI_MO
 {
 public:
     FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
     ~FCI_MO();
+
+    Reference reference();
 
 protected:
     void startup(Options &options);
@@ -147,10 +154,19 @@ protected:
     d2 Da_;
     d2 Db_;
 
+    // Density Matrix in Active
+    SharedTensor L1a;
+    SharedTensor L1b;
+    void fill_density();
+
     // 2-Body Density Cumulant
     d4 L2aa_;
     d4 L2ab_;
     d4 L2bb_;
+    SharedTensor L2aa;
+    SharedTensor L2ab;
+    SharedTensor L2bb;
+    void fill_cumulant2();
 
     // 3-Body Density Cumulant
     d6 L3aaa_;
@@ -165,6 +181,7 @@ protected:
 
     // Form Density Matrix
     void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &Da, d2 &Db);
+    void FormDensity_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B);
 
     // Form 2-Particle Density Cumulant  A: Straightforward; B: Efficient
     void FormCumulant2_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
@@ -175,6 +192,7 @@ protected:
     void FormCumulant3_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
 
     // N-Particle Operator
+    double OneOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
     double TwoOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
     double TwoOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
     double ThreeOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
