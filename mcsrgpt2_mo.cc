@@ -15,7 +15,7 @@
 
 using namespace std;
 
-namespace psi{ namespace main{
+namespace psi{ namespace libadaptive{
 
 MCSRGPT2_MO::MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : FCI_MO(options, ints)
 {

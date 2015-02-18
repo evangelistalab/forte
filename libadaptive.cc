@@ -15,6 +15,7 @@
 #include "adaptive_pici.h"
 #include "lambda-ci.h"
 #include "fcimc.h"
+#include "fci_mo.h"
 #include "sosrg.h"
 #include "mosrg.h"
 #include "dsrg_mrpt2.h"
@@ -319,7 +320,7 @@ libadaptive(Options &options)
         // Get the one- and two-electron integrals in the MO basis
         ExplorerIntegrals* ints_ = new ExplorerIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
         if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
-            main::MCSRGPT2_MO mcsrgpt2_mo(options, ints_);
+            MCSRGPT2_MO mcsrgpt2_mo(options, ints_);
         }
         // The explorer object will do its job
         if (options.get_str("JOB_TYPE") == "EXPLORER"){
@@ -347,8 +348,10 @@ libadaptive(Options &options)
             apici->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
+            FCI_MO fci_mo(options,ints_);
+            Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(wfn,options,ints_));
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){

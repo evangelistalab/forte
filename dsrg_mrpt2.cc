@@ -8,8 +8,8 @@
 
 namespace psi{ namespace libadaptive{
 
-DSRG_MRPT2::DSRG_MRPT2(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints)
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -61,41 +61,6 @@ void DSRG_MRPT2::startup()
         outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
         exit(1);
     }
-//    // Number of Electrons and Orbitals
-////    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-//    int natom = molecule_->natom();
-//    size_t nelec = 0;
-//    for(int i = 0; i<natom; ++i){
-//        nelec += molecule_->fZ(i);
-//    }
-//    int charge = molecule_->molecular_charge();
-//    if(options_["CHARGE"].has_changed()){
-//        charge = options_.get_int("CHARGE");
-//    }
-//    int ms_ = options_.get_int("MS");
-//    if(ms_ < 0){
-//        outfile->Printf("\n  MS must be no less than 0.");
-//        exit(1);
-//    }
-//    int multi_ = molecule_->multiplicity();
-//    if(options_["MULTI"].has_changed()){
-//        multi_ = options_.get_int("MULTI");
-//    }
-//    if(multi_ < 1){
-//        outfile->Printf("\n  MULTI must be no less than 1. Check Multiplicity!");
-//        exit(1);
-//    }
-//    int nalfa_ = (nelec - charge + ms_ * (ms_ + 1)) / 2;
-//    int nbeta_ = (nelec - charge - ms_ * (ms_ + 1)) / 2;
-//    if(nalfa_ < 0 || nbeta_ < 0){
-//        outfile->Printf("\n  Check the Charge and Multiplicity! \n");
-//        exit(1);
-//    }
-//    if(nalfa_ - nc_ - nfrzc_ > na_){
-//        outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
-//        outfile->Printf("\n  Check core and active orbitals! \n");
-//        exit(1);
-//    }
 
     // Populate the core, active, and virtuall arrays
     for (int h = 0, p = 0; h < nirrep_; ++h){
@@ -155,13 +120,12 @@ void DSRG_MRPT2::startup()
     F.resize_spin_components("Fock","gg");
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
-    DFL.resize("DF/Cholesky Vectors","dgg");
 
-//    V("pqrs") = DFL("gpq") * DFL("grs");
+    //DFL.resize_spin_components("DF/Cholesky Vectors","dgg");
 
-    Tensor Lambda1_aa("Lambda1_aa",{2,2});
-    Lambda1_aa(0,0) = 0.03743697688361;
-    Lambda1_aa(1,1) = 0.96256302311636;
+//    Tensor Lambda1_aa("Lambda1_aa",{2,2});
+//    Lambda1_aa(0,0) = 0.03743697688361;
+//    Lambda1_aa(1,1) = 0.96256302311636;
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -188,6 +152,15 @@ void DSRG_MRPT2::startup()
         *it = i[0] == i[1] ? 1.0 : 0.0;
     }
 
+    for (Tensor::iterator it = Eta1_aa.begin(),endit = Eta1_aa.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Eta1_AA.begin(),endit = Eta1_AA.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
     for (Tensor::iterator it = Eta1_vv.begin(),endit = Eta1_vv.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
         *it = i[0] == i[1] ? 1.0 : 0.0;
@@ -197,17 +170,24 @@ void DSRG_MRPT2::startup()
         *it = i[0] == i[1] ? 1.0 : 0.0;
     }
 
-    outfile->Printf("\n nel (Gamma1_aa) = %zu",Gamma1_aa.nelements());
-    outfile->Printf("\n nel (Lambda1_aa) = %zu",Lambda1_aa.nelements());
-    Gamma1_aa(0,0) = 0.03743697688361;
-    Gamma1_aa(1,1) = 0.96256302311636;
-    Gamma1_AA(0,0) = 0.03743697688361;
-    Gamma1_AA(1,1) = 0.96256302311636;
 
-    Eta1_aa(0,0) = 1.0 - 0.03743697688361;
-    Eta1_aa(1,1) = 1.0 - 0.96256302311636;
-    Eta1_AA(0,0) = 1.0 - 0.03743697688361;
-    Eta1_AA(1,1) = 1.0 - 0.96256302311636;
+    Gamma1_aa["pq"] = (*reference_.L1a())["pq"];
+    Gamma1_AA["pq"] = (*reference_.L1b())["pq"];
+
+    Eta1_aa["pq"] -= (*reference_.L1a())["pq"];
+    Eta1_AA["pq"] -= (*reference_.L1b())["pq"];
+
+    outfile->Printf("\n nel (Gamma1_aa) = %zu",Gamma1_aa.nelements());
+//    outfile->Printf("\n nel (Lambda1_aa) = %zu",Lambda1_aa.nelements());
+//    Gamma1_aa(0,0) = 0.03743697688361;
+//    Gamma1_aa(1,1) = 0.96256302311636;
+//    Gamma1_AA(0,0) = 0.03743697688361;
+//    Gamma1_AA(1,1) = 0.96256302311636;
+
+//    Eta1_aa(0,0) = 1.0 - 0.03743697688361;
+//    Eta1_aa(1,1) = 1.0 - 0.96256302311636;
+//    Eta1_AA(0,0) = 1.0 - 0.03743697688361;
+//    Eta1_AA(1,1) = 1.0 - 0.96256302311636;
 
 //    Gamma1_aa.pointwise_addition(Lambda1_aa);
 //    Gamma1_AA.pointwise_addition(Lambda1_aa);
@@ -248,6 +228,9 @@ void DSRG_MRPT2::startup()
     F["PQ"] += H["PQ"];
     F["PQ"] += V["rPsQ"] * Gamma1["sr"];
     F["PQ"] += V["PRQS"] * Gamma1["SR"];
+  
+   
+    //outfile->Printf("Number of cholesky vectors: %zu", nL);
 
     F.print();
 //    if (print_ > 2){
@@ -317,7 +300,8 @@ void DSRG_MRPT2::print_summary()
         {"Flow parameter",s_},
         {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
 
-    std::vector<std::pair<std::string,std::string>> calculation_info_string;
+    std::vector<std::pair<std::string,std::string>> calculation_info_string{
+        {"int_type", options_.get_str("INT_TYPE")}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");

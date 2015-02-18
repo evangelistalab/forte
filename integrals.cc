@@ -36,9 +36,6 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
         compute_chol_integrals();
     }
-    if(options_.get_str("INT_TYPE")=="ALL"){
-        //debug_ints();
-    }
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
@@ -327,37 +324,22 @@ void ExplorerIntegrals::read_two_electron_integrals()
            outfile->Printf("\n CONVENTIONAL INTEGRALS\n");
            outfile->Printf("\n p  q   r  s  aa  ab bb\n");
         }
-        SharedMatrix teiAM(new Matrix("teiAM",nmo_*nmo_,nmo_*nmo_)); 
         for (size_t p = 0; p < nmo_; ++p){
             for (size_t q = 0; q < nmo_; ++q){
                 for (size_t r = 0; r < nmo_; ++r){
                     for (size_t s = 0; s < nmo_; ++s){
-                        std::vector<int> pqrs;
-                        std::vector<double> integrals;
-                        std::pair<std::vector<int>, std::vector<double> > conv_int;
                         // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                        pqrs.push_back(p);
-                        pqrs.push_back(q);
-                        pqrs.push_back(r);
-                        pqrs.push_back(s);
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
-       //                 teiAM->set(p*nmo_ + q, r*nmo_ + s,direct - exchange);
                         size_t index = aptei_index(p,q,r,s);
                        
                         if(options_.get_int("PRINT") > 3){ 
                         outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
                         }
                        
-                        integrals.push_back(direct - exchange);
-                        integrals.push_back(direct);
-                        integrals.push_back(direct - exchange);
                         aphys_tei_aa[index] = direct - exchange;
                         aphys_tei_ab[index] = direct;
                         aphys_tei_bb[index] = direct - exchange;
-                        conv_int = std::make_pair(pqrs,integrals);
-                        conv_ints.push_back(conv_int);
-                        
                     }
                 }
             }
@@ -772,6 +754,7 @@ void ExplorerIntegrals::compute_df_integrals()
    
     int nprim = primary->nbf();
     int naux  = auxiliary->nbf();
+    naux_ = naux;
     //Constructor for building DFERI in MO basis from libthce/lreri.h
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
   
@@ -931,6 +914,7 @@ void ExplorerIntegrals::compute_chol_integrals()
     Ch->choleskify();
     //The number of vectors required to do cholesky factorization
     int nL = Ch->Q();
+    nL_ = nL;
     outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
     SharedMatrix Lao = Ch->L();
     Lao->print();
