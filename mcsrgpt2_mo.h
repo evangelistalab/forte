@@ -18,7 +18,7 @@ typedef vector<d3> d4;
 typedef vector<d4> d5;
 typedef vector<d5> d6;
 
-namespace psi{ namespace main{
+namespace psi{ namespace libadaptive{
 
 class MCSRGPT2_MO : public FCI_MO
 {

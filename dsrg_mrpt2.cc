@@ -1,14 +1,15 @@
-#include "dsrg_mrpt2.h"
+#include <numeric>
 
-#include "libmints/molecule.h"
-
-#include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
+#include <libpsio/psio.h>
+#include <libmints/molecule.h>
+
+#include "dsrg_mrpt2.h"
 
 namespace psi{ namespace libadaptive{
 
-DSRG_MRPT2::DSRG_MRPT2(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints)
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -60,41 +61,6 @@ void DSRG_MRPT2::startup()
         outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
         exit(1);
     }
-//    // Number of Electrons and Orbitals
-////    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-//    int natom = molecule_->natom();
-//    size_t nelec = 0;
-//    for(int i = 0; i<natom; ++i){
-//        nelec += molecule_->fZ(i);
-//    }
-//    int charge = molecule_->molecular_charge();
-//    if(options_["CHARGE"].has_changed()){
-//        charge = options_.get_int("CHARGE");
-//    }
-//    int ms_ = options_.get_int("MS");
-//    if(ms_ < 0){
-//        outfile->Printf("\n  MS must be no less than 0.");
-//        exit(1);
-//    }
-//    int multi_ = molecule_->multiplicity();
-//    if(options_["MULTI"].has_changed()){
-//        multi_ = options_.get_int("MULTI");
-//    }
-//    if(multi_ < 1){
-//        outfile->Printf("\n  MULTI must be no less than 1. Check Multiplicity!");
-//        exit(1);
-//    }
-//    int nalfa_ = (nelec - charge + ms_ * (ms_ + 1)) / 2;
-//    int nbeta_ = (nelec - charge - ms_ * (ms_ + 1)) / 2;
-//    if(nalfa_ < 0 || nbeta_ < 0){
-//        outfile->Printf("\n  Check the Charge and Multiplicity! \n");
-//        exit(1);
-//    }
-//    if(nalfa_ - nc_ - nfrzc_ > na_){
-//        outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
-//        outfile->Printf("\n  Check core and active orbitals! \n");
-//        exit(1);
-//    }
 
     // Populate the core, active, and virtuall arrays
     for (int h = 0, p = 0; h < nirrep_; ++h){
@@ -138,6 +104,12 @@ void DSRG_MRPT2::startup()
     BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
 
+
+    size_t ndf = 10;
+    std::vector<size_t> ndfpi(ndf);
+    std::iota(ndfpi.begin(),ndfpi.end(),0);
+    BlockedTensor::add_primitive_mo_space("d","g",ndfpi,Alpha);
+
     H.resize_spin_components("H","gg");
     V.resize_spin_components("V","gggg");
 
@@ -148,20 +120,88 @@ void DSRG_MRPT2::startup()
     F.resize_spin_components("Fock","gg");
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
+
     //DFL.resize_spin_components("DF/Cholesky Vectors","dgg");
+
+//    Tensor Lambda1_aa("Lambda1_aa",{2,2});
+//    Lambda1_aa(0,0) = 0.03743697688361;
+//    Lambda1_aa(1,1) = 0.96256302311636;
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         return (sp == Alpha) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
     });
 
-    Gamma1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
-    });
+    Tensor& Gamma1_cc = *Gamma1.block("cc");
+    Tensor& Gamma1_aa = *Gamma1.block("aa");
+    Tensor& Gamma1_CC = *Gamma1.block("CC");
+    Tensor& Gamma1_AA = *Gamma1.block("AA");
 
-    Eta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
-    });
+    Tensor& Eta1_aa = *Eta1.block("aa");
+    Tensor& Eta1_vv = *Eta1.block("vv");
+    Tensor& Eta1_AA = *Eta1.block("AA");
+    Tensor& Eta1_VV = *Eta1.block("VV");
+
+
+    for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Gamma1_CC.begin(),endit = Gamma1_CC.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
+    for (Tensor::iterator it = Eta1_aa.begin(),endit = Eta1_aa.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Eta1_AA.begin(),endit = Eta1_AA.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
+    for (Tensor::iterator it = Eta1_vv.begin(),endit = Eta1_vv.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Eta1_VV.begin(),endit = Eta1_VV.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
+
+    Gamma1_aa["pq"] = (*reference_.L1a())["pq"];
+    Gamma1_AA["pq"] = (*reference_.L1b())["pq"];
+
+    Eta1_aa["pq"] -= (*reference_.L1a())["pq"];
+    Eta1_AA["pq"] -= (*reference_.L1b())["pq"];
+
+    outfile->Printf("\n nel (Gamma1_aa) = %zu",Gamma1_aa.nelements());
+//    outfile->Printf("\n nel (Lambda1_aa) = %zu",Lambda1_aa.nelements());
+//    Gamma1_aa(0,0) = 0.03743697688361;
+//    Gamma1_aa(1,1) = 0.96256302311636;
+//    Gamma1_AA(0,0) = 0.03743697688361;
+//    Gamma1_AA(1,1) = 0.96256302311636;
+
+//    Eta1_aa(0,0) = 1.0 - 0.03743697688361;
+//    Eta1_aa(1,1) = 1.0 - 0.96256302311636;
+//    Eta1_AA(0,0) = 1.0 - 0.03743697688361;
+//    Eta1_AA(1,1) = 1.0 - 0.96256302311636;
+
+//    Gamma1_aa.pointwise_addition(Lambda1_aa);
+//    Gamma1_AA.pointwise_addition(Lambda1_aa);
+    Gamma1.print();
+    Eta1.print();
+
+//    Gamma1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+//        return (p == q ? 1.0 : 0.0);
+//    });
+
+//    Eta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+//        return (p == q ? 1.0 : 0.0);
+//    });
+
 
     // DC1 dc1 = fci->get_lambda_1({3,4,5});  // Return lambda_1 in the range 3-5
     // DC2 dc2 = fci->get_lambda_2({3,4,5});  // Return lambda_1 in the range 3-5
@@ -200,16 +240,22 @@ void DSRG_MRPT2::startup()
 //        F.print();
 //    }
 
-//    Tensor& Fa_oo = *F.block("oo");
-//    Tensor& Fa_vv = *F.block("vv");
-//    Tensor& Fb_OO = *F.block("OO");
-//    Tensor& Fb_VV = *F.block("VV");
+    Tensor& Fa_cc = *F.block("cc");
+    Tensor& Fa_aa = *F.block("aa");
+    Tensor& Fa_vv = *F.block("vv");
+    Tensor& Fb_CC = *F.block("CC");
+    Tensor& Fb_AA = *F.block("AA");
+    Tensor& Fb_VV = *F.block("VV");
+
+    std::vector<double> Fa;
+    for (Tensor::iterator it = Fa_cc.begin(),endit = Fa_cc.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fa.push_back(*it);
+    }
 
 //    D1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
 //        if (sp  == Alpha){
-//            size_t pp = mos_to_aocc[p];
-//            size_t qq = mos_to_avir[q];
-//            return Fa_oo(pp,pp) - Fa_vv(qq,qq);
+//            return Fa[p] - Fa[q];
 //        }else if (sp  == Beta){
 //            size_t pp = mos_to_bocc[p];
 //            size_t qq = mos_to_bvir[q];
