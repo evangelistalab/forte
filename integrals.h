@@ -157,10 +157,6 @@ public:
     /// Compute cholesky integrals
     void compute_chol_integrals();
     //const int* qt_pitzer_;
-    std::vector<std::pair<std::vector<int>, std::vector<double> >  >chol_ints;
-    std::vector<std::pair<std::vector<int>, std::vector<double> > > df_ints;
-    std::vector<std::pair<std::vector<int>, std::vector<double> > > conv_ints;
-    void debug_ints();
 
 private:
 
