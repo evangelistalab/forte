@@ -243,7 +243,6 @@ void DSRG_MRPT2::startup()
         return 0.0;
     });
 
-    // Things to do: add renormalized denominator
 
     RDelta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         if (sp  == Alpha){
@@ -326,9 +325,9 @@ double DSRG_MRPT2::renormalized_denominator(double D)
 {
     double Z = sqrt(s_) * D;
     if(fabs(Z) < pow(0.1,taylor_threshold_)){
-        return 1 / (Taylor_Exp(Z,taylor_order_) * sqrt(s_));
+        return  1.0/(Taylor_Exp(Z,taylor_order_) * sqrt(s_));
     }else{
-        return D / (1 - exp(-1.0 * s_ * pow(D, 2.0)));
+        return (D/(1 - exp(-1.0 * s_ * pow(D, 2.0))));
     }
 }
 
@@ -346,16 +345,20 @@ double DSRG_MRPT2::compute_energy()
 
 
     // Compute T2
-    T2["ijab"] = V["ijab"] / RDelta2["ijab"];
-    T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
-    T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
-    T2.block("aaaa")->zero();  // < zero internal amplitudes
-    T2.block("aAaA")->zero();  // < zero internal amplitudes
-    T2.block("AAAA")->zero();  // < zero internal amplitudes
-    double T2norm = T2.norm();
-    T2.print();
-    V.print();
-    outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
+    compute_t2();
+
+    compute_t1();
+   // T2["ijab"] = V["ijab"] / RDelta2["ijab"];
+   // T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
+   // T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
+   // T2.block("aaaa")->zero();  // < zero internal amplitudes
+   // T2.block("aAaA")->zero();  // < zero internal amplitudes
+   // T2.block("AAAA")->zero();  // < zero internal amplitudes
+   // double T2norm = T2.norm();
+   // T2.print();
+   // V.print();
+   // RDelta2.print();
+   // outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
     // T2.block("aaaa")->zero();  // < zero internal amplitudes
     // T2.block("aAaA")->zero();  // < zero internal amplitudes
     // T2.block("AAAA")->zero();  // < zero internal amplitudes
@@ -384,4 +387,40 @@ double DSRG_MRPT2::compute_energy()
     return 0.0;
 }
 
+void DSRG_MRPT2::compute_t2()
+{
+
+    T2["ijab"] = V["ijab"] / RDelta2["ijab"];
+    T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
+    T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
+    T2.block("aaaa")->zero();  // < zero internal amplitudes
+    T2.block("aAaA")->zero();  // < zero internal amplitudes
+    T2.block("AAAA")->zero();  // < zero internal amplitudes
+    double T2norm = T2.norm();
+    T2.print();
+    V.print();
+    RDelta2.print();
+    outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
+}
+void DSRG_MRPT2::compute_t1()
+{
+   T1["ia"]  =  F["ia"];
+   T1["ia"]  += F["xx"] * T2["iuax"] * Gamma1["xu"];
+   T1["ia"]  -= F["uu"] * T2["iuax"] * Gamma1["xu"];
+   T1["ia"]  += F["XX"] * T2["iUaX"] * Gamma1["XU"];
+   T1["ia"]  -= F["UU"] * T2["iUaX"] * Gamma1["XU"];
+
+   T1["ia"]  = T1["ia"] / RDelta1["ia"];
+
+   T1["IA"]  =  F["IA"];
+   T1["IA"]  += F["xx"] * T2["IuAx"] * Gamma1["xu"];
+   T1["IA"]  -= F["uu"] * T2["IuAx"] * Gamma1["xu"];
+   T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
+   T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
+   T1["IA"]  =  T1["IA"] / RDelta1["IA"];
+   T1.block("AA")->zero();
+   T1.block("aa")->zero();
+
+   T1.print();
+}
 }} // End Namespaces
