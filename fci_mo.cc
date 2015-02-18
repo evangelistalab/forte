@@ -58,15 +58,24 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = SharedTensor (new Tensor("L1a", {na_, na_}));
+    L1b = SharedTensor (new Tensor("L1b", {na_, na_}));
+//    (*L1a)(0,0) = 1.0;
+//    (*L1a)(1,1) = 2.0;
+//    (*L1a)(0,1) = 0.0;
+//    (*L1a)(1,0) = 0.0;
+//    (*L1a).print();
     outfile->Printf("\n  Forming one-particle density matrix ...");
     outfile->Flush();
-    FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
+    FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 1){
         print_d2("Da", Da_);
         print_d2("Db", Db_);
     }
+    fill_density();
+//    L1a->print();
 
     // Fock Matrix
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));
@@ -115,15 +124,18 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
+        L1a = SharedTensor (new Tensor("L1a", {na_, na_}));
+        L1b = SharedTensor (new Tensor("L1b", {na_, na_}));
         outfile->Printf("\n  Forming one-particle density matrix ...");
         outfile->Flush();
-        FormDensity(determinant_, CI_vec_, ground_state, Da_, Db_);
+        FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
         outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
         if(print_ > 1){
             print_d2("Da", Da_);
             print_d2("Db", Db_);
         }
+        fill_density();
 
         // Fock Matrix
         count = 0;
@@ -145,16 +157,22 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2aa = SharedTensor (new Tensor("L2aa", {na_, na_, na_, na_}));
+    L2ab = SharedTensor (new Tensor("L2ab", {na_, na_, na_, na_}));
+    L2bb = SharedTensor (new Tensor("L2bb", {na_, na_, na_, na_}));
     outfile->Printf("\n  Forming two-particle density cumulant ...");
     outfile->Flush();
     FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
-    if(print_ > 3){
+    if(print_ > 2){
         print2PDC("L2aa", L2aa_, print_);
         print2PDC("L2ab", L2ab_, print_);
         print2PDC("L2bb", L2bb_, print_);
     }
+    fill_cumulant2();
+//    L2aa->print();
+//    L2ab->print();
 
     // Form 3-PDC
     L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
@@ -170,7 +188,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     }
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
-    if(print_ > 4){
+    if(print_ > 3){
         print3PDC("L3aaa", L3aaa_, print_);
         print3PDC("L3aab", L3aab_, print_);
         print3PDC("L3abb", L3abb_, print_);
@@ -464,7 +482,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
         H->print();
         HV->print();
     }
-    if(print_ > 4){
+    if(print_ > 3){
         S2->print();
         Us->print();
         Vs->print();
@@ -624,6 +642,63 @@ void FCI_MO::FormDensity(const vector<libadaptive::StringDeterminant> &dets, con
     timer_off("FORM Density");
 }
 
+void FCI_MO::FormDensity_B(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B){
+    timer_on("FORM Density");
+    for(size_t p=0; p<nc_; ++p){
+        size_t np = idx_c_[p];
+            A[np][np] = 1.0;
+            B[np][np] = 1.0;
+    }
+
+    for(size_t p=0; p<na_; ++p){
+        size_t np = idx_a_[p];
+        for(size_t q=0; q<na_; ++q){
+            size_t nq = idx_a_[q];
+
+            if((sym_active_[p] ^ sym_active_[q]) != 0) continue;
+
+            size_t size = dets.size();
+            for(size_t ket = 0; ket != size; ++ket){
+                libadaptive::StringDeterminant Ja(vector<bool> (2*ncmo_)), Jb(vector<bool> (2*ncmo_));
+                double a = 1.0, b = 1.0;
+                a *= OneOP(dets[ket],Ja,np,0,nq,0) * CI_vector[root][ket];
+                b *= OneOP(dets[ket],Jb,np,1,nq,1) * CI_vector[root][ket];
+
+                for(size_t bra = 0; bra != size; ++bra){
+                    A[np][nq] += a * (dets[bra] == Ja) * CI_vector[root][bra];
+                    B[np][nq] += b * (dets[bra] == Jb) * CI_vector[root][bra];
+                }
+            }
+
+        }
+
+    }
+    timer_off("FORM Density");
+}
+
+double FCI_MO::OneOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq){
+    timer_on("1PO");
+    vector<vector<bool>> tmp;
+    tmp.push_back(J.get_alfa_bits_vector_bool());
+    tmp.push_back(J.get_beta_bits_vector_bool());
+
+    double sign = 1.0;
+
+    if(tmp[sq][q]){
+        sign *= CheckSign(tmp[sq],q);
+        tmp[sq][q] = 0;
+    }else{timer_off("1PO"); return 0.0;}
+
+    if(!tmp[sp][p]){
+        sign *= CheckSign(tmp[sp],p);
+        tmp[sp][p] = 1;
+        Jnew = libadaptive::StringDeterminant (tmp[0],tmp[1],0);
+        timer_off("1PO");
+        return sign;
+    }else{timer_off("1PO"); return 0.0;}
+}
+
+
 void FCI_MO::print_d2(const string &str, const d2 &OnePD){
     timer_on("PRINT Density");
 //    size_t count = 0;
@@ -692,7 +767,7 @@ void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT){
                 for(size_t l = 0; l != TwoPDC[i][j][k].size(); ++l){
                     if(fabs(TwoPDC[i][j][k][l]) > 1.0e-15){
                         ++count;
-                        if(PRINT > 3)
+                        if(PRINT > 2)
                             outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i, j, k, l, TwoPDC[i][j][k][l]);
                     }
                 }
@@ -912,7 +987,7 @@ void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT){
                         for(size_t n = 0; n != ThreePDC[i][j][k][l][m].size(); ++n){
                             if(fabs(ThreePDC[i][j][k][l][m][n]) > 1.0e-15){
                                 ++count;
-                                if(PRINT > 4)
+                                if(PRINT > 3)
                                     outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i, j, k, l, m, n, ThreePDC[i][j][k][l][m][n]);
                             }
                         }
@@ -1197,6 +1272,31 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         nv += ncmopi_[h] - core_[h] - active_[h];
     }
     timer_off("Block Diagonal Fock");
+}
+
+void FCI_MO::fill_density(){
+    for(size_t p=0; p<na_; ++p){
+        size_t np = idx_a_[p];
+        for(size_t q=0; q<na_; ++q){
+            size_t nq = idx_a_[q];
+            (*L1a)(p,q) = Da_[np][nq];
+            (*L1b)(p,q) = Db_[np][nq];
+        }
+    }
+}
+
+void FCI_MO::fill_cumulant2(){
+    for(size_t p=0; p<na_; ++p){
+        for(size_t q=0; q<na_; ++q){
+            for(size_t r=0; r<na_; ++r){
+                for(size_t s=0; s<na_; ++s){
+                    (*L2aa)(p,q,r,s) = L2aa_[p][q][r][s];
+                    (*L2ab)(p,q,r,s) = L2ab_[p][q][r][s];
+                    (*L2bb)(p,q,r,s) = L2bb_[p][q][r][s];
+                }
+            }
+        }
+    }
 }
 
 void FCI_MO::TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew){
