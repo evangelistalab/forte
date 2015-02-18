@@ -55,6 +55,7 @@ protected:
 
     /// The reference object
     Reference reference_;
+    double Eref_;
 
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;

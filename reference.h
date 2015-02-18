@@ -40,6 +40,8 @@ protected:
 //    Dimension actvpi_;
 //    Dimension udoccpi_;
 
+    double Eref_;
+
     SharedTensor L1a_;
     SharedTensor L1b_;
     SharedTensor L2aa_;
@@ -55,10 +57,12 @@ public:
     // => Constructors <= //
 
     Reference();
-    Reference(SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb);
-    Reference(SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb,
+    Reference(double Eref,SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb);
+    Reference(double Eref,SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb,
               SharedTensor L3aaa,SharedTensor L3aab,SharedTensor L3abb,SharedTensor L3bbb);
     ~Reference();
+
+    double get_Eref() {return Eref_;}
 
     void set_L1a(SharedTensor L1a) {L1a_ = L1a;}
     void set_L1b(SharedTensor L1b) {L1b_ = L1b;}
