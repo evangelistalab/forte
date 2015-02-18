@@ -1,9 +1,10 @@
-#include "dsrg_mrpt2.h"
+#include <numeric>
 
-#include "libmints/molecule.h"
-
-#include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
+#include <libpsio/psio.h>
+#include <libmints/molecule.h>
+
+#include "dsrg_mrpt2.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -138,6 +139,12 @@ void DSRG_MRPT2::startup()
     BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
 
+
+    size_t ndf = 10;
+    std::vector<size_t> ndfpi(ndf);
+    std::iota(ndfpi.begin(),ndfpi.end(),0);
+    BlockedTensor::add_primitive_mo_space("d","g",ndfpi,Alpha);
+
     H.resize_spin_components("H","gg");
     V.resize_spin_components("V","gggg");
 
@@ -148,19 +155,73 @@ void DSRG_MRPT2::startup()
     F.resize_spin_components("Fock","gg");
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
+    DFL.resize("DF/Cholesky Vectors","dgg");
+
+//    V("pqrs") = DFL("gpq") * DFL("grs");
+
+    Tensor Lambda1_aa("Lambda1_aa",{2,2});
+    Lambda1_aa(0,0) = 0.03743697688361;
+    Lambda1_aa(1,1) = 0.96256302311636;
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         return (sp == Alpha) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
     });
 
-    Gamma1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
-    });
+    Tensor& Gamma1_cc = *Gamma1.block("cc");
+    Tensor& Gamma1_aa = *Gamma1.block("aa");
+    Tensor& Gamma1_CC = *Gamma1.block("CC");
+    Tensor& Gamma1_AA = *Gamma1.block("AA");
 
-    Eta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
-    });
+    Tensor& Eta1_aa = *Eta1.block("aa");
+    Tensor& Eta1_vv = *Eta1.block("vv");
+    Tensor& Eta1_AA = *Eta1.block("AA");
+    Tensor& Eta1_VV = *Eta1.block("VV");
+
+
+    for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Gamma1_CC.begin(),endit = Gamma1_CC.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
+    for (Tensor::iterator it = Eta1_vv.begin(),endit = Eta1_vv.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+    for (Tensor::iterator it = Eta1_VV.begin(),endit = Eta1_VV.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        *it = i[0] == i[1] ? 1.0 : 0.0;
+    }
+
+    outfile->Printf("\n nel (Gamma1_aa) = %zu",Gamma1_aa.nelements());
+    outfile->Printf("\n nel (Lambda1_aa) = %zu",Lambda1_aa.nelements());
+    Gamma1_aa(0,0) = 0.03743697688361;
+    Gamma1_aa(1,1) = 0.96256302311636;
+    Gamma1_AA(0,0) = 0.03743697688361;
+    Gamma1_AA(1,1) = 0.96256302311636;
+
+    Eta1_aa(0,0) = 1.0 - 0.03743697688361;
+    Eta1_aa(1,1) = 1.0 - 0.96256302311636;
+    Eta1_AA(0,0) = 1.0 - 0.03743697688361;
+    Eta1_AA(1,1) = 1.0 - 0.96256302311636;
+
+//    Gamma1_aa.pointwise_addition(Lambda1_aa);
+//    Gamma1_AA.pointwise_addition(Lambda1_aa);
+    Gamma1.print();
+    Eta1.print();
+
+//    Gamma1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+//        return (p == q ? 1.0 : 0.0);
+//    });
+
+//    Eta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+//        return (p == q ? 1.0 : 0.0);
+//    });
+
 
     // DC1 dc1 = fci->get_lambda_1({3,4,5});  // Return lambda_1 in the range 3-5
     // DC2 dc2 = fci->get_lambda_2({3,4,5});  // Return lambda_1 in the range 3-5
@@ -196,16 +257,22 @@ void DSRG_MRPT2::startup()
 //        F.print();
 //    }
 
-//    Tensor& Fa_oo = *F.block("oo");
-//    Tensor& Fa_vv = *F.block("vv");
-//    Tensor& Fb_OO = *F.block("OO");
-//    Tensor& Fb_VV = *F.block("VV");
+    Tensor& Fa_cc = *F.block("cc");
+    Tensor& Fa_aa = *F.block("aa");
+    Tensor& Fa_vv = *F.block("vv");
+    Tensor& Fb_CC = *F.block("CC");
+    Tensor& Fb_AA = *F.block("AA");
+    Tensor& Fb_VV = *F.block("VV");
+
+    std::vector<double> Fa;
+    for (Tensor::iterator it = Fa_cc.begin(),endit = Fa_cc.end(); it != endit; ++it){
+        std::vector<size_t>& i = it.address();
+        if(i[0] == i[1]) Fa.push_back(*it);
+    }
 
 //    D1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
 //        if (sp  == Alpha){
-//            size_t pp = mos_to_aocc[p];
-//            size_t qq = mos_to_avir[q];
-//            return Fa_oo(pp,pp) - Fa_vv(qq,qq);
+//            return Fa[p] - Fa[q];
 //        }else if (sp  == Beta){
 //            size_t pp = mos_to_bocc[p];
 //            size_t qq = mos_to_bvir[q];

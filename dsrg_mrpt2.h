@@ -105,6 +105,7 @@ protected:
     BlockedTensor H;
     BlockedTensor F;
     BlockedTensor V;
+    BlockedTensor DFL;
     BlockedTensor Gamma1;
     BlockedTensor Eta1;
     BlockedTensor Lambda2;
