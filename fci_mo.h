@@ -208,6 +208,10 @@ protected:
     void TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew);
     void COPY(const SharedMatrix &Cnew, SharedMatrix &C);
 
+    // Reference Energy
+    double Eref_;
+    void compute_ref();
+
     // Check Sign (inline functons)
     double CheckSign(const vector<bool>& I, const int &n){
         timer_on("Check Sign");

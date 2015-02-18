@@ -25,6 +25,9 @@ DSRG_MRPT2::~DSRG_MRPT2()
 
 void DSRG_MRPT2::startup()
 {
+    Eref_ = reference_.get_Eref();
+    outfile->Printf("\n  Reference Energy = %.15f", Eref_);
+
     double frozen_core_energy = ints_->frozen_core_energy();
 
     ncmopi_ = ints_->ncmopi();

@@ -194,6 +194,9 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         print3PDC("L3abb", L3abb_, print_);
         print3PDC("L3bbb", L3bbb_, print_);
     }
+
+    compute_ref();
+
 }
 
 FCI_MO::~FCI_MO()
@@ -1299,9 +1302,40 @@ void FCI_MO::fill_cumulant2(){
     }
 }
 
+void FCI_MO::compute_ref(){
+    timer_on("Compute Ref");
+    Eref_ = 0.0;
+    for(size_t p=0; p<nh_; ++p){
+        size_t np = idx_h_[p];
+        for(size_t q=0; q<nh_; ++q){
+            size_t nq = idx_h_[q];
+            Eref_ += (integral_->oei_a(nq,np) + Fa_[nq][np]) * Da_[np][nq];
+            Eref_ += (integral_->oei_b(nq,np) + Fb_[nq][np]) * Db_[np][nq];
+        }
+    }
+    Eref_ *= 0.5;
+    for(size_t p=0; p<na_; ++p){
+        size_t np = idx_a_[p];
+        for(size_t q=0; q<na_; ++q){
+            size_t nq = idx_a_[q];
+            for(size_t r=0; r<na_; ++r){
+                size_t nr = idx_a_[r];
+                for(size_t s=0; s<na_; ++s){
+                    size_t ns = idx_a_[s];
+                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns) * L2aa_[p][q][r][s];
+                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns) * L2bb_[p][q][r][s];
+                    Eref_ += integral_->aptei_ab(np,nq,nr,ns) * L2ab_[p][q][r][s];
+                }
+            }
+        }
+    }
+    Eref_ += e_nuc_ + integral_->frozen_core_energy();
+    timer_off("Compute Ref");
+}
+
 Reference FCI_MO::reference()
 {
-    Reference ref(L1a,L1b,L2aa,L2ab,L2bb);
+    Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb);
     return ref;
 }
 
