@@ -33,6 +33,7 @@
 #include "tensor_labeled.h"
 #include "tensor_product.h"
 #include "tensor_blocked.h"
+#include "reference.h"
 
 namespace psi{
 
@@ -51,6 +52,9 @@ class DSRG_MRPT2 : public Wavefunction
 protected:
 
     // => Class data <= //
+
+    /// The reference object
+    Reference reference_;
 
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
@@ -105,6 +109,7 @@ protected:
     BlockedTensor H;
     BlockedTensor F;
     BlockedTensor V;
+    BlockedTensor DFL;
     BlockedTensor Gamma1;
     BlockedTensor Eta1;
     BlockedTensor Lambda2;
@@ -124,7 +129,7 @@ public:
 
     // => Constructors <= //
 
-    DSRG_MRPT2(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
 
     ~DSRG_MRPT2();
 

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-namespace psi{ namespace main{
+namespace psi{ namespace libadaptive{
 
 FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integral_(ints)
 {
@@ -1297,6 +1297,12 @@ void FCI_MO::fill_cumulant2(){
             }
         }
     }
+}
+
+Reference FCI_MO::reference()
+{
+    Reference ref(L1a,L1b,L2aa,L2ab,L2bb);
+    return ref;
 }
 
 void FCI_MO::TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew){

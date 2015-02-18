@@ -14,6 +14,7 @@
 #include "tensor_labeled.h"
 #include "tensor_product.h"
 #include "tensor_blocked.h"
+#include "reference.h"
 
 using namespace std;
 
@@ -25,12 +26,14 @@ typedef vector<d4> d5;
 typedef vector<d5> d6;
 typedef vector<psi::libadaptive::StringDeterminant> vecdet;
 
-namespace psi{ namespace main{
+namespace psi{ namespace libadaptive{
 class FCI_MO
 {
 public:
     FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
     ~FCI_MO();
+
+    Reference reference();
 
 protected:
     void startup(Options &options);
