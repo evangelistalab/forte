@@ -117,6 +117,10 @@ protected:
     BlockedTensor Lambda3;
     BlockedTensor Delta1;
     BlockedTensor Delta2;
+    BlockedTensor RDelta1;
+    BlockedTensor RDelta2;
+    BlockedTensor T1;
+    BlockedTensor T2;
 
     // => Class initialization and termination <= //
 
@@ -126,6 +130,21 @@ protected:
     void cleanup();
     /// Print a summary of the options
     void print_summary();
+
+    double renormalized_denominator(double D);
+
+    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp(const double &Z, const int &n){
+        if(n > 0){
+            double value = Z, tmp = Z;
+            for(int x=0; x<(n-1); ++x){
+                tmp *= pow(Z,2.0) / (x+2);
+                value += tmp;
+            }
+            return value;
+        }else{return 0.0;}
+    }
+
 public:
 
     // => Constructors <= //

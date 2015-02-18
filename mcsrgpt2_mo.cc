@@ -127,6 +127,7 @@ void MCSRGPT2_MO::startup(Options &options){
     Check_T2("AA",T2aa_,T2Naa_,T2Maxaa_,options);
     Check_T2("AB",T2ab_,T2Nab_,T2Maxab_,options);
     Check_T2("BB",T2bb_,T2Nbb_,T2Maxbb_,options);
+    print2PDC("T2aa",T2aa_,4);
 
     T1Na_ = 0.0, T1Nb_ = 0.0;
     T1Maxa_ = 0.0, T1Maxb_ = 0.0;
