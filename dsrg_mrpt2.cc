@@ -123,6 +123,10 @@ void DSRG_MRPT2::startup()
     F.resize_spin_components("Fock","gg");
     Delta1.resize_spin_components("Delta1","hp");
     Delta2.resize_spin_components("Delta2","hhpp");
+    RDelta1.resize_spin_components("RDelta1","hp");
+    RDelta2.resize_spin_components("RDelta2","hhpp");
+    T1.resize_spin_components("T1 Amplitudes","hp");
+    T2.resize_spin_components("T2 Amplitudes","hhpp");
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -241,14 +245,14 @@ void DSRG_MRPT2::startup()
 
     // Things to do: add renormalized denominator
 
-//    RDelta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        if (sp  == Alpha){
-//            return renormalized_denominator(Fa[p] - Fa[q]);
-//        }else if (sp  == Beta){
-//            return Fb[p] - Fb[q];
-//        }
-//        return 0.0;
-//    });
+    RDelta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
+        if (sp  == Alpha){
+            return renormalized_denominator(Fa[p] - Fa[q]);
+        }else if (sp  == Beta){
+            return renormalized_denominator(Fb[p] - Fb[q]);
+        }
+        return 0.0;
+    });
 
     Delta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                       size_t q,MOSetSpinType sq,
@@ -263,6 +267,29 @@ void DSRG_MRPT2::startup()
         }
         return 0.0;
     });
+
+    RDelta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
+                                      size_t q,MOSetSpinType sq,
+                                      size_t r,MOSetSpinType sr,
+                                      size_t s,MOSetSpinType ss){
+        if ((sp == Alpha) and (sq == Alpha)){
+            return renormalized_denominator(Fa[p] + Fa[q] - Fa[r] - Fa[s]);
+        }else if ((sp == Alpha) and (sq == Beta) ){
+            return renormalized_denominator(Fa[p] + Fb[q] - Fa[r] - Fb[s]);
+        }else if ((sp == Beta)  and (sq == Beta) ){
+            return renormalized_denominator(Fb[p] + Fb[q] - Fb[r] - Fb[s]);
+        }
+        return 0.0;
+    });
+
+    Tensor& Lambda2_aa = *Lambda2.block("aaaa");
+    Tensor& Lambda2_aA = *Lambda2.block("aAaA");
+    Tensor& Lambda2_AA = *Lambda2.block("AAAA");
+    Lambda2_aa["pqrs"] = (*reference_.L2aa())["pqrs"];
+    Lambda2_aA["pqrs"] = (*reference_.L2ab())["pqrs"];
+    Lambda2_AA["pqrs"] = (*reference_.L2bb())["pqrs"];
+
+
 }
 
 void DSRG_MRPT2::print_summary()
@@ -295,10 +322,40 @@ void DSRG_MRPT2::cleanup()
 {
 }
 
+double DSRG_MRPT2::renormalized_denominator(double D)
+{
+    double Z = sqrt(s_) * D;
+    if(fabs(Z) < pow(0.1,taylor_threshold_)){
+        return 1 / (Taylor_Exp(Z,taylor_order_) * sqrt(s_));
+    }else{
+        return D / (1 - exp(-1.0 * s_ * pow(D, 2.0)));
+    }
+}
+
 double DSRG_MRPT2::compute_energy()
 {
-    // Compute T2
+    // Compute Reference
+    double E0 = 0.5 * BlockedTensor::dot(H["ij"],Gamma1["ij"]);
+    E0 += 0.5 * BlockedTensor::dot(F["ij"],Gamma1["ij"]);
+    E0 += 0.5 * BlockedTensor::dot(H["IJ"],Gamma1["IJ"]);
+    E0 += 0.5 * BlockedTensor::dot(F["IJ"],Gamma1["IJ"]);
 
+    E0 += 0.25 * BlockedTensor::dot(V["uvxy"],Lambda2["uvxy"]);
+    E0 += 0.25 * BlockedTensor::dot(V["UVXY"],Lambda2["UVXY"]);
+    E0 += BlockedTensor::dot(V["uVxY"],Lambda2["uVxY"]);
+
+
+    // Compute T2
+    T2["ijab"] = V["ijab"] / RDelta2["ijab"];
+    T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
+    T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
+    T2.block("aaaa")->zero();  // < zero internal amplitudes
+    T2.block("aAaA")->zero();  // < zero internal amplitudes
+    T2.block("AAAA")->zero();  // < zero internal amplitudes
+    double T2norm = T2.norm();
+    T2.print();
+    V.print();
+    outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
     // T2.block("aaaa")->zero();  // < zero internal amplitudes
     // T2.block("aAaA")->zero();  // < zero internal amplitudes
     // T2.block("AAAA")->zero();  // < zero internal amplitudes
