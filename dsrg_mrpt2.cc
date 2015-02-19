@@ -224,31 +224,45 @@ void DSRG_MRPT2::startup()
     Tensor& Fb_AA = *F.block("AA");
     Tensor& Fb_VV = *F.block("VV");
 
-    std::vector<double> Fa;
-    std::vector<double> Fb;
+
+    size_t ncmo_ = ints_->ncmo();
+    std::vector<double> Fa(ncmo_);
+    std::vector<double> Fb(ncmo_);
     for (Tensor::iterator it = Fa_cc.begin(),endit = Fa_cc.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fa.push_back(*it);
+        if(i[0] == i[1]){
+            Fa[acore_mos[i[0]]] = *it;
+        }
     }
     for (Tensor::iterator it = Fa_aa.begin(),endit = Fa_aa.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fa.push_back(*it);
+        if(i[0] == i[1]){
+            Fa[aactv_mos[i[0]]] = *it;
+        }
     }
     for (Tensor::iterator it = Fa_vv.begin(),endit = Fa_vv.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fa.push_back(*it);
+        if(i[0] == i[1]){
+            Fa[avirt_mos[i[0]]] = *it;
+        }
     }
     for (Tensor::iterator it = Fb_CC.begin(),endit = Fb_CC.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fb.push_back(*it);
+        if(i[0] == i[1]){
+            Fb[bcore_mos[i[0]]] = *it;
+        }
     }
     for (Tensor::iterator it = Fb_AA.begin(),endit = Fb_AA.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fb.push_back(*it);
+        if(i[0] == i[1]){
+            Fb[bactv_mos[i[0]]] = *it;
+        }
     }
     for (Tensor::iterator it = Fb_VV.begin(),endit = Fb_VV.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
-        if(i[0] == i[1]) Fb.push_back(*it);
+        if(i[0] == i[1]){
+            Fb[bvirt_mos[i[0]]] = *it;
+        }
     }
 
 
@@ -341,11 +355,11 @@ void DSRG_MRPT2::cleanup()
 
 double DSRG_MRPT2::renormalized_denominator(double D)
 {
-    double Z = sqrt(s_) * D;
-    if(fabs(Z) < pow(0.1,taylor_threshold_)){
-        return  1.0/(Taylor_Exp(Z,taylor_order_) * sqrt(s_));
+    double Z = std::sqrt(s_) * D;
+    if(std::fabs(Z) < std::pow(0.1,taylor_threshold_)){
+        return  1.0/(Taylor_Exp(Z,taylor_order_) * std::sqrt(s_));
     }else{
-        return (D/(1 - exp(-1.0 * s_ * pow(D, 2.0))));
+        return (D/(1.0 - exp(- s_ * std::pow(D, 2.0))));
     }
 }
 
@@ -429,18 +443,18 @@ void DSRG_MRPT2::compute_t2()
 void DSRG_MRPT2::compute_t1()
 {
    T1["ia"]  =  F["ia"];
-   T1["ia"]  += F["xx"] * T2["iuax"] * Gamma1["xu"];
-   T1["ia"]  -= F["uu"] * T2["iuax"] * Gamma1["xu"];
-   T1["ia"]  += F["XX"] * T2["iUaX"] * Gamma1["XU"];
-   T1["ia"]  -= F["UU"] * T2["iUaX"] * Gamma1["XU"];
+//   T1["ia"]  += F["xx"] * T2["iuax"] * Gamma1["xu"];
+//   T1["ia"]  -= F["uu"] * T2["iuax"] * Gamma1["xu"];
+//   T1["ia"]  += F["XX"] * T2["iUaX"] * Gamma1["XU"];
+//   T1["ia"]  -= F["UU"] * T2["iUaX"] * Gamma1["XU"];
 
    T1["ia"]  = T1["ia"] / RDelta1["ia"];
 
    T1["IA"]  =  F["IA"];
-   T1["IA"]  += F["xx"] * T2["uIxA"] * Gamma1["xu"];
-   T1["IA"]  -= F["uu"] * T2["uIxA"] * Gamma1["xu"];
-   T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
-   T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
+//   T1["IA"]  += F["xx"] * T2["uIxA"] * Gamma1["xu"];
+//   T1["IA"]  -= F["uu"] * T2["uIxA"] * Gamma1["xu"];
+//   T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
+//   T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
    T1["IA"]  =  T1["IA"] / RDelta1["IA"];
    T1.block("AA")->zero();
    T1.block("aa")->zero();
