@@ -1,20 +1,6 @@
-.DS_Store
-
-Libadaptive.config
-Libadaptive.creator
-Libadaptive.creator.user
-Libadaptive.creator.user.2.5pre1
-Libadaptive.creator.user.2.6pre1
-Libadaptive.creator.user.92787d5
-Libadaptive.files
-Libadaptive.includes
-Makefile
-Makefile.opt
-
-*.pyc
-*.o
-*.d
-*.so
-inputalt.dat
-psi.clean
-stashed.changes
+# Qt Creator project files
+*.config
+*.creator
+*.creator.user
+*.files
+*.includes
