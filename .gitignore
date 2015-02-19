@@ -1,3 +1,9 @@
+*.o
+*.d
+*.so
+*.pyc
+Makefile.*
+
 # Qt Creator project files
 *.config
 *.creator
