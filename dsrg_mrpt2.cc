@@ -89,6 +89,8 @@ void DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
+
+
     BlockedTensor::add_primitive_mo_space("c","mn",acore_mos,Alpha);
     BlockedTensor::add_primitive_mo_space("C","MN",bcore_mos,Beta);
 
@@ -108,6 +110,22 @@ void DSRG_MRPT2::startup()
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
 
 
+    if(options_.get_str("INT_TYPE")=="CHOLESKY")
+    {
+        size_t nL = ints_->nL();
+        std::vector<size_t> nauxpi(nL);
+        std::iota(nauxpi.begin(), nauxpi.end(),0);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+        //BlockedTensor::add_composite_mo_space("o","@#$",{"d","c",;
+
+    }
+    else if(options_.get_str("INT_TYPE")=="DF")
+    {
+        size_t nDF = ints_->naux();
+        std::vector<size_t> nauxpi(nDF);
+        std::iota(nauxpi.begin(), nauxpi.end(),0);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+    }
     size_t ndf = 10;
     std::vector<size_t> ndfpi(ndf);
     std::iota(ndfpi.begin(),ndfpi.end(),0);
@@ -392,14 +410,20 @@ void DSRG_MRPT2::compute_t2()
 
     T2["ijab"] = V["ijab"] / RDelta2["ijab"];
     T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
+    //This next T2 might not be there
+    //T2["IjAb"] = V["IjAb"] / RDelta2["IjAb"];
+
     T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
     T2.block("aaaa")->zero();  // < zero internal amplitudes
     T2.block("aAaA")->zero();  // < zero internal amplitudes
+    //T2.block("AaAa")->zero();  // < zero internal amplitudes
     T2.block("AAAA")->zero();  // < zero internal amplitudes
     double T2norm = T2.norm();
-    T2.print();
-    V.print();
+    //T2.print();
+    //V.print();
     RDelta2.print();
+    T2.print();
+    //RDelta2.print_mo_spaces();
     outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
 }
 void DSRG_MRPT2::compute_t1()
@@ -413,8 +437,8 @@ void DSRG_MRPT2::compute_t1()
    T1["ia"]  = T1["ia"] / RDelta1["ia"];
 
    T1["IA"]  =  F["IA"];
-   T1["IA"]  += F["xx"] * T2["IuAx"] * Gamma1["xu"];
-   T1["IA"]  -= F["uu"] * T2["IuAx"] * Gamma1["xu"];
+   T1["IA"]  += F["xx"] * T2["uIxA"] * Gamma1["xu"];
+   T1["IA"]  -= F["uu"] * T2["uIxA"] * Gamma1["xu"];
    T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
    T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
    T1["IA"]  =  T1["IA"] / RDelta1["IA"];
@@ -422,5 +446,6 @@ void DSRG_MRPT2::compute_t1()
    T1.block("aa")->zero();
 
    T1.print();
+   T1.norm();
 }
 }} // End Namespaces
