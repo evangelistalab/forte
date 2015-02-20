@@ -523,9 +523,9 @@ void DSRG_MRPT2::renormalize_V()
     V["iJaB"] += V["iJaB"] % RExp2["iJaB"];
     V["IJAB"] += V["IJAB"] % RExp2["IJAB"];
 
-    V["abij"] += V["abij"] % RExp2["abij"];
-    V["aBiJ"] += V["aBiJ"] % RExp2["aBiJ"];
-    V["ABIJ"] += V["ABIJ"] % RExp2["ABIJ"];
+    V["abij"] += V["abij"] % RExp2["ijab"];
+    V["aBiJ"] += V["aBiJ"] % RExp2["iJaB"];
+    V["ABIJ"] += V["ABIJ"] % RExp2["IJAB"];
 }
 
 void DSRG_MRPT2::renormalize_F()
@@ -545,7 +545,7 @@ void DSRG_MRPT2::renormalize_F()
 
     temp_hp["ai"]  = temp_aa["xu"] * T2["auix"];
     temp_hp["ai"] += temp_aa["XU"] * T2["aUiX"];
-    F["ai"] += F["ai"] % RExp1["ai"];
+    F["ai"] += F["ai"] % RExp1["ia"];
     F["ai"] += temp_hp["ai"] % RExp1["ai"];
 
     temp_hp["IA"]  = temp_aa["xu"] * T2["uIxA"];
@@ -555,12 +555,10 @@ void DSRG_MRPT2::renormalize_F()
 
     temp_hp["AI"]  = temp_aa["xu"] * T2["uAxI"];
     temp_hp["AI"] += temp_aa["XU"] * T2["AUIX"];
-    F["AI"] += F["AI"] % RExp1["AI"];
+    F["AI"] += F["AI"] % RExp1["IA"];
     F["AI"] += temp_hp["AI"] % RExp1["AI"];
 
-    // The new Fock matrix seems correct.
-    // The actv-actv block is different but it should not matter.
-    F.print();
+//    F.print();  // The actv-actv block is different but it should not matter.
 }
 
 double DSRG_MRPT2::E_FT1()
@@ -579,10 +577,11 @@ double DSRG_MRPT2::E_FT1()
     E += BlockedTensor::dot(temp2["jb"], F["bj"]);
     E += BlockedTensor::dot(temp2["JB"], F["BJ"]);
 
-//    Gamma1.print();
-//    T1.print();
-//    temp1.print();
-//    temp2.print();
+    Gamma1.print();
+    T1.print();
+    temp1.print();
+    temp2.print();
+    F.print();
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
