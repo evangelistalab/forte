@@ -1307,22 +1307,22 @@ void FCI_MO::fill_cumulant2(){
 }
 
 void FCI_MO::fill_cumulant3(){
-//    for(size_t p=0; p<na_; ++p){
-//        for(size_t q=0; q<na_; ++q){
-//            for(size_t r=0; r<na_; ++r){
-//                for(size_t s=0; s<na_; ++s){
-//                    for(size_t t=0; t<na_; ++t){
-//                        for(size_t u=0; u<na_; ++u){
-//                            (*L3aaa)(p,q,r,s,t,u) = L3aaa_[p][q][r][s][t][u];
-//                            (*L3aab)(p,q,r,s,t,u) = L3aab_[p][q][r][s][t][u];
-//                            (*L3abb)(p,q,r,s,t,u) = L3abb_[p][q][r][s][t][u];
-//                            (*L3bbb)(p,q,r,s,t,u) = L3bbb_[p][q][r][s][t][u];
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
+    for(size_t p=0; p<na_; ++p){
+        for(size_t q=0; q<na_; ++q){
+            for(size_t r=0; r<na_; ++r){
+                for(size_t s=0; s<na_; ++s){
+                    for(size_t t=0; t<na_; ++t){
+                        for(size_t u=0; u<na_; ++u){
+                            (*L3aaa)(p,q,r,s,t,u) = L3aaa_[p][q][r][s][t][u];
+                            (*L3aab)(p,q,r,s,t,u) = L3aab_[p][q][r][s][t][u];
+                            (*L3abb)(p,q,r,s,t,u) = L3abb_[p][q][r][s][t][u];
+                            (*L3bbb)(p,q,r,s,t,u) = L3bbb_[p][q][r][s][t][u];
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 void FCI_MO::compute_ref(){
