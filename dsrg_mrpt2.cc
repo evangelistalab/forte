@@ -354,15 +354,15 @@ double DSRG_MRPT2::renormalized_denominator(double D)
 {
     double Z = std::sqrt(s_) * D;
     if(std::fabs(Z) < std::pow(0.1,taylor_threshold_)){
-        return  1.0 / (Taylor_Exp(Z,taylor_order_) * std::sqrt(s_));
+        return Taylor_Exp(Z,taylor_order_) * std::sqrt(s_);
     }else{
-        return D / (1.0 - exp(-s_ * std::pow(D, 2.0)));
+        return (1.0 - exp(-s_ * std::pow(D, 2.0))) / D;
     }
 }
 
 double DSRG_MRPT2::compute_energy()
 {
-    // Compute Reference
+    // Compute reference
     double E0 = 0.5 * BlockedTensor::dot(H["ij"],Gamma1["ij"]);
     E0 += 0.5 * BlockedTensor::dot(F["ij"],Gamma1["ij"]);
     E0 += 0.5 * BlockedTensor::dot(H["IJ"],Gamma1["IJ"]);
@@ -372,10 +372,12 @@ double DSRG_MRPT2::compute_energy()
     E0 += 0.25 * BlockedTensor::dot(V["UVXY"],Lambda2["UVXY"]);
     E0 += BlockedTensor::dot(V["uVxY"],Lambda2["uVxY"]);
 
-
-    // Compute T2
+    // Compute T2 and T1
     compute_t2();
-//    compute_t1();
+    compute_t1();
+
+    // Compute effective integrals
+
 
     return 0.0;
 }
@@ -383,9 +385,9 @@ double DSRG_MRPT2::compute_energy()
 void DSRG_MRPT2::compute_t2()
 {
 
-    T2["ijab"] = V["ijab"] / RDelta2["ijab"];
-    T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
-    T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
+    T2["ijab"] = V["ijab"] % RDelta2["ijab"];
+    T2["iJaB"] = V["iJaB"] % RDelta2["iJaB"];
+    T2["IJAB"] = V["IJAB"] % RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2.block("aaaa")->zero();
@@ -439,8 +441,8 @@ void DSRG_MRPT2::compute_t2()
         }
     }
     T2norm = sqrt(T2norm);
-    outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
-    outfile->Printf("\n T2 max: \t\t %.15f", T2max);
+    outfile->Printf("\n T2 norm: \t %20.15f", T2norm);
+    outfile->Printf("\n T2 max: \t %20.15f", T2max);
 }
 void DSRG_MRPT2::compute_t1()
 {
@@ -449,29 +451,51 @@ void DSRG_MRPT2::compute_t1()
    //via a pointwise multiplcation
    BlockedTensor temp;
    temp.resize_spin_components("temp","aa");
-   temp["xu"] = Gamma1["xu"]%Delta1["xu"];
-   temp["XU"] = Gamma1["XU"]%Delta1["XU"];
+   temp["xu"] = Gamma1["xu"] % Delta1["xu"];
+   temp["XU"] = Gamma1["XU"] % Delta1["XU"];
 
    //Form the T1 amplitudes
    //Note:  The equations are changed slightly from York's equations.
    //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
    //Did some permuting to get the correct format
 
-   T1["ia"]  =  F["ia"];
-   T1["ia"]  += temp["xu"] * T2["iuax"];
-   T1["ia"]  += temp["XU"] * T2["iUaX"];
+   T1["ia"]  = F["ia"];
+   T1["ia"] += temp["xu"] * T2["iuax"];
+   T1["ia"] += temp["XU"] * T2["iUaX"];
 
-   T1["ia"]  = T1["ia"] / RDelta1["ia"];
+   T1["ia"]  = T1["ia"] % RDelta1["ia"];
 
-   T1["IA"]  =  F["IA"];
-   T1["IA"]  += temp["xu"]* T2["uIxA"];
-   T1["IA"]  += temp["XU"]* T2["IUAX"];
-   T1["IA"]  = T1["IA"] / RDelta1["IA"];
+   T1["IA"]  = F["IA"];
+   T1["IA"] += temp["xu"] * T2["uIxA"];
+   T1["IA"] += temp["XU"] * T2["IUAX"];
+   T1["IA"]  = T1["IA"] % RDelta1["IA"];
 
    T1.block("AA")->zero();
    T1.block("aa")->zero();
 
-   T1.print();
-   T1.print_norm_of_blocks();
+//   T1.print();
+//   T1.print_norm_of_blocks();
+
+   T1norm = T1.norm(); T1max = 0.0;
+   std::vector<std::string> first; first.push_back("a"); first.push_back("c");
+   std::vector<std::string> second; second.push_back("a"); second.push_back("v");
+   for(const std::string& x1: first){
+       for(const std::string& x2: second){
+           std::string index (x1 + x2);
+           double max = T1.block(index)->max_abs_vec()[0];
+           T1max = T1max > max ? T1max : max;
+       }
+   }
+   first.clear(); first.push_back("A"); first.push_back("C");
+   second.clear(); second.push_back("A"); second.push_back("V");
+   for(const std::string& x1: first){
+       for(const std::string& x2: second){
+           std::string index (x1 + x2);
+           double max = T1.block(index)->max_abs_vec()[0];
+           T1max = T1max > max ? T1max : max;
+       }
+   }
+   outfile->Printf("\n T1 norm: \t %20.15f", T1norm);
+   outfile->Printf("\n T1 max: \t %20.15f", T1max);
 }
 }} // End Namespaces
