@@ -305,15 +305,15 @@ void DSRG_MRPT2::startup()
     Lambda2_AA["pqrs"] = (*reference_.L2bb())["pqrs"];
 
     // TODO Lambda3
-//    Tensor& Lambda3_aaa = *Lambda3.block("aaaaaa");
-//    Tensor& Lambda3_aaA = *Lambda3.block("aaAaaA");
-//    Tensor& Lambda3_aAA = *Lambda3.block("aAAaAA");
-//    Tensor& Lambda3_AAA = *Lambda3.block("AAAAAA");
-//    Lambda3_aaa["pqrstu"] = (*reference_.L3aaa())["pqrstu"];
-//    Lambda3_aaA["pqrstu"] = (*reference_.L3aab())["pqrstu"];
-//    Lambda3_aAA["pqrstu"] = (*reference_.L3abb())["pqrstu"];
-//    Lambda3_AAA["pqrstu"] = (*reference_.L3bbb())["pqrstu"];
-//    Lambda3.print();
+    Tensor& Lambda3_aaa = *Lambda3.block("aaaaaa");
+    Tensor& Lambda3_aaA = *Lambda3.block("aaAaaA");
+    Tensor& Lambda3_aAA = *Lambda3.block("aAAaAA");
+    Tensor& Lambda3_AAA = *Lambda3.block("AAAAAA");
+    Lambda3_aaa["pqrstu"] = (*reference_.L3aaa())["pqrstu"];
+    Lambda3_aaA["pqrstu"] = (*reference_.L3aab())["pqrstu"];
+    Lambda3_aAA["pqrstu"] = (*reference_.L3abb())["pqrstu"];
+    Lambda3_AAA["pqrstu"] = (*reference_.L3bbb())["pqrstu"];
+    Lambda3.print();
 
     // Prepare exponential tensors for effective Fock matrix and integrals
     RExp1.resize_spin_components("RExp1","hp");
@@ -579,6 +579,7 @@ double DSRG_MRPT2::E_FT1()
     temp1.resize_spin_components("temp1","hp");
     temp2.resize_spin_components("temp2","hp");
 
+//    temp1.zero();
     temp1["ib"] += T1["ia"] * Eta1["ab"];
     temp1["IB"] += T1["IA"] * Eta1["AB"];
     temp2["jb"] += temp1["ib"] * Gamma1["ji"];
