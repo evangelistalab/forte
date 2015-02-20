@@ -173,6 +173,11 @@ protected:
     d6 L3aab_;
     d6 L3abb_;
     d6 L3bbb_;
+    SharedTensor L3aaa;
+    SharedTensor L3aab;
+    SharedTensor L3abb;
+    SharedTensor L3bbb;
+    void fill_cumulant3();
 
     // Print Functions
     void print_d2(const string &str, const d2 &OnePD);

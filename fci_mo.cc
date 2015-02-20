@@ -179,6 +179,10 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3aaa = SharedTensor (new Tensor("L3aaa", {na_, na_, na_, na_, na_, na_}));
+    L3aab = SharedTensor (new Tensor("L3aab", {na_, na_, na_, na_, na_, na_}));
+    L3abb = SharedTensor (new Tensor("L3abb", {na_, na_, na_, na_, na_, na_}));
+    L3bbb = SharedTensor (new Tensor("L3bbb", {na_, na_, na_, na_, na_, na_}));
     string threepdc = options.get_str("THREEPDC");
     string t_algorithm = options.get_str("T_ALGORITHM");
     outfile->Printf("\n  Forming three-particle density cumulant ...");
@@ -194,9 +198,9 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         print3PDC("L3abb", L3abb_, print_);
         print3PDC("L3bbb", L3bbb_, print_);
     }
+    fill_cumulant3();
 
     compute_ref();
-
 }
 
 FCI_MO::~FCI_MO()
@@ -1302,6 +1306,25 @@ void FCI_MO::fill_cumulant2(){
     }
 }
 
+void FCI_MO::fill_cumulant3(){
+//    for(size_t p=0; p<na_; ++p){
+//        for(size_t q=0; q<na_; ++q){
+//            for(size_t r=0; r<na_; ++r){
+//                for(size_t s=0; s<na_; ++s){
+//                    for(size_t t=0; t<na_; ++t){
+//                        for(size_t u=0; u<na_; ++u){
+//                            (*L3aaa)(p,q,r,s,t,u) = L3aaa_[p][q][r][s][t][u];
+//                            (*L3aab)(p,q,r,s,t,u) = L3aab_[p][q][r][s][t][u];
+//                            (*L3abb)(p,q,r,s,t,u) = L3abb_[p][q][r][s][t][u];
+//                            (*L3bbb)(p,q,r,s,t,u) = L3bbb_[p][q][r][s][t][u];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+}
+
 void FCI_MO::compute_ref(){
     timer_on("Compute Ref");
     Eref_ = 0.0;
@@ -1336,7 +1359,7 @@ void FCI_MO::compute_ref(){
 
 Reference FCI_MO::reference()
 {
-    Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb);
+    Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
     return ref;
 }
 
