@@ -153,6 +153,7 @@ protected:
     /// Compute DSRG-PT2 correlation energy - Group of functions to calcualte indidual pieces of energy
     double E_FT1();
     double E_VT1();
+    double E_FT2();
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n){

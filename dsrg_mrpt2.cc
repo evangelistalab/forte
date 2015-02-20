@@ -407,6 +407,7 @@ double DSRG_MRPT2::compute_energy()
     double Ecorr = 0.0;
     Ecorr += E_FT1();
     Ecorr += E_VT1();
+    Ecorr += E_FT2();
 
     return Ecorr + Eref_;
 }
@@ -606,8 +607,13 @@ double DSRG_MRPT2::E_VT1()
 
 
     temp["uvxy"]+=V["evxy"] * T1["ue"];
+    temp["uvxy"]-=V["uvmy"] * T1["mx"];
+
     temp["UVXY"]+=V["EVXY"] * T1["UE"];
+    temp["UVXY"]-=V["UVMY"] * T1["MX"];
+
     temp["uVxY"]+= V["eVxY"] * T1["ue"];
+    temp["uVxY"]-= V["uVmY"] * T1["mx"];
 
     E+=0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
     E+=0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
@@ -615,9 +621,50 @@ double DSRG_MRPT2::E_VT1()
     //Zero because you we have to permute some of the equations for [V,T1] piece
     temp.zero();
     temp["vUyX"]+=V["vEyX"] * T1["UE"];
+    temp["vUyX"]-=V["vUyM"] * T1["MX"];
     E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+
+    //Computing the
+    outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
+
+    return E;
+    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+
+    //Computing the
     outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
 
     return E;
 }
+double DSRG_MRPT2::E_FT2()
+{
+    double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaa");
+
+
+    temp["uvxy"]+=F["ex"] * T2["uvey"];
+    temp["uvxy"]-=F["vm"] * T2["umxy"];
+
+    temp["UVXY"]+=F["EX"] * T2["UVEY"];
+    temp["UVXY"]-=F["VM"] * T2["UMXY"];
+
+    temp["uVxY"]+=F["ex"] * T2["uVeY"];
+    temp["uVxY"]-=F["VM"] * T2["uMxY"];
+
+    E+=0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+    E+=0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+
+    E+= BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
+    //Zero because you we have to permute some of the equations for [V,T1] piece
+    temp.zero();
+    temp["vUyX"]+=F["EX"] * T2["vUyE"];
+    temp["vUyX"]-=F["vm"] * T2["mUyX"];
+    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+
+    //Computing the
+    outfile->Printf("\n  E([F, T2]) %18c = %22.15lf", ' ', E);
+
+    return E;
+}
+
 }} // End Namespaces
