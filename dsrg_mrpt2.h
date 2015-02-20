@@ -135,9 +135,12 @@ protected:
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
+    double T2norm;
+    double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
+    double T1Norm;
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double &Z, const int &n){

@@ -265,7 +265,6 @@ void DSRG_MRPT2::startup()
         }
     }
 
-
     Delta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         if (sp  == Alpha){
             return Fa[p] - Fa[q];
@@ -274,7 +273,6 @@ void DSRG_MRPT2::startup()
         }
         return 0.0;
     });
-
 
     RDelta1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
         if (sp  == Alpha){
@@ -285,19 +283,19 @@ void DSRG_MRPT2::startup()
         return 0.0;
     });
 
-    Delta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                                      size_t q,MOSetSpinType sq,
-                                      size_t r,MOSetSpinType sr,
-                                      size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            return Fa[p] + Fa[q] - Fa[r] - Fa[s];
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            return Fa[p] + Fb[q] - Fa[r] - Fb[s];
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            return Fb[p] + Fb[q] - Fb[r] - Fb[s];
-        }
-        return 0.0;
-    });
+//    Delta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
+//                                      size_t q,MOSetSpinType sq,
+//                                      size_t r,MOSetSpinType sr,
+//                                      size_t s,MOSetSpinType ss){
+//        if ((sp == Alpha) and (sq == Alpha)){
+//            return Fa[p] + Fa[q] - Fa[r] - Fa[s];
+//        }else if ((sp == Alpha) and (sq == Beta) ){
+//            return Fa[p] + Fb[q] - Fa[r] - Fb[s];
+//        }else if ((sp == Beta)  and (sq == Beta) ){
+//            return Fb[p] + Fb[q] - Fb[r] - Fb[s];
+//        }
+//        return 0.0;
+//    });
 
     RDelta2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                       size_t q,MOSetSpinType sq,
@@ -319,7 +317,6 @@ void DSRG_MRPT2::startup()
     Lambda2_aa["pqrs"] = (*reference_.L2aa())["pqrs"];
     Lambda2_aA["pqrs"] = (*reference_.L2ab())["pqrs"];
     Lambda2_AA["pqrs"] = (*reference_.L2bb())["pqrs"];
-
 
 }
 
@@ -357,9 +354,9 @@ double DSRG_MRPT2::renormalized_denominator(double D)
 {
     double Z = std::sqrt(s_) * D;
     if(std::fabs(Z) < std::pow(0.1,taylor_threshold_)){
-        return  1.0/(Taylor_Exp(Z,taylor_order_) * std::sqrt(s_));
+        return  1.0 / (Taylor_Exp(Z,taylor_order_) * std::sqrt(s_));
     }else{
-        return (D/(1.0 - exp(- s_ * std::pow(D, 2.0))));
+        return D / (1.0 - exp(-s_ * std::pow(D, 2.0)));
     }
 }
 
@@ -379,22 +376,7 @@ double DSRG_MRPT2::compute_energy()
     // Compute T2
     compute_t2();
 
-    compute_t1();
-   // T2["ijab"] = V["ijab"] / RDelta2["ijab"];
-   // T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
-   // T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
-   // T2.block("aaaa")->zero();  // < zero internal amplitudes
-   // T2.block("aAaA")->zero();  // < zero internal amplitudes
-   // T2.block("AAAA")->zero();  // < zero internal amplitudes
-   // double T2norm = T2.norm();
-   // T2.print();
-   // V.print();
-   // RDelta2.print();
-   // outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
-    // T2.block("aaaa")->zero();  // < zero internal amplitudes
-    // T2.block("aAaA")->zero();  // < zero internal amplitudes
-    // T2.block("AAAA")->zero();  // < zero internal amplitudes
-    // T2.norm();
+//    compute_t1();
 
 
 //    S2["ijab"] = V["ijab"] / D2["ijab"];
@@ -424,21 +406,62 @@ void DSRG_MRPT2::compute_t2()
 
     T2["ijab"] = V["ijab"] / RDelta2["ijab"];
     T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
-    //This next T2 might not be there
-    //T2["IjAb"] = V["IjAb"] / RDelta2["IjAb"];
-
     T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
-    T2.block("aaaa")->zero();  // < zero internal amplitudes
-    T2.block("aAaA")->zero();  // < zero internal amplitudes
-    //T2.block("AaAa")->zero();  // < zero internal amplitudes
-    T2.block("AAAA")->zero();  // < zero internal amplitudes
-    double T2norm = T2.norm();
-    //T2.print();
-    //V.print();
-    RDelta2.print();
-    T2.print();
-    //RDelta2.print_mo_spaces();
+
+    // zero internal amplitudes
+    T2.block("aaaa")->zero();
+    T2.block("aAaA")->zero();
+    T2.block("AAAA")->zero();
+
+    // norm and maximum of T2 amplitudes
+    T2norm = 0.0; T2max = 0.0;
+    std::vector<std::string> first; first.push_back("a"); first.push_back("c");
+    std::vector<std::string> second; second.push_back("a"); second.push_back("c");
+    std::vector<std::string> third; third.push_back("a"); third.push_back("v");
+    std::vector<std::string> fourth; fourth.push_back("a"); fourth.push_back("v");
+    for(const std::string& x1: first){
+        for(const std::string& x2: second){
+            for(const std::string& x3: third){
+                for(const std::string& x4: fourth){
+                    std::string index (x1 + x2 + x3 + x4);
+                    T2norm += pow(T2.block(index)->norm(), 2.0);
+                    double max = T2.block(index)->max_abs_vec()[0];
+                    T2max = T2max > max ? T2max : max;
+                }
+            }
+        }
+    }
+    second.clear(); second.push_back("A"); second.push_back("C");
+    fourth.clear(); fourth.push_back("A"); fourth.push_back("V");
+    for(const std::string& x1: first){
+        for(const std::string& x2: second){
+            for(const std::string& x3: third){
+                for(const std::string& x4: fourth){
+                    std::string index (x1 + x2 + x3 + x4);
+                    T2norm += 4 * pow(T2.block(index)->norm(), 2.0);
+                    double max = T2.block(index)->max_abs_vec()[0];
+                    T2max = T2max > max ? T2max : max;
+                }
+            }
+        }
+    }
+    first.clear(); first.push_back("A"); first.push_back("C");
+    third.clear(); third.push_back("A"); third.push_back("V");
+    for(const std::string& x1: first){
+        for(const std::string& x2: second){
+            for(const std::string& x3: third){
+                for(const std::string& x4: fourth){
+                    std::string index (x1 + x2 + x3 + x4);
+                    T2norm += pow(T2.block(index)->norm(), 2.0);
+                    double max = T2.block(index)->max_abs_vec()[0];
+                    T2max = T2max > max ? T2max : max;
+                }
+            }
+        }
+    }
+    T2norm = sqrt(T2norm);
     outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
+    outfile->Printf("\n T2 max: \t\t %.15f", T2max);
 }
 void DSRG_MRPT2::compute_t1()
 {
