@@ -145,6 +145,8 @@ void DSRG_MRPT2::startup()
     RDelta2.resize_spin_components("RDelta2","hhpp");
     T1.resize_spin_components("T1 Amplitudes","hp");
     T2.resize_spin_components("T2 Amplitudes","hhpp");
+    RExp1.resize_spin_components("RExp1","hp");
+    RExp2.resize_spin_components("RExp2","hhpp");
 
     // Fill in the one-electron operator (H)
     H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -316,8 +318,6 @@ void DSRG_MRPT2::startup()
     Lambda3.print();
 
     // Prepare exponential tensors for effective Fock matrix and integrals
-    RExp1.resize_spin_components("RExp1","hp");
-    RExp2.resize_spin_components("RExp2","hhpp");
 
     RExp2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                       size_t q,MOSetSpinType sq,
@@ -406,6 +406,7 @@ double DSRG_MRPT2::compute_energy()
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
     Ecorr += E_FT1();
+    Ecorr += E_VT1();
 
     return Ecorr + Eref_;
 }
@@ -597,5 +598,26 @@ double DSRG_MRPT2::E_FT1()
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
 }
+double DSRG_MRPT2::E_VT1()
+{
+    double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaa");
 
+
+    temp["uvxy"]+=V["evxy"] * T1["ue"];
+    temp["UVXY"]+=V["EVXY"] * T1["UE"];
+    temp["uVxY"]+= V["eVxY"] * T1["ue"];
+
+    E+=0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+    E+=0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+    E+= BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
+    //Zero because you we have to permute some of the equations for [V,T1] piece
+    temp.zero();
+    temp["vUyX"]+=V["vEyX"] * T1["UE"];
+    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+    outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
+
+    return E;
+}
 }} // End Namespaces
