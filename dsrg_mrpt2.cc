@@ -296,14 +296,24 @@ void DSRG_MRPT2::startup()
         return 0.0;
     });
 
-    // Fill out Lambda2
-    // TODO fill out Lambda3
+    // Fill out Lambda2 and Lambda3
     Tensor& Lambda2_aa = *Lambda2.block("aaaa");
     Tensor& Lambda2_aA = *Lambda2.block("aAaA");
     Tensor& Lambda2_AA = *Lambda2.block("AAAA");
     Lambda2_aa["pqrs"] = (*reference_.L2aa())["pqrs"];
     Lambda2_aA["pqrs"] = (*reference_.L2ab())["pqrs"];
     Lambda2_AA["pqrs"] = (*reference_.L2bb())["pqrs"];
+
+    // TODO Lambda3
+//    Tensor& Lambda3_aaa = *Lambda3.block("aaaaaa");
+//    Tensor& Lambda3_aaA = *Lambda3.block("aaAaaA");
+//    Tensor& Lambda3_aAA = *Lambda3.block("aAAaAA");
+//    Tensor& Lambda3_AAA = *Lambda3.block("AAAAAA");
+//    Lambda3_aaa["pqrstu"] = (*reference_.L3aaa())["pqrstu"];
+//    Lambda3_aaA["pqrstu"] = (*reference_.L3aab())["pqrstu"];
+//    Lambda3_aAA["pqrstu"] = (*reference_.L3abb())["pqrstu"];
+//    Lambda3_AAA["pqrstu"] = (*reference_.L3bbb())["pqrstu"];
+//    Lambda3.print();
 
     // Prepare exponential tensors for effective Fock matrix and integrals
     RExp1.resize_spin_components("RExp1","hp");
@@ -538,25 +548,25 @@ void DSRG_MRPT2::renormalize_F()
     BlockedTensor temp_hp;
     temp_hp.resize_spin_components("temp_hp","hp");
 
-    temp_hp["ia"]  = temp_aa["xu"] * T2["iuax"];
+    temp_hp["ia"] += temp_aa["xu"] * T2["iuax"];
     temp_hp["ia"] += temp_aa["XU"] * T2["iUaX"];
     F["ia"] += F["ia"] % RExp1["ia"];
     F["ia"] += temp_hp["ia"] % RExp1["ia"];
 
-    temp_hp["ai"]  = temp_aa["xu"] * T2["auix"];
+    temp_hp["ai"] += temp_aa["xu"] * T2["auix"];
     temp_hp["ai"] += temp_aa["XU"] * T2["aUiX"];
     F["ai"] += F["ai"] % RExp1["ia"];
-    F["ai"] += temp_hp["ai"] % RExp1["ai"];
+    F["ai"] += temp_hp["ai"] % RExp1["ia"];
 
-    temp_hp["IA"]  = temp_aa["xu"] * T2["uIxA"];
+    temp_hp["IA"] += temp_aa["xu"] * T2["uIxA"];
     temp_hp["IA"] += temp_aa["XU"] * T2["IUAX"];
     F["IA"] += F["IA"] % RExp1["IA"];
     F["IA"] += temp_hp["IA"] % RExp1["IA"];
 
-    temp_hp["AI"]  = temp_aa["xu"] * T2["uAxI"];
+    temp_hp["AI"] += temp_aa["xu"] * T2["uAxI"];
     temp_hp["AI"] += temp_aa["XU"] * T2["AUIX"];
     F["AI"] += F["AI"] % RExp1["IA"];
-    F["AI"] += temp_hp["AI"] % RExp1["AI"];
+    F["AI"] += temp_hp["AI"] % RExp1["IA"];
 
 //    F.print();  // The actv-actv block is different but it should not matter.
 }
@@ -569,19 +579,19 @@ double DSRG_MRPT2::E_FT1()
     temp1.resize_spin_components("temp1","hp");
     temp2.resize_spin_components("temp2","hp");
 
-    temp1["ib"] = T1["ia"] * Eta1["ab"];
-    temp1["IB"] = T1["IA"] * Eta1["AB"];
-    temp2["jb"] = temp1["ib"] * Gamma1["ji"];
-    temp2["JB"] = temp1["IB"] * Gamma1["JI"];
+    temp1["ib"] += T1["ia"] * Eta1["ab"];
+    temp1["IB"] += T1["IA"] * Eta1["AB"];
+    temp2["jb"] += temp1["ib"] * Gamma1["ji"];
+    temp2["JB"] += temp1["IB"] * Gamma1["JI"];
 
     E += BlockedTensor::dot(temp2["jb"], F["bj"]);
     E += BlockedTensor::dot(temp2["JB"], F["BJ"]);
 
-    Gamma1.print();
-    T1.print();
-    temp1.print();
-    temp2.print();
-    F.print();
+//    Gamma1.print();
+//    T1.print();
+//    temp1.print();
+//    temp2.print();
+//    F.print();
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
