@@ -378,7 +378,6 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute T2
     compute_t2();
-
     compute_t1();
    // T2["ijab"] = V["ijab"] / RDelta2["ijab"];
    // T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
@@ -426,40 +425,52 @@ void DSRG_MRPT2::compute_t2()
     T2["iJaB"] = V["iJaB"] / RDelta2["iJaB"];
     //This next T2 might not be there
     //T2["IjAb"] = V["IjAb"] / RDelta2["IjAb"];
-
     T2["IJAB"] = V["IJAB"] / RDelta2["IJAB"];
+
+    //Zero the T2 active block.
     T2.block("aaaa")->zero();  // < zero internal amplitudes
     T2.block("aAaA")->zero();  // < zero internal amplitudes
     //T2.block("AaAa")->zero();  // < zero internal amplitudes
     T2.block("AAAA")->zero();  // < zero internal amplitudes
-    double T2norm = T2.norm();
+
+    //Debugging right now.
+    T2.print_norm_of_blocks();
     //T2.print();
     //V.print();
-    RDelta2.print();
-    T2.print();
+    //RDelta2.print();
+    //T2.print();
     //RDelta2.print_mo_spaces();
-    outfile->Printf("\n T2 norm: \t\t %.15f", T2norm);
 }
 void DSRG_MRPT2::compute_t1()
 {
+   //A temporary tensor to use for the building of T1
+   //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
+   //via a pointwise multiplcation
+   BlockedTensor temp;
+   temp.resize_spin_components("temp","aa");
+   temp["xu"] = Gamma1["xu"]%Delta1["xu"];
+   temp["XU"] = Gamma1["XU"]%Delta1["XU"];
+
+   //Form the T1 amplitudes
+   //Note:  The equations are changed slightly from York's equations.
+   //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
+   //Did some permuting to get the correct format
+
    T1["ia"]  =  F["ia"];
-//   T1["ia"]  += F["xx"] * T2["iuax"] * Gamma1["xu"];
-//   T1["ia"]  -= F["uu"] * T2["iuax"] * Gamma1["xu"];
-//   T1["ia"]  += F["XX"] * T2["iUaX"] * Gamma1["XU"];
-//   T1["ia"]  -= F["UU"] * T2["iUaX"] * Gamma1["XU"];
+   T1["ia"]  += temp["xu"] * T2["iuax"];
+   T1["ia"]  += temp["XU"] * T2["iUaX"];
 
    T1["ia"]  = T1["ia"] / RDelta1["ia"];
 
    T1["IA"]  =  F["IA"];
-//   T1["IA"]  += F["xx"] * T2["uIxA"] * Gamma1["xu"];
-//   T1["IA"]  -= F["uu"] * T2["uIxA"] * Gamma1["xu"];
-//   T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
-//   T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
-   T1["IA"]  =  T1["IA"] / RDelta1["IA"];
+   T1["IA"]  += temp["xu"]* T2["uIxA"];
+   T1["IA"]  += temp["XU"]* T2["IUAX"];
+   T1["IA"]  = T1["IA"] / RDelta1["IA"];
+
    T1.block("AA")->zero();
    T1.block("aa")->zero();
 
    T1.print();
-   T1.norm();
+   T1.print_norm_of_blocks();
 }
 }} // End Namespaces
