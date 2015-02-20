@@ -121,6 +121,8 @@ protected:
     BlockedTensor RDelta2;
     BlockedTensor T1;
     BlockedTensor T2;
+    BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
+    BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
 
     // => Class initialization and termination <= //
 
@@ -143,12 +145,20 @@ protected:
     double T1norm;
     double T1max;
 
+    /// Renormalize Fock matrix and two-electron integral
+    void renormalize_F();
+    void renormalize_V();
+    double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
+
+    /// Compute DSRG-PT2 correlation energy
+    double E_FT1();
+
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double &Z, const int &n){
+    double Taylor_Exp(const double& Z, const int& n){
         if(n > 0){
             double value = Z, tmp = Z;
             for(int x=0; x<(n-1); ++x){
-                tmp *= pow(Z,2.0) / (x+2);
+                tmp *= std::pow(Z, 2.0) / (x+2);
                 value += tmp;
             }
             return value;

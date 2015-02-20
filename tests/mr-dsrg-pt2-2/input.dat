@@ -14,7 +14,6 @@ molecule {
 }
 
 set globals{
-   basis            new
    reference        twocon
    scf_type         pk
    d_convergence    12
@@ -37,7 +36,6 @@ set libadaptive{
 }
 
 basis {
-[ new ]
 spherical
 ****
 Be     0
