@@ -375,29 +375,8 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute T2
     compute_t2();
-
 //    compute_t1();
 
-
-//    S2["ijab"] = V["ijab"] / D2["ijab"];
-//    S2["iJaB"] = V["iJaB"] / D2["iJaB"];
-//    S2["IJAB"] = V["IJAB"] / D2["IJAB"];
-
-//    double Eaa = 0.25 * BlockedTensor::dot(S2["ijab"],V["ijab"]);
-//    double Eab = BlockedTensor::dot(S2["iJaB"],V["iJaB"]);
-//    double Ebb = 0.25 * BlockedTensor::dot(S2["IJAB"],V["IJAB"]);
-
-//    double mp2_correlation_energy = Eaa + Eab + Ebb;
-//    double ref_energy = reference_energy();
-//    outfile->Printf("\n\n    SCF energy                            = %20.15f",ref_energy);
-//    outfile->Printf("\n    SRG-PT2 correlation energy            = %20.15f",mp2_correlation_energy);
-//    outfile->Printf("\n  * SRG-PT2 total energy                  = %20.15f\n",ref_energy + mp2_correlation_energy);
-
-////    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
-////    outfile->Printf("\n\n    SCF energy                            = %20.15f",E0_);
-////    outfile->Printf("\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
-////    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n",E0_ + mp2_correlation_energy);
-//    return E0_ + mp2_correlation_energy;
     return 0.0;
 }
 
@@ -465,24 +444,34 @@ void DSRG_MRPT2::compute_t2()
 }
 void DSRG_MRPT2::compute_t1()
 {
+   //A temporary tensor to use for the building of T1
+   //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
+   //via a pointwise multiplcation
+   BlockedTensor temp;
+   temp.resize_spin_components("temp","aa");
+   temp["xu"] = Gamma1["xu"]%Delta1["xu"];
+   temp["XU"] = Gamma1["XU"]%Delta1["XU"];
+
+   //Form the T1 amplitudes
+   //Note:  The equations are changed slightly from York's equations.
+   //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
+   //Did some permuting to get the correct format
+
    T1["ia"]  =  F["ia"];
-//   T1["ia"]  += F["xx"] * T2["iuax"] * Gamma1["xu"];
-//   T1["ia"]  -= F["uu"] * T2["iuax"] * Gamma1["xu"];
-//   T1["ia"]  += F["XX"] * T2["iUaX"] * Gamma1["XU"];
-//   T1["ia"]  -= F["UU"] * T2["iUaX"] * Gamma1["XU"];
+   T1["ia"]  += temp["xu"] * T2["iuax"];
+   T1["ia"]  += temp["XU"] * T2["iUaX"];
 
    T1["ia"]  = T1["ia"] / RDelta1["ia"];
 
    T1["IA"]  =  F["IA"];
-//   T1["IA"]  += F["xx"] * T2["uIxA"] * Gamma1["xu"];
-//   T1["IA"]  -= F["uu"] * T2["uIxA"] * Gamma1["xu"];
-//   T1["IA"]  += F["XX"] * T2["IUAX"] * Gamma1["XU"];
-//   T1["IA"]  -= F["UU"] * T2["IUAX"] * Gamma1["XU"];
-   T1["IA"]  =  T1["IA"] / RDelta1["IA"];
+   T1["IA"]  += temp["xu"]* T2["uIxA"];
+   T1["IA"]  += temp["XU"]* T2["IUAX"];
+   T1["IA"]  = T1["IA"] / RDelta1["IA"];
+
    T1.block("AA")->zero();
    T1.block("aa")->zero();
 
    T1.print();
-   T1.norm();
+   T1.print_norm_of_blocks();
 }
 }} // End Namespaces
