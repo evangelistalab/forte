@@ -55,7 +55,6 @@ protected:
 
     /// The reference object
     Reference reference_;
-    double Eref_;
 
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
@@ -150,10 +149,16 @@ protected:
     void renormalize_V();
     double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
 
-    /// Compute DSRG-PT2 correlation energy - Group of functions to calcualte indidual pieces of energy
+    /// Compute DSRG-PT2 correlation energy - Group of functions to calcualte individual pieces of energy
+    double compute_ref();
     double E_FT1();
     double E_VT1();
     double E_FT2();
+    double E_VT2_2();
+    double E_VT2_4PP();
+    double E_VT2_4HH();
+    double E_VT2_4PH();
+    double E_VT2_6();
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n){
@@ -179,10 +184,10 @@ public:
     double compute_energy();
 
     /// The energy of the reference
-    double E0_;
+    double Eref;
 
     /// The frozen-core energy
-    double frozen_core_energy_;
+    double frozen_core_energy;
 };
 
 }} // End Namespaces
