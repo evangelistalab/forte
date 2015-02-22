@@ -406,7 +406,7 @@ double DSRG_MRPT2::compute_energy()
     Ecorr += E_VT2_4PH();
     Ecorr += E_VT2_6();
 
-    outfile->Printf("\n  E(DSRG-PT2) %19c = %22.15lf", ' ', Ecorr);
+    outfile->Printf("\n  E(DSRG-PT2) %17c = %22.15lf", ' ', Ecorr);
     return Ecorr + Eref;
 }
 
@@ -442,54 +442,26 @@ void DSRG_MRPT2::compute_t2()
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
-    std::vector<std::string> first; first.push_back("a"); first.push_back("c");
-    std::vector<std::string> second; second.push_back("a"); second.push_back("c");
-    std::vector<std::string> third; third.push_back("a"); third.push_back("v");
-    std::vector<std::string> fourth; fourth.push_back("a"); fourth.push_back("v");
-    for(const std::string& x1: first){
-        for(const std::string& x2: second){
-            for(const std::string& x3: third){
-                for(const std::string& x4: fourth){
-                    std::string index (x1 + x2 + x3 + x4);
-                    T2norm += pow(T2.block(index)->norm(), 2.0);
-                    double max = T2.block(index)->max_abs_vec()[0];
-                    T2max = T2max > max ? T2max : max;
-                }
-            }
+    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
+    for(const auto& block: T2blocks){
+        std::vector<std::string> index_vec = block.first;
+        std::string name;
+        for(const std::string& index: index_vec)
+            name += index;
+
+        double max = T2.block(name)->max_abs_vec()[0];
+        T2max = T2max > max ? T2max : max;
+        if(islower(name[0]) && isupper(name[1])){
+            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
+        }else{
+            T2norm += pow(T2.block(name)->norm(), 2.0);
         }
     }
-    second.clear(); second.push_back("A"); second.push_back("C");
-    fourth.clear(); fourth.push_back("A"); fourth.push_back("V");
-    for(const std::string& x1: first){
-        for(const std::string& x2: second){
-            for(const std::string& x3: third){
-                for(const std::string& x4: fourth){
-                    std::string index (x1 + x2 + x3 + x4);
-                    T2norm += 4 * pow(T2.block(index)->norm(), 2.0);
-                    double max = T2.block(index)->max_abs_vec()[0];
-                    T2max = T2max > max ? T2max : max;
-                }
-            }
-        }
-    }
-    first.clear(); first.push_back("A"); first.push_back("C");
-    third.clear(); third.push_back("A"); third.push_back("V");
-    for(const std::string& x1: first){
-        for(const std::string& x2: second){
-            for(const std::string& x3: third){
-                for(const std::string& x4: fourth){
-                    std::string index (x1 + x2 + x3 + x4);
-                    T2norm += pow(T2.block(index)->norm(), 2.0);
-                    double max = T2.block(index)->max_abs_vec()[0];
-                    T2max = T2max > max ? T2max : max;
-                }
-            }
-        }
-    }
-    T2norm = sqrt(T2norm);
-    outfile->Printf("\n  T2 norm: \t %20.15f", T2norm);
-    outfile->Printf("\n  T2 max: \t %20.15f", T2max);
+    T2norm = sqrt(T2norm);    
+    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2norm);
+    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
 }
+
 void DSRG_MRPT2::compute_t1()
 {
    //A temporary tensor to use for the building of T1
@@ -519,30 +491,19 @@ void DSRG_MRPT2::compute_t1()
    T1.block("AA")->zero();
    T1.block("aa")->zero();
 
-//   T1.print();
-//   T1.print_norm_of_blocks();
-
+   // norm and maximum of T1 amplitudes
    T1norm = T1.norm(); T1max = 0.0;
-   std::vector<std::string> first; first.push_back("a"); first.push_back("c");
-   std::vector<std::string> second; second.push_back("a"); second.push_back("v");
-   for(const std::string& x1: first){
-       for(const std::string& x2: second){
-           std::string index (x1 + x2);
-           double max = T1.block(index)->max_abs_vec()[0];
-           T1max = T1max > max ? T1max : max;
-       }
+   std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
+   for(const auto& block: T1blocks){
+       std::vector<std::string> index_vec = block.first;
+       std::string name;
+       for(const std::string& index: index_vec)
+           name += index;
+       double max = T1.block(name)->max_abs_vec()[0];
+       T1max = T1max > max ? T1max : max;
    }
-   first.clear(); first.push_back("A"); first.push_back("C");
-   second.clear(); second.push_back("A"); second.push_back("V");
-   for(const std::string& x1: first){
-       for(const std::string& x2: second){
-           std::string index (x1 + x2);
-           double max = T1.block(index)->max_abs_vec()[0];
-           T1max = T1max > max ? T1max : max;
-       }
-   }
-   outfile->Printf("\n  T1 norm: \t %20.15f", T1norm);
-   outfile->Printf("\n  T1 max: \t %20.15f", T1max);
+   outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1norm);
+   outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
 }
 
 void DSRG_MRPT2::renormalize_V()
@@ -623,17 +584,13 @@ double DSRG_MRPT2::E_VT1()
     temp["UVXY"] -= V["UVMY"] * T1["MX"];
 
     temp["uVxY"] += V["eVxY"] * T1["ue"];
+    temp["uVxY"] += V["uExY"] * T1["VE"];
     temp["uVxY"] -= V["uVmY"] * T1["mx"];
+    temp["uVxY"] -= V["uVxM"] * T1["MY"];
 
     E += 0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
     E += 0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
     E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
-
-    //Zero because you we have to permute some of the equations for [V,T1] piece
-    temp.zero();
-    temp["vUyX"] += V["vEyX"] * T1["UE"];
-    temp["vUyX"] -= V["vUyM"] * T1["MX"];
-    E += BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
 
     outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
     return E;
@@ -652,17 +609,13 @@ double DSRG_MRPT2::E_FT2()
     temp["UVXY"] -= F["VM"] * T2["UMXY"];
 
     temp["uVxY"] += F["ex"] * T2["uVeY"];
+    temp["uVxY"] += F["EY"] * T2["uVxE"];
     temp["uVxY"] -= F["VM"] * T2["uMxY"];
+    temp["uVxY"] -= F["um"] * T2["mVxY"];
 
     E += 0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
     E += 0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
     E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
-
-    //Zero because you we have to permute some of the equations for [V,T1] piece
-    temp.block("aAaA")->zero();
-    temp["vUyX"] += F["EX"] * T2["vUyE"];
-    temp["vUyX"] -= F["vm"] * T2["mUyX"];
-    E += BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
 
     outfile->Printf("\n  E([F, T2]) %18c = %22.15lf", ' ', E);
     return E;

@@ -149,7 +149,7 @@ protected:
     void renormalize_V();
     double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
 
-    /// Compute DSRG-PT2 correlation energy - Group of functions to calcualte individual pieces of energy
+    /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
     double compute_ref();
     double E_FT1();
     double E_VT1();
