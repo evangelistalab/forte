@@ -25,10 +25,10 @@ DSRG_MRPT2::~DSRG_MRPT2()
 
 void DSRG_MRPT2::startup()
 {
-    Eref_ = reference_.get_Eref();
-    outfile->Printf("\n  Reference Energy = %.15f", Eref_);
+    Eref = reference_.get_Eref();
+    outfile->Printf("\n  Reference Energy = %.15f", Eref);
 
-    double frozen_core_energy = ints_->frozen_core_energy();
+    frozen_core_energy = ints_->frozen_core_energy();
 
     ncmopi_ = ints_->ncmopi();
 
@@ -88,7 +88,6 @@ void DSRG_MRPT2::startup()
     for (size_t p = 0; p < bactv_mos.size(); ++p) mos_to_bactv[bactv_mos[p]] = p;
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
-
 
 
     BlockedTensor::add_primitive_mo_space("c","mn",acore_mos,Alpha);
@@ -386,14 +385,7 @@ double DSRG_MRPT2::renormalized_denominator(double D)
 double DSRG_MRPT2::compute_energy()
 {
     // Compute reference
-//    double E0 = 0.5 * BlockedTensor::dot(H["ij"],Gamma1["ij"]);
-//    E0 += 0.5 * BlockedTensor::dot(F["ij"],Gamma1["ij"]);
-//    E0 += 0.5 * BlockedTensor::dot(H["IJ"],Gamma1["IJ"]);
-//    E0 += 0.5 * BlockedTensor::dot(F["IJ"],Gamma1["IJ"]);
-
-//    E0 += 0.25 * BlockedTensor::dot(V["uvxy"],Lambda2["uvxy"]);
-//    E0 += 0.25 * BlockedTensor::dot(V["UVXY"],Lambda2["UVXY"]);
-//    E0 += BlockedTensor::dot(V["uVxY"],Lambda2["uVxY"]);
+//    Eref = compute_ref();
 
     // Compute T2 and T1
     compute_t2();
@@ -408,13 +400,37 @@ double DSRG_MRPT2::compute_energy()
     Ecorr += E_FT1();
     Ecorr += E_VT1();
     Ecorr += E_FT2();
+    Ecorr += E_VT2_2();
+    Ecorr += E_VT2_4HH();
+    Ecorr += E_VT2_4PP();
+    Ecorr += E_VT2_4PH();
+    Ecorr += E_VT2_6();
 
-    return Ecorr + Eref_;
+    outfile->Printf("\n  E(DSRG-PT2) %19c = %22.15lf", ' ', Ecorr);
+    return Ecorr + Eref;
+}
+
+double DSRG_MRPT2::compute_ref()
+{
+    double E = 0.0;
+
+    E  = 0.5 * BlockedTensor::dot(H["ij"],Gamma1["ij"]);
+    E += 0.5 * BlockedTensor::dot(F["ij"],Gamma1["ij"]);
+    E += 0.5 * BlockedTensor::dot(H["IJ"],Gamma1["IJ"]);
+    E += 0.5 * BlockedTensor::dot(F["IJ"],Gamma1["IJ"]);
+
+    E += 0.25 * BlockedTensor::dot(V["uvxy"],Lambda2["uvxy"]);
+    E += 0.25 * BlockedTensor::dot(V["UVXY"],Lambda2["UVXY"]);
+    E += BlockedTensor::dot(V["uVxY"],Lambda2["uVxY"]);
+
+    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    double Enuc = molecule->nuclear_repulsion_energy();
+
+    return E + frozen_core_energy + Enuc;
 }
 
 void DSRG_MRPT2::compute_t2()
 {
-
     T2["ijab"] = V["ijab"] % RDelta2["ijab"];
     T2["iJaB"] = V["iJaB"] % RDelta2["iJaB"];
     T2["IJAB"] = V["IJAB"] % RDelta2["IJAB"];
@@ -471,8 +487,8 @@ void DSRG_MRPT2::compute_t2()
         }
     }
     T2norm = sqrt(T2norm);
-    outfile->Printf("\n T2 norm: \t %20.15f", T2norm);
-    outfile->Printf("\n T2 max: \t %20.15f", T2max);
+    outfile->Printf("\n  T2 norm: \t %20.15f", T2norm);
+    outfile->Printf("\n  T2 max: \t %20.15f", T2max);
 }
 void DSRG_MRPT2::compute_t1()
 {
@@ -525,8 +541,8 @@ void DSRG_MRPT2::compute_t1()
            T1max = T1max > max ? T1max : max;
        }
    }
-   outfile->Printf("\n T1 norm: \t %20.15f", T1norm);
-   outfile->Printf("\n T1 max: \t %20.15f", T1max);
+   outfile->Printf("\n  T1 norm: \t %20.15f", T1norm);
+   outfile->Printf("\n  T1 max: \t %20.15f", T1max);
 }
 
 void DSRG_MRPT2::renormalize_V()
@@ -576,94 +592,242 @@ void DSRG_MRPT2::renormalize_F()
 double DSRG_MRPT2::E_FT1()
 {
     double E = 0.0;
-    BlockedTensor temp1;
-    BlockedTensor temp2;
-    temp1.resize_spin_components("temp1","hp");
-    temp2.resize_spin_components("temp2","hp");
+    BlockedTensor temp;
+    temp.resize_spin_components("temp","hp");
 
-//    temp1.zero();
-    temp1["ib"] += T1["ia"] * Eta1["ab"];
-    temp1["IB"] += T1["IA"] * Eta1["AB"];
-    temp2["jb"] += temp1["ib"] * Gamma1["ji"];
-    temp2["JB"] += temp1["IB"] * Gamma1["JI"];
+    temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
+    temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
 
-    E += BlockedTensor::dot(temp2["jb"], F["bj"]);
-    E += BlockedTensor::dot(temp2["JB"], F["BJ"]);
+    E += BlockedTensor::dot(temp["jb"], F["bj"]);
+    E += BlockedTensor::dot(temp["JB"], F["BJ"]);
 
 //    Gamma1.print();
 //    T1.print();
-//    temp1.print();
-//    temp2.print();
+//    temp.print();
 //    F.print();
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
 }
+
 double DSRG_MRPT2::E_VT1()
 {
     double E = 0.0;
     BlockedTensor temp;
     temp.resize_spin_components("temp", "aaaa");
 
+    temp["uvxy"] += V["evxy"] * T1["ue"];
+    temp["uvxy"] -= V["uvmy"] * T1["mx"];
 
-    temp["uvxy"]+=V["evxy"] * T1["ue"];
-    temp["uvxy"]-=V["uvmy"] * T1["mx"];
+    temp["UVXY"] += V["EVXY"] * T1["UE"];
+    temp["UVXY"] -= V["UVMY"] * T1["MX"];
 
-    temp["UVXY"]+=V["EVXY"] * T1["UE"];
-    temp["UVXY"]-=V["UVMY"] * T1["MX"];
+    temp["uVxY"] += V["eVxY"] * T1["ue"];
+    temp["uVxY"] -= V["uVmY"] * T1["mx"];
 
-    temp["uVxY"]+= V["eVxY"] * T1["ue"];
-    temp["uVxY"]-= V["uVmY"] * T1["mx"];
+    E += 0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+    E += 0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+    E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
 
-    E+=0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
-    E+=0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
-    E+= BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
     //Zero because you we have to permute some of the equations for [V,T1] piece
     temp.zero();
-    temp["vUyX"]+=V["vEyX"] * T1["UE"];
-    temp["vUyX"]-=V["vUyM"] * T1["MX"];
-    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+    temp["vUyX"] += V["vEyX"] * T1["UE"];
+    temp["vUyX"] -= V["vUyM"] * T1["MX"];
+    E += BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
 
-    //Computing the
     outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
-
-    return E;
-    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
-
-    //Computing the
-    outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
-
     return E;
 }
+
 double DSRG_MRPT2::E_FT2()
 {
     double E = 0.0;
     BlockedTensor temp;
     temp.resize_spin_components("temp", "aaaa");
 
+    temp["uvxy"] += F["ex"] * T2["uvey"];
+    temp["uvxy"] -= F["vm"] * T2["umxy"];
 
-    temp["uvxy"]+=F["ex"] * T2["uvey"];
-    temp["uvxy"]-=F["vm"] * T2["umxy"];
+    temp["UVXY"] += F["EX"] * T2["UVEY"];
+    temp["UVXY"] -= F["VM"] * T2["UMXY"];
 
-    temp["UVXY"]+=F["EX"] * T2["UVEY"];
-    temp["UVXY"]-=F["VM"] * T2["UMXY"];
+    temp["uVxY"] += F["ex"] * T2["uVeY"];
+    temp["uVxY"] -= F["VM"] * T2["uMxY"];
 
-    temp["uVxY"]+=F["ex"] * T2["uVeY"];
-    temp["uVxY"]-=F["VM"] * T2["uMxY"];
+    E += 0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+    E += 0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+    E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
 
-    E+=0.5 * BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
-    E+=0.5 * BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
-
-    E+= BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
     //Zero because you we have to permute some of the equations for [V,T1] piece
-    temp.zero();
-    temp["vUyX"]+=F["EX"] * T2["vUyE"];
-    temp["vUyX"]-=F["vm"] * T2["mUyX"];
-    E+= BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
+    temp.block("aAaA")->zero();
+    temp["vUyX"] += F["EX"] * T2["vUyE"];
+    temp["vUyX"] -= F["vm"] * T2["mUyX"];
+    E += BlockedTensor::dot(temp["vUyX"], Lambda2["yXvU"]);
 
-    //Computing the
     outfile->Printf("\n  E([F, T2]) %18c = %22.15lf", ' ', E);
+    return E;
+}
 
+double DSRG_MRPT2::E_VT2_2()
+{
+    double E = 0.0;
+
+    // BUG
+//    BlockedTensor temp;
+//    temp.resize_spin_components("temp", "hhpp");
+//    temp["klcd"] += T2["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+//    temp["KLCD"] += T2["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
+//    temp["kLcD"] += T2["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+//    E += 0.25 * BlockedTensor::dot(V["cdkl"], temp["klcd"]);
+//    E += 0.25 * BlockedTensor::dot(V["CDKL"], temp["KLCD"]);
+//    E += BlockedTensor::dot(V["cDkL"], temp["kLcD"]);
+
+    BlockedTensor temp1;
+    BlockedTensor temp2;
+    temp1.resize_spin_components("temp1", "hhpp");
+    temp2.resize_spin_components("temp2", "hhpp");
+
+    temp1["klab"] += T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
+    temp2["klcd"] += temp1["klab"] * Eta1["ac"] * Eta1["bd"];
+
+    temp1["KLAB"] += T2["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
+    temp2["KLCD"] += temp1["KLAB"] * Eta1["AC"] * Eta1["BD"];
+
+    temp1["kLaB"] += T2["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
+    temp2["kLcD"] += temp1["kLaB"] * Eta1["ac"] * Eta1["BD"];
+
+    E += 0.25 * BlockedTensor::dot(V["cdkl"], temp2["klcd"]);
+    E += 0.25 * BlockedTensor::dot(V["CDKL"], temp2["KLCD"]);
+    E += BlockedTensor::dot(V["cDkL"], temp2["kLcD"]);
+
+    outfile->Printf("\n  E([V, T2] C_2^4) %12c = %22.15lf", ' ', E);
+    return E;
+}
+
+double DSRG_MRPT2::E_VT2_4HH()
+{
+    double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaa");
+
+    temp["uvxy"] += V["uvkl"] * T2["ijxy"] * Gamma1["ki"] * Gamma1["lj"];
+    temp["UVXY"] += V["UVKL"] * T2["IJXY"] * Gamma1["KI"] * Gamma1["LJ"];
+    temp["uVxY"] += V["uVkL"] * T2["iJxY"] * Gamma1["ki"] * Gamma1["LJ"];
+
+    E += 0.125 * BlockedTensor::dot(Lambda2["xyuv"], temp["uvxy"]);
+    E += 0.125 * BlockedTensor::dot(Lambda2["XYUV"], temp["UVXY"]);
+    E += BlockedTensor::dot(Lambda2["xYuV"], temp["uVxY"]);
+
+    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E);
+    return E;
+}
+
+double DSRG_MRPT2::E_VT2_4PP()
+{
+    double E = 0.0;
+
+    // BUG
+//    BlockedTensor temp;
+//    temp.resize_spin_components("temp", "aaaa");
+
+//    temp["uvxy"] += V["cdxy"] * T2["uvab"] * Eta1["ac"] * Eta1["bd"];
+//    temp["UVXY"] += V["CDXY"] * T2["UVAB"] * Eta1["AC"] * Eta1["BD"];
+//    temp["uVxY"] += V["cDxY"] * T2["uVaB"] * Eta1["ac"] * Eta1["BD"];
+
+//    E += 0.125 * BlockedTensor::dot(Lambda2["xyuv"], temp["uvxy"]);
+//    E += 0.125 * BlockedTensor::dot(Lambda2["XYUV"], temp["UVXY"]);
+//    E += BlockedTensor::dot(Lambda2["xYuV"], temp["uVxY"]);
+
+    BlockedTensor temp1;
+    BlockedTensor temp2;
+    temp1.resize_spin_components("temp1", "aapp");
+    temp2.resize_spin_components("temp2", "aaaa");
+
+    temp1["uvcd"] += T2["uvab"] * Eta1["ac"] * Eta1["bd"];
+    temp1["UVCD"] += T2["UVAB"] * Eta1["AC"] * Eta1["BD"];
+    temp1["uVcD"] += T2["uVaB"] * Eta1["ac"] * Eta1["BD"];
+
+    temp2["uvxy"] += temp1["uvcd"] * V["cdxy"];
+    temp2["UVXY"] += temp1["UVCD"] * V["CDXY"];
+    temp2["uVxY"] += temp1["uVcD"] * V["cDxY"];
+
+    E += 0.125 * BlockedTensor::dot(Lambda2["xyuv"], temp2["uvxy"]);
+    E += 0.125 * BlockedTensor::dot(Lambda2["XYUV"], temp2["UVXY"]);
+    E += BlockedTensor::dot(Lambda2["xYuV"], temp2["uVxY"]);
+
+    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E);
+    return E;
+}
+
+double DSRG_MRPT2::E_VT2_4PH()
+{
+    double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaa");
+
+    temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
+    E += BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+
+    temp["UVXY"] += V["VBJX"] * T2["IUAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp["UVXY"] -= V["bVjX"] * T2["iUaY"] * Gamma1["ji"] * Eta1["ab"];
+    E += BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+
+    temp["uVxY"] -= V["ubjx"] * T2["iVaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uVxY"] += V["uBxJ"] * T2["IVAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp["uVxY"] += V["bVjY"] * T2["iuax"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uVxY"] -= V["VBJY"] * T2["uIxA"] * Gamma1["JI"] * Eta1["AB"];
+    temp["uVxY"] -= V["bVxJ"] * T2["uIaY"] * Gamma1["JI"] * Eta1["ab"];
+    temp["uVxY"] -= V["uBjY"] * T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
+    E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
+
+    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E);
+    return E;
+}
+
+double DSRG_MRPT2::E_VT2_6()
+{
+    double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaaaa");
+
+    temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
+    temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
+    temp["UVWXYZ"] += V["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
+    temp["UVWXYZ"] += V["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
+    E += 0.25 * BlockedTensor::dot(temp["uvwxyz"], Lambda3["xyzuvw"]);
+    E += 0.25 * BlockedTensor::dot(temp["UVWXYZ"], Lambda3["XYZUVW"]);
+
+    temp["uvWxzY"] += V["uviz"] * T2["iWxY"];      //  aaAaaA from hole
+    temp["uvWxzY"] -= V["aWxY"] * T2["uvaz"];      //  aaAaaA from particle
+    E -= 0.50 * BlockedTensor::dot(temp["uvWxzY"], Lambda3["xzYuvW"]);
+
+    temp.block("aaAaaA")->zero();
+    temp["uwVxyZ"] += V["uViZ"] * T2["iwxy"];      //  aaAaaA from hole
+    temp["uwVxyZ"] += V["waxy"] * T2["uVaZ"];      //  aaAaaA from particle
+    E -= 0.50 * BlockedTensor::dot(temp["uwVxyZ"], Lambda3["xyZuwV"]);
+
+    temp.block("aaAaaA")->zero();
+    temp["uwVxzY"] += V["uVzI"] * T2["wIxY"];      //  aaAaaA from hole
+    temp["uwVxzY"] -= V["wAxY"] * T2["uVzA"];      //  aaAaaA from particle
+    E += BlockedTensor::dot(temp["uwVxzY"], Lambda3["xzYuwV"]);
+
+    temp["wUVxYZ"] -= V["UVIZ"] * T2["wIxY"];      //  aAAaAA from hole
+    temp["wUVxYZ"] += V["wAxY"] * T2["UVAZ"];      //  aAAaAA from particle
+    E += 0.5 * BlockedTensor::dot(temp["wUVxYZ"], Lambda3["xYZwUV"]);
+
+    temp.block("aAAaAA")->zero();
+    temp["vUWzXY"] += V["vUzI"] * T2["IWXY"];      //  aAAaAA from hole
+    temp["vUWzXY"] += V["WAXY"] * T2["vUzA"];      //  aAAaAA from particle
+    E -= 0.5 * BlockedTensor::dot(temp["vUWzXY"], Lambda3["zXYvUW"]);
+
+    temp.block("aAAaAA")->zero();
+    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+    E += BlockedTensor::dot(temp["uVWxYZ"], Lambda3["xYZuVW"]);
+
+    outfile->Printf("\n  E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E);
     return E;
 }
 
