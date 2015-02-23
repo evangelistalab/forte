@@ -752,19 +752,32 @@ double DSRG_MRPT2::E_VT2_6()
     E += 0.25 * BlockedTensor::dot(temp["uvwxyz"], Lambda3["xyzuvw"]);
     E += 0.25 * BlockedTensor::dot(temp["UVWXYZ"], Lambda3["XYZUVW"]);
 
-    temp["uvWxzY"] += V["uviz"] * T2["iWxY"];      //  aaAaaA from hole
-    temp["uvWxzY"] -= V["aWxY"] * T2["uvaz"];      //  aaAaaA from particle
-    E -= 0.50 * BlockedTensor::dot(temp["uvWxzY"], Lambda3["xzYuvW"]);
+    //temp["uvWxzY"] += V["uviz"] * T2["iWxY"];      //  aaAaaA from hole
+    //temp["uvWxzY"] -= V["aWxY"] * T2["uvaz"];      //  aaAaaA from particle
+    //E -= 0.50 * BlockedTensor::dot(temp["uvWxzY"], Lambda3["xzYuvW"]);
 
-    temp.block("aaAaaA")->zero();
-    temp["uwVxyZ"] += V["uViZ"] * T2["iwxy"];      //  aaAaaA from hole
-    temp["uwVxyZ"] += V["waxy"] * T2["uVaZ"];      //  aaAaaA from particle
-    E -= 0.50 * BlockedTensor::dot(temp["uwVxyZ"], Lambda3["xyZuwV"]);
+    //temp.block("aaAaaA")->zero();
+    //temp["uwVxyZ"] += V["uViZ"] * T2["iwxy"];      //  aaAaaA from hole
+    //temp["uwVxyZ"] += V["waxy"] * T2["uVaZ"];      //  aaAaaA from particle
+    //E -= 0.50 * BlockedTensor::dot(temp["uwVxyZ"], Lambda3["xyZuwV"]);
 
-    temp.block("aaAaaA")->zero();
-    temp["uwVxzY"] += V["uVzI"] * T2["wIxY"];      //  aaAaaA from hole
-    temp["uwVxzY"] -= V["wAxY"] * T2["uVzA"];      //  aaAaaA from particle
-    E += BlockedTensor::dot(temp["uwVxzY"], Lambda3["xzYuwV"]);
+    //temp.block("aaAaaA")->zero();
+    //temp["uwVxzY"] += V["uVzI"] * T2["wIxY"];      //  aaAaaA from hole
+    //temp["uwVxzY"] -= V["wAxY"] * T2["uVzA"];      //  aaAaaA from particle
+    //E += BlockedTensor::dot(temp["uwVxzY"], Lambda3["xzYuwV"]);
+    temp["uvWxyZ"]-=V["uviy"]*T2["iWxZ"];
+    temp["uvWxyZ"]-=V["uWiZ"]*T2["ivxy"];
+
+    temp["uvWxyZ"]+=V["uWyI"]*T2["vIxZ"];
+    temp["uvWxyZ"]+=V["uWyI"]*T2["vIxZ"];
+
+    temp["uvWxyZ"]+=V["aWyZ"]*T2["uvax"];
+    temp["uvWxyZ"]-=V["vaxy"]*T2["uWaZ"];
+
+    temp["uvWxyZ"]-=V["uAyZ"]*T2["vWxA"];
+    temp["uvWxyZ"]-=V["uAyZ"]*T2["vWxA"];
+
+    E += 0.50 * BlockedTensor::dot(temp["uvWxyZ"], Lambda3["xyZuvW"]);
 
     temp["wUVxYZ"] -= V["UVIZ"] * T2["wIxY"];      //  aAAaAA from hole
     temp["wUVxYZ"] += V["wAxY"] * T2["UVAZ"];      //  aAAaAA from particle
