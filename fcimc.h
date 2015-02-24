@@ -29,13 +29,17 @@
 #include <libmints/vector.h>
 #include <libmints/matrix.h>
 #include <libmints/wavefunction.h>
+#include <random>
+
 
 #include "integrals.h"
-#include "string_determinant.h"
+#include "bitset_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
-class FCIMC : public Wavefunction
+typedef std::map<BitsetDeterminant,double> walker_map;
+
+class FCIQMC : public Wavefunction
 {
 public:
     // ==> Class Constructor and Destructor <==
@@ -46,10 +50,10 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
 
     /// Destructor
-    ~FCIMC();
+    ~FCIQMC();
 
     // ==> Class Interface <==
 
@@ -69,16 +73,52 @@ private:
 //    std::vector<int> frzv_;
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
-//    /// The molecular integrals required by fcimc
-//    ExplorerIntegrals* ints_;
 //    /// The reference determinant
 //    StringDeterminant reference_determinant_;
 //    /// The determinant with minimum energy
 //    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
+    /// The maximum number of threads
+    int num_threads_;
+    /// Do we have OpenMP?
+    static bool have_omp_;
+    /// The molecular integrals required by fcimc
+    ExplorerIntegrals* ints_;
 
-    void startup(Options& options);
-    void read_info(Options& options);
+    /// The wave function symmetry
+    int wavefunction_symmetry_;
+    /// The symmetry of each orbital in Pitzer ordering
+    std::vector<int> mo_symmetry_;
+    /// The number of correlated molecular orbitals
+    int ncmo_;
+    /// The number of correlated molecular orbitals per irrep
+    Dimension ncmopi_;
+    /// The nuclear repulsion energy
+    double nuclear_repulsion_energy_;
+
+    // * Calculation info
+    /// The threshold applied to the primary space
+    double spawning_threshold_;
+    /// The size of the time step (TAU)
+    double time_step_;
+    /// The maximum number of FCIQMC steps
+    size_t maxiter_;
+
+    void startup();
+    void print_info();
+
+    // Spawning step
+    void spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+
+    // Clone/annihilation step
+    void clone_annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+
+    // Death step
+    void kill(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+
+    // Count the number of allowed single and double excitations
+    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const BitsetDeterminant &det);
+
 };
 
 }} // End Namespaces
