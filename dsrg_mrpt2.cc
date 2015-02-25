@@ -723,8 +723,9 @@ double DSRG_MRPT2::E_VT2_4PP()
 double DSRG_MRPT2::E_VT2_4PH()
 {
     double E = 0.0;
+    BlockedTensor temp;
+    temp.resize_spin_components("temp", "aaaa");
 
-<<<<<<< HEAD
     timer_on("uvxy");
     temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
     temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
@@ -746,7 +747,6 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp["uVxY"] -= V["uBjY"] * T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
     E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
     timer_off("uVxY");
-=======
 //    BlockedTensor temp;
 //    temp.resize_spin_components("temp", "aaaa");
 
@@ -803,7 +803,6 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp1["jVxB"]  = T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
     temp2["uVxY"] -= V["uBjY"] * temp1["jVxB"];
     E += BlockedTensor::dot(temp2["uVxY"], Lambda2["xYuV"]);
->>>>>>> 86a0fcdfd9f4e348af6648419edf639e1dd89338
 
     outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E);
     return E;
