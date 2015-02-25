@@ -115,6 +115,7 @@ void DSRG_MRPT2::startup()
         std::vector<size_t> nauxpi(nL);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Beta);
         //BlockedTensor::add_composite_mo_space("o","@#$",{"d","c",;
 
     }
@@ -124,6 +125,7 @@ void DSRG_MRPT2::startup()
         std::vector<size_t> nauxpi(nDF);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Beta);
     }
     size_t ndf = 10;
     std::vector<size_t> ndfpi(ndf);
@@ -397,14 +399,37 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
+    timer_on("E_FT1");
     Ecorr += E_FT1();
+    timer_off("E_FT1");
+
+    timer_on("E_VT1");
     Ecorr += E_VT1();
+    timer_off("E_VT1");
+
+    timer_on("E_FT2");
     Ecorr += E_FT2();
+    timer_off("E_FT2");
+
+    timer_on("E_VT2_2");
     Ecorr += E_VT2_2();
+    timer_off("E_VT2_2");
+
+    timer_on("E_VT2_4HH");
     Ecorr += E_VT2_4HH();
+    timer_off("E_VT2_4HH");
+
+    timer_on("E_VT2_4PP");
     Ecorr += E_VT2_4PP();
+    timer_off("E_VT2_4PP");
+
+    //timer_on("E_VT2_4PH");
     Ecorr += E_VT2_4PH();
+    //timer_off("E_VT2_4PH");
+
+    timer_on("E_VT2_6");
     Ecorr += E_VT2_6();
+    timer_off("E_VT2_6");
 
     outfile->Printf("\n  E(DSRG-PT2) %17c = %22.15lf", ' ', Ecorr);
     Process::environment.globals["CURRENT ENERGY"] = Ecorr + Eref;
@@ -700,6 +725,29 @@ double DSRG_MRPT2::E_VT2_4PH()
 {
     double E = 0.0;
 
+<<<<<<< HEAD
+    timer_on("uvxy");
+    temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
+    E += BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
+    timer_off("uvxy");
+
+    timer_on("UVXY");
+    temp["UVXY"] += V["VBJX"] * T2["IUAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp["UVXY"] -= V["bVjX"] * T2["iUaY"] * Gamma1["ji"] * Eta1["ab"];
+    E += BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
+    timer_off("UVXY");
+
+    timer_on("uVxY");
+    temp["uVxY"] -= V["ubjx"] * T2["iVaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uVxY"] += V["uBxJ"] * T2["IVAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp["uVxY"] += V["bVjY"] * T2["iuax"] * Gamma1["ji"] * Eta1["ab"];
+    temp["uVxY"] -= V["VBJY"] * T2["uIxA"] * Gamma1["JI"] * Eta1["AB"];
+    temp["uVxY"] -= V["bVxJ"] * T2["uIaY"] * Gamma1["JI"] * Eta1["ab"];
+    temp["uVxY"] -= V["uBjY"] * T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
+    E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
+    timer_off("uVxY");
+=======
 //    BlockedTensor temp;
 //    temp.resize_spin_components("temp", "aaaa");
 
@@ -756,6 +804,7 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp1["jVxB"]  = T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
     temp2["uVxY"] -= V["uBjY"] * temp1["jVxB"];
     E += BlockedTensor::dot(temp2["uVxY"], Lambda2["xYuV"]);
+>>>>>>> 86a0fcdfd9f4e348af6648419edf639e1dd89338
 
     outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E);
     return E;
