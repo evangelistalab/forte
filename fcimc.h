@@ -109,7 +109,7 @@ private:
 
     // Spawning step
     void spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
-
+    void singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
     // Clone/annihilation step
     void clone_annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
 
@@ -118,6 +118,8 @@ private:
 
     // Count the number of allowed single and double excitations
     std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const BitsetDeterminant &det);
+    void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& excitations);
+    void detExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
 
 };
 

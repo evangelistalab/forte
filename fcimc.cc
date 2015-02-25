@@ -211,6 +211,12 @@ double FCIQMC::compute_energy()
     std::map<BitsetDeterminant,double> walkers;
     walkers[reference] = 1.0;
 
+
+
+    for (size_t i = 0; i < nmo_; ++i){
+        outfile->Printf("%d\n",mo_symmetry_[i]);
+    }
+
     for (size_t iter = 0; iter < maxiter_; ++iter){
 
         std::map<BitsetDeterminant,double> new_walkers;
@@ -270,72 +276,25 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_t
     for (auto& det_coef : walkers){
         const BitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
-        size_t nsa,nsb,ndaa,ndab,ndbb;
-        std::tie (nsa,nsb,ndaa,ndab,ndbb) = compute_pgen(det);
+//        size_t nsa,nsb,ndaa,ndab,ndbb;
+//        std::tuple<size_t,size_t,size_t,size_t,size_t> pgen = compute_pgen(det);
+//        std::tie (nsa,nsb,ndaa,ndab,ndbb) = pgen;
 
-        size_t sumgen = nsa + nsb + ndaa + ndbb + ndab;
+//        size_t sumgen = nsa + nsb + ndaa + ndbb + ndab;
+        std::vector<std::tuple<size_t,size_t,size_t,size_t>> excitations;
+        compute_excitations(det, excitations);
+        size_t sumgen = excitations.size();
 
         size_t nid = std::round(coef);
         for (size_t detW = 0; detW < nid; ++detW){
 
-            BitsetDeterminant new_det(det);
 
+            BitsetDeterminant new_det(det);
             // Select a random number within the range of allowed determinants
-            size_t rand_class = rand_int() % sumgen;
-            if (rand_class < ndab){
-                const std::vector<int> aocc = det.get_alfa_occ();
-                const std::vector<int> avir = det.get_alfa_vir();
-                const std::vector<int> bocc = det.get_beta_occ();
-                const std::vector<int> bvir = det.get_beta_vir();
-                size_t i = aocc[rand_int() % aocc.size()];
-                size_t j = bocc[rand_int() % bocc.size()];
-                size_t a = avir[rand_int() % avir.size()];
-                size_t b = bvir[rand_int() % bvir.size()];
-                new_det.set_alfa_bit(i,false);
-                new_det.set_alfa_bit(a,true);
-                new_det.set_beta_bit(j,false);
-                new_det.set_beta_bit(b,true);
-            }else if (rand_class < ndab + ndaa){
-                const std::vector<int> aocc = det.get_alfa_occ();
-                const std::vector<int> avir = det.get_alfa_vir();
-                std::pair<size_t,size_t> ij = generate_ind_random_pair(aocc.size());
-                std::pair<size_t,size_t> ab = generate_ind_random_pair(avir.size());
-                size_t i = aocc[ij.first];
-                size_t j = aocc[ij.second];
-                size_t a = avir[ab.first];
-                size_t b = avir[ab.second];
-                new_det.set_alfa_bit(i,false);
-                new_det.set_alfa_bit(j,false);
-                new_det.set_alfa_bit(a,true);
-                new_det.set_alfa_bit(b,true);
-            }else if (rand_class < ndab + ndaa + ndbb){
-                const std::vector<int> bocc = det.get_beta_occ();
-                const std::vector<int> bvir = det.get_beta_vir();
-                std::pair<size_t,size_t> ij = generate_ind_random_pair(bocc.size());
-                std::pair<size_t,size_t> ab = generate_ind_random_pair(bvir.size());
-                size_t i = bocc[ij.first];
-                size_t j = bocc[ij.second];
-                size_t a = bvir[ab.first];
-                size_t b = bvir[ab.second];
-                new_det.set_beta_bit(i,false);
-                new_det.set_beta_bit(j,false);
-                new_det.set_beta_bit(a,true);
-                new_det.set_beta_bit(b,true);
-            }else if (rand_class < ndab + ndaa + ndbb + nsa){
-                const std::vector<int> aocc = det.get_alfa_occ();
-                const std::vector<int> avir = det.get_alfa_vir();
-                size_t i = aocc[rand_int() % aocc.size()];
-                size_t a = avir[rand_int() % avir.size()];
-                new_det.set_alfa_bit(i,false);
-                new_det.set_alfa_bit(a,true);
-            }else{
-                const std::vector<int> bocc = det.get_beta_occ();
-                const std::vector<int> bvir = det.get_beta_vir();
-                size_t i = bocc[rand_int() % bocc.size()];
-                size_t a = bvir[rand_int() % bvir.size()];
-                new_det.set_beta_bit(i,false);
-                new_det.set_beta_bit(a,true);
-            }
+//            singleWalkerSpawn(new_det,det,pgen,sumgen);
+            size_t rand_ext = rand_int() % sumgen;
+            detExcitation(new_det, excitations[rand_ext]);
+
 
             double HIJ = new_det.slater_rules(det);
             double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
@@ -344,7 +303,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_t
                 pspawn_floor++;
             }
 
-            size_t nspawn = coef * HIJ > 0 ? -double(pspawn_floor) : +double(pspawn_floor);
+            double nspawn = coef * HIJ > 0 ? -double(pspawn_floor) : +double(pspawn_floor);
 
             // TODO: check
             if (nspawn != 0){
@@ -353,11 +312,73 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_t
 
             outfile->Printf("\n  Determinant:");
             det.print();
-            outfile->Printf(" spawned %zu (%f):",nspawn,pspawn);
+            outfile->Printf(" spawned %f (%f):",nspawn,pspawn);
             new_det.print();
         }
     }
 
+}
+
+void FCIQMC::singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant& det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen)
+{
+
+    size_t nsa,nsb,ndaa,ndab,ndbb;
+    std::tie (nsa,nsb,ndaa,ndab,ndbb) = pgen;
+    size_t rand_class = rand_int() % sumgen;
+    if (rand_class < ndab){
+        const std::vector<int> aocc = det.get_alfa_occ();
+        const std::vector<int> avir = det.get_alfa_vir();
+        const std::vector<int> bocc = det.get_beta_occ();
+        const std::vector<int> bvir = det.get_beta_vir();
+        size_t i = aocc[rand_int() % aocc.size()];
+        size_t j = bocc[rand_int() % bocc.size()];
+        size_t a = avir[rand_int() % avir.size()];
+        size_t b = bvir[rand_int() % bvir.size()];
+        new_det.set_alfa_bit(i,false);
+        new_det.set_alfa_bit(a,true);
+        new_det.set_beta_bit(j,false);
+        new_det.set_beta_bit(b,true);
+    }else if (rand_class < ndab + ndaa){
+        const std::vector<int> aocc = det.get_alfa_occ();
+        const std::vector<int> avir = det.get_alfa_vir();
+        std::pair<size_t,size_t> ij = generate_ind_random_pair(aocc.size());
+        std::pair<size_t,size_t> ab = generate_ind_random_pair(avir.size());
+        size_t i = aocc[ij.first];
+        size_t j = aocc[ij.second];
+        size_t a = avir[ab.first];
+        size_t b = avir[ab.second];
+        new_det.set_alfa_bit(i,false);
+        new_det.set_alfa_bit(j,false);
+        new_det.set_alfa_bit(a,true);
+        new_det.set_alfa_bit(b,true);
+    }else if (rand_class < ndab + ndaa + ndbb){
+        const std::vector<int> bocc = det.get_beta_occ();
+        const std::vector<int> bvir = det.get_beta_vir();
+        std::pair<size_t,size_t> ij = generate_ind_random_pair(bocc.size());
+        std::pair<size_t,size_t> ab = generate_ind_random_pair(bvir.size());
+        size_t i = bocc[ij.first];
+        size_t j = bocc[ij.second];
+        size_t a = bvir[ab.first];
+        size_t b = bvir[ab.second];
+        new_det.set_beta_bit(i,false);
+        new_det.set_beta_bit(j,false);
+        new_det.set_beta_bit(a,true);
+        new_det.set_beta_bit(b,true);
+    }else if (rand_class < ndab + ndaa + ndbb + nsa){
+        const std::vector<int> aocc = det.get_alfa_occ();
+        const std::vector<int> avir = det.get_alfa_vir();
+        size_t i = aocc[rand_int() % aocc.size()];
+        size_t a = avir[rand_int() % avir.size()];
+        new_det.set_alfa_bit(i,false);
+        new_det.set_alfa_bit(a,true);
+    }else{
+        const std::vector<int> bocc = det.get_beta_occ();
+        const std::vector<int> bvir = det.get_beta_vir();
+        size_t i = bocc[rand_int() % bocc.size()];
+        size_t a = bvir[rand_int() % bvir.size()];
+        new_det.set_beta_bit(i,false);
+        new_det.set_beta_bit(a,true);
+    }
 }
 
 // Step #2.  Clone/annihilation
@@ -456,6 +477,122 @@ std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen(const Bitset
         }
     }
     return std::make_tuple(nsa,nsb,ndaa,ndab,ndbb);
+}
+
+void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& excitations)
+{
+    const std::vector<int> aocc = det.get_alfa_occ();
+    const std::vector<int> bocc = det.get_beta_occ();
+    const std::vector<int> avir = det.get_alfa_vir();
+    const std::vector<int> bvir = det.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    size_t nsa = 0;
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                excitations.push_back(std::make_tuple(ii,aa,aa,aa));
+            }
+        }
+    }
+    size_t nsb = 0;
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                excitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_,aa+nmo_,aa+nmo_));
+            }
+        }
+    }
+
+    size_t ndaa = 0;
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = a + 1; b < nvalpha; ++b){
+                    int bb = avir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        excitations.push_back(std::make_tuple(ii,aa,jj,bb));
+                    }
+                }
+            }
+        }
+    }
+
+    size_t ndab = 0;
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = 0; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        excitations.push_back(std::make_tuple(ii,aa,jj+nmo_,bb+nmo_));
+                    }
+                }
+            }
+        }
+    }
+
+    size_t ndbb = 0;
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                for (int b = a + 1; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        excitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_,jj+nmo_,bb+nmo_));
+                    }
+                }
+            }
+        }
+    }
+}
+
+void FCIQMC::detExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext){
+    size_t ii,aa,jj,bb;
+    std::tie (ii,aa,jj,bb) = rand_ext;
+    if (jj==bb){
+        if (ii<nmo_){
+            new_det.set_alfa_bit(ii,false);
+            new_det.set_alfa_bit(aa,true);
+        } else {
+            new_det.set_beta_bit(ii-nmo_,false);
+            new_det.set_beta_bit(aa-nmo_,true);
+        }
+    }else{
+        if (ii>nmo_){
+            new_det.set_beta_bit(ii-nmo_,false);
+            new_det.set_beta_bit(jj-nmo_,false);
+            new_det.set_beta_bit(aa-nmo_,true);
+            new_det.set_beta_bit(bb-nmo_,true);
+        }else if(jj>nmo_){
+            new_det.set_alfa_bit(ii,false);
+            new_det.set_alfa_bit(aa,true);
+            new_det.set_beta_bit(jj-nmo_,false);
+            new_det.set_beta_bit(bb-nmo_,true);
+        }else{
+            new_det.set_alfa_bit(ii,false);
+            new_det.set_alfa_bit(jj,false);
+            new_det.set_alfa_bit(aa,true);
+            new_det.set_alfa_bit(bb,true);
+        }
+    }
 }
 
 }} // EndNamespaces
