@@ -727,27 +727,6 @@ double DSRG_MRPT2::E_VT2_4PH()
     BlockedTensor temp;
     temp.resize_spin_components("temp", "aaaa");
 
-    timer_on("uvxy");
-    temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
-    temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
-    E += BlockedTensor::dot(temp["uvxy"], Lambda2["xyuv"]);
-    timer_off("uvxy");
-
-    timer_on("UVXY");
-    temp["UVXY"] += V["VBJX"] * T2["IUAY"] * Gamma1["JI"] * Eta1["AB"];
-    temp["UVXY"] -= V["bVjX"] * T2["iUaY"] * Gamma1["ji"] * Eta1["ab"];
-    E += BlockedTensor::dot(temp["UVXY"], Lambda2["XYUV"]);
-    timer_off("UVXY");
-
-    timer_on("uVxY");
-    temp["uVxY"] -= V["ubjx"] * T2["iVaY"] * Gamma1["ji"] * Eta1["ab"];
-    temp["uVxY"] += V["uBxJ"] * T2["IVAY"] * Gamma1["JI"] * Eta1["AB"];
-    temp["uVxY"] += V["bVjY"] * T2["iuax"] * Gamma1["ji"] * Eta1["ab"];
-    temp["uVxY"] -= V["VBJY"] * T2["uIxA"] * Gamma1["JI"] * Eta1["AB"];
-    temp["uVxY"] -= V["bVxJ"] * T2["uIaY"] * Gamma1["JI"] * Eta1["ab"];
-    temp["uVxY"] -= V["uBjY"] * T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
-    E += BlockedTensor::dot(temp["uVxY"], Lambda2["xYuV"]);
-    timer_off("uVxY");
 //    BlockedTensor temp;
 //    temp.resize_spin_components("temp", "aaaa");
 
