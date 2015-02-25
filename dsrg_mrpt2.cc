@@ -115,6 +115,7 @@ void DSRG_MRPT2::startup()
         std::vector<size_t> nauxpi(nL);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Beta);
         //BlockedTensor::add_composite_mo_space("o","@#$",{"d","c",;
 
     }
@@ -124,6 +125,7 @@ void DSRG_MRPT2::startup()
         std::vector<size_t> nauxpi(nDF);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Alpha);
+        BlockedTensor::add_primitive_mo_space("d","g",nauxpi,Beta);
     }
     size_t ndf = 10;
     std::vector<size_t> ndfpi(ndf);
@@ -314,7 +316,7 @@ void DSRG_MRPT2::startup()
     Lambda3_aaA["pqrstu"] = (*reference_.L3aab())["pqrstu"];
     Lambda3_aAA["pqrstu"] = (*reference_.L3abb())["pqrstu"];
     Lambda3_AAA["pqrstu"] = (*reference_.L3bbb())["pqrstu"];
-    Lambda3.print();
+//    Lambda3.print();
 
     // Prepare exponential tensors for effective Fock matrix and integrals
 
@@ -397,21 +399,46 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
+    timer_on("E_FT1");
     Ecorr += E_FT1();
+    timer_off("E_FT1");
+
+    timer_on("E_VT1");
     Ecorr += E_VT1();
+    timer_off("E_VT1");
+
+    timer_on("E_FT2");
     Ecorr += E_FT2();
+    timer_off("E_FT2");
+
+    timer_on("E_VT2_2");
     Ecorr += E_VT2_2();
+    timer_off("E_VT2_2");
+
+    timer_on("E_VT2_4HH");
     Ecorr += E_VT2_4HH();
+    timer_off("E_VT2_4HH");
+
+    timer_on("E_VT2_4PP");
     Ecorr += E_VT2_4PP();
+    timer_off("E_VT2_4PP");
+
+    timer_on("E_VT2_4PH");
     Ecorr += E_VT2_4PH();
+    timer_off("E_VT2_4PH");
+
+    timer_on("E_VT2_6");
     Ecorr += E_VT2_6();
+    timer_off("E_VT2_6");
 
     outfile->Printf("\n  E(DSRG-PT2) %17c = %22.15lf", ' ', Ecorr);
+    Process::environment.globals["CURRENT ENERGY"] = Ecorr + Eref;
     return Ecorr + Eref;
 }
 
 double DSRG_MRPT2::compute_ref()
 {
+    timer_on("Compute Eref");
     double E = 0.0;
 
     E  = 0.5 * BlockedTensor::dot(H["ij"],Gamma1["ij"]);
@@ -426,11 +453,13 @@ double DSRG_MRPT2::compute_ref()
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
+    timer_off("Compute Eref");
     return E + frozen_core_energy + Enuc;
 }
 
 void DSRG_MRPT2::compute_t2()
 {
+    timer_on("Compute T2");
     T2["ijab"] = V["ijab"] % RDelta2["ijab"];
     T2["iJaB"] = V["iJaB"] % RDelta2["iJaB"];
     T2["IJAB"] = V["IJAB"] % RDelta2["IJAB"];
@@ -442,72 +471,76 @@ void DSRG_MRPT2::compute_t2()
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
-//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
-//    for(const auto& block: T2blocks){
-//        std::vector<std::string> index_vec = block.first;
-//        std::string name;
-//        for(const std::string& index: index_vec)
-//            name += index;
+    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
+    for(const auto& block: T2blocks){
+        std::vector<std::string> index_vec = block.first;
+        std::string name;
+        for(const std::string& index: index_vec)
+            name += index;
 
+        if(islower(name[0]) && isupper(name[1])){
+            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
+        }else{
+            T2norm += pow(T2.block(name)->norm(), 2.0);
+        }
 //        double max = T2.block(name)->max_abs_vec()[0];
 //        T2max = T2max > max ? T2max : max;
-//        if(islower(name[0]) && isupper(name[1])){
-//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
-//        }else{
-//            T2norm += pow(T2.block(name)->norm(), 2.0);
-//        }
-//    }
+    }
     T2norm = sqrt(T2norm);    
     outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2norm);
-    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
+//    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
+    timer_off("Compute T2");
 }
 
 void DSRG_MRPT2::compute_t1()
 {
-   //A temporary tensor to use for the building of T1
-   //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
-   //via a pointwise multiplcation
-   BlockedTensor temp;
-   temp.resize_spin_components("temp","aa");
-   temp["xu"] = Gamma1["xu"] % Delta1["xu"];
-   temp["XU"] = Gamma1["XU"] % Delta1["XU"];
+    timer_on("Compute T1");
+    //A temporary tensor to use for the building of T1
+    //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
+    //via a pointwise multiplcation
+    BlockedTensor temp;
+    temp.resize_spin_components("temp","aa");
+    temp["xu"] = Gamma1["xu"] % Delta1["xu"];
+    temp["XU"] = Gamma1["XU"] % Delta1["XU"];
 
-   //Form the T1 amplitudes
-   //Note:  The equations are changed slightly from York's equations.
-   //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
-   //Did some permuting to get the correct format
+    //Form the T1 amplitudes
+    //Note:  The equations are changed slightly from York's equations.
+    //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
+    //Did some permuting to get the correct format
 
-   T1["ia"]  = F["ia"];
-   T1["ia"] += temp["xu"] * T2["iuax"];
-   T1["ia"] += temp["XU"] * T2["iUaX"];
+    T1["ia"]  = F["ia"];
+    T1["ia"] += temp["xu"] * T2["iuax"];
+    T1["ia"] += temp["XU"] * T2["iUaX"];
 
-   T1["ia"]  = T1["ia"] % RDelta1["ia"];
+    T1["ia"]  = T1["ia"] % RDelta1["ia"];
 
-   T1["IA"]  = F["IA"];
-   T1["IA"] += temp["xu"] * T2["uIxA"];
-   T1["IA"] += temp["XU"] * T2["IUAX"];
-   T1["IA"]  = T1["IA"] % RDelta1["IA"];
+    T1["IA"]  = F["IA"];
+    T1["IA"] += temp["xu"] * T2["uIxA"];
+    T1["IA"] += temp["XU"] * T2["IUAX"];
+    T1["IA"]  = T1["IA"] % RDelta1["IA"];
 
-   T1.block("AA")->zero();
-   T1.block("aa")->zero();
+    T1.block("AA")->zero();
+    T1.block("aa")->zero();
 
-   // norm and maximum of T1 amplitudes
-   T1norm = T1.norm(); T1max = 0.0;
-//   std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
-//   for(const auto& block: T1blocks){
-//       std::vector<std::string> index_vec = block.first;
-//       std::string name;
-//       for(const std::string& index: index_vec)
-//           name += index;
-//       double max = T1.block(name)->max_abs_vec()[0];
-//       T1max = T1max > max ? T1max : max;
-//   }
-   outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1norm);
-   outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
+    // norm and maximum of T1 amplitudes
+    T1norm = T1.norm(); T1max = 0.0;
+//    std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
+//    for(const auto& block: T1blocks){
+//        std::vector<std::string> index_vec = block.first;
+//        std::string name;
+//        for(const std::string& index: index_vec)
+//            name += index;
+//        double max = T1.block(name)->max_abs_vec()[0];
+//        T1max = T1max > max ? T1max : max;
+//    }
+    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1norm);
+//    outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
+    timer_off("Compute T1");
 }
 
 void DSRG_MRPT2::renormalize_V()
 {
+    timer_on("Renorm. V");
     V["ijab"] += V["ijab"] % RExp2["ijab"];
     V["iJaB"] += V["iJaB"] % RExp2["iJaB"];
     V["IJAB"] += V["IJAB"] % RExp2["IJAB"];
@@ -515,10 +548,12 @@ void DSRG_MRPT2::renormalize_V()
     V["abij"] += V["abij"] % RExp2["ijab"];
     V["aBiJ"] += V["aBiJ"] % RExp2["iJaB"];
     V["ABIJ"] += V["ABIJ"] % RExp2["IJAB"];
+    timer_off("Renorm. V");
 }
 
 void DSRG_MRPT2::renormalize_F()
 {
+    timer_on("Renorm. F");
     BlockedTensor temp_aa;
     temp_aa.resize_spin_components("temp_aa","aa");
     temp_aa["xu"] = Gamma1["xu"] % Delta1["xu"];
@@ -548,6 +583,7 @@ void DSRG_MRPT2::renormalize_F()
     F["AI"] += temp_hp["AI"] % RExp1["IA"];
 
 //    F.print();  // The actv-actv block is different but it should not matter.
+    timer_off("Renorm. F");
 }
 
 double DSRG_MRPT2::E_FT1()
@@ -561,11 +597,6 @@ double DSRG_MRPT2::E_FT1()
 
     E += BlockedTensor::dot(temp["jb"], F["bj"]);
     E += BlockedTensor::dot(temp["JB"], F["BJ"]);
-
-//    Gamma1.print();
-//    T1.print();
-//    temp.print();
-//    F.print();
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
@@ -698,7 +729,6 @@ double DSRG_MRPT2::E_VT2_4PP()
 double DSRG_MRPT2::E_VT2_4PH()
 {
     double E = 0.0;
-
 //    BlockedTensor temp;
 //    temp.resize_spin_components("temp", "aaaa");
 
