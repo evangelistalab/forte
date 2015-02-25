@@ -117,6 +117,16 @@ public:
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir();
 
+
+    /// Return a vector of occupied alpha orbitals
+    std::vector<int> get_alfa_occ() const;
+    /// Return a vector of occupied beta orbitals
+    std::vector<int> get_beta_occ() const;
+    /// Return a vector of virtual alpha orbitals
+    std::vector<int> get_alfa_vir() const;
+    /// Return a vector of virtual beta orbitals
+    std::vector<int> get_beta_vir() const;
+
     /// Print the Slater determinant
     void print() const;
     /// Save the Slater determinant as a string

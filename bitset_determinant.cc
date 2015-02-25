@@ -118,6 +118,67 @@ std::vector<int> BitsetDeterminant::get_beta_vir()
     return vir;
 }
 
+
+std::vector<int> BitsetDeterminant::get_alfa_occ() const
+{
+    std::vector<int> occ(alfa_bits_.count());
+    size_t index = alfa_bits_.find_first();
+    int i = 0;
+    while(index != boost::dynamic_bitset<>::npos)
+    {
+            occ[i] = index;
+            index = alfa_bits_.find_next(index);
+            i++;
+    }
+    return occ;
+}
+
+std::vector<int> BitsetDeterminant::get_beta_occ() const
+{
+    std::vector<int> occ(beta_bits_.count());
+    size_t index = beta_bits_.find_first();
+    int i = 0;
+    while(index != boost::dynamic_bitset<>::npos)
+    {
+            occ[i] = index;
+            index = beta_bits_.find_next(index);
+            i++;
+    }
+    return occ;
+}
+
+std::vector<int> BitsetDeterminant::get_alfa_vir() const
+{
+    boost::dynamic_bitset<> alfa_bits(alfa_bits_);
+    alfa_bits.flip();
+    std::vector<int> vir(alfa_bits.count());
+    size_t index = alfa_bits.find_first();
+    int i = 0;
+    while(index != boost::dynamic_bitset<>::npos)
+    {
+            vir[i] = index;
+            index = alfa_bits.find_next(index);
+            i++;
+    }
+    return vir;
+}
+
+std::vector<int> BitsetDeterminant::get_beta_vir() const
+{
+    boost::dynamic_bitset<> beta_bits(beta_bits_);
+    beta_bits.flip();
+    std::vector<int> vir(beta_bits.count());
+    size_t index = beta_bits.find_first();
+    int i = 0;
+    while(index != boost::dynamic_bitset<>::npos)
+    {
+            vir[i] = index;
+            index = beta_bits.find_next(index);
+            i++;
+    }
+    return vir;
+}
+
 ///// Return a vector of occupied beta orbitals
 //std::vector<int> get_beta_occ();
 ///// Return a vector of virtual alpha orbitals

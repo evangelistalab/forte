@@ -54,7 +54,7 @@ read_options(std::string name, Options &options)
          
         /*- The job type -*/
         options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE"
-                        " EXPLORER FCIMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI"
+                        " EXPLORER FCIQMC SOSRG SRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI"
                         " DSRG-MRPT2");
 
         // Options for the Explorer class
@@ -327,10 +327,10 @@ libadaptive(Options &options)
             LambdaCI* explorer = new LambdaCI(options,ints_);
             delete explorer;
         }
-        if (options.get_str("JOB_TYPE") == "FCIMC"){
+        if (options.get_str("JOB_TYPE") == "FCIQMC"){
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<FCIMC> fcimc(new FCIMC(wfn,options,ints_));
-            fcimc->compute_energy();
+            boost::shared_ptr<FCIQMC> fciqmc(new FCIQMC(wfn,options,ints_));
+            fciqmc->compute_energy();
         }
         if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
