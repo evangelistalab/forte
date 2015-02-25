@@ -432,6 +432,7 @@ double DSRG_MRPT2::compute_energy()
     timer_off("E_VT2_6");
 
     outfile->Printf("\n  E(DSRG-PT2) %17c = %22.15lf", ' ', Ecorr);
+    Process::environment.globals["CURRENT ENERGY"] = Ecorr + Eref;
     return Ecorr + Eref;
 }
 
