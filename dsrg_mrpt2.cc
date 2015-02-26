@@ -175,6 +175,7 @@ void DSRG_MRPT2::startup()
     ambit::Tensor Eta1_AA = Eta1.block("AA");
     ambit::Tensor Eta1_VV = Eta1.block("VV");
 
+//<<<<<<< HEAD
     Gamma1_cc.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Gamma1_CC.iterate([&](const std::vector<size_t>& i,double& value){
@@ -184,6 +185,25 @@ void DSRG_MRPT2::startup()
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Eta1_AA.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
+//=======
+//    for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
+//        std::vector<size_t>& i = it.address();
+//        *it = i[0] == i[1] ? 1.0 : 0.0;
+//    }
+//    for (Tensor::iterator it = Gamma1_CC.begin(),endit = Gamma1_CC.end(); it != endit; ++it){
+//        std::vector<size_t>& i = it.address();
+//        *it = i[0] == i[1] ? 1.0 : 0.0;
+//    }
+
+//    for (Tensor::iterator it = Eta1_aa.begin(),endit = Eta1_aa.end(); it != endit; ++it){
+//        std::vector<size_t>& i = it.address();
+//        *it = i[0] == i[1] ? 1.0 : 0.0;
+//    }
+//    for (Tensor::iterator it = Eta1_AA.begin(),endit = Eta1_AA.end(); it != endit; ++it){
+//        std::vector<size_t>& i = it.address();
+//        *it = i[0] == i[1] ? 1.0 : 0.0;
+//    }
+//>>>>>>> bf4fab4903e254641124556559b52f15ff1fb644
 
     Eta1_vv.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
@@ -219,6 +239,14 @@ void DSRG_MRPT2::startup()
     Tensor Fb_CC = F.block("CC");
     Tensor Fb_AA = F.block("AA");
     Tensor Fb_VV = F.block("VV");
+//=======
+//    Tensor& Fa_cc = *F.block("cc");
+//    Tensor& Fa_aa = *F.block("aa");
+//    Tensor& Fa_vv = *F.block("vv");
+//    Tensor& Fb_CC = *F.block("CC");
+//    Tensor& Fb_AA = *F.block("AA");
+//    Tensor& Fb_VV = *F.block("VV");
+//>>>>>>> bf4fab4903e254641124556559b52f15ff1fb644
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -275,7 +303,7 @@ void DSRG_MRPT2::startup()
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
     Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-//    Lambda3.print();
+//    Lambda3.print(stdout);
 
     // Prepare exponential tensors for effective Fock matrix and integrals
 
@@ -296,6 +324,21 @@ void DSRG_MRPT2::startup()
             value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
         }
     });
+
+    // Print levels
+    print_ = options_.get_int("PRINT");
+    if(print_ > 1){
+        Gamma1.print(stdout);
+        Eta1.print(stdout);
+        F.print(stdout);
+    }
+    if(print_ > 2){
+        V.print(stdout);
+        Lambda2.print(stdout);
+    }
+    if(print_ > 3){
+        Lambda3.print(stdout);
+    }
 }
 
 void DSRG_MRPT2::print_summary()
@@ -349,7 +392,13 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute effective integrals
     renormalize_V();
-    renormalize_F();
+    renormalize_F();       
+    if(print_ > 1)  F.print(stdout); // The actv-actv block is different but OK.
+    if(print_ > 2){
+        T1.print(stdout);
+        T2.print(stdout);
+        V.print(stdout);
+    }
 
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
@@ -513,30 +562,36 @@ void DSRG_MRPT2::renormalize_F()
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
 
-    BlockedTensor temp_hp;
-    temp_hp = BlockedTensor::build(tensor_type,"temp_hp",spin_cases({"hp"}));
+    BlockedTensor temp;
+    temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"hp"}));
 
-    temp_hp["ia"] += temp_aa["xu"] * T2["iuax"];
-    temp_hp["ia"] += temp_aa["XU"] * T2["iUaX"];
+
+    temp["ia"] += temp_aa["xu"] * T2["iuax"];
+    temp["ia"] += temp_aa["XU"] * T2["iUaX"];
     F["ia"] += F["ia"] * RExp1["ia"];
-    F["ia"] += temp_hp["ia"] * RExp1["ia"];
 
-    temp_hp["ai"] += temp_aa["xu"] * T2["auix"];
-    temp_hp["ai"] += temp_aa["XU"] * T2["aUiX"];
-    F["ai"] += F["ai"] * RExp1["ia"];
-    F["ai"] += temp_hp["ai"] * RExp1["ia"];
+    F["ia"] += temp["ia"] * RExp1["ia"];
 
-    temp_hp["IA"] += temp_aa["xu"] * T2["uIxA"];
-    temp_hp["IA"] += temp_aa["XU"] * T2["IUAX"];
+    temp["IA"] += temp_aa["xu"] * T2["uIxA"];
+    temp["IA"] += temp_aa["XU"] * T2["IUAX"];
     F["IA"] += F["IA"] * RExp1["IA"];
-    F["IA"] += temp_hp["IA"] * RExp1["IA"];
-
-    temp_hp["AI"] += temp_aa["xu"] * T2["uAxI"];
-    temp_hp["AI"] += temp_aa["XU"] * T2["AUIX"];
-    F["AI"] += F["AI"] * RExp1["IA"];
-    F["AI"] += temp_hp["AI"] * RExp1["IA"];
-
-//    F.print();  // The actv-actv block is different but it should not matter.
+    F["IA"] += temp["IA"] * RExp1["IA"];
+//    temp["ai"] += temp_aa["xu"] * T2["iuax"];
+//    temp["ai"] += temp_aa["XU"] * T2["iUaX"];
+//    F["ai"] += F["ai"] % RExp1["ia"];
+//    F["ai"] += temp["ai"] % RExp1["ia"];
+//    F["ai"] = F["ia"];
+    F["am"] = F["ma"];
+    F["eu"] = F["ue"];
+outfile->Printf("\nWas here\n"); outfile->Flush();
+//    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
+//    temp["AI"] += temp_aa["XU"] * T2["IUAX"];
+//    F["AI"] += F["AI"] % RExp1["IA"];
+//    F["AI"] += temp["AI"] % RExp1["IA"];
+    F["AM"] = F["MA"];
+    F["EU"] = F["UE"];
+//    F["AI"] = F["IA"];
+    outfile->Printf("\nWas here\n"); outfile->Flush();
     timer_off("Renorm. F");
 }
 
