@@ -164,7 +164,6 @@ void DSRG_MRPT2::startup()
     Tensor& Eta1_AA = *Eta1.block("AA");
     Tensor& Eta1_VV = *Eta1.block("VV");
 
-
     for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
         std::vector<size_t>& i = it.address();
         *it = i[0] == i[1] ? 1.0 : 0.0;
@@ -218,8 +217,6 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["rPsQ"] * Gamma1["sr"];
     F["PQ"] += V["PRQS"] * Gamma1["SR"];
   
-    F.print();
-
     Tensor& Fa_cc = *F.block("cc");
     Tensor& Fa_aa = *F.block("aa");
     Tensor& Fa_vv = *F.block("vv");
@@ -307,7 +304,6 @@ void DSRG_MRPT2::startup()
     Lambda2_aA["pqrs"] = (*reference_.L2ab())["pqrs"];
     Lambda2_AA["pqrs"] = (*reference_.L2bb())["pqrs"];
 
-    // TODO Lambda3
     Tensor& Lambda3_aaa = *Lambda3.block("aaaaaa");
     Tensor& Lambda3_aaA = *Lambda3.block("aaAaaA");
     Tensor& Lambda3_aAA = *Lambda3.block("aAAaAA");
@@ -316,10 +312,8 @@ void DSRG_MRPT2::startup()
     Lambda3_aaA["pqrstu"] = (*reference_.L3aab())["pqrstu"];
     Lambda3_aAA["pqrstu"] = (*reference_.L3abb())["pqrstu"];
     Lambda3_AAA["pqrstu"] = (*reference_.L3bbb())["pqrstu"];
-//    Lambda3.print();
 
     // Prepare exponential tensors for effective Fock matrix and integrals
-
     RExp2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
                                       size_t q,MOSetSpinType sq,
                                       size_t r,MOSetSpinType sr,
@@ -342,6 +336,21 @@ void DSRG_MRPT2::startup()
         }
         return 0.0;
     });
+
+    // Print levels
+    print_ = options_.get_int("PRINT");
+    if(print_ > 1){
+        Gamma1.print();
+        Eta1.print();
+        F.print();
+    }
+    if(print_ > 2){
+        V.print();
+        Lambda2.print();
+    }
+    if(print_ > 3){
+        Lambda3.print();
+    }
 }
 
 void DSRG_MRPT2::print_summary()
@@ -395,7 +404,13 @@ double DSRG_MRPT2::compute_energy()
 
     // Compute effective integrals
     renormalize_V();
-    renormalize_F();
+    renormalize_F();       
+    if(print_ > 1)  F.print(); // The actv-actv block is different but OK.
+    if(print_ > 2){
+        T1.print();
+        T2.print();
+        V.print();
+    }
 
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
@@ -559,30 +574,31 @@ void DSRG_MRPT2::renormalize_F()
     temp_aa["xu"] = Gamma1["xu"] % Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] % Delta1["XU"];
 
-    BlockedTensor temp_hp;
-    temp_hp.resize_spin_components("temp_hp","hp");
+    BlockedTensor temp;
+    temp.resize_spin_components("temp","hp");
 
-    temp_hp["ia"] += temp_aa["xu"] * T2["iuax"];
-    temp_hp["ia"] += temp_aa["XU"] * T2["iUaX"];
+    temp["ia"] += temp_aa["xu"] * T2["iuax"];
+    temp["ia"] += temp_aa["XU"] * T2["iUaX"];
     F["ia"] += F["ia"] % RExp1["ia"];
-    F["ia"] += temp_hp["ia"] % RExp1["ia"];
+    F["ia"] += temp["ia"] % RExp1["ia"];
 
-    temp_hp["ai"] += temp_aa["xu"] * T2["auix"];
-    temp_hp["ai"] += temp_aa["XU"] * T2["aUiX"];
-    F["ai"] += F["ai"] % RExp1["ia"];
-    F["ai"] += temp_hp["ai"] % RExp1["ia"];
-
-    temp_hp["IA"] += temp_aa["xu"] * T2["uIxA"];
-    temp_hp["IA"] += temp_aa["XU"] * T2["IUAX"];
+    temp["IA"] += temp_aa["xu"] * T2["uIxA"];
+    temp["IA"] += temp_aa["XU"] * T2["IUAX"];
     F["IA"] += F["IA"] % RExp1["IA"];
-    F["IA"] += temp_hp["IA"] % RExp1["IA"];
+    F["IA"] += temp["IA"] % RExp1["IA"];
 
-    temp_hp["AI"] += temp_aa["xu"] * T2["uAxI"];
-    temp_hp["AI"] += temp_aa["XU"] * T2["AUIX"];
-    F["AI"] += F["AI"] % RExp1["IA"];
-    F["AI"] += temp_hp["AI"] % RExp1["IA"];
+//    temp["ai"] += temp_aa["xu"] * T2["iuax"];
+//    temp["ai"] += temp_aa["XU"] * T2["iUaX"];
+//    F["ai"] += F["ai"] % RExp1["ia"];
+//    F["ai"] += temp["ai"] % RExp1["ia"];
+    F["ai"] = F["ia"];
 
-//    F.print();  // The actv-actv block is different but it should not matter.
+//    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
+//    temp["AI"] += temp_aa["XU"] * T2["IUAX"];
+//    F["AI"] += F["AI"] % RExp1["IA"];
+//    F["AI"] += temp["AI"] % RExp1["IA"];
+    F["AI"] = F["IA"];
+
     timer_off("Renorm. F");
 }
 
