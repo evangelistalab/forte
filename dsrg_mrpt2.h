@@ -29,16 +29,10 @@
 #include <libmints/wavefunction.h>
 
 #include "integrals.h"
-#include "tensor_basic.h"
-#include "tensor_labeled.h"
-#include "tensor_product.h"
-#include "tensor_blocked.h"
+#include "ambit/blocked_tensor.h"
 #include "reference.h"
 
 namespace psi{
-
-//class PSIO;
-//class Chkpt;
 
 namespace libadaptive{
 
@@ -106,22 +100,22 @@ protected:
 
     // => Tensors <= //
 
-    BlockedTensor H;
-    BlockedTensor F;
-    BlockedTensor V;
-    BlockedTensor DFL;
-    BlockedTensor Gamma1;
-    BlockedTensor Eta1;
-    BlockedTensor Lambda2;
-    BlockedTensor Lambda3;
-    BlockedTensor Delta1;
-    BlockedTensor Delta2;
-    BlockedTensor RDelta1;
-    BlockedTensor RDelta2;
-    BlockedTensor T1;
-    BlockedTensor T2;
-    BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor H;
+    ambit::BlockedTensor F;
+    ambit::BlockedTensor V;
+    ambit::BlockedTensor DFL;
+    ambit::BlockedTensor Gamma1;
+    ambit::BlockedTensor Eta1;
+    ambit::BlockedTensor Lambda2;
+    ambit::BlockedTensor Lambda3;
+    ambit::BlockedTensor Delta1;
+    ambit::BlockedTensor Delta2;
+    ambit::BlockedTensor RDelta1;
+    ambit::BlockedTensor RDelta2;
+    ambit::BlockedTensor T1;
+    ambit::BlockedTensor T2;
+    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
 
     // => Class initialization and termination <= //
 

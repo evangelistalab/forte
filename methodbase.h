@@ -73,26 +73,26 @@ protected:
     /// Map from all the MOs to the beta virtual
     std::map<size_t,size_t> mos_to_bvir;
 
-    BlockedTensor H;
-    BlockedTensor F;
-    BlockedTensor V;
-    BlockedTensor CG1;
-    BlockedTensor G1;
-    BlockedTensor D1;
-    BlockedTensor D2;
+    ::BlockedTensor H;
+    ::BlockedTensor F;
+    ::BlockedTensor V;
+    ::BlockedTensor CG1;
+    ::BlockedTensor G1;
+    ::BlockedTensor D1;
+    ::BlockedTensor D2;
 
-    BlockedTensor Ha;
-    BlockedTensor Hb;
-    BlockedTensor Fa;
-    BlockedTensor Fb;
-    BlockedTensor G1a;
-    BlockedTensor G1b;
-    BlockedTensor Vaa;
-    BlockedTensor Vab;
-    BlockedTensor Vbb;
-    BlockedTensor D2aa;
-    BlockedTensor D2ab;
-    BlockedTensor D2bb;
+    ::BlockedTensor Ha;
+    ::BlockedTensor Hb;
+    ::BlockedTensor Fa;
+    ::BlockedTensor Fb;
+    ::BlockedTensor G1a;
+    ::BlockedTensor G1b;
+    ::BlockedTensor Vaa;
+    ::BlockedTensor Vab;
+    ::BlockedTensor Vbb;
+    ::BlockedTensor D2aa;
+    ::BlockedTensor D2ab;
+    ::BlockedTensor D2bb;
 
     // => Class initialization and termination <= //
 

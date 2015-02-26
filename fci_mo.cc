@@ -58,8 +58,8 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = SharedTensor (new Tensor("L1a", {na_, na_}));
-    L1b = SharedTensor (new Tensor("L1b", {na_, na_}));
+    L1a = Tensor::build(kCore,"L1a", {na_, na_});
+    L1b = Tensor::build(kCore,"L1b", {na_, na_});
 //    (*L1a)(0,0) = 1.0;
 //    (*L1a)(1,1) = 2.0;
 //    (*L1a)(0,1) = 0.0;
@@ -124,8 +124,8 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = SharedTensor (new Tensor("L1a", {na_, na_}));
-        L1b = SharedTensor (new Tensor("L1b", {na_, na_}));
+        L1a = Tensor::build(kCore,"L1a", {na_, na_});
+        L1b = Tensor::build(kCore,"L1b", {na_, na_});
         outfile->Printf("\n  Forming one-particle density matrix ...");
         outfile->Flush();
         FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
@@ -157,9 +157,9 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa = SharedTensor (new Tensor("L2aa", {na_, na_, na_, na_}));
-    L2ab = SharedTensor (new Tensor("L2ab", {na_, na_, na_, na_}));
-    L2bb = SharedTensor (new Tensor("L2bb", {na_, na_, na_, na_}));
+    L2aa = Tensor::build(kCore,"L2aa",{na_, na_, na_, na_});
+    L2ab = Tensor::build(kCore,"L2ab",{na_, na_, na_, na_});
+    L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
     outfile->Printf("\n  Forming two-particle density cumulant ...");
     outfile->Flush();
     FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
@@ -179,10 +179,11 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aaa = SharedTensor (new Tensor("L3aaa", {na_, na_, na_, na_, na_, na_}));
-    L3aab = SharedTensor (new Tensor("L3aab", {na_, na_, na_, na_, na_, na_}));
-    L3abb = SharedTensor (new Tensor("L3abb", {na_, na_, na_, na_, na_, na_}));
-    L3bbb = SharedTensor (new Tensor("L3bbb", {na_, na_, na_, na_, na_, na_}));
+    L3aaa = Tensor::build(kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
+    L3aab = Tensor::build(kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
+    L3abb = Tensor::build(kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
+    L3bbb = Tensor::build(kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
+
     string threepdc = options.get_str("THREEPDC");
     string t_algorithm = options.get_str("T_ALGORITHM");
     outfile->Printf("\n  Forming three-particle density cumulant ...");
@@ -1282,47 +1283,43 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
 }
 
 void FCI_MO::fill_density(){
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-            (*L1a)(p,q) = Da_[np][nq];
-            (*L1b)(p,q) = Db_[np][nq];
-        }
-    }
+    L1a.iterate([&](const::vector<size_t>& i,double& value){
+        size_t np = idx_a_[i[0]];
+        size_t nq = idx_a_[i[1]];
+        value = Da_[np][nq];
+    });
+    L1b.iterate([&](const::vector<size_t>& i,double& value){
+        size_t np = idx_a_[i[0]];
+        size_t nq = idx_a_[i[1]];
+        value = Db_[np][nq];
+    });
 }
 
 void FCI_MO::fill_cumulant2(){
-    for(size_t p=0; p<na_; ++p){
-        for(size_t q=0; q<na_; ++q){
-            for(size_t r=0; r<na_; ++r){
-                for(size_t s=0; s<na_; ++s){
-                    (*L2aa)(p,q,r,s) = L2aa_[p][q][r][s];
-                    (*L2ab)(p,q,r,s) = L2ab_[p][q][r][s];
-                    (*L2bb)(p,q,r,s) = L2bb_[p][q][r][s];
-                }
-            }
-        }
-    }
+    L2aa.iterate([&](const::vector<size_t>& i,double& value){
+        value = L2aa_[i[0]][i[1]][i[2]][i[3]];
+    });
+    L2ab.iterate([&](const::vector<size_t>& i,double& value){
+        value = L2ab_[i[0]][i[1]][i[2]][i[3]];
+    });
+    L2bb.iterate([&](const::vector<size_t>& i,double& value){
+        value = L2bb_[i[0]][i[1]][i[2]][i[3]];
+    });
 }
 
 void FCI_MO::fill_cumulant3(){
-    for(size_t p=0; p<na_; ++p){
-        for(size_t q=0; q<na_; ++q){
-            for(size_t r=0; r<na_; ++r){
-                for(size_t s=0; s<na_; ++s){
-                    for(size_t t=0; t<na_; ++t){
-                        for(size_t u=0; u<na_; ++u){
-                            (*L3aaa)(p,q,r,s,t,u) = L3aaa_[p][q][r][s][t][u];
-                            (*L3aab)(p,q,r,s,t,u) = L3aab_[p][q][r][s][t][u];
-                            (*L3abb)(p,q,r,s,t,u) = L3abb_[p][q][r][s][t][u];
-                            (*L3bbb)(p,q,r,s,t,u) = L3bbb_[p][q][r][s][t][u];
-                        }
-                    }
-                }
-            }
-        }
-    }
+    L3aaa.iterate([&](const::vector<size_t>& i,double& value){
+        value = L3aaa_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+    });
+    L3aab.iterate([&](const::vector<size_t>& i,double& value){
+        value = L3aab_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+    });
+    L3abb.iterate([&](const::vector<size_t>& i,double& value){
+        value = L3abb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+    });
+    L3bbb.iterate([&](const::vector<size_t>& i,double& value){
+        value = L3bbb_[i[0]][i[1]][i[2]][i[3]][i[4]][i[5]];
+    });
 }
 
 void FCI_MO::compute_ref(){

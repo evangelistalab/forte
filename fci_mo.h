@@ -10,10 +10,7 @@
 #include <string>
 #include "integrals.h"
 #include "string_determinant.h"
-#include "tensor_basic.h"
-#include "tensor_labeled.h"
-#include "tensor_product.h"
-#include "tensor_blocked.h"
+#include "ambit/tensor.h"
 #include "reference.h"
 
 using namespace std;
@@ -155,17 +152,17 @@ protected:
     d2 Db_;
 
     // Density Matrix in Active
-    SharedTensor L1a;
-    SharedTensor L1b;
+    ambit::Tensor L1a;
+    ambit::Tensor L1b;
     void fill_density();
 
     // 2-Body Density Cumulant
     d4 L2aa_;
     d4 L2ab_;
     d4 L2bb_;
-    SharedTensor L2aa;
-    SharedTensor L2ab;
-    SharedTensor L2bb;
+    ambit::Tensor L2aa;
+    ambit::Tensor L2ab;
+    ambit::Tensor L2bb;
     void fill_cumulant2();
 
     // 3-Body Density Cumulant
@@ -173,10 +170,10 @@ protected:
     d6 L3aab_;
     d6 L3abb_;
     d6 L3bbb_;
-    SharedTensor L3aaa;
-    SharedTensor L3aab;
-    SharedTensor L3abb;
-    SharedTensor L3bbb;
+    ambit::Tensor L3aaa;
+    ambit::Tensor L3aab;
+    ambit::Tensor L3abb;
+    ambit::Tensor L3bbb;
     void fill_cumulant3();
 
     // Print Functions
