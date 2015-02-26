@@ -25,11 +25,12 @@
 
 #include <libmints/wavefunction.h>
 
-#include "tensor_basic.h"
+#include <ambit/tensor.h>
 
 namespace psi{
 namespace libadaptive{
 
+using namespace ambit;
 class Reference // : public Wavefunction
 {
 protected:
@@ -42,49 +43,49 @@ protected:
 
     double Eref_;
 
-    SharedTensor L1a_;
-    SharedTensor L1b_;
-    SharedTensor L2aa_;
-    SharedTensor L2ab_;
-    SharedTensor L2bb_;
-    SharedTensor L3aaa_;
-    SharedTensor L3aab_;
-    SharedTensor L3abb_;
-    SharedTensor L3bbb_;
+    ambit::Tensor L1a_;
+    ambit::Tensor L1b_;
+    ambit::Tensor L2aa_;
+    ambit::Tensor L2ab_;
+    ambit::Tensor L2bb_;
+    ambit::Tensor L3aaa_;
+    ambit::Tensor L3aab_;
+    ambit::Tensor L3abb_;
+    ambit::Tensor L3bbb_;
 
 public:
 
     // => Constructors <= //
 
     Reference();
-    Reference(double Eref,SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb);
-    Reference(double Eref,SharedTensor L1a,SharedTensor L1b,SharedTensor L2aa,SharedTensor L2ab,SharedTensor L2bb,
-              SharedTensor L3aaa,SharedTensor L3aab,SharedTensor L3abb,SharedTensor L3bbb);
+    Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb);
+    Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb,
+              ambit::Tensor L3aaa,ambit::Tensor L3aab,ambit::Tensor L3abb,ambit::Tensor L3bbb);
     ~Reference();
 
     double get_Eref() {return Eref_;}
 
-    void set_L1a(SharedTensor L1a) {L1a_ = L1a;}
-    void set_L1b(SharedTensor L1b) {L1b_ = L1b;}
+    void set_L1a(ambit::Tensor L1a) {L1a_ = L1a;}
+    void set_L1b(ambit::Tensor L1b) {L1b_ = L1b;}
 
-    void set_L2aa(SharedTensor L2aa) {L2aa_ = L2aa;}
-    void set_L2ab(SharedTensor L2ab) {L2ab_ = L2ab;}
-    void set_L2bb(SharedTensor L2bb) {L2bb_ = L2bb;}
+    void set_L2aa(ambit::Tensor L2aa) {L2aa_ = L2aa;}
+    void set_L2ab(ambit::Tensor L2ab) {L2ab_ = L2ab;}
+    void set_L2bb(ambit::Tensor L2bb) {L2bb_ = L2bb;}
 
-    void set_L3aaa(SharedTensor L3aaa) {L3aaa_ = L3aaa;}
-    void set_L3aab(SharedTensor L3aab) {L3aab_ = L3aab;}
-    void set_L3abb(SharedTensor L3abb) {L3abb_ = L3abb;}
-    void set_L3bbb(SharedTensor L3bbb) {L3bbb_ = L3bbb;}
+    void set_L3aaa(ambit::Tensor L3aaa) {L3aaa_ = L3aaa;}
+    void set_L3aab(ambit::Tensor L3aab) {L3aab_ = L3aab;}
+    void set_L3abb(ambit::Tensor L3abb) {L3abb_ = L3abb;}
+    void set_L3bbb(ambit::Tensor L3bbb) {L3bbb_ = L3bbb;}
 
-    SharedTensor L1a() {return L1a_;}
-    SharedTensor L1b() {return L1b_;}
-    SharedTensor L2aa() {return L2aa_;}
-    SharedTensor L2ab() {return L2ab_;}
-    SharedTensor L2bb() {return L2bb_;}
-    SharedTensor L3aaa() {return L3aaa_;}
-    SharedTensor L3aab() {return L3aab_;}
-    SharedTensor L3abb() {return L3abb_;}
-    SharedTensor L3bbb() {return L3bbb_;}
+    ambit::Tensor L1a() {return L1a_;}
+    ambit::Tensor L1b() {return L1b_;}
+    ambit::Tensor L2aa() {return L2aa_;}
+    ambit::Tensor L2ab() {return L2ab_;}
+    ambit::Tensor L2bb() {return L2bb_;}
+    ambit::Tensor L3aaa() {return L3aaa_;}
+    ambit::Tensor L3aab() {return L3aab_;}
+    ambit::Tensor L3abb() {return L3abb_;}
+    ambit::Tensor L3bbb() {return L3bbb_;}
 };
 
 }} // End Namespaces

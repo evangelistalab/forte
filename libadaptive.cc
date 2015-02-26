@@ -9,6 +9,7 @@
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
+#include <ambit/tensor.h>
 
 #include "ga-ci.h"
 #include "adaptive-ci.h"
@@ -314,6 +315,8 @@ read_options(std::string name, Options &options)
 extern "C" PsiReturnType
 libadaptive(Options &options)
 {
+    ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
+
     if (options.get_str("JOB_TYPE") == "TENSORTEST"){
         test_tensor_class(true);
     }else{
@@ -439,6 +442,8 @@ libadaptive(Options &options)
         // Delete ints_;
         delete ints_;
     }
+
+    ambit::finalize();
 
     return Success;
 }
