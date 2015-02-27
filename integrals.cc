@@ -837,7 +837,7 @@ void ExplorerIntegrals::compute_df_integrals()
     }
 
     fill_ThreeIntegral(tBpq);
-    ThreeIntegral.print(stdout);
+    //ThreeIntegral.print(stdout);
     //Forms the (pq | B) (B | rs)
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
@@ -998,7 +998,7 @@ void ExplorerIntegrals::compute_chol_integrals()
        }
     }
     fill_ThreeIntegral(L);
-    ThreeIntegral.print(stdout);
+    //ThreeIntegral.print(stdout);
     L->print(); 
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
