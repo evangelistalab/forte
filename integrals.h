@@ -159,8 +159,7 @@ public:
     void compute_chol_integrals();
 
     /// For future codes to get the DF or CD integrals
-    ambit::Tensor get_ThreeIntegral(ambit::Tensor ThreeInt);
-    void fill_ThreeIntegral(boost::shared_ptr<Matrix>);
+    ambit::Tensor get_ThreeIntegral() {return ThreeIntegral;}
 
     //const int* qt_pitzer_;
 
@@ -278,6 +277,8 @@ private:
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
     /// A three index tensor
     ambit::Tensor ThreeIntegral;
+    /// A function that fills the threeIntegral inside the integral class.
+    void fill_ThreeIntegral(boost::shared_ptr<Matrix>);
 };
 
 }} // End Namespaces
