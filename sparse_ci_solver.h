@@ -120,11 +120,11 @@ public:
 protected:
     ExplorerIntegrals* ints_;
     // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t,bool>>> a_ann_list;
-    std::vector<std::vector<std::pair<size_t,bool>>> b_ann_list;
+    std::vector<std::vector<std::pair<size_t,int>>> a_ann_list;
+    std::vector<std::vector<std::pair<size_t,int>>> b_ann_list;
     // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t,bool>>> a_cre_list;
-    std::vector<std::vector<std::pair<size_t,bool>>> b_cre_list;
+    std::vector<std::vector<std::pair<size_t,int>>> a_cre_list;
+    std::vector<std::vector<std::pair<size_t,int>>> b_cre_list;
 
 };
 
