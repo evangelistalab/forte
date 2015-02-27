@@ -123,7 +123,8 @@ void AdaptiveCI::print_info()
         {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"}};
+        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
+        {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
 //    {"Number of correlated beta electrons",nbeta_},
@@ -225,7 +226,7 @@ double AdaptiveCI::compute_energy()
         if (converged) break;
 
 
-        // Step 5. Prune the P + Q space to get an update P space
+        // Step 5. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
 
         // Print information about the wave function
@@ -288,6 +289,8 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
 
+//    std::vector<BitsetDeterminant,double> sorted_dets;
+
     // Check the coupling between the reference and the SD space
     for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
         double EI = it->first.energy();
@@ -303,15 +306,23 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         std::pair<double,double> max_C1 = *std::max_element(C1.begin(),C1.end());
         std::pair<double,double> max_E2 = *std::max_element(E2.begin(),E2.end());
 
-        double select_value = energy_selection_ ? max_E2.first : max_C1.first;
-
-        if (std::fabs(select_value) > tau_q_){
-            PQ_space_.push_back(it->first);
+        if (aimed_selection_){
+            double aimed_value = energy_selection_ ? max_E2.first : std::pow(max_C1.first,2.0);
+//            sorted_dets.push_back(std::make_pair(it->first,aimed_value));
         }else{
-            for (int n = 0; n < nroot; ++n){
-                ept2[n] += E2[n].second;
+            double select_value = energy_selection_ ? max_E2.first : max_C1.first;
+            if (std::fabs(select_value) > tau_q_){
+                PQ_space_.push_back(it->first);
+            }else{
+                for (int n = 0; n < nroot; ++n){
+                    ept2[n] += E2[n].second;
+                }
             }
         }
+    }
+
+    if (aimed_selection_){
+
     }
 
     multistate_pt2_energy_correction_ = ept2;
@@ -598,9 +609,12 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
 void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
                                std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
 {
+    // Select the new reference space using the sorted CI coefficients
+    pruned_space.clear();
+    pruned_space_map.clear();
+
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double,size_t> > dm_det_list;
-
     for (size_t I = 0; I < large_space.size(); ++I){
         double max_dm = 0.0;
         for (int n = 0; n < nroot; ++n){
@@ -609,19 +623,23 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
         dm_det_list.push_back(std::make_pair(max_dm,I));
     }
 
-    // Sort the CI coefficients
-    std::sort(dm_det_list.begin(),dm_det_list.end());
-    std::reverse(dm_det_list.begin(),dm_det_list.end());
-
-    // Select the new reference space using the sorted CI coefficients
-    pruned_space.clear();
-    pruned_space_map.clear();
-
     // Decide which determinants will go in pruned_space
     // Include all determinants such that
     // sum_I |C_I| < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
 
+        // Sort the CI coefficients in ascending order
+        std::sort(dm_det_list.begin(),dm_det_list.end());
+
+        double sum = 0.0;
+        for (size_t I = 0; I < large_space.size(); ++I){
+            if (sum < tau_p_){
+                sum += std::pow(dm_det_list[I].first,2.0);
+            }else{
+                pruned_space.push_back(large_space[dm_det_list[I].second]);
+                pruned_space_map[large_space[dm_det_list[I].second]] = 1;
+            }
+        }
     }
     // Include all determinants such that |C_I| > tau_p
     else{
