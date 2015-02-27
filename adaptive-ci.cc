@@ -289,7 +289,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
 
-//    std::vector<BitsetDeterminant,double> sorted_dets;
+    std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
 
     // Check the coupling between the reference and the SD space
     for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
@@ -308,7 +308,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
         if (aimed_selection_){
             double aimed_value = energy_selection_ ? max_E2.first : std::pow(max_C1.first,2.0);
-//            sorted_dets.push_back(std::make_pair(it->first,aimed_value));
+            sorted_dets.push_back(std::make_pair(aimed_value,it->first));
         }else{
             double select_value = energy_selection_ ? max_E2.first : max_C1.first;
             if (std::fabs(select_value) > tau_q_){
@@ -322,7 +322,25 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     }
 
     if (aimed_selection_){
+        // Sort the CI coefficients in ascending order
+        std::sort(sorted_dets.begin(),sorted_dets.end());
 
+        double sum = 0.0;
+        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+            const BitsetDeterminant& det = sorted_dets[I].second;
+            if (sum + sorted_dets[I].first < tau_q_){
+                sum += sorted_dets[I].first;
+                double EI = det.energy();
+                const std::vector<double>& V_vec = V_hash[det];
+                for (int n = 0; n < nroot; ++n){
+                    double V = V_vec[n];
+                    double E2_I = -V * V / (EI - evals->get(n));
+                    ept2[n] += E2_I;
+                }
+            }else{
+                PQ_space_.push_back(sorted_dets[I].second);
+            }
+        }
     }
 
     multistate_pt2_energy_correction_ = ept2;
@@ -627,14 +645,14 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
     // Include all determinants such that
     // sum_I |C_I| < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
-
         // Sort the CI coefficients in ascending order
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
         for (size_t I = 0; I < large_space.size(); ++I){
-            if (sum < tau_p_){
-                sum += std::pow(dm_det_list[I].first,2.0);
+            double dsum = std::pow(dm_det_list[I].first,2.0);
+            if (sum + dsum < tau_p_){
+                sum += dsum;
             }else{
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
