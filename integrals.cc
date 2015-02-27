@@ -335,7 +335,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         size_t index = aptei_index(p,q,r,s);
                        
                         if(options_.get_int("PRINT") > 3){ 
-                        outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
+                            outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
                         }
                        
                         aphys_tei_aa[index] = direct - exchange;
