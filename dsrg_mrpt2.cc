@@ -96,7 +96,6 @@ void DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
-
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
 
@@ -123,10 +122,10 @@ void DSRG_MRPT2::startup()
         std::iota(nauxpi.begin(), nauxpi.end(),0);
 
         BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        ThreeIntegral = BlockedTensor::build(tensor_type,"ThreeIntegral", spin_cases({"dpp"}));
+        ambit::BlockedTensor ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
         size_t nmo = ints_->nmo();
 
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIntegralTensor",{nCD,nmo, nmo});
+        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type_,"ThreeIntegralTensor",{nCD,nmo, nmo});
 
         ThreeIntegralTensor =ints_->get_ThreeIntegral();
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
@@ -139,7 +138,7 @@ void DSRG_MRPT2::startup()
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
 
-        ThreeIntegral = BlockedTensor::build(tensor_type,"ThreeIntegral", spin_cases({"dpp"}));
+        ambit::BlockedTensor ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
     }
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
@@ -265,7 +264,6 @@ void DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    // TODO Lambda3
     Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
     Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
     Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
