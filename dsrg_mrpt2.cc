@@ -344,6 +344,20 @@ double DSRG_MRPT2::renormalized_denominator(double D)
     }
 }
 
+// Computes (1 - exp(-s D^2/V^2))
+double DSRG_MRPT2::renormalized_denominator_amp(double V,double D)
+{
+    double Z = std::sqrt(s_) * (D / V);
+    if (V == 0.0){
+        return 0.0;
+    }
+    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
+        return V * Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+    }else{
+        return (1.0 - std::exp(-s_ * std::pow(D/V, 2.0))) / D;
+    }
+}
+
 double DSRG_MRPT2::compute_energy()
 {
     // Compute reference
@@ -479,11 +493,25 @@ void DSRG_MRPT2::compute_t1()
     N["ia"] += temp["xu"] * T2["iuax"];
     N["ia"] += temp["XU"] * T2["iUaX"];
 
-    T1["ia"] = N["ia"] * RDelta1["ia"];
-
     N["IA"]  = F["IA"];
     N["IA"] += temp["xu"] * T2["uIxA"];
     N["IA"] += temp["XU"] * T2["IUAX"];
+    //->    DN["ia"] = Delta1["ia"] / N["ia"];
+
+//    if (){
+//        std::vector<std::string> blocks(spin_cases({"ca","cv","av"}));
+//        for (const std::string& block : blocks){
+//            std::vector<double>& rd = RDelta1.block(block).data();
+//            std::vector<double>& n = N.block(block).data();
+//            std::vector<double>& d = Delta1.block(block).data();
+//            for (size_t i = 0; i < rd.size(); ++i){
+//                rd[i] = renormalized_exp_amp(n[i],d[i]);
+//            }
+//        }
+//    }
+
+    T1["ia"] = N["ia"] * RDelta1["ia"];
+
     T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
