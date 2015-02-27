@@ -1009,8 +1009,8 @@ void ExplorerIntegrals::compute_chol_integrals()
           }
        }
     }
-    fill_ThreeIntegral(L);
-    ThreeIntegral.print(stdout);
+    //fill_ThreeIntegral(L);
+    //ThreeIntegral.print(stdout);
     L->print(); 
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
