@@ -123,8 +123,8 @@ void DSRG_MRPT2::startup()
         size_t nL = ints_->nL();
         std::vector<size_t> nauxpi(nL);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,AlphaSpin);
-        BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
+        //BlockedTensor::add_mo_space("d","g",nauxpi,AlphaSpin);
+        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
         //BlockedTensor::add_composite_mo_space("o","@#$",{"d","c",;
 
     }
@@ -133,13 +133,9 @@ void DSRG_MRPT2::startup()
         size_t nDF = ints_->naux();
         std::vector<size_t> nauxpi(nDF);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,AlphaSpin);
-        BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
+//        BlockedTensor::add_mo_space("d","g",nauxpi,AlphaSpin);
+//       BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
     }
-    size_t ndf = 10;
-    std::vector<size_t> ndfpi(ndf);
-    std::iota(ndfpi.begin(),ndfpi.end(),0);
-    BlockedTensor::add_mo_space("d","g",ndfpi,AlphaSpin);
 
     H = BlockedTensor::build(tensor_type,"H",spin_cases({"gg"}));
     V = BlockedTensor::build(tensor_type,"V",spin_cases({"gggg"}));

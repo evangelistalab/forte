@@ -12,6 +12,7 @@
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
 #include <libtrans/integraltransform.h>
+#include <ambit/tensor.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -156,6 +157,11 @@ public:
     void compute_df_integrals();
     /// Compute cholesky integrals
     void compute_chol_integrals();
+
+    /// For future codes to get the DF or CD integrals
+    ambit::Tensor get_ThreeIntegral(ambit::Tensor ThreeInt);
+    void fill_ThreeIntegral(boost::shared_ptr<Matrix>);
+
     //const int* qt_pitzer_;
 
 private:
@@ -270,6 +276,8 @@ private:
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
+    /// A three index tensor
+    ambit::Tensor ThreeIntegral;
 };
 
 }} // End Namespaces
