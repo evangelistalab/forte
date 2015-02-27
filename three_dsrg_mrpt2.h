@@ -77,7 +77,7 @@ protected:
     int taylor_order_;
 
     // => Tensors <= //
-
+    TensorType tensor_type_;
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
