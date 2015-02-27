@@ -154,11 +154,6 @@ void DSRG_MRPT2::startup()
     RExp1 = BlockedTensor::build(tensor_type,"RExp1",spin_cases({"hp"}));
     RExp2 = BlockedTensor::build(tensor_type,"RExp2",spin_cases({"hhpp"}));
 
-    // Fill in the one-electron operator (H)
-//    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        return (sp == AlphaSpin) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
-//    });
-
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
             value = ints_->oei_a(i[0],i[1]);
@@ -176,7 +171,6 @@ void DSRG_MRPT2::startup()
     ambit::Tensor Eta1_AA = Eta1.block("AA");
     ambit::Tensor Eta1_VV = Eta1.block("VV");
 
-//<<<<<<< HEAD
     Gamma1_cc.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Gamma1_CC.iterate([&](const std::vector<size_t>& i,double& value){
@@ -186,25 +180,6 @@ void DSRG_MRPT2::startup()
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Eta1_AA.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
-//=======
-//    for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//    for (Tensor::iterator it = Gamma1_CC.begin(),endit = Gamma1_CC.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-
-//    for (Tensor::iterator it = Eta1_aa.begin(),endit = Eta1_aa.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//    for (Tensor::iterator it = Eta1_AA.begin(),endit = Eta1_AA.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//>>>>>>> bf4fab4903e254641124556559b52f15ff1fb644
 
     Eta1_vv.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
@@ -491,8 +466,7 @@ void DSRG_MRPT2::compute_t1()
     //A temporary tensor to use for the building of T1
     //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
     //via a pointwise multiplcation
-    BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"aa"}));
+    BlockedTensor temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"aa"}));
     temp["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp["XU"] = Gamma1["XU"] * Delta1["XU"];
 
@@ -573,6 +547,7 @@ void DSRG_MRPT2::renormalize_F()
 //    F["ai"] += F["ai"] % RExp1["ia"];  // TODO <- is this legal in ambit???
 //    F["ai"] += temp["ai"] % RExp1["ia"];
     F["ia"] += temp2["ia"];
+    temp2.block("aa").zero();
     F["ai"] += temp2["ia"];
 
 //    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
@@ -580,6 +555,7 @@ void DSRG_MRPT2::renormalize_F()
 //    F["AI"] += F["AI"] % RExp1["IA"];
 //    F["AI"] += temp["AI"] % RExp1["IA"];
     F["IA"] += temp2["IA"];
+    temp2.block("AA").zero();
     F["AI"] += temp2["IA"];
     timer_off("Renorm. F");
 }
