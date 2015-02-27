@@ -187,7 +187,6 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
 
-
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
 
         // Print the energy

@@ -75,8 +75,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space, Ex
         int noalpha = aocc.size();
         int nobeta  = bocc.size();
 
-        std::vector<std::pair<size_t,bool>> a_ann(noalpha);
-        std::vector<std::pair<size_t,bool>> b_ann(nobeta);
+        std::vector<std::pair<size_t,int>> a_ann(noalpha);
+        std::vector<std::pair<size_t,int>> b_ann(nobeta);
 
         // Generate alpha annihilation
         for (int i = 0; i < noalpha; ++i){
@@ -97,7 +97,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space, Ex
             }else{
                 detJ_add = it->second;
             }
-            a_ann[i] = std::make_pair(detJ_add,(sign > 0.5));
+            a_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
         }
         a_ann_list[I] = a_ann;
         // Generate beta annihilation
@@ -119,7 +119,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space, Ex
             }else{
                 detJ_add = it->second;
             }
-            b_ann[i] = std::make_pair(detJ_add,(sign > 0.5));
+            b_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
         }
         b_ann_list[I] = b_ann;
     }
@@ -129,16 +129,16 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space, Ex
 
 
     for (size_t I = 0; I < max_I; ++I){
-        const std::vector<std::pair<size_t,bool>>& a_ann = a_ann_list[I];
-        for (const std::pair<size_t,bool>& J_sign : a_ann){
+        const std::vector<std::pair<size_t,int>>& a_ann = a_ann_list[I];
+        for (const std::pair<size_t,int>& J_sign : a_ann){
             size_t J = J_sign.first;
-            bool sign = J_sign.second;
+            int sign = J_sign.second;
             a_cre_list[J].push_back(std::make_pair(I,sign));
         }
-        const std::vector<std::pair<size_t,bool>>& b_ann = b_ann_list[I];
-        for (const std::pair<size_t,bool>& J_sign : b_ann){
+        const std::vector<std::pair<size_t,int>>& b_ann = b_ann_list[I];
+        for (const std::pair<size_t,int>& J_sign : b_ann){
             size_t J = J_sign.first;
-            bool sign = J_sign.second;
+            int sign = J_sign.second;
             b_cre_list[J].push_back(std::make_pair(I,sign));
         }
     }
