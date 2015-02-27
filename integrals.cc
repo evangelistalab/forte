@@ -18,6 +18,7 @@
 
 using namespace std;
 using namespace psi;
+using namespace ambit;
 
 #include <psi4-dec.h>
 
@@ -753,11 +754,14 @@ void ExplorerIntegrals::compute_df_integrals()
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
    
     int nprim = primary->nbf();
-    int naux  = auxiliary->nbf();
+    size_t naux  = auxiliary->nbf();
     naux_ = naux;
     //Constructor for building DFERI in MO basis from libthce/lreri.h
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-  
+
+    TensorType tensor_type = kCore;
+    ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIntegral",{naux,nmo_, nmo_ });
+
     std::vector<double> eval;
     for(int h = 0; h < nirrep_; h++){
        for(int i = 0; i < eps_so->dim(h); i++){
@@ -818,6 +822,7 @@ void ExplorerIntegrals::compute_df_integrals()
    //I store all of them into this array.  
     double* two_electron_integrals = new double[num_aptei];
     SharedMatrix pqB(new Matrix("pqB", nmo_*nmo_, naux));
+    SharedMatrix tBpq(new Matrix("Bpqtensor", naux, nmo_*nmo_));
     SharedMatrix full_int(new Matrix("pq|rs", nmo_*nmo_, nmo_*nmo_));
 
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
@@ -831,12 +836,16 @@ void ExplorerIntegrals::compute_df_integrals()
                     // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
                     for(int B = 0; B < naux; B++){
                         int qB = q*naux + B;
+                        tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
                         pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
                     }
                 }
             }
         }
     }
+
+    //fill_ThreeIntegral(tBpq);
+    //ThreeIntegral.print(stdout);
     //Forms the (pq | B) (B | rs)
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
@@ -897,10 +906,12 @@ void ExplorerIntegrals::compute_chol_integrals()
 {
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs)
     {
-    aphys_tei_aa[pqrs] = 0.0;
-    aphys_tei_ab[pqrs] = 0.0;
-    aphys_tei_bb[pqrs] = 0.0;
+        aphys_tei_aa[pqrs] = 0.0;
+        aphys_tei_ab[pqrs] = 0.0;
+        aphys_tei_bb[pqrs] = 0.0;
     }
+
+    outfile->Printf("Seg Faults are stupid!!!");
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
@@ -913,58 +924,29 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Computes the cholesky integrals
     Ch->choleskify();
     //The number of vectors required to do cholesky factorization
-    int nL = Ch->Q();
+    size_t nL = Ch->Q();
     nL_ = nL;
+    TensorType tensor_type = kCore;
+
+    outfile->Printf("\n nL %u  nmo_ %u", nL, nmo_);
+    ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIntegral",{nL,nmo_, nmo_ });
+
+    //ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,ncmo_, ncmo_ });
+
     outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
     SharedMatrix Lao = Ch->L();
-    Lao->print();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
     SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
     SharedMatrix Cpq_so = wfn->Ca_subset("SO", "ALL");
 
     boost::shared_ptr<SOBasisSet> SO(new SOBasisSet(primary, integral));
     
- //   Cpq->zero();
- //   for(int h =0; h < nirrep_; h++){
- //      int pmax = Cpq_so->rowspi(h);
- //      int qmax = Cpq_so->colspi(h);
- //      int poff = SO->function_offset_for_irrep(h);
- //      int qoff = SO->function_offset_for_irrep(h);
- //      for(int p =0; p < pmax; p++){
- //         for(int q = 0; q < qmax; q++){
- //            Cpq->set(p + poff,q + qoff,Cpq_so->get(h,p,q));
- //         }
- //      }
- //   }
-     
-    //for(int h = 0; h < nirrep_; h++){
-    //   int pmax = Cpq_so->rowspi(h);
-    //   int qmax = Cpq_so->colspi(h);
-    //   int poff = SO->function_offset_for_irrep(h);
-    //   int qoff = SO->function_offset_for_irrep(h);
-    //   for(int l = 0; l < nL; l++){
-    //      for(int p = 0; p < pmax; p++){
-    //         for(int q = 0; q < qmax; q++){
-    //            for(int mu = poff; mu < poff +pmax; mu++){
-    //               for(int nu = 0; nu < poff + pmax; nu++){
-    //                  outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
-    //                  L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
-    //               }
-    //            }
-    //         }
-    //      }
-    //   }
-    //}
-    //Cpq->print();
-    Cpq->zero();
+//    Cpq->zero()e
     Cpq = wfn->Ca_subset("AO","ALL");
     SharedMatrix Cpqso = wfn->Ca_subset("SO","ALL");
     //Cpqso->print();
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-    eps_ao->print();
-    eps_so->print();
-    Cpq_so->print();
     std::vector<int> order;
     std::vector<double> eval;
     std::vector<double> evalao;
@@ -975,7 +957,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     //arranged by irrep. 
   
     //This code pushes back all the eigenvalues from SO in pitzer ordering
-    std::vector<int> aotoso;
     for(int h = 0; h < nirrep_; h++){
   
        for(int i = 0; i < eps_so->dim(h); i++){
@@ -989,30 +970,9 @@ void ExplorerIntegrals::compute_chol_integrals()
        EI = std::make_pair(eval[e],e); 
        eigind.push_back(EI);
     }
-    std::vector<int> aotoso_ind;
     //Sorts the eigenvalues by ascending order, but keeps the same index
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
-    //std::vector<double>::iterator evalIterator;
-    //std::vector<int> so2ao;
-    
-    //This uses an iterator to find at what index does my aoeval array euqal the so array
-    //for(int e = 0; e < eval.size(); e++){
-    //   int nume = std::count(evalao.begin(), evalao.end(), eval[e]);
-    //   if(nume > 1){
-    //      outfile->Printf("\n Eval[%d] = %8.6f has %d repeating\n", e, eval[e], nume);
-    //   }
-
-    //   evalIterator = std::find(evalao.begin(), evalao.end(), eval[e]);
-    //   //Iterator stops when it finds when two points are equal
-    //   if(evalIterator != evalao.end()){
-    //     
-    //     so2ao.push_back(std::distance(evalao.begin(), evalIterator));
-    //   }
-    //   //  evalao.erase(std::remove(evalao.begin(), evalao.end(),eval[e]),evalao.end());
-    //   
-    //}
-    //Now, i need to figure out if there are any duplicate elements in my array.  
 
     for(int i = 0; i < eigind.size(); i++){
        outfile->Printf("(%20.12f, %d): ", eigind[i].first, eigind[i].second);
@@ -1031,6 +991,10 @@ void ExplorerIntegrals::compute_chol_integrals()
        }
     }
     Cpq->print();
+
+    //TODO:  This needs to not be explict loops
+    //DGEMM call
+    //L_{munu}^L * C_{mii} * C_{nui}
     for(int l = 0; l < nL; l++){
        for(int p = 0; p < nmo_; p++){
           for(int q = 0; q < nmo_; q++){
@@ -1045,7 +1009,8 @@ void ExplorerIntegrals::compute_chol_integrals()
           }
        }
     }
-   
+    fill_ThreeIntegral(L);
+    ThreeIntegral.print(stdout);
     L->print(); 
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
@@ -1094,6 +1059,7 @@ void ExplorerIntegrals::compute_chol_integrals()
         }
     }
 }
+
 //void ExplorerIntegrals::debug_ints()
 //{
 //     outfile->Printf("\n num_aptei = %d\n num_tei = %d\n", num_aptei, num_tei);
@@ -1127,6 +1093,13 @@ void ExplorerIntegrals::compute_chol_integrals()
 //
 //
 //}
+void ExplorerIntegrals::fill_ThreeIntegral(boost::shared_ptr<Matrix> TI)
+{
+
+    ThreeIntegral.iterate([&](const::vector<size_t>& i,double& value){
+        value = TI->get(i[0],nmo_*i[1] + i[2]);
+    });
+}
 
 ///**
 // * Make the one electron intermediates
