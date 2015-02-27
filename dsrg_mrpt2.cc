@@ -18,6 +18,11 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn,
 {
     // Copy the wavefunction information
     copy(wfn);
+
+    outfile->Printf("\n\n\t  ---------------------------------------------------------");
+    outfile->Printf("\n\t      Driven Similarity Renormalization Group MBPT2");
+    outfile->Printf("\n\t  ---------------------------------------------------------");
+
     startup();
     print_summary();
 }
@@ -231,22 +236,12 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
   
-    F.print(stdout);
-
     Tensor Fa_cc = F.block("cc");
     Tensor Fa_aa = F.block("aa");
     Tensor Fa_vv = F.block("vv");
     Tensor Fb_CC = F.block("CC");
     Tensor Fb_AA = F.block("AA");
     Tensor Fb_VV = F.block("VV");
-//=======
-//    Tensor& Fa_cc = *F.block("cc");
-//    Tensor& Fa_aa = *F.block("aa");
-//    Tensor& Fa_vv = *F.block("vv");
-//    Tensor& Fb_CC = *F.block("CC");
-//    Tensor& Fb_AA = *F.block("AA");
-//    Tensor& Fb_VV = *F.block("VV");
-//>>>>>>> bf4fab4903e254641124556559b52f15ff1fb644
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -303,9 +298,16 @@ void DSRG_MRPT2::startup()
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
     Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-//    Lambda3.print(stdout);
 
     // Prepare exponential tensors for effective Fock matrix and integrals
+
+    RExp1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0]  == AlphaSpin){
+            value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
+        }else if (spin[0]  == BetaSpin){
+            value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
+        }
+    });
 
     RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
@@ -314,14 +316,6 @@ void DSRG_MRPT2::startup()
             value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
         }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
             value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-
-    RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
         }
     });
 
@@ -490,7 +484,7 @@ void DSRG_MRPT2::compute_t2()
 ////        T2max = T2max > max ? T2max : max;
 //    }
     T2norm = sqrt(T2norm);    
-    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2norm);
+    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
 //    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
     timer_off("Compute T2");
 }
@@ -511,22 +505,26 @@ void DSRG_MRPT2::compute_t1()
     //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
     //Did some permuting to get the correct format
 
-    T1["ia"]  = F["ia"];
-    T1["ia"] += temp["xu"] * T2["iuax"];
-    T1["ia"] += temp["XU"] * T2["iUaX"];
+    BlockedTensor N = BlockedTensor::build(tensor_type,"N",spin_cases({"hp"}));
 
-    T1["ia"]  = T1["ia"] * RDelta1["ia"];
+    N["ia"]  = F["ia"];
+    N["ia"] += temp["xu"] * T2["iuax"];
+    N["ia"] += temp["XU"] * T2["iUaX"];
 
-    T1["IA"]  = F["IA"];
-    T1["IA"] += temp["xu"] * T2["uIxA"];
-    T1["IA"] += temp["XU"] * T2["IUAX"];
-    T1["IA"]  = T1["IA"] * RDelta1["IA"];
+    T1["ia"] = N["ia"] * RDelta1["ia"];
+
+    N["IA"]  = F["IA"];
+    N["IA"] += temp["xu"] * T2["uIxA"];
+    N["IA"] += temp["XU"] * T2["IUAX"];
+    T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
     T1.block("aa").zero();
 
     // norm and maximum of T1 amplitudes
-    T1norm = T1.norm(); T1max = 0.0;
+    double Fnorm = F.norm(2);
+    double RDelta1norm = RDelta1.norm(2);
+//    T1norm = T1.norm(2); T1max = 0.0;
 //    std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
 //    for(const auto& block: T1blocks){
 //        std::vector<std::string> index_vec = block.first;
@@ -536,7 +534,7 @@ void DSRG_MRPT2::compute_t1()
 //        double max = T1.block(name)->max_abs_vec()[0];
 //        T1max = T1max > max ? T1max : max;
 //    }
-    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1norm);
+    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1.norm());
 //    outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
     timer_off("Compute T1");
 }
@@ -557,41 +555,36 @@ void DSRG_MRPT2::renormalize_V()
 void DSRG_MRPT2::renormalize_F()
 {
     timer_on("Renorm. F");
-    BlockedTensor temp_aa;
-    temp_aa = BlockedTensor::build(tensor_type,"temp_aa",spin_cases({"aa"}));
+    BlockedTensor temp_aa = BlockedTensor::build(tensor_type,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
 
-    BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"hp"}));
+    BlockedTensor temp1 = BlockedTensor::build(tensor_type,"temp1",spin_cases({"hp"}));
+    BlockedTensor temp2 = BlockedTensor::build(tensor_type,"temp2",spin_cases({"hp"}));
 
+    temp1["ia"] += temp_aa["xu"] * T2["iuax"];
+    temp1["ia"] += temp_aa["XU"] * T2["iUaX"];
+    temp2["ia"] += F["ia"] * RExp1["ia"];
+    temp2["ia"] += temp1["ia"] * RExp1["ia"];
 
-    temp["ia"] += temp_aa["xu"] * T2["iuax"];
-    temp["ia"] += temp_aa["XU"] * T2["iUaX"];
-    F["ia"] += F["ia"] * RExp1["ia"];
+    temp1["IA"] += temp_aa["xu"] * T2["uIxA"];
+    temp1["IA"] += temp_aa["XU"] * T2["IUAX"];
+    temp2["IA"] += F["IA"] * RExp1["IA"];
+    temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
-    F["ia"] += temp["ia"] * RExp1["ia"];
-
-    temp["IA"] += temp_aa["xu"] * T2["uIxA"];
-    temp["IA"] += temp_aa["XU"] * T2["IUAX"];
-    F["IA"] += F["IA"] * RExp1["IA"];
-    F["IA"] += temp["IA"] * RExp1["IA"];
 //    temp["ai"] += temp_aa["xu"] * T2["iuax"];
 //    temp["ai"] += temp_aa["XU"] * T2["iUaX"];
-//    F["ai"] += F["ai"] % RExp1["ia"];
+//    F["ai"] += F["ai"] % RExp1["ia"];  // TODO <- is this legal in ambit???
 //    F["ai"] += temp["ai"] % RExp1["ia"];
-//    F["ai"] = F["ia"];
-    F["am"] = F["ma"];
-    F["eu"] = F["ue"];
-outfile->Printf("\nWas here\n"); outfile->Flush();
+    F["ia"] += temp2["ia"];
+    F["ai"] += temp2["ia"];
+
 //    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
 //    temp["AI"] += temp_aa["XU"] * T2["IUAX"];
 //    F["AI"] += F["AI"] % RExp1["IA"];
 //    F["AI"] += temp["AI"] % RExp1["IA"];
-    F["AM"] = F["MA"];
-    F["EU"] = F["UE"];
-//    F["AI"] = F["IA"];
-    outfile->Printf("\nWas here\n"); outfile->Flush();
+    F["IA"] += temp2["IA"];
+    F["AI"] += temp2["IA"];
     timer_off("Renorm. F");
 }
 
