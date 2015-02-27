@@ -43,6 +43,9 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
+
+//    outfile->Printf("\n  Integral object created.");
+//    outfile->Flush();
 }
 
 ExplorerIntegrals::~ExplorerIntegrals()
@@ -219,6 +222,8 @@ void ExplorerIntegrals::transform_integrals()
     ints_->set_keep_iwl_so_ints(true);
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
+    outfile->Printf("\n  Integral transformation done.");
+    outfile->Flush();
 
     //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
     
@@ -319,12 +324,7 @@ void ExplorerIntegrals::read_two_electron_integrals()
         iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
         iwl_buf_close(&V_AAAA, 1);
 
-        // Store the integrals
-        
-        if(options_.get_int("PRINT") > 3){ 
-           outfile->Printf("\n CONVENTIONAL INTEGRALS\n");
-           outfile->Printf("\n p  q   r  s  aa  ab bb\n");
-        }
+        // Store the integrals        
         for (size_t p = 0; p < nmo_; ++p){
             for (size_t q = 0; q < nmo_; ++q){
                 for (size_t r = 0; r < nmo_; ++r){
@@ -333,11 +333,6 @@ void ExplorerIntegrals::read_two_electron_integrals()
                         double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
                         double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
                         size_t index = aptei_index(p,q,r,s);
-                       
-                        if(options_.get_int("PRINT") > 3){ 
-                            outfile->Printf("\nDirect = %20.12f  Exchange = %20.12f   index = %d %d %d %d %d",direct, exchange, index,p,q,r,s);
-                        }
-                       
                         aphys_tei_aa[index] = direct - exchange;
                         aphys_tei_ab[index] = direct;
                         aphys_tei_bb[index] = direct - exchange;
@@ -345,9 +340,6 @@ void ExplorerIntegrals::read_two_electron_integrals()
                 }
             }
         }
-        
-
-        
         
         // Deallocate temp memory
         delete[] two_electron_integrals;
@@ -860,10 +852,6 @@ void ExplorerIntegrals::compute_df_integrals()
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
-                    if(options_.get_int("PRINT") > 3){       
-                    outfile->Printf("\n direct = %20.12f  exchange = %20.12f   index = %d", direct, exchange, index);
-                    }
-
                 }
             }
         }
@@ -1046,10 +1034,7 @@ void ExplorerIntegrals::compute_chol_integrals()
                     double direct   = pqrs->get(p*nmo_+r,q*nmo_+s);
                     double exchange = pqrs->get(p*nmo_+s,q*nmo_+r);
                     size_t index = aptei_index(p,q,r,s);
-                   
-                    if(options_.get_int("PRINT") > 3){
-                    outfile->Printf("\n direct = %20.12f   exchange = %20.12f    index = %d %d %d %d %d", direct, exchange, index,p,q,r,s);
-                    }
+
                     aphys_tei_aa[index] = direct - exchange;
                     aphys_tei_ab[index] = direct;
                     aphys_tei_bb[index] = direct - exchange;
