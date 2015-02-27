@@ -11,10 +11,8 @@ using namespace ambit;
 
 namespace psi{ namespace libadaptive{
 
-TensorType tensor_type = kCore;
-
 DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints)
+    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -137,22 +135,22 @@ void DSRG_MRPT2::startup()
 //       BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
     }
 
-    H = BlockedTensor::build(tensor_type,"H",spin_cases({"gg"}));
-    V = BlockedTensor::build(tensor_type,"V",spin_cases({"gggg"}));
+    H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
+    V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
 
-    Gamma1 = BlockedTensor::build(tensor_type,"Gamma1",spin_cases({"hh"}));
-    Eta1 = BlockedTensor::build(tensor_type,"Eta1",spin_cases({"pp"}));
-    Lambda2 = BlockedTensor::build(tensor_type,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3 = BlockedTensor::build(tensor_type,"Lambda3",spin_cases({"aaaaaa"}));
-    F = BlockedTensor::build(tensor_type,"Fock",spin_cases({"gg"}));
-    Delta1 = BlockedTensor::build(tensor_type,"Delta1",spin_cases({"hp"}));
-    Delta2 = BlockedTensor::build(tensor_type,"Delta2",spin_cases({"hhpp"}));
-    RDelta1 = BlockedTensor::build(tensor_type,"RDelta1",spin_cases({"hp"}));
-    RDelta2 = BlockedTensor::build(tensor_type,"RDelta2",spin_cases({"hhpp"}));
-    T1 = BlockedTensor::build(tensor_type,"T1 Amplitudes",spin_cases({"hp"}));
-    T2 = BlockedTensor::build(tensor_type,"T2 Amplitudes",spin_cases({"hhpp"}));
-    RExp1 = BlockedTensor::build(tensor_type,"RExp1",spin_cases({"hp"}));
-    RExp2 = BlockedTensor::build(tensor_type,"RExp2",spin_cases({"hhpp"}));
+    Gamma1 = BlockedTensor::build(tensor_type_,"Gamma1",spin_cases({"hh"}));
+    Eta1 = BlockedTensor::build(tensor_type_,"Eta1",spin_cases({"pp"}));
+    Lambda2 = BlockedTensor::build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
+    Lambda3 = BlockedTensor::build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+    F = BlockedTensor::build(tensor_type_,"Fock",spin_cases({"gg"}));
+    Delta1 = BlockedTensor::build(tensor_type_,"Delta1",spin_cases({"hp"}));
+    Delta2 = BlockedTensor::build(tensor_type_,"Delta2",spin_cases({"hhpp"}));
+    RDelta1 = BlockedTensor::build(tensor_type_,"RDelta1",spin_cases({"hp"}));
+    RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
+    T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
+    T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
+    RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
+    RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -466,7 +464,7 @@ void DSRG_MRPT2::compute_t1()
     //A temporary tensor to use for the building of T1
     //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
     //via a pointwise multiplcation
-    BlockedTensor temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"aa"}));
+    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
     temp["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp["XU"] = Gamma1["XU"] * Delta1["XU"];
 
@@ -475,7 +473,7 @@ void DSRG_MRPT2::compute_t1()
     //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
     //Did some permuting to get the correct format
 
-    BlockedTensor N = BlockedTensor::build(tensor_type,"N",spin_cases({"hp"}));
+    BlockedTensor N = BlockedTensor::build(tensor_type_,"N",spin_cases({"hp"}));
 
     N["ia"]  = F["ia"];
     N["ia"] += temp["xu"] * T2["iuax"];
@@ -525,12 +523,12 @@ void DSRG_MRPT2::renormalize_V()
 void DSRG_MRPT2::renormalize_F()
 {
     timer_on("Renorm. F");
-    BlockedTensor temp_aa = BlockedTensor::build(tensor_type,"temp_aa",spin_cases({"aa"}));
+    BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
 
-    BlockedTensor temp1 = BlockedTensor::build(tensor_type,"temp1",spin_cases({"hp"}));
-    BlockedTensor temp2 = BlockedTensor::build(tensor_type,"temp2",spin_cases({"hp"}));
+    BlockedTensor temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hp"}));
+    BlockedTensor temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hp"}));
 
     temp1["ia"] += temp_aa["xu"] * T2["iuax"];
     temp1["ia"] += temp_aa["XU"] * T2["iUaX"];
@@ -564,7 +562,7 @@ double DSRG_MRPT2::E_FT1()
 {
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"hp"}));
+    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hp"}));
 
     temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
     temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
@@ -580,7 +578,7 @@ double DSRG_MRPT2::E_VT1()
 {
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp", spin_cases({"aaaa"}));
+    temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaa"}));
 
     temp["uvxy"] += V["evxy"] * T1["ue"];
     temp["uvxy"] -= V["uvmy"] * T1["mx"];
@@ -605,7 +603,7 @@ double DSRG_MRPT2::E_FT2()
 {
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp",spin_cases({"aaaa"}));
+    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
 
     temp["uvxy"] += F["ex"] * T2["uvey"];
     temp["uvxy"] -= F["vm"] * T2["umxy"];
@@ -632,8 +630,8 @@ double DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type,"temp1",spin_cases({"hhpp"}));
-    temp2 = BlockedTensor::build(tensor_type,"temp2",spin_cases({"hhpp"}));
+    temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hhpp"}));
+    temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hhpp"}));
 
     temp1["klab"] += T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
     temp2["klcd"] += temp1["klab"] * Eta1["ac"] * Eta1["bd"];
@@ -657,8 +655,8 @@ double DSRG_MRPT2::E_VT2_4HH()
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type,"temp1", spin_cases({"aahh"}));
-    temp2 = BlockedTensor::build(tensor_type,"temp2", spin_cases({"aaaa"}));
+    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"aahh"}));
+    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["uvij"] += V["uvkl"] * Gamma1["ki"] * Gamma1["lj"];
     temp1["UVIJ"] += V["UVKL"] * Gamma1["KI"] * Gamma1["LJ"];
@@ -681,8 +679,8 @@ double DSRG_MRPT2::E_VT2_4PP()
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type,"temp1", spin_cases({"aapp"}));
-    temp2 = BlockedTensor::build(tensor_type,"temp2", spin_cases({"aaaa"}));
+    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"aapp"}));
+    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["uvcd"] += T2["uvab"] * Eta1["ac"] * Eta1["bd"];
     temp1["UVCD"] += T2["UVAB"] * Eta1["AC"] * Eta1["BD"];
@@ -704,7 +702,7 @@ double DSRG_MRPT2::E_VT2_4PH()
 {
     double E = 0.0;
 //    BlockedTensor temp;
-//    temp = BlockedTensor::build(tensor_type,"temp", "aaaa");
+//    temp = BlockedTensor::build(tensor_type_,"temp", "aaaa");
 
 //    temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
 //    temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
@@ -724,8 +722,8 @@ double DSRG_MRPT2::E_VT2_4PH()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type,"temp1", spin_cases({"hhpp"}));
-    temp2 = BlockedTensor::build(tensor_type,"temp2", spin_cases({"aaaa"}));
+    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"hhpp"}));
+    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["juby"]  = T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uvxy"] += V["vbjx"] * temp1["juby"];
@@ -768,7 +766,7 @@ double DSRG_MRPT2::E_VT2_6()
 {
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type,"temp", spin_cases({"aaaaaa"}));
+    temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
     temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
     temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
