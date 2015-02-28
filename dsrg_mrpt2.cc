@@ -96,7 +96,6 @@ void DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
-
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
 
@@ -114,8 +113,6 @@ void DSRG_MRPT2::startup()
 
     BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
-
-
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
@@ -240,7 +237,6 @@ void DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    // TODO Lambda3
     Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
     Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
     Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
@@ -323,6 +319,20 @@ double DSRG_MRPT2::renormalized_denominator(double D)
         return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
     }else{
         return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
+    }
+}
+
+// Computes (1 - exp(-s D^2/V^2))
+double DSRG_MRPT2::renormalized_denominator_amp(double V,double D)
+{
+    double Z = std::sqrt(s_) * (D / V);
+    if (V == 0.0){
+        return 0.0;
+    }
+    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
+        return V * Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+    }else{
+        return (1.0 - std::exp(-s_ * std::pow(D/V, 2.0))) / D;
     }
 }
 
@@ -461,11 +471,25 @@ void DSRG_MRPT2::compute_t1()
     N["ia"] += temp["xu"] * T2["iuax"];
     N["ia"] += temp["XU"] * T2["iUaX"];
 
-    T1["ia"] = N["ia"] * RDelta1["ia"];
-
     N["IA"]  = F["IA"];
     N["IA"] += temp["xu"] * T2["uIxA"];
     N["IA"] += temp["XU"] * T2["IUAX"];
+    //->    DN["ia"] = Delta1["ia"] / N["ia"];
+
+//    if (){
+//        std::vector<std::string> blocks(spin_cases({"ca","cv","av"}));
+//        for (const std::string& block : blocks){
+//            std::vector<double>& rd = RDelta1.block(block).data();
+//            std::vector<double>& n = N.block(block).data();
+//            std::vector<double>& d = Delta1.block(block).data();
+//            for (size_t i = 0; i < rd.size(); ++i){
+//                rd[i] = renormalized_exp_amp(n[i],d[i]);
+//            }
+//        }
+//    }
+
+    T1["ia"] = N["ia"] * RDelta1["ia"];
+
     T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
