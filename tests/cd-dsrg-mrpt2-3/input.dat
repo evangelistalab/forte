@@ -1,8 +1,8 @@
 import libbtl
 import libadaptive
 
-refrhf       = -2.18862199153970
-refdsrgpt2   = -2.25959715906599
+refrhf       = -2.17907771115918 # cc-pVDZ
+refdsrgpt2   = -2.23866688789344 # cc-pVDZ
 
 memory 500 mb
 
@@ -15,7 +15,7 @@ molecule H4{
 }
 
 set globals{
-   basis                   cc-pvtz
+   basis                   cc-pvdz
    reference               rhf
    scf_type                pk
    d_convergence           12
@@ -30,6 +30,8 @@ set libadaptive{
    nroot                   1
    dsrg_s                  0.5
    threepdc                mk
+   int_type                cholesky
+   cholesky_tolerance      1e-14
 }
 
 energy('rhf')
