@@ -29,6 +29,8 @@ set libadaptive{
    nroot                   1
    dsrg_s                  1.0
 #   semi_canonical          false
+   int_type                cholesky
+   cholesky_tolerance      1e-14
 }
 
 energy('rhf')
