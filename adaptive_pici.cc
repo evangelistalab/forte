@@ -132,9 +132,9 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "POWER"){
         propagator_ = PowerPropagator;
         propagator_description_ = "Power";
-    }else if (options_.get_str("PROPAGATOR") == "POSITIVE"){
-        propagator_ = PositivePropagator;
-        propagator_description_ = "Positive";
+    }else if (options_.get_str("PROPAGATOR") == "TROTTER"){
+        propagator_ = TrotterLinearPropagator;
+        propagator_description_ = "Trotter Linear";
     }
 
     num_threads_ = omp_get_max_threads();
@@ -366,8 +366,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
         propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
     }else if (propagator == PowerPropagator){
         propagate_power(dets,C,tau,spawning_threshold,S);
-    }else if (propagator == PositivePropagator){
-        propagate_positive(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == TrotterLinearPropagator){
+        propagate_Trotter(dets,C,tau,spawning_threshold,S);
     }
 
     // Update prescreening boundary
@@ -542,6 +542,26 @@ void AdaptivePathIntegralCI::propagate_positive(std::vector<BitsetDeterminant>& 
     copy_map_to_vec(dets_C_map,dets,C);
 }
 
+void AdaptivePathIntegralCI::propagate_Trotter(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    std::map<BitsetDeterminant,double> dets_C_map;
+
+    nspawned_ = 0;
+    nzerospawn_ = 0;
+
+    // exp(-tau H) ~ exp(-tau H^n) exp(-tau H^d)
+    // Term 1. exp(-tau H^d)|n>
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        double EI = dets[I].energy();
+        dets_C_map[dets[I]] = C[I] * std::exp(-tau * (EI - S)) * (1.0 + tau * (EI - S)); // < Cancel the diagonal contribution from apply_tau_H
+    }
+    // Term 2. -tau (H - S)|n>
+    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_map,S);
+
+    // Overwrite the input vectors with the updated wave function
+    copy_map_to_vec(dets_C_map,dets,C);
+}
 double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();

@@ -207,7 +207,7 @@ read_options(std::string name, Options &options)
 
         // Options for the Adaptive Path-Integral CI //
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The determinant importance threshold -*/
