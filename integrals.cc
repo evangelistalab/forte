@@ -988,9 +988,6 @@ void ExplorerIntegrals::compute_chol_integrals()
           for(int q = 0; q < nmo_; q++){
              for(int mu = 0; mu < nbf; mu++){
                 for(int nu = 0; nu < nbf; nu++){
-                   //outfile->Printf("\n h  pmax qmax poff qoff l (p + poff)  (q + qoff)\n%d  %d %d %d %d %d %d %d", h, pmax, qmax, poff, qoff, l, p + poff, q + qoff);
-                   //L->add(l,(p + poff)*(pmax)+(q + qoff),Lao->get(l,mu*(pmax)+nu)*Cpq->get(mu,(p + poff))*Cpq->get(nu,(q + qoff)));
-                   //The funky eigind[p].second is used to grab index of my sorted array
                    L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,p)*Cpq->get(nu,q));
                 }
              }
@@ -1045,39 +1042,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     }
 }
 
-//void ExplorerIntegrals::debug_ints()
-//{
-//     outfile->Printf("\n num_aptei = %d\n num_tei = %d\n", num_aptei, num_tei);
-//     outfile->Printf("conv_ints = %d\n chol_ints = %d \n df_ints = %d\n", conv_ints.size(), chol_ints.size(), df_ints.size());
-//     int size_conv = conv_ints.size();
-//     int count = 0;
-//     // This function is used to debug all these annoying integrals.  
-//     outfile->Printf("\n p q r s aa_conv ab bb\n");
-//     for(int i = 0; i < conv_ints.size(); i++){
-//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > -1e-3)) 
-//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
-//        count++;
-//        }
-//
-//     outfile->Printf("\n The number of integrals that are not equivalent is %d", count);
-//     outfile->Printf("\n PRINTING good ints");
-//     for(int i = 0; i < conv_ints.size(); i++){
-//        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) < 1e-3)) {
-//            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], chol_ints[i].second[0]);
-//       }
-//        
-//     }    
-//       
-//     outfile->Printf("\n Printing direct and exchange integrals\n"); 
-////     for(int i = 0; i < conv_ints.size(); i++){
-////        if( (std::fabs(conv_ints[i].second[0] - chol_ints[i].second[0]) > 1e-6)) {
-////            outfile->Printf("\n %d %d %d %d %20.12f %20.12f %20.12f  %20.12f", conv_ints[i].first[0], conv_ints[i].first[1], conv_ints[i].first[2], conv_ints[i].first[3], conv_ints[i].second[0], conv_ints[i].second[1], chol_ints[i].second[0], chol_ints[i].second[1]);
-////       }
-////        
-////     }    
-//
-//
-//}
 void ExplorerIntegrals::fill_ThreeIntegral(boost::shared_ptr<Matrix> TI)
 {
 

@@ -1,11 +1,9 @@
 import libbtl
 import libadaptive
 
-#refrhf     = -108.98300653123336 # cc-pVTZ
-#refdsrgpt2 = -109.36841715616309 # cc-pVTZ
-#refdsrgpt2 = -109.368233368547152 # cc-pVTZ semi_canonical false
-refrhf     = -108.95379624015762 # cc-pVDZ
-refdsrgpt2 = -109.25041672286461 # cc-pVDZ
+refrhf     = -108.98300653123336
+#refdsrgpt2 = -109.368233368547152 # semi_canonical false
+refdsrgpt2 = -109.36841715616309
 
 memory 500 mb
 
@@ -17,8 +15,7 @@ molecule N2{
 }
 
 set globals{
-#   basis                   cc-pvtz
-   basis                   cc-pvdz
+   basis                   cc-pvtz
    reference               rhf
    scf_type                pk
    d_convergence           12
