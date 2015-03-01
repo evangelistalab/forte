@@ -96,7 +96,6 @@ void DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
-
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
 
@@ -114,33 +113,6 @@ void DSRG_MRPT2::startup()
 
     BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
-
-
-    if(options_.get_str("INT_TYPE")=="CHOLESKY")
-    {
-        size_t nCD = ints_->nL();
-        std::vector<size_t> nauxpi(nCD);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        ThreeIntegral = BlockedTensor::build(tensor_type,"ThreeIntegral", spin_cases({"dpp"}));
-        size_t nmo = ints_->nmo();
-
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIntegralTensor",{nCD,nmo, nmo});
-
-        ThreeIntegralTensor =ints_->get_ThreeIntegral();
-        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
-
-    }
-    else if(options_.get_str("INT_TYPE")=="DF")
-    {
-        size_t nDF = ints_->naux();
-        std::vector<size_t> nauxpi(nDF);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-
-        ThreeIntegral = BlockedTensor::build(tensor_type,"ThreeIntegral", spin_cases({"dpp"}));
-    }
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
@@ -265,7 +237,6 @@ void DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    // TODO Lambda3
     Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
     Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
     Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
