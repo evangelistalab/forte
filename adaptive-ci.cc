@@ -642,7 +642,7 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
 
     // Decide which determinants will go in pruned_space
     // Include all determinants such that
-    // sum_I |C_I| < tau_p, where the sum runs over all the excluded determinants
+    // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
         std::sort(dm_det_list.begin(),dm_det_list.end());

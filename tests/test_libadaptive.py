@@ -18,7 +18,10 @@ print "Running test using psi4 executable found in:\n%s" % psi4command
 
 adaptive_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
-                     "lambda+sd-ci-1","lambda+sd-ci-2","adaptive-ci-1"]
+                     "lambda+sd-ci-1","lambda+sd-ci-2",
+                     "adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
+                     "adaptive-ci-4","adaptive-ci-5","adaptive-ci-6",
+                     "adaptive-ci-7","adaptive-ci-8"]
 
 apifci_tests = ["apifci-1","apifci-2","apifci-3"]
 
