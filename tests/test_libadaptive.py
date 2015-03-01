@@ -27,7 +27,9 @@ apifci_tests = ["apifci-1","apifci-2","apifci-3"]
 
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 srg_tests = ["srg-1","srg-2"]
-dsrg_tests = ["dsrg-1","dsrg-2","mr-dsrg-pt2-1","dsrg-mrpt2"]
+dsrg_tests = ["dsrg-1","dsrg-2"]
+dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4",
+                    "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4"]
 
 tests = adaptive_ci_tests + apifci_tests + ct_tests + srg_tests + dsrg_tests
 maindir = os.getcwd()
