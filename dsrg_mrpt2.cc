@@ -116,33 +116,6 @@ void DSRG_MRPT2::startup()
     BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
 
-
-    if(options_.get_str("INT_TYPE")=="CHOLESKY")
-    {
-        size_t nCD = ints_->nL();
-        std::vector<size_t> nauxpi(nCD);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        ambit::BlockedTensor ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
-        size_t nmo = ints_->nmo();
-
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type_,"ThreeIntegralTensor",{nCD,nmo, nmo});
-
-        ThreeIntegralTensor =ints_->get_ThreeIntegral();
-        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
-
-    }
-    else if(options_.get_str("INT_TYPE")=="DF")
-    {
-        size_t nDF = ints_->naux();
-        std::vector<size_t> nauxpi(nDF);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-
-        ambit::BlockedTensor ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
-    }
-
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
 

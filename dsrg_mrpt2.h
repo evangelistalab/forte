@@ -125,6 +125,7 @@ protected:
     ambit::BlockedTensor T2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor ThreeIntegral;
 
     // => Class initialization and termination <= //
 
