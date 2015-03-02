@@ -40,7 +40,10 @@ enum PropagatorType {LinearPropagator,
                      CubicPropagator,
                      QuarticPropagator,
                      PowerPropagator,
-                     TrotterLinearPropagator};
+                     TrotterLinearPropagator,
+                     OlsenPropagator,
+                     MitrushenkovPropagator,
+                     DavidsonLiuPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -206,6 +209,9 @@ private:
 
     /// The Trotter propagator
     void propagate_Trotter(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// The Olsen propagator
+    void propagate_Olsen(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
