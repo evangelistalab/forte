@@ -555,6 +555,7 @@ void AdaptivePathIntegralCI::propagate_Trotter(std::vector<BitsetDeterminant>& d
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         double EI = dets[I].energy();
         dets_C_map[dets[I]] = C[I] * std::exp(-tau * (EI - S)) * (1.0 + tau * (EI - S)); // < Cancel the diagonal contribution from apply_tau_H
+        C[I] *= std::exp(-tau * (EI - S));
     }
     // Term 2. -tau (H - S)|n>
     apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_map,S);
@@ -562,6 +563,7 @@ void AdaptivePathIntegralCI::propagate_Trotter(std::vector<BitsetDeterminant>& d
     // Overwrite the input vectors with the updated wave function
     copy_map_to_vec(dets_C_map,dets,C);
 }
+
 double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
