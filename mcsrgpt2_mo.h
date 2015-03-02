@@ -35,6 +35,9 @@ protected:
     // DSRG s Parameter
     double s_;
 
+    // Source Operator
+    string source_;
+
     // Taylor Expansion Threshold
     int taylor_threshold_;
     int taylor_order_;
@@ -102,12 +105,24 @@ protected:
     double Ecorr_;
     double Etotal_;
 
+    // Timings
+    void Print_Timing();
+    Timer dsrg_timer;
+    double T2_timing;
+    double T1_timing;
+    double FT1_timing;
+    double FT2_timing;
+    double VT1_timing;
+    double VT2C2_timing;
+    double VT2C4_timing;
+    double VT2C6_timing;
+
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double &Z, const int &n){
+    double Taylor_Exp(const double& Z, const int& n){
         if(n > 0){
             double value = Z, tmp = Z;
             for(int x=0; x<(n-1); ++x){
-                tmp *= pow(Z,2.0) / (x+2);
+                tmp *= -1.0 * std::pow(Z, 2.0) / (x+2);
                 value += tmp;
             }
             return value;
