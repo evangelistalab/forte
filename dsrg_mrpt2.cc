@@ -1,4 +1,5 @@
 #include <numeric>
+#include <math.h>
 
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
@@ -33,7 +34,6 @@ DSRG_MRPT2::~DSRG_MRPT2()
 void DSRG_MRPT2::startup()
 {
     Eref = reference_.get_Eref();
-    outfile->Printf("\n  Reference Energy = %.15f", Eref);
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -50,6 +50,8 @@ void DSRG_MRPT2::startup()
         exit(1);
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
+
+    source_ = options_.get_str("SOURCE");
 
     rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
     actvpi_  = Dimension (nirrep_, "Active MOs");
@@ -202,6 +204,24 @@ void DSRG_MRPT2::startup()
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
         if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
+
+    // Fill out Lambda2 and Lambda3
+    Tensor Lambda2_aa = Lambda2.block("aaaa");
+    Tensor Lambda2_aA = Lambda2.block("aAaA");
+    Tensor Lambda2_AA = Lambda2.block("AAAA");
+    Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
+    Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
+    Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
+
+    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+
     // Form the Fock matrix
     F["pq"]  = H["pq"];
     F["pq"] += V["pjqi"] * Gamma1["ij"];
@@ -211,12 +231,12 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
   
-    Tensor Fa_cc = F.block("cc");
-    Tensor Fa_aa = F.block("aa");
-    Tensor Fa_vv = F.block("vv");
-    Tensor Fb_CC = F.block("CC");
-    Tensor Fb_AA = F.block("AA");
-    Tensor Fb_VV = F.block("VV");
+//    Tensor Fa_cc = F.block("cc");
+//    Tensor Fa_aa = F.block("aa");
+//    Tensor Fa_vv = F.block("vv");
+//    Tensor Fb_CC = F.block("CC");
+//    Tensor Fb_AA = F.block("AA");
+//    Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -239,59 +259,106 @@ void DSRG_MRPT2::startup()
         }
     });
 
-    RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
-        }
-    });
+    if(source_ == "STANDARD"){
+        RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0]  == AlphaSpin){
+                value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
+            }else if (spin[0]  == BetaSpin){
+                value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
+            }
+        });
 
-    RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-    // Fill out Lambda2 and Lambda3
-    Tensor Lambda2_aa = Lambda2.block("aaaa");
-    Tensor Lambda2_aA = Lambda2.block("aAaA");
-    Tensor Lambda2_AA = Lambda2.block("AAAA");
-    Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
-    Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
-    Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
+        RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
 
-    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
-    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+        // Prepare exponential tensors for effective Fock matrix and integrals
+        RExp1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0]  == AlphaSpin){
+                value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
+            }else if (spin[0]  == BetaSpin){
+                value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
+            }
+        });
 
-    // Prepare exponential tensors for effective Fock matrix and integrals
+        RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+    }
+    else if(source_ == "AMP"){
+        RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator_amp(ints_->aptei_aa(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_amp(ints_->aptei_ab(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_amp(ints_->aptei_bb(i[0],i[1],i[2],i[3]), Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
 
-    RExp1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
-        }
-    });
+        // Prepare exponential tensors for effective Fock matrix and integrals
+        RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                double D = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
+                double V = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / V);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                double D = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / V);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                double D = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / V);
+            }
+        });
+    }
+    else if(source_ == "EMP2"){
+        RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator_emp2(ints_->aptei_aa(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_emp2(ints_->aptei_ab(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_emp2(ints_->aptei_bb(i[0],i[1],i[2],i[3]), Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
 
-    RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
+        // Prepare exponential tensors for effective Fock matrix and integrals
+        RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                double D = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
+                double V = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / (V * V));
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                double D = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / (V * V));
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                double D = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp(D / (V * V));
+            }
+        });
+    }
 
     // Print levels
     print_ = options_.get_int("PRINT");
@@ -316,10 +383,11 @@ void DSRG_MRPT2::print_summary()
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"Flow parameter",s_},
-        {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
+        {"Taylor expansion threshold",pow(10.0,-double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")}};
+        {"int_type", options_.get_str("INT_TYPE")},
+        {"source operator", source_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -341,30 +409,45 @@ void DSRG_MRPT2::cleanup()
 
 double DSRG_MRPT2::renormalized_denominator(double D)
 {
-    double Z = std::sqrt(s_) * D;
-    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
-        return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+    double Z = sqrt(s_) * D;
+    if(fabs(Z) < pow(0.1, taylor_threshold_)){
+        return Taylor_Exp(Z, taylor_order_) * sqrt(s_);
     }else{
-        return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
+        return (1.0 - std::exp(-s_ * pow(D, 2.0))) / D;
     }
 }
 
-// Computes (1 - exp(-s D^2/V^2))
-double DSRG_MRPT2::renormalized_denominator_amp(double V,double D)
+// Computes (1 - exp(-s D^2/V^2)) * V / D
+double DSRG_MRPT2::renormalized_denominator_amp(double V, double D)
 {
-    double Z = std::sqrt(s_) * (D / V);
-    if (V == 0.0){
-        return 0.0;
-    }
-    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
-        return V * Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+    if (fabs(V) < 1.0e-10){return 0.0;}
+
+    double RD = D / V;
+    double Z = sqrt(s_) * RD;
+    if(fabs(Z) < pow(0.1, taylor_threshold_)){
+        return Taylor_Exp(Z, taylor_order_) * sqrt(s_);
     }else{
-        return (1.0 - std::exp(-s_ * std::pow(D/V, 2.0))) / D;
+        return (1.0 - std::exp(-s_ * pow(RD, 2.0))) * V / D;
+    }
+}
+
+// Computes (1 - exp(-s D^2/V^4)) * V / D
+double DSRG_MRPT2::renormalized_denominator_emp2(double V, double D)
+{
+    if (fabs(V) < 1.0e-10){return 0.0;}
+
+    double RD = D / V;
+    double Z = sqrt(s_) * (RD / V);
+    if(fabs(Z) < pow(0.1, taylor_threshold_)){
+        return Taylor_Exp(Z, taylor_order_) * sqrt(s_) / V;
+    }else{
+        return (1.0 - std::exp(-s_ * pow(RD/V, 2.0))) * V / D;
     }
 }
 
 double DSRG_MRPT2::compute_energy()
 {
+    outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
     // Compute reference
 //    Eref = compute_ref();
 
@@ -376,54 +459,77 @@ double DSRG_MRPT2::compute_energy()
     renormalize_V();
     renormalize_F();       
     if(print_ > 1)  F.print(stdout); // The actv-actv block is different but OK.
-    if(print_ > 2){
+    if(print_ > 2){        
         T1.print(stdout);
         T2.print(stdout);
         V.print(stdout);
     }
 
     // Compute DSRG-MRPT2 correlation energy
-    double Ecorr = 0.0;
-    timer_on("E_FT1");
-    Ecorr += E_FT1();
-    timer_off("E_FT1");
+    double Etemp  = 0.0;
+    double EVT2   = 0.0;
+    double Ecorr  = 0.0;
+    double Etotal = 0.0;
+    std::vector<std::pair<std::string,double>> energy;
+    energy.push_back({"E0 (reference)", Eref});
 
-    timer_on("E_VT1");
-    Ecorr += E_VT1();
-    timer_off("E_VT1");
+    Etemp  = E_FT1();
+    Ecorr += Etemp;
+    energy.push_back({"<[F, T1]>", Etemp});
 
-    timer_on("E_FT2");
-    Ecorr += E_FT2();
-    timer_off("E_FT2");
+    Etemp  = E_FT2();
+    Ecorr += Etemp;
+    energy.push_back({"<[F, T2]>", Etemp});
 
-    timer_on("E_VT2_2");
-    Ecorr += E_VT2_2();
-    timer_off("E_VT2_2");
+    Etemp  = E_VT1();
+    Ecorr += Etemp;
+    energy.push_back({"<[V, T1]>", Etemp});
 
-    timer_on("E_VT2_4HH");
-    Ecorr += E_VT2_4HH();
-    timer_off("E_VT2_4HH");
+    Etemp  = E_VT2_2();
+    EVT2 += Etemp;
+    energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
 
-    timer_on("E_VT2_4PP");
-    Ecorr += E_VT2_4PP();
-    timer_off("E_VT2_4PP");
+    Etemp  = E_VT2_4HH();
+    EVT2 += Etemp;
+    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
 
-    timer_on("E_VT2_4PH");
-    Ecorr += E_VT2_4PH();
-    timer_off("E_VT2_4PH");
+    Etemp  = E_VT2_4PP();
+    EVT2 += Etemp;
+    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
 
-    timer_on("E_VT2_6");
-    Ecorr += E_VT2_6();
-    timer_off("E_VT2_6");
+    Etemp  = E_VT2_4PH();
+    EVT2 += Etemp;
+    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    outfile->Printf("\n  E(DSRG-PT2) %17c = %22.15lf", ' ', Ecorr);
-    Process::environment.globals["CURRENT ENERGY"] = Ecorr + Eref;
-    return Ecorr + Eref;
+    Etemp  = E_VT2_6();
+    EVT2 += Etemp;
+    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+
+    Ecorr += EVT2;
+    Etotal = Ecorr + Eref;
+    energy.push_back({"<[V, T2]>", EVT2});
+    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
+    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+
+    // TODO Analyze T1 and T2
+    check_t1();
+    check_t2();
+
+    // Print energy summary
+    outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
+    for (auto& str_dim : energy){
+        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
+    }
+
+    Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    return Etotal;
 }
 
 double DSRG_MRPT2::compute_ref()
 {
-    timer_on("Compute Eref");
+    Timer timer;
+    std::string str = "Computing reference energy";
+    outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
 
     E  = 0.5 * H["ij"] * Gamma1["ij"];
@@ -438,48 +544,51 @@ double DSRG_MRPT2::compute_ref()
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
-    timer_off("Compute Eref");
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E + frozen_core_energy + Enuc;
 }
 
 void DSRG_MRPT2::compute_t2()
 {
-    timer_on("Compute T2");
-    T2["ijab"] = V["ijab"] * RDelta2["ijab"];
-    T2["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
-    T2["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
+    Timer timer;
+    std::string str = "Computing T2 amplitudes";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
+    switch (sourcemap[source_]) {
+    case AMP:{
+        T2["ijab"] = RDelta2["ijab"];
+        T2["iJaB"] = RDelta2["iJaB"];
+        T2["IJAB"] = RDelta2["IJAB"];
+        break;
+    }
+    case EMP2:
+        T2["ijab"] = RDelta2["ijab"];
+        T2["iJaB"] = RDelta2["iJaB"];
+        T2["IJAB"] = RDelta2["IJAB"];
+        break;
+
+    default:{
+        T2["ijab"] = V["ijab"] * RDelta2["ijab"];
+        T2["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
+        T2["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
+        break;
+    }
+    }
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
     T2.block("aAaA").zero();
     T2.block("AAAA").zero();
 
-    // norm and maximum of T2 amplitudes
-    T2norm = 0.0; T2max = 0.0;
-//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
-//    for(const auto& block: T2blocks){
-//        std::vector<std::string> index_vec = block.first;
-//        std::string name;
-//        for(const std::string& index: index_vec)
-//            name += index;
-
-//        if(islower(name[0]) && isupper(name[1])){
-//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
-//        }else{
-//            T2norm += pow(T2.block(name)->norm(), 2.0);
-//        }
-////        double max = T2.block(name)->max_abs_vec()[0];
-////        T2max = T2max > max ? T2max : max;
-//    }
-    T2norm = sqrt(T2norm);    
-    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
-//    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
-    timer_off("Compute T2");
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
 void DSRG_MRPT2::compute_t1()
 {
-    timer_on("Compute T1");
+    Timer timer;
+    std::string str = "Computing T1 amplitudes";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     //A temporary tensor to use for the building of T1
     //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
     //via a pointwise multiplcation
@@ -492,7 +601,7 @@ void DSRG_MRPT2::compute_t1()
     //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
     //Did some permuting to get the correct format
 
-    BlockedTensor N = BlockedTensor::build(tensor_type_,"N",spin_cases({"hp"}));
+    BlockedTensor N = BlockedTensor::build(tensor_type_,"Numerator",spin_cases({"hp"}));
 
     N["ia"]  = F["ia"];
     N["ia"] += temp["xu"] * T2["iuax"];
@@ -515,16 +624,59 @@ void DSRG_MRPT2::compute_t1()
 //        }
 //    }
 
-    T1["ia"] = N["ia"] * RDelta1["ia"];
+    switch (sourcemap[source_]) {
+    case AMP:{
 
-    T1["IA"] = N["IA"] * RDelta1["IA"];
+        break;
+    }
+    case EMP2:{
+
+        break;
+    }
+    default:{
+        T1["ia"] = N["ia"] * RDelta1["ia"];
+        T1["IA"] = N["IA"] * RDelta1["IA"];
+        break;
+    }
+    }
 
     T1.block("AA").zero();
     T1.block("aa").zero();
 
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+}
+
+// TODO
+void DSRG_MRPT2::check_t2()
+{
+    // norm and maximum of T2 amplitudes
+//    T2norm = 0.0; T2max = 0.0;
+//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
+//    for(const auto& block: T2blocks){
+//        std::vector<std::string> index_vec = block.first;
+//        std::string name;
+//        for(const std::string& index: index_vec)
+//            name += index;
+
+//        if(islower(name[0]) && isupper(name[1])){
+//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
+//        }else{
+//            T2norm += pow(T2.block(name)->norm(), 2.0);
+//        }
+////        double max = T2.block(name)->max_abs_vec()[0];
+////        T2max = T2max > max ? T2max : max;
+//    }
+//    T2norm = sqrt(T2norm);
+//    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
+//    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
+}
+
+// TODO
+void DSRG_MRPT2::check_t1()
+{
     // norm and maximum of T1 amplitudes
-    double Fnorm = F.norm(2);
-    double RDelta1norm = RDelta1.norm(2);
+//    double Fnorm = F.norm(2);
+//    double RDelta1norm = RDelta1.norm(2);
 //    T1norm = T1.norm(2); T1max = 0.0;
 //    std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
 //    for(const auto& block: T1blocks){
@@ -535,14 +687,16 @@ void DSRG_MRPT2::compute_t1()
 //        double max = T1.block(name)->max_abs_vec()[0];
 //        T1max = T1max > max ? T1max : max;
 //    }
-    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1.norm());
+//    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1.norm());
 //    outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
-    timer_off("Compute T1");
 }
 
 void DSRG_MRPT2::renormalize_V()
 {
-    timer_on("Renorm. V");
+    Timer timer;
+    std::string str = "Renormalizing two-electron integrals";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     V["ijab"] += V["ijab"] * RExp2["ijab"];
     V["iJaB"] += V["iJaB"] * RExp2["iJaB"];
     V["IJAB"] += V["IJAB"] * RExp2["IJAB"];
@@ -550,12 +704,16 @@ void DSRG_MRPT2::renormalize_V()
     V["abij"] += V["abij"] * RExp2["ijab"];
     V["aBiJ"] += V["aBiJ"] * RExp2["iJaB"];
     V["ABIJ"] += V["ABIJ"] * RExp2["IJAB"];
-    timer_off("Renorm. V");
+
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
 void DSRG_MRPT2::renormalize_F()
 {
-    timer_on("Renorm. F");
+    Timer timer;
+    std::string str = "Renormalizing Fock matrix elements";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
@@ -565,34 +723,53 @@ void DSRG_MRPT2::renormalize_F()
 
     temp1["ia"] += temp_aa["xu"] * T2["iuax"];
     temp1["ia"] += temp_aa["XU"] * T2["iUaX"];
-    temp2["ia"] += F["ia"] * RExp1["ia"];
-    temp2["ia"] += temp1["ia"] * RExp1["ia"];
-
     temp1["IA"] += temp_aa["xu"] * T2["uIxA"];
     temp1["IA"] += temp_aa["XU"] * T2["IUAX"];
-    temp2["IA"] += F["IA"] * RExp1["IA"];
-    temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
+    switch (sourcemap[source_]) {
+    case AMP:{
+
+        break;
+    }
+    case EMP2:{
+
+        break;
+    }
+    default:{
+        temp2["ia"] += F["ia"] * RExp1["ia"];
+        temp2["ia"] += temp1["ia"] * RExp1["ia"];
+        temp2["IA"] += F["IA"] * RExp1["IA"];
+        temp2["IA"] += temp1["IA"] * RExp1["IA"];
+
+        F["ia"] += temp2["ia"];
+        temp2.block("aa").zero();
+        F["ai"] += temp2["ia"];
+
+        F["IA"] += temp2["IA"];
+        temp2.block("AA").zero();
+        F["AI"] += temp2["IA"];
+        break;
+    }
+    }
 //    temp["ai"] += temp_aa["xu"] * T2["iuax"];
 //    temp["ai"] += temp_aa["XU"] * T2["iUaX"];
 //    F["ai"] += F["ai"] % RExp1["ia"];  // TODO <- is this legal in ambit???
 //    F["ai"] += temp["ai"] % RExp1["ia"];
-    F["ia"] += temp2["ia"];
-    temp2.block("aa").zero();
-    F["ai"] += temp2["ia"];
 
 //    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
 //    temp["AI"] += temp_aa["XU"] * T2["IUAX"];
 //    F["AI"] += F["AI"] % RExp1["IA"];
 //    F["AI"] += temp["AI"] % RExp1["IA"];
-    F["IA"] += temp2["IA"];
-    temp2.block("AA").zero();
-    F["AI"] += temp2["IA"];
-    timer_off("Renorm. F");
+
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
 double DSRG_MRPT2::E_FT1()
 {
+    Timer timer;
+    std::string str = "Computing <[F, T1]>";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hp"}));
@@ -603,12 +780,16 @@ double DSRG_MRPT2::E_FT1()
     E += temp["jb"] * F["bj"];
     E += temp["JB"] * F["BJ"];
 
-    outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT1()
 {
+    Timer timer;
+    std::string str = "Computing <[V, T1]>";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaa"}));
@@ -628,12 +809,16 @@ double DSRG_MRPT2::E_VT1()
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
     E += temp["uVxY"] * Lambda2["xYuV"];
 
-    outfile->Printf("\n  E([V, T1]) %18c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_FT2()
 {
+    Timer timer;
+    std::string str = "Computing <[F, T2]>";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
@@ -653,14 +838,17 @@ double DSRG_MRPT2::E_FT2()
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
     E += temp["uVxY"] * Lambda2["xYuV"];
 
-    outfile->Printf("\n  E([F, T2]) %18c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT2_2()
 {
-    double E = 0.0;
+    Timer timer;
+    std::string str = "Computing <[V, T2]> (C_2)^4";
+    outfile->Printf("\n    %-36s ...", str.c_str());
 
+    double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
     temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hhpp"}));
@@ -679,12 +867,16 @@ double DSRG_MRPT2::E_VT2_2()
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
     E += V["cDkL"] * temp2["kLcD"];
 
-    outfile->Printf("\n  E([V, T2] C_2^4) %12c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT2_4HH()
 {
+    Timer timer;
+    std::string str = "Computing <[V, T2]> C_4 (C_2)^2 HH";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
@@ -703,12 +895,16 @@ double DSRG_MRPT2::E_VT2_4HH()
     E += 0.125 * Lambda2["XYUV"] * temp2["UVXY"];
     E += Lambda2["xYuV"] * temp2["uVxY"];
 
-    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: HH) %2c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT2_4PP()
 {
+    Timer timer;
+    std::string str = "Computing <[V, T2]> C_4 (C_2)^2 PP";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
@@ -727,12 +923,16 @@ double DSRG_MRPT2::E_VT2_4PP()
     E += 0.125 * Lambda2["XYUV"] * temp2["UVXY"];
     E += Lambda2["xYuV"] * temp2["uVxY"];
 
-    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PP) %2c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT2_4PH()
 {
+    Timer timer;
+    std::string str = "Computing <[V, T2]> C_4 (C_2)^2 PH";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
 //    BlockedTensor temp;
 //    temp = BlockedTensor::build(tensor_type_,"temp", "aaaa");
@@ -791,12 +991,16 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp2["uVxY"] -= V["uBjY"] * temp1["jVxB"];
     E += temp2["uVxY"] * Lambda2["xYuV"];
 
-    outfile->Printf("\n  E([V, T2] C_2^2 * C_4: PH) %2c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 
 double DSRG_MRPT2::E_VT2_6()
 {
+    Timer timer;
+    std::string str = "Computing <[V, T2]> C_6 C_2";
+    outfile->Printf("\n    %-36s ...", str.c_str());
+
     double E = 0.0;
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
@@ -832,7 +1036,7 @@ double DSRG_MRPT2::E_VT2_6()
 
     E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
 
-    outfile->Printf("\n  E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E);
+    outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
 }
 

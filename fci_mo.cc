@@ -1349,7 +1349,7 @@ void FCI_MO::compute_ref(){
             }
         }
     }
-    outfile->Printf("\n  Energy = %.15f",Eref_);
+//    outfile->Printf("\n  Energy = %.15f",Eref_);
     Eref_ += e_nuc_ + integral_->frozen_core_energy();
     timer_off("Compute Ref");
 }
