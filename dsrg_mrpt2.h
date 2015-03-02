@@ -37,9 +37,6 @@ namespace psi{
 
 namespace libadaptive{
 
-enum sourceop{STANDARD, AMP, EMP2};
-std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2);
-
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure
@@ -50,6 +47,9 @@ class DSRG_MRPT2 : public Wavefunction
 protected:
 
     // => Class data <= //
+
+    enum sourceop{STANDARD, AMP, EMP2};
+    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2);
 
     /// The reference object
     Reference reference_;
