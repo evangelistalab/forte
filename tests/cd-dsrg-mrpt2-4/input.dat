@@ -1,0 +1,43 @@
+import libbtl
+import libadaptive
+
+refrhf     = -108.98300653123336
+#refdsrgpt2 = -109.368233368547152 # semi_canonical false
+refdsrgpt2 = -109.36841715616309
+
+refrhf     = -108.95379624015762 # cc-pVDZ
+refdsrgpt2 = -109.25041672286461 # cc-pVDZ
+
+memory 500 mb
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.1
+}
+
+set globals{
+   basis                   cc-pvdz
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           15
+}
+
+set libadaptive{
+   restricted_docc        [2,0,0,0,0,2,0,0]
+   active                 [1,0,1,1,0,1,1,1]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  1.0
+#   semi_canonical          false
+   int_type                cholesky
+   cholesky_tolerance      1e-14
+}
+
+energy('rhf')
+energy('dsrg-mrpt2')
+
+compare_values(refrhf, get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

@@ -20,6 +20,7 @@
 #include "sosrg.h"
 #include "mosrg.h"
 #include "dsrg_mrpt2.h"
+#include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "tensor_test.h"
 #include "mcsrgpt2_mo.h"
@@ -206,7 +207,7 @@ read_options(std::string name, Options &options)
 
         // Options for the Adaptive Path-Integral CI //
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The determinant importance threshold -*/
@@ -358,6 +359,13 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
+        }
+        if (options.get_str("JOB_TYPE") == "Three_DSRG-MRPT2"){
+            FCI_MO fci_mo(options,ints_);
+            Reference reference = fci_mo.reference();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+            three_dsrg_mrpt2->compute_energy();
         }
         if (options.get_str("JOB_TYPE") == "SOSRG"){
 //            Explorer* explorer = new Explorer(options,ints_);
