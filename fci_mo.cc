@@ -238,7 +238,9 @@ void FCI_MO::startup(Options &options){
     // Core and Active
     if(options["ACTIVE"].size() == 0){
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
-        exit(1);
+        outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
+        outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
+        throw PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
     }
     core_ = Dimension (nirrep_, "Core MOs");
     active_ = Dimension (nirrep_, "Active MOs");
@@ -251,7 +253,11 @@ void FCI_MO::startup(Options &options){
         }
     }else{
         outfile->Printf("\n  The size of RESTRICTED_DOCC or ACTIVE occupation does not match the number of Irrep.");
-        exit(1);
+        outfile->Printf("\n  Number of irreps: %2d", nirrep_);
+        outfile->Printf("\n  Size of RESTRICTED_DOCC: %2d", options["RESTRICTED_DOCC"].size());
+        outfile->Printf("\n  Size of ACTIVE: %2d", options["ACTIVE"].size());
+        outfile->Printf("\n  Check RESTRICTED_DOCC and ACTIVE! \n");
+        throw PSIEXCEPTION("Wrong RESTRICTED_DOCC or ACTIVE. Check output for details.");
     }
     nc_ = core_.sum();
     na_ = active_.sum();
@@ -267,29 +273,38 @@ void FCI_MO::startup(Options &options){
     if(options["CHARGE"].has_changed()){
         charge = options.get_int("CHARGE");
     }
-    ms_ = options.get_int("MS");
-    if(ms_ < 0){
-        outfile->Printf("\n  MS must be no less than 0.");
-        exit(1);
-    }
     multi_ = molecule->multiplicity();
     if(options["MULTI"].has_changed()){
         multi_ = options.get_int("MULTI");
     }
     if(multi_ < 1){
-        outfile->Printf("\n  MULTI must be no less than 1. Check Multiplicity!");
-        exit(1);
+        outfile->Printf("\n  MULTI must be no less than 1.");
+        outfile->Printf("\n  MULTI = %2d", multi_);
+        outfile->Printf("\n  Check (specify) Multiplicity! \n");
+        throw PSIEXCEPTION("MULTI must be no less than 1. Check output for details.");
+    }
+    ms_ = options.get_int("MS");
+    if(ms_ < 0){
+        outfile->Printf("\n  Ms must be no less than 0.");
+        outfile->Printf("\n  Ms = %2d, MULTI = %2d", ms_, multi_);
+        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
+        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
     nalfa_ = (nelec - charge + ms_ * (ms_ + 1)) / 2;
     nbeta_ = (nelec - charge - ms_ * (ms_ + 1)) / 2;
     if(nalfa_ < 0 || nbeta_ < 0){
+        outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
+        outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
+        outfile->Printf("\n  Charge = %3d, Multi = %3d", charge, multi_);
         outfile->Printf("\n  Check the Charge and Multiplicity! \n");
-        exit(1);
+        throw PSIEXCEPTION("Negative number of alpha electrons or beta electrons. Check output for details.");
     }
     if(nalfa_ - nc_ - nfrzc_ > na_){
         outfile->Printf("\n  Not enough active orbitals to arrange electrons!");
+        outfile->Printf("\n  Number of orbitals: active = %5zu, core = %5zu", na_, nc_);
+        outfile->Printf("\n  Number of alpha electrons: Nalpha = %5ld", nalfa_);
         outfile->Printf("\n  Check core and active orbitals! \n");
-        exit(1);
+        throw PSIEXCEPTION("Not enough active orbitals to arrange electrons! Check output for details.");
     }
 
     root_sym_ = options.get_int("ROOT_SYM");  // wavefunction symmetry
