@@ -135,7 +135,11 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "TROTTER"){
         propagator_ = TrotterLinearPropagator;
         propagator_description_ = "Trotter Linear";
+    }else if (options_.get_str("PROPAGATOR") == "OLSEN"){
+        propagator_ = OlsenPropagator;
+        propagator_description_ = "Olsen";
     }
+
 
     num_threads_ = omp_get_max_threads();
 }
@@ -247,7 +251,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
-        double shift = do_shift_ ? var_energy : 0.0;
+        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
 
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
@@ -368,6 +372,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
         propagate_power(dets,C,tau,spawning_threshold,S);
     }else if (propagator == TrotterLinearPropagator){
         propagate_Trotter(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == OlsenPropagator){
+        propagate_Olsen(dets,C,tau,spawning_threshold,S);
     }
 
     // Update prescreening boundary
@@ -560,6 +566,51 @@ void AdaptivePathIntegralCI::propagate_Trotter(std::vector<BitsetDeterminant>& d
     // Term 2. -tau (H - S)|n>
     apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_map,S);
 
+    // Overwrite the input vectors with the updated wave function
+    copy_map_to_vec(dets_C_map,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    std::map<BitsetDeterminant,double> dets_C_map;
+
+    nspawned_ = 0;
+    nzerospawn_ = 0;
+
+    // 1.  Compute H - E (S = E)
+    apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_map,S);
+
+    double delta_E_num = 0.0;
+    double delta_E_den = 0.0;
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        double CI = C[I];
+        double EI = dets[I].energy();
+        double sigma_I = dets_C_map[dets[I]];
+        delta_E_num += CI * sigma_I / (EI - S);
+        delta_E_den += CI * CI / (EI - S);
+    }
+    double delta_E = delta_E_num / delta_E_den;
+
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_C_map[dets[I]] -= C[I] * delta_E;
+    }
+
+    for (auto& det_C : dets_C_map){
+        double EI = det_C.first.energy();
+        det_C.second /= - (EI - S);
+    }
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_C_map[dets[I]] += C[I];
+    }
+    double norm = 0.0;
+    for (auto& det_C : dets_C_map){
+        norm += std::pow(det_C.second,2.0);
+    }
+    norm = std::sqrt(norm);
+    for (auto& det_C : dets_C_map){
+        det_C.second /= norm;
+    }
     // Overwrite the input vectors with the updated wave function
     copy_map_to_vec(dets_C_map,dets,C);
 }
@@ -768,8 +819,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau,double spawning_thresh
     double my_new_max_one_HJI = 0.0;
     double my_new_max_two_HJI = 0.0;
 
-    // Diagonal contributions
+
     double det_energy = detI.energy();
+    // Diagonal contributions
     new_space_C[detI] += tau * (det_energy - E0) * CI;
 
     size_t spawned = 0;
