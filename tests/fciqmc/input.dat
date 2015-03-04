@@ -18,7 +18,7 @@ set {
 
 set libadaptive {
   tau 0.1
-  maxiter 60
+  maxiter 100
   spawning_threshold 0.0001
 }
 
