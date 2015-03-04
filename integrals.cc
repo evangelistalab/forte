@@ -751,9 +751,6 @@ void ExplorerIntegrals::compute_df_integrals()
     //Constructor for building DFERI in MO basis from libthce/lreri.h
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
 
-    TensorType tensor_type = kCore;
-    ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIntegral",{naux,nmo_, nmo_ });
-
     std::vector<double> eval;
     for(int h = 0; h < nirrep_; h++){
        for(int i = 0; i < eps_so->dim(h); i++){
@@ -835,8 +832,7 @@ void ExplorerIntegrals::compute_df_integrals()
             }
         }
     }
-
-    fill_ThreeIntegral(tBpq);
+     ThreeIntegral_= tBpq->clone();
     //ThreeIntegral.print(stdout);
     //Forms the (pq | B) (B | rs)
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
@@ -899,7 +895,6 @@ void ExplorerIntegrals::compute_chol_integrals()
         aphys_tei_bb[pqrs] = 0.0;
     }
 
-    outfile->Printf("Seg Faults are stupid!!!");
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
@@ -917,7 +912,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     TensorType tensor_type = kCore;
 
     outfile->Printf("\n nL %u  nmo_ %u", nL, nmo_);
-    ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIntegral",{nL,nmo_, nmo_ });
 
     //ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,ncmo_, ncmo_ });
 
@@ -935,7 +929,7 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Cpqso->print();
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-    std::vector<int> order;
+
     std::vector<double> eval;
     std::vector<double> evalao;
     for(int i = 0; i < nmo_; i++){evalao.push_back(eps_ao->get(i));}
@@ -994,8 +988,7 @@ void ExplorerIntegrals::compute_chol_integrals()
           }
        }
     }
-    fill_ThreeIntegral(L);
-    //ThreeIntegral.print(stdout);
+    ThreeIntegral_ = L->clone();
     L->print(); 
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
@@ -1040,15 +1033,10 @@ void ExplorerIntegrals::compute_chol_integrals()
             }
         }
     }
+    outfile->Printf("Done with cholesky");
 }
 
-void ExplorerIntegrals::fill_ThreeIntegral(boost::shared_ptr<Matrix> TI)
-{
 
-    ThreeIntegral.iterate([&](const::vector<size_t>& i,double& value){
-        value = TI->get(i[0],nmo_*i[1] + i[2]);
-    });
-}
 
 ///**
 // * Make the one electron intermediates
