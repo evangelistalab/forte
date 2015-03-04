@@ -183,6 +183,7 @@ void DSRG_MRPT2::startup()
     F["PQ"] += H["PQ"];
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
+
   
     Tensor Fa_cc = F.block("cc");
     Tensor Fa_aa = F.block("aa");
