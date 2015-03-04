@@ -45,6 +45,13 @@ void MCSRGPT2_MO::cleanup(){
 
 void MCSRGPT2_MO::startup(Options &options){
 
+    // Source Operator
+    source_ = options.get_str("SOURCE");
+    if(sourcemap.find(source_) == sourcemap.end()){
+        outfile->Printf("\n  Source operator %s is not available.", source_.c_str());
+        throw PSIEXCEPTION("Source operator is not available.");
+    }
+
     // Print Delta
     if(print_ > 1)  PrintDelta();
 
@@ -61,9 +68,6 @@ void MCSRGPT2_MO::startup(Options &options){
     }
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));
     taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1));
-
-    // Source Operator
-    source_ = options.get_str("SOURCE");
 
     // Print Original Orbital Indices
     outfile->Printf("\n  Correlating Subspace Indices:");
@@ -138,7 +142,7 @@ void MCSRGPT2_MO::startup(Options &options){
     Check_T1("A",T1a_,T1Na_,T1Maxa_,options);
     Check_T1("B",T1b_,T1Nb_,T1Maxb_,options);
 
-//    print_d2("T1a",T1a_);
+    print_d2("T1a",T1a_);
 
     bool dsrgpt = options.get_bool("DSRGPT");
 
@@ -152,7 +156,7 @@ void MCSRGPT2_MO::startup(Options &options){
     outfile->Printf("\t\t\tDone.");
     outfile->Flush();
 
-//    print_d2("Fa_dsrg_",Fa_dsrg_);
+    print_d2("Fa_dsrg_",Fa_dsrg_);
 
     // Effective Two Electron Integrals
     outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
@@ -160,6 +164,31 @@ void MCSRGPT2_MO::startup(Options &options){
     Form_APTEI_DSRG(dsrgpt);
     outfile->Printf("\tDone.");
     outfile->Flush();
+}
+
+double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const double &V){
+    if(fabs(V) < 1.0e-12) return 0.0;
+    switch (sourcemap[source]) {
+    case AMP:{
+        double RD = D / V;
+        return V * exp(-s_ * RD * RD);
+    }
+    case EMP2:{
+        double RD = D / (V * V);
+        return V * exp(-s_ * RD * RD);
+    }
+    case LAMP:{
+        double RD = D / V;
+        return V * exp(-s_ * fabs(RD));
+    }
+    case LEMP2:{
+        double RD = D / (V * V);
+        return V * exp(-s_ * fabs(RD));
+    }
+    default:{
+        return V * exp(-s_ * D * D);
+    }
+    }
 }
 
 void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
@@ -190,36 +219,12 @@ void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
                 value_b += Fb_[na][ni];
                 double Da = Fa_[ni][ni] - Fa_[na][na];
                 double Db = Fb_[ni][ni] - Fb_[na][na];
-                if(source_ == "STANDARD"){
-                    A[ni][na] += value_a * exp(-s_ * Da * Da);
-                    B[ni][na] += value_b * exp(-s_ * Db * Db);
-                    A[na][ni] += value_a * exp(-s_ * Da * Da);
-                    B[na][ni] += value_b * exp(-s_ * Db * Db);
-                }
-                else if(source_ == "AMP"){
-                    if(fabs(value_a) > 1.0e-10){
-                        double RDa = Da / value_a;
-                        A[ni][na] += value_a * exp(-s_ * RDa * RDa);
-                        A[na][ni] += value_a * exp(-s_ * RDa * RDa);
-                    }
-                    if(fabs(value_b) > 1.0e-10){
-                        double RDb = Db / value_b;
-                        B[ni][na] += value_b * exp(-s_ * RDb * RDb);
-                        B[na][ni] += value_b * exp(-s_ * RDb * RDb);
-                    }
-                }
-                else if(source_ == "EMP2"){
-                    if(fabs(value_a) > 1.0e-10){
-                        double RDa = Da / (value_a * value_a);
-                        A[ni][na] += value_a * exp(-s_ * RDa * RDa);
-                        A[na][ni] += value_a * exp(-s_ * RDa * RDa);
-                    }
-                    if(fabs(value_b) > 1.0e-10){
-                        double RDb = Db / (value_b * value_b);
-                        B[ni][na] += value_b * exp(-s_ * RDb * RDb);
-                        B[na][ni] += value_b * exp(-s_ * RDb * RDb);
-                    }
-                }
+
+                A[ni][na] += ElementRH(source_, Da, value_a);
+                A[na][ni] += ElementRH(source_, Da, value_a);
+                B[ni][na] += ElementRH(source_, Db, value_b);
+                B[na][ni] += ElementRH(source_, Db, value_b);
+
             }
         }
     }
@@ -245,105 +250,20 @@ void MCSRGPT2_MO::Form_APTEI_DSRG(const bool &dsrgpt){
                         double Vaa = integral_->aptei_aa(ni,nj,na,nb);
                         double Vab = integral_->aptei_ab(ni,nj,na,nb);
                         double Vbb = integral_->aptei_bb(ni,nj,na,nb);
-                        double Vaa_cc = integral_->aptei_aa(na,nb,ni,nj);
-                        double Vab_cc = integral_->aptei_ab(na,nb,ni,nj);
-                        double Vbb_cc = integral_->aptei_bb(na,nb,ni,nj);
 
-                        if(source_ == "STANDARD"){
-                            double value = 0.0;
-                            value = Vaa * (1 + exp(-s_ * Daa * Daa));
-                            integral_->set_tei(ni,nj,na,nb,value,true,true);
-                            integral_->set_tei(na,nb,ni,nj,value,true,true);
+                        Vaa += ElementRH(source_, Daa, Vaa);
+                        Vab += ElementRH(source_, Dab, Vab);
+                        Vbb += ElementRH(source_, Dbb, Vbb);
 
-                            value = Vab * (1 + exp(-s_ * Dab * Dab));
-                            integral_->set_tei(ni,nj,na,nb,value,true,false);
-                            integral_->set_tei(na,nb,ni,nj,value,true,false);
+                        integral_->set_tei(ni,nj,na,nb,Vaa,true,true);
+                        integral_->set_tei(na,nb,ni,nj,Vaa,true,true);
 
-                            value = Vbb * (1 + exp(-s_ * Dbb * Dbb));
-                            integral_->set_tei(ni,nj,na,nb,value,false,false);
-                            integral_->set_tei(na,nb,ni,nj,value,false,false);
+                        integral_->set_tei(ni,nj,na,nb,Vab,true,false);
+                        integral_->set_tei(na,nb,ni,nj,Vab,true,false);
 
-//                            value = Vaa_cc * (1 + exp(-s_ * Daa * Daa));
-//                            integral_->set_tei(na,nb,ni,nj,value,true,true);
+                        integral_->set_tei(ni,nj,na,nb,Vbb,false,false);
+                        integral_->set_tei(na,nb,ni,nj,Vbb,false,false);
 
-//                            value = Vab_cc * (1 + exp(-s_ * Dab * Dab));
-//                            integral_->set_tei(na,nb,ni,nj,value,true,false);
-
-//                            value = Vbb_cc * (1 + exp(-s_ * Dbb * Dbb));
-//                            integral_->set_tei(na,nb,ni,nj,value,false,false);
-                        }
-                        else if(source_ == "AMP"){
-                            double value = 0.0;
-                            if(fabs(Vaa) > 1.0e-10){
-                                double RDaa = Daa / Vaa;
-                                value = Vaa * (1 + exp(-s_ * RDaa * RDaa));
-                                integral_->set_tei(ni,nj,na,nb,value,true,true);
-                                integral_->set_tei(na,nb,ni,nj,value,true,true);
-                            }
-                            if(fabs(Vab) > 1.0e-10){
-                                double RDab = Dab / Vab;
-                                value = Vab * (1 + exp(-s_ * RDab * RDab));
-                                integral_->set_tei(ni,nj,na,nb,value,true,false);
-                                integral_->set_tei(na,nb,ni,nj,value,true,false);
-                            }
-                            if(fabs(Vbb) > 1.0e-10){
-                                double RDbb = Dbb / Vbb;
-                                value = Vbb * (1 + exp(-s_ * RDbb * RDbb));
-                                integral_->set_tei(ni,nj,na,nb,value,false,false);
-                                integral_->set_tei(na,nb,ni,nj,value,false,false);
-                            }
-//                            if(fabs(Vaa_cc) > 1.0e-10){
-//                                double RDaa = Daa / Vaa_cc;
-//                                value = Vaa_cc * (1 + exp(-s_ * RDaa * RDaa));
-//                                integral_->set_tei(na,nb,ni,nj,value,true,true);
-//                            }
-//                            if(fabs(Vab_cc) > 1.0e-10){
-//                                double RDab = Dab / Vab_cc;
-//                                value = Vab_cc * (1 + exp(-s_ * RDab * RDab));
-//                                integral_->set_tei(na,nb,ni,nj,value,true,false);
-//                            }
-//                            if(fabs(Vbb_cc) > 1.0e-10){
-//                                double RDbb = Dbb / Vbb_cc;
-//                                value = Vbb_cc * (1 + exp(-s_ * RDbb * RDbb));
-//                                integral_->set_tei(na,nb,ni,nj,value,false,false);
-//                            }
-                        }
-                        else if(source_ == "EMP2"){
-                            double value = 0.0;
-                            if(fabs(Vaa) > 1.0e-10){
-                                double RDaa = Daa / (Vaa * Vaa);
-                                value = Vaa * (1 + exp(-s_ * RDaa * RDaa));
-                                integral_->set_tei(ni,nj,na,nb,value,true,true);
-                                integral_->set_tei(na,nb,ni,nj,value,true,true);
-                            }
-                            if(fabs(Vab) > 1.0e-10){
-                                double RDab = Dab / (Vab * Vab);
-                                value = Vab * (1 + exp(-s_ * RDab * RDab));
-                                integral_->set_tei(ni,nj,na,nb,value,true,false);
-                                integral_->set_tei(na,nb,ni,nj,value,true,false);
-                            }
-                            if(fabs(Vbb) > 1.0e-10){
-                                double RDbb = Dbb / (Vbb * Vbb);
-                                value = Vbb * (1 + exp(-s_ * RDbb * RDbb));
-                                integral_->set_tei(ni,nj,na,nb,value,false,false);
-                                integral_->set_tei(na,nb,ni,nj,value,false,false);
-                            }
-//                            if(fabs(Vaa_cc) > 1.0e-10){
-//                                double RDaa = Daa / (Vaa_cc * Vaa_cc);
-//                                value = Vaa_cc * (1 + exp(-s_ * RDaa * RDaa));
-//                                integral_->set_tei(na,nb,ni,nj,value,true,true);
-//                            }
-//                            if(fabs(Vab_cc) > 1.0e-10){
-//                                double RDab = Dab / (Vab_cc * Vab_cc);
-//                                value = Vab_cc * (1 + exp(-s_ * RDab * RDab));
-//                                integral_->set_tei(na,nb,ni,nj,value,true,false);
-//                            }
-//                            if(fabs(Vbb_cc) > 1.0e-10){
-//                                double RDbb = Dbb / (Vbb_cc * Vbb_cc);
-//                                value = Vbb_cc * (1 + exp(-s_ * RDbb * RDbb));
-//                                integral_->set_tei(na,nb,ni,nj,value,false,false);
-//                            }
-                        }
                     }
                 }
             }
@@ -384,6 +304,56 @@ void MCSRGPT2_MO::compute_ref(){
     timer_off("Compute Ref");
 }
 
+double MCSRGPT2_MO::ElementT(const string &source, const double &D, const double &V){
+    if(fabs(V) < 1.0e-12) return 0.0;
+    switch (sourcemap[source]) {
+    case AMP:{
+        double RD = D / V;
+        double Z = sqrt(s_) * RD;
+        if(fabs(Z) < pow(0.1, taylor_threshold_)){
+            return Taylor_Exp(Z, taylor_order_) * sqrt(s_);
+        }else{
+            return (1 - exp(-1.0 * s_ * pow(RD, 2.0))) * V / D;
+        }
+    }
+    case EMP2:{
+        double RD = D / V;
+        double Z = sqrt(s_) * RD / V;
+        if(fabs(Z) < pow(0.1, taylor_threshold_)){
+            return Taylor_Exp(Z, taylor_order_) * sqrt(s_) / V;
+        }else{
+            return (1 - exp(-1.0 * s_ * pow(RD / V, 2.0))) * V / D;
+        }
+    }
+    case LAMP:{
+        double RD = D / V;
+        double Z = s_ * RD;
+        if(fabs(Z) < pow(0.1, taylor_threshold_)){
+            return Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_;
+        }else{
+            return (1 - exp(-1.0 * s_ * fabs(RD))) * V / D;
+        }
+    }
+    case LEMP2:{
+        double RD = D / V;
+        double Z = s_ * RD / V;
+        if(fabs(Z) < pow(0.1, taylor_threshold_)){
+            return Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_ / V;
+        }else{
+            return (1 - exp(-1.0 * s_ * fabs(RD / V))) * V / D;
+        }
+    }
+    default:{
+        double Z = sqrt(s_) * D;
+        if(fabs(Z) < pow(0.1, taylor_threshold_)){
+            return Taylor_Exp(Z, taylor_order_) * sqrt(s_) * V;
+        }else{
+            return (1 - exp(-1.0 * s_ * pow(D, 2.0))) * V / D;
+        }
+    }
+    }
+}
+
 void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR){
     timer_on("Form T2");
     for(size_t i=0; i<nh_; ++i){
@@ -403,99 +373,10 @@ void MCSRGPT2_MO::Form_T2_DSRG(d4 &AA, d4 &AB, d4 &BB, string &T_ALGOR){
                     double Vab = integral_->aptei_ab(na,nb,ni,nj);
                     double Vbb = integral_->aptei_bb(na,nb,ni,nj);
 
-                    if(source_ == "STANDARD"){
-                        double Zaa = sqrt(s_) * Daa;
-                        double Zab = sqrt(s_) * Dab;
-                        double Zbb = sqrt(s_) * Dbb;
+                    AA[i][j][a][b] = ElementT(source_, Daa, Vaa);
+                    AB[i][j][a][b] = ElementT(source_, Dab, Vab);
+                    BB[i][j][a][b] = ElementT(source_, Dbb, Vbb);
 
-                        if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                            AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * Vaa;
-                        }else{
-                            AA[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Daa, 2.0))) / Daa * Vaa;
-                        }
-
-                        if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                            AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * Vab;
-                        }else{
-                            AB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Dab, 2.0))) / Dab * Vab;
-                        }
-
-                        if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                            BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * Vbb;
-                        }else{
-                            BB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(Dbb, 2.0))) / Dbb * Vbb;
-                        }
-                    }
-                    else if(source_ == "AMP"){
-                        if(fabs(Vaa) < 1.0e-10){
-                            AA[i][j][a][b] = 0.0;
-                        }else{
-                            double RDaa = Daa / Vaa;
-                            double Zaa = sqrt(s_) * RDaa;
-                            if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                                AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_);
-                            }else{
-                                AA[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDaa, 2.0))) / RDaa;
-                            }
-                        }
-                        if(fabs(Vab) < 1.0e-10){
-                            AB[i][j][a][b] = 0.0;
-                        }else{
-                            double RDab = Dab / Vab;
-                            double Zab = sqrt(s_) * RDab;
-                            if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                                AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_);
-                            }else{
-                                AB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDab, 2.0))) / RDab;
-                            }
-                        }
-                        if(fabs(Vbb) < 1.0e-10){
-                            BB[i][j][a][b] = 0.0;
-                        }else{
-                            double RDbb = Dbb / Vbb;
-                            double Zbb = sqrt(s_) * RDbb;
-                            if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                                BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_);
-                            }else{
-                                BB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDbb, 2.0))) / RDbb;
-                            }
-                        }
-                    }
-                    else if(source_ == "EMP2"){
-                        if(fabs(Vaa) < 1.0e-10){
-                            AA[i][j][a][b] = 0.0;
-                        }else{
-                            double RDaa = Daa / Vaa;
-                            double Zaa = sqrt(s_) * RDaa / Vaa;
-                            if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                                AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) / Vaa;
-                            }else{
-                                AA[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDaa / Vaa, 2.0))) / RDaa;
-                            }
-                        }
-                        if(fabs(Vab) < 1.0e-10){
-                            AB[i][j][a][b] = 0.0;
-                        }else{
-                            double RDab = Dab / Vab;
-                            double Zab = sqrt(s_) * RDab / Vab;
-                            if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                                AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) / Vab;
-                            }else{
-                                AB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDab / Vab, 2.0))) / RDab;
-                            }
-                        }
-                        if(fabs(Vbb) < 1.0e-10){
-                            BB[i][j][a][b] = 0.0;
-                        }else{
-                            double RDbb = Dbb / Vbb;
-                            double Zbb = sqrt(s_) * RDbb / Vbb;
-                            if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                                BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) / Vbb;
-                            }else{
-                                BB[i][j][a][b] = (1 - exp(-1.0 * s_ * pow(RDbb / Vbb, 2.0))) / RDbb;
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -570,70 +451,9 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
             double Da = Fa_[ni][ni] - Fa_[na][na];
             double Db = Fb_[ni][ni] - Fb_[na][na];
 
-            if(source_ == "STANDARD"){
-                double Za = sqrt(s_) * Da;
-                double Zb = sqrt(s_) * Db;
+            A[i][a] = ElementT(source_, Da, RFa);
+            B[i][a] = ElementT(source_, Db, RFb);
 
-                if(fabs(Za) < pow(0.1,taylor_threshold_)){
-                    A[i][a] = Taylor_Exp(Za,taylor_order_) * sqrt(s_) * RFa;
-                }else{
-                    A[i][a] = (1 - exp(-1.0 * s_ * pow(Da, 2.0))) / Da * RFa;
-                }
-
-                if(fabs(Zb) < pow(0.1,taylor_threshold_)){
-                    B[i][a] = Taylor_Exp(Zb,taylor_order_) * sqrt(s_) * RFb;
-                }else{
-                    B[i][a] = (1 - exp(-1.0 * s_ * pow(Db, 2.0))) / Db * RFb;
-                }
-            }
-            else if(source_ == "AMP"){
-                if(fabs(RFa) < 1.0e-10){
-                    A[i][a] = 0.0;
-                }else{
-                    double RDa = Da / RFa;
-                    double Za = sqrt(s_) * RDa;
-                    if(fabs(Za) < pow(0.1,taylor_threshold_)){
-                        A[i][a] = Taylor_Exp(Za,taylor_order_) * sqrt(s_);
-                    }else{
-                        A[i][a] = (1 - exp(-1.0 * s_ * pow(RDa, 2.0))) / RDa;
-                    }
-                }
-                if(fabs(RFb) < 1.0e-10){
-                    B[i][a] = 0.0;
-                }else{
-                    double RDb = Db / RFb;
-                    double Zb = sqrt(s_) * RDb;
-                    if(fabs(Zb) < pow(0.1,taylor_threshold_)){
-                        B[i][a] = Taylor_Exp(Zb,taylor_order_) * sqrt(s_);
-                    }else{
-                        B[i][a] = (1 - exp(-1.0 * s_ * pow(RDb, 2.0))) / RDb;
-                    }
-                }
-            }
-            else if(source_ == "EMP2"){
-                if(fabs(RFa) < 1.0e-10){
-                    A[i][a] = 0.0;
-                }else{
-                    double RDa = Da / RFa;
-                    double Za = sqrt(s_) * RDa / RFa;
-                    if(fabs(Za) < pow(0.1,taylor_threshold_)){
-                        A[i][a] = Taylor_Exp(Za,taylor_order_) * sqrt(s_) / RFa;
-                    }else{
-                        A[i][a] = (1 - exp(-1.0 * s_ * pow(RDa / RFa, 2.0))) / RDa;
-                    }
-                }
-                if(fabs(RFb) < 1.0e-10){
-                    B[i][a] = 0.0;
-                }else{
-                    double RDb = Db / RFb;
-                    double Zb = sqrt(s_) * RDb / RFb;
-                    if(fabs(Zb) < pow(0.1,taylor_threshold_)){
-                        B[i][a] = Taylor_Exp(Zb,taylor_order_) * sqrt(s_) / RFb;
-                    }else{
-                        B[i][a] = (1 - exp(-1.0 * s_ * pow(RDb / RFb, 2.0))) / RDb;
-                    }
-                }
-            }
         }
     }
 
