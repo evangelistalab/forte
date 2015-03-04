@@ -671,7 +671,7 @@ void DSRG_MRPT2::renormalize_V()
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hhpp"}));
+    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"gggg"}));
 
     temp["ijab"] = V["ijab"] * RExp2["ijab"];
     temp["iJaB"] = V["iJaB"] * RExp2["iJaB"];
