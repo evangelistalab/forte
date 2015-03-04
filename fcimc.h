@@ -103,6 +103,13 @@ private:
     double time_step_;
     /// The maximum number of FCIQMC steps
     size_t maxiter_;
+    /// HartreeForkEnergy
+    double Ehf_;
+    /// The shift of energy
+    double shift_;
+    /// Number of walkers
+    double nWalkers_;
+
 
     void startup();
     void print_info();
@@ -110,16 +117,22 @@ private:
     // Spawning step
     void spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
     void singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
-    // Clone/annihilation step
-    void clone_annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
-
-    // Death step
-    void kill(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+    // Death/Clone step
+    void death_clone(walker_map& walkers, double shift, double spawning_threshold);
+    void detClone(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
+    void detDeath(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
+    // Merge step
+    void merge(walker_map& walkers,walker_map& new_walkers);
+    // Annihilation step
+    void annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
 
     // Count the number of allowed single and double excitations
     std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const BitsetDeterminant &det);
-    void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& excitations);
-    void detExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
+    void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    void compute_single_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
+    void compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    void detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
+    void detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
 
 };
 
