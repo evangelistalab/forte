@@ -42,10 +42,13 @@ protected:
 
     /// List of alpha core MOs
     std::vector<size_t> acore_mos;
+    size_t core_;
     /// List of alpha active MOs
     std::vector<size_t> aactv_mos;
+    size_t active_;
     /// List of alpha virtual MOs
     std::vector<size_t> avirt_mos;
+    size_t virtual_;
 
     /// List of beta core MOs
     std::vector<size_t> bcore_mos;
@@ -94,6 +97,7 @@ protected:
     ambit::BlockedTensor T2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
+    boost::shared_ptr<Matrix> RExp2M_;
     ambit::BlockedTensor ThreeIntegral;
 
     // => Class initialization and termination <= //
