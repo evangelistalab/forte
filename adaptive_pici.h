@@ -35,7 +35,15 @@
 
 namespace psi{ namespace libadaptive{
 
-enum PropagatorType {LinearPropagator,QuadraticPropagator,CubicPropagator,QuarticPropagator,PowerPropagator,PositivePropagator};
+enum PropagatorType {LinearPropagator,
+                     QuadraticPropagator,
+                     CubicPropagator,
+                     QuarticPropagator,
+                     PowerPropagator,
+                     TrotterLinearPropagator,
+                     OlsenPropagator,
+                     MitrushenkovPropagator,
+                     DavidsonLiuPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -198,6 +206,12 @@ private:
 
     /// The +tau propagator
     void propagate_positive(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// The Trotter propagator
+    void propagate_Trotter(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// The Olsen propagator
+    void propagate_Olsen(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
