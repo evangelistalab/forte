@@ -307,7 +307,7 @@ read_options(std::string name, Options &options)
         /*- Three-Particle Density Cumulant -*/
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD AMP EMP2");
+        options.add_str("SOURCE", "STANDARD", "STANDARD AMP EMP2 LAMP LEMP2");
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
     }
