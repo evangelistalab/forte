@@ -670,13 +670,23 @@ void DSRG_MRPT2::renormalize_V()
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    V["ijab"] += V["ijab"] * RExp2["ijab"];
-    V["iJaB"] += V["iJaB"] * RExp2["iJaB"];
-    V["IJAB"] += V["IJAB"] * RExp2["IJAB"];
+    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hhpp"}));
 
-    V["abij"] += V["abij"] * RExp2["ijab"];
-    V["aBiJ"] += V["aBiJ"] * RExp2["iJaB"];
-    V["ABIJ"] += V["ABIJ"] * RExp2["IJAB"];
+    temp["ijab"] = V["ijab"] * RExp2["ijab"];
+    temp["iJaB"] = V["iJaB"] * RExp2["iJaB"];
+    temp["IJAB"] = V["IJAB"] * RExp2["IJAB"];
+
+    temp["abij"] = V["abij"] * RExp2["ijab"];
+    temp["aBiJ"] = V["aBiJ"] * RExp2["iJaB"];
+    temp["ABIJ"] = V["ABIJ"] * RExp2["IJAB"];
+
+    V["ijab"] += temp["ijab"];
+    V["iJaB"] += temp["iJaB"];
+    V["IJAB"] += temp["IJAB"];
+
+    V["abij"] += temp["abij"];
+    V["aBiJ"] += temp["aBiJ"];
+    V["ABIJ"] += temp["ABIJ"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
