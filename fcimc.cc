@@ -59,7 +59,7 @@ void FCIQMC::startup()
     frzcpi_ = ints_->frzcpi();
     frzvpi_ = ints_->frzvpi();
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+
 
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h){
@@ -67,6 +67,8 @@ void FCIQMC::startup()
             mo_symmetry_.push_back(h);
         }
     }
+
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
     wavefunction_symmetry_ = 0;
     if(options_["ROOT_SYM"].has_changed()){
@@ -213,7 +215,7 @@ double FCIQMC::compute_energy()
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = 1.0;
+    walkers[reference] = 100.0;
 
     for (size_t iter = 0; iter < maxiter_; ++iter){
 
@@ -221,12 +223,12 @@ double FCIQMC::compute_energy()
 
         // Step #1.  Spawning
         timer_on("FCIQMC:Spawn");
-        spawn(walkers,new_walkers,spawning_threshold_);
+        spawn(walkers,new_walkers);
         timer_off("FCIQMC:Spawn");
 
         // Step #2.  Death/Clone
         timer_on("FCIQMC:Death_Clone");
-        death_clone(walkers, shift_,spawning_threshold_);
+        death_clone(walkers, shift_);
         timer_off("FCIQMC:Death_Clone");
 
         // Step #3.  Merge parents and spawned
@@ -239,7 +241,7 @@ double FCIQMC::compute_energy()
         annihilate(walkers,new_walkers,spawning_threshold_);
         timer_off("FCIQMC:Annihilation");
 
-        print_iter_info(iter, nre, reference, walkers);
+        print_iter_info(iter,reference, walkers);
     }
 
 
@@ -249,7 +251,7 @@ double FCIQMC::compute_energy()
 //    outfile->Printf("\n  Energy 2: %f",energy2);
 
 //    excited.set_alfa_bit(1,false);
-//    excited.set_beta_bit(1,false);
+//    excited.set_beta_bit(1,false);:
 //    excited.set_alfa_bit(6,true);
 //    excited.set_beta_bit(6,true);
 
@@ -281,7 +283,7 @@ double FCIQMC::compute_energy()
 }
 
 
-void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
+void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 {
     int count = 0;
     for (auto& det_coef : walkers){
@@ -419,18 +421,35 @@ void FCIQMC::singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDetermin
 }
 
 // Step #2.  Death/Clone
-void FCIQMC::death_clone(walker_map& walkers, double shift, double spawning_threshold)
+void FCIQMC::death_clone(walker_map& walkers, double shift)
 {
     for (auto& det_coef : walkers){
         const BitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
-        double HIJ = det.slater_rules(det);
-        double pDeathClone = time_step_ * std::fabs(HIJ-Ehf_-shift);
+        double HII = det.energy();
+        double pDeathClone = time_step_ * (HII-Ehf_-shift);
 
-        if (pDeathClone<0)
-            detClone(walkers, det, coef, pDeathClone);
-        else
-            detDeath(walkers, det, coef, pDeathClone);
+        int pDC_trunc = std::trunc(pDeathClone);
+
+        size_t nid = std::round(std::fabs(coef));
+        double signCoef = coef >= 0.0 ? 1.0 : -1.0;
+        for (size_t detW=0; detW < nid; ++detW){
+
+            if (rand_real() > std::fabs(pDeathClone-pDC_trunc)){
+                coef -= signCoef * pDC_trunc;
+            }else {
+                coef -= signCoef * (pDC_trunc + (pDeathClone >= 0.0 ? 1.0 : -1.0));
+            }
+        }
+//        det.print();
+//        outfile->Printf("\nold coef=%lf, new coef=%lf, pDC=%lf",det_coef.second, coef, pDeathClone);
+
+        walkers[det] = coef;
+
+//        if (pDeathClone<0)
+//            detClone(walkers, det, coef, pDeathClone);
+//        else
+//            detDeath(walkers, det, coef, pDeathClone);
     }
 
 }
@@ -450,13 +469,13 @@ void FCIQMC::detClone(walker_map& walkers, const BitsetDeterminant& det, double 
     if (cloneCount<0){
         double signFlag = coef>0.0?-1.0:1.0;
         walkers[det] += signFlag*cloneCount;
-        outfile->Printf("\n  Determinant:");
-        det.print();
-        outfile->Printf("%f dets cloned %d:",nid,signFlag*cloneCount);
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("%f dets cloned %d:",nid,signFlag*cloneCount);
     }else{
-        outfile->Printf("\n  Determinant:");
-        det.print();
-        outfile->Printf("dets did not clone");
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("dets did not clone");
     }
 
 }
@@ -737,24 +756,28 @@ void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,s
     }
 }
 
-void FCIQMC::print_iter_info(size_t iter, double nre, BitsetDeterminant& ref, walker_map& walkers){
+void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers){
     size_t countWalkers = 0;
     double Cref = walkers[ref];
-    double Eproj = nre, Evar = 0;
+    double Eproj = nuclear_repulsion_energy_, Evar = 0;
     double mod2 = 0.0;
     for (auto walker:walkers){
+        const BitsetDeterminant& det = walker.first;
         double Cwalker = walker.second;
-        Eproj += ref.slater_rules(walker.first)*Cwalker/Cref;
+        Eproj += ref.slater_rules(det)*Cwalker/Cref;
         countWalkers+=size_t(std::fabs(Cwalker));
         mod2 += Cwalker*Cwalker;
         for (auto walker2:walkers){
+            const BitsetDeterminant& det2 = walker2.first;
             double Cwalker2 = walker2.second;
-            Evar += walker.first.slater_rules(walker2.first)*Cwalker*Cwalker2;
+            Evar += det.slater_rules(det2)*Cwalker*Cwalker2;
         }
+//        det.print();
+//        outfile->Printf("\nCwalker: %lf",Cwalker);
     }
     Evar /= mod2;
-    Evar += nre;
-    outfile->Printf("\niter:%zu ended with %zu dets, %zu walkers, var E=%lf, proj E=%lf",iter, walkers.size(), countWalkers, Eproj, Evar);
+    Evar += nuclear_repulsion_energy_;
+    outfile->Printf("\niter:%zu ended with %zu dets, %zu walkers, var E=%lf, proj E=%lf",iter, walkers.size(), countWalkers, Evar, Eproj);
 }
 
 }} // EndNamespaces
