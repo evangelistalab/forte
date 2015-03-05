@@ -9,6 +9,8 @@
 #include "integrals.h"
 #include <ambit/blocked_tensor.h>
 #include "reference.h"
+#include <string>
+#include <vector>
 
 namespace psi{
 
@@ -95,6 +97,7 @@ protected:
     ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
+    ambit::BlockedTensor T2pr; // <- Reduced T2 amplitude
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
     boost::shared_ptr<Matrix> RExp2M_;
@@ -151,6 +154,9 @@ protected:
             return value;
         }else{return 0.0;}
     }
+
+    ///This function will generate all the possible string combinations minus the ccvv
+    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& in_str_vec);
 
 public:
 
