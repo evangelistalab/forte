@@ -93,7 +93,7 @@ private:
     int ncmo_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
-    /// The nuclear repulsion energy
+    /// Nuclear repulsion energy
     double nuclear_repulsion_energy_;
 
     // * Calculation info
@@ -115,10 +115,10 @@ private:
     void print_info();
 
     // Spawning step
-    void spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+    void spawn(walker_map& walkers, walker_map& new_walkers);
     void singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
     // Death/Clone step
-    void death_clone(walker_map& walkers, double shift, double spawning_threshold);
+    void death_clone(walker_map& walkers, double shift);
     void detClone(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
     void detDeath(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
     // Merge step
@@ -133,6 +133,7 @@ private:
     void compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
     void detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
     void detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
+    void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers);
 
 };
 

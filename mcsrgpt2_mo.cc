@@ -49,6 +49,12 @@ void MCSRGPT2_MO::startup(Options &options){
     source_ = options.get_str("SOURCE");
     if(sourcemap.find(source_) == sourcemap.end()){
         outfile->Printf("\n  Source operator %s is not available.", source_.c_str());
+        outfile->Printf("\n  Only these source operators are available: ");
+        for (const auto& keys: sourcemap){
+            std::string key = keys.first;
+            outfile->Printf("%s ", key.c_str());
+        }
+        outfile->Printf("\n");
         throw PSIEXCEPTION("Source operator is not available.");
     }
 
