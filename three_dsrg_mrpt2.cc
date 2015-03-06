@@ -8,6 +8,9 @@
 #include <libqt/qt.h>
 
 #include "three_dsrg_mrpt2.h"
+#include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace ambit;
 
@@ -127,6 +130,7 @@ void THREE_DSRG_MRPT2::startup()
     // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
     if(options_.get_str("INT_TYPE")=="CHOLESKY")
     {
+        outfile->Printf("\n Building cholesky integrals");
         size_t nCD = ints_->nL();
         std::vector<size_t> nauxpi(nCD);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
@@ -138,6 +142,8 @@ void THREE_DSRG_MRPT2::startup()
         ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
+        outfile->Printf("\n Done with cholesky integrals");
+        outfile->Flush();
         ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if (spin[0] == AlphaSpin)
                 value = ints_->get_three_integral(i[0],i[1],i[2]);
@@ -165,7 +171,6 @@ void THREE_DSRG_MRPT2::startup()
         });
 
     }
-   // ThreeIntegral.print(stdout);
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
@@ -179,10 +184,35 @@ void THREE_DSRG_MRPT2::startup()
     Delta2 = BlockedTensor::build(tensor_type_,"Delta2",spin_cases({"hhpp"}));
     RDelta1 = BlockedTensor::build(tensor_type_,"RDelta1",spin_cases({"hp"}));
     RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
+
+
     T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
     T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
     RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
+    //T2pr.print(stdout,false);
+    //all_spin = RExp2.get.();
+
+    std::vector<std::string> mo_indices = RDelta2.block_labels();
+    std::vector<std::string> no_hhpp;
+    no_hhpp = spin_cases_avoid(mo_indices);
+    for(const std::string spin : mo_indices){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            no_hhpp.push_back(spin);
+        }
+    }
+    for(std::string spin : no_hhpp){
+        outfile->Printf("\nspin : %s", spin.c_str());
+    }
+
+
+    BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
+    T2pr.print(stdout,false);
+
+
+
 
     // Fill in the one-electron operator (H)
 //    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -272,12 +302,12 @@ void THREE_DSRG_MRPT2::startup()
     F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
     F["PQ"] -= ThreeIntegral["gPJ"]*ThreeIntegral["gIQ"]*Gamma1["IJ"];
 
-    Tensor Fa_cc = F.block("cc");
-    Tensor Fa_aa = F.block("aa");
-    Tensor Fa_vv = F.block("vv");
-    Tensor Fb_CC = F.block("CC");
-    Tensor Fb_AA = F.block("AA");
-    Tensor Fb_VV = F.block("VV");
+  // Tensor Fa_cc = F.block("cc");
+  // Tensor Fa_aa = F.block("aa");
+  // Tensor Fa_vv = F.block("vv");
+  // Tensor Fb_CC = F.block("CC");
+  // Tensor Fb_AA = F.block("AA");
+  // Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -345,30 +375,16 @@ void THREE_DSRG_MRPT2::startup()
         }
     });
 
-    size_t naocc = acore_mos.size() + bcore_mos.size() + aactv_mos.size() + bactv_mos.size();
-    size_t navir = aactv_mos.size() + bactv_mos.size() + avirt_mos.size() + bvirt_mos.size();
-    boost::shared_ptr<Matrix> RExp2M(new Matrix("RExp2M", naocc*navir, naocc*navir));
 
     RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-            //RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],1.0 + value);
-            RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],value);
         }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
             value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-            //RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],1.0 + value);
-            RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],value);
         }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
             value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-            //RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],1.0 + value);
-            RExp2M->set(i[0]*naocc + i[2],i[1]*naocc + i[3],value);
         }
     });
-    RExp2M->print();
-    boost::shared_ptr<Vector> RExpEigs(new Vector("RExpEigs", naocc*navir));
-    boost::shared_ptr<Matrix> RExpEvecs(new Matrix("RExpEvecs", naocc*navir, naocc*navir));
-    RExp2M->diagonalize(RExpEvecs, RExpEigs);
-    int count = 0.0;
 //    for (size_t i = 0; i < naocc*navir; i++)
 //    {
 //        if(RExpEigs->get(i) < -1.0e-8) count++;
@@ -526,11 +542,15 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2["ijab"] = v["ijab"] * RDelta2["ijab"];
     T2["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
     T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+    //T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
+    //T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    //T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
     T2.block("aAaA").zero();
     T2.block("AAAA").zero();
+    //T2.print(stdout, false);
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
@@ -910,5 +930,19 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n  E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E);
     return E;
 }
+std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
+{
+
+    std::vector<std::string> out_str_vec;
+    for(const std::string spin : in_str_vec){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            out_str_vec.push_back(spin);
+        }
+    }
+    return out_str_vec;
+}
+
 
 }} // End Namespaces
