@@ -105,11 +105,14 @@ private:
     size_t maxiter_;
     /// HartreeForkEnergy
     double Ehf_;
+    /// Start Number of walkers
+    double start_num_det_;
     /// The shift of energy
     double shift_;
     /// Number of walkers
     double nWalkers_;
-
+    /// Shift the Hamiltonian?
+    bool do_shift_;
 
     void startup();
     void print_info();
