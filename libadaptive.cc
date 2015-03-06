@@ -234,7 +234,11 @@ read_options(std::string name, Options &options)
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
-
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
+        //////////////////////////////////////////////////////////////
+        /*- The maximum value of beta -*/
+        options.add_double("START_NUM_DET",1000.0);
 
         //////////////////////////////////////////////////////////////
         ///

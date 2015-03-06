@@ -99,6 +99,7 @@ void FCIQMC::startup()
 //    initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
+    start_num_det_ = options_.get_double("START_NUM_DET");
 //    e_convergence_ = options_.get_double("E_CONVERGENCE");
 //    energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
 
@@ -106,7 +107,7 @@ void FCIQMC::startup()
 
 //    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
 //    fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
-//    do_shift_ = options_.get_bool("USE_SHIFT");
+    do_shift_ = options_.get_bool("USE_SHIFT");
 //    do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
 //    do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
@@ -215,7 +216,7 @@ double FCIQMC::compute_energy()
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = 100.0;
+    walkers[reference] = start_num_det_;
 
     for (size_t iter = 0; iter < maxiter_; ++iter){
 
@@ -508,16 +509,26 @@ void FCIQMC::detDeath(walker_map& walkers, const BitsetDeterminant& det, double 
 
 // Step #3.  Merge
 void FCIQMC::merge(walker_map& walkers,walker_map& new_walkers){
+    std::vector<BitsetDeterminant> removeDets;
     for (auto& det_coef : walkers){
         const BitsetDeterminant& det = det_coef.first;
         if (new_walkers.count(det)){
             walkers[det] += new_walkers[det];
             new_walkers.erase(det);
         }
+        if (int(std::round(walkers[det]))==0){
+            removeDets.push_back(det);
+        }
     }
     for (auto& det_coef : new_walkers){
         const BitsetDeterminant& det = det_coef.first;
         walkers[det] = det_coef.second;
+        if (int(std::round(walkers[det]))==0){
+            removeDets.push_back(det);
+        }
+    }
+    for (auto& det : removeDets) {
+        walkers.erase(det);
     }
 }
 
