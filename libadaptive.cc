@@ -200,12 +200,16 @@ read_options(std::string name, Options &options)
         /*- The size of the population -*/
         options.add_int("NPOP",100);
 
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE ADAPTIVE CI
+        //////////////////////////////////////////////////////////////
+
+        /*- The threshold for smoothing the Hamiltonian. -*/
+        options.add_double("SMOOTH_THRESHOLD",0.01);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
-
-        // Options for the Adaptive Path-Integral CI //
         /*- The propagation algorithm -*/
         options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV");
         /*- The determinant importance threshold -*/
