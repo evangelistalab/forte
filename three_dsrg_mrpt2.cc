@@ -3,15 +3,19 @@
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
 #include <libmints/molecule.h>
+#include <libmints/matrix.h>
+#include <libmints/vector.h>
 #include <libqt/qt.h>
 
 #include "three_dsrg_mrpt2.h"
+#include <vector>
+#include <string>
+#include <algorithm>
 
 using namespace ambit;
 
 namespace psi{ namespace libadaptive{
 
-TensorType tensor_type_ = kCore;
 
 THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore)
@@ -101,12 +105,15 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
+    size_t core_ = bcore_mos.size();
 
     BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
     BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
+    size_t active_ = aactv_mos.size();
 
     BlockedTensor::add_mo_space("v","ef",avirt_mos,AlphaSpin);
     BlockedTensor::add_mo_space("V","EF",bvirt_mos,BetaSpin);
+    size_t virtual_ = avirt_mos.size();
 
     BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
     BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
@@ -118,20 +125,31 @@ void THREE_DSRG_MRPT2::startup()
     BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
 
 
+    // These two blocks of functions create a BlockedThreeIntegral tensor
+    // And fill the tensor
+    // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
     if(options_.get_str("INT_TYPE")=="CHOLESKY")
     {
+        outfile->Printf("\n Building cholesky integrals");
         size_t nCD = ints_->nL();
         std::vector<size_t> nauxpi(nCD);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-        BlockedTensor::add_mo_space("d","$",nauxpi,NoSpin);
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
+        //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
         size_t nmo = ints_->nmo();
 
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type_,"ThreeIntegralTensor",{nCD,nmo, nmo});
+        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
-        ThreeIntegralTensor =ints_->get_ThreeIntegral();
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
+        outfile->Printf("\n Done with cholesky integrals");
+        outfile->Flush();
+        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0] == AlphaSpin)
+                value = ints_->get_three_integral(i[0],i[1],i[2]);
+            else
+                value = ints_->get_three_integral(i[0],i[1],i[2]);
+        });
 
     }
     else if(options_.get_str("INT_TYPE")=="DF")
@@ -139,9 +157,19 @@ void THREE_DSRG_MRPT2::startup()
         size_t nDF = ints_->naux();
         std::vector<size_t> nauxpi(nDF);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+        size_t nmo = ints_->nmo();
 
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeIntegral", spin_cases({"dpp"}));
+        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+
+        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
+        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0] == AlphaSpin)
+                value = ints_->get_three_integral(i[0],i[1],i[2]);
+            else
+                value = ints_->get_three_integral(i[0],i[1],i[2]);
+        });
+
     }
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
@@ -156,10 +184,35 @@ void THREE_DSRG_MRPT2::startup()
     Delta2 = BlockedTensor::build(tensor_type_,"Delta2",spin_cases({"hhpp"}));
     RDelta1 = BlockedTensor::build(tensor_type_,"RDelta1",spin_cases({"hp"}));
     RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
+
+
     T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
     T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
     RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
+    //T2pr.print(stdout,false);
+    //all_spin = RExp2.get.();
+
+    std::vector<std::string> mo_indices = RDelta2.block_labels();
+    std::vector<std::string> no_hhpp;
+    no_hhpp = spin_cases_avoid(mo_indices);
+    for(const std::string spin : mo_indices){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            no_hhpp.push_back(spin);
+        }
+    }
+    for(std::string spin : no_hhpp){
+        outfile->Printf("\nspin : %s", spin.c_str());
+    }
+
+
+    BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
+    T2pr.print(stdout,false);
+
+
+
 
     // Fill in the one-electron operator (H)
 //    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -225,26 +278,36 @@ void THREE_DSRG_MRPT2::startup()
     Eta1_AA("pq") -= reference_.L1b()("pq");
 
     // Fill in the two-electron operator (V)
-    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
-    });
+    //V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+    //    if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+    //    if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+    //});
+
+    V["pqrs"] += ThreeIntegral["gpr"]*ThreeIntegral["gqs"];
+    V["pqrs"] -=  ThreeIntegral["gps"]*ThreeIntegral["gqr"];
+
+    V["pQrS"] += ThreeIntegral["gpr"]*ThreeIntegral["gQS"];
+
+    V["PQRS"] += ThreeIntegral["gPR"]*ThreeIntegral["gQS"];
+    V["PQRS"] -= ThreeIntegral["gPS"]*ThreeIntegral["gQR"];
     // Form the Fock matrix
     F["pq"]  = H["pq"];
-    F["pq"] += V["pjqi"] * Gamma1["ij"];
-    F["pq"] += V["pJqI"] * Gamma1["IJ"];
+    F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
+    F["pq"] -= ThreeIntegral["gpj"]*ThreeIntegral["giq"]*Gamma1["ij"];
+    F["pq"]  +=ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
 
     F["PQ"] += H["PQ"];
-    F["PQ"] += V["jPiQ"] * Gamma1["ij"];
-    F["PQ"] += V["PJQI"] * Gamma1["IJ"];
+    F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gji"]*Gamma1["ij"];
+    F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+    F["PQ"] -= ThreeIntegral["gPJ"]*ThreeIntegral["gIQ"]*Gamma1["IJ"];
 
-    Tensor Fa_cc = F.block("cc");
-    Tensor Fa_aa = F.block("aa");
-    Tensor Fa_vv = F.block("vv");
-    Tensor Fb_CC = F.block("CC");
-    Tensor Fb_AA = F.block("AA");
-    Tensor Fb_VV = F.block("VV");
+  // Tensor Fa_cc = F.block("cc");
+  // Tensor Fa_aa = F.block("aa");
+  // Tensor Fa_vv = F.block("vv");
+  // Tensor Fb_CC = F.block("CC");
+  // Tensor Fb_AA = F.block("AA");
+  // Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -312,6 +375,7 @@ void THREE_DSRG_MRPT2::startup()
         }
     });
 
+
     RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -321,6 +385,10 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
         }
     });
+//    for (size_t i = 0; i < naocc*navir; i++)
+//    {
+//        if(RExpEigs->get(i) < -1.0e-8) count++;
+//    }
 
     // Print levels
     print_ = options_.get_int("PRINT");
@@ -345,6 +413,7 @@ void THREE_DSRG_MRPT2::print_summary()
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"Flow parameter",s_},
+        {"Cholesky Tolerance", options_.get_double("CHOLESKY_TOLERANCE")},
         {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
@@ -380,6 +449,7 @@ double THREE_DSRG_MRPT2::renormalized_denominator(double D)
 
 double THREE_DSRG_MRPT2::compute_energy()
 {
+    outfile->Printf("\n Computing energy!!!");
     // Compute reference
 //    Eref = compute_ref();
 
@@ -397,6 +467,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         V.print(stdout);
     }
 
+    outfile->Printf("\n Getting to the E_FT1 piece");
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
     timer_on("E_FT1");
@@ -460,14 +531,26 @@ double THREE_DSRG_MRPT2::compute_ref()
 void THREE_DSRG_MRPT2::compute_t2()
 {
     timer_on("Compute T2");
-    T2["ijab"] = V["ijab"] * RDelta2["ijab"];
-    T2["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
-    T2["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
+    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",spin_cases({"hhpp"}));
+    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
+    //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
+    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
+    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
+    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
+    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
+
+    T2["ijab"] = v["ijab"] * RDelta2["ijab"];
+    T2["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+    //T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
+    //T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    //T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
     T2.block("aAaA").zero();
     T2.block("AAAA").zero();
+    //T2.print(stdout, false);
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
@@ -545,13 +628,23 @@ void THREE_DSRG_MRPT2::compute_t1()
 void THREE_DSRG_MRPT2::renormalize_V()
 {
     timer_on("Renorm. V");
-    V["ijab"] += V["ijab"] * RExp2["ijab"];
-    V["iJaB"] += V["iJaB"] * RExp2["iJaB"];
-    V["IJAB"] += V["IJAB"] * RExp2["IJAB"];
+    // Put RExp2 into a shared matrix.
+    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",spin_cases({"hhpp"}));
+    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
+    //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
+    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
+    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
+    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
+    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
 
-    V["abij"] += V["abij"] * RExp2["ijab"];
-    V["aBiJ"] += V["aBiJ"] * RExp2["iJaB"];
-    V["ABIJ"] += V["ABIJ"] * RExp2["IJAB"];
+    //V["ijab"] += V["ijab"] * RExp2["ijab"];
+    V["ijab"] += v["ijab"] * RExp2["ijab"];
+    V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
+    V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
+
+    V["abij"] += v["ijab"] * RExp2["ijab"];
+    V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
+    V["ABIJ"] += v["IJAB"] * RExp2["IJAB"];
     timer_off("Renorm. V");
 }
 
@@ -600,7 +693,9 @@ double THREE_DSRG_MRPT2::E_FT1()
     temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
     temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
 
+    //E += T1["ia"]*Eta1["ab"]* Gamma1["ji"] * F["bj"];
     E += temp["jb"] * F["bj"];
+    //E += T1["IA"]*Eta1["AB"]* Gamma1["JI"] * F["BJ"];
     E += temp["JB"] * F["BJ"];
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
@@ -835,5 +930,19 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n  E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E);
     return E;
 }
+std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
+{
+
+    std::vector<std::string> out_str_vec;
+    for(const std::string spin : in_str_vec){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            out_str_vec.push_back(spin);
+        }
+    }
+    return out_str_vec;
+}
+
 
 }} // End Namespaces

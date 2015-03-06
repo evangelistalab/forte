@@ -93,7 +93,7 @@ private:
     int ncmo_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
-    /// The nuclear repulsion energy
+    /// Nuclear repulsion energy
     double nuclear_repulsion_energy_;
 
     // * Calculation info
@@ -103,23 +103,40 @@ private:
     double time_step_;
     /// The maximum number of FCIQMC steps
     size_t maxiter_;
+    /// HartreeForkEnergy
+    double Ehf_;
+    /// Start Number of walkers
+    double start_num_det_;
+    /// The shift of energy
+    double shift_;
+    /// Number of walkers
+    double nWalkers_;
+    /// Shift the Hamiltonian?
+    bool do_shift_;
 
     void startup();
     void print_info();
 
     // Spawning step
-    void spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+    void spawn(walker_map& walkers, walker_map& new_walkers);
     void singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
-    // Clone/annihilation step
-    void clone_annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
-
-    // Death step
-    void kill(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+    // Death/Clone step
+    void death_clone(walker_map& walkers, double shift);
+    void detClone(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
+    void detDeath(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone);
+    // Merge step
+    void merge(walker_map& walkers,walker_map& new_walkers);
+    // Annihilation step
+    void annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
 
     // Count the number of allowed single and double excitations
     std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const BitsetDeterminant &det);
-    void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& excitations);
-    void detExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
+    void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    void compute_single_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
+    void compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    void detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
+    void detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
+    void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers);
 
 };
 

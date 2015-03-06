@@ -13,6 +13,7 @@
 #include <liboptions/liboptions.h>
 #include <libtrans/integraltransform.h>
 #include <ambit/tensor.h>
+#include <libmints/matrix.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -53,6 +54,9 @@ public:
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}
+
+    /// Return the total number of auxiliary index(CD or DF)
+    size_t nthree() const {return nthree_;}
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension& ncmopi() {return ncmopi_;}
@@ -157,9 +161,9 @@ public:
     void compute_df_integrals();
     /// Compute cholesky integrals
     void compute_chol_integrals();
+    /// Return value of df/cd integral
+    double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * nmo_ + q);}
 
-    /// For future codes to get the DF or CD integrals
-    ambit::Tensor get_ThreeIntegral() {return ThreeIntegral;}
 
     //const int* qt_pitzer_;
 
@@ -189,6 +193,10 @@ private:
     size_t naux_;
     /// The number of cholesky vectors
     size_t nL_;
+    /// The number of cholesky/auxiliary
+    size_t nthree_;
+    /// Three Index Shared Matrix
+    boost::shared_ptr<Matrix> ThreeIntegral_;
 
     /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;
@@ -275,10 +283,7 @@ private:
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
-    /// A three index tensor
-    ambit::Tensor ThreeIntegral;
-    /// A function that fills the threeIntegral inside the integral class.
-    void fill_ThreeIntegral(boost::shared_ptr<Matrix>);
+    /// Function to get three index integral
 };
 
 }} // End Namespaces
