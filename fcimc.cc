@@ -59,7 +59,7 @@ void FCIQMC::startup()
     frzcpi_ = ints_->frzcpi();
     frzvpi_ = ints_->frzvpi();
 
-    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
+
 
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h){
@@ -67,6 +67,8 @@ void FCIQMC::startup()
             mo_symmetry_.push_back(h);
         }
     }
+
+    nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
     wavefunction_symmetry_ = 0;
     if(options_["ROOT_SYM"].has_changed()){
@@ -97,6 +99,7 @@ void FCIQMC::startup()
 //    initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
+    start_num_det_ = options_.get_double("START_NUM_DET");
 //    e_convergence_ = options_.get_double("E_CONVERGENCE");
 //    energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
 
@@ -104,7 +107,7 @@ void FCIQMC::startup()
 
 //    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
 //    fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
-//    do_shift_ = options_.get_bool("USE_SHIFT");
+    do_shift_ = options_.get_bool("USE_SHIFT");
 //    do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
 //    do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
@@ -127,7 +130,8 @@ void FCIQMC::startup()
 //        propagator_ = PositivePropagator;
 //        propagator_description_ = "Positive";
 //    }
-
+    shift_ = 0.0;
+    nWalkers_ = 0;
     num_threads_ = omp_get_max_threads();
 }
 
@@ -205,31 +209,40 @@ double FCIQMC::compute_energy()
     BitsetDeterminant reference(occupation_a,occupation_b);
     reference.print();
 
+    Ehf_ = reference.slater_rules(reference);
+
     double nre = molecule_->nuclear_repulsion_energy();
+    outfile->Printf("\nnuclear_repulsion_energy:%lf, Ehf:%lf",nre, Ehf_);
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = 1.0;
-
-
-
-    for (size_t i = 0; i < nmo_; ++i){
-        outfile->Printf("%d\n",mo_symmetry_[i]);
-    }
+    walkers[reference] = start_num_det_;
 
     for (size_t iter = 0; iter < maxiter_; ++iter){
 
         std::map<BitsetDeterminant,double> new_walkers;
 
         // Step #1.  Spawning
-        spawn(walkers,new_walkers,spawning_threshold_);
+        timer_on("FCIQMC:Spawn");
+        spawn(walkers,new_walkers);
+        timer_off("FCIQMC:Spawn");
 
-        // Step #2.  Clone/annihilation
-        clone_annihilate(walkers,new_walkers,spawning_threshold_);
+        // Step #2.  Death/Clone
+        timer_on("FCIQMC:Death_Clone");
+        death_clone(walkers, shift_);
+        timer_off("FCIQMC:Death_Clone");
 
-        // Step #3.  Death
-        kill(walkers,new_walkers,spawning_threshold_);
+        // Step #3.  Merge parents and spawned
+        timer_on("FCIQMC:Merge");
+        merge(walkers, new_walkers);
+        timer_off("FCIQMC:Merge");
 
+        // Step #3.  annihilation
+        timer_on("FCIQMC:Annihilation");
+        annihilate(walkers,new_walkers,spawning_threshold_);
+        timer_off("FCIQMC:Annihilation");
+
+        print_iter_info(iter,reference, walkers);
     }
 
 
@@ -239,7 +252,7 @@ double FCIQMC::compute_energy()
 //    outfile->Printf("\n  Energy 2: %f",energy2);
 
 //    excited.set_alfa_bit(1,false);
-//    excited.set_beta_bit(1,false);
+//    excited.set_beta_bit(1,false);:
 //    excited.set_alfa_bit(6,true);
 //    excited.set_beta_bit(6,true);
 
@@ -271,8 +284,9 @@ double FCIQMC::compute_energy()
 }
 
 
-void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
+void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 {
+    int count = 0;
     for (auto& det_coef : walkers){
         const BitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
@@ -281,40 +295,66 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers,double spawning_t
 //        std::tie (nsa,nsb,ndaa,ndab,ndbb) = pgen;
 
 //        size_t sumgen = nsa + nsb + ndaa + ndbb + ndab;
-        std::vector<std::tuple<size_t,size_t,size_t,size_t>> excitations;
-        compute_excitations(det, excitations);
-        size_t sumgen = excitations.size();
+        timer_on("FCIQMC:Compute_excitations");
+        std::vector<std::tuple<size_t,size_t>> singleExcitations;
+        std::vector<std::tuple<size_t,size_t,size_t,size_t>> doubleExcitations;
+        compute_excitations(det, singleExcitations, doubleExcitations);
+        size_t sumSingle = singleExcitations.size(), sumDouble = doubleExcitations.size();
+        size_t sumgen = sumSingle+sumDouble;
+        timer_off("FCIQMC:Compute_excitations");
 
-        size_t nid = std::round(coef);
+        size_t nid = std::round(std::fabs(coef));
         for (size_t detW = 0; detW < nid; ++detW){
-
-
             BitsetDeterminant new_det(det);
             // Select a random number within the range of allowed determinants
 //            singleWalkerSpawn(new_det,det,pgen,sumgen);
             size_t rand_ext = rand_int() % sumgen;
-            detExcitation(new_det, excitations[rand_ext]);
+            if (rand_ext<sumDouble)
+                detDoubleExcitation(new_det, doubleExcitations[rand_ext]);
+            else
+                detSingleExcitation(new_det, singleExcitations[rand_ext-sumDouble]);
 
 
             double HIJ = new_det.slater_rules(det);
             double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
-            size_t pspawn_floor = std::floor(pspawn);
+            int pspawn_floor = std::floor(pspawn);
             if (rand_real() < pspawn - double(pspawn_floor)){
                 pspawn_floor++;
             }
 
-            double nspawn = coef * HIJ > 0 ? -double(pspawn_floor) : +double(pspawn_floor);
+            int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
 
             // TODO: check
             if (nspawn != 0){
-                new_walkers[new_det] += nspawn;
+                new_walkers[new_det] += double(nspawn);
             }
 
-            outfile->Printf("\n  Determinant:");
-            det.print();
-            outfile->Printf(" spawned %f (%f):",nspawn,pspawn);
-            new_det.print();
+//            outfile->Printf("\n  Determinant %d:",count);
+//            det.print();
+//            outfile->Printf(" spawned %d (%f):",nspawn,pspawn);
+//            new_det.print();
+//            if (count == 15){
+//                outfile->Printf("\n  Determinant %d spawn detail:",count);
+//                outfile->Printf("\n  Random: %zu",rand_ext);
+//                outfile->Printf("\n  NS %zu, ND %zu",sumSingle,sumDouble);
+//                size_t ii,aa,jj,bb;
+//                std::tie (ii,aa,jj,bb) = doubleExcitations[rand_ext];
+//                outfile->Printf("\n  Ext: %zu %zu %zu %zu",ii,aa,jj,bb);
+//                std::vector<std::tuple<size_t,size_t>>::iterator t1 ;
+//                for(t1=singleExcitations.begin(); t1!=singleExcitations.end(); t1++){
+//                    size_t ii,aa;
+//                    std::tie (ii,aa) = *t1;
+//                    outfile->Printf("\n %zu %zu",ii,aa);
+//                }
+//                std::vector<std::tuple<size_t,size_t,size_t,size_t>>::iterator t2 ;
+//                for(t2=doubleExcitations.begin(); t2!=doubleExcitations.end(); t2++){
+//                    size_t ii,aa,jj,bb;
+//                    std::tie (ii,aa,jj,bb) = *t2;
+//                    outfile->Printf("\n %zu %zu %zu %zu",ii,aa,jj,bb);
+//                }
+//            }
         }
+        count++;
     }
 
 }
@@ -381,14 +421,119 @@ void FCIQMC::singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDetermin
     }
 }
 
-// Step #2.  Clone/annihilation
-void FCIQMC::clone_annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
+// Step #2.  Death/Clone
+void FCIQMC::death_clone(walker_map& walkers, double shift)
 {
+    for (auto& det_coef : walkers){
+        const BitsetDeterminant& det = det_coef.first;
+        double coef = det_coef.second;
+        double HII = det.energy();
+        double pDeathClone = time_step_ * (HII-Ehf_-shift);
+
+        int pDC_trunc = std::trunc(pDeathClone);
+
+        size_t nid = std::round(std::fabs(coef));
+        double signCoef = coef >= 0.0 ? 1.0 : -1.0;
+        for (size_t detW=0; detW < nid; ++detW){
+
+            if (rand_real() > std::fabs(pDeathClone-pDC_trunc)){
+                coef -= signCoef * pDC_trunc;
+            }else {
+                coef -= signCoef * (pDC_trunc + (pDeathClone >= 0.0 ? 1.0 : -1.0));
+            }
+        }
+//        det.print();
+//        outfile->Printf("\nold coef=%lf, new coef=%lf, pDC=%lf",det_coef.second, coef, pDeathClone);
+
+        walkers[det] = coef;
+
+//        if (pDeathClone<0)
+//            detClone(walkers, det, coef, pDeathClone);
+//        else
+//            detDeath(walkers, det, coef, pDeathClone);
+    }
 
 }
 
-// Step #3.  Death
-void FCIQMC::kill(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
+void FCIQMC::detClone(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone){
+    int pDC_trunc = std::trunc(pDeathClone);
+    size_t nid = std::round(std::fabs(coef));
+    int cloneCount = 0;
+    for (size_t detW = 0; detW < nid; ++detW){
+        if (rand_real() < double(pDC_trunc)-pDeathClone){
+            cloneCount += pDC_trunc-1;
+        } else {
+            cloneCount += pDC_trunc;
+        }
+
+    }
+    if (cloneCount<0){
+        double signFlag = coef>0.0?-1.0:1.0;
+        walkers[det] += signFlag*cloneCount;
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("%f dets cloned %d:",nid,signFlag*cloneCount);
+    }else{
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("dets did not clone");
+    }
+
+}
+
+void FCIQMC::detDeath(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone){
+    int pDC_trunc = std::trunc(pDeathClone);
+    size_t nid = std::round(std::fabs(coef));
+    int deathCount = 0;
+    for (size_t detW = 0; detW < nid; ++detW){
+        if (rand_real() < pDeathClone-double(pDC_trunc)){
+            deathCount += pDC_trunc+1;
+        } else {
+            deathCount += pDC_trunc;
+        }
+
+    }
+    if (deathCount<0){
+        double signFlag = coef>0.0?-1.0:1.0;
+        walkers[det] += signFlag*deathCount;
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("%f dets died %d:",nid,signFlag*deathCount);
+    }else{
+//        outfile->Printf("\n  Determinant:");
+//        det.print();
+//        outfile->Printf("dets did not die");
+    }
+
+}
+
+// Step #3.  Merge
+void FCIQMC::merge(walker_map& walkers,walker_map& new_walkers){
+    std::vector<BitsetDeterminant> removeDets;
+    for (auto& det_coef : walkers){
+        const BitsetDeterminant& det = det_coef.first;
+        if (new_walkers.count(det)){
+            walkers[det] += new_walkers[det];
+            new_walkers.erase(det);
+        }
+        if (int(std::round(walkers[det]))==0){
+            removeDets.push_back(det);
+        }
+    }
+    for (auto& det_coef : new_walkers){
+        const BitsetDeterminant& det = det_coef.first;
+        walkers[det] = det_coef.second;
+        if (int(std::round(walkers[det]))==0){
+            removeDets.push_back(det);
+        }
+    }
+    for (auto& det : removeDets) {
+        walkers.erase(det);
+    }
+}
+
+// Step #3.  Annihilation
+void FCIQMC::annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
 {
 
 }
@@ -479,7 +624,54 @@ std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen(const Bitset
     return std::make_tuple(nsa,nsb,ndaa,ndab,ndbb);
 }
 
-void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& excitations)
+void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
+{
+    compute_single_excitations(det, singleExcitations);
+    compute_double_excitations(det, doubleExcitations);
+}
+
+void FCIQMC::compute_single_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations)
+{
+    const std::vector<int> aocc = det.get_alfa_occ();
+    const std::vector<int> bocc = det.get_beta_occ();
+    const std::vector<int> avir = det.get_alfa_vir();
+    const std::vector<int> bvir = det.get_beta_vir();
+
+//    det.print();
+
+//    for (size_t ii : aocc){
+//        outfile->Printf("\n  aocc = %d",ii);
+//    }
+
+//    for (size_t aa : avir){
+//        outfile->Printf("\n  avir = %d",aa);
+//    }
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                singleExcitations.push_back(std::make_tuple(ii,aa));
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                singleExcitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_));
+            }
+        }
+    }
+}
+
+void FCIQMC::compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
 {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
@@ -491,28 +683,6 @@ void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::
     int nvalpha = avir.size();
     int nvbeta  = bvir.size();
 
-    size_t nsa = 0;
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a){
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                excitations.push_back(std::make_tuple(ii,aa,aa,aa));
-            }
-        }
-    }
-    size_t nsb = 0;
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a){
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                excitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_,aa+nmo_,aa+nmo_));
-            }
-        }
-    }
-
-    size_t ndaa = 0;
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
         for (int j = i + 1; j < noalpha; ++j){
@@ -522,14 +692,14 @@ void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        excitations.push_back(std::make_tuple(ii,aa,jj,bb));
+                        doubleExcitations.push_back(std::make_tuple(ii,aa,jj,bb));
                     }
                 }
             }
         }
     }
 
-    size_t ndab = 0;
+
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
         for (int j = 0; j < nobeta; ++j){
@@ -539,14 +709,13 @@ void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        excitations.push_back(std::make_tuple(ii,aa,jj+nmo_,bb+nmo_));
+                        doubleExcitations.push_back(std::make_tuple(ii,aa,jj+nmo_,bb+nmo_));
                     }
                 }
             }
         }
     }
 
-    size_t ndbb = 0;
     for (int i = 0; i < nobeta; ++i){
         int ii = bocc[i];
         for (int j = i + 1; j < nobeta; ++j){
@@ -555,8 +724,8 @@ void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                        excitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_,jj+nmo_,bb+nmo_));
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        doubleExcitations.push_back(std::make_tuple(ii+nmo_,aa+nmo_,jj+nmo_,bb+nmo_));
                     }
                 }
             }
@@ -564,35 +733,62 @@ void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::
     }
 }
 
-void FCIQMC::detExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext){
+void FCIQMC::detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext){
+    size_t ii,aa;
+    std::tie (ii,aa) = rand_ext;
+    if (ii<nmo_){
+        new_det.set_alfa_bit(ii,false);
+        new_det.set_alfa_bit(aa,true);
+    } else {
+        new_det.set_beta_bit(ii-nmo_,false);
+        new_det.set_beta_bit(aa-nmo_,true);
+    }
+
+}
+
+void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext){
     size_t ii,aa,jj,bb;
     std::tie (ii,aa,jj,bb) = rand_ext;
-    if (jj==bb){
-        if (ii<nmo_){
-            new_det.set_alfa_bit(ii,false);
-            new_det.set_alfa_bit(aa,true);
-        } else {
-            new_det.set_beta_bit(ii-nmo_,false);
-            new_det.set_beta_bit(aa-nmo_,true);
-        }
+    if (ii>=nmo_){
+        new_det.set_beta_bit(ii-nmo_,false);
+        new_det.set_beta_bit(jj-nmo_,false);
+        new_det.set_beta_bit(aa-nmo_,true);
+        new_det.set_beta_bit(bb-nmo_,true);
+    }else if(jj>=nmo_){
+        new_det.set_alfa_bit(ii,false);
+        new_det.set_alfa_bit(aa,true);
+        new_det.set_beta_bit(jj-nmo_,false);
+        new_det.set_beta_bit(bb-nmo_,true);
     }else{
-        if (ii>nmo_){
-            new_det.set_beta_bit(ii-nmo_,false);
-            new_det.set_beta_bit(jj-nmo_,false);
-            new_det.set_beta_bit(aa-nmo_,true);
-            new_det.set_beta_bit(bb-nmo_,true);
-        }else if(jj>nmo_){
-            new_det.set_alfa_bit(ii,false);
-            new_det.set_alfa_bit(aa,true);
-            new_det.set_beta_bit(jj-nmo_,false);
-            new_det.set_beta_bit(bb-nmo_,true);
-        }else{
-            new_det.set_alfa_bit(ii,false);
-            new_det.set_alfa_bit(jj,false);
-            new_det.set_alfa_bit(aa,true);
-            new_det.set_alfa_bit(bb,true);
-        }
+        new_det.set_alfa_bit(ii,false);
+        new_det.set_alfa_bit(jj,false);
+        new_det.set_alfa_bit(aa,true);
+        new_det.set_alfa_bit(bb,true);
     }
+}
+
+void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers){
+    size_t countWalkers = 0;
+    double Cref = walkers[ref];
+    double Eproj = nuclear_repulsion_energy_, Evar = 0;
+    double mod2 = 0.0;
+    for (auto walker:walkers){
+        const BitsetDeterminant& det = walker.first;
+        double Cwalker = walker.second;
+        Eproj += ref.slater_rules(det)*Cwalker/Cref;
+        countWalkers+=size_t(std::fabs(Cwalker));
+        mod2 += Cwalker*Cwalker;
+        for (auto walker2:walkers){
+            const BitsetDeterminant& det2 = walker2.first;
+            double Cwalker2 = walker2.second;
+            Evar += det.slater_rules(det2)*Cwalker*Cwalker2;
+        }
+//        det.print();
+//        outfile->Printf("\nCwalker: %lf",Cwalker);
+    }
+    Evar /= mod2;
+    Evar += nuclear_repulsion_energy_;
+    outfile->Printf("\niter:%zu ended with %zu dets, %zu walkers, var E=%lf, proj E=%lf",iter, walkers.size(), countWalkers, Evar, Eproj);
 }
 
 }} // EndNamespaces

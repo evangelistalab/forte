@@ -1,6 +1,7 @@
 #ifndef MCSRGPT2_MO_H
 #define MCSRGPT2_MO_H
 
+#include <boost/assign.hpp>
 #include <liboptions/liboptions.h>
 #include <libmints/vector.h>
 #include <libmints/matrix.h>
@@ -28,12 +29,20 @@ public:
 
 protected:
 
+    // Source Operators
+    enum sourceop{STANDARD, AMP, EMP2, LAMP, LEMP2};
+    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)
+            ("AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
+
     void startup(Options &options);
 
     void cleanup();
 
     // DSRG s Parameter
     double s_;
+
+    // Source Operator
+    string source_;
 
     // Taylor Expansion Threshold
     int taylor_threshold_;
@@ -102,18 +111,48 @@ protected:
     double Ecorr_;
     double Etotal_;
 
-    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double &Z, const int &n){
+    // Timings
+    void Print_Timing();
+    Timer dsrg_timer;
+    double T2_timing;
+    double T1_timing;
+    double FT1_timing;
+    double FT2_timing;
+    double VT1_timing;
+    double VT2C2_timing;
+    double VT2C4_timing;
+    double VT2C6_timing;
+
+    // Compute an addition element of renorm. H according to source operator
+    double ElementRH(const string& source, const double& D, const double& V);
+
+    // Compute an element of T according to source operator
+    double ElementT(const string& source, const double& D, const double& V);
+
+    // Taylor Expansion of [1 - exp(-s * Z^2)] / Z = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp(const double& Z, const int& n){
         if(n > 0){
             double value = Z, tmp = Z;
             for(int x=0; x<(n-1); ++x){
-                tmp *= pow(Z,2.0) / (x+2);
+                tmp *= -1.0 * std::pow(Z, 2.0) / (x+2);
                 value += tmp;
             }
             return value;
         }else{return 0.0;}
     }
 
+    // Taylor Expansion of [1 - exp(-s * |Z|)] / Z = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp_Linear(const double& Z, const int& n){
+        bool Zabs = Z > 0.0 ? 1 : 0;
+        if(n > 0){
+            double value = 1, tmp = 1;
+            for(int x=0; x<(n-1); ++x){
+                tmp *= pow(-1.0, Zabs) * Z / (x+2);
+                value += tmp;
+            }
+            return value * pow(-1.0, Zabs + 1);
+        }else{return 0.0;}
+    }
 };
 }}
 

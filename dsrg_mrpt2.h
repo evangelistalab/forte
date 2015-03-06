@@ -24,6 +24,7 @@
 #define _dsrg_mrpt2_h_
 
 #include <fstream>
+#include <boost/assign.hpp>
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
@@ -46,6 +47,9 @@ class DSRG_MRPT2 : public Wavefunction
 protected:
 
     // => Class data <= //
+
+    enum sourceop{STANDARD, AMP, EMP2};
+    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2);
 
     /// The reference object
     Reference reference_;
@@ -93,6 +97,9 @@ protected:
     /// The flow parameter
     double s_;
 
+    /// Source operator
+    std::string source_;
+
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
@@ -129,24 +136,27 @@ protected:
     /// Print a summary of the options
     void print_summary();
 
+    /// Renormalized denominator
     double renormalized_denominator(double D);
     double renormalized_denominator_amp(double V,double D);
-
+    double renormalized_denominator_emp2(double V,double D);
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
+    void check_t2();
     double T2norm;
     double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
+    void check_t1();
     double T1norm;
     double T1max;
 
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
-    double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
+    double renormalized_exp(double D) {return std::exp(-s_ * pow(D, 2.0));}
 
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
     double compute_ref();
@@ -167,7 +177,7 @@ protected:
         if(n > 0){
             double value = Z, tmp = Z;
             for(int x=0; x<(n-1); ++x){
-                tmp *= std::pow(Z, 2.0) / (x+2);
+                tmp *= -1.0 * pow(Z, 2.0) / (x+2);
                 value += tmp;
             }
             return value;

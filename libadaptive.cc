@@ -238,7 +238,11 @@ read_options(std::string name, Options &options)
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
-
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
+        //////////////////////////////////////////////////////////////
+        /*- The maximum value of beta -*/
+        options.add_double("START_NUM_DET",1000.0);
 
         //////////////////////////////////////////////////////////////
         ///
@@ -310,6 +314,8 @@ read_options(std::string name, Options &options)
         options.add_str("TWOPDC", "MK", "MK ZERO");
         /*- Three-Particle Density Cumulant -*/
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO");
+        /*- Source Operator -*/
+        options.add_str("SOURCE", "STANDARD", "STANDARD AMP EMP2 LAMP LEMP2");
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
     }
@@ -362,7 +368,7 @@ libadaptive(Options &options)
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }
-        if (options.get_str("JOB_TYPE") == "Three_DSRG-MRPT2"){
+        if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();

@@ -6,7 +6,7 @@ import libadaptive
 refscf = -14.6097447388741113 #TEST
 refapifci = -14.646160290078 #TEST
 
-molecule li2{
+molecule Li2{
    Li
    Li 1 2.0000
 }
@@ -18,11 +18,13 @@ set {
 
 set libadaptive {
   tau 0.1
+  maxiter 60
   spawning_threshold 0.0001
+  start_num_det 100.0
 }
 
 energy('fciqmc')
 
-compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
+#compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
 #compare_values(refapifci, get_variable("APIFCI ENERGY"),7, "APIFCI energy") #TEST
 
