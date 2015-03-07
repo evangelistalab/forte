@@ -103,6 +103,8 @@ void THREE_DSRG_MRPT2::startup()
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
 
+    BlockedTensor::set_expert_mode(true);
+
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
     size_t core_ = bcore_mos.size();
@@ -159,7 +161,6 @@ void THREE_DSRG_MRPT2::startup()
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
         size_t nmo = ints_->nmo();
-
         ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
@@ -190,22 +191,11 @@ void THREE_DSRG_MRPT2::startup()
     T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
     RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
-    //T2pr.print(stdout,false);
     //all_spin = RExp2.get.();
 
     std::vector<std::string> mo_indices = RDelta2.block_labels();
     std::vector<std::string> no_hhpp;
     no_hhpp = spin_cases_avoid(mo_indices);
-    for(const std::string spin : mo_indices){
-        size_t spin_ind  = spin.find('a');
-        size_t spin_ind2 = spin.find('A');
-        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
-            no_hhpp.push_back(spin);
-        }
-    }
-    for(std::string spin : no_hhpp){
-        outfile->Printf("\nspin : %s", spin.c_str());
-    }
 
 
     BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
@@ -246,25 +236,6 @@ void THREE_DSRG_MRPT2::startup()
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Eta1_AA.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
-//=======
-//    for (Tensor::iterator it = Gamma1_cc.begin(),endit = Gamma1_cc.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//    for (Tensor::iterator it = Gamma1_CC.begin(),endit = Gamma1_CC.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-
-//    for (Tensor::iterator it = Eta1_aa.begin(),endit = Eta1_aa.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//    for (Tensor::iterator it = Eta1_AA.begin(),endit = Eta1_AA.end(); it != endit; ++it){
-//        std::vector<size_t>& i = it.address();
-//        *it = i[0] == i[1] ? 1.0 : 0.0;
-//    }
-//>>>>>>> bf4fab4903e254641124556559b52f15ff1fb644
 
     Eta1_vv.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
@@ -542,9 +513,9 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2["ijab"] = v["ijab"] * RDelta2["ijab"];
     T2["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
     T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
-    //T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
-    //T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
-    //T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+    T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
+    T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
