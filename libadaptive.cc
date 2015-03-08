@@ -11,7 +11,6 @@
 #include "multidimensional_arrays.h"
 #include <ambit/tensor.h>
 
-#include "ga-ci.h"
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
 #include "lambda-ci.h"
@@ -53,7 +52,7 @@ read_options(std::string name, Options &options)
          
         /*- The job type -*/
         options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE"
-                        " EXPLORER FCIQMC SOSRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI GACI APICI"
+                        " EXPLORER FCIQMC SOSRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI APICI"
                         " DSRG-MRPT2");
 
         // Options for the Explorer class
@@ -344,11 +343,6 @@ libadaptive(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
         aci->compute_energy();
-    }
-    if (options.get_str("JOB_TYPE") == "GACI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<GeneticAlgorithmCI> gaci(new GeneticAlgorithmCI(wfn,options,ints_));
-        gaci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
