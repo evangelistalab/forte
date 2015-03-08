@@ -17,8 +17,6 @@
 #include "lambda-ci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
-#include "sosrg.h"
-#include "mosrg.h"
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
@@ -371,22 +369,6 @@ libadaptive(Options &options)
         boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
         three_dsrg_mrpt2->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "SOSRG"){
-        //            Explorer* explorer = new Explorer(options,ints_);
-        //            std::vector<double> ONa = explorer->Da();
-        //            std::vector<double> ONb = explorer->Db();
-        //            int nmo = explorer->nmo();
-        //            double** G1;
-        //            init_matrix<double>(G1,2 * nmo,2 * nmo);
-        //            for (int p = 0; p < nmo; ++p){
-        //                G1[p][p] = ONa[p];
-        //                G1[p + nmo][p + nmo] = ONb[p];
-        //            }
-        //            SOSRG sosrg(options,ints_,G1);
-        //            free_matrix<double>(G1,2 * nmo,2 * nmo);
-
-        //            delete explorer;
-    }
     if (options.get_str("JOB_TYPE") == "TENSORSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
@@ -400,62 +382,9 @@ libadaptive(Options &options)
         LambdaCI* explorer = new LambdaCI(options,ints_);
         delete explorer;
     }
-//    if (options.get_str("JOB_TYPE") == "SRG"){
-//        LambdaCI* explorer = new LambdaCI(options,ints_);
-//        std::vector<double> ONa = explorer->Da();
-//        std::vector<double> ONb = explorer->Db();
-//        int ncmo = explorer->ncmo();
 
-//        double** G1aa;
-//        double** G1bb;
-//        init_matrix<double>(G1aa,ncmo,ncmo);
-//        init_matrix<double>(G1bb,ncmo,ncmo);
-//        for (int p = 0; p < ncmo; ++p){
-//            G1aa[p][p] = ONa[p];
-//            G1bb[p][p] = ONb[p];
-//        }
-//        MOSRG mosrg(options,ints_,G1aa,G1bb);
-//        free_matrix<double>(G1aa,ncmo,ncmo);
-//        free_matrix<double>(G1bb,ncmo,ncmo);
-
-//        delete explorer;
-//    }
-//    if (options.get_str("JOB_TYPE") == "SRG-LCI"){
-//        double dett = options.get_double("DET_THRESHOLD");
-//        double dent = options.get_double("DEN_THRESHOLD");
-//        options.set_double("LIBADAPTIVE","DET_THRESHOLD",1.0e-3);
-//        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",1.0e-3);
-
-//        LambdaCI* explorer = new LambdaCI(options,ints_);
-//        std::vector<double> ONa = explorer->Da();
-//        std::vector<double> ONb = explorer->Db();
-//        int ncmo = explorer->ncmo();
-
-//        double** G1aa;
-//        double** G1bb;
-//        init_matrix<double>(G1aa,ncmo,ncmo);
-//        init_matrix<double>(G1bb,ncmo,ncmo);
-//        for (int p = 0; p < ncmo; ++p){
-//            G1aa[p][p] = ONa[p];
-//            G1bb[p][p] = ONb[p];
-//        }
-//        MOSRG mosrg(options,ints_,G1aa,G1bb);
-//        mosrg.transfer_integrals();
-//        delete explorer;
-
-//        options.set_double("LIBADAPTIVE","DET_THRESHOLD",dett);
-//        options.set_double("LIBADAPTIVE","DEN_THRESHOLD",dent);
-
-//        explorer = new LambdaCI(options,ints_);
-
-//        free_matrix<double>(G1aa,ncmo,ncmo);
-//        free_matrix<double>(G1bb,ncmo,ncmo);
-
-//        delete explorer;
-//    }
     // Delete ints_;
     delete ints_;
-
 
     ambit::finalize();
 
