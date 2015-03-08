@@ -33,17 +33,17 @@ double TensorSRG::compute_ct_energy()
     if (max_diis_vectors > 0){
         diis_manager = boost::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "L-CTSD DIIS vector", DIISManager::OldestAdded, DIISManager::InCore));
         diis_manager->set_error_vector_size(5,
-                                           DIISEntry::Pointer,S1.block("ov")->nelements(),
-                                           DIISEntry::Pointer,S1.block("OV")->nelements(),
-                                           DIISEntry::Pointer,S2.block("oovv")->nelements(),
-                                           DIISEntry::Pointer,S2.block("oOvV")->nelements(),
-                                           DIISEntry::Pointer,S2.block("OOVV")->nelements());
+                                           DIISEntry::Pointer,S1.block("ov").numel(),
+                                           DIISEntry::Pointer,S1.block("OV").numel(),
+                                           DIISEntry::Pointer,S2.block("oovv").numel(),
+                                           DIISEntry::Pointer,S2.block("oOvV").numel(),
+                                           DIISEntry::Pointer,S2.block("OOVV").numel());
         diis_manager->set_vector_size(5,
-                                     DIISEntry::Pointer,S1.block("ov")->nelements(),
-                                     DIISEntry::Pointer,S1.block("OV")->nelements(),
-                                     DIISEntry::Pointer,S2.block("oovv")->nelements(),
-                                     DIISEntry::Pointer,S2.block("oOvV")->nelements(),
-                                     DIISEntry::Pointer,S2.block("OOVV")->nelements());
+                                     DIISEntry::Pointer,S1.block("ov").numel(),
+                                     DIISEntry::Pointer,S1.block("OV").numel(),
+                                     DIISEntry::Pointer,S2.block("oovv").numel(),
+                                     DIISEntry::Pointer,S2.block("oOvV").numel(),
+                                     DIISEntry::Pointer,S2.block("OOVV").numel());
     }
 
     if (dsrg_s == 0.0){
@@ -79,21 +79,21 @@ double TensorSRG::compute_ct_energy()
             outfile->Printf("\n    2     %15e      %15e",S2.norm(),0.0);
             outfile->Printf("\n  --------------------------------------------");
 
-            auto max_S2aa = S2.block("oovv")->max_abs_element();
-            auto max_S2ab = S2.block("oOvV")->max_abs_element();
-            auto max_S2bb = S2.block("OOVV")->max_abs_element();
-            outfile->Printf("\n  Largest S2 (aa): %20.12f  ",max_S2aa.first);
-            for (size_t index: max_S2aa.second){
-                outfile->Printf(" %zu",index);
-            }
-            outfile->Printf("\n  Largest S2 (ab): %20.12f  ",max_S2ab.first);
-            for (size_t index: max_S2ab.second){
-                outfile->Printf(" %zu",index);
-            }
-            outfile->Printf("\n  Largest S2 (bb): %20.12f  ",max_S2bb.first);
-            for (size_t index: max_S2bb.second){
-                outfile->Printf(" %zu",index);
-            }
+//            auto max_S2aa = S2.block("oovv")->max_abs_element();
+//            auto max_S2ab = S2.block("oOvV")->max_abs_element();
+//            auto max_S2bb = S2.block("OOVV")->max_abs_element();
+//            outfile->Printf("\n  Largest S2 (aa): %20.12f  ",max_S2aa.first);
+//            for (size_t index: max_S2aa.second){
+//                outfile->Printf(" %zu",index);
+//            }
+//            outfile->Printf("\n  Largest S2 (ab): %20.12f  ",max_S2ab.first);
+//            for (size_t index: max_S2ab.second){
+//                outfile->Printf(" %zu",index);
+//            }
+//            outfile->Printf("\n  Largest S2 (bb): %20.12f  ",max_S2bb.first);
+//            for (size_t index: max_S2bb.second){
+//                outfile->Printf(" %zu",index);
+//            }
         }
 
         if (print_ > 1){
@@ -103,38 +103,38 @@ double TensorSRG::compute_ct_energy()
         if(diis_manager){
             if (do_dsrg){
                 diis_manager->add_entry(10,
-                                        DS1.block("ov")->t(),
-                                        DS1.block("OV")->t(),
-                                        DS2.block("oovv")->t(),
-                                        DS2.block("oOvV")->t(),
-                                        DS2.block("OOVV")->t(),
-                                        S1.block("ov")->t(),
-                                        S1.block("OV")->t(),
-                                        S2.block("oovv")->t(),
-                                        S2.block("oOvV")->t(),
-                                        S2.block("OOVV")->t());
+                                        &(DS1.block("ov").data()[0]),
+                                        &(DS1.block("OV").data()[0]),
+                                        &(DS2.block("oovv").data()[0]),
+                                        &(DS2.block("oOvV").data()[0]),
+                                        &(DS2.block("OOVV").data()[0]),
+                                        &(S1.block("ov").data()[0]),
+                                        &(S1.block("OV").data()[0]),
+                                        &(S2.block("oovv").data()[0]),
+                                        &(S2.block("oOvV").data()[0]),
+                                        &(S2.block("OOVV").data()[0]));
             }else{
                 diis_manager->add_entry(10,
-                                        Hbar1.block("ov")->t(),
-                                        Hbar1.block("OV")->t(),
-                                        Hbar2.block("oovv")->t(),
-                                        Hbar2.block("oOvV")->t(),
-                                        Hbar2.block("OOVV")->t(),
-                                        S1.block("ov")->t(),
-                                        S1.block("OV")->t(),
-                                        S2.block("oovv")->t(),
-                                        S2.block("oOvV")->t(),
-                                        S2.block("OOVV")->t());
+                                        &(Hbar1.block("ov").data()[0]),
+                                        &(Hbar1.block("OV").data()[0]),
+                                        &(Hbar2.block("oovv").data()[0]),
+                                        &(Hbar2.block("oOvV").data()[0]),
+                                        &(Hbar2.block("OOVV").data()[0]),
+                                        &(S1.block("ov").data()[0]),
+                                        &(S1.block("OV").data()[0]),
+                                        &(S2.block("oovv").data()[0]),
+                                        &(S2.block("oOvV").data()[0]),
+                                        &(S2.block("OOVV").data()[0]));
             }
             if (cycle > max_diis_vectors){
                 if (cycle % max_diis_vectors == 2){
                     outfile->Printf(" -> DIIS");
                     diis_manager->extrapolate(5,
-                                             S1.block("ov")->t(),
-                                             S1.block("OV")->t(),
-                                             S2.block("oovv")->t(),
-                                             S2.block("oOvV")->t(),
-                                             S2.block("OOVV")->t());
+                                             &(S1.block("ov").data()[0]),
+                                             &(S1.block("OV").data()[0]),
+                                             &(S2.block("oovv").data()[0]),
+                                             &(S2.block("oOvV").data()[0]),
+                                             &(S2.block("OOVV").data()[0]));
                 }
             }
         }
@@ -155,36 +155,35 @@ double TensorSRG::compute_ct_energy()
         old_energy = energy;
 
 
-        auto max_S1a = S1.block("ov")->max_abs_element();
-        auto max_S1b = S1.block("OV")->max_abs_element();
-        auto max_S2aa = S2.block("oovv")->max_abs_element();
-        auto max_S2ab = S2.block("oOvV")->max_abs_element();
-        auto max_S2bb = S2.block("OOVV")->max_abs_element();
-        std::vector<double> S1_vec = {max_S1b.first,max_S1b.first};
-        std::vector<double> S2_vec = {max_S2aa.first,max_S2ab.first,max_S2bb.first};
+        double max_S1 = 0.0;
+        double max_S2 = 0.0;
+        S1.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+            if (std::fabs(value) > std::fabs(max_S1)) max_S1 = value;
+        });
 
-        double max_S1 = *max_element(S1_vec.begin(),S1_vec.end());
-        double max_S2 = *max_element(S2_vec.begin(),S2_vec.end());
+        S2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+            if (std::fabs(value) > std::fabs(max_S2)) max_S2= value;
+        });
 
-        double norm_H1a  = Hbar1.block("ov")->norm();
-        double norm_H1b  = Hbar1.block("OV")->norm();
-        double norm_H2aa = Hbar2.block("oovv")->norm();
-        double norm_H2ab = Hbar2.block("oOvV")->norm();
-        double norm_H2bb = Hbar2.block("OOVV")->norm();
+        double norm_H1a  = Hbar1.block("ov").norm();
+        double norm_H1b  = Hbar1.block("OV").norm();
+        double norm_H2aa = Hbar2.block("oovv").norm();
+        double norm_H2ab = Hbar2.block("oOvV").norm();
+        double norm_H2bb = Hbar2.block("OOVV").norm();
 
         double norm_Hbar1_ex = std::sqrt(norm_H1a * norm_H1a + norm_H1b * norm_H1b);
         double norm_Hbar2_ex = std::sqrt(0.25 * norm_H2aa * norm_H2aa + norm_H2ab * norm_H2ab + 0.25 * norm_H2bb * norm_H2bb);
 
-        double norm_S1a  = S1.block("ov")->norm();
-        double norm_S1b  = S1.block("OV")->norm();
-        double norm_S2aa = S2.block("oovv")->norm();
-        double norm_S2ab = S2.block("oOvV")->norm();
-        double norm_S2bb = S2.block("OOVV")->norm();
+        double norm_S1a  = S1.block("ov").norm();
+        double norm_S1b  = S1.block("OV").norm();
+        double norm_S2aa = S2.block("oovv").norm();
+        double norm_S2ab = S2.block("oOvV").norm();
+        double norm_S2bb = S2.block("OOVV").norm();
 
         double norm_S1 = std::sqrt(norm_S1a * norm_S1a + norm_S1b * norm_S1b);
         double norm_S2 = std::sqrt(0.25 * norm_S2aa * norm_S2aa + norm_S2ab * norm_S2ab + 0.25 * norm_S2bb * norm_S2bb);
 
-        outfile->Printf("\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,max_S1,max_S2,norm_S1,norm_S2);
+        outfile->Printf("\n    @CT %4d %20.12f %11.3e %10.3e %10.3e %7.4f %7.4f %7.4f %7.4f",cycle,energy,delta_energy,norm_Hbar1_ex,norm_Hbar2_ex,norm_S1,norm_S2,max_S1,max_S2);
 
         if(fabs(delta_energy) < options_.get_double("E_CONVERGENCE")){
             converged = true;
@@ -295,48 +294,27 @@ double TensorSRG::compute_hbar()
 
 void TensorSRG::update_S1()
 {
-    S1["ia"] += Hbar1["ia"] / D1["ia"];
-    S1["IA"] += Hbar1["IA"] / D1["IA"];
+    S1["ia"] += Hbar1["ia"] * InvD1["ia"];
+    S1["IA"] += Hbar1["IA"] * InvD1["IA"];
 }
 
 void TensorSRG::update_S2()
 {
-    S2["ijab"] += Hbar2["ijab"] / D2["ijab"];
-    S2["iJaB"] += Hbar2["iJaB"] / D2["iJaB"];
-    S2["IJAB"] += Hbar2["IJAB"] / D2["IJAB"];
+    S2["ijab"] += Hbar2["ijab"] * InvD2["ijab"];
+    S2["iJaB"] += Hbar2["iJaB"] * InvD2["iJaB"];
+    S2["IJAB"] += Hbar2["IJAB"] * InvD2["IJAB"];
 }
 
 void TensorSRG::update_S1_dsrg()
 {
-    double srg_s = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& Ha_ov = *Hbar1.block("ov");
-    Tensor& Hb_OV = *Hbar1.block("OV");
-    Tensor& S1_ov = *S1.block("ov");
-    Tensor& S1_OV = *S1.block("OV");
-
     R1.zero();
 
-    R1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        if (sp  == Alpha){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_avir[q];
-            double denominator = Fa_oo(pp,pp) - Fa_vv(qq,qq);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
-            return (Ha_ov(pp,qq) + S1_ov(pp,qq) * denominator) * exp_factor;
-        }else if (sp  == Beta){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bvir[q];
-            double denominator = Fb_OO(pp,pp) - Fb_VV(qq,qq);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
-            return (Hb_OV(pp,qq) + S1_OV(pp,qq) * denominator) * exp_factor;
-        }
-        return 0.0;
-    });
+    R1["ia"]  = Hbar1["ia"] * RInvD1["ia"];
+    R1["ia"] += S1["ia"] * D1["ia"] * RInvD1["ia"];
+
+    R1["IA"]  = Hbar1["IA"] * RInvD1["IA"];
+    R1["IA"] += S1["IA"] * D1["IA"] * RInvD1["IA"];
+
 
     // Compute the change in amplitudes
     DS1["ia"] = S1["ia"];
@@ -346,56 +324,22 @@ void TensorSRG::update_S1_dsrg()
 
     S1["ia"] = R1["ia"];
     S1["IA"] = R1["IA"];
+
+//    outfile->Printf("\n ||R1|| = %f, ||S1|| = %f,",R1.norm(),S1.norm());
 }
 
 void TensorSRG::update_S2_dsrg()
 {
-    double srg_s = options_.get_double("DSRG_S");
-
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
-    Tensor& S2_oovv = *S2.block("oovv");
-    Tensor& S2_oOvV = *S2.block("oOvV");
-    Tensor& S2_OOVV = *S2.block("OOVV");
-    Tensor& H_oovv = *Hbar2.block("oovv");
-    Tensor& H_oOvV = *Hbar2.block("oOvV");
-    Tensor& H_OOVV = *Hbar2.block("OOVV");
-
     R2.zero();
 
-    R2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                              size_t q,MOSetSpinType sq,
-                              size_t r,MOSetSpinType sr,
-                              size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_aocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_avir[s];
-            double denominator = Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
-            return (H_oovv(pp,qq,rr,ss) + S2_oovv(pp,qq,rr,ss) * denominator ) * exp_factor;
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_bvir[s];
-            double denominator = Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
-            return (H_oOvV(pp,qq,rr,ss) + S2_oOvV(pp,qq,rr,ss) * denominator ) * exp_factor;
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_bvir[r];
-            size_t ss = mos_to_bvir[s];
-            double denominator = Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);
-            double exp_factor = one_minus_exp_div_x(srg_s,denominator,dsrg_power_);
-            return (H_OOVV(pp,qq,rr,ss) + S2_OOVV(pp,qq,rr,ss) * denominator ) * exp_factor;
-        }
-        return 0.0;
-    });
+    R2["ijab"]  = Hbar2["ijab"] * RInvD2["ijab"];
+    R2["ijab"] += S2["ijab"] * D2["ijab"] * RInvD2["ijab"];
+
+    R2["iJaB"]  = Hbar2["iJaB"] * RInvD2["iJaB"];
+    R2["iJaB"] += S2["iJaB"] * D2["iJaB"] * RInvD2["iJaB"];
+
+    R2["IJAB"]  = Hbar2["IJAB"] * RInvD2["IJAB"];
+    R2["IJAB"] += S2["IJAB"] * D2["IJAB"] * RInvD2["IJAB"];
 
     // Compute the change in amplitudes
     DS2["ijab"]  = S2["ijab"];
@@ -408,6 +352,8 @@ void TensorSRG::update_S2_dsrg()
     S2["ijab"] = R2["ijab"];
     S2["iJaB"] = R2["iJaB"];
     S2["IJAB"] = R2["IJAB"];
+
+//outfile->Printf("\n ||Hbar2|| = %f, ||R2|| = %f, ||S2|| = %f,",Hbar2.norm(),R2.norm(),S2.norm());
 }
 
 }} // EndNamespaces

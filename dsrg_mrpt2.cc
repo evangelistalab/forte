@@ -140,6 +140,13 @@ void DSRG_MRPT2::startup()
             value = ints_->oei_b(i[0],i[1]);
     });
 
+    // Fill in the two-electron operator (V)
+    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+    });
+
     ambit::Tensor Gamma1_cc = Gamma1.block("cc");
     ambit::Tensor Gamma1_aa = Gamma1.block("aa");
     ambit::Tensor Gamma1_CC = Gamma1.block("CC");
@@ -170,13 +177,6 @@ void DSRG_MRPT2::startup()
 
     Eta1_aa("pq") -= reference_.L1a()("pq");
     Eta1_AA("pq") -= reference_.L1b()("pq");
-
-    // Fill in the two-electron operator (V)
-    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
-    });
 
     // Fill out Lambda2 and Lambda3
     Tensor Lambda2_aa = Lambda2.block("aaaa");

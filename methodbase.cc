@@ -5,12 +5,14 @@
 
 namespace psi{ namespace libadaptive{
 
+using namespace ambit;
+
 MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints)
+    : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(kCore)
 {
     // Copy the wavefunction information
     copy(wfn);
-    Tensor::set_print_level(debug_);
+//    Tensor::set_print_level(debug_);
     startup();
 }
 
@@ -23,6 +25,8 @@ void MethodBase::startup()
 {
     double frozen_core_energy = ints_->frozen_core_energy();
     E0_ = reference_energy();
+
+    BlockedTensor::set_expert_mode(true);
 
     Dimension ncmopi_ = ints_->ncmopi();
 
@@ -54,44 +58,49 @@ void MethodBase::startup()
     size_t navir = a_vir_mos.size();
     size_t nbvir = b_vir_mos.size();
 
-    BlockedTensor::add_primitive_mo_space("o","ijklmn",a_occ_mos,Alpha);
-    BlockedTensor::add_primitive_mo_space("O","IJKLMN",b_occ_mos,Beta);
-    BlockedTensor::add_primitive_mo_space("v","abcdef",a_vir_mos,Alpha);
-    BlockedTensor::add_primitive_mo_space("V","ABCDEF",b_vir_mos,Beta);
+    BlockedTensor::add_mo_space("o","ijklmn",a_occ_mos,AlphaSpin);
+    BlockedTensor::add_mo_space("O","IJKLMN",b_occ_mos,BetaSpin);
+    BlockedTensor::add_mo_space("v","abcdef",a_vir_mos,AlphaSpin);
+    BlockedTensor::add_mo_space("V","ABCDEF",b_vir_mos,BetaSpin);
     BlockedTensor::add_composite_mo_space("i","pqrstuvwxyz",{"o","v"});
     BlockedTensor::add_composite_mo_space("I","PQRSTUVWXYZ",{"O","V"});
 
-    H.resize_spin_components("H","ii");
-    G1.resize_spin_components("G1","oo");
-    CG1.resize_spin_components("CG1","vv");
-    F.resize_spin_components("F","ii");
-    V.resize_spin_components("V","iiii");
-    D1.resize_spin_components("D1","ov");
-    D2.resize_spin_components("D2","oovv");
+
+    H = BlockedTensor::build(tensor_type_,"H",spin_cases({"ii"}));
+    G1 = BlockedTensor::build(tensor_type_,"G1",spin_cases({"oo"}));
+    CG1 = BlockedTensor::build(tensor_type_,"CG1",spin_cases({"vv"}));
+    F = BlockedTensor::build(tensor_type_,"F",spin_cases({"ii"}));
+    V = BlockedTensor::build(tensor_type_,"V",spin_cases({"iiii"}));
+    InvD1 = BlockedTensor::build(tensor_type_,"Inverse D1",spin_cases({"ov"}));
+    InvD2 = BlockedTensor::build(tensor_type_,"Inverse D2",spin_cases({"oovv"}));
 
     // Fill in the one-electron operator (H)
-    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (sp == Alpha) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
-    });
-
-    G1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
-    });
-
-    CG1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        return (p == q ? 1.0 : 0.0);
+    H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin)
+            value = ints_->oei_a(i[0],i[1]);
+        else
+            value = ints_->oei_b(i[0],i[1]);
     });
 
     // Fill in the two-electron operator (V)
-    V.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                                           size_t q,MOSetSpinType sq,
-                                           size_t r,MOSetSpinType sr,
-                                           size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)) return ints_->aptei_aa(p,q,r,s);
-        if ((sp == Alpha) and (sq == Beta) ) return ints_->aptei_ab(p,q,r,s);
-        if ((sp == Beta)  and (sq == Beta) ) return ints_->aptei_bb(p,q,r,s);
-        return 0.0;
+    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
+
+    H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin)
+            value = ints_->oei_a(i[0],i[1]);
+        else
+            value = ints_->oei_b(i[0],i[1]);
+    });
+
+    G1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+
+    CG1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
 
     // Form the Fock matrix
     F["pq"]  = H["pq"];
@@ -102,60 +111,48 @@ void MethodBase::startup()
     F["PQ"] += V["rPsQ"] * G1["sr"];
     F["PQ"] += V["PRQS"] * G1["SR"];
 
-    if (print_ > 2){
-        G1.print();
-        CG1.print();
-        H.print();
-        F.print();
-    }
+//    if (print_ > 2){
+//        G1.print();
+//        CG1.print();
+//        H.print();
+//        F.print();
+//    }
 
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
+    size_t ncmo_ = ints_->ncmo();
+    std::vector<double> Fa(ncmo_);
+    std::vector<double> Fb(ncmo_);
 
-    D1.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-        if (sp  == Alpha){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_avir[q];
-            return Fa_oo(pp,pp) - Fa_vv(qq,qq);
-        }else if (sp  == Beta){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bvir[q];
-            return Fb_OO(pp,pp) - Fb_VV(qq,qq);
+    F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin and (i[0] == i[1])){
+            Fa[i[0]] = value;
         }
-        return 0.0;
+        if (spin[0] == BetaSpin and (i[0] == i[1])){
+            Fb[i[0]] = value;
+        }
     });
 
-    D2.fill_two_electron_spin([&](size_t p,MOSetSpinType sp,
-                                           size_t q,MOSetSpinType sq,
-                                           size_t r,MOSetSpinType sr,
-                                           size_t s,MOSetSpinType ss){
-        if ((sp == Alpha) and (sq == Alpha)){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_aocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_avir[s];
-            return Fa_oo(pp,pp) + Fa_oo(qq,qq) - Fa_vv(rr,rr) - Fa_vv(ss,ss);
-        }else if ((sp == Alpha) and (sq == Beta) ){
-            size_t pp = mos_to_aocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_avir[r];
-            size_t ss = mos_to_bvir[s];
-            return Fa_oo(pp,pp) + Fb_OO(qq,qq) - Fa_vv(rr,rr) - Fb_VV(ss,ss);
-        }else if ((sp == Beta)  and (sq == Beta) ){
-            size_t pp = mos_to_bocc[p];
-            size_t qq = mos_to_bocc[q];
-            size_t rr = mos_to_bvir[r];
-            size_t ss = mos_to_bvir[s];
-            return Fb_OO(pp,pp) + Fb_OO(qq,qq) - Fb_VV(rr,rr) - Fb_VV(ss,ss);
+    InvD1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value = 1.0 / (Fa[i[0]] - Fa[i[1]]);
+        }else if (spin[0]  == BetaSpin){
+            value = 1.0 / (Fb[i[0]] - Fb[i[1]]);
         }
-        return 0.0;
+    });
+
+    InvD2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = 1.0 / (Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = 1.0 / (Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = 1.0 / (Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
     });
 }
 
 void MethodBase::cleanup()
 {
+    BlockedTensor::set_expert_mode(false);
 }
 
 }} // End Namespaces

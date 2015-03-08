@@ -1,5 +1,7 @@
 //#define _MULTIPLE_CONTRACTIONS_
 
+#if 0
+
 #include <cmath>
 
 #include <boost/timer.hpp>
@@ -604,3 +606,5 @@ void MOSRG::print_timings()
 }
 
 }} // EndNamespaces
+
+#endif

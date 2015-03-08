@@ -89,10 +89,10 @@ void TensorSRG::full_commutator_A_B_C_SRC_fourth_order(double factor,
 void TensorSRG::full_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
     boost::timer t;
-    C += alpha * dot(A["qi"],B["iq"]);
-    C -= alpha * dot(B["qi"],A["iq"]);
-    C += alpha * dot(A["QI"],B["IQ"]);
-    C -= alpha * dot(B["QI"],A["IQ"]);
+    C += alpha * A["qi"] * B["iq"];
+    C -= alpha * B["qi"] * A["iq"];
+    C += alpha * A["QI"] * B["IQ"];
+    C -= alpha * B["QI"] * A["IQ"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
@@ -168,12 +168,12 @@ void TensorSRG::full_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,doubl
 {
     boost::timer t;
 
-    C += alpha * 0.25 * dot(A["abij"],B["ijab"]);
-    C += alpha * 1.0  * dot(A["aBiJ"],B["iJaB"]);
-    C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
-    C -= alpha * 0.25 * dot(B["abij"],A["ijab"]);
-    C -= alpha * 1.0  * dot(B["aBiJ"],A["iJaB"]);
-    C -= alpha * 0.25 * dot(B["ABIJ"],A["IJAB"]);
+    C += alpha * 0.25 * A["abij"] * B["ijab"];
+    C += alpha * 1.0  * A["aBiJ"] * B["iJaB"];
+    C += alpha * 0.25 * A["ABIJ"] * B["IJAB"];
+    C -= alpha * 0.25 * B["abij"] * A["ijab"];
+    C -= alpha * 1.0  * B["aBiJ"] * A["iJaB"];
+    C -= alpha * 0.25 * B["ABIJ"] * A["IJAB"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
