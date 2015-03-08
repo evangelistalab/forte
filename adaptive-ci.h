@@ -93,6 +93,10 @@ private:
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
     bool energy_selection_;
+    /// Smooth the Hamiltonian in the P space?
+    bool do_smooth_;
+    /// The threshold for smoothing elements of the Hamiltonian
+    double smooth_threshold_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -132,15 +136,17 @@ private:
     void prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
                                    std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
 
+    void smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot);
+
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
 
-    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
-    /// Perform a Davidson-Liu diagonalization
-    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
+//    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
+//    /// Perform a Davidson-Liu diagonalization
+//    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
 
-    /// Perform a Davidson-Liu diagonalization on a sparse matrix
-    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
+//    /// Perform a Davidson-Liu diagonalization on a sparse matrix
+//    bool davidson_liu_sparse(std::vector<std::vector<std::pair<int,double> > > H_sparse,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
 };
 
 }} // End Namespaces

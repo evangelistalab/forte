@@ -29,16 +29,9 @@
 #include <libmints/wavefunction.h>
 
 #include "integrals.h"
-//#include <ambit/blocked_tensor.h>
-#include "tensor_basic.h"
-#include "tensor_labeled.h"
-#include "tensor_product.h"
-#include "tensor_blocked.h"
+#include <ambit/blocked_tensor.h>
 
 namespace psi{
-
-//class PSIO;
-//class Chkpt;
 
 namespace libadaptive{
 
@@ -74,26 +67,28 @@ protected:
     /// Map from all the MOs to the beta virtual
     std::map<size_t,size_t> mos_to_bvir;
 
-    ::BlockedTensor H;
-    ::BlockedTensor F;
-    ::BlockedTensor V;
-    ::BlockedTensor CG1;
-    ::BlockedTensor G1;
-    ::BlockedTensor D1;
-    ::BlockedTensor D2;
+    ambit::TensorType tensor_type_;
 
-    ::BlockedTensor Ha;
-    ::BlockedTensor Hb;
-    ::BlockedTensor Fa;
-    ::BlockedTensor Fb;
-    ::BlockedTensor G1a;
-    ::BlockedTensor G1b;
-    ::BlockedTensor Vaa;
-    ::BlockedTensor Vab;
-    ::BlockedTensor Vbb;
-    ::BlockedTensor D2aa;
-    ::BlockedTensor D2ab;
-    ::BlockedTensor D2bb;
+    ambit::BlockedTensor H;
+    ambit::BlockedTensor F;
+    ambit::BlockedTensor V;
+    ambit::BlockedTensor CG1;
+    ambit::BlockedTensor G1;
+    ambit::BlockedTensor InvD1;
+    ambit::BlockedTensor InvD2;
+
+    ambit::BlockedTensor Ha;
+    ambit::BlockedTensor Hb;
+    ambit::BlockedTensor Fa;
+    ambit::BlockedTensor Fb;
+    ambit::BlockedTensor G1a;
+    ambit::BlockedTensor G1b;
+    ambit::BlockedTensor Vaa;
+    ambit::BlockedTensor Vab;
+    ambit::BlockedTensor Vbb;
+    ambit::BlockedTensor D2aa;
+    ambit::BlockedTensor D2ab;
+    ambit::BlockedTensor D2bb;
 
     // => Class initialization and termination <= //
 

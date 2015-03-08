@@ -1,4 +1,5 @@
-﻿#include <cmath>
+﻿#if 0
+#include <cmath>
 
 #include <boost/numeric/odeint.hpp>
 
@@ -8,6 +9,7 @@
 #include <libmints/vector.h>
 
 #include "mosrg.h"
+
 
 using namespace std;
 using namespace psi;
@@ -47,7 +49,6 @@ MOSRG::~MOSRG()
 }
 
 
-/* The rhs of x' = f(x) */
 void MOSRG_ODEInterface::operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t)
 {
 //    outfile->Printf("\n  Computing the Hamiltonian flow at time %f",t);
@@ -1030,4 +1031,7 @@ void MOSRG::transfer_integrals()
     outfile->Flush();
 }
 
+
+
 }} // EndNamespaces
+#endif

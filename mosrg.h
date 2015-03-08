@@ -20,16 +20,15 @@
  *@END LICENSE
  */
 
+#if 0
 #ifndef _mosrg_h_
 #define _mosrg_h_
 
 #include <fstream>
 
+#include <ambit/blocked_tensor.h>
 #include "libdiis/diismanager.h"
 #include "mobase.h"
-#include "tensor_basic.h"
-#include "tensor_labeled.h"
-#include "tensor_product.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -83,29 +82,29 @@ private:
     /// Use the Tensor class?
     bool use_tensor_class_;
 
-    ::Tensor D_a;
-    ::Tensor D_b;
-    ::Tensor CD_a;
-    ::Tensor CD_b;
-    ::Tensor C_a;
-    ::Tensor C_b;
+//    ::Tensor D_a;
+//    ::Tensor D_b;
+//    ::Tensor CD_a;
+//    ::Tensor CD_b;
+//    ::Tensor C_a;
+//    ::Tensor C_b;
 
-    ::Tensor A4_aa;
-    ::Tensor A4_ab;
-    ::Tensor A4_bb;
-    ::Tensor A4m_aa;
-    ::Tensor A4m_ab;
-    ::Tensor A4m_bb;
-    ::Tensor B4_aa;
-    ::Tensor B4_ab;
-    ::Tensor B4_bb;
-    ::Tensor B4m_aa;
-    ::Tensor B4m_ab;
-    ::Tensor B4m_bb;
-    ::Tensor C4_aa;
-    ::Tensor C4_ab;
-    ::Tensor C4_bb;
-    ::Tensor I4;
+//    ::Tensor A4_aa;
+//    ::Tensor A4_ab;
+//    ::Tensor A4_bb;
+//    ::Tensor A4m_aa;
+//    ::Tensor A4m_ab;
+//    ::Tensor A4m_bb;
+//    ::Tensor B4_aa;
+//    ::Tensor B4_ab;
+//    ::Tensor B4_bb;
+//    ::Tensor B4m_aa;
+//    ::Tensor B4m_ab;
+//    ::Tensor B4m_bb;
+//    ::Tensor C4_aa;
+//    ::Tensor C4_ab;
+//    ::Tensor C4_bb;
+//    ::Tensor I4;
 
     void mosrg_startup();
     void mosrg_cleanup();
@@ -172,3 +171,5 @@ public:
 }} // End Namespaces
 
 #endif // _mosrg_h_
+
+#endif
