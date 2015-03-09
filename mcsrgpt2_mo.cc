@@ -7,8 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <boost/format.hpp>
-#include "tensor_basic.h"
-#include "tensor_blocked.h"
 #include "mcsrgpt2_mo.h"
 
 #define Delta(i,j) ((i==j) ? 1 : 0)

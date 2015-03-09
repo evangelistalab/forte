@@ -13,6 +13,9 @@ namespace psi{ namespace libadaptive{
 /* The rhs of x' = f(x) */
 void TensorSRG_ODEInterface::operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t)
 {
+    throw std::runtime_error("TensorSRG_ODEInterface::operator() is not implemented yet!");
+
+    /*
     // Step 1. Read the Hamiltonian from the vector x
     tensorsrg_obj_.Hbar0 = x[0];
 
@@ -36,6 +39,7 @@ void TensorSRG_ODEInterface::operator() (const odeint_state_type& x,odeint_state
                 [&](std::vector<size_t>& m,std::vector<MOSetSpinType>& spin,double& value){dxdt[k] = value; k++;});
 
     neval_ += 1;
+    */
 }
 
 struct push_back_state_and_time_srg
@@ -59,6 +63,8 @@ struct push_back_state_and_time_srg
 
 double TensorSRG::compute_srg_energy()
 {
+    throw std::runtime_error("TensorSRG::compute_srg_energy() is not implemented yet!");  return 0.0;
+    /*
     vector<double> e_vec,times;
 
     size_t x_size = 1 + Hbar1.size() + Hbar2.size();
@@ -139,6 +145,7 @@ double TensorSRG::compute_srg_energy()
     Process::environment.globals["SRG-SD ENERGY"] = final_energy;
     Process::environment.globals["SRG ENERGY"] = final_energy;
     return final_energy;
+        */
 }
 
 
@@ -156,6 +163,9 @@ double TensorSRG::compute_srg_energy()
 
 void TensorSRG::compute_srg_step()
 {
+    throw std::runtime_error("TensorSRG::compute_srg_step() is not implemented yet!");
+
+    /*
     // Step 1. Compute the generator (stored in eta)
     if (options_.get_str("SRG_ETA") == "WEGNER_BLOCK"){
         // a. copy the Hamiltonian
@@ -315,6 +325,7 @@ void TensorSRG::compute_srg_step()
     }else{
         commutator_A_B_C(-1.0,Hbar1,Hbar2,S1,S2,C0,C1,C2,1);
     }
+    */
 }
 
 }}
