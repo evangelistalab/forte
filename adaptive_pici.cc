@@ -138,8 +138,9 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "OLSEN"){
         propagator_ = OlsenPropagator;
         propagator_description_ = "Olsen";
+        // Make sure that do_shift_ is set to true
+        do_shift_ = true;
     }
-
 
     num_threads_ = omp_get_max_threads();
 }
@@ -592,6 +593,7 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& det
     }
     double delta_E = delta_E_num / delta_E_den;
 
+
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         dets_C_map[dets[I]] -= C[I] * delta_E;
     }
@@ -600,9 +602,14 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& det
         double EI = det_C.first.energy();
         det_C.second /= - (EI - S);
     }
+    double sum = 0.0;
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        sum += std::fabs(dets_C_map[dets[I]]);
         dets_C_map[dets[I]] += C[I];
     }
+
+    outfile->Printf("\n  %f = %f / %f, sum = %f",delta_E, delta_E_num, delta_E_den,sum);
+
     double norm = 0.0;
     for (auto& det_C : dets_C_map){
         norm += std::pow(det_C.second,2.0);

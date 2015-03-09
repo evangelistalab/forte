@@ -119,8 +119,8 @@ void TensorSRG::hermitian_commutator_A_B_C_SRC_fourth_order(double factor,
 void TensorSRG::hermitian_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
     boost::timer t;
-    C += alpha * dot(A["ai"],B["ia"]);
-    C += alpha * dot(A["AI"],B["IA"]);
+    C += alpha * A["ai"] * B["ia"];
+    C += alpha * A["AI"] * B["IA"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
@@ -212,9 +212,9 @@ void TensorSRG::hermitian_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,
 {
     boost::timer t;
 
-    C += alpha * 0.25 * dot(A["abij"],B["ijab"]);
-    C += alpha * 1.0 * dot(A["aBiJ"],B["iJaB"]);
-    C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
+    C += alpha * 0.25 * A["abij"] * B["ijab"];
+    C += alpha * 1.00 * A["aBiJ"] * B["iJaB"];
+    C += alpha * 0.25 * A["ABIJ"] * B["IJAB"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());

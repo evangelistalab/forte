@@ -35,6 +35,8 @@
 
 namespace psi{ namespace libadaptive{
 
+using namespace ambit;
+
 /**
  * @brief The TensorSRG class
  * This class implements Canonical Transformation (CT) theory
@@ -49,45 +51,55 @@ protected:
 
 
     /// The one-body component of the operator S
-    ::BlockedTensor S1;
+    ambit::BlockedTensor S1;
     /// The two-body component of the operator S
-    ::BlockedTensor S2;
+    ambit::BlockedTensor S2;
 
     /// The one-body component of the operator S
-    ::BlockedTensor DS1;
+    ambit::BlockedTensor DS1;
     /// The two-body component of the operator S
-    ::BlockedTensor DS2;
+    ambit::BlockedTensor DS2;
 
     /// The one-body residual
-    ::BlockedTensor R1;
+    ambit::BlockedTensor R1;
     /// The two-body residual
-    ::BlockedTensor R2;
+    ambit::BlockedTensor R2;
 
     double C0;
     /// An intermediate one-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor C1;
+    ambit::BlockedTensor C1;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor C2;
+    ambit::BlockedTensor C2;
 
     /// An intermediate one-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor O1;
+    ambit::BlockedTensor O1;
     /// An intermediate two-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor O2;
+    ambit::BlockedTensor O2;
 
     /// The scalar component of the similarity-transformed Hamiltonian
     double Hbar0;
     /// The one-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor Hbar1;
+    ambit::BlockedTensor Hbar1;
     /// The two-body component of the similarity-transformed Hamiltonian
-    ::BlockedTensor Hbar2;
+    ambit::BlockedTensor Hbar2;
 
-    ::BlockedTensor g1;
-    ::BlockedTensor g2;
-    ::BlockedTensor eta1;
-    ::BlockedTensor eta2;
+    /// The one-body denominator
+    ambit::BlockedTensor D1;
+    /// The two-body denominator
+    ambit::BlockedTensor D2;
+
+    /// The renormalized one-body denominator
+    ambit::BlockedTensor RInvD1;
+    /// The renormalized two-body denominator
+    ambit::BlockedTensor RInvD2;
+
+    ambit::BlockedTensor g1;
+    ambit::BlockedTensor g2;
+    ambit::BlockedTensor eta1;
+    ambit::BlockedTensor eta2;
 
     /// An intermediate tensor
-    ::BlockedTensor I_ioiv;
+    ambit::BlockedTensor I_ioiv;
 
     double dsrg_power_;
 
@@ -139,100 +151,100 @@ protected:
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void commutator_A_B_C(double factor,
-                          ::BlockedTensor& A1, ::BlockedTensor& A2,
-                          ::BlockedTensor& B1, ::BlockedTensor& B2,
-                          double& C0, ::BlockedTensor& C1, ::BlockedTensor& C2, int order);
+                          BlockedTensor& A1, BlockedTensor& A2,
+                          BlockedTensor& B1, BlockedTensor& B2,
+                          double& C0, BlockedTensor& C1, BlockedTensor& C2, int order);
     /// The commutator [A,B - B+]_1,2
     void commutator_A_B_C_SRC(double factor,
-                              ::BlockedTensor& A1,::BlockedTensor& A2,
-                              ::BlockedTensor& B1,::BlockedTensor& B2,
-                              double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                              BlockedTensor& A1,BlockedTensor& A2,
+                              BlockedTensor& B1,BlockedTensor& B2,
+                              double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The commutator [A,B - B+]_1,2 with the [V,T2]_1 diagram weights modified
     void commutator_A_B_C_SRC_fourth_order(double factor,
-                                           ::BlockedTensor& A1,::BlockedTensor& A2,
-                                           ::BlockedTensor& B1,::BlockedTensor& B2,
-                                           double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The commutator [A,B - B+]_1,2 with the [F,T2]_2 diagram weights modified
     void commutator_A_B_C_SRC_fourth_order2(double factor,
-                                           ::BlockedTensor& A1,::BlockedTensor& A2,
-                                           ::BlockedTensor& B1,::BlockedTensor& B2,
-                                           double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The commutator [A,B - B+]_1,2 using the approximation of Tsukiyama
     void commutator_A_B_C_SRC_Tsukiyama(double factor,
-                                        ::BlockedTensor& A1,::BlockedTensor& A2,
-                                        ::BlockedTensor& B1,::BlockedTensor& B2,
-                                        double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                                        BlockedTensor& A1,BlockedTensor& A2,
+                                        BlockedTensor& B1,BlockedTensor& B2,
+                                        double& C0,BlockedTensor& C1,BlockedTensor& C2);
 
     /// The numbers indicate the rank of each operator
-    void commutator_A1_B1_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void commutator_A1_B1_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void commutator_A1_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void commutator_A1_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void commutator_A1_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void commutator_A2_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void commutator_A2_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void commutator_A2_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void commutator_A2_B2_C1_simplified(::BlockedTensor& A,::BlockedTensor& B,double alpha,::BlockedTensor& C);
-    void commutator_A2_B2_C1_fo(::BlockedTensor& A,::BlockedTensor& B,double alpha,::BlockedTensor& C);
-    void commutator_A1_B2_C2_fo(::BlockedTensor& A,::BlockedTensor& B,double alpha,::BlockedTensor& C);
+    void commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A1_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void commutator_A2_B2_C1_simplified(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
+    void commutator_A2_B2_C1_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
+    void commutator_A1_B2_C2_fo(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
 
 
 
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void full_commutator_A_B_C(double factor,
-                          ::BlockedTensor& A1,::BlockedTensor& A2,
-                          ::BlockedTensor& B1,::BlockedTensor& B2,
-                          double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                          BlockedTensor& A1,BlockedTensor& A2,
+                          BlockedTensor& B1,BlockedTensor& B2,
+                          double& C0,BlockedTensor& C1,BlockedTensor& C2);
     void full_commutator_A_B_C_SRC(double factor,
-                              ::BlockedTensor& A1,::BlockedTensor& A2,
-                              ::BlockedTensor& B1,::BlockedTensor& B2,
-                              double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                              BlockedTensor& A1,BlockedTensor& A2,
+                              BlockedTensor& B1,BlockedTensor& B2,
+                              double& C0,BlockedTensor& C1,BlockedTensor& C2);
     void full_commutator_A_B_C_SRC_fourth_order(double factor,
-                                           ::BlockedTensor& A1,::BlockedTensor& A2,
-                                           ::BlockedTensor& B1,::BlockedTensor& B2,
-                                           double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The numbers indicate the rank of each operator
-    void full_commutator_A1_B1_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void full_commutator_A1_B1_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void full_commutator_A1_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void full_commutator_A1_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void full_commutator_A1_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void full_commutator_A2_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void full_commutator_A2_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void full_commutator_A2_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
+    void full_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void full_commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void full_commutator_A1_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void full_commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void full_commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void full_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void full_commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void full_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
 
 
     /// Compute the commutator of a general two-body operator A with an excitation operator B
     /// B is assumed to have components B1 and B2 which span the "ov" and "oovv" spaces.
     void hermitian_commutator_A_B_C(double factor,
-                          ::BlockedTensor& A1,::BlockedTensor& A2,
-                          ::BlockedTensor& B1,::BlockedTensor& B2,
-                          double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                          BlockedTensor& A1,BlockedTensor& A2,
+                          BlockedTensor& B1,BlockedTensor& B2,
+                          double& C0,BlockedTensor& C1,BlockedTensor& C2);
     void hermitian_commutator_A_B_C_SRC(double factor,
-                              ::BlockedTensor& A1,::BlockedTensor& A2,
-                              ::BlockedTensor& B1,::BlockedTensor& B2,
-                              double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                              BlockedTensor& A1,BlockedTensor& A2,
+                              BlockedTensor& B1,BlockedTensor& B2,
+                              double& C0,BlockedTensor& C1,BlockedTensor& C2);
     void hermitian_commutator_A_B_C_SRC_fourth_order(double factor,
-                                           ::BlockedTensor& A1,::BlockedTensor& A2,
-                                           ::BlockedTensor& B1,::BlockedTensor& B2,
-                                           double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
+                                           BlockedTensor& A1,BlockedTensor& A2,
+                                           BlockedTensor& B1,BlockedTensor& B2,
+                                           double& C0,BlockedTensor& C1,BlockedTensor& C2);
     /// The numbers indicate the rank of each operator
-    void hermitian_commutator_A1_B1_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void hermitian_commutator_A1_B1_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void hermitian_commutator_A1_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void hermitian_commutator_A1_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void hermitian_commutator_A1_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void hermitian_commutator_A2_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void hermitian_commutator_A2_B2_C1(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
-    void hermitian_commutator_A2_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double sign,::BlockedTensor& C);
+    void hermitian_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void hermitian_commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void hermitian_commutator_A1_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void hermitian_commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void hermitian_commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void hermitian_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void hermitian_commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
+    void hermitian_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double sign,BlockedTensor& C);
 
     void modified_commutator_A_B_C(double factor,
-                          ::BlockedTensor& A1,::BlockedTensor& A2,
-                          ::BlockedTensor& B1,::BlockedTensor& B2,
-                          double& C0,::BlockedTensor& C1,::BlockedTensor& C2);
-    void modified_commutator_A2_B2_C0(::BlockedTensor& A,::BlockedTensor& B,double sign,double& C);
-    void modified_commutator_A2_B2_C2(::BlockedTensor& A,::BlockedTensor& B,double alpha,::BlockedTensor& C);
+                          BlockedTensor& A1,BlockedTensor& A2,
+                          BlockedTensor& B1,BlockedTensor& B2,
+                          double& C0,BlockedTensor& C1,BlockedTensor& C2);
+    void modified_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double sign,double& C);
+    void modified_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C);
     void print_timings();
 
 public:
