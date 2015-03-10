@@ -28,6 +28,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefu
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
     startup();
+    frozen_natural_orbitals();
     print_summary();
 }
 
@@ -107,7 +108,7 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
-    size_t core_ = bcore_mos.size();
+    size_t core_ = acore_mos.size();
 
     BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
     BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
@@ -308,7 +309,10 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
         }
     });
+    size_t nh = core_ + active_;
+    size_t np = active_ + virtual_;
 
+    SharedMatrix RDelta2M(new Matrix("RDelta2_matrix", nh*np, nh*np));
     RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -318,6 +322,18 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
         }
     });
+    RDelta2M->print();
+    RDelta2.print(stdout);
+    //for(int i = 0; i < nh; i++){
+    //    for(int j = 0; j < nh; j++){
+    //        for(int a = 0; a < np; a++){
+    //            for(int b = 0; b < np; b++){
+    //                RDelta2M->set(i*np + a, j*np + b,
+    //
+    //            }
+    //        }
+    //    }
+    //}
     // Fill out Lambda2 and Lambda3
     Tensor Lambda2_aa = Lambda2.block("aaaa");
     Tensor Lambda2_aA = Lambda2.block("aAaA");
@@ -513,9 +529,12 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2["ijab"] = v["ijab"] * RDelta2["ijab"];
     T2["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
     T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
-    T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
-    T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
-    T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+
+
+    //T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
+    //T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    //T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+ 
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
@@ -525,25 +544,12 @@ void THREE_DSRG_MRPT2::compute_t2()
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
-//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
-//    for(const auto& block: T2blocks){
-//        std::vector<std::string> index_vec = block.first;
-//        std::string name;
-//        for(const std::string& index: index_vec)
-//            name += index;
 
-//        if(islower(name[0]) && isupper(name[1])){
-//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
-//        }else{
-//            T2norm += pow(T2.block(name)->norm(), 2.0);
-//        }
-////        double max = T2.block(name)->max_abs_vec()[0];
-////        T2max = T2max > max ? T2max : max;
-//    }
     T2norm = sqrt(T2norm);
     outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
 //    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
     timer_off("Compute T2");
+
 }
 
 void THREE_DSRG_MRPT2::compute_t1()
@@ -664,10 +670,10 @@ double THREE_DSRG_MRPT2::E_FT1()
     temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
     temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
 
-    //E += T1["ia"]*Eta1["ab"]* Gamma1["ji"] * F["bj"];
-    E += temp["jb"] * F["bj"];
-    //E += T1["IA"]*Eta1["AB"]* Gamma1["JI"] * F["BJ"];
-    E += temp["JB"] * F["BJ"];
+    E += T1["ia"]*Eta1["ab"]* Gamma1["ji"] * F["bj"];
+    //E += temp["jb"] * F["bj"];
+    E += T1["IA"]*Eta1["AB"]* Gamma1["JI"] * F["BJ"];
+    //E += temp["JB"] * F["BJ"];
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
@@ -913,6 +919,18 @@ std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<st
         }
     }
     return out_str_vec;
+}
+void THREE_DSRG_MRPT2::frozen_natural_orbitals()
+{
+     outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
+     ambit::Tensor Fa = F.block("aa");
+
+     //Diagonalizes the active block of fock matrix
+     auto Fa_eigs = Fa.syev(kAscending);
+     //returns a map where each tensor can be addressed via name
+     Fa_eigs["eigenvectors"].print(stdout, true);
+     Fa_eigs["eigenvalues"].print(stdout,true);
+
 }
 
 
