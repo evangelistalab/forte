@@ -53,12 +53,14 @@ ExplorerIntegrals::~ExplorerIntegrals()
     cleanup();
 }
 
-void ExplorerIntegrals::update_integrals()
+void ExplorerIntegrals::update_integrals(bool freeze_core)
 {
     make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        aptei_idx_ = ncmo_;
+    if (freeze_core){
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            aptei_idx_ = ncmo_;
+        }
     }
 }
 
