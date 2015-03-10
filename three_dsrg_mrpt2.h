@@ -107,6 +107,8 @@ protected:
 
     /// Called in the constructor
     void startup();
+    ///Compute frozen natural orbitals
+    void frozen_natural_orbitals();
     /// Called in the destructor
     void cleanup();
     /// Print a summary of the options

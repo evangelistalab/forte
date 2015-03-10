@@ -977,6 +977,7 @@ void ExplorerIntegrals::compute_chol_integrals()
     ThreeIntegral_ = L->clone();
 
     ThreeIntegral_->zero();
+
     ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n,")*Cpq_tensor("m,p")*Cpq_tensor("n,q");
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,double& value){
