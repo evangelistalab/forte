@@ -1,4 +1,5 @@
 #include <cmath>
+#include <memory>
 
 #include "psi4-dec.h"
 #include "psifiles.h"
@@ -51,9 +52,9 @@ read_options(std::string name, Options &options)
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","MR-DSRG-PT2 ACI ACI_SPARSE"
-                        " EXPLORER FCIQMC SOSRG SRG-LCI TENSORTEST TENSORSRG TENSORSRG-CI APICI"
-                        " DSRG-MRPT2");
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI"
+                                              " SR-DSRG SR-DSRG-ACI TENSORSRG TENSORSRG-CI"
+                                              " DSRG-MRPT2 MR-DSRG-PT2");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -363,18 +364,18 @@ libadaptive(Options &options)
         boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
         three_dsrg_mrpt2->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "TENSORSRG"){
+    if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
         srg->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "TENSORSRG-CI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
-        srg->compute_energy();
-        srg->transfer_integrals();
-        LambdaCI* explorer = new LambdaCI(options,ints_);
-        delete explorer;
+        auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
+        dsrg->compute_energy();
+        dsrg->transfer_integrals();
+        auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_);
+        aci->compute_energy();
     }
 
     // Delete ints_;

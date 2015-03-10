@@ -147,7 +147,7 @@ public:
     ///     ints->set_oei(oei_aa,true);
     ///     ints->set_oei(oei_bb,false);
     ///     ints->update_integrals();
-    void update_integrals();
+    void update_integrals(bool freeze_core = false);
 
     /// Update the integrals with a new set of MO coefficients
     void retransform_integrals();
