@@ -108,15 +108,15 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
     BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
-    size_t core_ = acore_mos.size();
+    core_ = acore_mos.size();
 
     BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
     BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
-    size_t active_ = aactv_mos.size();
+    active_ = aactv_mos.size();
 
     BlockedTensor::add_mo_space("v","ef",avirt_mos,AlphaSpin);
     BlockedTensor::add_mo_space("V","EF",bvirt_mos,BetaSpin);
-    size_t virtual_ = avirt_mos.size();
+    virtual_ = avirt_mos.size();
 
     BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
     BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
@@ -190,20 +190,29 @@ void THREE_DSRG_MRPT2::startup()
 
     T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
     T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
+
     RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
     //all_spin = RExp2.get.();
 
+    memory_info();
     std::vector<std::string> mo_indices = RDelta2.block_labels();
     std::vector<std::string> no_hhpp;
+
     no_hhpp = spin_cases_avoid(mo_indices);
+
+    for(const std::string spin : no_hhpp){
+       outfile->Printf("\n %s ", spin.c_str());
+    }
+  
+    outfile->Printf("\n RDelta2 spin cases");
+    for(const std::string spin : mo_indices){
+        outfile->Printf("\n %s ", spin.c_str());
+    }
 
 
     BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
-    T2pr.print(stdout,false);
-
-
-
+    //T2pr.print(stdout,false);
 
     // Fill in the one-electron operator (H)
 //    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
@@ -322,8 +331,6 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
         }
     });
-    RDelta2M->print();
-    RDelta2.print(stdout);
     //for(int i = 0; i < nh; i++){
     //    for(int j = 0; j < nh; j++){
     //        for(int a = 0; a < np; a++){
@@ -531,9 +538,9 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
 
 
-    //T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
-    //T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
-    //T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
+    T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
+    T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
+    T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
  
 
     // zero internal amplitudes
@@ -928,10 +935,16 @@ void THREE_DSRG_MRPT2::frozen_natural_orbitals()
      //Diagonalizes the active block of fock matrix
      auto Fa_eigs = Fa.syev(kAscending);
      //returns a map where each tensor can be addressed via name
-     Fa_eigs["eigenvectors"].print(stdout, true);
-     Fa_eigs["eigenvalues"].print(stdout,true);
 
 }
+void THREE_DSRG_MRPT2::memory_info()
+{
+     size_t nthree = ints_->nthree();
+     outfile->Printf("\n Memory info \n");
+     outfile->Printf("\n Size of V: %4.6f Gb \n", std::pow(core_ + active_ + virtual_,4)*8/1073741824);
+     outfile->Printf("\n Size of Lambda2: %4.6f Gb\n", std::pow(active_,2)*8/1073741824);
+     outfile->Printf("\n Size of T2: %4.6f Gb\n", std::pow(core_ + active_,2)*std::pow(active_ + virtual_,2)*8/1073741824);
+     outfile->Printf("\n Size of DF/CD Integrals: %4.6f Gb\n",(nthree*(core_ + active_ + virtual_)*(core_ + active_ + virtual_) * 8.0 / 1073741824));
 
-
+}
 }} // End Namespaces
