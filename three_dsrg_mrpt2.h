@@ -113,6 +113,8 @@ protected:
     void cleanup();
     /// Print a summary of the options
     void print_summary();
+    /// Print some information about sizes
+    void memory_info();
 
     double renormalized_denominator(double D);
 
