@@ -53,12 +53,14 @@ ExplorerIntegrals::~ExplorerIntegrals()
     cleanup();
 }
 
-void ExplorerIntegrals::update_integrals()
+void ExplorerIntegrals::update_integrals(bool freeze_core)
 {
     make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        aptei_idx_ = ncmo_;
+    if (freeze_core){
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            aptei_idx_ = ncmo_;
+        }
     }
 }
 
@@ -775,7 +777,6 @@ void ExplorerIntegrals::compute_df_integrals()
           C_ord->set(mu,eigind[p].second,Cpq->get(mu,p));
        }
     }
-    C_ord->print();
     
     //B_{pq}^Q -> MO without frozen core
     
@@ -792,7 +793,6 @@ void ExplorerIntegrals::compute_df_integrals()
     //Does not add the pair_space, but says which one is should use
     df->add_pair_space("B", "ALL", "ALL");
     df->set_memory(Process::environment.get_memory()/8L);
-    df->print_header(3);
 
     //Finally computes the df integrals
     df->compute();
@@ -804,7 +804,6 @@ void ExplorerIntegrals::compute_df_integrals()
     //Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
     fseek(Bf,0, SEEK_SET);
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
-    Bpq->print();
 
     //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
    //This is because francesco reads only the nonzero integrals
@@ -898,7 +897,7 @@ void ExplorerIntegrals::compute_chol_integrals()
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
-    int nbf = primary->nbf();
+    size_t nbf = primary->nbf();
 
     boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
@@ -909,11 +908,8 @@ void ExplorerIntegrals::compute_chol_integrals()
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nL_ = nL;
+
     TensorType tensor_type = kCore;
-
-    outfile->Printf("\n nL %u  nmo_ %u", nL, nmo_);
-
-    //ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,ncmo_, ncmo_ });
 
     outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
     SharedMatrix Lao = Ch->L();
@@ -940,11 +936,11 @@ void ExplorerIntegrals::compute_chol_integrals()
   
     //This code pushes back all the eigenvalues from SO in pitzer ordering
     for(int h = 0; h < nirrep_; h++){
-  
        for(int i = 0; i < eps_so->dim(h); i++){
          eval.push_back(eps_so->get(h,i)); 
        }
     }
+
     //A vector of pairs for eval, index
     std::vector<std::pair<double, int> > eigind;
     for(int e = 0; e < eval.size(); e++){
@@ -956,66 +952,48 @@ void ExplorerIntegrals::compute_chol_integrals()
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
 
-    for(int i = 0; i < eigind.size(); i++){
-       outfile->Printf("(%20.12f, %d): ", eigind[i].first, eigind[i].second);
-    //   outfile->Printf("%d", so2ao[i]);
-    }
-     
-    
-    Cpq->print();
     SharedMatrix Cpq_new(Cpq->clone());
     for(int p = 0; p < nmo_; p++){
        for(int mu = 0; mu < nbf; mu++){
-          if(options_.get_int("PRINT") > 4){
-              outfile->Printf("\nCpq[%d][%d] = Cpq[%d][%d] = %20.12f", mu, eigind[p].second, mu, p, Cpq->get(mu,p));
-          }
           Cpq->set(mu,eigind[p].second,Cpq_new->get(mu,p));
        }
     }
-    Cpq->print();
 
-    //TODO:  This needs to not be explict loops
-    //DGEMM call
-    //L_{munu}^L * C_{mii} * C_{nui}
-    for(int l = 0; l < nL; l++){
-       for(int p = 0; p < nmo_; p++){
-          for(int q = 0; q < nmo_; q++){
-             for(int mu = 0; mu < nbf; mu++){
-                for(int nu = 0; nu < nbf; nu++){
-                   L->add(l,p*(nmo_)+q,Lao->get(l,mu*(nbf)+nu)*Cpq->get(mu,p)*Cpq->get(nu,q));
-                }
-             }
-          }
-       }
+    ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,nmo_, nmo_ });
+    ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
+    ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,nmo_, nmo_ });
+
+    if(nmo_ != ncmo_)
+    {
+        outfile->Printf("WARNING!!! Cholesky vectors not frozen");
     }
+
+    Cpq_tensor.iterate([&](const std::vector<size_t>& i,double& value){
+       value = Cpq->get(i[0],i[1]);
+    });
+    ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i,double& value){
+        value = Lao->get(i[0],i[1]*nbf + i[2]);
+    });
     ThreeIntegral_ = L->clone();
-    L->print(); 
+
+    ThreeIntegral_->zero();
+
+    ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n,")*Cpq_tensor("m,p")*Cpq_tensor("n,q");
+
+    ThreeIntegral.iterate([&](const std::vector<size_t>& i,double& value){
+        ThreeIntegral_->set(i[0],i[1]*nmo_ + i[2],value);
+        L->set(i[0],i[1]*nmo_ + i[2],value);
+     });
+    ThreeIntegral_->print();
+
+
+
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
 
-    //Computes L_pq^B * L_{rs}^B - in chemist notation
-    //ie  (p(1)q(1) | r(2) s(2))
-    //stores (pq | rs) ->val
+
     pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
-    //for(int p = 0; p < nmo_; p++){
-    //  for(int q = 0; q < nmo_; q++){
-    //     for(int r = 0; r < nmo_; r++){
-    //        for(int s = 0; s < nmo_; s++){
-    //            double val = 0.0;
-    //            for(int B = 0; B < nL; B++){
-    //                val += L->get(B,p*nmo_ + q)* L->get(B,r*nmo_ + s);
-    //            }
-    //            //aphys_tei_aa[aptei_index(p,r,q,s)] += val;
-    //            //aphys_tei_aa[aptei_index(p,r,s,q)] -= val;
-    //            //aphys_tei_ab[aptei_index(p,r,q,s)]  = val;
-    //            //aphys_tei_bb[aptei_index(p,r,q,s)] += val;
-    //            //aphys_tei_bb[aptei_index(p,r,s,q)] -= val;
-    //            
-    ////            two_electron_integrals[aptei_index(p,q,r,s)] = val;
-    //         }
-    //      }
-    //   }
-    //}
+    pqrs->print();
 
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){

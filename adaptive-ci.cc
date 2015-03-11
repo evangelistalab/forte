@@ -25,6 +25,35 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
+
+inline double clamp(double x, double a, double b)
+
+{
+    return x < a ? a : (x > b ? b : x);
+}
+
+/**
+ * @brief smootherstep
+ * @param edge0
+ * @param edge1
+ * @param x
+ * @return
+ *
+ * This is a smooth step function that is
+ * 0.0 for x <= edge0
+ * 1.0 for x >= edge1
+ */
+inline double smootherstep(double edge0, double edge1, double x)
+{
+    if (edge1 == edge0){
+        return x <= edge0 ? 0.0 : 1.0;
+    }
+    // Scale, and clamp x to 0..1 range
+    x = clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+    // Evaluate polynomial
+    return x * x * x *( x *( x * 6. - 15.) + 10.);
+}
+
 AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints)
 {
@@ -87,6 +116,9 @@ void AdaptiveCI::startup()
 
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
+
+    do_smooth_ = options_.get_bool("SMOOTH");
+    smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -230,6 +262,11 @@ double AdaptiveCI::compute_energy()
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
+    }
+
+    // Do Hamiltonian smoothing
+    if (do_smooth_){
+        smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
@@ -645,6 +682,7 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
+        outfile->Printf("AIMED SELECTION");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
@@ -667,6 +705,43 @@ void AdaptiveCI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::
             }
         }
     }
+}
+
+
+void AdaptiveCI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
+{
+    size_t ndets = space.size();
+
+    SharedMatrix H(new Matrix("H-smooth",ndets,ndets));
+
+    SharedMatrix F(new Matrix("F-smooth",ndets,ndets));
+
+    // Build the smoothed Hamiltonian
+    for (int I = 0; I < ndets; ++I){
+        for (int J = 0; J < ndets; ++J){
+            double CI = evecs->get(I,0);
+            double CJ = evecs->get(J,0);
+            double HIJ = space[I].slater_rules(space[J]);
+            double factorI = smootherstep(tau_p_ * tau_p_,smooth_threshold_,CI * CI);
+            double factorJ = smootherstep(tau_p_ * tau_p_,smooth_threshold_,CJ * CJ);
+            if (I != J){
+                HIJ *= factorI * factorJ;
+                F->set(I,J,factorI * factorJ);
+            }
+            H->set(I,J,HIJ);
+        }
+    }
+
+    evecs->print();
+    H->print();
+    F->print();
+
+    SharedMatrix evecs_s(new Matrix("C-smooth",ndets,ndets));
+    SharedVector evals_s(new Vector("lambda-smooth",ndets));
+
+    H->diagonalize(evecs_s,evals_s);
+
+    outfile->Printf("\n  * sAdaptive-CI Energy Root %3d        = %.12f Eh",1,evals_s->get(0) + nuclear_repulsion_energy_);
 }
 
 void AdaptiveCI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,int nroot)
