@@ -48,8 +48,8 @@ protected:
 
     // => Class data <= //
 
-    enum sourceop{STANDARD, AMP, EMP2};
-    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2);
+    enum sourceop{STANDARD, AMP, EMP2, LAMP, LEMP2};
+    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
 
     /// The reference object
     Reference reference_;
@@ -140,6 +140,8 @@ protected:
     double renormalized_denominator(double D);
     double renormalized_denominator_amp(double V,double D);
     double renormalized_denominator_emp2(double V,double D);
+    double renormalized_denominator_lamp(double V,double D);
+    double renormalized_denominator_lemp2(double V,double D);
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
@@ -157,6 +159,7 @@ protected:
     void renormalize_F();
     void renormalize_V();
     double renormalized_exp(double D) {return std::exp(-s_ * pow(D, 2.0));}
+    double renormalized_exp_linear(double D) {return std::exp(-s_ * fabs(D));}
 
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
     double compute_ref();
@@ -181,6 +184,19 @@ protected:
                 value += tmp;
             }
             return value;
+        }else{return 0.0;}
+    }
+
+    // Taylor Expansion of [1 - exp(-s * |Z|)] / Z
+    double Taylor_Exp_Linear(const double& Z, const int& n){
+        bool Zabs = Z > 0.0 ? 1 : 0;
+        if(n > 0){
+            double value = 1, tmp = 1;
+            for(int x=0; x<(n-1); ++x){
+                tmp *= pow(-1.0, Zabs) * Z / (x+2);
+                value += tmp;
+            }
+            return value * pow(-1.0, Zabs + 1);
         }else{return 0.0;}
     }
 

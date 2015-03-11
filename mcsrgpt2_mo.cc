@@ -30,6 +30,31 @@ MCSRGPT2_MO::MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints)
 
     startup(options);
 
+//    vector<double> vec_V (2001);
+//    vector<double> vec_D (2001);
+//    std::iota(vec_V.begin(), vec_V.end(), 0);
+//    std::iota(vec_D.begin(), vec_D.end(), 0);
+
+//    ofstream out_V;
+//    out_V.open("V_0.1");
+////    out_V << "     D        value" << endl;
+//    for(const double& n: vec_D){
+//        double D = n * 0.0001 - 0.1;
+//        double value = ElementT(source_,D,0.1);
+//        out_V << boost::format("%.5f %20.15f\n") % D % value;
+//    }
+//    out_V.close();
+
+//    ofstream out_D;
+//    out_D.open("D_0.1");
+////    out_D << "     V        value" << endl;
+//    for(const double& n: vec_V){
+//        double V = n * 0.0001 - 0.1;
+//        double value = ElementT(source_,0.1,V);
+//        out_D << boost::format("%.5f %20.15f\n") % V % value;
+//    }
+//    out_D.close();
+
     Process::environment.globals["CURRENT ENERGY"] = compute_energy();
 
 }
@@ -185,6 +210,7 @@ double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const doubl
     }
     case LAMP:{
         double RD = D / V;
+//        outfile->Printf("\n  D = %20.15f, V = %20.15f, RD = %20.15f, EXP = %20.15f", D, V, RD, V * exp(-s_ * fabs(RD)));
         return V * exp(-s_ * fabs(RD));
     }
     case LEMP2:{
@@ -221,8 +247,9 @@ void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
                         value_b += (Fb_[nx][nx] - Fb_[nu][nu]) * T2bb_[i][u][a][x] * Db_[nx][nu];
                     }
                 }
-                value_a += Fa_[na][ni];
-                value_b += Fb_[na][ni];
+                value_a += Fa_[ni][na];
+                value_b += Fb_[ni][na];
+
                 double Da = Fa_[ni][ni] - Fa_[na][na];
                 double Db = Fb_[ni][ni] - Fb_[na][na];
 
@@ -456,6 +483,48 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
 
             double Da = Fa_[ni][ni] - Fa_[na][na];
             double Db = Fb_[ni][ni] - Fb_[na][na];
+
+//            if(ni == 2 && na == 3){
+//                outfile->Printf("\n  Da[%zu][%zu]         = %20.15f", ni, na, Da);
+//                outfile->Printf("\n  Fa[%zu][%zu]         = %20.15f", ni, na, Fa_[ni][na]);
+//                outfile->Printf("\n RFa[%zu][%zu]         = %20.15f", ni, na, RFa);
+//                outfile->Printf("\n  Ta[%zu][%zu] (infty) = %20.15f", ni, na, RFa / Da);
+//                outfile->Printf("\n  Ta[%zu][%zu] (s)     = %20.15f", ni, na, ElementT(source_, Da, RFa));
+//                if(source_ == "STANDARD"){
+//                    double Z = sqrt(s_) * Da;
+//                    outfile->Printf("\n  Z                = %20.15f", Z);
+//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(Da, 2.0))) * RFa / Da);
+//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_) * RFa);
+//                }
+//                if(source_ == "AMP"){
+//                    double RD = Da / RFa;
+//                    double Z = sqrt(s_) * RD;
+//                    outfile->Printf("\n  Z                = %20.15f", Z);
+//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(RD, 2.0))) * RFa / Da);
+//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_));
+//                }
+//                if(source_ == "EMP2"){
+//                    double RD = Da / RFa;
+//                    double Z = sqrt(s_) * RD / RFa;
+//                    outfile->Printf("\n  Z                = %20.15f", Z);
+//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(RD / RFa, 2.0))) * RFa / Da);
+//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_) / RFa);
+//                }
+//                if(source_ == "LAMP"){
+//                    double RD = Da / RFa;
+//                    double Z = s_ * RD;
+//                    outfile->Printf("\n  Z                = %20.15f", Z);
+//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * fabs(RD))) * RFa / Da);
+//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_);
+//                }
+//                if(source_ == "LEMP2"){
+//                    double RD = Da / RFa;
+//                    double Z = s_ * RD / RFa;
+//                    outfile->Printf("\n  Z                = %20.15f", Z);
+//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * fabs(RD / RFa))) * RFa / Da);
+//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp_Linear(Z, 2 * taylor_order_) * sqrt(s_) / RFa);
+//                }
+//            }
 
             A[i][a] = ElementT(source_, Da, RFa);
             B[i][a] = ElementT(source_, Db, RFb);
