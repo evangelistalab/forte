@@ -53,7 +53,7 @@ read_options(std::string name, Options &options)
          
         /*- The job type -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI"
-                                              " SR-DSRG SR-DSRG-ACI TENSORSRG TENSORSRG-CI"
+                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2");
 
         // Options for the Explorer class
@@ -153,7 +153,7 @@ read_options(std::string name, Options &options)
         options.add_double("SMO_THRESHOLD",0.0);
 
         /*- The method used to smooth the Hamiltonian -*/
-        options.add_bool("SMOOTH",true);
+        options.add_bool("SMOOTH",false);
 
         /*- The method used to smooth the Hamiltonian -*/
         options.add_bool("SELECT",false);
@@ -162,7 +162,7 @@ read_options(std::string name, Options &options)
         options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
 
         /*- The number of roots computed -*/
-        options.add_int("NROOT",4);
+        options.add_int("NROOT",1);
 
         /*- The root selected for state-specific computations -*/
         options.add_int("ROOT",0);
@@ -371,11 +371,27 @@ libadaptive(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
-        dsrg->compute_energy();
-        dsrg->transfer_integrals();
-        auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_);
-        aci->compute_energy();
+        {
+            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
+            dsrg->compute_energy();
+            dsrg->transfer_integrals();
+        }
+        {
+            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_);
+            aci->compute_energy();
+        }
+    }
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        {
+            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
+            dsrg->compute_energy();
+            dsrg->transfer_integrals();
+        }
+        {
+            auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_);
+            apici->compute_energy();
+        }
     }
 
     // Delete ints_;

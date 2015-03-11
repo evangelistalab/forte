@@ -45,24 +45,6 @@ def run_adaptive_ci(name, **kwargs):
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
-def run_ga_ci(name, **kwargs):
-    r"""Function encoding sequence of PSI module and plugin calls so that
-    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
-
-    >>> energy('libadaptive')
-
-    """
-    lowername = name.lower()
-    kwargs = p4util.kwargs_lower(kwargs)
-
-    # Your plugin's psi4 run sequence goes here
-    scf_helper(name, **kwargs)
-    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'GACI')
-    returnvalue = psi4.plugin('libadaptive.so')
-    psi4.set_variable('CURRENT ENERGY', returnvalue)
-    return returnvalue
-
-
 # Adaptive Path-Integral CI
 def run_adaptive_pici(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -152,6 +134,42 @@ def run_ct_ci(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'TENSORSRG-CI')
+    psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
+def run_sr_dsrg_aci(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('sr-dsrg-aci')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE','JOB_TYPE','SR-DSRG-ACI')
+    psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
+def run_sr_dsrg_apici(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('sr-dsrg-apici')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE','JOB_TYPE','SR-DSRG-APICI')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
     psi4.plugin('libadaptive.so')
     returnvalue = psi4.get_variable('CURRENT ENERGY')
@@ -283,13 +301,13 @@ procedures['energy']['aci'] = run_adaptive_ci
 procedures['energy']['apici'] = run_adaptive_pici
 procedures['energy']['fciqmc'] = run_fciqmc
 procedures['energy']['fno-apifci'] = run_fno_apifci
-procedures['energy']['gaci'] = run_ga_ci
 procedures['energy']['ct'] = run_ct
 procedures['energy']['srg'] = run_srg
 procedures['energy']['ct-ci'] = run_ct_ci
 procedures['energy']['sr-lctsd'] = run_sr_lctsd
 procedures['energy']['sr-srgsd'] = run_sr_srgsd
 procedures['energy']['sr-dsrgsd'] = run_sr_dsrgsd
+procedures['energy']['sr-dsrg-aci'] = run_sr_dsrg_aci
 procedures['energy']['mr-dsrg-pt2'] = run_mrdsrgpt2
 procedures['energy']['dsrg-mrpt2'] = run_dsrg_mrpt2
 procedures['energy']['three-dsrg-mrpt2'] = run_three_dsrg_mrpt2
