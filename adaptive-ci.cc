@@ -256,7 +256,6 @@ double AdaptiveCI::compute_energy()
         bool converged = check_convergence(energy_history,PQ_evals);
         if (converged) break;
 
-
         // Step 5. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
 
@@ -313,9 +312,10 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     // This will contain all the determinants
     PQ_space_.clear();
 
-    // Add  the P-space determinants
+    // Add the P-space determinants and zero the hash
     for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
         PQ_space_.push_back(P_space_[J]);
+        V_hash.erase(P_space_[J]);
     }
 
     boost::timer t_ms_screen;
@@ -387,6 +387,168 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 }
 
 void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash)
+{
+    std::vector<int> aocc = det.get_alfa_occ();
+    std::vector<int> bocc = det.get_beta_occ();
+    std::vector<int> avir = det.get_alfa_vir();
+    std::vector<int> bvir = det.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                BitsetDeterminant new_det(det);
+                new_det.set_alfa_bit(ii,false);
+                new_det.set_alfa_bit(aa,true);
+                double HIJ = det.slater_rules(new_det);
+                if (V_hash.count(new_det) == 0){
+                    V_hash[new_det] = std::vector<double>(nroot);
+                }
+                for (int n = 0; n < nroot; ++n){
+                    V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                BitsetDeterminant new_det(det);
+                new_det.set_beta_bit(ii,false);
+                new_det.set_beta_bit(aa,true);
+                double HIJ = det.slater_rules(new_det);
+                if (V_hash.count(new_det) == 0){
+                    V_hash[new_det] = std::vector<double>(nroot);
+                }
+                for (int n = 0; n < nroot; ++n){
+                    V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                }
+            }
+        }
+    }
+
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = a + 1; b < nvalpha; ++b){
+                    int bb = avir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        BitsetDeterminant new_det(det);
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_alfa_bit(jj,false);
+                        new_det.set_alfa_bit(aa,true);
+                        new_det.set_alfa_bit(bb,true);
+
+                        double HIJ = ints_->aptei_aa(ii,jj,aa,bb);
+
+                        // grap the alpha bits of both determinants
+                        const boost::dynamic_bitset<>& Ia = det.alfa_bits();
+                        const boost::dynamic_bitset<>& Ja = new_det.alfa_bits();
+
+                        // compute the sign of the matrix element
+                        HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ia,jj) * SlaterSign(Ja,aa) * SlaterSign(Ja,bb);
+
+                        if (V_hash.count(new_det) == 0){
+                            V_hash[new_det] = std::vector<double>(nroot);
+                        }
+                        for (int n = 0; n < nroot; ++n){
+                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = 0; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        BitsetDeterminant new_det(det);
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_beta_bit(jj,false);
+                        new_det.set_alfa_bit(aa,true);
+                        new_det.set_beta_bit(bb,true);
+
+                        double HIJ = ints_->aptei_ab(ii,jj,aa,bb);
+
+                        // grap the alpha bits of both determinants
+                        const boost::dynamic_bitset<>& Ia = det.alfa_bits();
+                        const boost::dynamic_bitset<>& Ib = det.beta_bits();
+                        const boost::dynamic_bitset<>& Ja = new_det.alfa_bits();
+                        const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
+
+                        // compute the sign of the matrix element
+                        HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ib,jj) * SlaterSign(Ja,aa) * SlaterSign(Jb,bb);
+
+                        if (V_hash.count(new_det) == 0){
+                            V_hash[new_det] = std::vector<double>(nroot);
+                        }
+                        for (int n = 0; n < nroot; ++n){
+                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                for (int b = a + 1; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        BitsetDeterminant new_det(det);
+                        new_det.set_beta_bit(ii,false);
+                        new_det.set_beta_bit(jj,false);
+                        new_det.set_beta_bit(aa,true);
+                        new_det.set_beta_bit(bb,true);
+
+                        double HIJ = ints_->aptei_bb(ii,jj,aa,bb);
+
+                        // grap the alpha bits of both determinants
+                        const boost::dynamic_bitset<>& Ib = det.beta_bits();
+                        const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
+
+                        // compute the sign of the matrix element
+                        HIJ *= SlaterSign(Ib,ii) * SlaterSign(Ib,jj) * SlaterSign(Jb,aa) * SlaterSign(Jb,bb);
+
+                        if (V_hash.count(new_det) == 0){
+                            V_hash[new_det] = std::vector<double>(nroot);
+                        }
+                        for (int n = 0; n < nroot; ++n){
+                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AdaptiveCI::generate_excited_determinants_original(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
