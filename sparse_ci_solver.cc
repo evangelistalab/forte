@@ -159,7 +159,7 @@ void SigmaVectorList::get_diagonal(Vector& diag)
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
 {
-    if (space.size() < 50){
+    if (space.size() < 200){
         diagonalize_full(space,evals,evecs,nroot);
     }else{
         if (diag_method == Full){
@@ -174,7 +174,7 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<BitsetDeterminant
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
 {
-    if (space.size() < 50){
+    if (space.size() < 200){
         diagonalize_full(space,evals,evecs,nroot);
     }else{
         if (diag_method == Full){
@@ -483,13 +483,19 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     // Use unit vectors as initial guesses
     int N = sigma_vector->size();
+    // Number of roots
     int M = nroot_s;
-    int maxdim = 12 * M;
+
+    size_t collapse_size = 2 * M;
+    size_t subspace_size = 4 * M;
+
+    // Maximum number of vectors stored
+    int maxdim = subspace_size;
 
     double* eps = Eigenvalues->pointer();
     double** v = Eigenvectors->pointer();
 
-    double cutoff = 1.0e-10;
+    double e_convergence = 1.0e-10;
 
     if (print_details_){
         outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
@@ -498,8 +504,9 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     // current set of guess vectors stored by row
     Matrix b("b",maxdim,N);
     b.zero();
+
     // guess vectors formed from old vectors, stored by row
-    Matrix bnew("bnew",M,N);
+    Matrix bnew("bnew",maxdim,N);
 
     // residual eigenvectors, stored by row
     Matrix f("f",maxdim,N);
@@ -517,59 +524,53 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     Vector lambda("lambda",maxdim);
     // Old eigenvalues of the Davidson mini-Hamitonian
     Vector lambda_old("lambda",maxdim);
+    // Diagonal elements of the Hamiltonian
+    Vector Hdiag("Hdiag",N);
 
-    Vector Adiag("Adiag",N);
-    sigma_vector->get_diagonal(Adiag);
+    sigma_vector->get_diagonal(Hdiag);
 
-    // Find the M lowest diagonals
-    double minimum = Adiag.get(0);
-    int min_pos = 0;
-    for(int i = 0; i < M; i++) {
-        for(int j = 1; j < N; j++){
-            if(Adiag.get(j) < minimum) {
-                minimum = Adiag.get(j);
-                min_pos = j;
-            }
+    size_t initial_size = collapse_size * M;
+
+    // Find the initial_size lowest diagonals
+    {
+        std::vector<std::pair<double,size_t>> smallest(N);
+        for(size_t j = 0; j < N; ++j){
+            smallest[j] = std::make_pair(Hdiag.get(j),j);
         }
-        b.set(i,min_pos,1.0);
-        Adiag.set(min_pos,BIGNUM);
+        std::sort(smallest.begin(),smallest.end());
+        for(int i = 0; i < initial_size; i++) {
+            b.set(i,smallest[i].second,1.0);
+        }
     }
 
-    int init_dim = M;
-    int L = init_dim;
+    int L = initial_size;
     int iter = 0;
     int converged = 0;
     while((converged < M) and (iter < maxiter)) {
+        double* lambda_p = lambda.pointer();
+        double* Adiag_p = Hdiag.pointer();
+        double** b_p = b.pointer();
+        double** f_p = f.pointer();
+        double** alpha_p = alpha.pointer();
+        double** sigma_p = sigma.pointer();
+
         bool skip_check = false;
         if(print) outfile->Printf("\n  iter = %d\n", iter);
 
         // Step #2: Build and Diagonalize the Subspace Hamiltonian
-        sigma_vector->compute_sigma(sigma,b,maxdim);
+        sigma_vector->compute_sigma(sigma,b,L);
 
-
+        G.zero();
         G.gemm(false,false,1.0,b,sigma,0.0);
-
-//        G.print();
-
-//        for (int r = 0; r < L; ++r){
-//            for (int I = 0; I < N; ++I){
-//                if (std::fabs(b.get(r,I)) > 0.05){
-//                    outfile->Printf("\n  sol = %d, N = %d, c = %f",r,I,b.get(r,I));
-//                }
-//            }
-//        }
-//        if (L == M) G.print();
 
         // diagonalize mini-matrix
         G.diagonalize(alpha,lambda);
 
-        // Davidson mini-Hamitonian
+        // Overlap matrix
         S.gemm(false,true,1.0,b,b,0.0);
 
-//        S.print();
-
-        bool printed_S = false;
         // Check for orthogonality
+        bool printed_S = false;
         for (int i = 0; i < L; ++i){
             double diag = S.get(i,i);
             double zero = false;
@@ -582,10 +583,9 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             }
             if ((not zero) and (not one)){
                 if (not printed_S) {
-                    S.print();
+                    outfile->Printf("\n  WARNING: Vector %d is not normalized or zero");
                     printed_S = true;
                 }
-                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero");
             }
             double offdiag = 0.0;
             for (int j = i + 1; j < L; ++j){
@@ -593,31 +593,77 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             }
             if (offdiag > 1.0e-6){
                 if (not printed_S) {
-                    S.print();
+                    outfile->Printf("\n  WARNING: The vectors are not orthogonal");
                     printed_S = true;
                 }
-                outfile->Printf("\n  WARNING: The vectors are not orthogonal");
 
             }
+        }
+
+        // If L is close to maxdim, collapse to one guess per root */
+        if(maxdim - L < M) {
+            if(print) {
+                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
+                outfile->Printf("Collapsing eigenvectors.\n");
+            }
+            bnew.zero();
+            double** bnew_p = bnew.pointer();
+            for(int i = 0; i < collapse_size; i++) {
+                for(int j = 0; j < L; j++) {
+                    for(int k = 0; k < N; k++) {
+                        bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
+                    }
+                }
+            }
+
+            // normalize new vectors
+            for(int i = 0; i < collapse_size; i++){
+                double norm = 0.0;
+                for(int k = 0; k < N; k++){
+                    norm += bnew_p[i][k] * bnew_p[i][k];
+                }
+                norm = std::sqrt(norm);
+                for(int k = 0; k < N; k++){
+                    bnew_p[i][k] = bnew_p[i][k] / norm;
+                }
+            }
+
+            // Copy them into place
+            b.zero();
+            L = 0;
+            for(int k = 0; k < collapse_size; k++){
+                if(schmidt_add(b_p,k, N, bnew_p[k])) {
+                    L++;  // <- Increase L if we add one more basis vector
+                }
+            }
+
+            skip_check = true;
+
+            // Rebuild and Diagonalize the Subspace Hamiltonian
+            sigma_vector->compute_sigma(sigma,b,L);
+
+            G.zero();
+            G.gemm(false,false,1.0,b,sigma,0.0);
+
+            // diagonalize mini-matrix
+            G.diagonalize(alpha,lambda);
         }
 
         // Step #3: Build the Correction Vectors
         // form preconditioned residue vectors
         f.zero();
-        double* lambda_p = lambda.pointer();
-        double* Adiag_p = Adiag.pointer();
-        double** b_p = b.pointer();
-        double** f_p = f.pointer();
-        double** alpha_p = alpha.pointer();
-        double** sigma_p = sigma.pointer();
         for(int k = 0; k < M; k++){  // loop over roots
             for(int I = 0; I < N; I++) {  // loop over elements
                 for(int i = 0; i < L; i++) {
                     f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
                 }
                 double denom = lambda_p[k] - Adiag_p[I];
-                if(fabs(denom) > 1e-6) f_p[k][I] /= denom;
-                else f_p[k][I] = 0.0;
+                if(fabs(denom) > 1e-6){
+                    f_p[k][I] /= denom;
+                }
+                else{
+                    f_p[k][I] = 0.0;
+                }
             }
         }
 
@@ -629,64 +675,18 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
                 norm += f_p[k][I] * f_p[k][I];
             }
             norm = std::sqrt(norm);
-            if(norm < 1.0e-6){
-                outfile->Printf("\n  WARNING norm of Davidson residual is less than 1.0e-6");
-                for(int I = 0; I < N; I++) {
-                    f_p[k][I] = 0.0;
-                }
-            }else{
-                for(int I = 0; I < N; I++) {
-                    f_p[k][I] /= norm;
-                }
+            for(int I = 0; I < N; I++) {
+                f_p[k][I] /= norm;
             }
         }
 
         // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
-        for(int k = 0,numf = 0; k < M; k++)
-            if(schmidt_add(b_p, L, N, f_p[k])) {
-                L++;  // <- Increase L if we add one more basis vector
-                numf++;
-            }
-
-        // If L is close to maxdim, collapse to one guess per root */
-        if(maxdim - L < M) {
-            if(print) {
-                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
-                outfile->Printf("Collapsing eigenvectors.\n");
-            }
-            bnew.zero();
-            double** bnew_p = bnew.pointer();
-            for(int i = 0; i < M; i++) {
-                for(int j = 0; j < L; j++) {
-                    for(int k = 0; k < N; k++) {
-                        bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
-                    }
-                }
-            }
-
-            // normalize new vectors
-            for(int i = 0; i < M; i++){
-                double norm = 0.0;
-                for(int k = 0; k < N; k++){
-                    norm += bnew_p[i][k] * bnew_p[i][k];
-                }
-                norm = std::sqrt(norm);
-                for(int k = 0; k < N; k++){
-                    bnew_p[i][k] = bnew_p[i][k] / norm;
-                }
-            }
-            // Copy them into place
-            b.zero();
-            for(int k = 0,numf = 0; k < M; k++){
-                if(schmidt_add(b_p,k, N, bnew_p[k])) {
+        for(int k = 0; k < M; k++){
+            if (L < subspace_size){
+                if(schmidt_add(b_p, L, N, f_p[k])) {
                     L++;  // <- Increase L if we add one more basis vector
-                    numf++;
                 }
             }
-
-            skip_check = true;
-
-            L = M;
         }
 
         // check convergence on all roots
@@ -699,7 +699,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             for(int k = 0; k < M; k++) {
                 double diff = std::fabs(lambda.get(k) - lambda_old.get(k));
                 bool this_converged = false;
-                if(diff < cutoff) {
+                if(diff < e_convergence) {
                     this_converged = true;
                     converged++;
                 }
