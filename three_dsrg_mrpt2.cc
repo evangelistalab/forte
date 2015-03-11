@@ -211,7 +211,7 @@ void THREE_DSRG_MRPT2::startup()
     }
 
 
-    BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
+    T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
     //T2pr.print(stdout,false);
 
     // Fill in the one-electron operator (H)
@@ -634,7 +634,7 @@ void THREE_DSRG_MRPT2::renormalize_V()
 
 void THREE_DSRG_MRPT2::renormalize_F()
 {
-    timer_on("Renorm. F");
+    timer_on("Renom. F");
     BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
