@@ -179,17 +179,17 @@ void DSRG_MRPT2::startup()
     Eta1_AA("pq") -= reference_.L1b()("pq");
 
     // Fill out Lambda2 and Lambda3
-    Tensor Lambda2_aa = Lambda2.block("aaaa");
-    Tensor Lambda2_aA = Lambda2.block("aAaA");
-    Tensor Lambda2_AA = Lambda2.block("AAAA");
+    ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
+    ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
+    ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
     Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+    ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+    ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+    ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+    ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
     Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
@@ -203,14 +203,6 @@ void DSRG_MRPT2::startup()
     F["PQ"] += H["PQ"];
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
-
-  
-//    Tensor Fa_cc = F.block("cc");
-//    Tensor Fa_aa = F.block("aa");
-//    Tensor Fa_vv = F.block("vv");
-//    Tensor Fb_CC = F.block("CC");
-//    Tensor Fb_AA = F.block("AA");
-//    Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -299,6 +291,37 @@ void DSRG_MRPT2::startup()
                 double V = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
                 if(fabs(V) < 1.0e-10) value = 0.0;
                 else value = renormalized_exp(D / V);
+            }
+        });
+    }
+    else if(source_ == "LAMP"){
+        RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator_lamp(ints_->aptei_aa(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_lamp(ints_->aptei_ab(i[0],i[1],i[2],i[3]), Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                value = renormalized_denominator_lamp(ints_->aptei_bb(i[0],i[1],i[2],i[3]), Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+
+        // Prepare exponential tensors for effective Fock matrix and integrals
+        RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                double D = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
+                double V = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp_linear(D / V);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin)){
+                double D = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp_linear(D / V);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin)){
+                double D = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
+                double V = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+                if(fabs(V) < 1.0e-10) value = 0.0;
+                else value = renormalized_exp_linear(D / V);
             }
         });
     }
@@ -419,6 +442,20 @@ double DSRG_MRPT2::renormalized_denominator_emp2(double V, double D)
     }
 }
 
+// Computes (1 - exp(-s |D / V|)) * V / D
+double DSRG_MRPT2::renormalized_denominator_lamp(double V, double D)
+{
+    if (fabs(V) < 1.0e-10){return 0.0;}
+
+    double RD = D / V;
+    double Z = s_ * RD;
+    if(fabs(Z) < pow(0.1, taylor_threshold_)){
+        return Taylor_Exp_Linear(Z, taylor_order_) * s_;
+    }else{
+        return (1.0 - exp(-s_ * fabs(RD))) * V / D;
+    }
+}
+
 double DSRG_MRPT2::compute_energy()
 {
     outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
@@ -485,9 +522,13 @@ double DSRG_MRPT2::compute_energy()
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Etotal});
 
-    // TODO Analyze T1 and T2
+    // Analyze T1 and T2
     check_t1();
     check_t2();
+    energy.push_back({"max(T1)", T1max});
+    energy.push_back({"max(T2)", T2max});
+    energy.push_back({"||T1||", T1norm});
+    energy.push_back({"||T2||", T2norm});
 
     // Print energy summary
     outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
@@ -535,12 +576,18 @@ void DSRG_MRPT2::compute_t2()
         T2["IJAB"] = RDelta2["IJAB"];
         break;
     }
-    case EMP2:
+    case EMP2:{
         T2["ijab"] = RDelta2["ijab"];
         T2["iJaB"] = RDelta2["iJaB"];
         T2["IJAB"] = RDelta2["IJAB"];
         break;
-
+    }
+    case LAMP:{
+        T2["ijab"] = RDelta2["ijab"];
+        T2["iJaB"] = RDelta2["iJaB"];
+        T2["IJAB"] = RDelta2["IJAB"];
+        break;
+    }
     default:{
         T2["ijab"] = V["ijab"] * RDelta2["ijab"];
         T2["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
@@ -620,49 +667,32 @@ void DSRG_MRPT2::compute_t1()
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
-// TODO
 void DSRG_MRPT2::check_t2()
 {
     // norm and maximum of T2 amplitudes
-//    T2norm = 0.0; T2max = 0.0;
-//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
-//    for(const auto& block: T2blocks){
-//        std::vector<std::string> index_vec = block.first;
-//        std::string name;
-//        for(const std::string& index: index_vec)
-//            name += index;
-
-//        if(islower(name[0]) && isupper(name[1])){
-//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
-//        }else{
-//            T2norm += pow(T2.block(name)->norm(), 2.0);
-//        }
-////        double max = T2.block(name)->max_abs_vec()[0];
-////        T2max = T2max > max ? T2max : max;
-//    }
-//    T2norm = sqrt(T2norm);
-//    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
-//    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
+    T2norm = 0.0; T2max = 0.0;
+    std::vector<std::string> T2blocks = T2.block_labels();
+    for(const std::string& block: T2blocks){
+        Tensor temp = T2.block(block);
+        if(islower(block[0]) && isupper(block[1])){
+            T2norm += 4 * pow(temp.norm(), 2.0);
+        }else{
+            T2norm += pow(temp.norm(), 2.0);
+        }
+        temp.iterate([&](const std::vector<size_t>& i,double& value){
+                T2max = T2max > fabs(value) ? T2max : fabs(value);
+        });
+    }
+    T2norm = sqrt(T2norm);
 }
 
-// TODO
 void DSRG_MRPT2::check_t1()
 {
     // norm and maximum of T1 amplitudes
-//    double Fnorm = F.norm(2);
-//    double RDelta1norm = RDelta1.norm(2);
-//    T1norm = T1.norm(2); T1max = 0.0;
-//    std::map<std::vector<std::string>,SharedTensor>& T1blocks = T1.blocks();
-//    for(const auto& block: T1blocks){
-//        std::vector<std::string> index_vec = block.first;
-//        std::string name;
-//        for(const std::string& index: index_vec)
-//            name += index;
-//        double max = T1.block(name)->max_abs_vec()[0];
-//        T1max = T1max > max ? T1max : max;
-//    }
-//    outfile->Printf("\n  ||T1|| %22c = %22.15lf", ' ', T1.norm());
-//    outfile->Printf("\n  max(T1) %21c = %22.15lf", ' ', T1max);
+    T1norm = T1.norm(); T1max = 0.0;
+    T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            T1max = T1max > fabs(value) ? T1max : fabs(value);
+    });
 }
 
 void DSRG_MRPT2::renormalize_V()
@@ -671,23 +701,19 @@ void DSRG_MRPT2::renormalize_V()
     std::string str = "Renormalizing two-electron integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"gggg"}));
+    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hhpp"}));
 
     temp["ijab"] = V["ijab"] * RExp2["ijab"];
     temp["iJaB"] = V["iJaB"] * RExp2["iJaB"];
     temp["IJAB"] = V["IJAB"] * RExp2["IJAB"];
 
-    temp["abij"] = V["abij"] * RExp2["ijab"];
-    temp["aBiJ"] = V["aBiJ"] * RExp2["iJaB"];
-    temp["ABIJ"] = V["ABIJ"] * RExp2["IJAB"];
-
     V["ijab"] += temp["ijab"];
     V["iJaB"] += temp["iJaB"];
     V["IJAB"] += temp["IJAB"];
 
-    V["abij"] += temp["abij"];
-    V["aBiJ"] += temp["aBiJ"];
-    V["ABIJ"] += temp["ABIJ"];
+    V["abij"] += temp["ijab"];
+    V["aBiJ"] += temp["iJaB"];
+    V["ABIJ"] += temp["IJAB"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
