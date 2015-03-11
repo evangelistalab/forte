@@ -152,9 +152,6 @@ double TensorSRG::compute_mp2_guess_driven_srg()
     S2["iJaB"] = V["iJaB"] * RInvD2["iJaB"];
     S2["IJAB"] = V["IJAB"] * RInvD2["IJAB"];
 
-    outfile->Printf("\n\n ||V||      = %20.15f",V.norm());
-    outfile->Printf("\n\n ||RInvD2|| = %20.15f",RInvD2.norm());
-
     double Eaa = 0.25 * S2["ijab"] * V["ijab"];
     double Eab = S2["iJaB"] * V["iJaB"];
     double Ebb = 0.25 * S2["IJAB"] * V["IJAB"];
