@@ -92,22 +92,25 @@ void FCIQMC::startup()
 
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant.print();
+    time_step_ = options_.get_double("TAU");
+    maxiter_ = options_.get_int("MAXITER");
+    start_num_det_ = options_.get_double("START_NUM_DET");
+    do_shift_ = options_.get_bool("USE_SHIFT");
+    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
 
     // Read options
 //    nroot_ = options_.get_int("NROOT");
 //    spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
 //    initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
-    time_step_ = options_.get_double("TAU");
-    maxiter_ = options_.get_int("MAXITER");
-    start_num_det_ = options_.get_double("START_NUM_DET");
+
 //    e_convergence_ = options_.get_double("E_CONVERGENCE");
 //    energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
 
-//    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
+
 
 //    adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
 //    fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
-    do_shift_ = options_.get_bool("USE_SHIFT");
+
 //    do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
 //    do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
@@ -218,7 +221,7 @@ double FCIQMC::compute_energy()
     std::map<BitsetDeterminant,double> walkers;
     walkers[reference] = start_num_det_;
 
-    for (size_t iter = 0; iter < maxiter_; ++iter){
+    for (iter_ = 1; iter_ <= maxiter_; ++iter_){
 
         std::map<BitsetDeterminant,double> new_walkers;
 
@@ -240,7 +243,7 @@ double FCIQMC::compute_energy()
         merge(walkers, new_walkers);
         timer_off("FCIQMC:Merge");
 
-        outfile->Printf("\nRef walkers: %f after merge", new_walkers[reference]);
+        outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
 
 
         // Step #3.  annihilation
@@ -248,42 +251,14 @@ double FCIQMC::compute_energy()
         annihilate(walkers,new_walkers,spawning_threshold_);
         timer_off("FCIQMC:Annihilation");
 
-        print_iter_info(iter,reference, walkers, true, true, true);
+        if (iter_ % energy_estimate_freq_ == 0)
+            print_iter_info(iter_,reference, walkers, true, true, true);
+        else
+            print_iter_info(iter_,reference, walkers, true, true, false);
     }
 
-
-//    double energy1 = reference.energy() + nre;
-//    double energy2 = reference.slater_rules(reference) + nre;
-//    outfile->Printf("\n  Energy 1: %f",energy1);
-//    outfile->Printf("\n  Energy 2: %f",energy2);
-
-//    excited.set_alfa_bit(1,false);
-//    excited.set_beta_bit(1,false);:
-//    excited.set_alfa_bit(6,true);
-//    excited.set_beta_bit(6,true);
-
-//    excited.print();
-
-//    std::vector<BitsetDeterminant> walkers;
-//    walkers.push_back(reference);
-//    walkers.push_back(excited);
-//    size_t nwalkers = walkers.size();
-
-//    Matrix H("Hamiltonian",nwalkers,nwalkers);
-//    Matrix evecs("Eigenvectors",nwalkers,nwalkers);
-//    Vector evals("Eigenvalues",nwalkers);
-
-//    for (size_t I = 0; I < nwalkers; ++I){
-//        for (size_t J = 0; J < nwalkers; ++J){
-//            double HIJ = walkers[I].slater_rules(walkers[J]) + (I == J ? nre : 0.0);
-//            H.set(I,J,HIJ);
-//        }
-//    }
-//    H.print();
-
-//    H.diagonalize(evecs,evals);
-//    evecs.print();
-//    evals.print();
+    outfile->Printf("\n\nFCIQMC calculation ended with:");
+    print_iter_info(--iter_,reference, walkers, true, true, true);
 
     timer_off("FCIQMC:Energy");
     return 0.0;
@@ -774,15 +749,18 @@ void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,s
 }
 
 double FCIQMC::count_walkers(walker_map& walkers) {
+    timer_on("FCIQMC:CountWalker");
     double countWalkers = 0;
     for (auto walker:walkers){
         double Cwalker = walker.second;
         countWalkers+=std::fabs(Cwalker);
     }
+    timer_off("FCIQMC:CountWalker");
     return countWalkers;
 }
 
 double FCIQMC::compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers) {
+    timer_on("FCIQMC:Calc_Eproj");
     double Cref = walkers[ref];
     double Eproj = nuclear_repulsion_energy_;
     for (auto walker:walkers){
@@ -790,10 +768,12 @@ double FCIQMC::compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers) 
         double Cwalker = walker.second;
         Eproj += ref.slater_rules(det)*Cwalker/Cref;
     }
+    timer_off("FCIQMC:Calc_Eproj");
     return Eproj;
 }
 
 double FCIQMC::compute_var_energy(walker_map& walkers) {
+    timer_on("FCIQMC:Calc_Evar");
     double Evar = 0;
     double mod2 = 0.0;
     for (auto walker:walkers){
@@ -810,17 +790,18 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
     }
     Evar /= mod2;
     Evar += nuclear_repulsion_energy_;
+    timer_off("FCIQMC:Calc_Evar");
     return Evar;
 }
 
 void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar){
     outfile->Printf("\niter:%zu ended with %zu dets",iter, walkers.size());
     if (countWalkers)
-        outfile->Printf(", %zu walkers", count_walkers(walkers));
+        outfile->Printf(", %lf walkers", count_walkers(walkers));
     if (calcEproj)
-        outfile->Printf(", proj E=%lf", compute_proj_energy(ref, walkers));
+        outfile->Printf(", proj E=%.12lf", compute_proj_energy(ref, walkers));
     if (calcEvar)
-        outfile->Printf(", var E=%lf", compute_var_energy(walkers));
+        outfile->Printf(", var E=%.12lf", compute_var_energy(walkers));
 }
 
 }} // EndNamespaces

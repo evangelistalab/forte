@@ -113,6 +113,10 @@ private:
     double nWalkers_;
     /// Shift the Hamiltonian?
     bool do_shift_;
+    /// The frequency of approximate variational estimation of the energy
+    int energy_estimate_freq_;
+    /// number of iterations
+    size_t iter_;
 
     void startup();
     void print_info();
