@@ -214,8 +214,8 @@ void TensorSRG::commutator_A_B_C_SRC_Tsukiyama(double factor,
 void TensorSRG::commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
     boost::timer t;
-    C += alpha * dot(A["ai"],B["ia"]);
-    C += alpha * dot(A["AI"],B["IA"]);
+    C += alpha * A["ai"] * B["ia"];
+    C += alpha * A["AI"] * B["IA"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A1,B1] -> C0 : %.4f",t.elapsed());
@@ -369,9 +369,9 @@ void TensorSRG::commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double alp
 {
     boost::timer t;
 
-    C += alpha * 0.25 * dot(A["abij"],B["ijab"]);
-    C += alpha * 1.0 * dot(A["aBiJ"],B["iJaB"]);
-    C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
+    C += alpha * 0.25 * A["abij"] * B["ijab"];
+    C += alpha * 1.00 * A["aBiJ"] * B["iJaB"];
+    C += alpha * 0.25 * A["ABIJ"] * B["IJAB"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());
@@ -487,6 +487,7 @@ void TensorSRG::commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alp
 
     I_ioiv["rjpb"]  = alpha * A["rapi"] * B["jiba"];
     I_ioiv["rjpb"] += alpha * A["rApI"] * B["jIbA"];
+
     C["rspq"] += I_ioiv["rspq"];
     C["rspq"] -= I_ioiv["rsqp"];
     C["rspq"] -= I_ioiv["srpq"];
@@ -571,9 +572,9 @@ void TensorSRG::modified_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,d
 {
     boost::timer t;
 
-    C += alpha * 0.25 * dot(A["abij"],B["ijab"]);
-    C += alpha * 1.0 * dot(A["aBiJ"],B["iJaB"]);
-    C += alpha * 0.25 * dot(A["ABIJ"],B["IJAB"]);
+    C += alpha * 0.25 * A["abij"] * B["ijab"];
+    C += alpha * 1.00 * A["aBiJ"] * B["iJaB"];
+    C += alpha * 0.25 * A["ABIJ"] * B["IJAB"];
 
     if(print_ > 2){
         outfile->Printf("\n  Time for [A2,B2] -> C0 : %.4f",t.elapsed());

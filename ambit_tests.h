@@ -1,5 +1,27 @@
-#ifndef _three_dsrg_mrpt2_h_
-#define _three_dsrg_mrpt2_h_
+/*
+ *@BEGIN LICENSE
+ *
+ * Libadaptive: an ab initio quantum chemistry software package
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *@END LICENSE
+ */
+
+#ifndef _ambit_tests_h_
+#define _ambit_tests_h_
 
 #include <fstream>
 
@@ -7,10 +29,8 @@
 #include <libmints/wavefunction.h>
 
 #include "integrals.h"
-#include <ambit/blocked_tensor.h>
+#include "ambit/blocked_tensor.h"
 #include "reference.h"
-#include <string>
-#include <vector>
 
 namespace psi{
 
@@ -21,7 +41,7 @@ namespace libadaptive{
  * This class provides basic functions to write electronic structure
  * pilot codes using the Tensor classes
  */
-class THREE_DSRG_MRPT2 : public Wavefunction
+class AmbitTests : public Wavefunction
 {
 protected:
 
@@ -44,13 +64,10 @@ protected:
 
     /// List of alpha core MOs
     std::vector<size_t> acore_mos;
-    size_t core_;
     /// List of alpha active MOs
     std::vector<size_t> aactv_mos;
-    size_t active_;
     /// List of alpha virtual MOs
     std::vector<size_t> avirt_mos;
-    size_t virtual_;
 
     /// List of beta core MOs
     std::vector<size_t> bcore_mos;
@@ -81,94 +98,45 @@ protected:
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
 
-    // => Tensors <= //
     TensorType tensor_type_;
+
+    // => Tensors <= //
+
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
-    ambit::BlockedTensor DFL;
-    ambit::BlockedTensor Gamma1;
-    ambit::BlockedTensor Eta1;
-    ambit::BlockedTensor Lambda2;
-    ambit::BlockedTensor Lambda3;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
-    ambit::BlockedTensor RDelta1;
-    ambit::BlockedTensor RDelta2;
+    ambit::BlockedTensor R1;
+    ambit::BlockedTensor R2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
-    ambit::BlockedTensor T2pr; // <- Reduced T2 amplitude
-    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
-    boost::shared_ptr<Matrix> RExp2M_;
-    ambit::BlockedTensor ThreeIntegral;
 
     // => Class initialization and termination <= //
 
     /// Called in the constructor
     void startup();
-    ///Compute frozen natural orbitals
-    void frozen_natural_orbitals();
     /// Called in the destructor
     void cleanup();
     /// Print a summary of the options
     void print_summary();
-    /// Print some information about sizes
-    void memory_info();
-
-    double renormalized_denominator(double D);
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
-    double T2norm;
-    double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
-    double T1norm;
-    double T1max;
-
-    /// Renormalize Fock matrix and two-electron integral
-    void renormalize_F();
-    void renormalize_V();
-    double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
-
-    /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
-    double compute_ref();
-    double E_FT1();
-    double E_VT1();
-    double E_FT2();
-    double E_VT2_2();
-    double E_VT2_4PP();
-    double E_VT2_4HH();
-    double E_VT2_4PH();
-    double E_VT2_6();
 
     // Print levels
     int print_;
-
-    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
-            double value = Z, tmp = Z;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= std::pow(Z, 2.0) / (x+2);
-                value += tmp;
-            }
-            return value;
-        }else{return 0.0;}
-    }
-
-    ///This function will generate all the possible string combinations minus the ccvv
-    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& in_str_vec);
 
 public:
 
     // => Constructors <= //
 
-    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    AmbitTests(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
 
-    ~THREE_DSRG_MRPT2();
+    ~AmbitTests();
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
@@ -182,4 +150,4 @@ public:
 
 }} // End Namespaces
 
-#endif // _three_dsrg_mrpt2_h_
+#endif // _ambit_tests_h_

@@ -3,41 +3,30 @@
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
 #include <libmints/molecule.h>
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
 #include <libqt/qt.h>
 
-#include "three_dsrg_mrpt2.h"
-#include <vector>
-#include <string>
-#include <algorithm>
+#include "ambit_tests.h"
 
 using namespace ambit;
 
 namespace psi{ namespace libadaptive{
 
-
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+AmbitTests::AmbitTests(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore)
 {
     // Copy the wavefunction information
     copy(wfn);
 
-    outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t      Driven Similarity Renormalization Group MBPT2");
-    outfile->Printf("\n\t  ---------------------------------------------------------");
-
     startup();
-    frozen_natural_orbitals();
     print_summary();
 }
 
-THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2()
+AmbitTests::~AmbitTests()
 {
     cleanup();
 }
 
-void THREE_DSRG_MRPT2::startup()
+void AmbitTests::startup()
 {
     Eref = reference_.get_Eref();
     outfile->Printf("\n  Reference Energy = %.15f", Eref);
@@ -58,237 +47,99 @@ void THREE_DSRG_MRPT2::startup()
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
-    rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
-    actvpi_  = Dimension (nirrep_, "Active MOs");
-    ruoccpi_ = Dimension (nirrep_, "Restricted Unoccupied MOs");
-    if (options_["RESTRICTED_DOCC"].size() == nirrep_){
-        for (int h = 0; h < nirrep_; ++h){
-            rdoccpi_[h] = options_["RESTRICTED_DOCC"][h].to_integer();
-        }
-    }else{
-        outfile->Printf("\n  The size of RESTRICTED_DOCC occupation does not match the number of Irrep.");
-        exit(1);
-    }
-    if ((options_["ACTIVE"].has_changed()) && (options_["ACTIVE"].size() == nirrep_)){
-        for (int h = 0; h < nirrep_; ++h){
-            actvpi_[h] = options_["ACTIVE"][h].to_integer();
-            ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
-        }
-    }else{
-        outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
-        exit(1);
-    }
+//    rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
+//    actvpi_  = Dimension (nirrep_, "Active MOs");
+//    ruoccpi_ = Dimension (nirrep_, "Restricted Unoccupied MOs");
+//    if (options_["RESTRICTED_DOCC"].size() == nirrep_){
+//        for (int h = 0; h < nirrep_; ++h){
+//            rdoccpi_[h] = options_["RESTRICTED_DOCC"][h].to_integer();
+//        }
+//    }else{
+//        outfile->Printf("\n  The size of RESTRICTED_DOCC occupation does not match the number of Irrep.");
+//        exit(1);
+//    }
+//    if ((options_["ACTIVE"].has_changed()) && (options_["ACTIVE"].size() == nirrep_)){
+//        for (int h = 0; h < nirrep_; ++h){
+//            actvpi_[h] = options_["ACTIVE"][h].to_integer();
+//            ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
+//        }
+//    }else{
+//        outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
+//        exit(1);
+//    }
 
-    // Populate the core, active, and virtuall arrays
+
+    std::vector<std::pair<size_t,SpinType>> occ_mos,vir_mos;
+    // Populate the occupied and virtual arrays
     for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < rdoccpi_[h]; ++i,++p){
-            acore_mos.push_back(p);
-            bcore_mos.push_back(p);
-        }
-        for (int i = 0; i < actvpi_[h]; ++i,++p){
-            aactv_mos.push_back(p);
-            bactv_mos.push_back(p);
-        }
-        for (int a = 0; a < ruoccpi_[h]; ++a,++p){
-            avirt_mos.push_back(p);
-            bvirt_mos.push_back(p);
-        }
+//        for (int i = 0; i < doccpi_[h]; ++i,++p){
+//            occ_mos.push_back(std::make_pair(p,AlphaSpin));
+//            occ_mos.push_back(std::make_pair(p,BetaSpin));
+//        }
+//        for (int a = 0; a < mopi_[h] - doccpi_[h]; ++a,++p){
+//            vir_mos.push_back(std::make_pair(p,AlphaSpin));
+//            vir_mos.push_back(std::make_pair(p,BetaSpin));
+//        }
     }
 
     // Form the maps from MOs to orbital sets
-    for (size_t p = 0; p < acore_mos.size(); ++p) mos_to_acore[acore_mos[p]] = p;
-    for (size_t p = 0; p < bcore_mos.size(); ++p) mos_to_bcore[bcore_mos[p]] = p;
-    for (size_t p = 0; p < aactv_mos.size(); ++p) mos_to_aactv[aactv_mos[p]] = p;
-    for (size_t p = 0; p < bactv_mos.size(); ++p) mos_to_bactv[bactv_mos[p]] = p;
-    for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
-    for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
+//    for (size_t p = 0; p < acore_mos.size(); ++p) mos_to_acore[acore_mos[p]] = p;
+//    for (size_t p = 0; p < bcore_mos.size(); ++p) mos_to_bcore[bcore_mos[p]] = p;
+//    for (size_t p = 0; p < aactv_mos.size(); ++p) mos_to_aactv[aactv_mos[p]] = p;
+//    for (size_t p = 0; p < bactv_mos.size(); ++p) mos_to_bactv[bactv_mos[p]] = p;
+//    for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
+//    for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
 
-    BlockedTensor::set_expert_mode(true);
+    BlockedTensor::add_mo_space("o","ijklmn",occ_mos);
+    BlockedTensor::add_mo_space("v","abcdef",vir_mos);
+    BlockedTensor::add_composite_mo_space("g","pqrs",{"o","v"});
 
-    BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
-    core_ = acore_mos.size();
+    H = BlockedTensor::build(tensor_type_,"H",{"gg"});
+    V = BlockedTensor::build(tensor_type_,"V",{"gggg"});
 
-    BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
-    active_ = aactv_mos.size();
+    F = BlockedTensor::build(tensor_type_,"Fock",{"gg"});
+    Delta1 = BlockedTensor::build(tensor_type_,"Delta1",{"ov"});
+    Delta2 = BlockedTensor::build(tensor_type_,"Delta2",{"oovv"});
+    T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",{"ov"});
+    T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",{"oovv"});
 
-    BlockedTensor::add_mo_space("v","ef",avirt_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("V","EF",bvirt_mos,BetaSpin);
-    virtual_ = avirt_mos.size();
+    BlockedTensor Gamma1 = BlockedTensor::build(tensor_type_,"Gamma1",{"oo"});
 
-    BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
-    BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
-
-    BlockedTensor::add_composite_mo_space("p","abcd",{"a","v"});
-    BlockedTensor::add_composite_mo_space("P","ABCD",{"A","V"});
-
-    BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
-    BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
-
-
-    // These two blocks of functions create a BlockedThreeIntegral tensor
-    // And fill the tensor
-    // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
-    if(options_.get_str("INT_TYPE")=="CHOLESKY")
-    {
-        outfile->Printf("\n Building cholesky integrals");
-        size_t nCD = ints_->nL();
-        std::vector<size_t> nauxpi(nCD);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-
-        //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        size_t nmo = ints_->nmo();
-
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
-
-        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
-        outfile->Printf("\n Done with cholesky integrals");
-        outfile->Flush();
-        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin)
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-            else
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-        });
-
-    }
-    else if(options_.get_str("INT_TYPE")=="DF")
-    {
-        size_t nDF = ints_->naux();
-        std::vector<size_t> nauxpi(nDF);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        size_t nmo = ints_->nmo();
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
-
-        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
-        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin)
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-            else
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-        });
-
-    }
-
-    H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
-    V = BlockedTensor::build(tensor_type_,"V",spin_cases({"gggg"}));
-
-    Gamma1 = BlockedTensor::build(tensor_type_,"Gamma1",spin_cases({"hh"}));
-    Eta1 = BlockedTensor::build(tensor_type_,"Eta1",spin_cases({"pp"}));
-    Lambda2 = BlockedTensor::build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3 = BlockedTensor::build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
-    F = BlockedTensor::build(tensor_type_,"Fock",spin_cases({"gg"}));
-    Delta1 = BlockedTensor::build(tensor_type_,"Delta1",spin_cases({"hp"}));
-    Delta2 = BlockedTensor::build(tensor_type_,"Delta2",spin_cases({"hhpp"}));
-    RDelta1 = BlockedTensor::build(tensor_type_,"RDelta1",spin_cases({"hp"}));
-    RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
-
-
-    T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-    T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
-
-    RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
-    //all_spin = RExp2.get.();
-
-    memory_info();
-    std::vector<std::string> mo_indices = RDelta2.block_labels();
-    std::vector<std::string> no_hhpp;
-
-    no_hhpp = spin_cases_avoid(mo_indices);
-
-    for(const std::string spin : no_hhpp){
-       outfile->Printf("\n %s ", spin.c_str());
-    }
-  
-    outfile->Printf("\n RDelta2 spin cases");
-    for(const std::string spin : mo_indices){
-        outfile->Printf("\n %s ", spin.c_str());
-    }
-
-
-    BlockedTensor T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp);
-    //T2pr.print(stdout,false);
-
-    // Fill in the one-electron operator (H)
-//    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        return (sp == AlphaSpin) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
-//    });
+    ambit::Tensor Gamma1_oo = Gamma1.block("oo");
+    Gamma1_oo.iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin)
-            value = ints_->oei_a(i[0],i[1]);
+        bool spin_i0 = (i[0] % 2 == 0);
+        bool spin_i1 = (i[1] % 2 == 0);
+        if (spin[0] % 2 == 0)
+            value = ints_->oei_a(i[0] / 2, i[1] / 2);
         else
-            value = ints_->oei_b(i[0],i[1]);
+            value = ints_->oei_b((i[0] - 1) / 2, (i[1] - 1) / 2);
     });
 
-    ambit::Tensor Gamma1_cc = Gamma1.block("cc");
-    ambit::Tensor Gamma1_aa = Gamma1.block("aa");
-    ambit::Tensor Gamma1_CC = Gamma1.block("CC");
-    ambit::Tensor Gamma1_AA = Gamma1.block("AA");
-
-    ambit::Tensor Eta1_aa = Eta1.block("aa");
-    ambit::Tensor Eta1_vv = Eta1.block("vv");
-    ambit::Tensor Eta1_AA = Eta1.block("AA");
-    ambit::Tensor Eta1_VV = Eta1.block("VV");
-
-//<<<<<<< HEAD
-    Gamma1_cc.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-    Gamma1_CC.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-
-    Eta1_aa.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-    Eta1_AA.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-
-    Eta1_vv.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-    Eta1_VV.iterate([&](const std::vector<size_t>& i,double& value){
-        value = i[0] == i[1] ? 1.0 : 0.0;});
-
-    Gamma1_aa("pq") = reference_.L1a()("pq");
-    Gamma1_AA("pq") = reference_.L1b()("pq");
-
-    Eta1_aa("pq") -= reference_.L1a()("pq");
-    Eta1_AA("pq") -= reference_.L1b()("pq");
-
     // Fill in the two-electron operator (V)
-    //V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-    //    if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-    //    if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
-    //});
-
-    V["pqrs"] += ThreeIntegral["gpr"]*ThreeIntegral["gqs"];
-    V["pqrs"] -=  ThreeIntegral["gps"]*ThreeIntegral["gqr"];
-
-    V["pQrS"] += ThreeIntegral["gpr"]*ThreeIntegral["gQS"];
-
-    V["PQRS"] += ThreeIntegral["gPR"]*ThreeIntegral["gQS"];
-    V["PQRS"] -= ThreeIntegral["gPS"]*ThreeIntegral["gQR"];
+    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+    });
     // Form the Fock matrix
     F["pq"]  = H["pq"];
-    F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
-    F["pq"] -= ThreeIntegral["gpj"]*ThreeIntegral["giq"]*Gamma1["ij"];
-    F["pq"]  +=ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+    F["pq"] += V["pjqi"] * Gamma1["ij"];
+    F["pq"] += V["pJqI"] * Gamma1["IJ"];
 
     F["PQ"] += H["PQ"];
-    F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gji"]*Gamma1["ij"];
-    F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-    F["PQ"] -= ThreeIntegral["gPJ"]*ThreeIntegral["gIQ"]*Gamma1["IJ"];
+    F["PQ"] += V["jPiQ"] * Gamma1["ij"];
+    F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
-  // Tensor Fa_cc = F.block("cc");
-  // Tensor Fa_aa = F.block("aa");
-  // Tensor Fa_vv = F.block("vv");
-  // Tensor Fb_CC = F.block("CC");
-  // Tensor Fb_AA = F.block("AA");
-  // Tensor Fb_VV = F.block("VV");
+    Tensor Fa_cc = F.block("cc");
+    Tensor Fa_aa = F.block("aa");
+    Tensor Fa_vv = F.block("vv");
+    Tensor Fb_CC = F.block("CC");
+    Tensor Fb_AA = F.block("AA");
+    Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -311,103 +162,31 @@ void THREE_DSRG_MRPT2::startup()
         }
     });
 
-    RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
-        }
-    });
-    size_t nh = core_ + active_;
-    size_t np = active_ + virtual_;
-
-    SharedMatrix RDelta2M(new Matrix("RDelta2_matrix", nh*np, nh*np));
-    RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    Delta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            value = Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]];
         }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            value = Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]];
         }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            value = Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]];
         }
     });
-    //for(int i = 0; i < nh; i++){
-    //    for(int j = 0; j < nh; j++){
-    //        for(int a = 0; a < np; a++){
-    //            for(int b = 0; b < np; b++){
-    //                RDelta2M->set(i*np + a, j*np + b,
-    //
-    //            }
-    //        }
-    //    }
-    //}
-    // Fill out Lambda2 and Lambda3
-    Tensor Lambda2_aa = Lambda2.block("aaaa");
-    Tensor Lambda2_aA = Lambda2.block("aAaA");
-    Tensor Lambda2_AA = Lambda2.block("AAAA");
-    Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
-    Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
-    Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
-
-    // TODO Lambda3
-    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
-    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-
-    // Prepare exponential tensors for effective Fock matrix and integrals
-
-    RExp1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_exp(Fb[i[0]] - Fb[i[1]]);
-        }
-    });
-
-
-    RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-//    for (size_t i = 0; i < naocc*navir; i++)
-//    {
-//        if(RExpEigs->get(i) < -1.0e-8) count++;
-//    }
 
     // Print levels
     print_ = options_.get_int("PRINT");
     if(print_ > 1){
         Gamma1.print(stdout);
-        Eta1.print(stdout);
         F.print(stdout);
-    }
-    if(print_ > 2){
-        V.print(stdout);
-        Lambda2.print(stdout);
-    }
-    if(print_ > 3){
-        Lambda3.print(stdout);
     }
 }
 
-void THREE_DSRG_MRPT2::print_summary()
+void AmbitTests::print_summary()
 {
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info;
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"Flow parameter",s_},
-        {"Cholesky Tolerance", options_.get_double("CHOLESKY_TOLERANCE")},
         {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
@@ -427,11 +206,17 @@ void THREE_DSRG_MRPT2::print_summary()
     outfile->Flush();
 }
 
-void THREE_DSRG_MRPT2::cleanup()
+void AmbitTests::cleanup()
 {
 }
 
-double THREE_DSRG_MRPT2::renormalized_denominator(double D)
+double AmbitTests::compute_energy()
+{
+}
+
+
+/*
+double DSRG_MRPT2::renormalized_denominator(double D)
 {
     double Z = std::sqrt(s_) * D;
     if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
@@ -441,9 +226,21 @@ double THREE_DSRG_MRPT2::renormalized_denominator(double D)
     }
 }
 
-double THREE_DSRG_MRPT2::compute_energy()
+// Computes (1 - exp(-s D^2/V^2))
+double DSRG_MRPT2::renormalized_denominator_amp(double V,double D)
 {
-    outfile->Printf("\n Computing energy!!!");
+    double Z = std::sqrt(s_) * (D / V);
+    if (V == 0.0){
+        return 0.0;
+    }
+    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
+        return V * Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
+    }else{
+        return (1.0 - std::exp(-s_ * std::pow(D/V, 2.0))) / D;
+    }
+}
+
+
     // Compute reference
 //    Eref = compute_ref();
 
@@ -461,7 +258,6 @@ double THREE_DSRG_MRPT2::compute_energy()
         V.print(stdout);
     }
 
-    outfile->Printf("\n Getting to the E_FT1 piece");
     // Compute DSRG-MRPT2 correlation energy
     double Ecorr = 0.0;
     timer_on("E_FT1");
@@ -501,7 +297,7 @@ double THREE_DSRG_MRPT2::compute_energy()
     return Ecorr + Eref;
 }
 
-double THREE_DSRG_MRPT2::compute_ref()
+double DSRG_MRPT2::compute_ref()
 {
     timer_on("Compute Eref");
     double E = 0.0;
@@ -522,51 +318,48 @@ double THREE_DSRG_MRPT2::compute_ref()
     return E + frozen_core_energy + Enuc;
 }
 
-void THREE_DSRG_MRPT2::compute_t2()
+void DSRG_MRPT2::compute_t2()
 {
     timer_on("Compute T2");
-    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",spin_cases({"hhpp"}));
-    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
-    //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
-    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
-    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
-
-    T2["ijab"] = v["ijab"] * RDelta2["ijab"];
-    T2["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
-    T2["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
-
-
-    T2pr["ijab"] = v["ijab"] * RDelta2["ijab"];
-    T2pr["iJaB"] = v["iJaB"] * RDelta2["iJaB"];
-    T2pr["IJAB"] = v["IJAB"] * RDelta2["IJAB"];
- 
+    T2["ijab"] = V["ijab"] * RDelta2["ijab"];
+    T2["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
+    T2["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2.block("aaaa").zero();
     T2.block("aAaA").zero();
     T2.block("AAAA").zero();
-    //T2.print(stdout, false);
 
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
+//    std::map<std::vector<std::string>,SharedTensor>& T2blocks = T2.blocks();
+//    for(const auto& block: T2blocks){
+//        std::vector<std::string> index_vec = block.first;
+//        std::string name;
+//        for(const std::string& index: index_vec)
+//            name += index;
 
+//        if(islower(name[0]) && isupper(name[1])){
+//            T2norm += 4 * pow(T2.block(name)->norm(), 2.0);
+//        }else{
+//            T2norm += pow(T2.block(name)->norm(), 2.0);
+//        }
+////        double max = T2.block(name)->max_abs_vec()[0];
+////        T2max = T2max > max ? T2max : max;
+//    }
     T2norm = sqrt(T2norm);
     outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
 //    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
     timer_off("Compute T2");
-
 }
 
-void THREE_DSRG_MRPT2::compute_t1()
+void DSRG_MRPT2::compute_t1()
 {
     timer_on("Compute T1");
     //A temporary tensor to use for the building of T1
     //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
     //via a pointwise multiplcation
-    BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
+    BlockedTensor temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
     temp["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp["XU"] = Gamma1["XU"] * Delta1["XU"];
 
@@ -581,11 +374,25 @@ void THREE_DSRG_MRPT2::compute_t1()
     N["ia"] += temp["xu"] * T2["iuax"];
     N["ia"] += temp["XU"] * T2["iUaX"];
 
-    T1["ia"] = N["ia"] * RDelta1["ia"];
-
     N["IA"]  = F["IA"];
     N["IA"] += temp["xu"] * T2["uIxA"];
     N["IA"] += temp["XU"] * T2["IUAX"];
+    //->    DN["ia"] = Delta1["ia"] / N["ia"];
+
+//    if (){
+//        std::vector<std::string> blocks(spin_cases({"ca","cv","av"}));
+//        for (const std::string& block : blocks){
+//            std::vector<double>& rd = RDelta1.block(block).data();
+//            std::vector<double>& n = N.block(block).data();
+//            std::vector<double>& d = Delta1.block(block).data();
+//            for (size_t i = 0; i < rd.size(); ++i){
+//                rd[i] = renormalized_exp_amp(n[i],d[i]);
+//            }
+//        }
+//    }
+
+    T1["ia"] = N["ia"] * RDelta1["ia"];
+
     T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
@@ -609,30 +416,20 @@ void THREE_DSRG_MRPT2::compute_t1()
     timer_off("Compute T1");
 }
 
-void THREE_DSRG_MRPT2::renormalize_V()
+void DSRG_MRPT2::renormalize_V()
 {
     timer_on("Renorm. V");
-    // Put RExp2 into a shared matrix.
-    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",spin_cases({"hhpp"}));
-    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
-    //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
-    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
-    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
+    V["ijab"] += V["ijab"] * RExp2["ijab"];
+    V["iJaB"] += V["iJaB"] * RExp2["iJaB"];
+    V["IJAB"] += V["IJAB"] * RExp2["IJAB"];
 
-    //V["ijab"] += V["ijab"] * RExp2["ijab"];
-    V["ijab"] += v["ijab"] * RExp2["ijab"];
-    V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
-    V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
-
-    V["abij"] += v["ijab"] * RExp2["ijab"];
-    V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
-    V["ABIJ"] += v["IJAB"] * RExp2["IJAB"];
+    V["abij"] += V["abij"] * RExp2["ijab"];
+    V["aBiJ"] += V["aBiJ"] * RExp2["iJaB"];
+    V["ABIJ"] += V["ABIJ"] * RExp2["IJAB"];
     timer_off("Renorm. V");
 }
 
-void THREE_DSRG_MRPT2::renormalize_F()
+void DSRG_MRPT2::renormalize_F()
 {
     timer_on("Renorm. F");
     BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
@@ -657,6 +454,7 @@ void THREE_DSRG_MRPT2::renormalize_F()
 //    F["ai"] += F["ai"] % RExp1["ia"];  // TODO <- is this legal in ambit???
 //    F["ai"] += temp["ai"] % RExp1["ia"];
     F["ia"] += temp2["ia"];
+    temp2.block("aa").zero();
     F["ai"] += temp2["ia"];
 
 //    temp["AI"] += temp_aa["xu"] * T2["uIxA"];
@@ -664,11 +462,12 @@ void THREE_DSRG_MRPT2::renormalize_F()
 //    F["AI"] += F["AI"] % RExp1["IA"];
 //    F["AI"] += temp["AI"] % RExp1["IA"];
     F["IA"] += temp2["IA"];
+    temp2.block("AA").zero();
     F["AI"] += temp2["IA"];
     timer_off("Renorm. F");
 }
 
-double THREE_DSRG_MRPT2::E_FT1()
+double DSRG_MRPT2::E_FT1()
 {
     double E = 0.0;
     BlockedTensor temp;
@@ -677,16 +476,14 @@ double THREE_DSRG_MRPT2::E_FT1()
     temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
     temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
 
-    E += T1["ia"]*Eta1["ab"]* Gamma1["ji"] * F["bj"];
-    //E += temp["jb"] * F["bj"];
-    E += T1["IA"]*Eta1["AB"]* Gamma1["JI"] * F["BJ"];
-    //E += temp["JB"] * F["BJ"];
+    E += temp["jb"] * F["bj"];
+    E += temp["JB"] * F["BJ"];
 
     outfile->Printf("\n  E([F, T1]) %18c = %22.15lf", ' ', E);
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT1()
+double DSRG_MRPT2::E_VT1()
 {
     double E = 0.0;
     BlockedTensor temp;
@@ -711,7 +508,7 @@ double THREE_DSRG_MRPT2::E_VT1()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_FT2()
+double DSRG_MRPT2::E_FT2()
 {
     double E = 0.0;
     BlockedTensor temp;
@@ -736,7 +533,7 @@ double THREE_DSRG_MRPT2::E_FT2()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT2_2()
+double DSRG_MRPT2::E_VT2_2()
 {
     double E = 0.0;
 
@@ -762,7 +559,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT2_4HH()
+double DSRG_MRPT2::E_VT2_4HH()
 {
     double E = 0.0;
     BlockedTensor temp1;
@@ -786,7 +583,7 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT2_4PP()
+double DSRG_MRPT2::E_VT2_4PP()
 {
     double E = 0.0;
     BlockedTensor temp1;
@@ -810,7 +607,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT2_4PH()
+double DSRG_MRPT2::E_VT2_4PH()
 {
     double E = 0.0;
 //    BlockedTensor temp;
@@ -874,7 +671,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     return E;
 }
 
-double THREE_DSRG_MRPT2::E_VT2_6()
+double DSRG_MRPT2::E_VT2_6()
 {
     double E = 0.0;
     BlockedTensor temp;
@@ -914,37 +711,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n  E([V, T2] C_2 * C_6) %8c = %22.15lf", ' ', E);
     return E;
 }
-std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
-{
 
-    std::vector<std::string> out_str_vec;
-    for(const std::string spin : in_str_vec){
-        size_t spin_ind  = spin.find('a');
-        size_t spin_ind2 = spin.find('A');
-        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
-            out_str_vec.push_back(spin);
-        }
-    }
-    return out_str_vec;
-}
-void THREE_DSRG_MRPT2::frozen_natural_orbitals()
-{
-     outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
-     ambit::Tensor Fa = F.block("aa");
+*/
 
-     //Diagonalizes the active block of fock matrix
-     auto Fa_eigs = Fa.syev(kAscending);
-     //returns a map where each tensor can be addressed via name
-
-}
-void THREE_DSRG_MRPT2::memory_info()
-{
-     size_t nthree = ints_->nthree();
-     outfile->Printf("\n Memory info \n");
-     outfile->Printf("\n Size of V: %4.6f Gb \n", std::pow(core_ + active_ + virtual_,4)*8/1073741824);
-     outfile->Printf("\n Size of Lambda2: %4.6f Gb\n", std::pow(active_,2)*8/1073741824);
-     outfile->Printf("\n Size of T2: %4.6f Gb\n", std::pow(core_ + active_,2)*std::pow(active_ + virtual_,2)*8/1073741824);
-     outfile->Printf("\n Size of DF/CD Integrals: %4.6f Gb\n",(nthree*(core_ + active_ + virtual_)*(core_ + active_ + virtual_) * 8.0 / 1073741824));
-
-}
 }} // End Namespaces

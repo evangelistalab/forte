@@ -19,6 +19,9 @@ void set_elements(Matrix &M, Tensor& T, pair_map_t& A_map, pair_map_t& B_map);
 
 void TensorSRG::save_hbar()
 {
+    throw std::runtime_error("TensorSRG::save_hbar() is not implemented yet!");
+
+/*
     std::string filename;
     outfile->Printf("\n  Saving Hbar\n");
 
@@ -29,10 +32,10 @@ void TensorSRG::save_hbar()
     pair_map_t oV_map;
     pair_map_t vV_map;
 
-    Tensor& Fa_oo = *F.block("oo");
-    Tensor& Fa_vv = *F.block("vv");
-    Tensor& Fb_OO = *F.block("OO");
-    Tensor& Fb_VV = *F.block("VV");
+//    Tensor& Fa_oo = *F.block("oo");
+//    Tensor& Fa_vv = *F.block("vv");
+//    Tensor& Fb_OO = *F.block("OO");
+//    Tensor& Fb_VV = *F.block("VV");
 
     size_t naocc = a_occ_mos.size();
     size_t nbocc = b_occ_mos.size();
@@ -117,19 +120,20 @@ void TensorSRG::save_hbar()
         myfile << "\n";
     }
     myfile.close();
+    */
 }
 
-void set_elements(Matrix& M,Tensor& T, pair_map_t &A_map, pair_map_t &B_map){
-    Tensor::iterator it = T.begin();
-    Tensor::iterator endit = T.end();
-    for (; it != endit; ++it){
-        std::vector<size_t>& i = it.address();
-        std::pair<size_t,size_t> xx(i[0],i[1]);
-        std::pair<size_t,size_t> yy(i[2],i[3]);
-        int x = A_map[xx];
-        int y = B_map[yy];
-        M.set(x,y,std::fabs(*it));
-    }
-}
+//void set_elements(Matrix& M,Tensor& T, pair_map_t &A_map, pair_map_t &B_map){
+//    Tensor::iterator it = T.begin();
+//    Tensor::iterator endit = T.end();
+//    for (; it != endit; ++it){
+//        std::vector<size_t>& i = it.address();
+//        std::pair<size_t,size_t> xx(i[0],i[1]);
+//        std::pair<size_t,size_t> yy(i[2],i[3]);
+//        int x = A_map[xx];
+//        int y = B_map[yy];
+//        M.set(x,y,std::fabs(*it));
+//    }
+//}
 
 }} // EndNamespaces
