@@ -226,23 +226,29 @@ double FCIQMC::compute_energy()
         timer_on("FCIQMC:Spawn");
         spawn(walkers,new_walkers);
         timer_off("FCIQMC:Spawn");
+        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference]);
 
         // Step #2.  Death/Clone
         timer_on("FCIQMC:Death_Clone");
         death_clone(walkers, shift_);
         timer_off("FCIQMC:Death_Clone");
 
+        outfile->Printf("\nRef walkers: %f after Death/Clone", new_walkers[reference]);
+
         // Step #3.  Merge parents and spawned
         timer_on("FCIQMC:Merge");
         merge(walkers, new_walkers);
         timer_off("FCIQMC:Merge");
+
+        outfile->Printf("\nRef walkers: %f after merge", new_walkers[reference]);
+
 
         // Step #3.  annihilation
         timer_on("FCIQMC:Annihilation");
         annihilate(walkers,new_walkers,spawning_threshold_);
         timer_off("FCIQMC:Annihilation");
 
-        print_iter_info(iter,reference, walkers);
+        print_iter_info(iter,reference, walkers, true, true, true);
     }
 
 
@@ -767,16 +773,32 @@ void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,s
     }
 }
 
-void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers){
-    size_t countWalkers = 0;
+double FCIQMC::count_walkers(walker_map& walkers) {
+    double countWalkers = 0;
+    for (auto walker:walkers){
+        double Cwalker = walker.second;
+        countWalkers+=std::fabs(Cwalker);
+    }
+    return countWalkers;
+}
+
+double FCIQMC::compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers) {
     double Cref = walkers[ref];
-    double Eproj = nuclear_repulsion_energy_, Evar = 0;
-    double mod2 = 0.0;
+    double Eproj = nuclear_repulsion_energy_;
     for (auto walker:walkers){
         const BitsetDeterminant& det = walker.first;
         double Cwalker = walker.second;
         Eproj += ref.slater_rules(det)*Cwalker/Cref;
-        countWalkers+=size_t(std::fabs(Cwalker));
+    }
+    return Eproj;
+}
+
+double FCIQMC::compute_var_energy(walker_map& walkers) {
+    double Evar = 0;
+    double mod2 = 0.0;
+    for (auto walker:walkers){
+        const BitsetDeterminant& det = walker.first;
+        double Cwalker = walker.second;
         mod2 += Cwalker*Cwalker;
         for (auto walker2:walkers){
             const BitsetDeterminant& det2 = walker2.first;
@@ -788,7 +810,17 @@ void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& wa
     }
     Evar /= mod2;
     Evar += nuclear_repulsion_energy_;
-    outfile->Printf("\niter:%zu ended with %zu dets, %zu walkers, var E=%lf, proj E=%lf",iter, walkers.size(), countWalkers, Evar, Eproj);
+    return Evar;
+}
+
+void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar){
+    outfile->Printf("\niter:%zu ended with %zu dets",iter, walkers.size());
+    if (countWalkers)
+        outfile->Printf(", %zu walkers", count_walkers(walkers));
+    if (calcEproj)
+        outfile->Printf(", proj E=%lf", compute_proj_energy(ref, walkers));
+    if (calcEvar)
+        outfile->Printf(", var E=%lf", compute_var_energy(walkers));
 }
 
 }} // EndNamespaces
