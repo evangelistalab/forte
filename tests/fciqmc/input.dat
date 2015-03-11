@@ -1,6 +1,5 @@
 #! This tests the Adaptive Path-Integral FCI procedure with no prescreening
 
-import libbtl
 import libadaptive
 
 refscf = -14.6097447388741113 #TEST
@@ -18,7 +17,8 @@ set {
 
 set libadaptive {
   tau 0.01
-  maxiter 6000
+  maxiter 100
+  energy_estimate_freq 100
   start_num_det 10000.0
 }
 
