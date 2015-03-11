@@ -136,7 +136,10 @@ private:
     void compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
     void detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
     void detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
-    void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers);
+    double count_walkers(walker_map& walkers);
+    double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
+    double compute_var_energy(walker_map& walkers);
+    void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar);
 
 };
 

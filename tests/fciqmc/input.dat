@@ -17,10 +17,9 @@ set {
 }
 
 set libadaptive {
-  tau 0.1
-  maxiter 60
-  spawning_threshold 0.0001
-  start_num_det 100.0
+  tau 0.01
+  maxiter 6000
+  start_num_det 10000.0
 }
 
 energy('fciqmc')
