@@ -239,7 +239,18 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
         //////////////////////////////////////////////////////////////
         /*- The maximum value of beta -*/
-        options.add_double("START_NUM_DET",1000.0);
+        options.add_double("START_NUM_WALKERS",1000.0);
+        /*- Spawn excitation type -*/
+        options.add_str("SPAWN_TYPE","RANDOM", "RAMDOM ALL GROUND_AND_RANDOM");
+        /*- The number of walkers for shift -*/
+        options.add_double("SHIFT_NUM_WALKERS", 10000.0);
+        options.add_int("SHIFT_FREQ", 10);
+        options.add_double("SHIFT_DAMP", 0.1);
+        /*- Clone/Death scope -*/
+        options.add_bool("DEATH_PARENT_ONLY", false);
+        /*- initiator -*/
+        options.add_bool("USE_INITIATOR", false);
+        options.add_double("INITIATOR_NA", 3.0);
 
         //////////////////////////////////////////////////////////////
         ///
