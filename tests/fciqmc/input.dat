@@ -17,15 +17,15 @@ set {
 
 set libadaptive {
   tau 0.01
-  maxiter 500
-  energy_estimate_freq 100
-  start_num_walkers 100.0
+  maxiter 10000
+  energy_estimate_freq 10000
+  start_num_walkers 1000.0
   use_shift true
   shift_freq 10
   shift_damp 0.1
-  shift_num_walkers 150.0
+  shift_num_walkers 1500.0
   death_parent_only true
-  use_initiator true
+  use_initiator false
   initiator_na 3.0
   spawn_type random
 }

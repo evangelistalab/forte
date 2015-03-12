@@ -243,6 +243,8 @@ double FCIQMC::compute_energy()
     double pre_nWalker = 0;
     size_t pre_iter = 0;
 
+    std::vector<double> shifts;
+
     for (iter_ = 1; iter_ <= maxiter_; ++iter_){
         if (!shift_flag && do_shift_ && nWalkers_ > shift_num_walkers_) {
             shift_flag = true;
@@ -254,7 +256,7 @@ double FCIQMC::compute_energy()
             adjust_shift(pre_nWalker, pre_iter);
             pre_nWalker = nWalkers_;
             pre_iter = iter_;
-
+            shifts.push_back(shift_);
         }
 
         std::map<BitsetDeterminant,double> new_walkers;
@@ -310,7 +312,8 @@ double FCIQMC::compute_energy()
 
     outfile->Printf("\n\nFCIQMC calculation ended with:");
     print_iter_info(--iter_,reference, walkers, true, true, true);
-
+    if (do_shift_)
+        print_shift_info(shifts);
     timer_off("FCIQMC:Energy");
     return 0.0;
 }
@@ -862,6 +865,15 @@ void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& wa
         outfile->Printf(", var E=%.12lf", compute_var_energy(walkers));
     if (do_shift_)
         outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
+}
+
+void FCIQMC::print_shift_info(std::vector<double> shifts){
+    double sum = 0.0;
+    for (double shift:shifts) {
+        sum += shift;
+    }
+    sum /= shifts.size();
+    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
 }
 
 }} // EndNamespaces

@@ -158,7 +158,7 @@ private:
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
     void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar);
-
+    void print_shift_info(std::vector<double> shifts);
 };
 
 }} // End Namespaces
