@@ -94,10 +94,22 @@ void FCIQMC::startup()
     reference_determinant.print();
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
-    start_num_det_ = options_.get_double("START_NUM_DET");
+    start_num_walkers_ = options_.get_double("START_NUM_WALKERS");
     do_shift_ = options_.get_bool("USE_SHIFT");
+    shift_freq_ = options_.get_int("SHIFT_FREQ");
+    shift_damp_ = options_.get_double("SHIFT_DAMP");
+    shift_num_walkers_ = options_.get_double("SHIFT_NUM_WALKERS");
+    death_parent_only_ = options_.get_bool("DEATH_PARENT_ONLY");
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
-
+    use_initiator_ = options_.get_bool("USE_INITIATOR");
+    initiator_na_ = options_.get_double("INITIATOR_NA");
+    if (options_.get_str("SPAWN_TYPE") == "RANDOM"){
+        spawn_type_ = random;
+    }else if (options_.get_str("PROPAGATOR") == "ALL"){
+        spawn_type_ = all;
+    }else if (options_.get_str("PROPAGATOR") == "GROUND_AND_RANDOM"){
+        spawn_type_ = ground_and_random;
+    }
     // Read options
 //    nroot_ = options_.get_int("NROOT");
 //    spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
@@ -134,7 +146,7 @@ void FCIQMC::startup()
 //        propagator_description_ = "Positive";
 //    }
     shift_ = 0.0;
-    nWalkers_ = 0;
+    nWalkers_ = 0.0;
     num_threads_ = omp_get_max_threads();
 }
 
@@ -146,18 +158,20 @@ void FCIQMC::print_info()
 //        {"Number of roots",nroot_},
 //        {"Root used for properties",options_.get_int("ROOT")},
         {"Maximum number of steps",maxiter_},
-//        {"Energy estimation frequency",energy_estimate_freq_},
+        {"Energy estimation frequency",energy_estimate_freq_},
         {"Number of threads",num_threads_}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"Time step (beta)",time_step_},
+        {"start_num_walkers", start_num_walkers_},
+        {"shift_num_walkers", shift_num_walkers_},
+        {"initiator_na", initiator_na_}
 //        {"Spawning threshold",spawning_threshold_},
 //        {"Initial guess spawning threshold",initial_guess_spawning_threshold_},
 //        {"Convergence threshold",e_convergence_},
 //        {"Prescreening tollerance factor",prescreening_tollerance_factor_},
 //        {"Energy estimate tollerance",energy_estimate_threshold_}
     };
-
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
 //        {"Propagator type",propagator_description_},
 //        {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
@@ -165,6 +179,10 @@ void FCIQMC::print_info()
 //        {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
 //        {"Dynamic prescreening",do_dynamic_prescreening_ ? "YES" : "NO"},
 //        {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
+        {"Using shift", do_shift_? "YES" : "NO"},
+        {"Using initiator", use_initiator_? "YES" : "NO"},
+        {"death parent only", death_parent_only_ ? "YES" : "NO"},
+        {"spawn type", options_.get_str("SPAWN_TYPE")},
         {"Using OpenMP", have_omp_ ? "YES" : "NO"},
     };
 
@@ -219,9 +237,27 @@ double FCIQMC::compute_energy()
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = start_num_det_;
+    walkers[reference] = start_num_walkers_;
+
+    bool shift_flag = false;
+    double pre_nWalker = 0;
+    size_t pre_iter = 0;
+
+    std::vector<double> shifts;
 
     for (iter_ = 1; iter_ <= maxiter_; ++iter_){
+        if (!shift_flag && do_shift_ && nWalkers_ > shift_num_walkers_) {
+            shift_flag = true;
+            pre_nWalker = nWalkers_;
+            pre_iter = iter_;
+        }
+
+        if (do_shift_ && shift_flag && iter_ % shift_freq_ == 0) {
+            adjust_shift(pre_nWalker, pre_iter);
+            pre_nWalker = nWalkers_;
+            pre_iter = iter_;
+            shifts.push_back(shift_);
+        }
 
         std::map<BitsetDeterminant,double> new_walkers;
 
@@ -231,24 +267,41 @@ double FCIQMC::compute_energy()
         timer_off("FCIQMC:Spawn");
         outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference]);
 
-        // Step #2.  Death/Clone
-        timer_on("FCIQMC:Death_Clone");
-        death_clone(walkers, shift_);
-        timer_off("FCIQMC:Death_Clone");
+        if (death_parent_only_) {
+            // Step #2.  Death/Clone
+            timer_on("FCIQMC:Death_Clone");
+            death_clone(walkers, shift_);
+            timer_off("FCIQMC:Death_Clone");
 
-        outfile->Printf("\nRef walkers: %f after Death/Clone", new_walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
 
-        // Step #3.  Merge parents and spawned
-        timer_on("FCIQMC:Merge");
-        merge(walkers, new_walkers);
-        timer_off("FCIQMC:Merge");
+            // Step #3.  Merge parents and spawned
+            timer_on("FCIQMC:Merge");
+            merge(walkers, new_walkers);
+            timer_off("FCIQMC:Merge");
 
-        outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+        } else {
+            // Step #3.  Merge parents and spawned
+            timer_on("FCIQMC:Merge");
+            merge(walkers, new_walkers);
+            timer_off("FCIQMC:Merge");
+
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+
+            // Step #2.  Death/Clone
+            timer_on("FCIQMC:Death_Clone");
+            death_clone(walkers, shift_);
+            timer_off("FCIQMC:Death_Clone");
+
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
+        }
+
 
 
         // Step #3.  annihilation
         timer_on("FCIQMC:Annihilation");
-        annihilate(walkers,new_walkers,spawning_threshold_);
+        annihilate(walkers,new_walkers);
         timer_off("FCIQMC:Annihilation");
 
         if (iter_ % energy_estimate_freq_ == 0)
@@ -259,11 +312,16 @@ double FCIQMC::compute_energy()
 
     outfile->Printf("\n\nFCIQMC calculation ended with:");
     print_iter_info(--iter_,reference, walkers, true, true, true);
-
+    if (do_shift_)
+        print_shift_info(shifts);
     timer_off("FCIQMC:Energy");
     return 0.0;
 }
 
+void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
+    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
+    outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f, pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter, nWalkers_, pre_nWalker,shift_);
+}
 
 void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 {
@@ -271,6 +329,9 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
     for (auto& det_coef : walkers){
         const BitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
+        size_t nid = std::round(std::fabs(coef));
+        if (use_initiator_ && nid < std::round(initiator_na_))
+            continue;
 //        size_t nsa,nsb,ndaa,ndab,ndbb;
 //        std::tuple<size_t,size_t,size_t,size_t,size_t> pgen = compute_pgen(det);
 //        std::tie (nsa,nsb,ndaa,ndab,ndbb) = pgen;
@@ -284,7 +345,6 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
         size_t sumgen = sumSingle+sumDouble;
         timer_off("FCIQMC:Compute_excitations");
 
-        size_t nid = std::round(std::fabs(coef));
         for (size_t detW = 0; detW < nid; ++detW){
             BitsetDeterminant new_det(det);
             // Select a random number within the range of allowed determinants
@@ -514,7 +574,7 @@ void FCIQMC::merge(walker_map& walkers,walker_map& new_walkers){
 }
 
 // Step #3.  Annihilation
-void FCIQMC::annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold)
+void FCIQMC::annihilate(walker_map& walkers,walker_map& new_walkers)
 {
 
 }
@@ -756,6 +816,7 @@ double FCIQMC::count_walkers(walker_map& walkers) {
         countWalkers+=std::fabs(Cwalker);
     }
     timer_off("FCIQMC:CountWalker");
+    nWalkers_ = countWalkers;
     return countWalkers;
 }
 
@@ -802,6 +863,17 @@ void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& wa
         outfile->Printf(", proj E=%.12lf", compute_proj_energy(ref, walkers));
     if (calcEvar)
         outfile->Printf(", var E=%.12lf", compute_var_energy(walkers));
+    if (do_shift_)
+        outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
+}
+
+void FCIQMC::print_shift_info(std::vector<double> shifts){
+    double sum = 0.0;
+    for (double shift:shifts) {
+        sum += shift;
+    }
+    sum /= shifts.size();
+    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
 }
 
 }} // EndNamespaces

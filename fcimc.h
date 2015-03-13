@@ -37,6 +37,8 @@
 
 namespace psi{ namespace libadaptive{
 
+enum SpawnType {random, all, ground_and_random};
+
 typedef std::map<BitsetDeterminant,double> walker_map;
 
 class FCIQMC : public Wavefunction
@@ -78,6 +80,7 @@ private:
 //    /// The determinant with minimum energy
 //    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
+
     /// The maximum number of threads
     int num_threads_;
     /// Do we have OpenMP?
@@ -97,8 +100,8 @@ private:
     double nuclear_repulsion_energy_;
 
     // * Calculation info
-    /// The threshold applied to the primary space
-    double spawning_threshold_;
+    /// spawn type
+    SpawnType spawn_type_;
     /// The size of the time step (TAU)
     double time_step_;
     /// The maximum number of FCIQMC steps
@@ -106,13 +109,21 @@ private:
     /// HartreeForkEnergy
     double Ehf_;
     /// Start Number of walkers
-    double start_num_det_;
+    double start_num_walkers_;
     /// The shift of energy
     double shift_;
     /// Number of walkers
     double nWalkers_;
     /// Shift the Hamiltonian?
     bool do_shift_;
+    double shift_num_walkers_;
+    int shift_freq_;
+    double shift_damp_;
+    /// Clone/Death only parents?
+    bool death_parent_only_;
+    /// Initiator
+    bool use_initiator_;
+    double initiator_na_;
     /// The frequency of approximate variational estimation of the energy
     int energy_estimate_freq_;
     /// number of iterations
@@ -120,6 +131,9 @@ private:
 
     void startup();
     void print_info();
+
+    // adjust shift
+    void adjust_shift(double pre_nWalker, size_t pre_iter);
 
     // Spawning step
     void spawn(walker_map& walkers, walker_map& new_walkers);
@@ -131,7 +145,7 @@ private:
     // Merge step
     void merge(walker_map& walkers,walker_map& new_walkers);
     // Annihilation step
-    void annihilate(walker_map& walkers,walker_map& new_walkers,double spawning_threshold);
+    void annihilate(walker_map& walkers, walker_map& new_walkers);
 
     // Count the number of allowed single and double excitations
     std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const BitsetDeterminant &det);
@@ -144,7 +158,7 @@ private:
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
     void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar);
-
+    void print_shift_info(std::vector<double> shifts);
 };
 
 }} // End Namespaces
