@@ -106,16 +106,16 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::set_expert_mode(true);
 
-    BlockedTensor::add_mo_space("c","mn",acore_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("C","MN",bcore_mos,BetaSpin);
+    BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
+    BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
     core_ = acore_mos.size();
 
     BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
     BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
     active_ = aactv_mos.size();
 
-    BlockedTensor::add_mo_space("v","ef",avirt_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("V","EF",bvirt_mos,BetaSpin);
+    BlockedTensor::add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
+    BlockedTensor::add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
     virtual_ = avirt_mos.size();
 
     BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
@@ -547,6 +547,9 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2.block("aaaa").zero();
     T2.block("aAaA").zero();
     T2.block("AAAA").zero();
+    T2pr.block("aaaa").zero();
+    T2pr.block("aAaA").zero();
+    T2pr.block("AAAA").zero();
     //T2.print(stdout, false);
 
     // norm and maximum of T2 amplitudes
@@ -571,21 +574,18 @@ void THREE_DSRG_MRPT2::compute_t1()
     temp["XU"] = Gamma1["XU"] * Delta1["XU"];
 
     //Form the T1 amplitudes
-    //Note:  The equations are changed slightly from York's equations.
-    //Tensor libary does not handle beta alpha beta alpha, only alpha beta alpha beta.
-    //Did some permuting to get the correct format
 
     BlockedTensor N = BlockedTensor::build(tensor_type_,"N",spin_cases({"hp"}));
 
     N["ia"]  = F["ia"];
-    N["ia"] += temp["xu"] * T2["iuax"];
-    N["ia"] += temp["XU"] * T2["iUaX"];
+    N["ia"] += temp["xu"] * T2pr["iuax"];
+    N["ia"] += temp["XU"] * T2pr["iUaX"];
 
     T1["ia"] = N["ia"] * RDelta1["ia"];
 
     N["IA"]  = F["IA"];
-    N["IA"] += temp["xu"] * T2["uIxA"];
-    N["IA"] += temp["XU"] * T2["IUAX"];
+    N["IA"] += temp["xu"] * T2pr["uIxA"];
+    N["IA"] += temp["XU"] * T2pr["IUAX"];
     T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
@@ -634,7 +634,7 @@ void THREE_DSRG_MRPT2::renormalize_V()
 
 void THREE_DSRG_MRPT2::renormalize_F()
 {
-    timer_on("Renom. F");
+    timer_on("Renorm. F");
     BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
@@ -642,13 +642,13 @@ void THREE_DSRG_MRPT2::renormalize_F()
     BlockedTensor temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hp"}));
     BlockedTensor temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hp"}));
 
-    temp1["ia"] += temp_aa["xu"] * T2["iuax"];
-    temp1["ia"] += temp_aa["XU"] * T2["iUaX"];
+    temp1["ia"] += temp_aa["xu"] * T2pr["iuax"];
+    temp1["ia"] += temp_aa["XU"] * T2pr["iUaX"];
     temp2["ia"] += F["ia"] * RExp1["ia"];
     temp2["ia"] += temp1["ia"] * RExp1["ia"];
 
-    temp1["IA"] += temp_aa["xu"] * T2["uIxA"];
-    temp1["IA"] += temp_aa["XU"] * T2["IUAX"];
+    temp1["IA"] += temp_aa["xu"] * T2pr["uIxA"];
+    temp1["IA"] += temp_aa["XU"] * T2pr["IUAX"];
     temp2["IA"] += F["IA"] * RExp1["IA"];
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
@@ -717,16 +717,16 @@ double THREE_DSRG_MRPT2::E_FT2()
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
 
-    temp["uvxy"] += F["ex"] * T2["uvey"];
-    temp["uvxy"] -= F["vm"] * T2["umxy"];
+    temp["uvxy"] += F["ex"] * T2pr["uvey"];
+    temp["uvxy"] -= F["vm"] * T2pr["umxy"];
 
-    temp["UVXY"] += F["EX"] * T2["UVEY"];
-    temp["UVXY"] -= F["VM"] * T2["UMXY"];
+    temp["UVXY"] += F["EX"] * T2pr["UVEY"];
+    temp["UVXY"] -= F["VM"] * T2pr["UMXY"];
 
-    temp["uVxY"] += F["ex"] * T2["uVeY"];
-    temp["uVxY"] += F["EY"] * T2["uVxE"];
-    temp["uVxY"] -= F["VM"] * T2["uMxY"];
-    temp["uVxY"] -= F["um"] * T2["mVxY"];
+    temp["uVxY"] += F["ex"] * T2pr["uVeY"];
+    temp["uVxY"] += F["EY"] * T2pr["uVxE"];
+    temp["uVxY"] -= F["VM"] * T2pr["uMxY"];
+    temp["uVxY"] -= F["um"] * T2pr["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
@@ -742,21 +742,72 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
+    BlockedTensor temp3;
+    BlockedTensor temp4;
     temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hhpp"}));
     temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hhpp"}));
+    temp3 = BlockedTensor::build(tensor_type_,"temp3",spin_cases({"ccvv"}));
+    temp4 = BlockedTensor::build(tensor_type_,"temp4",spin_cases({"ccvv"}));
+    BlockedTensor T2ph = BlockedTensor::build(tensor_type_,"T2ph",spin_cases({"ccvv"}));
+    T2ph["mnef"] = V["mnef"] * RDelta2["mnef"];
+    T2ph["mNeF"] = V["mNeF"] * RDelta2["mNeF"];
+    T2ph["MNEF"] = V["MNEF"] * RDelta2["MNEF"];
 
-    temp1["klab"] += T2["ijab"] * Gamma1["ki"] * Gamma1["lj"];
+    //BlockedTensor::add_mo_space("c","mnμπ",acore_mos,AlphaSpin);
+    //BlockedTensor::add_mo_space("C","MNΩ∏",bcore_mos,BetaSpin);
+    //BlockedTensor::add_mo_space("v","efεφ",avirt_mos,AlphaSpin);
+    //BlockedTensor::add_mo_space("V","EFƑƎ",bvirt_mos,BetaSpin);
+    temp1["klab"] += T2pr["ijab"] * Gamma1["ki"] * Gamma1["lj"];
     temp2["klcd"] += temp1["klab"] * Eta1["ac"] * Eta1["bd"];
 
-    temp1["KLAB"] += T2["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
+    temp3["mnef"] += T2ph["µ,π,e,f"]  *  Gamma1["m,µ"] * Gamma1["n,π"];
+    temp4["mnef"] += temp3["m,n,ε,φ"] * Eta1["ε,e"] * Eta1["φ,f"];
+
+    temp1["KLAB"] += T2pr["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
     temp2["KLCD"] += temp1["KLAB"] * Eta1["AC"] * Eta1["BD"];
 
-    temp1["kLaB"] += T2["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
+    temp3["MNEF"] += T2ph["Ω,∏,E,F"] * Gamma1["M,Ω"] * Gamma1["N,∏"];
+    temp4["MNEF"] += temp3["M,N,Ǝ,Ƒ"] * Eta1["Ǝ,E"] * Eta1["Ƒ,F"];
+
+    temp1["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
     temp2["kLcD"] += temp1["kLaB"] * Eta1["ac"] * Eta1["BD"];
 
-    E += 0.25 * V["cdkl"] * temp2["klcd"];
+    temp3["mNeF"] += T2ph["µ,Ω,e,F"] * Gamma1["m,µ"] * Gamma1["N,Ω"];
+    temp4["mNeF"] += temp3["m,N,ε,Ƒ"] * Eta1["ε,e"] * Eta1["Ƒ,F"];
+
+
+    //T2ph["mnef"] = v["mnef"] * RDelta2["mnef"];
+    //T2ph["mNeF"] = v["mNeF"] * RDelta2["mNeF"];
+    //T2ph["MNEF"] = v["MNEF"] * RDelta2["MNEF"];
+
+    //temp3["klab"] += T2pr["ijab"] * Gamma1["ki"] * Gamma1["lj"];
+    //temp4["klcd"] += temp3["klab"] * Eta1["ac"] * Eta1["bd"];
+
+    //temp3["KLAB"] += T2pr["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
+    //temp4["KLCD"] += temp3["KLAB"] * Eta1["AC"] * Eta1["BD"];
+
+    //temp3["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
+    //temp4["kLcD"] += temp3["kLaB"] * Eta1["ac"] * Eta1["BD"];
+
+    //E += 0.25 * V["cdkl"]*T2["ijab"]*Gamma1["ki"]*Gamma1["lj"]*Eta1["ac"]*Eta1["bd"];
+    //E += 0.25 * V["CDKL"]*T2["IJAB"]*Gamma1["KI"]*Gamma1["LJ"]*Eta1["AC"]*Eta1["BD"];
+    //E += 0.25 * V["cDkL"]*T2["iJaB"]*Gamma1["ki"]*Gamma1["LJ"]*Eta1["ac"]*Eta1["BD"];
+    //E += 0.25 * V["cdkl"]*T2ph["ijab"]*Gamma1["ki"]*Gamma1["lj"]*Eta1["ac"]*Eta1["bd"];
+    //E += 0.25 * V["CDKL"]*T2ph["IJAB"]*Gamma1["KI"]*Gamma1["LJ"]*Eta1["AC"]*Eta1["BD"];
+    //E += 0.25 * V["cDkL"]*T2ph["iJaB"]*Gamma1["ki"]*Gamma1["LJ"]*Eta1["ac"]*Eta1["BD"];
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
+    E += 0.25 * V["cdkl"] * temp2["klcd"];
     E += V["cDkL"] * temp2["kLcD"];
+    outfile->Printf("\n No ccvv terms %8.6f", E);
+    
+    double E2 = 0.0;
+    E += 0.25 * V["EFMN"] * temp4["MNEF"];
+    E += 0.25 * V["efmn"] * temp4["mnef"];
+    E += V["eFmN"] * temp4["mNeF"];
+    E2 += 0.25 * V["EFMN"] * temp4["MNEF"];
+    E2 += 0.25 * V["efmn"] * temp4["mnef"];
+    E2 += V["eFmN"] * temp4["mNeF"];
+    outfile->Printf("\n ccvv terms %8.6f", E2);
 
     outfile->Printf("\n  E([V, T2] C_2^4) %12c = %22.15lf", ' ', E);
     return E;
@@ -774,9 +825,9 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     temp1["UVIJ"] += V["UVKL"] * Gamma1["KI"] * Gamma1["LJ"];
     temp1["uViJ"] += V["uVkL"] * Gamma1["ki"] * Gamma1["LJ"];
 
-    temp2["uvxy"] += temp1["uvij"] * T2["ijxy"];
-    temp2["UVXY"] += temp1["UVIJ"] * T2["IJXY"];
-    temp2["uVxY"] += temp1["uViJ"] * T2["iJxY"];
+    temp2["uvxy"] += temp1["uvij"] * T2pr["ijxy"];
+    temp2["UVXY"] += temp1["UVIJ"] * T2pr["IJXY"];
+    temp2["uVxY"] += temp1["uViJ"] * T2pr["iJxY"];
 
     E += 0.125 * Lambda2["xyuv"] * temp2["uvxy"];
     E += 0.125 * Lambda2["XYUV"] * temp2["UVXY"];
@@ -794,9 +845,9 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"aapp"}));
     temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    temp1["uvcd"] += T2["uvab"] * Eta1["ac"] * Eta1["bd"];
-    temp1["UVCD"] += T2["UVAB"] * Eta1["AC"] * Eta1["BD"];
-    temp1["uVcD"] += T2["uVaB"] * Eta1["ac"] * Eta1["BD"];
+    temp1["uvcd"] += T2pr["uvab"] * Eta1["ac"] * Eta1["bd"];
+    temp1["UVCD"] += T2pr["UVAB"] * Eta1["AC"] * Eta1["BD"];
+    temp1["uVcD"] += T2pr["uVaB"] * Eta1["ac"] * Eta1["BD"];
 
     temp2["uvxy"] += temp1["uvcd"] * V["cdxy"];
     temp2["UVXY"] += temp1["UVCD"] * V["CDXY"];
@@ -837,36 +888,36 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"hhpp"}));
     temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    temp1["juby"]  = T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["juby"]  = T2pr["iuay"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uvxy"] += V["vbjx"] * temp1["juby"];
 
-    temp1["uJyB"]  = T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["uJyB"]  = T2pr["uIyA"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uvxy"] -= V["vBxJ"] * temp1["uJyB"];
     E += temp2["uvxy"] * Lambda2["xyuv"];
 
-    temp1["JUBY"]  = T2["IUAY"] * Gamma1["IJ"] * Eta1["AB"];
+    temp1["JUBY"]  = T2pr["IUAY"] * Gamma1["IJ"] * Eta1["AB"];
     temp2["UVXY"] += V["VBJX"] * temp1["JUBY"];
 
-    temp1["jUbY"]  = T2["iUaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jUbY"]  = T2pr["iUaY"] * Gamma1["ji"] * Eta1["ab"];
     temp2["UVXY"] -= V["bVjX"] * temp1["jUbY"];
     E += temp2["UVXY"] * Lambda2["XYUV"];
 
-    temp1["jVbY"]  = T2["iVaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jVbY"]  = T2pr["iVaY"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uVxY"] -= V["ubjx"] * temp1["jVbY"];
 
-    temp1["JVBY"]  = T2["IVAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["JVBY"]  = T2pr["IVAY"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uVxY"] += V["uBxJ"] * temp1["JVBY"];
 
-    temp1["jubx"]  = T2["iuax"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jubx"]  = T2pr["iuax"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uVxY"] += V["bVjY"] * temp1["jubx"];
 
-    temp1["uJxB"]  = T2["uIxA"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["uJxB"]  = T2pr["uIxA"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uVxY"] -= V["VBJY"] * temp1["uJxB"];
 
-    temp1["uJbY"]  = T2["uIaY"] * Gamma1["JI"] * Eta1["ab"];
+    temp1["uJbY"]  = T2pr["uIaY"] * Gamma1["JI"] * Eta1["ab"];
     temp2["uVxY"] -= V["bVxJ"] * temp1["uJbY"];
 
-    temp1["jVxB"]  = T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
+    temp1["jVxB"]  = T2pr["iVxA"] * Gamma1["ji"] * Eta1["AB"];
     temp2["uVxY"] -= V["uBjY"] * temp1["jVxB"];
     E += temp2["uVxY"] * Lambda2["xYuV"];
 
@@ -880,34 +931,34 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     BlockedTensor temp;
     temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
-    temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
-    temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
-    temp["UVWXYZ"] += V["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
-    temp["UVWXYZ"] += V["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
+    temp["uvwxyz"] += V["uviz"] * T2pr["iwxy"];      //  aaaaaa from hole
+    temp["uvwxyz"] += V["waxy"] * T2pr["uvaz"];      //  aaaaaa from particle
+    temp["UVWXYZ"] += V["UVIZ"] * T2pr["IWXY"];      //  AAAAAA from hole
+    temp["UVWXYZ"] += V["WAXY"] * T2pr["UVAZ"];      //  AAAAAA from particle
     E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
     E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
-    temp["uvWxyZ"] -= V["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] -= V["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] -= V["uviy"] * T2pr["iWxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] -= V["uWiZ"] * T2pr["ivxy"];      //  aaAaaA from hole
+    temp["uvWxyZ"] += V["uWyI"] * T2pr["vIxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] += V["uWyI"] * T2pr["vIxZ"];      //  aaAaaA from hole
 
-    temp["uvWxyZ"] += V["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+    temp["uvWxyZ"] += V["aWxZ"] * T2pr["uvay"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vaxy"] * T2pr["uWaZ"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vAxZ"] * T2pr["uWyA"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vAxZ"] * T2pr["uWyA"];      //  aaAaaA from particle
 
     E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
-    temp["uVWxYZ"] -= V["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] -= V["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] -= V["VWIZ"] * T2pr["uIxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] -= V["uVxI"] * T2pr["IWYZ"];      //  aAAaAA from hole
+    temp["uVWxYZ"] += V["uViZ"] * T2pr["iWxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] += V["uViZ"] * T2pr["iWxY"];      //  aAAaAA from hole
 
-    temp["uVWxYZ"] += V["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] += V["uAxY"] * T2pr["VWAZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["WAYZ"] * T2pr["uVxA"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["aWxY"] * T2pr["uVaZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["aWxY"] * T2pr["uVaZ"];      //  aAAaAA from particle
 
     E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
 
