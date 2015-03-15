@@ -171,7 +171,7 @@ void MCSRGPT2_MO::startup(Options &options){
     Check_T1("A",T1a_,T1Na_,T1Maxa_,options);
     Check_T1("B",T1b_,T1Nb_,T1Maxb_,options);
 
-    print_d2("T1a",T1a_);
+//    print_d2("T1a",T1a_);
 
     bool dsrgpt = options.get_bool("DSRGPT");
 
@@ -185,7 +185,7 @@ void MCSRGPT2_MO::startup(Options &options){
     outfile->Printf("\t\t\tDone.");
     outfile->Flush();
 
-    print_d2("Fa_dsrg_",Fa_dsrg_);
+//    print_d2("Fa_dsrg_",Fa_dsrg_);
 
     // Effective Two Electron Integrals
     outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
