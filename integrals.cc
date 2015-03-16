@@ -69,7 +69,17 @@ void ExplorerIntegrals::retransform_integrals()
     aptei_idx_ = nmo_;
     transform_integrals();
     read_one_electron_integrals();
-    read_two_electron_integrals();
+    if (options_.get_str("INT_TYPE") == "DF" ){
+        compute_df_integrals();
+    }
+    else if (options_.get_str("INT_TYPE")  == "CHOLESKY"){
+        compute_chol_integrals();
+    }
+    else
+    {
+        read_two_electron_integrals();
+    }
+
     update_integrals();
 }
 
@@ -893,6 +903,7 @@ void ExplorerIntegrals::compute_chol_integrals()
         aphys_tei_ab[pqrs] = 0.0;
         aphys_tei_bb[pqrs] = 0.0;
     }
+    outfile->Printf("\n Computing the Cholesky Vectors \n");
 
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -921,6 +932,10 @@ void ExplorerIntegrals::compute_chol_integrals()
     
 //    Cpq->zero()e
     Cpq = wfn->Ca_subset("AO","ALL");
+    SharedMatrix Cpqcore = wfn->Ca_subset("AO", "ACTIVE");
+    //Cpqcore->print();
+    //Cpq->print();
+
     SharedMatrix Cpqso = wfn->Ca_subset("SO","ALL");
     //Cpqso->print();
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
@@ -978,21 +993,30 @@ void ExplorerIntegrals::compute_chol_integrals()
 
     ThreeIntegral_->zero();
 
-    ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n,")*Cpq_tensor("m,p")*Cpq_tensor("n,q");
+    ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n")*Cpq_tensor("m,p")*Cpq_tensor("n,q");
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,double& value){
         ThreeIntegral_->set(i[0],i[1]*nmo_ + i[2],value);
         L->set(i[0],i[1]*nmo_ + i[2],value);
      });
-    ThreeIntegral_->print();
+    //ThreeIntegral_->zero();
+    for(int L = 0; L < nL; L++){
+    for(int mu = 0; mu < nbf; mu++){
+        for(int nu = 0; nu < nbf; nu++){
+            for(int p = 0; p < nmo_; p++){
+                for(int q = 0; q < nmo_; q++){
+                    //ThreeIntegral_->add(L,p*nmo_ + q,Lao->get(L, mu * nbf + nu) * Cpq->get(mu,p) * Cpq->get(nu,q));
+                }
 
-
-
+                }
+            }
+        }
+    }
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
 
 
-    pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,L,(nmo_)*(nmo_),L,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
+    pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,ThreeIntegral_,(nmo_)*(nmo_),ThreeIntegral_,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
     pqrs->print();
 
     for (size_t p = 0; p < nmo_; ++p){
@@ -1046,7 +1070,7 @@ void ExplorerIntegrals::compute_chol_integrals()
 //    for(size_t p = 0; p < nmo; ++p){
 //      for(size_t q = 0; q < nmo; ++q){
 //        // Builf Fock Diagonal alpha-alpha
-//        f_aa[mu][p][q] = oei_aa[p][q];
+//        f_aa[mu][p][q] = oei_aa[p][q]
 //        // Add the non-frozen alfa part, the forzen core part is already included in oei
 //        for (int k = 0; k < moinfo->get_nall(); ++k) {
 //          size_t k_f = moinfo->get_all_to_mo()[k];
