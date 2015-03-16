@@ -34,7 +34,7 @@
 
 namespace psi{ namespace libadaptive{
 
-enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuString};
+enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList};
 
 
 /**
@@ -112,13 +112,15 @@ protected:
 class SigmaVectorList : public SigmaVector
 {
 public:
-    SigmaVectorList(const std::vector<BitsetDeterminant>& space,ExplorerIntegrals* ints);
+    SigmaVectorList(const std::vector<BitsetDeterminant>& space);
 
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
+    void get_hamiltonian(Matrix& H);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> get_sparse_hamiltonian();
 
 protected:
-    ExplorerIntegrals* ints_;
+    const std::vector<BitsetDeterminant>& space_;
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t,int>>> a_ann_list;
     std::vector<std::vector<std::pair<size_t,int>>> b_ann_list;
@@ -126,6 +128,15 @@ protected:
     std::vector<std::vector<std::pair<size_t,int>>> a_cre_list;
     std::vector<std::vector<std::pair<size_t,int>>> b_cre_list;
 
+    // Create the list of a_q a_p|N>
+    std::vector<std::vector<std::tuple<size_t,int,int>>> aa_ann_list;
+    std::vector<std::vector<std::tuple<size_t,int,int>>> ab_ann_list;
+    std::vector<std::vector<std::tuple<size_t,int,int>>> bb_ann_list;
+    // Create the list of a+_s a+_r |N-2>
+    std::vector<std::vector<std::tuple<size_t,int,int>>> aa_cre_list;
+    std::vector<std::vector<std::tuple<size_t,int,int>>> ab_cre_list;
+    std::vector<std::vector<std::tuple<size_t,int,int>>> bb_cre_list;
+    std::vector<double> diag_;
 };
 
 
@@ -196,6 +207,12 @@ private:
                                          SharedMatrix& evecs,
                                          int nroot);
 
+    /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
+    void diagonalize_davidson_liu_list(const std::vector<BitsetDeterminant> &space,
+                                         SharedVector& evals,
+                                         SharedMatrix& evecs,
+                                         int nroot);
+
     /// Build the full Hamiltonian matrix
     SharedMatrix build_full_hamiltonian(const std::vector<BitsetDeterminant>& space);
 
@@ -217,6 +234,12 @@ private:
 
     /// Form a sparse Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
     void diagonalize_davidson_liu_sparse(const std::vector<SharedBitsetDeterminant>& space,
+                                         SharedVector& evals,
+                                         SharedMatrix& evecs,
+                                         int nroot);
+
+    /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
+    void diagonalize_davidson_liu_list(const std::vector<SharedBitsetDeterminant>& space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
                                          int nroot);
