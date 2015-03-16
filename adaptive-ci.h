@@ -127,7 +127,7 @@ private:
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate excited determinants
-    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant, double> &V_hash);
 
     /// Generate excited determinants
     void generate_excited_determinants_original(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);

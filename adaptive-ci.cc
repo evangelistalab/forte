@@ -3,8 +3,8 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
+#include <unordered_map>
 
-#include <boost/unordered_map.hpp>
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
 
@@ -219,7 +219,11 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
 
-        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
+        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuList);
+        }else{
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuSparse);
+        }
 
         // Print the energy
         outfile->Printf("\n");
@@ -237,7 +241,11 @@ double AdaptiveCI::compute_energy()
 
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
+        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuList);
+        }else{
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
+        }
 
         // Print the energy
         outfile->Printf("\n");
@@ -290,6 +298,102 @@ double AdaptiveCI::compute_energy()
 }
 
 
+void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
+{
+    // Find the SD space out of the reference
+    std::vector<BitsetDeterminant> sd_dets_vec;
+    std::map<BitsetDeterminant,int> new_dets_map;
+
+    boost::timer t_ms_build;
+
+    // This hash saves the determinant coupling to the model space eigenfunction
+    std::map<BitsetDeterminant,double> V_map;
+
+    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+        BitsetDeterminant& det = P_space_[I];
+        generate_excited_determinants(nroot,I,evecs,det,V_map);
+    }
+    outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_map.size());
+    outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
+    outfile->Flush();
+
+    // This will contain all the determinants
+    PQ_space_.clear();
+
+    // Add the P-space determinants to PQ and remove them from the hash
+    for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
+        PQ_space_.push_back(P_space_[J]);
+        V_map.erase(P_space_[J]);
+    }
+
+    boost::timer t_ms_screen;
+
+    typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
+    std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
+    std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
+    std::vector<double> ept2(nroot_,0.0);
+
+    std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
+
+    // Check the coupling between the reference and the SD space
+    for (const auto& det_V : V_map){
+        double EI = det_V.first.energy();
+        for (int n = 0; n < nroot; ++n){
+            double V = det_V.second;
+            double C1_I = -V / (EI - evals->get(n));
+            double E2_I = -V * V / (EI - evals->get(n));
+
+            C1[n] = make_pair(std::fabs(C1_I),C1_I);
+            E2[n] = make_pair(std::fabs(E2_I),E2_I);
+        }
+
+        std::pair<double,double> max_C1 = *std::max_element(C1.begin(),C1.end());
+        std::pair<double,double> max_E2 = *std::max_element(E2.begin(),E2.end());
+
+        if (aimed_selection_){
+            double aimed_value = energy_selection_ ? max_E2.first : std::pow(max_C1.first,2.0);
+            sorted_dets.push_back(std::make_pair(aimed_value,det_V.first));
+        }else{
+            double select_value = energy_selection_ ? max_E2.first : max_C1.first;
+            if (std::fabs(select_value) > tau_q_){
+                PQ_space_.push_back(det_V.first);
+            }else{
+                for (int n = 0; n < nroot; ++n){
+                    ept2[n] += E2[n].second;
+                }
+            }
+        }
+    }
+
+    if (aimed_selection_){
+        // Sort the CI coefficients in ascending order
+        std::sort(sorted_dets.begin(),sorted_dets.end());
+
+        double sum = 0.0;
+        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+            const BitsetDeterminant& det = sorted_dets[I].second;
+            if (sum + sorted_dets[I].first < tau_q_){
+                sum += sorted_dets[I].first;
+                double EI = det.energy();
+                const double V = V_map[det];
+                for (int n = 0; n < nroot; ++n){
+                    double E2_I = -V * V / (EI - evals->get(n));
+                    ept2[n] += E2_I;
+                }
+            }else{
+                PQ_space_.push_back(sorted_dets[I].second);
+            }
+        }
+    }
+
+    multistate_pt2_energy_correction_ = ept2;
+
+    outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
+    outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
+    outfile->Flush();
+}
+
+/*
 void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
     // Find the SD space out of the reference
@@ -385,8 +489,9 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
     outfile->Flush();
 }
+*/
 
-void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash)
+void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,double>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
@@ -398,6 +503,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
     int nvalpha = avir.size();
     int nvbeta  = bvir.size();
 
+    int n = 0;
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
@@ -408,12 +514,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
                 double HIJ = det.slater_rules(new_det);
-                if (V_hash.count(new_det) == 0){
-                    V_hash[new_det] = std::vector<double>(nroot);
-                }
-                for (int n = 0; n < nroot; ++n){
-                    V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                }
+                V_hash[new_det] += HIJ * evecs->get(I,n);
             }
         }
     }
@@ -427,12 +528,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
                 double HIJ = det.slater_rules(new_det);
-                if (V_hash.count(new_det) == 0){
-                    V_hash[new_det] = std::vector<double>(nroot);
-                }
-                for (int n = 0; n < nroot; ++n){
-                    V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                }
+                V_hash[new_det] += HIJ * evecs->get(I,n);
             }
         }
     }
@@ -462,12 +558,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         // compute the sign of the matrix element
                         HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ia,jj) * SlaterSign(Ja,aa) * SlaterSign(Ja,bb);
 
-                        if (V_hash.count(new_det) == 0){
-                            V_hash[new_det] = std::vector<double>(nroot);
-                        }
-                        for (int n = 0; n < nroot; ++n){
-                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                        }
+                        V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
                 }
             }
@@ -500,12 +591,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         // compute the sign of the matrix element
                         HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ib,jj) * SlaterSign(Ja,aa) * SlaterSign(Jb,bb);
 
-                        if (V_hash.count(new_det) == 0){
-                            V_hash[new_det] = std::vector<double>(nroot);
-                        }
-                        for (int n = 0; n < nroot; ++n){
-                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                        }
+                        V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
                 }
             }
@@ -535,12 +621,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         // compute the sign of the matrix element
                         HIJ *= SlaterSign(Ib,ii) * SlaterSign(Ib,jj) * SlaterSign(Jb,aa) * SlaterSign(Jb,bb);
 
-                        if (V_hash.count(new_det) == 0){
-                            V_hash[new_det] = std::vector<double>(nroot);
-                        }
-                        for (int n = 0; n < nroot; ++n){
-                            V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                        }
+                        V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
                 }
             }

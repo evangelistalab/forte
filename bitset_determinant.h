@@ -23,11 +23,14 @@
 #ifndef _bitset_determinant_h_
 #define _bitset_determinant_h_
 
-#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS 1
+#include <unordered_map>
+
+#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
+#include <boost/functional/hash.hpp>
+#include "boost/dynamic_bitset.hpp"
 
 #include "integrals.h"
 #include "excitation_determinant.h"
-#include "boost/dynamic_bitset.hpp"
 
 namespace psi{ namespace libadaptive{
 
@@ -160,12 +163,41 @@ public:
     static boost::dynamic_bitset<> temp_beta_bits_;
 };
 
-std::size_t hash_value(const BitsetDeterminant& input);
+//std::size_t hash_value(const BitsetDeterminant& input);
 
 double SlaterSign(const boost::dynamic_bitset<>& I,int n);
 
 typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;
 
 }} // End Namespaces
+
+
+//namespace boost {
+//    template <typename B, typename A>
+//    std::size_t hash_value(const boost::dynamic_bitset<B, A>& bs) {
+//        return boost::hash_value(bs.m_bits);
+//    }
+//}
+
+//namespace std
+//{
+//    template<>
+//    struct hash<psi::libadaptive::BitsetDeterminant>
+//    {
+//        typedef psi::libadaptive::BitsetDeterminant argument_type;
+//        typedef std::size_t result_type;
+
+//        result_type operator()(argument_type const& s) const
+//        {
+////            result_type const h1 (boost::hash_value(s.alfa_bits_.m_bits));
+////            result_type const h2 (boost::hash_value(s.beta_bits_.m_bits));
+//            result_type const h1 (boost::hash_value(s.alfa_bits_));
+//            result_type const h2 (boost::hash_value(s.beta_bits_));
+////            result_type const h1 ( std::hash<std::string>()(s.first_name) );
+////            result_type const h2 ( std::hash<std::string>()(s.last_name) );
+//            return h1 ^ (h2 << 1);
+//        }
+//    };
+//}
 
 #endif // _bitset_determinant_h_
