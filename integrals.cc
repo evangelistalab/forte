@@ -450,8 +450,6 @@ void ExplorerIntegrals::make_diagonal_integrals()
         for(size_t p = 0; p < nmo_; ++p){
             for(size_t q = 0; q < nmo_; ++q){
                 diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
-//                diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,p,p,p);
-
                 diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
                 diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
             }
@@ -459,17 +457,28 @@ void ExplorerIntegrals::make_diagonal_integrals()
     }
     else
     {
-        for(size_t L = 0; L < nmo_; L++){
-            for(size_t p = 0; p < nmo_; ++p){
-                for(size_t q = 0; q < nmo_; ++q){
-                    diagonal_aphys_tei_aa[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
-                            - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + q));
-                    diagonal_aphys_tei_ab[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q));
-                    diagonal_aphys_tei_bb[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
-                            - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + q));
+        outfile->Printf("\n  Computing diag with DF/CD");
+        double int_valueaa = 0.0;
+        double int_valuebb = 0.0;
+        double int_valueab = 0.0;
+        for(size_t p = 0; p < nmo_; ++p){
+            for(size_t q = 0; q < nmo_; ++q){
+                for(size_t L = 0; L < ThreeIntegral_->nrow(); L++){
+                    int_valueaa += (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
+                      - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, q * nmo_ + p));
+                    int_valuebb += (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
+                      - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, q * nmo_ + p));
+                    int_valueab += (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q));
                 }
+                diagonal_aphys_tei_aa[p * nmo_ + q] = int_valueaa;
+                diagonal_aphys_tei_ab[p * nmo_ + q] = int_valueab;
+                diagonal_aphys_tei_bb[p * nmo_ + q] = int_valuebb;
+                int_valueaa = 0.0;
+                int_valuebb = 0.0;
+                int_valueab = 0.0;
             }
         }
+
      }
 }
 void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
@@ -612,10 +621,12 @@ void ExplorerIntegrals::freeze_core_orbitals()
 void ExplorerIntegrals::compute_frozen_core_energy()
 {
     core_energy_ = 0.0;
+    double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
             core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
+
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
                     core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
@@ -634,20 +645,64 @@ void ExplorerIntegrals::compute_frozen_one_body_operator()
 
     // Modify the active part of H to include the core effects;
     size_t f = 0;
-    for (int hi = 0; hi < nirrep_; ++hi){
-        for (int i = 0; i < frzcpi_[hi]; ++i){
-            size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %zu",r);
-            for(size_t p = 0; p < nmo_; ++p){
-                for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
-                    one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+    if(options_.get_str("INT_TYPE")=="CONVENTIONAL")
+    {
+        for (int hi = 0; hi < nirrep_; ++hi){
+            for (int i = 0; i < frzcpi_[hi]; ++i){
+                size_t r = f + i;
+                outfile->Printf("\n  Freezing MO %zu",r);
+                for(size_t p = 0; p < nmo_; ++p){
+                    for(size_t q = 0; q < nmo_; ++q){
+                        one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
+                        one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+                    }
                 }
             }
+            f += nmopi_[hi];
         }
-        f += nmopi_[hi];
+
+    }
+    else
+    {
+        double va = 0.0;
+        double vb = 0.0;
+        double vaa = 0.0;
+        double vbb = 0.0;
+        double vab = 0.0;
+        for (int hi = 0; hi < nirrep_; ++hi){
+            for (int i = 0; i < frzcpi_[hi]; ++i){
+                size_t r = f + i;
+                outfile->Printf("\n  Freezing MO %zu",r);
+                for(size_t p = 0; p < nmo_; ++p){
+                    for(size_t q = 0; q < nmo_; ++q){
+                        for(int L = 0; L < ThreeIntegral_->nrow(); L++){
+                            vaa += (ThreeIntegral_->get(L,r*nmo_ + r)*ThreeIntegral_->get(L,p*nmo_ + q)
+                              - ThreeIntegral_->get(L, r*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + r));
+                            vbb += (ThreeIntegral_->get(L,r*nmo_ + r)*ThreeIntegral_->get(L,p*nmo_ + q)
+                              - ThreeIntegral_->get(L, r*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + r));
+                            vab += (ThreeIntegral_->get(L,r*nmo_ + r)*ThreeIntegral_->get(L,p*nmo_ + q));
+                        }
+                        va = vaa + vab;
+                        vb = vbb + vab;
+                        one_electron_integrals_a[p * nmo_ + q] += va;
+                        one_electron_integrals_b[p * nmo_ + q] += vb;
+                        vaa = 0.0;
+                        vbb = 0.0;
+                        vab = 0.0;
+                    }
+                }
+            }
+            f += nmopi_[hi];
+        }
+    }
+    for(int p = 0; p < nmo_; p++){
+        for(int q = 0; q < nmo_; q++){
+            outfile->Printf("\n one_inta(%d, %d) = %8.8f\n", p, q, one_electron_integrals_a[p*nmo_ + q]);
+            outfile->Printf("\n one_intb(%d, %d) = %8.8f\n", p, q, one_electron_integrals_b[p*nmo_ + q]);
+        }
     }
 }
+
 
 void ExplorerIntegrals::resort_integrals_after_freezing()
 {
