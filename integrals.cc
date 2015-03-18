@@ -30,12 +30,15 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     startup();
     transform_integrals();
     read_one_electron_integrals();
-    read_two_electron_integrals();
-    if (options_.get_str("INT_TYPE") == "DF" || options_.get_str("INT_TYPE")=="ALL"){
+    if (options_.get_str("INT_TYPE") == "DF"){
         compute_df_integrals();
     }
-    if (options_.get_str("INT_TYPE")  == "CHOLESKY" || options_.get_str("INT_TYPE")=="ALL"){
+    else if (options_.get_str("INT_TYPE")  == "CHOLESKY"){ 
         compute_chol_integrals();
+    }
+    else
+    {
+        read_two_electron_integrals();
     }
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -441,15 +444,36 @@ void ExplorerIntegrals::read_two_electron_integrals()
 
 void ExplorerIntegrals::make_diagonal_integrals()
 {
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = 0; q < nmo_; ++q){
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
+    if(options_.get_str("INT_TYPE") == "CONVENTIONAL")
+    {
+        outfile->Printf("\n Conv ints");
+
+        for(size_t p = 0; p < nmo_; ++p){
+            for(size_t q = 0; q < nmo_; ++q){
+                diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
+//                diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,p,p,p);
+
+                diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
+                diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
+            }
         }
     }
+    else
+    {
+        outfile->Printf("\n Generating diagonal with threeint");
+        for(size_t L = 0; L < nmo_; L++){
+            for(size_t p = 0; p < nmo_; ++p){
+                for(size_t q = 0; q < nmo_; ++q){
+                    diagonal_aphys_tei_aa[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
+                            - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + q));
+                    diagonal_aphys_tei_ab[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q));
+                    diagonal_aphys_tei_bb[p * nmo_ + q] = (ThreeIntegral_->get(L,p*nmo_ + p)*ThreeIntegral_->get(L,q*nmo_ + q)
+                            - ThreeIntegral_->get(L, p*nmo_ + q) * ThreeIntegral_->get(L, p * nmo_ + q));
+                }
+            }
+        }
+     }
 }
-
 void ExplorerIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
     for(size_t p = 0; p < ncmo_; ++p){
@@ -603,7 +627,6 @@ void ExplorerIntegrals::compute_frozen_core_energy()
         }
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
-
     outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
 }
 
@@ -649,6 +672,12 @@ void ExplorerIntegrals::resort_integrals_after_freezing()
     resort_two(diagonal_aphys_tei_aa,cmo2mo);
     resort_two(diagonal_aphys_tei_ab,cmo2mo);
     resort_two(diagonal_aphys_tei_bb,cmo2mo);
+
+    if(options_.get_str("INT_TYPE")!="CONVENTIONAL")
+    {
+    resort_three(ThreeIntegral_,cmo2mo);
+    }
+
     resort_four(aphys_tei_aa,cmo2mo);
     resort_four(aphys_tei_ab,cmo2mo);
     resort_four(aphys_tei_bb,cmo2mo);
@@ -670,6 +699,32 @@ void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
     // Delete old integrals and assign the pointer
     delete[] ints;
     ints = temp_ints;
+}
+
+void ExplorerIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
+{
+    //Create a temperature threeint matrix
+    SharedMatrix temp_threeint(threeint->clone());
+    temp_threeint->zero();
+    size_t nthree = threeint->nrow(); 
+
+    // Borrwed from resort_four.
+    // Since L is not sorted, only need to sort the columns
+    // Surprisingly, this was pretty easy.
+    for (size_t L = 0; L < nthree; ++L){
+        for (size_t q = 0; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                    size_t Lpq_cmo  = q * ncmo_ + r;
+                    size_t Lpq_mo  = map[q] * nmo_ + map[r];
+                    temp_threeint->set(L, Lpq_cmo, threeint->get(L, Lpq_mo));
+                    
+            }
+        }
+    }
+
+    //This copies the resorted integrals and the data is changed to the sorted
+    //matrix
+    threeint->copy(temp_threeint);
 }
 
 void ExplorerIntegrals::resort_four(double*& ints,std::vector<size_t>& map)
@@ -841,9 +896,9 @@ void ExplorerIntegrals::compute_df_integrals()
             }
         }
     }
+
      ThreeIntegral_= tBpq->clone();
-    //ThreeIntegral.print(stdout);
-    //Forms the (pq | B) (B | rs)
+
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
     outfile->Printf("\n DENSITY FITTED");
@@ -933,11 +988,9 @@ void ExplorerIntegrals::compute_chol_integrals()
 //    Cpq->zero()e
     Cpq = wfn->Ca_subset("AO","ALL");
     SharedMatrix Cpqcore = wfn->Ca_subset("AO", "ACTIVE");
-    //Cpqcore->print();
-    //Cpq->print();
 
     SharedMatrix Cpqso = wfn->Ca_subset("SO","ALL");
-    //Cpqso->print();
+
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
 
@@ -978,11 +1031,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
     ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nL_,nmo_, nmo_ });
 
-    if(nmo_ != ncmo_)
-    {
-        outfile->Printf("WARNING!!! Cholesky vectors not frozen");
-    }
-
     Cpq_tensor.iterate([&](const std::vector<size_t>& i,double& value){
        value = Cpq->get(i[0],i[1]);
     });
@@ -1000,24 +1048,11 @@ void ExplorerIntegrals::compute_chol_integrals()
         L->set(i[0],i[1]*nmo_ + i[2],value);
      });
     //ThreeIntegral_->zero();
-    for(int L = 0; L < nL; L++){
-    for(int mu = 0; mu < nbf; mu++){
-        for(int nu = 0; nu < nbf; nu++){
-            for(int p = 0; p < nmo_; p++){
-                for(int q = 0; q < nmo_; q++){
-                    //ThreeIntegral_->add(L,p*nmo_ + q,Lao->get(L, mu * nbf + nu) * Cpq->get(mu,p) * Cpq->get(nu,q));
-                }
-
-                }
-            }
-        }
-    }
 
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
 
 
     pqrs->gemm('T','N',(nmo_)*(nmo_),(nmo_)*(nmo_),nL,1.0,ThreeIntegral_,(nmo_)*(nmo_),ThreeIntegral_,(nmo_)*(nmo_),0.0,(nmo_)*(nmo_),0,0,0);
-    pqrs->print();
 
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
