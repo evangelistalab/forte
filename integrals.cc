@@ -446,7 +446,6 @@ void ExplorerIntegrals::make_diagonal_integrals()
 {
     if(options_.get_str("INT_TYPE") == "CONVENTIONAL")
     {
-        outfile->Printf("\n Conv ints");
 
         for(size_t p = 0; p < nmo_; ++p){
             for(size_t q = 0; q < nmo_; ++q){
@@ -460,7 +459,6 @@ void ExplorerIntegrals::make_diagonal_integrals()
     }
     else
     {
-        outfile->Printf("\n Generating diagonal with threeint");
         for(size_t L = 0; L < nmo_; L++){
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
@@ -808,6 +806,8 @@ void ExplorerIntegrals::compute_df_integrals()
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+   
+    outfile->Printf("\n Computing Density fitted integrals \n");
 
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
@@ -815,6 +815,7 @@ void ExplorerIntegrals::compute_df_integrals()
     int nprim = primary->nbf();
     size_t naux  = auxiliary->nbf();
     naux_ = naux;
+    outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     //Constructor for building DFERI in MO basis from libthce/lreri.h
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
 
@@ -901,7 +902,6 @@ void ExplorerIntegrals::compute_df_integrals()
 
     full_int->gemm('N','T',(nmo_)*(nmo_),(nmo_)*(nmo_),naux,1.0,pqB,naux,pqB,naux,0.0,(nmo_)*(nmo_),0,0,0);
 
-    outfile->Printf("\n DENSITY FITTED");
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             for (size_t r = 0; r < nmo_; ++r){
