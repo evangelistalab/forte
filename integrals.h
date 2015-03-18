@@ -164,9 +164,6 @@ public:
     /// Return value of df/cd integral
     double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * ncmo_ + q);}
 
-
-    //const int* qt_pitzer_;
-
 private:
 
     // ==> Class data <==
