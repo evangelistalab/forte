@@ -118,13 +118,16 @@ protected:
 
     double renormalized_denominator(double D);
 
+    void compute_t1();
+
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
+    void check_t2();
     double T2norm;
     double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t1();
+    void check_t1();
     double T1norm;
     double T1max;
 
