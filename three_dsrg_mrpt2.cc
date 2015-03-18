@@ -141,7 +141,6 @@ void THREE_DSRG_MRPT2::startup()
 
         //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
         BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        size_t nmo = ints_->nmo();
 
         ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
@@ -156,7 +155,7 @@ void THREE_DSRG_MRPT2::startup()
         std::vector<size_t> nauxpi(nDF);
         std::iota(nauxpi.begin(), nauxpi.end(),0);
         BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-        size_t nmo = ints_->nmo();
+
         ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
@@ -265,7 +264,6 @@ void THREE_DSRG_MRPT2::startup()
     //V["PQRS"] =  ThreeIntegral["gPQ"]*ThreeIntegral["gRS"];
     //V["PQRS"] -= ThreeIntegral["gPQ"]*ThreeIntegral["gSR"];
 
-    //V.print(stdout);
 
     double Vnorm = V.norm();
     outfile->Printf("\n Vnorm = %12.8f", Vnorm);
@@ -337,7 +335,6 @@ void THREE_DSRG_MRPT2::startup()
     size_t nh = core_ + active_;
     size_t np = active_ + virtual_;
 
-    SharedMatrix RDelta2M(new Matrix("RDelta2_matrix", nh*np, nh*np));
     RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -347,16 +344,7 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
         }
     });
-    //for(int i = 0; i < nh; i++){
-    //    for(int j = 0; j < nh; j++){
-    //        for(int a = 0; a < np; a++){
-    //            for(int b = 0; b < np; b++){
-    //                RDelta2M->set(i*np + a, j*np + b,
-    //
-    //            }
-    //        }
-    //    }
-    //}
+
     // Fill out Lambda2 and Lambda3
     Tensor Lambda2_aa = Lambda2.block("aaaa");
     Tensor Lambda2_aA = Lambda2.block("aAaA");
@@ -599,8 +587,6 @@ void THREE_DSRG_MRPT2::compute_t2()
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
 
-    outfile->Printf("\n  ||T2|| no hp %22c = %22.15lf", ' ', T2pr.norm());
-    outfile->Printf("\n  ||T2|| %22c = %22.15lf", ' ', T2.norm());
 //    outfile->Printf("\n  max(T2) %21c = %22.15lf", ' ', T2max);
 
 }
@@ -826,8 +812,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     T2ph["mnef"] = v["mnef"] * RDelta2["mnef"];
     T2ph["mNeF"] = v["mNeF"] * RDelta2["mNeF"];
     T2ph["MNEF"] = v["MNEF"] * RDelta2["MNEF"];
-    T2ph.print(stdout);
-    T2pr.print(stdout);
 
     //BlockedTensor::add_mo_space("c","mnμπ",acore_mos,AlphaSpin);
     //BlockedTensor::add_mo_space("C","MNΩ∏",bcore_mos,BetaSpin);
@@ -853,51 +837,19 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     //temp3["mNeF"] += T2ph["µ,Ω,e,F"] * Gamma1["m,µ"] * Gamma1["N,Ω"];
     //temp4["m,N,ε,Ƒ"] += temp3["m,N,e,F"] * Eta1["e,ε"] * Eta1["F,Ƒ"];
 
-    temp1.block("ccvv").print(stdout);
-    temp2.block("ccvv").print(stdout);
-    temp3.block("ccvv").print(stdout);
-    temp4.block("ccvv").print(stdout);
-
-    double Etest, Etest2;
-    Etest += 0.25 * V["efmn"] * T2ph["mnef"];
-    Etest2 += 0.25 * V["efmn"] * T2["mnef"];
-
-    outfile->Printf("\n Etest %6.6f  Etest2 %6.6f", Etest, Etest2);
-    //T2ph["mnef"] = v["mnef"] * RDelta2["mnef"];
-    //T2ph["mNeF"] = v["mNeF"] * RDelta2["mNeF"];
-    //T2ph["MNEF"] = v["MNEF"] * RDelta2["MNEF"];
-
-    //temp3["klab"] += T2pr["ijab"] * Gamma1["ki"] * Gamma1["lj"];
-    //temp4["klcd"] += temp3["klab"] * Eta1["ac"] * Eta1["bd"];
-
-
-    //T2ph["mnef"] = v["mnef"] * RDelta2["mnef"];
-    //T2ph["mNeF"] = v["mNeF"] * RDelta2["mNeF"];
-    //T2ph["MNEF"] = v["MNEF"] * RDelta2["MNEF"];
-
-    //temp3["klab"] += T2pr["ijab"] * Gamma1["ki"] * Gamma1["lj"];
-    //temp4["klcd"] += temp3["klab"] * Eta1["ac"] * Eta1["bd"];
-
-    //temp3["KLAB"] += T2pr["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
-    //temp4["KLCD"] += temp3["KLAB"] * Eta1["AC"] * Eta1["BD"];
-
-    //temp3["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
-    //temp4["kLcD"] += temp3["kLaB"] * Eta1["ac"] * Eta1["BD"];
-
-    //E += 0.25 * V["cdkl"]*T2["ijab"]*Gamma1["ki"]*Gamma1["lj"]*Eta1["ac"]*Eta1["bd"];
-    //E += 0.25 * V["CDKL"]*T2["IJAB"]*Gamma1["KI"]*Gamma1["LJ"]*Eta1["AC"]*Eta1["BD"];
-    //E += 0.25 * V["cDkL"]*T2["iJaB"]*Gamma1["ki"]*Gamma1["LJ"]*Eta1["ac"]*Eta1["BD"];
-    //E += 0.25 * V["cdkl"]*T2ph["ijab"]*Gamma1["ki"]*Gamma1["lj"]*Eta1["ac"]*Eta1["bd"];
-    //E += 0.25 * V["CDKL"]*T2ph["IJAB"]*Gamma1["KI"]*Gamma1["LJ"]*Eta1["AC"]*Eta1["BD"];
-    //E += 0.25 * V["cDkL"]*T2ph["iJaB"]*Gamma1["ki"]*Gamma1["LJ"]*Eta1["ac"]*Eta1["BD"];
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
     E += 0.25 * V["cdkl"] * temp2["klcd"];
     E += V["cDkL"] * temp2["kLcD"];
     
     double E2 = 0.0;
+
     E += 0.25 * V["EFMN"] * T2ph["MNEF"];
+    //E += 0.25 * V["efmn"] * T2ph["mnef"];
+    //E += V["eFmN"] * T2ph["mNeF"];
+    //E += 0.25 * (ThreeIntegral["gEM"]*ThreeIntegral["gFN"] - ThreeIntegral["gEN"]*ThreeIntegral["gFM"]) * RDelta2["MNEF"] * T2ph["MNEF"];
     E += 0.25 * V["efmn"] * T2ph["mnef"];
     E += V["eFmN"] * T2ph["mNeF"];
+
     E2 += 0.25 * V["EFMN"] * T2ph["MNEF"];
     E2 += 0.25 * V["efmn"] * T2ph["mnef"];
     E2 += V["eFmN"] * T2ph["mNeF"];

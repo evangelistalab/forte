@@ -162,7 +162,7 @@ public:
     /// Compute cholesky integrals
     void compute_chol_integrals();
     /// Return value of df/cd integral
-    double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * nmo_ + q);}
+    double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * ncmo_ + q);}
 
 
     //const int* qt_pitzer_;
@@ -276,6 +276,7 @@ private:
     void resort_integrals_after_freezing();
 
     void resort_two(double*& ints,std::vector<size_t>& map);
+    void resort_three(SharedMatrix&, std::vector<size_t>& map);
     void resort_four(double*& ints,std::vector<size_t>& map);
 
     /// Freeze the doubly occupied and virtual orbitals but do not resort the integrals
