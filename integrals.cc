@@ -870,6 +870,7 @@ void ExplorerIntegrals::compute_df_integrals()
     int nprim = primary->nbf();
     size_t naux  = auxiliary->nbf();
     naux_ = naux;
+    nthree_ = naux;
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     //Constructor for building DFERI in MO basis from libthce/lreri.h
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
@@ -1029,6 +1030,7 @@ void ExplorerIntegrals::compute_chol_integrals()
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nL_ = nL;
+    nthree_ = nL;
 
     TensorType tensor_type = kCore;
 
@@ -1042,9 +1044,6 @@ void ExplorerIntegrals::compute_chol_integrals()
     
 //    Cpq->zero()e
     Cpq = wfn->Ca_subset("AO","ALL");
-    SharedMatrix Cpqcore = wfn->Ca_subset("AO", "ACTIVE");
-
-    SharedMatrix Cpqso = wfn->Ca_subset("SO","ALL");
 
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
