@@ -24,12 +24,13 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefu
     copy(wfn);
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t      Driven Similarity Renormalization Group MBPT2");
+    outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
+    outfile->Printf("\n\t      Kevin Hannon and Chenyang (York) Li");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
     startup();
-    if(false){
-    frozen_natural_orbitals();}
+    //if(false){
+    //frozen_natural_orbitals();}
     print_summary();
 }
 
@@ -104,6 +105,25 @@ void THREE_DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
+    for (size_t p = 0; p < acore_mos.size(); ++p){
+        outfile->Printf("\nacore_mos[%d] =  %d mos_to_acore[%d] = %d \n",p, acore_mos[p],p, mos_to_acore[p] );
+    }
+    for (size_t p = 0; p < bcore_mos.size(); ++p){
+        outfile->Printf("\nbcore_mos[%d] =  %d mos_to_bcore[%d] = %d \n",p, bcore_mos[p],p, mos_to_bcore[p] );
+    }
+    for (size_t p = 0; p < aactv_mos.size(); ++p){
+        outfile->Printf("\naactv_mos[%d] =  %d mos_to_aactv[%d] = %d \n",p, aactv_mos[p],p, mos_to_aactv[p] );
+    }
+    for (size_t p = 0; p < bactv_mos.size(); ++p){
+        outfile->Printf("\nbactv_mos[%d] =  %d mos_to_bactv[%d] = %d \n",p, bactv_mos[p],p, mos_to_bactv[p] );
+    }
+    for (size_t p = 0; p < avirt_mos.size(); ++p){
+        outfile->Printf("\navirt_mos[%d] =  %d mos_to_avirt[%d] = %d \n",p, avirt_mos[p],p, mos_to_avirt[p] );
+    }
+    for (size_t p = 0; p < bvirt_mos.size(); ++p){
+        outfile->Printf("\nbvirt_mos[%d] =  %d mos_to_bvirt[%d] = %d \n",p, bvirt_mos[p],p, mos_to_bvirt[p] );
+    }
+
 
     BlockedTensor::set_expert_mode(true);
 
@@ -161,16 +181,15 @@ void THREE_DSRG_MRPT2::startup()
         //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
         ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
                 value = ints_->get_three_integral(i[0],i[1],i[2]);
-                //value = ints_->get_three_integral(i[0],i[1],i[2]);
         });
 
     }
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     //Returns a vector of all combinations for gggg
-    std::vector<std::string> list_of_space = generate_all_indices("cav");
+    std::vector<std::string> list_of_entire_space = generate_all_indices("cav", "all");
 
-    V = BlockedTensor::build(tensor_type_,"V",spin_cases_avoid(list_of_space));
+    V = BlockedTensor::build(tensor_type_,"V",spin_cases_avoid(list_of_entire_space));
 
 
     Gamma1 = BlockedTensor::build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -186,27 +205,19 @@ void THREE_DSRG_MRPT2::startup()
 
     //Need to avoid building ccvv part of this
     //ccvv only used for creating T2
-    RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
+    std::vector<std::string> hhpp_no_cv = generate_all_indices("cav", "hhpp");
+    RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases_avoid(hhpp_no_cv));
 
 
     T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-    T2 = BlockedTensor::build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
-
-    RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
-    //all_spin = RExp2.get.();
-
-    memory_info();
-    std::vector<std::string> mo_indices = RDelta2.block_labels();
-
-    no_hhpp_ = spin_cases_avoid(mo_indices);
-
     T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
 
-    // Fill in the one-electron operator (H)
-//    H.fill_one_electron_spin([&](size_t p,MOSetSpinType sp,size_t q,MOSetSpinType sq){
-//        return (sp == AlphaSpin) ? ints_->oei_a(p,q) : ints_->oei_b(p,q);
-//    });
+    RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
+    RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases_avoid(hhpp_no_cv));
+    //all_spin = RExp2.get.();
+    memory_info();
+    no_hhpp_ = hhpp_no_cv;
+    T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -297,8 +308,10 @@ void THREE_DSRG_MRPT2::startup()
   // Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
-    std::vector<double> Fa(ncmo_);
-    std::vector<double> Fb(ncmo_);
+    //std::vector<double> Fa(ncmo_);
+    //std::vector<double> Fb(ncmo_);
+    Fa.reserve(ncmo_);
+    Fb.reserve(ncmo_);
 
     F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin and (i[0] == i[1])){
@@ -450,7 +463,6 @@ double THREE_DSRG_MRPT2::compute_energy()
     // Compute reference
     //    Eref = compute_ref();
 
-
         // Compute T2 and T1
         compute_t2();
         check_t2();
@@ -463,7 +475,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         if(print_ > 1)  F.print(stdout); // The actv-actv block is different but OK.
         if(print_ > 2){
             T1.print(stdout);
-            T2.print(stdout);
+            T2pr.print(stdout);
             V.print(stdout);
         }
 
@@ -564,8 +576,6 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2pr["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
     T2pr["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
 
-
-
     // zero internal amplitudes
     T2pr.block("aaaa").zero();
     T2pr.block("aAaA").zero();
@@ -653,9 +663,6 @@ void THREE_DSRG_MRPT2::renormalize_V()
     V["abij"] += v["ijab"] * RExp2["ijab"];
     V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
     V["ABIJ"] += v["IJAB"] * RExp2["IJAB"];
-    RExp2.block("ccvv").print();
-    RExp2.block("cCvV").print();
-    RExp2.block("cCvV").print();
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -782,35 +789,17 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hhpp"}));
-    temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hhpp"}));
-    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",spin_cases({"ccvv"}));
-    BlockedTensor Vr = BlockedTensor::build(tensor_type_,"Vr",spin_cases({"vvcc"}));
-    BlockedTensor T2ph = BlockedTensor::build(tensor_type_,"T2ph",spin_cases({"ccvv"}));
-    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
-    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
-    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
-    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
+    temp1 = BlockedTensor::build(tensor_type_,"temp1",no_hhpp_);
+    temp2 = BlockedTensor::build(tensor_type_,"temp2",no_hhpp_);
 
-    T2ph["mnef"] = v["mnef"] * RDelta2["mnef"];
-    T2ph["mNeF"] = v["mNeF"] * RDelta2["mNeF"];
-    T2ph["MNEF"] = v["MNEF"] * RDelta2["MNEF"];
 
-    Vr["efmn"] = v["mnef"];
-    Vr["eFmN"] = v["mNeF"];
-    Vr["EFMN"] = v["MNEF"];
-    Vr["efmn"] += v["mnef"]*RExp2["mnef"];
-    Vr["eFmN"] += v["mNeF"]*RExp2["mNeF"];
-    Vr["EFMN"] += v["MNEF"]*RExp2["MNEF"];
+    //Calculates all but ccvv, cCvV, and CCVV energies
 
     temp1["klab"] += T2pr["ijab"] * Gamma1["ki"] * Gamma1["lj"];
     temp2["klcd"] += temp1["klab"] * Eta1["ac"] * Eta1["bd"];
 
-
     temp1["KLAB"] += T2pr["IJAB"] * Gamma1["KI"] * Gamma1["LJ"];
     temp2["KLCD"] += temp1["KLAB"] * Eta1["AC"] * Eta1["BD"];
-
 
     temp1["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
     temp2["kLcD"] += temp1["kLaB"] * Eta1["ac"] * Eta1["BD"];
@@ -818,14 +807,96 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
     E += 0.25 * V["cdkl"] * temp2["klcd"];
     E += V["cDkL"] * temp2["kLcD"];
-    
-    E += 0.25 * Vr["EFMN"] * T2ph["MNEF"];
-    E += 0.25 * Vr["efmn"] * T2ph["mnef"];
-    E += Vr["eFmN"] * T2ph["mNeF"];
 
+    // This part needs to be computed on the fly rather than what is like here
+    double E2alpha = 0.0;
+    double E2beta = 0.0;
+    double E2mixed = 0.0;
+    double E2 = 0.0;
+    //E += 0.25 * Vr["EFMN"] * T2ph["MNEF"];
+    //E += 0.25 * Vr["efmn"] * T2ph["mnef"];
+    //E += Vr["eFmN"] * T2ph["mNeF"];
+    //E2alpha += 0.25 * Vr["EFMN"] * T2ph["MNEF"];
+    //E2beta += 0.25 * Vr["efmn"] * T2ph["mnef"];
+    //E2mixed += Vr["eFmN"] * T2ph["mNeF"];
+    //E2 = E2alpha + E2beta + E2mixed;
+
+    ///Calculating the last three E without storing any ccvv quantities
+    ///
+    double Eflyalpha = 0.0;
+    double Eflybeta = 0.0;
+    double Eflymixed = 0.0;
+    double Efly = 0.0;
+    for(size_t mind = 0; mind < core_; mind++){
+        for(size_t nind = 0; nind < core_; nind++){
+            for(size_t eind = 0; eind < virtual_; eind++){
+                for(size_t find = 0; find < virtual_; find++){
+                    //These are used because active is not partitioned as simple as
+                    //core orbs -- active orbs -- virtual
+                    //This also takes in account symmetry labeled
+                    size_t m = acore_mos[mind];
+                    size_t n = acore_mos[nind];
+                    size_t e = avirt_mos[eind];
+                    size_t f = bvirt_mos[find];
+                    size_t mb = bcore_mos[mind];
+                    size_t nb = bcore_mos[nind];
+                    size_t eb = bvirt_mos[eind];
+                    size_t fb = bvirt_mos[find];
+                    double vmnefalpha = 0.0;
+
+                    double vmnefalphaR = 0.0;
+                    double vmnefbeta = 0.0;
+                    double vmnefalphaC = 0.0;
+                    double vmnefalphaE = 0.0;
+                    double vmnefbetaC = 0.0;
+                    double vmnefbetaE = 0.0;
+                    double vmnefbetaR = 0.0;
+                    double vmnefmixed = 0.0;
+                    double vmnefmixedC = 0.0;
+                    double vmnefmixedR = 0.0;
+                    double t2alpha = 0.0;
+                    double t2mixed = 0.0;
+                    double t2beta = 0.0;
+                    //Perform the contracted for the g index with the correct index
+                    for(size_t g = 0; g < ints_->nthree(); g++){
+                        vmnefalphaC += (ints_->get_three_integral(g, m, e)
+                                      * ints_->get_three_integral(g, n, f));
+                        vmnefalphaE += (ints_->get_three_integral(g, m, f)
+                                      * ints_->get_three_integral(g, n, e));
+                        vmnefbetaC += (ints_->get_three_integral(g, mb,  eb)
+                                     * ints_->get_three_integral(g, nb,  fb));
+                        vmnefbetaE += (ints_->get_three_integral(g, mb,  fb)
+                                     * ints_->get_three_integral(g, nb,  eb));
+                        vmnefmixedC += (ints_->get_three_integral(g, m, eb)
+                                      * ints_->get_three_integral(g, n, fb));
+                    }
+
+                    vmnefalpha = vmnefalphaC - vmnefalphaE;
+                    vmnefbeta = vmnefbetaC - vmnefbetaE;
+                    vmnefmixed = vmnefmixedC;
+
+                    t2alpha = vmnefalpha * renormalized_denominator(Fa[m] + Fa[n] - Fa[e] - Fa[f ]);
+                    t2beta  = vmnefbeta  * renormalized_denominator(Fb[m] + Fb[n] - Fb[e] - Fb[f ]);
+                    t2mixed = vmnefmixed * renormalized_denominator(Fa[m] + Fb[n] - Fa[e] - Fb[f ]);
+
+                    vmnefalphaR  = vmnefalpha;
+                    vmnefbetaR   = vmnefbeta;
+                    vmnefmixedR  = vmnefmixed;
+                    vmnefalphaR += vmnefalpha * renormalized_exp(Fa[m] + Fa[n] - Fa[e] - Fa[f]);
+                    vmnefbetaR  += vmnefbeta * renormalized_exp(Fb[m] + Fb[n]  - Fb[e] - Fb[f]);
+                    vmnefmixedR += vmnefmixed * renormalized_exp(Fa[m] + Fb[n] - Fa[e] - Fb[f]);
+
+                    Eflyalpha+=0.25 * vmnefalphaR * t2alpha;
+                    Eflybeta+=0.25 * vmnefbetaR * t2beta;
+                    Eflymixed+=vmnefmixedR * t2mixed;
+                    Efly = Eflyalpha + Eflybeta + Eflymixed;
+                }
+            }
+        }
+    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
-    return E;
+    return (E + Efly);
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4HH()
@@ -907,7 +978,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"hhpp"}));
+    temp1 = BlockedTensor::build(tensor_type_,"temp1", no_hhpp_);
     temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["juby"]  = T2pr["iuay"] * Gamma1["ji"] * Eta1["ab"];
@@ -1002,46 +1073,81 @@ std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<st
     }
     return out_str_vec;
 }
-std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::string in_str)
+std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::string in_str, const std::string type)
 {
     std::vector<std::string> return_string;
 
     //Hardlined for 4 character strings
-    for(int i = 0; i < 3; i++){
-        for(int j = 0; j < 3; j++){
-            for(int k = 0; k < 3; k++){
-                for(int l = 0; l < 3; l++){
-                    std::string one_string_lower;
-                    std::string one_string_upper;
-                    std::string one_string_mixed;
+    if(type=="all")
+    {
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++){
+                for(int k = 0; k < 3; k++){
+                    for(int l = 0; l < 3; l++){
+                        std::string one_string_lower;
+                        std::string one_string_upper;
+                        std::string one_string_mixed;
 
-                    one_string_lower.push_back(in_str[i]);
-                    one_string_lower.push_back(in_str[j]);
-                    one_string_lower.push_back(in_str[k]);
-                    one_string_lower.push_back(in_str[l]);
+                        one_string_lower.push_back(in_str[i]);
+                        one_string_lower.push_back(in_str[j]);
+                        one_string_lower.push_back(in_str[k]);
+                        one_string_lower.push_back(in_str[l]);
 
-                    one_string_upper.push_back(std::toupper(in_str[i]));
-                    one_string_upper.push_back(std::toupper(in_str[j]));
-                    one_string_upper.push_back(std::toupper(in_str[k]));
-                    one_string_upper.push_back(std::toupper(in_str[l]));
+                        one_string_upper.push_back(std::toupper(in_str[i]));
+                        one_string_upper.push_back(std::toupper(in_str[j]));
+                        one_string_upper.push_back(std::toupper(in_str[k]));
+                        one_string_upper.push_back(std::toupper(in_str[l]));
 
-                    one_string_mixed.push_back(in_str[i]);
-                    one_string_mixed.push_back(std::toupper(in_str[j]));
-                    one_string_mixed.push_back(in_str[k]);
-                    one_string_mixed.push_back(std::toupper(in_str[l]));
+                        one_string_mixed.push_back(in_str[i]);
+                        one_string_mixed.push_back(std::toupper(in_str[j]));
+                        one_string_mixed.push_back(in_str[k]);
+                        one_string_mixed.push_back(std::toupper(in_str[l]));
 
-                    return_string.push_back(one_string_lower);
-                    return_string.push_back(one_string_upper);
-                    return_string.push_back(one_string_mixed);
+                        return_string.push_back(one_string_lower);
+                        return_string.push_back(one_string_upper);
+                        return_string.push_back(one_string_mixed);
+                    }
+
                 }
-
             }
         }
     }
-    outfile->Printf("\n return_string %d", return_string.size());
-    for(std::string mo_blocks : return_string){
-        outfile->Printf("\n  %s", mo_blocks.c_str());
+    else if(type=="hhpp")
+    {
+        
+        for(int i = 0; i < 2; i++){
+            for(int j = 0; j < 2; j++){
+                for(int k = 0; k < 2; k++){
+                    for(int l = 0; l < 2; l++){
+                        std::string one_string_lower;
+                        std::string one_string_upper;
+                        std::string one_string_mixed;
+
+                        one_string_lower.push_back(in_str[i]);
+                        one_string_lower.push_back(in_str[j]);
+                        one_string_lower.push_back(in_str[k + 1]);
+                        one_string_lower.push_back(in_str[l + 1]);
+
+                        one_string_upper.push_back(std::toupper(in_str[i]));
+                        one_string_upper.push_back(std::toupper(in_str[j]));
+                        one_string_upper.push_back(std::toupper(in_str[k + 1]));
+                        one_string_upper.push_back(std::toupper(in_str[l + 1]));
+
+                        one_string_mixed.push_back(in_str[i]);
+                        one_string_mixed.push_back(std::toupper(in_str[j]));
+                        one_string_mixed.push_back(in_str[k + 1]);
+                        one_string_mixed.push_back(std::toupper(in_str[l + 1]));
+
+                        return_string.push_back(one_string_lower);
+                        return_string.push_back(one_string_upper);
+                        return_string.push_back(one_string_mixed);
+                    }
+
+                }
+            }
+        }
     }
+
 
     return return_string;
 

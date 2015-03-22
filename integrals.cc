@@ -1102,7 +1102,6 @@ void ExplorerIntegrals::compute_chol_integrals()
         L->set(i[0],i[1]*nmo_ + i[2],value);
      });
     //ThreeIntegral_->zero();
-
     SharedMatrix pqrs(new Matrix("pqrs", nmo_*nmo_, nmo_*nmo_));
 
 
@@ -1124,6 +1123,8 @@ void ExplorerIntegrals::compute_chol_integrals()
             }
         }
     }
+    pqrs->print();
+
     outfile->Printf("Done with cholesky");
 }
 
