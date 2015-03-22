@@ -59,6 +59,11 @@ protected:
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos;
 
+    /// List of eigenvalues for fock alpha
+    std::vector<double> Fa;
+    /// List of eigenvalues for fock beta
+    std::vector<double> Fb;
+
     /// Map from all the MOs to the alpha core
     std::map<size_t,size_t> mos_to_acore;
     /// Map from all the MOs to the alpha active
@@ -171,7 +176,7 @@ protected:
     /// Param:  std::string is the lables - "cav"
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
-    std::vector<std::string> generate_all_indices(std::string);
+    std::vector<std::string> generate_all_indices(const std::string, std::string);
 
 
 public:
