@@ -105,26 +105,6 @@ void THREE_DSRG_MRPT2::startup()
     for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
     for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
-    for (size_t p = 0; p < acore_mos.size(); ++p){
-        outfile->Printf("\nacore_mos[%d] =  %d mos_to_acore[%d] = %d \n",p, acore_mos[p],p, mos_to_acore[p] );
-    }
-    for (size_t p = 0; p < bcore_mos.size(); ++p){
-        outfile->Printf("\nbcore_mos[%d] =  %d mos_to_bcore[%d] = %d \n",p, bcore_mos[p],p, mos_to_bcore[p] );
-    }
-    for (size_t p = 0; p < aactv_mos.size(); ++p){
-        outfile->Printf("\naactv_mos[%d] =  %d mos_to_aactv[%d] = %d \n",p, aactv_mos[p],p, mos_to_aactv[p] );
-    }
-    for (size_t p = 0; p < bactv_mos.size(); ++p){
-        outfile->Printf("\nbactv_mos[%d] =  %d mos_to_bactv[%d] = %d \n",p, bactv_mos[p],p, mos_to_bactv[p] );
-    }
-    for (size_t p = 0; p < avirt_mos.size(); ++p){
-        outfile->Printf("\navirt_mos[%d] =  %d mos_to_avirt[%d] = %d \n",p, avirt_mos[p],p, mos_to_avirt[p] );
-    }
-    for (size_t p = 0; p < bvirt_mos.size(); ++p){
-        outfile->Printf("\nbvirt_mos[%d] =  %d mos_to_bvirt[%d] = %d \n",p, bvirt_mos[p],p, mos_to_bvirt[p] );
-    }
-
-
     BlockedTensor::set_expert_mode(true);
 
     BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
