@@ -44,6 +44,9 @@ protected:
     // Source Operator
     string source_;
 
+    // Exponent of Delta
+    double expo_delta_;
+
     // Taylor Expansion Threshold
     int taylor_threshold_;
     int taylor_order_;
@@ -129,19 +132,21 @@ protected:
     // Compute an element of T according to source operator
     double ElementT(const string& source, const double& D, const double& V);
 
-    // Taylor Expansion of [1 - exp(-s * Z^2)] / Z = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
-            double value = Z, tmp = Z;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= -1.0 * std::pow(Z, 2.0) / (x+2);
-                value += tmp;
-            }
-            return value;
-        }else{return 0.0;}
+    // Taylor Expansion of [1 - exp(-|Z|^g)] / Z = Z^{g-1} \sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{(n-1)g})
+    double Taylor_Exp(const double& Z, const int& n, const double& g){
+        bool Znegative = Z < 0.0 ? 1 : 0;
+        double Zcopy = Znegative ? -Z : Z;
+
+        double value = 1, tmp = 1;
+        for(int x=0; x<(n-1); ++x){
+            tmp *= -1.0 * pow(Zcopy, g) / (x+2);
+            value += tmp;
+        }
+        value *= pow(Zcopy, g - 1.0);
+        return Znegative ? -value : value;
     }
 
-    // Taylor Expansion of [1 - exp(-s * |Z|)] / Z = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    // Taylor Expansion of [1 - exp(-|Z|)] / Z
     double Taylor_Exp_Linear(const double& Z, const int& n){
         bool Zabs = Z > 0.0 ? 1 : 0;
         if(n > 0){

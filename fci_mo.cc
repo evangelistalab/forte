@@ -49,11 +49,16 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     double Print_CI_Vector = options.get_double("PRINT_CI_VECTOR");
     if(nroot > Evecs_->coldim()){
         outfile->Printf("\n  Too many roots of interest! There are only %3d roots that satisfy the condition!", Evecs_->coldim());
-        exit(1);
+        throw PSIEXCEPTION("Too many roots of interest.");
     }
     Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
 
-    int ground_state = 0;
+    int root = options.get_int("ROOT");
+    if(root >= nroot){
+        outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot, root);
+        outfile->Printf("\n  ROOT must be smaller than NROOT.");
+        throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
+    }
 
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
@@ -67,7 +72,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
 //    (*L1a).print();
     outfile->Printf("\n  Forming one-particle density matrix ...");
     outfile->Flush();
-    FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
+    FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 1){
@@ -128,7 +133,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         L1b = Tensor::build(kCore,"L1b", {na_, na_});
         outfile->Printf("\n  Forming one-particle density matrix ...");
         outfile->Flush();
-        FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
+        FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
         outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
         if(print_ > 1){
@@ -162,7 +167,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
     outfile->Printf("\n  Forming two-particle density cumulant ...");
     outfile->Flush();
-    FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
+    FormCumulant2_A(determinant_, CI_vec_, root, L2aa_, L2ab_, L2bb_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 2){
@@ -171,8 +176,6 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         print2PDC("L2bb", L2bb_, print_);
     }
     fill_cumulant2();
-//    L2aa->print();
-//    L2ab->print();
 
     // Form 3-PDC
     L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
@@ -189,7 +192,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     outfile->Printf("\n  Forming three-particle density cumulant ...");
     outfile->Flush();
     if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-        FormCumulant3_A(determinant_, CI_vec_, ground_state, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+        FormCumulant3_A(determinant_, CI_vec_, root, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
     }
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
