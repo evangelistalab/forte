@@ -86,13 +86,79 @@ public:
     double diag_fock_b(int p) {return fock_matrix_b[p * aptei_idx_ + p];}
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
-    double aptei_aa(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_aa[aptei_index(p,q,r,s)];}
+    double aptei_aa(size_t p,size_t q,size_t r, size_t s)
+    {
+        return aphys_tei_aa[aptei_index(p,q,r,s)];
+    }
 
+    double aptei_aa(size_t p,size_t q,size_t r, size_t s, std::string str)
+    {
+        if(str == "CONVENTIONAL")
+        {
+            return aphys_tei_aa[aptei_index(p,q,r,s)];
+        }
+        else
+        {
+            double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
+            for(size_t g = 0; g < nthree_; g++){
+                vpqrsalphaC += (get_three_integral(g, p, r)
+                          * get_three_integral(g,q, s));
+                vpqrsalphaE += (get_three_integral(g, p, s)
+                          * get_three_integral(g, q, r));
+
+            }
+            return (vpqrsalphaC - vpqrsalphaE);
+        }
+
+    }
     /// The antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||rs>
     double aptei_ab(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_ab[aptei_index(p,q,r,s)];}
 
+    double aptei_ab(size_t p,size_t q,size_t r, size_t s, std::string str)
+    {
+       if(str == "CONVENTIONAL")
+       {
+           return aphys_tei_ab[aptei_index(p,q,r,s)];
+       }
+       else
+       {
+           double vpqrsalphaC = 0.0;
+           for(size_t g = 0; g < nthree_; g++){
+               vpqrsalphaC += (get_three_integral(g, p, r)
+                               * get_three_integral(g, q, s));
+
+           }
+           return (vpqrsalphaC);
+       }
+
+    }
+
     /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
     double aptei_bb(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_bb[aptei_index(p,q,r,s)];}
+    double aptei_bb(size_t p,size_t q,size_t r, size_t s, std::string str)
+    {
+        {
+            if(str == "CONVENTIONAL")
+            {
+                return aphys_tei_bb[aptei_index(p,q,r,s)];
+            }
+            else
+            {
+                double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
+                for(size_t g = 0; g < nthree_; g++){
+                    vpqrsalphaC += (get_three_integral(g, p, r)
+                              * get_three_integral(g, q, s));
+                    vpqrsalphaE += (get_three_integral(g, p, s)
+                              * get_three_integral(g, q, r));
+
+                }
+                return (vpqrsalphaC - vpqrsalphaE);
+            }
+
+        }
+
+
+    }
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
 

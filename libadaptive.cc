@@ -326,6 +326,9 @@ read_options(std::string name, Options &options)
         options.add_str("SOURCE", "STANDARD", "STANDARD AMP EMP2 LAMP LEMP2");
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
+        /*- DMRG-CI or CAS-CI reference -*/
+        options.add_str("CASTYPE", "CAS", "CAS DMRG");
+        
     }
 
     return true;
@@ -362,18 +365,40 @@ libadaptive(Options &options)
         apici->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
-        FCI_MO fci_mo(options,ints_);
-        Reference reference = fci_mo.reference();
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
-        dsrg_mrpt2->compute_energy();
+        if(options.get_str("CASTYPE")=="CAS")
+        {
+            FCI_MO fci_mo(options,ints_);
+            Reference reference = fci_mo.reference();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+            dsrg_mrpt2->compute_energy();
+        }
+        else
+        {
+            Reference reference("DMRG");
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+            dsrg_mrpt2->compute_energy();
+
+        }
+
     }
     if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
-        FCI_MO fci_mo(options,ints_);
-        Reference reference = fci_mo.reference();
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
-        three_dsrg_mrpt2->compute_energy();
+        if(options.get_str("CASTYPE")=="CAS")
+        {
+            FCI_MO fci_mo(options,ints_);
+            Reference reference = fci_mo.reference();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+            three_dsrg_mrpt2->compute_energy();
+        }
+        else
+        {
+            Reference reference("DMRG");
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+            three_dsrg_mrpt2->compute_energy();
+        }
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
