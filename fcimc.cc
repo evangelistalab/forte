@@ -244,6 +244,7 @@ double FCIQMC::compute_energy()
     size_t pre_iter = 0;
 
     std::vector<double> shifts;
+    std::vector<double> Eprojs;
 
     for (iter_ = 1; iter_ <= maxiter_; ++iter_){
         if (!shift_flag && do_shift_ && nWalkers_ > shift_num_walkers_) {
@@ -304,16 +305,26 @@ double FCIQMC::compute_energy()
         annihilate(walkers,new_walkers);
         timer_off("FCIQMC:Annihilation");
 
-        if (iter_ % energy_estimate_freq_ == 0)
-            print_iter_info(iter_,reference, walkers, true, true, true);
-        else
-            print_iter_info(iter_,reference, walkers, true, true, false);
+        // calculate iter info
+        count_walkers(walkers);
+        Eprojs.push_back(compute_proj_energy(reference, walkers));
+
+        if (iter_ % energy_estimate_freq_ == 0){
+            compute_var_energy(walkers);
+            print_iter_info(iter_, true, true, true);
+        } else
+            print_iter_info(iter_, true, true, false);
     }
 
     outfile->Printf("\n\nFCIQMC calculation ended with:");
-    print_iter_info(--iter_,reference, walkers, true, true, true);
-    if (do_shift_)
+    outfile->Printf("\nFinal iter:");
+    print_iter_info(--iter_, true, true, true);
+    outfile->Printf("\nProjectional Energy info:");
+    print_Eproj_info(Eprojs);
+    if (do_shift_) {
+        outfile->Printf("\nShift info:");
         print_shift_info(shifts);
+    }
     timer_off("FCIQMC:Energy");
     return 0.0;
 }
@@ -823,19 +834,19 @@ double FCIQMC::count_walkers(walker_map& walkers) {
 double FCIQMC::compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers) {
     timer_on("FCIQMC:Calc_Eproj");
     double Cref = walkers[ref];
-    double Eproj = nuclear_repulsion_energy_;
+    Eproj_ = nuclear_repulsion_energy_;
     for (auto walker:walkers){
         const BitsetDeterminant& det = walker.first;
         double Cwalker = walker.second;
-        Eproj += ref.slater_rules(det)*Cwalker/Cref;
+        Eproj_ += ref.slater_rules(det)*Cwalker/Cref;
     }
     timer_off("FCIQMC:Calc_Eproj");
-    return Eproj;
+    return Eproj_;
 }
 
 double FCIQMC::compute_var_energy(walker_map& walkers) {
     timer_on("FCIQMC:Calc_Evar");
-    double Evar = 0;
+    Evar_ = 0;
     double mod2 = 0.0;
     for (auto walker:walkers){
         const BitsetDeterminant& det = walker.first;
@@ -844,27 +855,38 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
         for (auto walker2:walkers){
             const BitsetDeterminant& det2 = walker2.first;
             double Cwalker2 = walker2.second;
-            Evar += det.slater_rules(det2)*Cwalker*Cwalker2;
+            Evar_ += det.slater_rules(det2)*Cwalker*Cwalker2;
         }
 //        det.print();
 //        outfile->Printf("\nCwalker: %lf",Cwalker);
     }
-    Evar /= mod2;
-    Evar += nuclear_repulsion_energy_;
+    Evar_ /= mod2;
+    Evar_ += nuclear_repulsion_energy_;
     timer_off("FCIQMC:Calc_Evar");
-    return Evar;
+    return Evar_;
 }
 
-void FCIQMC::print_iter_info(size_t iter, BitsetDeterminant& ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar){
-    outfile->Printf("\niter:%zu ended with %zu dets",iter, walkers.size());
+void FCIQMC::print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar){
+    outfile->Printf("\niter:%zu ended with %zu dets",iter, nDets_);
     if (countWalkers)
-        outfile->Printf(", %lf walkers", count_walkers(walkers));
+        outfile->Printf(", %lf walkers", nWalkers_);
     if (calcEproj)
-        outfile->Printf(", proj E=%.12lf", compute_proj_energy(ref, walkers));
+        outfile->Printf(", proj E=%.12lf", Eproj_);
     if (calcEvar)
-        outfile->Printf(", var E=%.12lf", compute_var_energy(walkers));
+        outfile->Printf(", var E=%.12lf", Evar_);
     if (do_shift_)
         outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
+}
+
+void FCIQMC::print_Eproj_info(std::vector<double> Eprojs){
+    double sum = 0.0;
+    for (size_t iter = iter_*3/4; iter<iter_; iter++) {
+        sum += Eprojs[iter];
+//        outfile->Printf("\n%d\t: %.12lf",iter, Eprojs[iter]);
+    }
+
+    sum /= iter_-iter_*3/4;
+    outfile->Printf("\nAverage Eproj=%.12lf", sum);
 }
 
 void FCIQMC::print_shift_info(std::vector<double> shifts){
