@@ -61,6 +61,8 @@ public:
     Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb);
     Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb,
               ambit::Tensor L3aaa,ambit::Tensor L3aab,ambit::Tensor L3abb,ambit::Tensor L3bbb);
+    //Constructor for DMRG based reference.
+    Reference(std::string);
     ~Reference();
 
     double get_Eref() {return Eref_;}
