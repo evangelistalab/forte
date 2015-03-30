@@ -108,12 +108,18 @@ private:
     size_t maxiter_;
     /// HartreeForkEnergy
     double Ehf_;
+    /// Projectional energy
+    double Eproj_;
+    /// Variational energy
+    double Evar_;
     /// Start Number of walkers
     double start_num_walkers_;
     /// The shift of energy
     double shift_;
     /// Number of walkers
     double nWalkers_;
+    /// Number of determinants
+    double nDets_;
     /// Shift the Hamiltonian?
     bool do_shift_;
     double shift_num_walkers_;
@@ -157,7 +163,8 @@ private:
     double count_walkers(walker_map& walkers);
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
-    void print_iter_info(size_t iter, BitsetDeterminant &ref, walker_map& walkers, bool countWalkers, bool calcEproj, bool calcEvar);
+    void print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar);
+    void print_Eproj_info(std::vector<double> Eprojs);
     void print_shift_info(std::vector<double> shifts);
 };
 
