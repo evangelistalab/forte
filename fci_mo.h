@@ -41,6 +41,9 @@ protected:
 
     int print_;
 
+    //Used for getting ThreeIntegral integrals
+    std::string int_type_;
+
     // Nucear Repulsion Energy
     double e_nuc_;
 
