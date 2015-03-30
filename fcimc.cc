@@ -356,56 +356,89 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
         size_t sumgen = sumSingle+sumDouble;
         timer_off("FCIQMC:Compute_excitations");
 
-        for (size_t detW = 0; detW < nid; ++detW){
-            BitsetDeterminant new_det(det);
-            // Select a random number within the range of allowed determinants
-//            singleWalkerSpawn(new_det,det,pgen,sumgen);
-            size_t rand_ext = rand_int() % sumgen;
-            if (rand_ext<sumDouble)
-                detDoubleExcitation(new_det, doubleExcitations[rand_ext]);
-            else
-                detSingleExcitation(new_det, singleExcitations[rand_ext-sumDouble]);
+        switch (spawn_type_) {
+        case random:
+            for (size_t detW = 0; detW < nid; ++detW){
+                BitsetDeterminant new_det(det);
+                // Select a random number within the range of allowed determinants
+    //            singleWalkerSpawn(new_det,det,pgen,sumgen);
+                size_t rand_ext = rand_int() % sumgen;
+                if (rand_ext<sumDouble)
+                    detDoubleExcitation(new_det, doubleExcitations[rand_ext]);
+                else
+                    detSingleExcitation(new_det, singleExcitations[rand_ext-sumDouble]);
 
 
-            double HIJ = new_det.slater_rules(det);
-            double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
-            int pspawn_floor = std::floor(pspawn);
-            if (rand_real() < pspawn - double(pspawn_floor)){
-                pspawn_floor++;
+                double HIJ = new_det.slater_rules(det);
+                double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
+                int pspawn_floor = std::floor(pspawn);
+                if (rand_real() < pspawn - double(pspawn_floor)){
+                    pspawn_floor++;
+                }
+
+                int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                // TODO: check
+                if (nspawn != 0){
+                    new_walkers[new_det] += double(nspawn);
+                }
+
+    //            outfile->Printf("\n  Determinant %d:",count);
+    //            det.print();
+    //            outfile->Printf(" spawned %d (%f):",nspawn,pspawn);
+    //            new_det.print();
+    //            if (count == 15){
+    //                outfile->Printf("\n  Determinant %d spawn detail:",count);
+    //                outfile->Printf("\n  Random: %zu",rand_ext);
+    //                outfile->Printf("\n  NS %zu, ND %zu",sumSingle,sumDouble);
+    //                size_t ii,aa,jj,bb;
+    //                std::tie (ii,aa,jj,bb) = doubleExcitations[rand_ext];
+    //                outfile->Printf("\n  Ext: %zu %zu %zu %zu",ii,aa,jj,bb);
+    //                std::vector<std::tuple<size_t,size_t>>::iterator t1 ;
+    //                for(t1=singleExcitations.begin(); t1!=singleExcitations.end(); t1++){
+    //                    size_t ii,aa;
+    //                    std::tie (ii,aa) = *t1;
+    //                    outfile->Printf("\n %zu %zu",ii,aa);
+    //                }
+    //                std::vector<std::tuple<size_t,size_t,size_t,size_t>>::iterator t2 ;
+    //                for(t2=doubleExcitations.begin(); t2!=doubleExcitations.end(); t2++){
+    //                    size_t ii,aa,jj,bb;
+    //                    std::tie (ii,aa,jj,bb) = *t2;
+    //                    outfile->Printf("\n %zu %zu %zu %zu",ii,aa,jj,bb);
+    //                }
+    //            }
             }
+            break;
+        case all:
+            for (size_t gen = 0; gen < sumgen; ++gen){
+                BitsetDeterminant new_det(det);
+                if (gen<sumDouble)
+                    detDoubleExcitation(new_det, doubleExcitations[gen]);
+                else
+                    detSingleExcitation(new_det, singleExcitations[gen-sumDouble]);
 
-            int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+                double HIJ = new_det.slater_rules(det);
+                double pspawn = time_step_ * std::fabs(HIJ) * nid;
+                int pspawn_floor = std::floor(pspawn);
+                if (rand_real() < pspawn - double(pspawn_floor)){
+                    pspawn_floor++;
+                }
 
-            // TODO: check
-            if (nspawn != 0){
-                new_walkers[new_det] += double(nspawn);
+                int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                // TODO: check
+                if (nspawn != 0){
+                    new_walkers[new_det] += double(nspawn);
+                }
             }
-
-//            outfile->Printf("\n  Determinant %d:",count);
-//            det.print();
-//            outfile->Printf(" spawned %d (%f):",nspawn,pspawn);
-//            new_det.print();
-//            if (count == 15){
-//                outfile->Printf("\n  Determinant %d spawn detail:",count);
-//                outfile->Printf("\n  Random: %zu",rand_ext);
-//                outfile->Printf("\n  NS %zu, ND %zu",sumSingle,sumDouble);
-//                size_t ii,aa,jj,bb;
-//                std::tie (ii,aa,jj,bb) = doubleExcitations[rand_ext];
-//                outfile->Printf("\n  Ext: %zu %zu %zu %zu",ii,aa,jj,bb);
-//                std::vector<std::tuple<size_t,size_t>>::iterator t1 ;
-//                for(t1=singleExcitations.begin(); t1!=singleExcitations.end(); t1++){
-//                    size_t ii,aa;
-//                    std::tie (ii,aa) = *t1;
-//                    outfile->Printf("\n %zu %zu",ii,aa);
-//                }
-//                std::vector<std::tuple<size_t,size_t,size_t,size_t>>::iterator t2 ;
-//                for(t2=doubleExcitations.begin(); t2!=doubleExcitations.end(); t2++){
-//                    size_t ii,aa,jj,bb;
-//                    std::tie (ii,aa,jj,bb) = *t2;
-//                    outfile->Printf("\n %zu %zu %zu %zu",ii,aa,jj,bb);
-//                }
-//            }
+            break;
+        case ground_and_random:
+            break;
+        default:
+            break;
         }
+
+
         count++;
     }
 
