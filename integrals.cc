@@ -1123,7 +1123,6 @@ void ExplorerIntegrals::compute_chol_integrals()
             }
         }
     }
-    pqrs->print();
 
     outfile->Printf("Done with cholesky");
 }
