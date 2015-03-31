@@ -30,10 +30,11 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     startup();
     transform_integrals();
     read_one_electron_integrals();
-    if (options_.get_str("INT_TYPE") == "DF"){
+    integral_type_ = options_.get_str("INT_TYPE");
+    if (integral_type_ == "DF"){
         compute_df_integrals();
     }
-    else if (options_.get_str("INT_TYPE")  == "CHOLESKY"){ 
+    else if (integral_type_ == "CHOLESKY"){ 
         compute_chol_integrals();
     }
     else

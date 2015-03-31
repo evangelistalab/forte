@@ -26,7 +26,6 @@
 #define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS 1
 
 #include "integrals.h"
-#include <liboptions/liboptions.h>
 #include "excitation_determinant.h"
 #include "boost/dynamic_bitset.hpp"
 
@@ -148,8 +147,6 @@ private:
     // Data
     /// Number of non-frozen molecular orbitals
     size_t nmo_;
-    psi::Options options;
-    std::string int_type_ = options.get_str("INT_TYPE");
 public:
     /// The occupation vector for the alpha electrons (does not include the frozen orbitals)
     boost::dynamic_bitset<> alfa_bits_;
