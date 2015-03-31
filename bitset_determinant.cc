@@ -282,9 +282,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
     const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
 
-    outfile->Printf("\n Slater rules \n");
     std::string int_type_ = ints_->which_integral();
-    outfile->Printf("\n%s", int_type_.c_str());
 
     int nadiff = 0;
     int nbdiff = 0;
