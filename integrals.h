@@ -145,9 +145,12 @@ public:
             else
             {
                 double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
+
                 for(size_t g = 0; g < nthree_; g++){
+
                     vpqrsalphaC += (get_three_integral(g, p, r)
                               * get_three_integral(g, q, s));
+
                     vpqrsalphaE += (get_three_integral(g, p, s)
                               * get_three_integral(g, q, r));
 
@@ -229,6 +232,7 @@ public:
     void compute_chol_integrals();
     /// Return value of df/cd integral
     double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * ncmo_ + q);}
+    std::string which_integral(){ return integral_type_;}
 
 private:
 
@@ -236,6 +240,8 @@ private:
 
     /// The options object
     psi::Options& options_;
+    /// The integral_type
+    std::string integral_type_;
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction restricted_;
