@@ -1014,7 +1014,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     // Maximum number of vectors stored
     int maxdim = subspace_size;
 
-    double e_convergence = 1.0e-11;
+    double e_convergence = 1.0e-12;
 
     if (print_details_){
         outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
