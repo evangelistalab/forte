@@ -29,6 +29,8 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     // Print Level
     print_ = options.get_int("PRINT");
 
+    int_type_ = options.get_str("INT_TYPE");
+
     // Basic Preparation: Form Determinants
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     startup(options);
@@ -49,11 +51,16 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     double Print_CI_Vector = options.get_double("PRINT_CI_VECTOR");
     if(nroot > Evecs_->coldim()){
         outfile->Printf("\n  Too many roots of interest! There are only %3d roots that satisfy the condition!", Evecs_->coldim());
-        exit(1);
+        throw PSIEXCEPTION("Too many roots of interest.");
     }
     Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
 
-    int ground_state = 0;
+    int root = options.get_int("ROOT");
+    if(root >= nroot){
+        outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot, root);
+        outfile->Printf("\n  ROOT must be smaller than NROOT.");
+        throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
+    }
 
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
@@ -67,7 +74,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
 //    (*L1a).print();
     outfile->Printf("\n  Forming one-particle density matrix ...");
     outfile->Flush();
-    FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
+    FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 1){
@@ -128,7 +135,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         L1b = Tensor::build(kCore,"L1b", {na_, na_});
         outfile->Printf("\n  Forming one-particle density matrix ...");
         outfile->Flush();
-        FormDensity_B(determinant_, CI_vec_, ground_state, Da_, Db_);
+        FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
         outfile->Printf("\t\t\t\tDone.");
         outfile->Flush();
         if(print_ > 1){
@@ -162,7 +169,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
     outfile->Printf("\n  Forming two-particle density cumulant ...");
     outfile->Flush();
-    FormCumulant2_A(determinant_, CI_vec_, ground_state, L2aa_, L2ab_, L2bb_);
+    FormCumulant2_A(determinant_, CI_vec_, root, L2aa_, L2ab_, L2bb_);
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
     if(print_ > 2){
@@ -171,8 +178,6 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         print2PDC("L2bb", L2bb_, print_);
     }
     fill_cumulant2();
-//    L2aa->print();
-//    L2ab->print();
 
     // Form 3-PDC
     L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
@@ -189,7 +194,7 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     outfile->Printf("\n  Forming three-particle density cumulant ...");
     outfile->Flush();
     if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-        FormCumulant3_A(determinant_, CI_vec_, ground_state, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+        FormCumulant3_A(determinant_, CI_vec_, root, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
     }
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
@@ -1112,24 +1117,23 @@ double FCI_MO::ThreeOP(const libadaptive::StringDeterminant &J, libadaptive::Str
 
 void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
-    for(size_t p=0; p<ncmo_; ++p){
-        for(size_t q=0; q<ncmo_; ++q){
-            double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
-            for(size_t r=0; r<nh_; ++r){
-                size_t nr = idx_h_[r];
-                for(size_t s=0; s<nh_; ++s){
-                    size_t ns = idx_h_[s];
-                    vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
-                    vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
-                    vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
-                    vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
+        for(size_t p=0; p<ncmo_; ++p){
+            for(size_t q=0; q<ncmo_; ++q){
+                double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
+                for(size_t r=0; r<nh_; ++r){
+                    size_t nr = idx_h_[r];
+                    for(size_t s=0; s<nh_; ++s){
+                        size_t ns = idx_h_[s];
+                        vaa += integral_->aptei_aa(q,nr,p,ns, int_type_) * Da_[nr][ns];
+                        vab += integral_->aptei_ab(q,nr,p,ns, int_type_) * Db_[nr][ns];
+                        vba += integral_->aptei_ab(nr,q,ns,p, int_type_) * Da_[nr][ns];
+                        vbb += integral_->aptei_bb(q,nr,p,ns, int_type_) * Db_[nr][ns];
+                    }
                 }
+                A[p][q] = integral_->oei_a(p,q) + vaa + vab;
+                B[p][q] = integral_->oei_b(p,q) + vba + vbb;
             }
-            A[p][q] = integral_->oei_a(p,q) + vaa + vab;
-            B[p][q] = integral_->oei_b(p,q) + vba + vbb;
-        }
-    }
-    timer_off("Form Fock");
+        } timer_off("Form Fock");
 }
 
 void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count){
@@ -1357,9 +1361,9 @@ void FCI_MO::compute_ref(){
                 size_t nr = idx_a_[r];
                 for(size_t s=0; s<na_; ++s){
                     size_t ns = idx_a_[s];
-                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns) * L2aa_[p][q][r][s];
-                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns) * L2bb_[p][q][r][s];
-                    Eref_ += integral_->aptei_ab(np,nq,nr,ns) * L2ab_[p][q][r][s];
+                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns, int_type_) * L2aa_[p][q][r][s];
+                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns, int_type_) * L2bb_[p][q][r][s];
+                    Eref_ += integral_->aptei_ab(np,nq,nr,ns, int_type_) * L2ab_[p][q][r][s];
                 }
             }
         }

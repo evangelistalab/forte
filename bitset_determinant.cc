@@ -282,6 +282,8 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
     const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
 
+    std::string int_type_ = ints_->which_integral();
+
     int nadiff = 0;
     int nbdiff = 0;
     // Count how many differences in mos are there
@@ -327,10 +329,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
+                matrix_element += sign * ints_->aptei_aa(i,p,j,p, int_type_);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
+                matrix_element += sign * ints_->aptei_ab(i,p,j,p, int_type_);
             }
         }
     }
@@ -347,10 +349,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
+                matrix_element += sign * ints_->aptei_ab(p,i,p,j, int_type_);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
+                matrix_element += sign * ints_->aptei_bb(i,p,j,p, int_type_);
             }
         }
     }
@@ -371,7 +373,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
+        matrix_element = sign * ints_->aptei_aa(i,j,k,l, int_type_);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -391,7 +393,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
+        matrix_element = sign * ints_->aptei_bb(i,j,k,l, int_type_);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -406,7 +408,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
+        matrix_element = sign * ints_->aptei_ab(i,j,k,l, int_type_);
     }
     return(matrix_element);
 }
