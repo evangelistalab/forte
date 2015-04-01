@@ -122,20 +122,20 @@ public:
 protected:
     const std::vector<BitsetDeterminant>& space_;
     // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t,int>>> a_ann_list;
-    std::vector<std::vector<std::pair<size_t,int>>> b_ann_list;
+    std::vector<std::vector<std::pair<size_t,short>>> a_ann_list;
+    std::vector<std::vector<std::pair<size_t,short>>> b_ann_list;
     // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t,int>>> a_cre_list;
-    std::vector<std::vector<std::pair<size_t,int>>> b_cre_list;
+    std::vector<std::vector<std::pair<size_t,short>>> a_cre_list;
+    std::vector<std::vector<std::pair<size_t,short>>> b_cre_list;
 
     // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t,int,int>>> aa_ann_list;
-    std::vector<std::vector<std::tuple<size_t,int,int>>> ab_ann_list;
-    std::vector<std::vector<std::tuple<size_t,int,int>>> bb_ann_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_ann_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list;
     // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t,int,int>>> aa_cre_list;
-    std::vector<std::vector<std::tuple<size_t,int,int>>> ab_cre_list;
-    std::vector<std::vector<std::tuple<size_t,int,int>>> bb_cre_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list;
     std::vector<double> diag_;
 };
 
