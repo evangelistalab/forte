@@ -30,17 +30,7 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     startup();
     transform_integrals();
     read_one_electron_integrals();
-    integral_type_ = options_.get_str("INT_TYPE");
-    if (integral_type_ == "DF"){
-        compute_df_integrals();
-    }
-    else if (integral_type_ == "CHOLESKY"){ 
-        compute_chol_integrals();
-    }
-    else
-    {
-        read_two_electron_integrals();
-    }
+    gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
@@ -55,6 +45,20 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
 ExplorerIntegrals::~ExplorerIntegrals()
 {
     cleanup();
+}
+
+void ExplorerIntegrals::gather_integrals() {
+    integral_type_ = options_.get_str("INT_TYPE");
+    if (integral_type_ == "DF"){
+        compute_df_integrals();
+    }
+    else if (integral_type_ == "CHOLESKY"){
+        compute_chol_integrals();
+    }
+    else
+    {
+        read_two_electron_integrals();
+    }
 }
 
 void ExplorerIntegrals::update_integrals(bool freeze_core)
