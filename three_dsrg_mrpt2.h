@@ -59,6 +59,11 @@ protected:
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos;
 
+    /// List of eigenvalues for fock alpha
+    std::vector<double> Fa;
+    /// List of eigenvalues for fock beta
+    std::vector<double> Fb;
+
     /// Map from all the MOs to the alpha core
     std::map<size_t,size_t> mos_to_acore;
     /// Map from all the MOs to the alpha active
@@ -102,6 +107,9 @@ protected:
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
     boost::shared_ptr<Matrix> RExp2M_;
     ambit::BlockedTensor ThreeIntegral;
+
+    /// A vector of strings that avoids creating ccvv indices
+    std::vector<std::string> no_hhpp_;
 
     // => Class initialization and termination <= //
 
@@ -162,8 +170,14 @@ protected:
         }else{return 0.0;}
     }
 
-    ///This function will generate all the possible string combinations minus the ccvv
+    ///This function will remove the indices that do not have at least one active index
     std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& in_str_vec);
+    ///This function generates all possible MO spaces and spin components
+    /// Param:  std::string is the lables - "cav"
+    /// Will take a string like cav and generate all possible combinations of this
+    /// for a four character string
+    std::vector<std::string> generate_all_indices(const std::string, std::string);
+
 
 public:
 

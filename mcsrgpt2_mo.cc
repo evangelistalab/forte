@@ -34,11 +34,18 @@ MCSRGPT2_MO::MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints)
 //    std::iota(vec_D.begin(), vec_D.end(), 0);
 
 //    ofstream out_V;
-//    out_V.open("V_0.1");
+//    out_V.open("T_V0.1");
 ////    out_V << "     D        value" << endl;
 //    for(const double& n: vec_D){
 //        double D = n * 0.0001 - 0.1;
 //        double value = ElementT(source_,D,0.1);
+//        out_V << boost::format("%.5f %20.15f\n") % D % value;
+//    }   
+//    out_V.close();
+//    out_V.open("H_V0.1");
+//    for(const double& n: vec_D){
+//        double D = n * 0.0001 - 0.1;
+//        double value = ElementRH(source_,D,0.1);
 //        out_V << boost::format("%.5f %20.15f\n") % D % value;
 //    }
 //    out_V.close();
@@ -87,16 +94,18 @@ void MCSRGPT2_MO::startup(Options &options){
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
     if(s_ < 0){
-        outfile->Printf("\n  S parameter for DSRG must >= 0!");
-        exit(1);
+        throw PSIEXCEPTION("DSRG_S cannot be negative numbers.");
     }
     taylor_threshold_ = options.get_int("TAYLOR_THRESHOLD");
     if(taylor_threshold_ <= 0){
-        outfile->Printf("\n  Threshold for Taylor expansion must be an integer greater than 0!");
-        exit(1);
+        throw PSIEXCEPTION("TAYLOR_THRESHOLD must be an integer greater than 0.");
     }
-    int e_conv = -log10(options.get_double("E_CONVERGENCE"));
-    taylor_order_ = int(0.5 * (e_conv / taylor_threshold_ + 1));
+    expo_delta_ = options.get_double("DELTA_EXPONENT");
+    if(expo_delta_ <= 1.0){
+        throw PSIEXCEPTION("DELTA_EXPONENT must be greater than 1.0.");
+    }
+    double e_conv = -log10(options.get_double("E_CONVERGENCE"));
+    taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
     outfile->Printf("\n  Correlating Subspace Indices:");
@@ -200,11 +209,11 @@ double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const doubl
     switch (sourcemap[source]) {
     case AMP:{
         double RD = D / V;
-        return V * exp(-s_ * RD * RD);
+        return V * exp(-s_ * pow(fabs(RD), expo_delta_));
     }
     case EMP2:{
         double RD = D / (V * V);
-        return V * exp(-s_ * RD * RD);
+        return V * exp(-s_ * pow(fabs(RD), expo_delta_));
     }
     case LAMP:{
         double RD = D / V;
@@ -216,7 +225,7 @@ double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const doubl
         return V * exp(-s_ * fabs(RD));
     }
     default:{
-        return V * exp(-s_ * D * D);
+        return V * exp(-s_ * pow(fabs(D), expo_delta_));
     }
     }
 }
@@ -340,20 +349,20 @@ double MCSRGPT2_MO::ElementT(const string &source, const double &D, const double
     switch (sourcemap[source]) {
     case AMP:{
         double RD = D / V;
-        double Z = sqrt(s_) * RD;
+        double Z = pow(s_, 1 / expo_delta_) * RD;
         if(fabs(Z) < pow(0.1, taylor_threshold_)){
-            return Taylor_Exp(Z, taylor_order_) * sqrt(s_);
+            return Taylor_Exp(Z, taylor_order_, expo_delta_) * sqrt(s_);
         }else{
-            return (1 - exp(-1.0 * s_ * pow(RD, 2.0))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(fabs(RD), expo_delta_))) * V / D;
         }
     }
     case EMP2:{
         double RD = D / V;
-        double Z = sqrt(s_) * RD / V;
+        double Z = pow(s_, 1 / expo_delta_) * RD / V;
         if(fabs(Z) < pow(0.1, taylor_threshold_)){
-            return Taylor_Exp(Z, taylor_order_) * sqrt(s_) / V;
+            return Taylor_Exp(Z, taylor_order_, expo_delta_) * sqrt(s_) / V;
         }else{
-            return (1 - exp(-1.0 * s_ * pow(RD / V, 2.0))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(fabs(RD / V), expo_delta_))) * V / D;
         }
     }
     case LAMP:{
@@ -375,11 +384,11 @@ double MCSRGPT2_MO::ElementT(const string &source, const double &D, const double
         }
     }
     default:{
-        double Z = sqrt(s_) * D;
+        double Z = pow(s_, 1 / expo_delta_) * D;
         if(fabs(Z) < pow(0.1, taylor_threshold_)){
-            return Taylor_Exp(Z, taylor_order_) * sqrt(s_) * V;
+            return Taylor_Exp(Z, taylor_order_, expo_delta_) * pow(s_, 1 / expo_delta_) * V;
         }else{
-            return (1 - exp(-1.0 * s_ * pow(D, 2.0))) * V / D;
+            return (1 - exp(-1.0 * s_ * pow(fabs(D), expo_delta_))) * V / D;
         }
     }
     }
@@ -482,48 +491,6 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
             double Da = Fa_[ni][ni] - Fa_[na][na];
             double Db = Fb_[ni][ni] - Fb_[na][na];
 
-//            if(ni == 2 && na == 3){
-//                outfile->Printf("\n  Da[%zu][%zu]         = %20.15f", ni, na, Da);
-//                outfile->Printf("\n  Fa[%zu][%zu]         = %20.15f", ni, na, Fa_[ni][na]);
-//                outfile->Printf("\n RFa[%zu][%zu]         = %20.15f", ni, na, RFa);
-//                outfile->Printf("\n  Ta[%zu][%zu] (infty) = %20.15f", ni, na, RFa / Da);
-//                outfile->Printf("\n  Ta[%zu][%zu] (s)     = %20.15f", ni, na, ElementT(source_, Da, RFa));
-//                if(source_ == "STANDARD"){
-//                    double Z = sqrt(s_) * Da;
-//                    outfile->Printf("\n  Z                = %20.15f", Z);
-//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(Da, 2.0))) * RFa / Da);
-//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_) * RFa);
-//                }
-//                if(source_ == "AMP"){
-//                    double RD = Da / RFa;
-//                    double Z = sqrt(s_) * RD;
-//                    outfile->Printf("\n  Z                = %20.15f", Z);
-//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(RD, 2.0))) * RFa / Da);
-//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_));
-//                }
-//                if(source_ == "EMP2"){
-//                    double RD = Da / RFa;
-//                    double Z = sqrt(s_) * RD / RFa;
-//                    outfile->Printf("\n  Z                = %20.15f", Z);
-//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * pow(RD / RFa, 2.0))) * RFa / Da);
-//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp(Z, taylor_order_) * sqrt(s_) / RFa);
-//                }
-//                if(source_ == "LAMP"){
-//                    double RD = Da / RFa;
-//                    double Z = s_ * RD;
-//                    outfile->Printf("\n  Z                = %20.15f", Z);
-//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * fabs(RD))) * RFa / Da);
-//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp_Linear(Z, 2 * taylor_order_) * s_);
-//                }
-//                if(source_ == "LEMP2"){
-//                    double RD = Da / RFa;
-//                    double Z = s_ * RD / RFa;
-//                    outfile->Printf("\n  Z                = %20.15f", Z);
-//                    outfile->Printf("\n  Exponential      = %20.15f", (1 - exp(-1.0 * s_ * fabs(RD / RFa))) * RFa / Da);
-//                    outfile->Printf("\n  Expansion        = %20.15f", Taylor_Exp_Linear(Z, 2 * taylor_order_) * sqrt(s_) / RFa);
-//                }
-//            }
-
             A[i][a] = ElementT(source_, Da, RFa);
             B[i][a] = ElementT(source_, Db, RFb);
 
@@ -555,33 +522,15 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
                     double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
 
-                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
-                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
-                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
-
-                    double Zaa = sqrt(s_) * Daa;
-                    double Zab = sqrt(s_) * Dab;
-                    double Zbb = sqrt(s_) * Dbb;
+                    double Vaa = integral_->aptei_aa(na,nb,ni,nj);
+                    double Vab = integral_->aptei_ab(na,nb,ni,nj);
+                    double Vbb = integral_->aptei_bb(na,nb,ni,nj);
 
                     i += na_;
                     j += na_;
-                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
-                    }else{
-                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
-                    }
-
-                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
-                    }else{
-                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
-                    }
-
-                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
-                    }else{
-                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
-                    }
+                    AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
+                    AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
+                    BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
                     i -= na_;
                     j -= na_;
                 }
@@ -601,9 +550,9 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
                     double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
 
-                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
-                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
-                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+                    double Vaa = integral_->aptei_aa(na,nb,ni,nj);
+                    double Vab = integral_->aptei_ab(na,nb,ni,nj);
+                    double Vbb = integral_->aptei_bb(na,nb,ni,nj);
 
                     double Zaa = sqrt(s_) * Daa;
                     double Zab = sqrt(s_) * Dab;
@@ -613,23 +562,9 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     j += na_;
                     a += na_;
                     b += na_;
-                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
-                    }else{
-                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
-                    }
-
-                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
-                    }else{
-                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
-                    }
-
-                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
-                    }else{
-                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
-                    }
+                    AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
+                    AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
+                    BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
                     i -= na_;
                     j -= na_;
                     a -= na_;
@@ -651,9 +586,9 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
                     double Dbb = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
 
-                    double scalar_aa = integral_->aptei_aa(na,nb,ni,nj);
-                    double scalar_ab = integral_->aptei_ab(na,nb,ni,nj);
-                    double scalar_bb = integral_->aptei_bb(na,nb,ni,nj);
+                    double Vaa = integral_->aptei_aa(na,nb,ni,nj);
+                    double Vab = integral_->aptei_ab(na,nb,ni,nj);
+                    double Vbb = integral_->aptei_bb(na,nb,ni,nj);
 
                     double Zaa = sqrt(s_) * Daa;
                     double Zab = sqrt(s_) * Dab;
@@ -661,23 +596,9 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
 
                     a += na_;
                     b += na_;
-                    if(fabs(Zaa) < pow(0.1,taylor_threshold_)){
-                        AA[i][j][a][b] = Taylor_Exp(Zaa,taylor_order_) * sqrt(s_) * scalar_aa;
-                    }else{
-                        AA[i][j][a][b] = (1 - exp(-1.0 * pow(Zaa, 2.0))) / Zaa * sqrt(s_) * scalar_aa;
-                    }
-
-                    if(fabs(Zab) < pow(0.1,taylor_threshold_)){
-                        AB[i][j][a][b] = Taylor_Exp(Zab,taylor_order_) * sqrt(s_) * scalar_ab;
-                    }else{
-                        AB[i][j][a][b] = (1 - exp(-1.0 * pow(Zab, 2.0))) / Zab * sqrt(s_) * scalar_ab;
-                    }
-
-                    if(fabs(Zbb) < pow(0.1,taylor_threshold_)){
-                        BB[i][j][a][b] = Taylor_Exp(Zbb,taylor_order_) * sqrt(s_) * scalar_bb;
-                    }else{
-                        BB[i][j][a][b] = (1 - exp(-1.0 * pow(Zbb, 2.0))) / Zbb * sqrt(s_) * scalar_bb;
-                    }
+                    AA[i][j][a][b] = ElementT("STANDARD", Daa, Vaa);
+                    AB[i][j][a][b] = ElementT("STANDARD", Dab, Vab);
+                    BB[i][j][a][b] = ElementT("STANDARD", Dbb, Vbb);
                     a -= na_;
                     b -= na_;
                 }
