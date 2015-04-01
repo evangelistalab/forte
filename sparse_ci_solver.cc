@@ -87,8 +87,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
         int noalpha = aocc.size();
         int nobeta  = bocc.size();
 
-        std::vector<std::pair<size_t,int>> a_ann(noalpha);
-        std::vector<std::pair<size_t,int>> b_ann(nobeta);
+        std::vector<std::pair<size_t,short>> a_ann(noalpha);
+        std::vector<std::pair<size_t,short>> b_ann(nobeta);
 
         // Generate alpha annihilation
         for (int i = 0; i < noalpha; ++i){
@@ -142,22 +142,22 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
 
     size_t num_tuples_sigles = 0;
     for (size_t I = 0; I < max_I; ++I){
-        const std::vector<std::pair<size_t,int>>& a_ann = a_ann_list[I];
-        for (const std::pair<size_t,int>& J_sign : a_ann){
+        const std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[I];
+        for (const std::pair<size_t,short>& J_sign : a_ann){
             size_t J = J_sign.first;
-            int sign = J_sign.second;
+            short sign = J_sign.second;
             a_cre_list[J].push_back(std::make_pair(I,sign));
             num_tuples_sigles++;
         }
-        const std::vector<std::pair<size_t,int>>& b_ann = b_ann_list[I];
-        for (const std::pair<size_t,int>& J_sign : b_ann){
+        const std::vector<std::pair<size_t,short>>& b_ann = b_ann_list[I];
+        for (const std::pair<size_t,short>& J_sign : b_ann){
             size_t J = J_sign.first;
-            int sign = J_sign.second;
+            short sign = J_sign.second;
             b_cre_list[J].push_back(std::make_pair(I,sign));
             num_tuples_sigles++;
         }
     }
-    size_t mem_tuple_singles = num_tuples_sigles * (sizeof(size_t) + sizeof(int));
+    size_t mem_tuple_singles = num_tuples_sigles * (sizeof(size_t) + sizeof(short));
 
 //    outfile->Printf("\n  Size of lists:");
 //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",a_ann_list.size());
@@ -176,9 +176,9 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
         int noalpha = aocc.size();
         int nobeta  = bocc.size();
 
-        std::vector<std::tuple<size_t,int,int>> aa_ann(noalpha * (noalpha - 1) / 2);
-        std::vector<std::tuple<size_t,int,int>> ab_ann(noalpha * nobeta);
-        std::vector<std::tuple<size_t,int,int>> bb_ann(nobeta * (nobeta - 1) / 2);
+        std::vector<std::tuple<size_t,short,short>> aa_ann(noalpha * (noalpha - 1) / 2);
+        std::vector<std::tuple<size_t,short,short>> ab_ann(noalpha * nobeta);
+        std::vector<std::tuple<size_t,short,short>> bb_ann(nobeta * (nobeta - 1) / 2);
 
         // Generate alpha-alpha annihilation
         for (size_t i = 0, ij = 0; i < noalpha; ++i){
@@ -268,33 +268,33 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
 
     size_t num_tuples_doubles = 0;
     for (size_t I = 0; I < max_I; ++I){
-        const std::vector<std::tuple<size_t,int,int>>& aa_ann = aa_ann_list[I];
-        for (const std::tuple<size_t,int,int>& J_sign : aa_ann){
+        const std::vector<std::tuple<size_t,short,short>>& aa_ann = aa_ann_list[I];
+        for (const std::tuple<size_t,short,short>& J_sign : aa_ann){
             size_t J = std::get<0>(J_sign);
-            int i = std::get<1>(J_sign);
-            int j = std::get<2>(J_sign);
+            short i = std::get<1>(J_sign);
+            short j = std::get<2>(J_sign);
             aa_cre_list[J].push_back(std::make_tuple(I,i,j));
             num_tuples_doubles++;
         }
-        const std::vector<std::tuple<size_t,int,int>>& bb_ann = bb_ann_list[I];
-        for (const std::tuple<size_t,int,int>& J_sign : bb_ann){
+        const std::vector<std::tuple<size_t,short,short>>& bb_ann = bb_ann_list[I];
+        for (const std::tuple<size_t,short,short>& J_sign : bb_ann){
             size_t J = std::get<0>(J_sign);
-            int i = std::get<1>(J_sign);
-            int j = std::get<2>(J_sign);
+            short i = std::get<1>(J_sign);
+            short j = std::get<2>(J_sign);
             bb_cre_list[J].push_back(std::make_tuple(I,i,j));
             num_tuples_doubles++;
         }
-        const std::vector<std::tuple<size_t,int,int>>& ab_ann = ab_ann_list[I];
-        for (const std::tuple<size_t,int,int>& J_sign : ab_ann){
+        const std::vector<std::tuple<size_t,short,short>>& ab_ann = ab_ann_list[I];
+        for (const std::tuple<size_t,short,short>& J_sign : ab_ann){
             size_t J = std::get<0>(J_sign);
-            int i = std::get<1>(J_sign);
-            int j = std::get<2>(J_sign);
+            short i = std::get<1>(J_sign);
+            short j = std::get<2>(J_sign);
             ab_cre_list[J].push_back(std::make_tuple(I,i,j));
             num_tuples_doubles++;
         }
     }
 
-    size_t mem_tuple_doubles = num_tuples_doubles * (sizeof(size_t) + 2 * sizeof(int));
+    size_t mem_tuple_doubles = num_tuples_doubles * (sizeof(size_t) + 2 * sizeof(short));
 
 //    outfile->Printf("\n  Size of lists:");
 //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",aa_ann_list.size());
@@ -1000,7 +1000,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     boost::timer t_davidson;
 
     int maxiter = 100;
-    bool print = false;
+    bool print = true;
 
     // Use unit vectors as initial guesses
     int N = sigma_vector->size();
@@ -1048,7 +1048,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     sigma_vector->get_diagonal(Hdiag);
 
-    size_t initial_size = collapse_size * M;
+    size_t initial_size = collapse_size;
 
     // Find the initial_size lowest diagonals
     {
@@ -1057,7 +1057,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             smallest[j] = std::make_pair(Hdiag.get(j),j);
         }
         std::sort(smallest.begin(),smallest.end());
-        for(int i = 0; i < initial_size; i++) {
+        for(int i = 0; i < M; i++) {
             b.set(i,smallest[i].second,1.0);
         }
     }
@@ -1074,7 +1074,6 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
         double** sigma_p = sigma.pointer();
 
         bool skip_check = false;
-        if(print) outfile->Printf("\n  iter = %d\n", iter);
 
         // Step #2: Build and Diagonalize the Subspace Hamiltonian
         sigma_vector->compute_sigma(sigma,b,L);
