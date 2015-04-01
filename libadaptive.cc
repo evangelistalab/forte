@@ -359,7 +359,9 @@ libadaptive(Options &options)
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
-        apici->compute_energy();
+        for (int n = 0; n < options.get_int("NROOT"); ++n){
+            apici->compute_energy();
+        }
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         FCI_MO fci_mo(options,ints_);

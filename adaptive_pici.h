@@ -42,7 +42,6 @@ enum PropagatorType {LinearPropagator,
                      PowerPropagator,
                      TrotterLinearPropagator,
                      OlsenPropagator,
-                     MitrushenkovPropagator,
                      DavidsonLiuPropagator};
 
 /**
@@ -99,6 +98,7 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
+    std::vector<std::map<BitsetDeterminant,double>> solutions_;
 
 
     // * Calculation info
@@ -118,8 +118,10 @@ private:
     double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
+    /// The current iteration
     int iter_;
-
+    /// The current root
+    int current_root_;
 
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
@@ -143,7 +145,6 @@ private:
     /// the couplings to the singles and doubles, respectively.
     std::map<BitsetDeterminant,std::pair<double,double>> dets_max_couplings_;
 
-
     // * Energy estimation
     /// Estimate the variational energy via a fast procedure?
     bool fast_variational_estimate_;
@@ -163,7 +164,6 @@ private:
     /// Number of determinants that don't spawn
     size_t nzerospawn_;
 
-
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -173,7 +173,13 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<BitsetDeterminant> space, std::vector<double> C);
+    void print_wfn(std::vector<BitsetDeterminant> &space, std::vector<double> &C);
+
+    /// Save a wave function
+    void save_wfn(std::vector<BitsetDeterminant> &space, std::vector<double> &C,std::vector<std::map<BitsetDeterminant,double>>& solutions);
+
+    /// Orthogonalize the wave function to previous solutions
+    void orthogonalize(std::vector<BitsetDeterminant>& space,std::vector<double>& C,std::vector<std::map<BitsetDeterminant,double>>& solutions);
 
     /// Initial wave function guess
     double initial_guess(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
@@ -204,14 +210,17 @@ private:
     /// The power propagator
     void propagate_power(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
-    /// The +tau propagator
-    void propagate_positive(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    /// The power propagator
+    void propagate_power_quadratic_extrapolation(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The Trotter propagator
     void propagate_Trotter(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The Olsen propagator
     void propagate_Olsen(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+
+    /// The Davidson-Liu propagator
+    void propagate_DavidsonLiu(std::vector<BitsetDeterminant>& dets, std::vector<double>& C, double tau, double spawning_threshold);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
@@ -236,13 +245,14 @@ private:
 
     /// Apply tau H to a determinant using dynamic screening
     size_t apply_tau_H(double tau, double spawning_threshold, std::vector<BitsetDeterminant> &dets, const std::vector<double>& C, std::map<BitsetDeterminant,double>& dets_C_map, double S);
+    size_t apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S);
 
     /// Apply tau H to a determinant
-    size_t apply_tau_H_det(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det(double tau,double spawning_threshold,const BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
     double form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling);
