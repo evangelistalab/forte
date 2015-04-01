@@ -41,6 +41,8 @@ public:
     /// Destructor
     ~ExplorerIntegrals();
 
+    virtual void gather_integrals();
+
     // ==> Class Interface <==
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
@@ -86,7 +88,7 @@ public:
     double diag_fock_b(int p) {return fock_matrix_b[p * aptei_idx_ + p];}
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
-    double aptei_aa(size_t p,size_t q,size_t r, size_t s)
+    virtual double aptei_aa(size_t p,size_t q,size_t r, size_t s)
     {
         return aphys_tei_aa[aptei_index(p,q,r,s)];
     }
@@ -112,7 +114,7 @@ public:
 
     }
     /// The antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||rs>
-    double aptei_ab(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_ab[aptei_index(p,q,r,s)];}
+    virtual double aptei_ab(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_ab[aptei_index(p,q,r,s)];}
 
     double aptei_ab(size_t p,size_t q,size_t r, size_t s, std::string str)
     {
@@ -134,7 +136,7 @@ public:
     }
 
     /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
-    double aptei_bb(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_bb[aptei_index(p,q,r,s)];}
+    virtual double aptei_bb(size_t p,size_t q,size_t r, size_t s) {return aphys_tei_bb[aptei_index(p,q,r,s)];}
     double aptei_bb(size_t p,size_t q,size_t r, size_t s, std::string str)
     {
         {
@@ -165,13 +167,13 @@ public:
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
 
-    double diag_aptei_aa(size_t p,size_t q) {return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
+    virtual double diag_aptei_aa(size_t p,size_t q) {return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
 
     /// The diagonal antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||pq>
-    double diag_aptei_ab(size_t p,size_t q) {return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
+    virtual double diag_aptei_ab(size_t p,size_t q) {return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
 
     /// The diagonal antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||pq>
-    double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual double diag_aptei_bb(size_t p,size_t q) {return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
 
     /// Make a Fock matrix computed with respect to a given determinant
     void make_fock_matrix(bool* Ia, bool* Ib);
@@ -200,11 +202,11 @@ public:
     /// Set the value of the two-electron integrals
     /// @param ints pointer to the integrals
     /// @param the spin type of the integrals
-    void set_tei(double**** ints,bool alpha1,bool alpha2);
+    virtual void set_tei(double**** ints,bool alpha1,bool alpha2);
 
     /// Set the value of the two-electron integrals
     /// @param the spin type of the integrals
-    void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
 
     /// Update all integrals after providing one- and two-electron integrals
@@ -231,7 +233,7 @@ public:
     /// Compute cholesky integrals
     void compute_chol_integrals();
     /// Return value of df/cd integral
-    double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * ncmo_ + q);}
+    virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * ncmo_ + q);}
     std::string which_integral(){ return integral_type_;}
 
 private:
@@ -345,8 +347,8 @@ private:
     void resort_integrals_after_freezing();
 
     void resort_two(double*& ints,std::vector<size_t>& map);
-    void resort_three(SharedMatrix&, std::vector<size_t>& map);
-    void resort_four(double*& ints,std::vector<size_t>& map);
+    virtual void resort_three(SharedMatrix&, std::vector<size_t>& map);
+    virtual void resort_four(double*& ints,std::vector<size_t>& map);
 
     /// Freeze the doubly occupied and virtual orbitals but do not resort the integrals
     void freeze_core_full();
