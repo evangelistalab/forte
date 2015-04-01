@@ -16,10 +16,11 @@ elif len(sys.argv) == 2:
 
 print "Running test using psi4 executable found in:\n%s" % psi4command
 
-adaptive_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
+lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
-                     "lambda+sd-ci-1","lambda+sd-ci-2",
-                     "adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
+                     "lambda+sd-ci-1","lambda+sd-ci-2"]
+
+adaptive_ci_tests = ["adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
                      "adaptive-ci-4","adaptive-ci-5","adaptive-ci-6",
                      "adaptive-ci-7","adaptive-ci-8"]
 
@@ -31,7 +32,7 @@ dsrg_tests = ["dsrg-1","dsrg-2"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4"]
 
-tests = adaptive_ci_tests + apifci_tests + ct_tests + srg_tests + dsrg_tests
+tests =  dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + ct_tests + srg_tests + dsrg_tests
 maindir = os.getcwd()
 for d in tests:
     print "\nRunning test %s" % d
