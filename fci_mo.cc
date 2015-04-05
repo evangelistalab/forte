@@ -29,7 +29,6 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     // Print Level
     print_ = options.get_int("PRINT");
 
-    int_type_ = options.get_str("INT_TYPE");
 
     // Basic Preparation: Form Determinants
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -1124,10 +1123,10 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
                     size_t nr = idx_h_[r];
                     for(size_t s=0; s<nh_; ++s){
                         size_t ns = idx_h_[s];
-                        vaa += integral_->aptei_aa(q,nr,p,ns, int_type_) * Da_[nr][ns];
-                        vab += integral_->aptei_ab(q,nr,p,ns, int_type_) * Db_[nr][ns];
-                        vba += integral_->aptei_ab(nr,q,ns,p, int_type_) * Da_[nr][ns];
-                        vbb += integral_->aptei_bb(q,nr,p,ns, int_type_) * Db_[nr][ns];
+                        vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
+                        vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
+                        vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
+                        vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
                     }
                 }
                 A[p][q] = integral_->oei_a(p,q) + vaa + vab;
@@ -1361,9 +1360,9 @@ void FCI_MO::compute_ref(){
                 size_t nr = idx_a_[r];
                 for(size_t s=0; s<na_; ++s){
                     size_t ns = idx_a_[s];
-                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns, int_type_) * L2aa_[p][q][r][s];
-                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns, int_type_) * L2bb_[p][q][r][s];
-                    Eref_ += integral_->aptei_ab(np,nq,nr,ns, int_type_) * L2ab_[p][q][r][s];
+                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns) * L2aa_[p][q][r][s];
+                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns) * L2bb_[p][q][r][s];
+                    Eref_ += integral_->aptei_ab(np,nq,nr,ns) * L2ab_[p][q][r][s];
                 }
             }
         }

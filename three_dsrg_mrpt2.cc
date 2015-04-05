@@ -132,38 +132,20 @@ void THREE_DSRG_MRPT2::startup()
     // These two blocks of functions create a Blocked tensor
     // And fill the tensor
     // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
-    if(options_.get_str("INT_TYPE")=="CHOLESKY")
-    {
-        outfile->Printf("\n Building cholesky integrals");
-        size_t nCD = ints_->nL();
-        std::vector<size_t> nauxpi(nCD);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
+    outfile->Printf("\n Building cholesky integrals");
+    size_t nthree = ints_->nthree();
+    std::vector<size_t> nauxpi(nthree);
+    std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-        //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+    //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+    BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
 
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
-        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-        });
+    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = ints_->get_three_integral(i[0],i[1],i[2]);
+    });
 
-    }
-    else if(options_.get_str("INT_TYPE")=="DF")
-    {
-        size_t nDF = ints_->naux();
-        std::vector<size_t> nauxpi(nDF);
-        std::iota(nauxpi.begin(), nauxpi.end(),0);
-        BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-
-        ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
-
-        //BlockedTensor::add_mo_space("d","g",nauxpi,BetaSpin);
-        ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                value = ints_->get_three_integral(i[0],i[1],i[2]);
-        });
-
-    }
 
     H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
     //Returns a vector of all combinations for gggg
