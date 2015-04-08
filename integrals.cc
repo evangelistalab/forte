@@ -36,8 +36,11 @@ namespace psi{ namespace libadaptive{
            // Set the new value of the number of orbitals to be used in indexing routines
            aptei_idx_ = ncmo_;
        }
+   }
 
-
+   CholeskyIntegrals::~CholeskyIntegrals()
+   {
+       deallocate();
    }
     void CholeskyIntegrals::make_diagonal_integrals()
     {
@@ -222,9 +225,13 @@ namespace psi{ namespace libadaptive{
             // Set the new value of the number of orbitals to be used in indexing routines
             aptei_idx_ = ncmo_;
         }
-
-
     }
+
+    DFIntegrals::~DFIntegrals()
+    {
+        deallocate();
+    }
+
     void DFIntegrals::allocate()
     {
         // Allocate the memory required to store the one-electron integrals
@@ -529,10 +536,13 @@ namespace psi{ namespace libadaptive{
             // Set the new value of the number of orbitals to be used in indexing routines
             aptei_idx_ = ncmo_;
         }
-
-
-
     }
+
+    ConventionalIntegrals::~ConventionalIntegrals()
+    {
+        deallocate();
+    }
+
     void ConventionalIntegrals::allocate()
     {
         // Allocate the memory required to store the one-electron integrals
@@ -595,18 +605,6 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
 ExplorerIntegrals::~ExplorerIntegrals()
 {
     cleanup();
-}
-ConventionalIntegrals::~ConventionalIntegrals()
-{
-    deallocate();
-}
-DFIntegrals::~DFIntegrals()
-{
-    deallocate();
-}
-CholeskyIntegrals::~CholeskyIntegrals()
-{
-    deallocate();
 }
 
 void CholeskyIntegrals::update_integrals(bool freeze_core)

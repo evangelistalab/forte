@@ -126,11 +126,14 @@ private:
     /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
-    /// Generate excited determinants
-    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+    /// Find all the relevant excitations out of the P space - single root version
+    void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate excited determinants
-    void generate_excited_determinants_original(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+    void generate_excited_determinants_single_root(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant, double> &V_hash);
+
+    /// Generate excited determinants
+    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
 
     /// Experimental
     void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash);
