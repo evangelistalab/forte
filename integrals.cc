@@ -907,13 +907,6 @@ void ExplorerIntegrals::transform_integrals()
 
     outfile->Printf("\n  Integral transformation done.");
     outfile->Flush();
-
-    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
-    
-    //for(size_t p = 0; p < nmo_; p++){
-     //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
-    //}
-
 }
 
 void ExplorerIntegrals::read_one_electron_integrals()
@@ -1519,9 +1512,6 @@ void DFIntegrals::resort_integrals_after_freezing()
 
 }
 
-
-
-
 void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 {
     // Store the integrals in a temporary array of dimension nmo x nmo
@@ -1575,9 +1565,6 @@ void CholeskyIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double v
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
-
-
-
 void ConventionalIntegrals::freeze_core_orbitals()
 {
     compute_frozen_core_energy();
@@ -1642,8 +1629,6 @@ void DFIntegrals::compute_frozen_core_energy()
     }
     outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
 }
-
-
 void ConventionalIntegrals::compute_frozen_core_energy()
 {
     core_energy_ = 0.0;
@@ -1717,10 +1702,6 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
         f += nmopi_[hi];
     }
 }
-
-
-
-
 ///**
 // * Make the one electron intermediates
 // * h'_pq = h_pq - 1/2 \sum_r (pr|qr)
