@@ -183,20 +183,15 @@ double StringDeterminant::energy() const
     for(int p = 0; p < nmo_; ++p){
         if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
         if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
-//        if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f",ints_->oei_a(p,p));
-//        if(beta_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f",ints_->oei_b(p,p));
         for(int q = 0; q < nmo_; ++q){
             if(alfa_bits_[p] and alfa_bits_[q]){
                 matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
-//                                outfile->Printf("\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_aa(p,q));
             }
             if(alfa_bits_[p] and beta_bits_[q]){
                 matrix_element += ints_->diag_aptei_ab(p,q);
-//                                outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_aptei_ab(p,q));
             }
             if(beta_bits_[p] and beta_bits_[q]){
                 matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
-//                                outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_bb(p,q));
             }
         }
     }
@@ -419,7 +414,6 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
     bool* Ib = beta_bits_;
     bool* Ja = rhs.alfa_bits_;
     bool* Jb = rhs.beta_bits_;
-    std::string int_type_ = ints_->which_integral();
 
     int nadiff = 0;
     int nbdiff = 0;
@@ -464,10 +458,10 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_aa(i,p,j,p, int_type_);
+                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_ab(i,p,j,p, int_type_);
+                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
     }
@@ -484,10 +478,10 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
         matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_ab(p,i,p,j, int_type_);
+                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_bb(i,p,j,p, int_type_);
+                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
     }
@@ -508,7 +502,7 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        matrix_element = sign * ints_->aptei_aa(i,j,k,l, int_type_);
+        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -528,7 +522,7 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_bb(i,j,k,l, int_type_);
+        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -543,7 +537,7 @@ double StringDeterminant::slater_rules(const StringDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_ab(i,j,k,l, int_type_);
+        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
     }
     return(matrix_element);
 }
