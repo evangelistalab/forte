@@ -271,7 +271,7 @@ protected:
  */
 class CholeskyIntegrals : public ExplorerIntegrals{
 public:
-   ///aptei_x will grab antisymmetriced integrals and creates them on the fly
+   ///aptei_x will grab antisymmetriced integrals and creates DF/CD integrals on the fly
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -301,11 +301,12 @@ public:
     CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
     ~CholeskyIntegrals();
 private:
-    //Computes Cholesky integrals
+    ///Computes Cholesky integrals
     virtual void gather_integrals();
+    ///Allocates diagonal integrals
     virtual void allocate();
     virtual void deallocate();
-    //Needs to be phased out - transfroms one electron ints
+    ///Needs to be phased out - transfroms one electron ints
     virtual void transform_integrals();
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
@@ -313,6 +314,8 @@ private:
     virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
+    ///This is not used in Cholesky, but I have to have implementations for
+    /// derived classes.
     virtual void resort_four(double *&tei, std::vector<size_t> &map)
     {
         outfile->Printf("If this is called, sig fault!");

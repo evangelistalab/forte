@@ -212,6 +212,7 @@ void AmbitTests::cleanup()
 
 double AmbitTests::compute_energy()
 {
+    return 0.0;
 }
 
 

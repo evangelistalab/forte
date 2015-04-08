@@ -1,0 +1,250 @@
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:41:11 2015
+Timers Off: Wed Apr  8 11:41:13 2015
+
+Wall Time:        2.00 seconds
+
+JK: (A|mn)  :       0.00u       0.00s       0.00w      1 call
+JK: (A|Q)^-1/2:       0.02u       0.00s       0.00w      1 call
+JK: (Q|mn)  :       0.00u       0.00s       0.00w      1 call
+Form H      :       0.00u       0.00s       0.00w      1 call
+Form S/X    :       0.00u       0.00s       0.00w      1 call
+Guess       :       0.00u       0.00s       0.00w      1 call
+Form G      :       0.00u       0.00s       0.00w     18 calls
+JK: D       :       0.00u       0.00s       0.00w     18 calls
+JK: USO2AO  :       0.00u       0.00s       0.00w     11 calls
+JK: JK      :       0.00u       0.00s       0.00w     18 calls
+JK: J       :       0.00u       0.00s       0.00w     11 calls
+JK: J1      :       0.00u       0.00s       0.00w     11 calls
+JK: J2      :       0.00u       0.00s       0.00w     11 calls
+JK: K       :       0.00u       0.00s       0.00w     11 calls
+JK: K1      :       0.00u       0.00s       0.00w     11 calls
+JK: K2      :       0.00u       0.00s       0.00w     11 calls
+JK: AO2USO  :       0.00u       0.00s       0.00w     11 calls
+Form F      :       0.00u       0.00s       0.00w     18 calls
+DIIS        :       0.00u       0.00s       0.00w     18 calls
+DIISManager::add_entry:       0.00u       0.00s       0.00w     18 calls
+Form C      :       0.00u       0.00s       0.00w     18 calls
+Form D      :       0.00u       0.00s       0.00w     18 calls
+DIISManager::extrapolate:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: bMatrix setup:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: bMatrix pseudoinverse:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: form new data:       0.00u       0.00s       0.00w     17 calls
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w    192 calls
+Check Sign  :       0.02u       0.05s       0.00w  39840 calls
+Form Fock   :       0.03u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.02u       0.02s       0.00w      1 call
+2PO         :       0.00u       0.00s       0.00w   2304 calls
+FORM 3-Cumulant:       0.25u       0.10s       0.00w      1 call
+3PO         :       0.17u       0.10s       0.00w  49152 calls
+Compute Ref :       0.02u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:42:14 2015
+Timers Off: Wed Apr  8 11:42:16 2015
+
+Wall Time:        2.00 seconds
+
+JK: (A|mn)  :       0.00u       0.00s       0.00w      1 call
+JK: (A|Q)^-1/2:       0.02u       0.00s       0.00w      1 call
+JK: (Q|mn)  :       0.00u       0.00s       0.00w      1 call
+Form H      :       0.00u       0.02s       0.00w      1 call
+Form S/X    :       0.00u       0.00s       0.00w      1 call
+Guess       :       0.00u       0.00s       0.00w      1 call
+Form G      :       0.02u       0.00s       0.00w     20 calls
+JK: D       :       0.00u       0.00s       0.00w     20 calls
+JK: USO2AO  :       0.00u       0.00s       0.00w     13 calls
+JK: JK      :       0.02u       0.00s       0.00w     20 calls
+JK: J       :       0.00u       0.00s       0.00w     13 calls
+JK: J1      :       0.00u       0.00s       0.00w     13 calls
+JK: J2      :       0.00u       0.00s       0.00w     13 calls
+JK: K       :       0.00u       0.00s       0.00w     13 calls
+JK: K1      :       0.00u       0.00s       0.00w     13 calls
+JK: K2      :       0.00u       0.00s       0.00w     13 calls
+JK: AO2USO  :       0.00u       0.00s       0.00w     13 calls
+Form F      :       0.00u       0.00s       0.00w     20 calls
+DIIS        :       0.00u       0.00s       0.00w     20 calls
+DIISManager::add_entry:       0.00u       0.00s       0.00w     20 calls
+Form C      :       0.00u       0.00s       0.00w     20 calls
+Form D      :       0.00u       0.00s       0.00w     20 calls
+DIISManager::extrapolate:       0.00u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: bMatrix setup:       0.00u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: bMatrix pseudoinverse:       0.00u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: form new data:       0.00u       0.00s       0.00w     19 calls
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w    192 calls
+Check Sign  :       0.03u       0.02s       0.00w  39840 calls
+Form Fock   :       0.03u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.02u       0.02s       0.00w      1 call
+2PO         :       0.02u       0.02s       0.00w   2304 calls
+FORM 3-Cumulant:       0.25u       0.10s       0.00w      1 call
+3PO         :       0.15u       0.07s       0.00w  49152 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:42:22 2015
+Timers Off: Wed Apr  8 11:42:24 2015
+
+Wall Time:        2.00 seconds
+
+JK: (A|mn)  :       0.00u       0.00s       0.00w      1 call
+JK: (A|Q)^-1/2:       0.02u       0.00s       0.00w      1 call
+JK: (Q|mn)  :       0.00u       0.00s       0.00w      1 call
+Form H      :       0.00u       0.00s       0.00w      1 call
+Form S/X    :       0.00u       0.00s       0.00w      1 call
+Guess       :       0.00u       0.00s       0.00w      1 call
+Form G      :       0.02u       0.00s       0.00w     19 calls
+JK: D       :       0.00u       0.00s       0.00w     19 calls
+JK: USO2AO  :       0.00u       0.00s       0.00w     11 calls
+JK: JK      :       0.02u       0.00s       0.00w     19 calls
+JK: J       :       0.00u       0.00s       0.00w     11 calls
+JK: J1      :       0.00u       0.00s       0.00w     11 calls
+JK: J2      :       0.00u       0.00s       0.00w     11 calls
+JK: K       :       0.02u       0.00s       0.00w     11 calls
+JK: K1      :       0.02u       0.00s       0.00w     11 calls
+JK: K2      :       0.00u       0.00s       0.00w     11 calls
+JK: AO2USO  :       0.00u       0.00s       0.00w     11 calls
+Form F      :       0.00u       0.00s       0.00w     19 calls
+DIIS        :       0.00u       0.00s       0.00w     19 calls
+DIISManager::add_entry:       0.00u       0.00s       0.00w     19 calls
+Form C      :       0.00u       0.00s       0.00w     19 calls
+Form D      :       0.00u       0.00s       0.00w     19 calls
+DIISManager::extrapolate:       0.00u       0.00s       0.00w     18 calls
+DIISManager::extrapolate: bMatrix setup:       0.00u       0.00s       0.00w     18 calls
+DIISManager::extrapolate: bMatrix pseudoinverse:       0.00u       0.00s       0.00w     18 calls
+DIISManager::extrapolate: form new data:       0.00u       0.00s       0.00w     18 calls
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w    192 calls
+Check Sign  :       0.03u       0.05s       0.00w  39840 calls
+Form Fock   :       0.03u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.02u       0.00s       0.00w      1 call
+2PO         :       0.02u       0.00s       0.00w   2304 calls
+FORM 3-Cumulant:       0.25u       0.12s       0.00w      1 call
+3PO         :       0.17u       0.10s       0.00w  49152 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:42:26 2015
+Timers Off: Wed Apr  8 11:42:27 2015
+
+Wall Time:        1.00 seconds
+
+JK: (A|mn)  :       0.02u       0.00s       0.00w      1 call
+JK: (A|Q)^-1/2:       0.02u       0.00s       0.00w      1 call
+JK: (Q|mn)  :       0.00u       0.00s       0.00w      1 call
+Form H      :       0.00u       0.00s       0.00w      1 call
+Form S/X    :       0.00u       0.00s       0.00w      1 call
+Guess       :       0.00u       0.00s       0.00w      1 call
+Form G      :       0.00u       0.00s       0.00w     20 calls
+JK: D       :       0.00u       0.00s       0.00w     20 calls
+JK: USO2AO  :       0.00u       0.00s       0.00w     13 calls
+JK: JK      :       0.00u       0.00s       0.00w     20 calls
+JK: J       :       0.00u       0.00s       0.00w     13 calls
+JK: J1      :       0.00u       0.00s       0.00w     13 calls
+JK: J2      :       0.00u       0.00s       0.00w     13 calls
+JK: K       :       0.00u       0.00s       0.00w     13 calls
+JK: K1      :       0.00u       0.00s       0.00w     13 calls
+JK: K2      :       0.00u       0.00s       0.00w     13 calls
+JK: AO2USO  :       0.00u       0.00s       0.00w     13 calls
+Form F      :       0.00u       0.00s       0.00w     20 calls
+DIIS        :       0.02u       0.00s       0.00w     20 calls
+DIISManager::add_entry:       0.00u       0.00s       0.00w     20 calls
+Form C      :       0.00u       0.00s       0.00w     20 calls
+Form D      :       0.00u       0.00s       0.00w     20 calls
+DIISManager::extrapolate:       0.02u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: bMatrix setup:       0.00u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: bMatrix pseudoinverse:       0.02u       0.00s       0.00w     19 calls
+DIISManager::extrapolate: form new data:       0.00u       0.00s       0.00w     19 calls
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w    192 calls
+Check Sign  :       0.08u       0.02s       0.00w  39840 calls
+Form Fock   :       0.03u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.02u       0.00s       1.00w      1 call
+2PO         :       0.00u       0.00s       0.00w   2304 calls
+FORM 3-Cumulant:       0.25u       0.12s       0.00w      1 call
+3PO         :       0.15u       0.02s       0.00w  49152 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:54:04 2015
+Timers Off: Wed Apr  8 11:54:05 2015
+
+Wall Time:        1.00 seconds
+
+JK: (A|mn)  :       0.02u       0.00s       0.00w      1 call
+JK: (A|Q)^-1/2:       0.02u       0.00s       0.00w      1 call
+JK: (Q|mn)  :       0.00u       0.00s       0.00w      1 call
+Form H      :       0.00u       0.00s       0.00w      1 call
+Form S/X    :       0.00u       0.00s       0.00w      1 call
+Guess       :       0.00u       0.00s       0.00w      1 call
+Form G      :       0.00u       0.00s       0.00w     18 calls
+JK: D       :       0.00u       0.00s       0.00w     18 calls
+JK: USO2AO  :       0.00u       0.00s       0.00w     11 calls
+JK: JK      :       0.00u       0.00s       0.00w     18 calls
+JK: J       :       0.00u       0.00s       0.00w     11 calls
+JK: J1      :       0.00u       0.00s       0.00w     11 calls
+JK: J2      :       0.00u       0.00s       0.00w     11 calls
+JK: K       :       0.00u       0.00s       0.00w     11 calls
+JK: K1      :       0.00u       0.00s       0.00w     11 calls
+JK: K2      :       0.00u       0.00s       0.00w     11 calls
+JK: AO2USO  :       0.00u       0.00s       0.00w     11 calls
+Form F      :       0.00u       0.00s       0.00w     18 calls
+DIIS        :       0.00u       0.00s       0.00w     18 calls
+DIISManager::add_entry:       0.00u       0.00s       0.00w     18 calls
+Form C      :       0.00u       0.00s       0.00w     18 calls
+Form D      :       0.00u       0.00s       0.00w     18 calls
+DIISManager::extrapolate:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: bMatrix setup:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: bMatrix pseudoinverse:       0.00u       0.00s       0.00w     17 calls
+DIISManager::extrapolate: form new data:       0.00u       0.00s       0.00w     17 calls
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w    192 calls
+Check Sign  :       0.05u       0.07s       0.00w  39840 calls
+Form Fock   :       0.05u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.02u       0.00s       0.00w      1 call
+2PO         :       0.02u       0.00s       0.00w   2304 calls
+FORM 3-Cumulant:       0.25u       0.13s       0.00w      1 call
+3PO         :       0.15u       0.12s       0.00w  49152 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************

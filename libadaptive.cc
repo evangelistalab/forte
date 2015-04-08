@@ -401,21 +401,26 @@ libadaptive(Options &options)
 
     }
     if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
-        if(options.get_str("CASTYPE")=="CAS")
-        {
+        //if(options.get_str("CASTYPE")=="CAS")
+        //{
+            if(options.get_str("INT_TYPE")=="CONVENTIONAL")
+            {
+                outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
+                throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+            }
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
             three_dsrg_mrpt2->compute_energy();
-        }
-        else
+        //}
+        /*else
         {
             Reference reference("DMRG");
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
             three_dsrg_mrpt2->compute_energy();
-        }
+        }*/
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();

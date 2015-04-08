@@ -1,0 +1,41 @@
+import libbtl
+import libadaptive
+
+refrhf       = -2.17907771115918
+refdsrgpt2   = -2.238711801896253
+
+memory 500 mb
+
+molecule H4{
+  0 1
+  H  0.0 0.0 0.0
+  H  0.0 0.0 0.7
+  H  0.0 1.4 0.0
+  H  0.0 1.4 0.7
+}
+
+set globals{
+   basis                   cc-pvdz
+   df_basis_mp2            cc-pvdz-ri
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           15
+   maxiter                 300
+}
+
+set libadaptive{
+   restricted_docc         [0,0,0,0,0,0,0,0]
+   active                  [1,0,0,1,0,1,1,0]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  0.5
+   threepdc                mk
+   int_type                df
+}
+
+energy('rhf')
+energy('three-dsrg-mrpt2')
+
+compare_values(refrhf,get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
