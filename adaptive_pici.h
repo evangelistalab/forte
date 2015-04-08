@@ -122,6 +122,8 @@ private:
     int iter_;
     /// The current root
     int current_root_;
+    /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
+    bool post_diagonalization_;
 
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
