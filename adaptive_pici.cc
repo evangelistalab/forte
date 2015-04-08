@@ -107,6 +107,8 @@ void AdaptivePathIntegralCI::startup()
     // Read options
     nroot_ = options_.get_int("NROOT");
     current_root_ = -1;
+    post_diagonalization_ = false;
+//    /-> Define appropriate variable: post_diagonalization_ = options_.get_bool("EX_ALGORITHM");
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
@@ -215,7 +217,7 @@ double AdaptivePathIntegralCI::compute_energy()
     timer_on("PIFCI:Energy");
     boost::timer t_apici;
 
-    // Increase the root counter
+    // Increase the root counter (ground state = 0)
     current_root_ += 1;
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
@@ -277,7 +279,9 @@ double AdaptivePathIntegralCI::compute_energy()
 
         // Orthogonalize this solution with respect to the previous ones
         timer_on("PIFCI:Ortho");
-        orthogonalize(dets,C,solutions_);
+        if (current_root_ > 0){
+            orthogonalize(dets,C,solutions_);
+        }
         timer_off("PIFCI:Ortho");
 
         // Compute the energy and check for convergence
@@ -333,6 +337,12 @@ double AdaptivePathIntegralCI::compute_energy()
     print_wfn(dets,C);
     if (current_root_ < nroot_ - 1){
         save_wfn(dets,C,solutions_);
+    }
+
+    if (post_diagonalization_){
+        SharedMatrix apfci_evecs;
+        SharedVector apfci_evals;
+        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
     }
 
     timer_off("PIFCI:Energy");

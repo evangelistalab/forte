@@ -39,7 +39,7 @@ public:
     ExplorerIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
 
     /// Destructor
-    ~ExplorerIntegrals();
+    virtual ~ExplorerIntegrals();
 
 
     // ==> Class Interface <==
@@ -299,7 +299,7 @@ public:
     virtual double frozen_core_energy() const{return core_energy_;}
 
     CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-    ~CholeskyIntegrals();
+    virtual ~CholeskyIntegrals();
 private:
     //Computes Cholesky integrals
     virtual void gather_integrals();
@@ -347,7 +347,7 @@ public:
    virtual void update_integrals(bool freeze_core = true);
    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-   ~DFIntegrals();
+   virtual ~DFIntegrals();
    /// Make a Fock matrix computed with respect to a given determinant
    virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
@@ -407,7 +407,7 @@ public:
     throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");}
    ///Contructor of the class.  Calls ExplorerIntegrals constructor
    ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-  ~ConventionalIntegrals();
+   virtual ~ConventionalIntegrals();
    /// Make a Fock matrix computed with respect to a given determinant
    virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
