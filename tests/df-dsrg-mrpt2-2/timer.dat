@@ -1,0 +1,72 @@
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:35:28 2015
+Timers Off: Wed Apr  8 11:35:29 2015
+
+Wall Time:        1.00 seconds
+
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w     64 calls
+Check Sign  :       0.00u       0.00s       0.00w    784 calls
+Form Fock   :       0.05u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.00u       0.00s       0.00w      1 call
+2PO         :       0.00u       0.00s       0.00w    192 calls
+FORM 3-Cumulant:       0.00u       0.02s       0.00w      1 call
+3PO         :       0.00u       0.00s       0.00w   1024 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:40:07 2015
+Timers Off: Wed Apr  8 11:40:08 2015
+
+Wall Time:        1.00 seconds
+
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w     64 calls
+Check Sign  :       0.00u       0.00s       0.00w    784 calls
+Form Fock   :       0.07u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.00u       0.00s       0.00w      1 call
+2PO         :       0.00u       0.00s       0.00w    192 calls
+FORM 3-Cumulant:       0.00u       0.00s       0.00w      1 call
+3PO         :       0.00u       0.00s       0.00w   1024 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
+
+Host: Kevins-MacBook-Pro.local
+
+Timers On : Wed Apr  8 11:54:03 2015
+Timers Off: Wed Apr  8 11:54:04 2015
+
+Wall Time:        1.00 seconds
+
+FORM String :       0.00u       0.00s       0.00w      2 calls
+Diagonalize H:       0.00u       0.00s       0.00w      2 calls
+STORE CI Vectors:       0.00u       0.00s       0.00w      2 calls
+FORM Density:       0.00u       0.00s       0.00w      2 calls
+1PO         :       0.00u       0.00s       0.00w     64 calls
+Check Sign  :       0.00u       0.00s       0.00w    784 calls
+Form Fock   :       0.07u       0.00s       0.00w      2 calls
+Check Fock  :       0.00u       0.00s       0.00w      2 calls
+Block Diagonal Fock:       0.00u       0.00s       0.00w      1 call
+FORM 2-Cumulant:       0.00u       0.00s       0.00w      1 call
+2PO         :       0.00u       0.00s       0.00w    192 calls
+FORM 3-Cumulant:       0.00u       0.00s       0.00w      1 call
+3PO         :       0.00u       0.00s       0.00w   1024 calls
+Compute Ref :       0.00u       0.00s       0.00w      1 call
+
+***********************************************************
