@@ -37,7 +37,12 @@ typedef std::map<BitsetDeterminant,double>::iterator bsmap_it;
 void combine_maps(std::vector<bsmap>& thread_det_C_map, bsmap& dets_C_map);
 void combine_maps(bsmap& dets_C_map_A,bsmap& dets_C_map_B);
 void copy_map_to_vec(bsmap& dets_C_map,std::vector<BitsetDeterminant>& dets,std::vector<double>& C);
-void normalize(std::vector<double>& C);
+void scale(std::vector<double>& A,double alpha);
+void scale(std::map<BitsetDeterminant,double>& A,double alpha);
+double normalize(std::vector<double>& C);
+double normalize(std::map<BitsetDeterminant,double>& dets_C);
+double dot(std::map<BitsetDeterminant,double>& A,std::map<BitsetDeterminant,double>& B);
+void add(std::map<BitsetDeterminant,double>& A,double beta,std::map<BitsetDeterminant,double>& B);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_),
@@ -101,6 +106,9 @@ void AdaptivePathIntegralCI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
+    current_root_ = -1;
+    post_diagonalization_ = false;
+//    /-> Define appropriate variable: post_diagonalization_ = options_.get_bool("EX_ALGORITHM");
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
@@ -138,6 +146,11 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "OLSEN"){
         propagator_ = OlsenPropagator;
         propagator_description_ = "Olsen";
+        // Make sure that do_shift_ is set to true
+        do_shift_ = true;
+    }else if (options_.get_str("PROPAGATOR") == "DAVIDSON"){
+        propagator_ = DavidsonLiuPropagator;
+        propagator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
     }
@@ -203,6 +216,10 @@ double AdaptivePathIntegralCI::compute_energy()
 {
     timer_on("PIFCI:Energy");
     boost::timer t_apici;
+
+    // Increase the root counter (ground state = 0)
+    current_root_ += 1;
+
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t                   by Francesco A. Evangelista");
@@ -258,6 +275,14 @@ double AdaptivePathIntegralCI::compute_energy()
         timer_on("PIFCI:Step");
         propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
         timer_off("PIFCI:Step");
+        if (propagator_ == DavidsonLiuPropagator) break;
+
+        // Orthogonalize this solution with respect to the previous ones
+        timer_on("PIFCI:Ortho");
+        if (current_root_ > 0){
+            orthogonalize(dets,C,solutions_);
+        }
+        timer_off("PIFCI:Ortho");
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0){
@@ -310,6 +335,15 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Flush();
 
     print_wfn(dets,C);
+    if (current_root_ < nroot_ - 1){
+        save_wfn(dets,C,solutions_);
+    }
+
+    if (post_diagonalization_){
+        SharedMatrix apfci_evecs;
+        SharedVector apfci_evals;
+        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
+    }
 
     timer_off("PIFCI:Energy");
     return var_energy;
@@ -335,15 +369,15 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<BitsetDeterminant>& det
     sparse_solver.set_parallel(true);
 
     size_t wfn_size = dets.size();
-    SharedMatrix evecs(new Matrix("Eigenvectors",wfn_size,1));
-    SharedVector evals(new Vector("Eigenvalues",wfn_size));
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,1);
-    double var_energy = evals->get(0) + nuclear_repulsion_energy_;
-    outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh",var_energy);
+    SharedMatrix evecs(new Matrix("Eigenvectors",wfn_size,nroot_));
+    SharedVector evals(new Vector("Eigenvalues",nroot_));
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_);
+    double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
+    outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
 
     // Copy the ground state eigenvector
     for (int I = 0; I < wfn_size; ++I){
-        C[I] = evecs->get(I,0);
+        C[I] = evecs->get(I,current_root_);
     }
     return var_energy;
 }
@@ -370,11 +404,13 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Bi
     }else if (propagator == QuarticPropagator){
         propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
     }else if (propagator == PowerPropagator){
-        propagate_power(dets,C,tau,spawning_threshold,S);
+        propagate_power(dets,C,tau,spawning_threshold,0.0);
     }else if (propagator == TrotterLinearPropagator){
         propagate_Trotter(dets,C,tau,spawning_threshold,S);
     }else if (propagator == OlsenPropagator){
         propagate_Olsen(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == DavidsonLiuPropagator){
+        propagate_DavidsonLiu(dets,C,tau,spawning_threshold);
     }
 
     // Update prescreening boundary
@@ -530,24 +566,8 @@ void AdaptivePathIntegralCI::propagate_power(std::vector<BitsetDeterminant>& det
     copy_map_to_vec(dets_C_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_positive(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
-{
-    // A map that contains the pair (determinant,coefficient)
-    std::map<BitsetDeterminant,double> dets_C_map;
 
-    nspawned_ = 0;
-    nzerospawn_ = 0;
 
-    // Term 1. |n>
-    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
-        dets_C_map[dets[I]] = C[I];
-    }
-    // Term 2. +tau (H - S)|n>
-    apply_tau_H(+tau,spawning_threshold,dets,C,dets_C_map,S);
-
-    // Overwrite the input vectors with the updated wave function
-    copy_map_to_vec(dets_C_map,dets,C);
-}
 
 void AdaptivePathIntegralCI::propagate_Trotter(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
@@ -593,22 +613,33 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& det
     }
     double delta_E = delta_E_num / delta_E_den;
 
-
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         dets_C_map[dets[I]] -= C[I] * delta_E;
     }
 
+    double step_norm = 0.0;
     for (auto& det_C : dets_C_map){
         double EI = det_C.first.energy();
         det_C.second /= - (EI - S);
+        step_norm += det_C.second * det_C.second;
     }
+    step_norm = std::sqrt(step_norm);
+
+
+    double max_norm = 0.05;
+    if (step_norm > max_norm){
+        outfile->Printf("\n\t  Step norm = %f is greather than %f.  Rescaling Olsen step.",step_norm,max_norm);
+        double factor = max_norm / step_norm;
+        for (auto& det_C : dets_C_map){
+            det_C.second *= factor;
+        }
+    }
+
     double sum = 0.0;
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         sum += std::fabs(dets_C_map[dets[I]]);
         dets_C_map[dets[I]] += C[I];
     }
-
-    outfile->Printf("\n  %f = %f / %f, sum = %f",delta_E, delta_E_num, delta_E_den,sum);
 
     double norm = 0.0;
     for (auto& det_C : dets_C_map){
@@ -618,8 +649,315 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& det
     for (auto& det_C : dets_C_map){
         det_C.second /= norm;
     }
+
     // Overwrite the input vectors with the updated wave function
     copy_map_to_vec(dets_C_map,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold)
+{
+    std::map<BitsetDeterminant,double> dets_C_map;
+
+    int maxiter = 50;
+    bool print = false;
+
+    // Number of roots
+    int M = 1;
+
+    size_t collapse_size = 1 * M;
+    size_t subspace_size = 8 * M;
+
+    double e_convergence = 1.0e-10;
+
+    // current set of guess vectors
+    std::vector<std::map<BitsetDeterminant,double>> b(subspace_size);
+
+    // guess vectors formed from old vectors, stored by row
+    std::vector<std::map<BitsetDeterminant,double>> bnew(subspace_size);
+
+    // residual eigenvectors, stored by row
+    std::vector<std::map<BitsetDeterminant,double>> r(subspace_size);
+
+    // sigma vectors, stored by column
+    std::vector<std::map<BitsetDeterminant,double>> sigma(subspace_size);
+
+    // Davidson mini-Hamitonian
+    Matrix G("G",subspace_size, subspace_size);
+    // A metric matrix
+    Matrix S("S",subspace_size, subspace_size);
+    // Eigenvectors of the Davidson mini-Hamitonian
+    Matrix alpha("alpha",subspace_size, subspace_size);
+    Matrix alpha_t("alpha",subspace_size, subspace_size);
+    // Eigenvalues of the Davidson mini-Hamitonian
+    Vector lambda("lambda",subspace_size);
+    double* lambda_p = lambda.pointer();
+    // Old eigenvalues of the Davidson mini-Hamitonian
+    Vector lambda_old("lambda",subspace_size);
+
+    // Set b[0]
+    for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+        b[0][dets[I]] = C[I];
+    }
+
+    size_t L = 1;
+    int iter = 0;
+    int converged = 0;
+    double old_energy = 0.0;
+    while((converged < M) and (iter < maxiter)) {
+        bool skip_check = false;
+        if(print) outfile->Printf("\n  iter = %d\n", iter);
+
+        // Step #2: Build and Diagonalize the Subspace Hamiltonian
+        for (size_t l = 0; l < L; ++l){
+            sigma[l].clear();
+            apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
+        }
+
+        G.zero();
+        S.zero();
+        for (size_t i = 0; i < L; ++i){
+            for (size_t j = 0; j < L; ++j){
+                double g = 0.0;
+                auto& sigma_j = sigma[j];
+                for (auto& det_b_i : b[i]){
+                    g += det_b_i.second * sigma_j[det_b_i.first];
+                }
+                G.set(i,j,g);
+
+                double s = 0.0;
+                auto& b_j = b[j];
+                for (auto& det_b_i : b[i]){
+                    s += det_b_i.second * b_j[det_b_i.first];
+                }
+                S.set(i,j,s);
+            }
+        }
+
+        S.power(-0.5);
+        G.transform(S);
+        G.diagonalize(alpha,lambda);
+        alpha_t.gemm(false,false,1.0,S,alpha,0.0);
+        double** alpha_p = alpha_t.pointer();
+
+        dets_C_map.clear();
+        for(int i = 0; i < L; i++) {
+            for (auto& det_b_i : b[i]){
+                dets_C_map[det_b_i.first] += alpha_p[i][0] * det_b_i.second;
+            }
+        }
+
+        copy_map_to_vec(dets_C_map,dets,C);
+        double var_energy = estimate_var_energy_sparse(dets,C,1.0e-8);
+
+        double var_energy_gradient = var_energy - old_energy;
+        old_energy = var_energy;
+        outfile->Printf("\n%9d %8.4f %10zu %20.12f %.3e %20.12f %.3e",iter,0.0,C.size(),
+                        0.0,0.0,
+                        var_energy,var_energy_gradient);
+
+        // If L is close to maxdim, collapse to one guess per root */
+        if(subspace_size - L < M) {
+            if(print) {
+                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", subspace_size, L);
+                outfile->Printf("Collapsing eigenvectors.\n");
+            }
+            for(int k = 0; k < collapse_size; k++){
+                bnew[k].clear();
+                auto& bnew_k = bnew[k];
+                for(int i = 0; i < L; i++) {
+                    for (auto& det_b_i : b[i]){
+                        bnew_k[det_b_i.first] += alpha_p[i][k] * det_b_i.second;
+                    }
+                }
+            }
+
+            // Copy them into place
+            L = 0;
+            for(int k = 0; k < collapse_size; k++){
+                b[k].clear();
+                auto& b_k = b[k];
+                for (auto& det_bnew_k : bnew[k]){
+                    b_k[det_bnew_k.first] = det_bnew_k.second;
+                }
+                L++;
+            }
+
+            skip_check = true;
+
+            // Step #2: Build and Diagonalize the Subspace Hamiltonian
+            for (size_t l = 0; l < L; ++l){
+                sigma[l].clear();
+                apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
+            }
+
+            // Rebuild and Diagonalize the Subspace Hamiltonian
+            G.zero();
+            S.zero();
+            for (size_t i = 0; i < L; ++i){
+                for (size_t j = 0; j < L; ++j){
+                    double g = 0.0;
+                    auto& sigma_j = sigma[j];
+                    for (auto& det_b_i : b[i]){
+                        g += det_b_i.second * sigma_j[det_b_i.first];
+                    }
+                    G.set(i,j,g);
+
+                    double s = 0.0;
+                    auto& b_j = b[j];
+                    for (auto& det_b_i : b[i]){
+                        s += det_b_i.second * b_j[det_b_i.first];
+                    }
+                    S.set(i,j,s);
+                }
+            }
+            for (size_t i = 1; i < L; ++i){
+                for (size_t j = 1; j < L; ++j){
+                    if (i != j){
+                        G.set(i,j,0.0);
+                    }
+                }
+            }
+
+            S.power(-0.5);
+            G.transform(S);
+            G.diagonalize(alpha,lambda);
+            alpha_t.gemm(false,false,1.0,S,alpha,0.0);
+        }
+
+        // Step #3: Build the Correction Vectors
+        // form preconditioned residue vectors
+        for(int k = 0; k < M; k++){  // loop over roots
+            r[k].clear();
+            auto& r_k = r[k];
+            for(int i = 0; i < L; i++) {
+                for (auto& det_sigma_i : sigma[i]){
+                    r_k[det_sigma_i.first] += alpha_p[i][k] * det_sigma_i.second;
+                }
+            }
+            for(int i = 0; i < L; i++) {
+                for (auto& det_b_i : b[i]){
+                    r_k[det_b_i.first] -= alpha_p[i][k] * lambda_p[k] * det_b_i.second;
+                }
+            }
+
+            for (auto& det_r_k : r_k){
+                double denom = lambda_p[k] - det_r_k.first.energy();
+                if(fabs(denom) > 1e-6){
+                    det_r_k.second  /= denom;
+                }
+                else{
+                    det_r_k.second  = 0.0;
+                }
+            }
+        }
+
+        // Step #4: Add the new correction vectors
+        for(int k = 0; k < M; k++){  // loop over roots
+            auto& r_k = r[k];
+            auto& b_new = b[L];
+            for (auto& det_r_k : r_k){
+                b_new[det_r_k.first] = det_r_k.second;
+            }
+            // Orthogonalize to previous roots
+            for (int i = 0; i < L; ++i){
+                double s_i = 0.0;
+                double m_i = 0.0;
+                auto& b_i = b[i];
+                for (auto& det_b_new : b_new){
+                    s_i += det_b_new.second * b_i[det_b_new.first];
+                }
+                for (auto& det_b_i : b_i){
+                    m_i += det_b_i.second * det_b_i.second;
+                }
+                for (auto& det_b_i : b_i){
+                    b_new[det_b_i.first] -= s_i * det_b_i.second / m_i;
+                }
+            }
+            L++;
+        }
+
+
+//        /* normalize each residual */
+//        for(int k = 0; k < M; k++) {
+//            double norm = 0.0;
+//            for(int I = 0; I < N; I++) {
+//                norm += f_p[k][I] * f_p[k][I];
+//            }
+//            norm = std::sqrt(norm);
+//            for(int I = 0; I < N; I++) {
+//                f_p[k][I] /= norm;
+//            }
+//        }
+
+//        // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
+//        for(int k = 0; k < M; k++){
+//            if (L < subspace_size){
+//                if(schmidt_add(b_p, L, N, f_p[k])) {
+//                    L++;  // <- Increase L if we add one more basis vector
+//                }
+//            }
+//        }
+
+        // check convergence on all roots
+        if(!skip_check) {
+            converged = 0;
+            if(print) {
+                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
+                outfile->Printf("---- -------------------- ------- ----------\n");
+            }
+            for(int k = 0; k < M; k++) {
+                double diff = std::fabs(lambda.get(k) - lambda_old.get(k));
+                bool this_converged = false;
+                if(diff < e_convergence) {
+                    this_converged = true;
+                    converged++;
+                }
+                lambda_old.set(k,lambda.get(k));
+                if(print) {
+                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k) + nuclear_repulsion_energy_, diff,
+                           this_converged ? "Y" : "N");
+                }
+            }
+        }
+
+        outfile->Flush();
+
+        iter++;
+    }
+
+//    /* generate final eigenvalues and eigenvectors */
+//    //if(converged == M) {
+//    double** alpha_p = alpha.pointer();
+//    double** b_p = b.pointer();
+//    for(int i = 0; i < M; i++) {
+//        eps[i] = lambda.get(i);
+//        for(int I = 0; I < N; I++){
+//            v[I][i] = 0.0;
+//        }
+//        for(int j = 0; j < L; j++) {
+//            for(int I=0; I < N; I++) {
+//                v[I][i] += alpha_p[j][i] * b_p[j][I];
+//            }
+//        }
+//        // Normalize v
+//        double norm = 0.0;
+//        for(int I = 0; I < N; I++) {
+//            norm += v[I][i] * v[I][i];
+//        }
+//        norm = std::sqrt(norm);
+//        for(int I = 0; I < N; I++) {
+//            v[I][i] /= norm;
+//        }
+//    }
+
+    copy_map_to_vec(dets_C_map,dets,C);
+
+
+
+    outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
+    double var_energy = estimate_var_energy_sparse(dets,C,1.0e-14);
+    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %.12f Eh",var_energy);
+//    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
 }
 
 double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
@@ -811,7 +1149,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Bit
 }
 
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
+size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, const BitsetDeterminant &detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1045,7 +1383,52 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 }
 
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling)
+size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S)
+{
+    // A vector of maps that hold (determinant,coefficient)
+    std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
+    std::vector<size_t> spawned(num_threads_,0);
+
+    if(do_dynamic_prescreening_){
+#pragma omp parallel for
+        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+            const BitsetDeterminant& det = it->first;
+            std::pair<double,double> zero_pair(0.0,0.0);
+            int thread_id = omp_get_thread_num();
+            // Update the list of couplings
+            std::pair<double,double> max_coupling;
+            #pragma omp critical
+            {
+                max_coupling = dets_max_couplings_[it->first];
+            }
+            if (max_coupling == zero_pair){
+                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
+                #pragma omp critical
+                {
+                    dets_max_couplings_[it->first] = max_coupling;
+                }
+            }else{
+                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
+            }
+        }
+    }else{
+#pragma omp parallel for
+        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+            int thread_id = omp_get_thread_num();
+            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S);
+        }
+    }
+
+    // Combine the results of all the threads
+    combine_maps(thread_det_C_map,dets_C_map);
+
+    nspawned_ = 0;
+    for (size_t t = 0; t < num_threads_; ++t) nspawned_ += spawned[t];
+    return nspawned_;
+}
+
+
+size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const BitsetDeterminant &detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1333,7 +1716,7 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<BitsetDete
 }
 
 
-void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std::vector<double> C)
+void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant>& space,std::vector<double>& C)
 {
     outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
@@ -1352,6 +1735,31 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant> space,std:
                         det_weight[I].second,
                         space[det_weight[I].second].str().c_str());
     }
+}
+
+void AdaptivePathIntegralCI::save_wfn(std::vector<BitsetDeterminant>& space,std::vector<double>& C,std::vector<std::map<BitsetDeterminant,double>>& solutions)
+{
+    outfile->Printf("\n\n  Saving the wave function:\n");
+
+    std::map<BitsetDeterminant,double> solution;
+    for (size_t I = 0; I < space.size(); ++I){
+        solution[space[I]] = C[I];
+    }
+    solutions.push_back(std::move(solution));
+}
+
+void AdaptivePathIntegralCI::orthogonalize(std::vector<BitsetDeterminant>& space,std::vector<double>& C,std::vector<std::map<BitsetDeterminant,double>>& solutions)
+{
+    std::map<BitsetDeterminant,double> det_C;
+    for (size_t I = 0; I < space.size(); ++I){
+        det_C[space[I]] = C[I];
+    }
+    for (size_t n = 0; n < solutions.size(); ++n){
+        double dot_prod = dot(det_C,solutions[n]);
+        add(det_C,-dot_prod,solutions[n]);
+    }
+    normalize(det_C);
+    copy_map_to_vec(det_C,space,C);
 }
 
 void combine_maps(std::vector<bsmap>& thread_det_C_map,bsmap& dets_C_map)
@@ -1386,7 +1794,7 @@ void copy_map_to_vec(bsmap& dets_C_map,std::vector<BitsetDeterminant>& dets,std:
     }
 }
 
-void normalize(std::vector<double>& C)
+double normalize(std::vector<double>& C)
 {
     size_t size = C.size();
     double norm = 0.0;
@@ -1397,8 +1805,54 @@ void normalize(std::vector<double>& C)
     for (size_t I = 0; I < size; ++I){
         C[I] /= norm;
     }
+    return norm;
 }
 
+double normalize(std::map<BitsetDeterminant,double>& dets_C)
+{
+    double norm = 0.0;
+    for (auto& det_C : dets_C){
+        norm += det_C.second * det_C.second;
+    }
+    norm = std::sqrt(norm);
+    for (auto& det_C : dets_C){
+        det_C.second /= norm;
+    }
+    return norm;
+}
+
+double dot(std::map<BitsetDeterminant,double>& A,std::map<BitsetDeterminant,double>& B)
+{
+    double res = 0.0;
+    for (auto& det_C : A){
+        res += det_C.second * B[det_C.first];
+    }
+    return res;
+}
+
+void add(std::map<BitsetDeterminant,double>& A,double beta,std::map<BitsetDeterminant,double>& B)
+{
+    // A += beta B
+    double res = 0.0;
+    for (auto& det_C : B){
+        A[det_C.first] += beta * det_C.second;
+    }
+}
+
+void scale(std::vector<double>& A,double alpha)
+{
+    size_t size = A.size();
+    for (size_t I = 0; I < size; ++I){
+        A[I] *= alpha;
+    }
+}
+
+void scale(std::map<BitsetDeterminant,double>& A,double alpha)
+{
+    for (auto& det_C : A){
+        A[det_C.first] *= alpha;
+    }
+}
 
 double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& det_C,std::pair<double,double>& max_coupling)
 {
@@ -1822,6 +2276,74 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,BitsetDetermi
         }
     }
     return gradient_norm;
+}
+
+void AdaptivePathIntegralCI::propagate_power_quadratic_extrapolation(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    std::map<BitsetDeterminant,double> dets_C_map;
+
+    std::vector<std::map<BitsetDeterminant,double>> x(4);
+    std::vector<std::map<BitsetDeterminant,double>> y(3);
+
+    // Form the xs
+    auto& x0 = x[0];
+    for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+        x0[dets[I]] = C[I];
+    }
+    for (size_t k = 0; k < 3; ++k){
+        dets_C_map.clear();
+        double norm = normalize(C);
+        apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_map,0.0);
+        // Overwrite the input vectors with the updated wave function
+//        scale(dets_C_map,norm);
+        copy_map_to_vec(dets_C_map,dets,C);
+        auto& xk = x[k + 1];
+        for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+            xk[dets[I]] = C[I];
+        }
+    }
+    // Form the ys
+    for (size_t k = 0; k < 3; ++k){
+        add(y[k],1.0,x[k + 1]);
+        add(y[k],-1.0,x[0]);
+    }
+    // QR factorization
+    std::vector<std::map<BitsetDeterminant,double>> e(2);
+    // Form e1
+    e[0] = y[0];
+    normalize(e[0]);
+
+    // Form e2
+    e[1] = y[1];
+    double e0_y1 = dot(e[0],y[1]);
+    add(e[1],-e0_y1,e[0]);
+    normalize(e[1]);
+
+    double r11 = dot(e[0],y[0]);
+    double r12 = dot(e[0],y[1]);
+    double r22 = dot(e[1],y[1]);
+    double Qy1 = dot(e[0],y[2]);
+    double Qy2 = dot(e[1],y[2]);
+
+    double gamma3 = 1.0;
+    double gamma2 = -Qy2 / r22;
+    double gamma1 = -(Qy1 + r12 * gamma2) / r11;
+    double gamma0 = -(gamma1 + gamma2 + gamma3);
+    double beta0 = gamma1 + gamma2 + gamma3;
+    double beta1 = gamma2 + gamma3;
+    double beta2 = gamma3;
+    double b[3];
+    b[0] = beta0;
+    b[1] = beta1;
+    b[2] = beta2;
+
+    dets_C_map.clear();
+    for (size_t k = 0; k < 3; ++k){
+        outfile->Printf("\n  beta[%zu] = %f",k,b[k]);
+        add(dets_C_map,b[k],x[k + 1]);
+    }
+    copy_map_to_vec(dets_C_map,dets,C);
 }
  */
 

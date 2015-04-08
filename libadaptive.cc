@@ -159,7 +159,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL");
+        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST");
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",1);
@@ -379,7 +379,9 @@ libadaptive(Options &options)
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
-        apici->compute_energy();
+        for (int n = 0; n < options.get_int("NROOT"); ++n){
+            apici->compute_energy();
+        }
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")
