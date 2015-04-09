@@ -347,15 +347,15 @@ libadaptive(Options &options)
     ExplorerIntegrals* ints_;
     if(options.get_str("INT_TYPE") == "CHOLESKY")
     {
-    ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
     else if(options.get_str("INT_TYPE") == "DF")
     {
-    ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
     else
     {
-    ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
