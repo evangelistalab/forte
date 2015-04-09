@@ -26,17 +26,16 @@ namespace psi{ namespace libadaptive{
 
 
 ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), core_energy_(0.0), scalar_(0.0), ints_(nullptr)
+    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0)
 {
     startup();
-    transform_integrals();
-    read_one_electron_integrals();
-
+    allocate();
+    transform_one_electron_integrals();
 }
 
 ExplorerIntegrals::~ExplorerIntegrals()
 {
-    cleanup();
+    deallocate();
 }
 
 void ExplorerIntegrals::startup()
@@ -113,8 +112,6 @@ void ExplorerIntegrals::startup()
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
-
-    allocate();
 }
 
 void ExplorerIntegrals::allocate()
@@ -125,13 +122,10 @@ void ExplorerIntegrals::allocate()
 
     fock_matrix_a = new double[nmo_ * nmo_];
     fock_matrix_b = new double[nmo_ * nmo_];
-
 }
 
 void ExplorerIntegrals::deallocate()
 {
-    if (ints_ != nullptr) delete ints_;
-
     // Deallocate the memory required to store the one-electron integrals
     delete[] one_electron_integrals_a;
     delete[] one_electron_integrals_b;
@@ -139,7 +133,6 @@ void ExplorerIntegrals::deallocate()
     delete[] fock_matrix_a;
     delete[] fock_matrix_b;
 }
-
 
 void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 {
@@ -157,123 +150,87 @@ void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
     delete[] ints;
     ints = temp_ints;
 }
-void ExplorerIntegrals::set_oei(double** ints,bool alpha)
-{
-    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    for (int p = 0; p < nmo_; ++p){
-        for (int q = 0; q < nmo_; ++q){
-            p_oei[p * nmo_ + q] = ints[p][q];
-        }
-    }
-}
-
-void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
-{
-    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    p_oei[p * nmo_ + q] = value;
-}
 
 
-void ExplorerIntegrals::cleanup()
-{
-    deallocate();
-}
+//void ExplorerIntegrals::set_oei(double** ints,bool alpha)
+//{
+//    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+//    for (int p = 0; p < nmo_; ++p){
+//        for (int q = 0; q < nmo_; ++q){
+//            p_oei[p * nmo_ + q] = ints[p][q];
+//        }
+//    }
+//}
 
-void ExplorerIntegrals::transform_integrals()
+//void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
+//{
+//    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+//    p_oei[p * nmo_ + q] = value;
+//}
+
+//void ExplorerIntegrals::transform_integrals()
+//{
+//    // Now we want the reference (SCF) wavefunction
+//    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+//    // For now, we'll just transform for closed shells and generate all integrals.
+//    std::vector<boost::shared_ptr<MOSpace> > spaces;
+
+//    // TODO: transform only the orbitals within an energy range to save time on this step.
+//    spaces.push_back(MOSpace::all);
+
+//    // If the integral
+//    if (ints_ != nullptr) delete ints_;
+
+//    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
+//    if (restricted_){
+//        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+//    }else{
+//        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+//    }
+
+//    // Keep the SO integrals on disk in case we want to retransform them
+//    ints_->set_keep_iwl_so_ints(true);
+//    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+
+//    outfile->Printf("\n  Integral transformation done.");
+//    outfile->Flush();
+//}
+
+void ExplorerIntegrals::transform_one_electron_integrals()
 {
     // Now we want the reference (SCF) wavefunction
+    boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
-    // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
+    SharedMatrix T = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_T));
+    SharedMatrix V = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_V));
 
-    // TODO: transform only the orbitals within an energy range to save time on this step.
-    spaces.push_back(MOSpace::all);
+    T->load(psio_, PSIF_OEI);
+    V->load(psio_, PSIF_OEI);
 
-    // If the integral
-    if (ints_ != nullptr) delete ints_;
+    SharedMatrix Ca = wfn->Ca();
+    SharedMatrix Cb = wfn->Cb();
 
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }
+    T->add(V);
+    V->copy(T);
+    T->transform(Ca);
+    V->transform(Cb);
 
-    // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
-
-    outfile->Printf("\n  Integral transformation done.");
-    outfile->Flush();
-}
-
-void ExplorerIntegrals::read_one_electron_integrals()
-{
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_a[pq] = 0.0;
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_b[pq] = 0.0;
-    double* packed_oei = new double[num_oei];
 
-    if(restricted_){
-        // Read the one-electron integrals (T + V, restricted)
-        for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_OEI,packed_oei,num_oei,0,0,"outfile");
-        for (int p = 0; p < nmo_; ++p){
-            for (int q = p; q < nmo_; ++q){
-                one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
-                one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_b[q * nmo_ + p] = packed_oei[p + ioff[q]];
+    // Read the one-electron integrals (T + V, restricted)
+    int offset = 0;
+    for (int h = 0; h < nirrep_; ++h){
+        for (int p = 0; p < nmopi_[h]; ++p){
+            for (int q = 0; q < nmopi_[h]; ++q){
+                one_electron_integrals_a[(p + offset) * nmo_ + q + offset] = T->get(h,p,q);
+                one_electron_integrals_b[(p + offset) * nmo_ + q + offset] = V->get(h,p,q);
             }
         }
-    }else{
-        // Read the alpha-alpha one-electron integrals (T + V)
-        for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_A_OEI,packed_oei,num_oei,0,0,"outfile");
-        for (int p = 0; p < nmo_; ++p){
-            for (int q = p; q < nmo_; ++q){
-                one_electron_integrals_a[p * nmo_ + q] = one_electron_integrals_a[q * nmo_ + p] = packed_oei[p + ioff[q]];
-            }
-        }
-        for (size_t pq = 0; pq < num_oei; ++pq) packed_oei[pq] = 0.0;
-        iwl_rdone(PSIF_OEI,PSIF_MO_B_OEI,packed_oei,num_oei,0,0,"outfile");
-        for (int p = 0; p < nmo_; ++p){
-            for (int q = p; q < nmo_; ++q){
-                one_electron_integrals_b[p * nmo_ + q] = one_electron_integrals_b[q * nmo_ + p] = packed_oei[p + ioff[q]];
-            }
-        }
+        offset += nmopi_[h];
     }
-    delete[] packed_oei;
-
-    //    int num_oei_so = INDEX2(nso_ - 1, nso_ - 1) + 1;
-    //    for (size_t p = 0; p < nmo_; ++p) diagonal_kinetic_energy_integrals[p] = 0.0;
-    //    double* packed_oei_so = new double[num_oei_so];
-
-    //    // Read the kinetic energy integrals (restricted integrals, T)
-    //    for (size_t pq = 0; pq < num_oei_so; ++pq) packed_oei_so[pq] = 0.0;
-    //    iwl_rdone(PSIF_OEI,PSIF_SO_T,packed_oei_so,num_oei_so,0,0,"outfile");
-
-    //    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    //    SharedMatrix Ca = wfn->Ca();
-    //    Dimension mopi_ = Ca->colspi();
-    //    Dimension sopi = Ca->rowspi();
-
-    //    // Transform the SO integrals to the MO basis
-    //    int q = 0;
-    //    int rho = 0;
-    //    for (int h = 0; h < nirrep_; ++h){
-    //        double** c = Ca->pointer(h);
-    //        for (int p = 0; p < mopi_[h]; ++p){
-    //            double t_int = 0.0;
-    //            for (int mu = 0; mu < sopi[h]; ++mu){
-    //                for (int nu = 0; nu < sopi[h]; ++nu){
-    //                    t_int += packed_oei_so[INDEX2(rho + mu,rho + nu)] * c[mu][p] * c[nu][p];
-    //                }
-    //            }
-    //            diagonal_kinetic_energy_integrals[q] = t_int;
-    //            q++;
-    //        }
-    //        rho += sopi[h];
-    //    }
-    //    delete[] packed_oei_so;
 }
 
 /**
@@ -283,11 +240,10 @@ void ExplorerIntegrals::read_one_electron_integrals()
      * @param resort_frozen_core -
      */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    : ExplorerIntegrals(options, restricted, resort_frozen_core), ints_(nullptr){
 
     allocate();
     transform_integrals();
-    read_one_electron_integrals();
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -319,8 +275,8 @@ void ConventionalIntegrals::allocate()
 
 void ConventionalIntegrals::deallocate()
 {
-
-    // Deallocate the memory required to store the one-electron integrals
+    // Deallocate the integral transform object if needed
+    if (ints_ != nullptr) delete ints_;
 
     // Allocate the memory required to store the two-electron integrals
     delete[] aphys_tei_aa;
@@ -405,11 +361,12 @@ void ConventionalIntegrals::update_integrals(bool freeze_core)
         }
     }
 }
+
 void ConventionalIntegrals::retransform_integrals()
 {
     aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
     transform_integrals();
-    read_one_electron_integrals();
     gather_integrals();
     update_integrals();
 }
@@ -561,7 +518,6 @@ void ConventionalIntegrals::resort_integrals_after_freezing()
     resort_two(diagonal_aphys_tei_aa,cmo2mo);
     resort_two(diagonal_aphys_tei_ab,cmo2mo);
     resort_two(diagonal_aphys_tei_bb,cmo2mo);
-
 
     resort_four(aphys_tei_aa,cmo2mo);
     resort_four(aphys_tei_ab,cmo2mo);
@@ -741,24 +697,24 @@ void ConventionalIntegrals::freeze_core_orbitals()
 
 void ConventionalIntegrals::compute_frozen_core_energy()
 {
-    core_energy_ = 0.0;
+    frozen_core_energy_ = 0.0;
     double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
-            core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
+            frozen_core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
             outfile->Printf("\n %12.8f", oei_a(p + i, p + i));
 
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
-                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
+                    frozen_core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
                 }
                 q += nmopi_[hj]; // orbital offset for the irrep hj
             }
         }
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
+    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 }
 
 void ConventionalIntegrals::compute_frozen_one_body_operator()
@@ -950,8 +906,6 @@ void DFIntegrals::make_diagonal_integrals()
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
     allocate();
-    transform_integrals();
-    read_one_electron_integrals();
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -961,41 +915,6 @@ DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restrict
     }
 }
 
-void DFIntegrals::transform_integrals()
-{
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
-    // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
-
-    // TODO: transform only the orbitals within an energy range to save time on this step.
-    spaces.push_back(MOSpace::all);
-
-    // If the integral
-    if (ints_ != nullptr) delete ints_;
-
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }
-
-    // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
-
-    outfile->Printf("\n  Integral transformation done.");
-    outfile->Flush();
-
-    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
-
-    //for(size_t p = 0; p < nmo_; p++){
-    //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
-    //}
-
-}
 void DFIntegrals::update_integrals(bool freeze_core)
 {
     make_diagonal_integrals();
@@ -1010,8 +929,7 @@ void DFIntegrals::update_integrals(bool freeze_core)
 void DFIntegrals::retransform_integrals()
 {
     aptei_idx_ = nmo_;
-    transform_integrals();
-    read_one_electron_integrals();
+    transform_one_electron_integrals();
     gather_integrals();
     update_integrals();
 }
@@ -1192,23 +1110,23 @@ void DFIntegrals::freeze_core_orbitals()
 
 void DFIntegrals::compute_frozen_core_energy()
 {
-    core_energy_ = 0.0;
+    frozen_core_energy_ = 0.0;
     double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
-            core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
+            frozen_core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
 
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
-                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
+                    frozen_core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
                 }
                 q += nmopi_[hj]; // orbital offset for the irrep hj
             }
         }
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
+    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 }
 
 void DFIntegrals::compute_frozen_one_body_operator()
@@ -1259,8 +1177,6 @@ void DFIntegrals::resort_integrals_after_freezing()
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
     allocate();
-    transform_integrals();
-    read_one_electron_integrals();
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -1423,8 +1339,6 @@ void CholeskyIntegrals::allocate()
 
 }
 
-
-
 void CholeskyIntegrals::update_integrals(bool freeze_core)
 {
     make_diagonal_integrals();
@@ -1435,48 +1349,11 @@ void CholeskyIntegrals::update_integrals(bool freeze_core)
         }
     }
 }
-void CholeskyIntegrals::transform_integrals()
-{
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
-    // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
-
-    // TODO: transform only the orbitals within an energy range to save time on this step.
-    spaces.push_back(MOSpace::all);
-
-    // If the integral
-    if (ints_ != nullptr) delete ints_;
-
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }
-
-    // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
-
-    outfile->Printf("\n  Integral transformation done.");
-    outfile->Flush();
-
-    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
-
-    //for(size_t p = 0; p < nmo_; p++){
-    //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
-    //}
-
-}
-
 
 void CholeskyIntegrals::retransform_integrals()
 {
     aptei_idx_ = nmo_;
-    transform_integrals();
-    read_one_electron_integrals();
+    transform_one_electron_integrals();
     gather_integrals();
     update_integrals();
 }
@@ -1692,23 +1569,23 @@ void CholeskyIntegrals::freeze_core_orbitals()
 
 void CholeskyIntegrals::compute_frozen_core_energy()
 {
-    core_energy_ = 0.0;
+    frozen_core_energy_ = 0.0;
     double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
-            core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
+            frozen_core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
 
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
-                    core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
+                    frozen_core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
                 }
                 q += nmopi_[hj]; // orbital offset for the irrep hj
             }
         }
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",core_energy_);
+    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 }
 
 void CholeskyIntegrals::compute_frozen_one_body_operator()

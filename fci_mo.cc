@@ -81,7 +81,6 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
         print_d2("Db", Db_);
     }
     fill_density();
-//    L1a->print();
 
     // Fock Matrix
     int e_conv = -log10(options.get_double("E_CONVERGENCE"));

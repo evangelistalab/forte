@@ -50,7 +50,7 @@ public:
     
     /// Return the number of auxiliary basis functions if density fitting
 
-    /// Return the number of cholesky vectors if integrals are cholesky factorized    
+    /// Return the number of cholesky vectors if integrals are cholesky factorized
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}
@@ -61,7 +61,7 @@ public:
     Dimension& ncmopi() {return ncmopi_;}
 
     /// Return the frozen core energy
-    virtual double frozen_core_energy() const = 0;
+    double frozen_core_energy() {return frozen_core_energy_;}
 
     /// Scalar component of the Hamiltonian
     double scalar() const {return scalar_;}
@@ -169,15 +169,12 @@ protected:
     /// Do we have to resort the integrals to eliminate frozen orbitals?
     IntegralFrozenCore resort_frozen_core_;
 
-    /// The IntegralTransform object used by this class
-    IntegralTransform* ints_;
-
     /// Number of irreps
     size_t nirrep_;
 
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
-  
+
     /// The number of auxiliary basis functions if DF
     /// The number of cholesky vectors
     /// The number of cholesky/auxiliary
@@ -207,7 +204,7 @@ protected:
     size_t num_aptei;
 
     /// Frozen-core energy
-    double core_energy_;
+    double frozen_core_energy_;
     std::vector<int> pair_irrep_map;
     std::vector<int> pair_index_map;
 
@@ -223,7 +220,12 @@ protected:
     // ==> Class private functions <==
 
     void startup();
-    void cleanup();
+
+    void transform_one_electron_integrals();
+
+    void resort_two(double*& ints,std::vector<size_t>& map);
+
+    // ==> Class private virtual functions <==
 
     /// Allocate memory
     virtual void allocate();
@@ -231,10 +233,6 @@ protected:
     /// Deallocate memory
     virtual void deallocate();
 
-    /// Transform the integrals
-    virtual void transform_integrals();
-
-    void read_one_electron_integrals();
     virtual void make_diagonal_integrals() = 0;
 
     /// This function manages freezing core and virtual orbitals
@@ -250,18 +248,87 @@ protected:
     /// we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
 
-    void resort_two(double*& ints,std::vector<size_t>& map);
+
     virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
     virtual void resort_four(double*& tei, std::vector<size_t>& map) = 0;
 
     /// Look at CD/DF/Conventional to see implementation
     /// computes/reads integrals
     virtual void gather_integrals() = 0;
+};
+
+/**
+ * @brief The ConventionalIntegrals class is an interface to calculate the conventional integrals
+ * Assumes storage of all tei and stores in core.
+ */
+
+class ConventionalIntegrals: public ExplorerIntegrals{
+public:
+    ///Contructor of the class.  Calls ExplorerIntegrals constructor
+    ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    virtual ~ConventionalIntegrals();
+
+    /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+    virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
+    virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
+    virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual void retransform_integrals();
+    virtual void update_integrals(bool freeze_core = true);
+    virtual double get_three_integral(size_t A, size_t p, size_t q)
+    {outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");}
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(bool* Ia, bool* Ib);
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
+
+    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
+    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
+    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
+    virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
+    virtual size_t nthree() const
+    {
+        throw PSIEXCEPTION("Wrong Int_Type");
+    }
+private:
+    /// Transform the integrals
+    void transform_integrals();
+
+    virtual void gather_integrals();
+    //Allocates memory for a antisymmetriced tei (nmo_^4)
+    virtual void allocate();
+    virtual void deallocate();
+    //Calculates the diagonal integrals from aptei
+    virtual void make_diagonal_integrals();
+    virtual void freeze_core_orbitals();
+    virtual void compute_frozen_core_energy();
+    virtual void compute_frozen_one_body_operator();
+    virtual void resort_integrals_after_freezing();
+    virtual void resort_four(double*& tei, std::vector<size_t>& map);
+    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map){}
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
     /// Function to get three index integral
+
+    /// The IntegralTransform object used by this class
+    IntegralTransform* ints_;
+
+    double* aphys_tei_aa;
+    double* aphys_tei_ab;
+    double* aphys_tei_bb;
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
 };
+
 
 /// Classes written by Kevin Hannon
 ///
@@ -271,7 +338,9 @@ protected:
  */
 class CholeskyIntegrals : public ExplorerIntegrals{
 public:
-   ///aptei_x will grab antisymmetriced integrals and creates DF/CD integrals on the fly
+    CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    virtual ~CholeskyIntegrals();
+    ///aptei_x will grab antisymmetriced integrals and creates DF/CD integrals on the fly
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -281,7 +350,7 @@ public:
     virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
-   ///Do not use this if you are using CD/DF integrals
+    ///Do not use this if you are using CD/DF integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib);
@@ -296,18 +365,13 @@ public:
     virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
     virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
     virtual size_t nthree() const {return nthree_;}
-    virtual double frozen_core_energy() const{return core_energy_;}
 
-    CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-    virtual ~CholeskyIntegrals();
 private:
     ///Computes Cholesky integrals
     virtual void gather_integrals();
     ///Allocates diagonal integrals
     virtual void allocate();
     virtual void deallocate();
-    ///Needs to be phased out - transfroms one electron ints
-    virtual void transform_integrals();
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
     virtual void compute_frozen_core_energy();
@@ -327,11 +391,8 @@ private:
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
     size_t nthree_;
-    double core_energy_;
-
-
-
 };
+
 
 /**
  * @brief The DFIntegrals class - interface to get DF integrals, freeze core and resort,
@@ -339,123 +400,49 @@ private:
  */
 class DFIntegrals : public ExplorerIntegrals{
 public:
-   virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
-   virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
-   virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
-   virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
-   virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
-   virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
-   virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
-   virtual void retransform_integrals();
-   virtual void update_integrals(bool freeze_core = true);
-   virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
-   DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-   virtual ~DFIntegrals();
-   /// Make a Fock matrix computed with respect to a given determinant
-   virtual void make_fock_matrix(bool* Ia, bool* Ib);
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+    virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
+    virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
+    virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
+    virtual void retransform_integrals();
+    virtual void update_integrals(bool freeze_core = true);
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    virtual ~DFIntegrals();
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
-   /// Make a Fock matrix computed with respect to a given determinant
-   virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
 
-   /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-   virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-   virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-   virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-   virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-   virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-   virtual size_t nthree() const {return nthree_;}
-   virtual double frozen_core_energy() const{return core_energy_;}
-
- private:
-   virtual void gather_integrals();
-   virtual void allocate();
-   virtual void deallocate();
-   //Grabs DF integrals with new Ca coefficients
-   virtual void transform_integrals();
-   virtual void make_diagonal_integrals();
-   virtual void freeze_core_orbitals();
-   virtual void compute_frozen_core_energy();
-   virtual void compute_frozen_one_body_operator();
-   virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
-   virtual void resort_integrals_after_freezing();
-   virtual void resort_four(double *&tei, std::vector<size_t> &map){}
-
-   boost::shared_ptr<Matrix> ThreeIntegral_;
-   double* diagonal_aphys_tei_aa;
-   double* diagonal_aphys_tei_ab;
-   double* diagonal_aphys_tei_bb;
-   size_t nthree_;
-   double core_energy_;
-
-
-};
-/**
- * @brief The ConventionalIntegrals class is an interface to calculate the conventional integrals
- * Assumes storage of all tei and stores in core.
- */
-
-class ConventionalIntegrals: public ExplorerIntegrals{
-public:
-   /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
-   virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
-   virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
-   virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
-   virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
-   virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
-   virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
-   virtual void retransform_integrals();
-   virtual void update_integrals(bool freeze_core = true);
-   virtual double get_three_integral(size_t A, size_t p, size_t q)
-    {outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
-    throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");}
-   ///Contructor of the class.  Calls ExplorerIntegrals constructor
-   ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
-   virtual ~ConventionalIntegrals();
-   /// Make a Fock matrix computed with respect to a given determinant
-   virtual void make_fock_matrix(bool* Ia, bool* Ib);
-
-   /// Make a Fock matrix computed with respect to a given determinant
-   virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-
-   /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-   virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-   virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-   virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-   virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-   virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-   virtual size_t nthree() const
-   {
-       throw PSIEXCEPTION("Wrong Int_Type");
-   }
-   virtual double frozen_core_energy() const{return core_energy_;}
-
-
+    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
+    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
+    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
+    virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
+    virtual size_t nthree() const {return nthree_;}
 private:
-   virtual void gather_integrals();
-   //Allocates memory for a antisymmetriced tei (nmo_^4)
-   virtual void allocate();
-   virtual void deallocate();
-   //Calls gather_integrals again, but uses new C matrices
-   virtual void transform_integrals();
-   //Calculates the diagonal integrals from aptei
-   virtual void make_diagonal_integrals();
-   virtual void freeze_core_orbitals();
-   virtual void compute_frozen_core_energy();
-   virtual void compute_frozen_one_body_operator();
-   virtual void resort_integrals_after_freezing();
-   virtual void resort_four(double*& tei, std::vector<size_t>& map);
-   virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map){}
-   virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+    virtual void gather_integrals();
+    virtual void allocate();
+    virtual void deallocate();
+    //Grabs DF integrals with new Ca coefficients
+    virtual void make_diagonal_integrals();
+    virtual void freeze_core_orbitals();
+    virtual void compute_frozen_core_energy();
+    virtual void compute_frozen_one_body_operator();
+    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    virtual void resort_integrals_after_freezing();
+    virtual void resort_four(double *&tei, std::vector<size_t> &map){}
 
-   double* aphys_tei_aa;
-   double* aphys_tei_ab;
-   double* aphys_tei_bb;
-   double* diagonal_aphys_tei_aa;
-   double* diagonal_aphys_tei_ab;
-   double* diagonal_aphys_tei_bb;
-   double core_energy_;
-
-
+    boost::shared_ptr<Matrix> ThreeIntegral_;
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
+    size_t nthree_;
 };
 
 
