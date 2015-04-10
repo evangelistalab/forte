@@ -733,6 +733,7 @@ double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
     return (vpqrsalphaC - vpqrsalphaE);
 
 }
+
 double DFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
@@ -1339,7 +1340,6 @@ void CholeskyIntegrals::deallocate()
     //delete[] qt_pitzer_;
 }
 
-
 void CholeskyIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
     for(size_t p = 0; p < ncmo_; ++p){
@@ -1466,9 +1466,6 @@ void CholeskyIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<
         }
     }
 }
-
-
-
 
 void CholeskyIntegrals::resort_integrals_after_freezing()
 {
@@ -1832,76 +1829,3 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //    }
 
 
-
-//    ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted);
-//    // Use the IntegralTransform object's DPD instance, for convenience
-//    dpd_set_default(ints_->get_dpd_id());
-
-//    dpdbuf4 K;
-//    psio->open(PSIF_LIBTRANS_DPD, PSIO_OPEN_OLD);
-//    // To only process the permutationally unique integrals, change the ID("[A,A]") to ID("[A>=A]+")
-//    global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0, ID("[A,A]"), ID("[A,A]"),
-//                  ID("[A>=A]+"), ID("[A>=A]+"), 0, "MO Ints (AA|AA)");
-//    for(size_t h = 0; h < nirrep_; ++h){
-//        global_dpd_->buf4_mat_irrep_init(&K, h);
-//        global_dpd_->buf4_mat_irrep_rd(&K, h);
-//        for(size_t pq = 0; pq < K.params->rowtot[h]; ++pq){
-//            size_t p = K.params->roworb[h][pq][0];
-//            size_t q = K.params->roworb[h][pq][1];
-//            int psym = K.params->psym[p];
-//            int qsym = K.params->qsym[q];
-//            int prel = p - K.params->poff[psym];
-//            int qrel = q - K.params->qoff[qsym];
-//            for(size_t rs = 0; rs < K.params->coltot[h]; ++rs){
-//                size_t r = K.params->colorb[h][rs][0];
-//                size_t s = K.params->colorb[h][rs][1];
-//                int rsym = K.params->rsym[r];
-//                int ssym = K.params->ssym[s];
-//                int rrel = r - K.params->roff[rsym];
-//                int srel = s - K.params->soff[ssym];
-//                // Print out the absolute orbital numbers, the relative (within irrep)
-//                // numbers, the symmetries, and the integral itself
-////                outfile->Printf( "(%2d %2d | %2d %2d) = %16.10f, "
-////                                 "symmetries = (%1d %1d | %1d %1d), "
-////                                 "relative indices = (%2d %2d | %2d %2d)\n",
-////                                 p, q, r, s, K.matrix[h][pq][rs],
-////                                 psym, qsym, rsym, ssym,
-////                                 prel, qrel, rrel, srel);
-//                two_electron_integrals[INDEX4(p,q,r,s)] = K.matrix[h][pq][rs];
-//            }
-//        }
-//        global_dpd_->buf4_mat_irrep_close(&K, h);
-//    }
-//    global_dpd_->buf4_close(&K);
-//    psio->close(PSIF_LIBTRANS_DPD, PSIO_OPEN_OLD);
-
-
-
-//  // Assume all the integrals are stored regardless of symmetry
-//  nmo = wfn->nmo();
-//  ntei = four(nmo-1,nmo-1,nmo-1,nmo-1) + 1;
-//  noei = ioff[nmo];
-
-//  allocate1(int,all_to_mo,moinfo->get_nall());
-//  for(size_t p = 0; p < moinfo->get_nall(); ++p)
-//    all_to_mo[p] = moinfo->get_all_to_mo()[p];
-
-//  allocate2(double,oei_aa,nmo,nmo);
-//  allocate2(double,oei_bb,nmo,nmo);
-//  allocate2(double,h_aa,nmo,nmo);
-//  allocate2(double,h_bb,nmo,nmo);
-//  allocate1(double,tei_aaaa,ntei);
-//  allocate1(double,tei_bbbb,ntei);
-//  allocate2(double,tei_aabb,noei,noei);
-
-//  // Fock matrix
-//  int nrefs = moinfo->get_nrefs();
-//  allocate1(double**,f_aa,nrefs);
-//  allocate1(double**,f_bb,nrefs);
-//  for (int mu = 0; mu < nrefs; ++mu) {
-//    allocate2(double,f_aa[mu],nmo,nmo);
-//    allocate2(double,f_bb[mu],nmo,nmo);
-//  }
-//  allocate2(double,f_avg_aa,nmo,nmo);
-//  allocate2(double,f_avg_bb,nmo,nmo);
-//  // N.B. assumes all arrays are zeroed
