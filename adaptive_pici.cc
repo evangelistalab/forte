@@ -1735,8 +1735,43 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant>& space,std
                         C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first,
                         det_weight[I].second,
-                        space[det_weight[I].second].str().c_str());
+                        space[det_weight[I].second].str().c_str());       
     }
+
+    // Compute the expectation value of the spin
+    size_t max_I = 0;
+    double sum_weight = 0.0;
+    double wfn_threshold = 0.95;
+    for (size_t I = 0; I < space.size(); ++I){
+        if (sum_weight < wfn_threshold){
+            sum_weight += std::pow(det_weight[I].first,2.0);
+            max_I++;
+        }else{
+            break;
+        }
+    }
+
+    double norm = 0.0;
+    double S2 = 0.0;
+    for (int sI = 0; sI < max_I; ++sI){
+        size_t I = det_weight[sI].second;
+        for (int sJ = 0; sJ < max_I; ++sJ){
+            size_t J = det_weight[sJ].second;
+            if (std::fabs(C[I] * C[J]) > 1.0e-12){
+                const double S2IJ = space[I].spin2(space[J]);
+                S2 += C[I] * C[J] * S2IJ;
+            }
+        }
+        norm += std::pow(C[I],2.0);
+    }
+    S2 /= norm;
+    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
+    std::string state_label = s2_labels[std::round(S * 2.0)];
+    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),max_I);
+
+    outfile->Flush();
 }
 
 void AdaptivePathIntegralCI::save_wfn(std::vector<BitsetDeterminant>& space,std::vector<double>& C,std::vector<std::map<BitsetDeterminant,double>>& solutions)
