@@ -152,50 +152,21 @@ void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 }
 
 
-//void ExplorerIntegrals::set_oei(double** ints,bool alpha)
-//{
-//    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-//    for (int p = 0; p < nmo_; ++p){
-//        for (int q = 0; q < nmo_; ++q){
-//            p_oei[p * nmo_ + q] = ints[p][q];
-//        }
-//    }
-//}
+void ExplorerIntegrals::set_oei(double** ints,bool alpha)
+{
+    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    for (int p = 0; p < nmo_; ++p){
+        for (int q = 0; q < nmo_; ++q){
+            p_oei[p * nmo_ + q] = ints[p][q];
+        }
+    }
+}
 
-//void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
-//{
-//    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-//    p_oei[p * nmo_ + q] = value;
-//}
-
-//void ExplorerIntegrals::transform_integrals()
-//{
-//    // Now we want the reference (SCF) wavefunction
-//    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
-//    // For now, we'll just transform for closed shells and generate all integrals.
-//    std::vector<boost::shared_ptr<MOSpace> > spaces;
-
-//    // TODO: transform only the orbitals within an energy range to save time on this step.
-//    spaces.push_back(MOSpace::all);
-
-//    // If the integral
-//    if (ints_ != nullptr) delete ints_;
-
-//    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-//    if (restricted_){
-//        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-//    }else{
-//        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-//    }
-
-//    // Keep the SO integrals on disk in case we want to retransform them
-//    ints_->set_keep_iwl_so_ints(true);
-//    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
-
-//    outfile->Printf("\n  Integral transformation done.");
-//    outfile->Flush();
-//}
+void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
+{
+    double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
+    p_oei[p * nmo_ + q] = value;
+}
 
 void ExplorerIntegrals::transform_one_electron_integrals()
 {
@@ -347,8 +318,6 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double
     if (alpha1 == false and alpha2 == false) p_tei = aphys_tei_bb;
     size_t index = aptei_index(p,q,r,s);
     p_tei[index] = value;
-    //    if (std::fabs(value) > 1.0e-9)
-    //        outfile->Printf("\n (%zu %zu | %zu %zu) = v_{%zu %zu}^{%zu %zu} = [%zu] = %f",p,r,q,s,p,q,r,s,index,value);
 }
 
 void ConventionalIntegrals::update_integrals(bool freeze_core)
