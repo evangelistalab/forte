@@ -139,6 +139,8 @@ public:
     double energy() const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules(const BitsetDeterminant& rhs) const;
+    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    double spin2(const BitsetDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
     static void set_ints(ExplorerIntegrals* ints) {
