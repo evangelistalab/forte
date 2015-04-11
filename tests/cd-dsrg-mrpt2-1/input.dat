@@ -71,7 +71,7 @@ S   1   1.00
 }
 
 energy('mcscf')
-energy('dsrg-mrpt2')
+energy('three-dsrg-mrpt2')
 
 compare_values(refmcscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10, "DSRG-MRPT2 energy") #TEST
