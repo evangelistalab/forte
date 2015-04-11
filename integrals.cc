@@ -106,6 +106,7 @@ void ExplorerIntegrals::startup()
     outfile->Printf("\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());
     outfile->Printf("\n  Number of frozen unoccupied orbitals:    %5d\n\n",frzvpi_.sum());
 
+
     // Indexing
     // This is important!  Set the indexing to work using the number of molecular integrals
     aptei_idx_ = nmo_;
@@ -373,6 +374,8 @@ void ConventionalIntegrals::retransform_integrals()
 
 void ConventionalIntegrals::gather_integrals()
 {
+    outfile->Printf("\n Getting the two electron integrals");
+    outfile->Printf("\n Size of tei: %8.6f GB", num_aptei * 8 / 1073741824.0);
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
@@ -810,7 +813,9 @@ void DFIntegrals::gather_integrals()
     size_t naux  = auxiliary->nbf();
     nthree_ = naux;
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-    //Constructor for building DFERI in MO basis from libthce/lreri.h
+    outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * 8/1073741824.0));
+
+
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
 
     std::vector<double> eval;
@@ -1254,9 +1259,11 @@ void CholeskyIntegrals::gather_integrals()
     boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
     //Computes the cholesky integrals
     Ch->choleskify();
+    outfile->Printf("\nJust computed Cholesky Integrals\n");
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nthree_ = nL;
+    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * 8.0 / 1073741824.0 );
 
     TensorType tensor_type = kCore;
 
@@ -1268,7 +1275,6 @@ void CholeskyIntegrals::gather_integrals()
 
     boost::shared_ptr<SOBasisSet> SO(new SOBasisSet(primary, integral));
 
-    //    Cpq->zero()e
     Cpq = wfn->Ca_subset("AO","ALL");
 
     SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
