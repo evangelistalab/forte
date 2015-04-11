@@ -261,7 +261,6 @@ protected:
  * @brief The ConventionalIntegrals class is an interface to calculate the conventional integrals
  * Assumes storage of all tei and stores in core.
  */
-
 class ConventionalIntegrals: public ExplorerIntegrals{
 public:
     ///Contructor of the class.  Calls ExplorerIntegrals constructor
