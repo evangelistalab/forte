@@ -656,6 +656,8 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<BitsetDeterminant>& det
 
 void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<BitsetDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold)
 {
+    throw PSIEXCEPTION("\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
+
     std::map<BitsetDeterminant,double> dets_C_map;
 
     int maxiter = 50;
@@ -710,7 +712,7 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<BitsetDeterminant
         // Step #2: Build and Diagonalize the Subspace Hamiltonian
         for (size_t l = 0; l < L; ++l){
             sigma[l].clear();
-            apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
+//            apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0); <= TODO : re-enable
         }
 
         G.zero();
@@ -787,7 +789,7 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<BitsetDeterminant
             // Step #2: Build and Diagonalize the Subspace Hamiltonian
             for (size_t l = 0; l < L; ++l){
                 sigma[l].clear();
-                apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0);
+//                apply_tau_H(1.0,spawning_threshold,b[l],sigma[l],0.0); <= TODO : re-enable
             }
 
             // Rebuild and Diagonalize the Subspace Hamiltonian
@@ -1383,49 +1385,49 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 }
 
 
-size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S)
-{
-    // A vector of maps that hold (determinant,coefficient)
-    std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
-    std::vector<size_t> spawned(num_threads_,0);
+//size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S)
+//{
+//    // A vector of maps that hold (determinant,coefficient)
+//    std::vector<std::map<BitsetDeterminant,double> > thread_det_C_map(num_threads_);
+//    std::vector<size_t> spawned(num_threads_,0);
 
-    if(do_dynamic_prescreening_){
-#pragma omp parallel for
-        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
-            const BitsetDeterminant& det = it->first;
-            std::pair<double,double> zero_pair(0.0,0.0);
-            int thread_id = omp_get_thread_num();
-            // Update the list of couplings
-            std::pair<double,double> max_coupling;
-            #pragma omp critical
-            {
-                max_coupling = dets_max_couplings_[it->first];
-            }
-            if (max_coupling == zero_pair){
-                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
-                #pragma omp critical
-                {
-                    dets_max_couplings_[it->first] = max_coupling;
-                }
-            }else{
-                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
-            }
-        }
-    }else{
-#pragma omp parallel for
-        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
-            int thread_id = omp_get_thread_num();
-            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S);
-        }
-    }
+//    if(do_dynamic_prescreening_){
+//#pragma omp parallel for
+//        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+//            const BitsetDeterminant& det = it->first;
+//            std::pair<double,double> zero_pair(0.0,0.0);
+//            int thread_id = omp_get_thread_num();
+//            // Update the list of couplings
+//            std::pair<double,double> max_coupling;
+//            #pragma omp critical
+//            {
+//                max_coupling = dets_max_couplings_[it->first];
+//            }
+//            if (max_coupling == zero_pair){
+//                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
+//                #pragma omp critical
+//                {
+//                    dets_max_couplings_[it->first] = max_coupling;
+//                }
+//            }else{
+//                spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S,max_coupling);
+//            }
+//        }
+//    }else{
+//#pragma omp parallel for
+//        for (std::map<BitsetDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+//            int thread_id = omp_get_thread_num();
+//            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S);
+//        }
+//    }
 
-    // Combine the results of all the threads
-    combine_maps(thread_det_C_map,dets_C_map);
+//    // Combine the results of all the threads
+//    combine_maps(thread_det_C_map,dets_C_map);
 
-    nspawned_ = 0;
-    for (size_t t = 0; t < num_threads_; ++t) nspawned_ += spawned[t];
-    return nspawned_;
-}
+//    nspawned_ = 0;
+//    for (size_t t = 0; t < num_threads_; ++t) nspawned_ += spawned[t];
+//    return nspawned_;
+//}
 
 
 size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const BitsetDeterminant &detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
@@ -1733,8 +1735,43 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<BitsetDeterminant>& space,std
                         C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first,
                         det_weight[I].second,
-                        space[det_weight[I].second].str().c_str());
+                        space[det_weight[I].second].str().c_str());       
     }
+
+    // Compute the expectation value of the spin
+    size_t max_I = 0;
+    double sum_weight = 0.0;
+    double wfn_threshold = 0.95;
+    for (size_t I = 0; I < space.size(); ++I){
+        if (sum_weight < wfn_threshold){
+            sum_weight += std::pow(det_weight[I].first,2.0);
+            max_I++;
+        }else{
+            break;
+        }
+    }
+
+    double norm = 0.0;
+    double S2 = 0.0;
+    for (int sI = 0; sI < max_I; ++sI){
+        size_t I = det_weight[sI].second;
+        for (int sJ = 0; sJ < max_I; ++sJ){
+            size_t J = det_weight[sJ].second;
+            if (std::fabs(C[I] * C[J]) > 1.0e-12){
+                const double S2IJ = space[I].spin2(space[J]);
+                S2 += C[I] * C[J] * S2IJ;
+            }
+        }
+        norm += std::pow(C[I],2.0);
+    }
+    S2 /= norm;
+    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
+    std::string state_label = s2_labels[std::round(S * 2.0)];
+    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),max_I);
+
+    outfile->Flush();
 }
 
 void AdaptivePathIntegralCI::save_wfn(std::vector<BitsetDeterminant>& space,std::vector<double>& C,std::vector<std::map<BitsetDeterminant,double>>& solutions)

@@ -247,7 +247,7 @@ private:
 
     /// Apply tau H to a determinant using dynamic screening
     size_t apply_tau_H(double tau, double spawning_threshold, std::vector<BitsetDeterminant> &dets, const std::vector<double>& C, std::map<BitsetDeterminant,double>& dets_C_map, double S);
-    size_t apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S);
+//    size_t apply_tau_H(double tau,double spawning_threshold,std::map<BitsetDeterminant,double>& det_C_old, std::map<BitsetDeterminant,double>& dets_C_map, double S);
 
     /// Apply tau H to a determinant
     size_t apply_tau_H_det(double tau,double spawning_threshold,const BitsetDeterminant& detI, double CI, std::map<BitsetDeterminant,double>& new_space_C, double E0);

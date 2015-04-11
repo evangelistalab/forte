@@ -412,6 +412,64 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     return(matrix_element);
 }
 
+/**
+ * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
+ * @return S^2
+ */
+double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
+{
+    const boost::dynamic_bitset<>& Ia = alfa_bits_;
+    const boost::dynamic_bitset<>& Ib = beta_bits_;
+    const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
+    const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
+
+    // Compute the matrix elements of the operator S^2
+    // S^2 = S- S+ + Sz (Sz + 1)
+    //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
+    double matrix_element = 0.0;
+
+    int nadiff = 0;
+    int nbdiff = 0;
+    int na = 0;
+    int nb = 0;
+    int npair = 0;
+    int nmo = nmo_;
+    // Count how many differences in mos are there and the number of alpha/beta electrons
+    for (int n = 0; n < nmo; ++n) {
+        if (Ia[n] != Ja[n]) nadiff++;
+        if (Ib[n] != Jb[n]) nbdiff++;
+        if (Ia[n]) na++;
+        if (Ib[n]) nb++;
+        if ((Ia[n] and Ib[n])) npair += 1;
+    }
+    nadiff /= 2;
+    nbdiff /= 2;
+
+    double Ms = 0.5 * static_cast<double>(na - nb);
+
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta + Npairs
+    if ((nadiff == 0) and (nbdiff == 0)) {
+        matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
+    }
+
+    // PhiI = a+(qa) a+(pb) a-(qb) a-(pa) PhiJ
+    if ((nadiff == 1) and (nbdiff == 1)) {
+        // Find a pair of spin coupled electrons
+        int i = -1;
+        int j = -1;
+        // The logic here is a bit complex
+        for(int p = 0; p < nmo; ++p){
+            if(Ja[p] and Ib[p] and (not Jb[p]) and  (not Ia[p])) i = p; //(p)
+            if(Jb[p] and Ia[p] and (not Ja[p]) and  (not Ib[p])) j = p; //(q)
+        }
+        if (i != j and i >= 0 and j >= 0){
+            double sign = SlaterSign(Ja,i) * SlaterSign(Jb,j) * SlaterSign(Ib,i) * SlaterSign(Ia,j);
+            matrix_element -= sign;
+        }
+    }
+    return(matrix_element);
+}
+
 double SlaterSign(const boost::dynamic_bitset<>& I,int n)
 {
     double sign = 1.0;
