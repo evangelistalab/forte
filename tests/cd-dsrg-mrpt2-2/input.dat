@@ -1,4 +1,3 @@
-import libbtl
 import libadaptive
 
 refmcscf     =  -99.939316381643451 # cc-pVDZ
@@ -35,7 +34,7 @@ set libadaptive{
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
-   int_type                cholesky
+#   int_type                cholesky
    cholesky_tolerance      1e-14
 }
 
