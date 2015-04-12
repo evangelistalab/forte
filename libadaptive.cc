@@ -14,6 +14,7 @@
 
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
+#include "fast_apici.h"
 #include "lambda-ci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
@@ -52,7 +53,7 @@ read_options(std::string name, Options &options)
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2");
 
@@ -211,6 +212,8 @@ read_options(std::string name, Options &options)
         options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
+        /*- The maximum number of determinants used to form the guess wave function -*/
+        options.add_double("MAX_GUESS_SIZE",10000);
         /*- The determinant importance threshold -*/
         options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
         /*- The threshold with which we estimate the variational energy.
@@ -379,6 +382,13 @@ libadaptive(Options &options)
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
+        for (int n = 0; n < options.get_int("NROOT"); ++n){
+            apici->compute_energy();
+        }
+    }
+    if (options.get_str("JOB_TYPE") == "FAPICI"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<FastAdaptivePathIntegralCI> apici(new FastAdaptivePathIntegralCI(wfn,options,ints_));
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }

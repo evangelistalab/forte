@@ -20,22 +20,19 @@
  *@END LICENSE
  */
 
-#ifndef _bitset_determinant_h_
-#define _bitset_determinant_h_
+#ifndef _fast_determinant_h_
+#define _fast_determinant_h_
 
-#include <unordered_map>
-
-#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
-#include <boost/functional/hash.hpp>
-#include "boost/dynamic_bitset.hpp"
+#include <cstdint>
 
 #include "integrals.h"
-#include "excitation_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
+using bit_t = uint64_t;
+
 /**
- * A class to store a Slater determinant using Boost's dynamic_bitset.
+ * A class to store a Slater determinant using 64-bit unsigned integers.
  *
  * The determinant is represented by a pair of alpha/beta strings
  * that specify the occupation of each molecular orbital
@@ -48,70 +45,61 @@ namespace psi{ namespace libadaptive{
  * true <-> 1
  * false <-> 0
  */
-class BitsetDeterminant{
+class FastDeterminant{
 public:
-    using bit_t = boost::dynamic_bitset<>;
-
     // Class Constructor and Destructor
     /// Construct an empty determinant
-    BitsetDeterminant();
+    FastDeterminant() : nmo_(0),alfa_bits_(0), beta_bits_(0) {}
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<int>& occupation,bool print_det = false);
+    explicit FastDeterminant(const std::vector<int>& occupation,bool print_det = false);
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<bool>& occupation,bool print_det = false);
+    explicit FastDeterminant(const std::vector<bool>& occupation,bool print_det = false);
 
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
+    explicit FastDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
 
-    bool operator<(const BitsetDeterminant& lhs) const{
+    bool operator<(const FastDeterminant& lhs) const{
         if (alfa_bits_ > lhs.alfa_bits_) return false;
         if (alfa_bits_ < lhs.alfa_bits_) return true;
         return beta_bits_ < lhs.beta_bits_;
     }
 
-    bool operator==(const BitsetDeterminant& lhs) const{
+    bool operator==(const FastDeterminant& lhs) const{
         return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
-//    BitsetDeterminant& operator=(const BitsetDeterminant &rhs)
-//    {
-//       alfa_bits_ = rhs.alfa_bits_;
-//       beta_bits_ = rhs.beta_bits_;
-//       return *this;
-//    }
-
-    void copy(const BitsetDeterminant &rhs)
+    void copy(const FastDeterminant &rhs)
     {
        alfa_bits_ = rhs.alfa_bits_;
        beta_bits_ = rhs.beta_bits_;
     }
 
     /// Get a pointer to the alpha bits
-    const bit_t& alfa_bits() const {return alfa_bits_;}
+    bit_t alfa_bits() const {return alfa_bits_;}
 
     /// Get a pointer to the beta bits
-    const bit_t& beta_bits() const {return beta_bits_;}
+    bit_t beta_bits() const {return beta_bits_;}
 
     /// Return the value of an alpha bit
-    bool get_alfa_bit(int n) const {return alfa_bits_[n];}
+    bool get_alfa_bit(int n) const {return (0 != (alfa_bits_ & (1UL << n)));}
     /// Return the value of a beta bit
-    bool get_beta_bit(int n) const {return beta_bits_[n];}
+    bool get_beta_bit(int n) const {return (0 != (beta_bits_ & (1UL << n)));}
 
     /// Set the value of an alpha bit
-    void set_alfa_bit(int n, bool value) {alfa_bits_[n] = value;}
+    void set_alfa_bit(int n, bool v) {alfa_bits_ ^= (-v ^ alfa_bits_) & (1 << n);}
     /// Set the value of a beta bit
-    void set_beta_bit(int n, bool value) {beta_bits_[n] = value;}
+    void set_beta_bit(int n, bool v) {beta_bits_ ^= (-v ^ beta_bits_) & (1 << n);}
 
     /// Specify the occupation numbers
-    void set_alfa_bits(const bit_t& alfa_bits) {alfa_bits_ = alfa_bits;}
+    void set_alfa_bits(const bit_t alfa_bits) {alfa_bits_ = alfa_bits;}
     /// Specify the occupation numbers
-    void set_beta_bits(const bit_t& beta_bits) {beta_bits_ = beta_bits;}
+    void set_beta_bits(const bit_t beta_bits) {beta_bits_ = beta_bits;}
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -140,9 +128,9 @@ public:
     /// Compute the energy of a Slater determinant
     double energy() const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
-    double slater_rules(const BitsetDeterminant& rhs) const;
+    double slater_rules(const FastDeterminant& rhs) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
-    double spin2(const BitsetDeterminant& rhs) const;
+    double spin2(const FastDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
     static void set_ints(ExplorerIntegrals* ints) {
@@ -151,7 +139,7 @@ public:
 private:
     // Data
     /// Number of non-frozen molecular orbitals
-    size_t nmo_;
+    unsigned short nmo_;
 public:
     /// The occupation vector for the alpha electrons (does not include the frozen orbitals)
     bit_t alfa_bits_;
@@ -161,11 +149,23 @@ public:
     // Static data
     /// A pointer to the integral object
     static ExplorerIntegrals* ints_;
-    static double SlaterSign(const bit_t& I,int n);
+    static double SlaterSign(const bit_t I,int n);
 };
 
-typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;
+//std::size_t hash_value(const FastDeterminant& input);
+
 
 }} // End Namespaces
 
-#endif // _bitset_determinant_h_
+namespace std {
+template <>
+class hash<psi::libadaptive::FastDeterminant> {
+public:
+    size_t operator()(const psi::libadaptive::FastDeterminant &det) const
+    {
+        return det.alfa_bits_ ^ det.beta_bits_;
+    }
+};
+}
+
+#endif // _fast_determinant_h_

@@ -31,11 +31,9 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
-
 namespace psi{ namespace libadaptive{
 
 enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList};
-
 
 /**
  * @brief The SigmaVector class
@@ -262,7 +260,6 @@ private:
     /// Print details?
     bool print_details_;
 };
-
 
 }}
 
