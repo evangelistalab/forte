@@ -999,7 +999,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     boost::timer t_davidson;
 
     int maxiter = 100;
-    bool print = true;
+    bool print = print_details_;
 
     // Use unit vectors as initial guesses
     int N = sigma_vector->size();

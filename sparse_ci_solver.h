@@ -186,6 +186,9 @@ public:
     /// Enable or disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
+    /// Enable or disable printing of details
+    void set_print_details(bool print_details) {print_details_ = print_details;}
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<BitsetDeterminant>& space,
