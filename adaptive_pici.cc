@@ -1762,11 +1762,12 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vect
     }
 
     // Compute the expectation value of the spin
+    size_t max_sample = 1000;
     size_t max_I = 0;
     double sum_weight = 0.0;
     double wfn_threshold = 0.95;
     for (size_t I = 0; I < space.size(); ++I){
-        if (sum_weight < wfn_threshold){
+        if ((sum_weight < wfn_threshold) and (I < max_sample)) {
             sum_weight += std::pow(det_weight[I].first,2.0);
             max_I++;
         }else{
