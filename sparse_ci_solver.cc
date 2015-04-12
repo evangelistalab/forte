@@ -11,7 +11,6 @@
 
 namespace psi{ namespace libadaptive{
 
-
 void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int nroot){
     sigma.gemm(false,true,1.0,H_,b,0.0);
 }
@@ -97,7 +96,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
             detJ.set_alfa_bit(ii,false);
 
             const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
-            double sign = SlaterSign(Ia,ii);
+            double sign = BitsetDeterminant::SlaterSign(Ia,ii);
 
             bstmap_it it = map_a_ann.find(detJ);
             size_t detJ_add;
@@ -119,7 +118,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
             detJ.set_beta_bit(ii,false);
 
             const boost::dynamic_bitset<>& Ib = detI.beta_bits();
-            double sign = SlaterSign(Ib,ii);
+            double sign = BitsetDeterminant::SlaterSign(Ib,ii);
 
             bstmap_it it = map_b_ann.find(detJ);
             size_t detJ_add;
@@ -190,7 +189,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
                 detJ.set_alfa_bit(jj,false);
 
                 const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
-                double sign = SlaterSign(Ia,ii) * SlaterSign(Ia,jj);
+                double sign = BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ia,jj);
 
                 bstmap_it it = map_aa_ann.find(detJ);
                 size_t detJ_add;
@@ -216,7 +215,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
                 detJ.set_beta_bit(jj,false);
 
                 const boost::dynamic_bitset<>& Ib = detI.beta_bits();
-                double sign = SlaterSign(Ib,ii) * SlaterSign(Ib,jj);;
+                double sign = BitsetDeterminant::SlaterSign(Ib,ii) * BitsetDeterminant::SlaterSign(Ib,jj);;
 
                 bstmap_it it = map_bb_ann.find(detJ);
                 size_t detJ_add;
@@ -243,7 +242,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
                 const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
                 const boost::dynamic_bitset<>& Ib = detI.beta_bits();
 
-                double sign = SlaterSign(Ia,ii) * SlaterSign(Ib,jj);
+                double sign = BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ib,jj);
 
                 bstmap_it it = map_ab_ann.find(detJ);
                 size_t detJ_add;

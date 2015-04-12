@@ -63,6 +63,24 @@ def run_adaptive_pici(name, **kwargs):
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
+# (Fast) Adaptive Path-Integral CI
+def run_fast_adaptive_pici(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('apici')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    scf_helper(name, **kwargs)
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'FAPICI')
+    returnvalue = psi4.plugin('libadaptive.so')
+    psi4.set_variable('CURRENT ENERGY', returnvalue)
+    return returnvalue
+
 # Full CI Quantum Monte-Carlo
 def run_fciqmc(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -299,6 +317,7 @@ def run_three_dsrg_mrpt2(name, **kwargs):
 procedures['energy']['libadaptive'] = run_libadaptive
 procedures['energy']['aci'] = run_adaptive_ci
 procedures['energy']['apici'] = run_adaptive_pici
+procedures['energy']['fapici'] = run_fast_adaptive_pici
 procedures['energy']['fciqmc'] = run_fciqmc
 procedures['energy']['fno-apifci'] = run_fno_apifci
 procedures['energy']['ct'] = run_ct

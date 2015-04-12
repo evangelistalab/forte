@@ -13,38 +13,38 @@
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
 
+#include "fast_determinant.h"
 #include "cartographer.h"
 #include "adaptive_pici.h"
+#include "fast_apici.h"
 #include "sparse_ci_solver.h"
 
-#ifdef _OPENMP
-   #include <omp.h>
-   bool have_omp = true;
-#else
-   #define omp_get_max_threads() 1
-   #define omp_get_thread_num() 0
-   bool have_omp = false;
-#endif
 
 using namespace std;
 using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-typedef std::map<Determinant,double> bsmap;
-typedef std::map<Determinant,double>::iterator bsmap_it;
+#ifdef _OPENMP
+   #include <omp.h>
+   bool FastAdaptivePathIntegralCI::have_omp = true;
+#else
+   #define omp_get_max_threads() 1
+   #define omp_get_thread_num() 0
+   bool FastAdaptivePathIntegralCI::have_omp = false;
+#endif
 
-void combine_maps(std::vector<bsmap>& thread_det_C_map, bsmap& dets_C_map);
-void combine_maps(bsmap& dets_C_map_A,bsmap& dets_C_map_B);
-void copy_map_to_vec(bsmap& dets_C_map,std::vector<Determinant>& dets,std::vector<double>& C);
-void scale(std::vector<double>& A,double alpha);
-void scale(std::map<Determinant,double>& A,double alpha);
-double normalize(std::vector<double>& C);
-double normalize(std::map<Determinant,double>& dets_C);
-double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B);
-void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B);
+typedef std::map<FastDeterminant,double> fdmap;
+typedef std::map<FastDeterminant,double>::iterator fdmap_it;
 
-AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+void combine_maps(std::vector<fdmap>& thread_det_C_map, fdmap& dets_C_map);
+void combine_maps(fdmap& dets_C_map_A,fdmap& dets_C_map_B);
+void copy_map_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C);
+void scale(std::map<FastDeterminant,double>& A,double alpha);
+double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>& B);
+void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B);
+
+FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
@@ -57,11 +57,12 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
     startup();
 }
 
-void AdaptivePathIntegralCI::startup()
+
+void FastAdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
     StringDeterminant::set_ints(ints_);
-    Determinant::set_ints(ints_);
+    FastDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
     ncmo_ = ints_->ncmo();
@@ -116,7 +117,6 @@ void AdaptivePathIntegralCI::startup()
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
 
-    max_guess_size_ = options_.get_int("MAX_GUESS_SIZE");
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
 
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
@@ -158,11 +158,11 @@ void AdaptivePathIntegralCI::startup()
     num_threads_ = omp_get_max_threads();
 }
 
-AdaptivePathIntegralCI::~AdaptivePathIntegralCI()
+FastAdaptivePathIntegralCI::~FastAdaptivePathIntegralCI()
 {
 }
 
-void AdaptivePathIntegralCI::print_info()
+void FastAdaptivePathIntegralCI::print_info()
 {
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info{
@@ -182,7 +182,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Energy estimate tollerance",energy_estimate_threshold_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Propagator type",propagator_description_},        
+        {"Propagator type",propagator_description_},
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy",do_shift_ ? "YES" : "NO"},
         {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
@@ -212,15 +212,10 @@ void AdaptivePathIntegralCI::print_info()
 }
 
 
-double AdaptivePathIntegralCI::compute_energy()
+double FastAdaptivePathIntegralCI::compute_energy()
 {
     timer_on("PIFCI:Energy");
     boost::timer t_apici;
-
-    old_max_one_HJI_ = 1e100;
-    new_max_one_HJI_ = 1e100;
-    old_max_two_HJI_ = 1e100;
-    new_max_two_HJI_ = 1e100;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
@@ -235,20 +230,24 @@ double AdaptivePathIntegralCI::compute_energy()
     print_info();
 
     /// A vector of determinants in the P space
-    std::vector<Determinant> dets;
+    std::vector<FastDeterminant> dets;
     std::vector<double> C;
 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
 
-    // Compute the initial guess
+    // Initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
     double var_energy = initial_guess(dets,C);
     double proj_energy = var_energy;
 
+    old_max_one_HJI_ = 1e100;
+    new_max_one_HJI_ = 1e100;
+    old_max_two_HJI_ = 1e100;
+    new_max_two_HJI_ = 1e100;
 
     print_wfn(dets,C);
-    std::map<Determinant,double> old_space_map;
+    std::map<FastDeterminant,double> old_space_map;
     for (int I = 0; I < dets.size(); ++I){
         old_space_map[dets[I]] = C[I];
     }
@@ -340,72 +339,75 @@ double AdaptivePathIntegralCI::compute_energy()
         save_wfn(dets,C,solutions_);
     }
 
-    if (post_diagonalization_){
-        SharedMatrix apfci_evecs;
-        SharedVector apfci_evals;
-        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
-    }
+//    if (post_diagonalization_){
+//        SharedMatrix apfci_evecs;
+//        SharedVector apfci_evals;
+//        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
+//    }
 
     timer_off("PIFCI:Energy");
     return var_energy;
 }
 
 
-double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std::vector<double>& C)
+double FastAdaptivePathIntegralCI::initial_guess(std::vector<FastDeterminant>& dets,std::vector<double>& C)
 {
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
-    std::map<Determinant,double> dets_C;
+    std::map<FastDeterminant,double> dets_C;
 
 
     // Do one time step starting from the reference determinant
-    Determinant bs_det(alfa_bits,beta_bits);
-    std::vector<Determinant> guess_dets{bs_det};
-    apply_tau_H(time_step_,spawning_threshold_ * 10.0,guess_dets,{1.0},dets_C,0.0);
+    FastDeterminant bs_det(alfa_bits,beta_bits);
+    time_step_optimized(spawning_threshold_ * 10.0,bs_det,1.0,dets_C,0.0);
 
     // Save the list of determinants
     copy_map_to_vec(dets_C,dets,C);
 
-    size_t guess_size = dets.size();
-    if (guess_size > max_guess_size_){
-        // Consider the 1000 largest contributions
-        std::vector<std::pair<double,size_t> > det_weight;
-        for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
-            det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-            dets[I].print();
-        }
-        std::sort(det_weight.begin(),det_weight.end());
-        std::reverse(det_weight.begin(),det_weight.end());
+    // Consider the 1000 largest contributions
 
-        std::vector<Determinant> new_dets;
-        for (size_t sI = 0; sI < max_guess_size_; ++sI){
-            size_t I = det_weight[sI].second;
-            new_dets.push_back(dets[I]);
-        }
-        dets = new_dets;
-        C.resize(guess_size);
+    std::vector<std::pair<double,size_t> > det_weight;
+    for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+        det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
+        dets[I].print();
     }
+    std::sort(det_weight.begin(),det_weight.end());
+    std::reverse(det_weight.begin(),det_weight.end());
+    size_t max_dets = std::min(size_t(100),C.size());
 
-    outfile->Printf("\n\n  Initial guess size = %zu",guess_size);
+    SharedMatrix H(new Matrix("H",max_dets,max_dets));
+    SharedMatrix evecs(new Matrix("Eigenvectors",max_dets,max_dets));
+    SharedVector evals(new Vector("Eigenvalues",max_dets));
+    for (size_t sI = 0; sI < max_dets; ++sI){
+        size_t I = det_weight[sI].second;
+        for (size_t sJ = sI; sJ < max_dets; ++sJ){
+            size_t J = det_weight[sJ].second;
+            double HIJ = dets[I].slater_rules(dets[J]);
+            H->set(sI,sJ,HIJ);
+            H->set(sJ,sI,HIJ);
+        }
+    }
+    H->print();
 
-    SparseCISolver sparse_solver;
-    sparse_solver.set_parallel(true);
+    H->diagonalize(evecs,evals);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_));
-    SharedVector evals(new Vector("Eigenvalues",nroot_));
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
 
-    // Copy the ground state eigenvector
-    for (int I = 0; I < guess_size; ++I){
-        C[I] = evecs->get(I,current_root_);
+    for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+        C[I] = 0.0;
+    }
+
+    for (size_t sI = 0; sI < max_dets; ++sI){
+        size_t I = det_weight[sI].second;
+        double CI = evecs->get(sI,current_root_);
+        C[I] = CI;
     }
     return var_energy;
 }
 
-void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<Determinant>& dets, std::vector<double>& C, double tau, double spawning_threshold, double S)
+void FastAdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<FastDeterminant>& dets, std::vector<double>& C, double tau, double spawning_threshold, double S)
 {
     // Reset statistics
     ndet_visited_ = 0;
@@ -445,10 +447,10 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, std::vector<De
 }
 
 
-void AdaptivePathIntegralCI::propagate_first_order(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_first_order(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     nspawned_ = 0;
     nzerospawn_ = 0;
@@ -464,11 +466,11 @@ void AdaptivePathIntegralCI::propagate_first_order(std::vector<Determinant>& det
     copy_map_to_vec(dets_C_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
-    std::map<Determinant,double> dets_sum_map;
+    std::map<FastDeterminant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_sum_map;
     // A vector of maps that hold (determinant,coefficient)
 
     // Propagate the wave function for one time step using |n+1> = (1 - tau (H-S) + tau^2 (H-S)^2 / 2)|n>
@@ -483,7 +485,7 @@ void AdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<Determinant>
         apply_tau_H(delta_tau,spawning_threshold,dets,C,dets_C_map,S);
 
         // Add this term to the total vector
-        combine_maps(dets_C_map,dets_sum_map);      
+        combine_maps(dets_C_map,dets_sum_map);
         // Copy the wave function to a vector
         if (j < order){
             copy_map_to_vec(dets_C_map,dets,C);
@@ -499,15 +501,15 @@ void AdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<Determinant>
     copy_map_to_vec(dets_sum_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
-    std::map<Determinant,double> dets_Tn_1_map;
-    std::map<Determinant,double> dets_Tn_2_map;
-    std::map<Determinant,double> dets_sum_map;
+    std::map<FastDeterminant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_Tn_1_map;
+    std::map<FastDeterminant,double> dets_Tn_2_map;
+    std::map<FastDeterminant,double> dets_sum_map;
     // A vector of maps that hold (determinant,coefficient)
-    std::vector<std::map<Determinant,double> > thread_det_C_map(num_threads_);
+    std::vector<std::map<FastDeterminant,double> > thread_det_C_map(num_threads_);
 
     double R = 1.0;
 
@@ -578,10 +580,10 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<Determina
 }
 
 
-void AdaptivePathIntegralCI::propagate_power(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_power(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_map,S);
 
@@ -592,10 +594,10 @@ void AdaptivePathIntegralCI::propagate_power(std::vector<Determinant>& dets,std:
 
 
 
-void AdaptivePathIntegralCI::propagate_Trotter(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_Trotter(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     nspawned_ = 0;
     nzerospawn_ = 0;
@@ -614,10 +616,10 @@ void AdaptivePathIntegralCI::propagate_Trotter(std::vector<Determinant>& dets,st
     copy_map_to_vec(dets_C_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Olsen(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void FastAdaptivePathIntegralCI::propagate_Olsen(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     nspawned_ = 0;
     nzerospawn_ = 0;
@@ -677,11 +679,11 @@ void AdaptivePathIntegralCI::propagate_Olsen(std::vector<Determinant>& dets,std:
     copy_map_to_vec(dets_C_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold)
+void FastAdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold)
 {
     throw PSIEXCEPTION("\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
 
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     int maxiter = 50;
     bool print = false;
@@ -695,16 +697,16 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<Determinant>& det
     double e_convergence = 1.0e-10;
 
     // current set of guess vectors
-    std::vector<std::map<Determinant,double>> b(subspace_size);
+    std::vector<std::map<FastDeterminant,double>> b(subspace_size);
 
     // guess vectors formed from old vectors, stored by row
-    std::vector<std::map<Determinant,double>> bnew(subspace_size);
+    std::vector<std::map<FastDeterminant,double>> bnew(subspace_size);
 
     // residual eigenvectors, stored by row
-    std::vector<std::map<Determinant,double>> r(subspace_size);
+    std::vector<std::map<FastDeterminant,double>> r(subspace_size);
 
     // sigma vectors, stored by column
-    std::vector<std::map<Determinant,double>> sigma(subspace_size);
+    std::vector<std::map<FastDeterminant,double>> sigma(subspace_size);
 
     // Davidson mini-Hamitonian
     Matrix G("G",subspace_size, subspace_size);
@@ -985,7 +987,7 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<Determinant>& det
 //    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
 }
 
-double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
+double FastAdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1013,7 +1015,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
                 if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1035,7 +1037,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
                 if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1066,18 +1068,18 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
                         double HJI = ints_->aptei_aa(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
+                            FastDeterminant detJ(detI);
                             detJ.set_alfa_bit(ii,false);
                             detJ.set_alfa_bit(jj,false);
                             detJ.set_alfa_bit(aa,true);
                             detJ.set_alfa_bit(bb,true);
 
                             // grap the alpha bits of both determinants
-                            const Determinant::bit_t& Ia = detI.alfa_bits();
-                            const Determinant::bit_t& Ja = detJ.alfa_bits();
+                            const bit_t& Ia = detI.alfa_bits();
+                            const bit_t& Ja = detJ.alfa_bits();
 
                             // compute the sign of the matrix element
-                            HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+                            HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ia,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Ja,bb);
 
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
@@ -1102,20 +1104,20 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
                         double HJI = ints_->aptei_ab(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
+                            FastDeterminant detJ(detI);
                             detJ.set_alfa_bit(ii,false);
                             detJ.set_beta_bit(jj,false);
                             detJ.set_alfa_bit(aa,true);
                             detJ.set_beta_bit(bb,true);
 
                             // grap the alpha bits of both determinants
-                            const Determinant::bit_t& Ia = detI.alfa_bits();
-                            const Determinant::bit_t& Ib = detI.beta_bits();
-                            const Determinant::bit_t& Ja = detJ.alfa_bits();
-                            const Determinant::bit_t& Jb = detJ.beta_bits();
+                            const bit_t& Ia = detI.alfa_bits();
+                            const bit_t& Ib = detI.beta_bits();
+                            const bit_t& Ja = detJ.alfa_bits();
+                            const bit_t& Jb = detJ.beta_bits();
 
                             // compute the sign of the matrix element
-                            HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+                            HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
@@ -1139,18 +1141,18 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
                         double HJI = ints_->aptei_bb(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
+                            FastDeterminant detJ(detI);
                             detJ.set_beta_bit(ii,false);
                             detJ.set_beta_bit(jj,false);
                             detJ.set_beta_bit(aa,true);
                             detJ.set_beta_bit(bb,true);
 
                             // grap the alpha bits of both determinants
-                            const Determinant::bit_t& Ib = detI.beta_bits();
-                            const Determinant::bit_t& Jb = detJ.beta_bits();
+                            const bit_t& Ib = detI.beta_bits();
+                            const bit_t& Jb = detJ.beta_bits();
 
                             // compute the sign of the matrix element
-                            HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+                            HJI *= FastDeterminant::SlaterSign(Ib,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Jb,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                             new_space_C[detJ] += -time_step_ * HJI * CI;
 
@@ -1174,7 +1176,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
 }
 
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
+size_t FastAdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, const FastDeterminant &detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1203,7 +1205,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1222,7 +1224,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1252,18 +1254,18 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_alfa_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_alfa_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ia = detI.alfa_bits();
-                                const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                const bit_t& Ia = detI.alfa_bits();
+                                const bit_t& Ja = detJ.alfa_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ia,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Ja,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1290,20 +1292,20 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ia = detI.alfa_bits();
-                                const Determinant::bit_t& Ib = detI.beta_bits();
-                                const Determinant::bit_t& Ja = detJ.alfa_bits();
-                                const Determinant::bit_t& Jb = detJ.beta_bits();
+                                const bit_t& Ia = detI.alfa_bits();
+                                const bit_t& Ib = detI.beta_bits();
+                                const bit_t& Ja = detJ.alfa_bits();
+                                const bit_t& Jb = detJ.beta_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1329,18 +1331,18 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_beta_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_beta_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ib = detI.beta_bits();
-                                const Determinant::bit_t& Jb = detJ.beta_bits();
+                                const bit_t& Ib = detI.beta_bits();
+                                const bit_t& Jb = detJ.beta_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ib,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Jb,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1362,10 +1364,10 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
     return spawned;
 }
 
-size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::vector<Determinant>& dets,const std::vector<double>& C, std::map<Determinant,double>& dets_C_map, double S)
+size_t FastAdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::vector<FastDeterminant>& dets,const std::vector<double>& C, std::map<FastDeterminant,double>& dets_C_map, double S)
 {
     // A vector of maps that hold (determinant,coefficient)
-    std::vector<std::map<Determinant,double> > thread_det_C_map(num_threads_);
+    std::vector<std::map<FastDeterminant,double> > thread_det_C_map(num_threads_);
     std::vector<size_t> spawned(num_threads_,0);
 
     if(do_dynamic_prescreening_){
@@ -1408,16 +1410,16 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 }
 
 
-//size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::map<Determinant,double>& det_C_old, std::map<Determinant,double>& dets_C_map, double S)
+//size_t FastAdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,std::map<FastDeterminant,double>& det_C_old, std::map<FastDeterminant,double>& dets_C_map, double S)
 //{
 //    // A vector of maps that hold (determinant,coefficient)
-//    std::vector<std::map<Determinant,double> > thread_det_C_map(num_threads_);
+//    std::vector<std::map<FastDeterminant,double> > thread_det_C_map(num_threads_);
 //    std::vector<size_t> spawned(num_threads_,0);
 
 //    if(do_dynamic_prescreening_){
 //#pragma omp parallel for
-//        for (std::map<Determinant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
-//            const Determinant& det = it->first;
+//        for (std::map<FastDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+//            const FastDeterminant& det = it->first;
 //            std::pair<double,double> zero_pair(0.0,0.0);
 //            int thread_id = omp_get_thread_num();
 //            // Update the list of couplings
@@ -1438,7 +1440,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 //        }
 //    }else{
 //#pragma omp parallel for
-//        for (std::map<Determinant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
+//        for (std::map<FastDeterminant,double>::iterator it = det_C_old.begin(); it != det_C_old.end(); ++it){
 //            int thread_id = omp_get_thread_num();
 //            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,it->first,it->second,thread_det_C_map[thread_id],S);
 //        }
@@ -1453,7 +1455,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 //}
 
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
+size_t FastAdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const FastDeterminant &detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1478,7 +1480,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1497,7 +1499,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
                     double HJI = detJ.slater_rules(detI);
@@ -1527,18 +1529,18 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_alfa_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_alfa_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ia = detI.alfa_bits();
-                                const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                const bit_t& Ia = detI.alfa_bits();
+                                const bit_t& Ja = detJ.alfa_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ia,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Ja,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1565,20 +1567,20 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ia = detI.alfa_bits();
-                                const Determinant::bit_t& Ib = detI.beta_bits();
-                                const Determinant::bit_t& Ja = detJ.alfa_bits();
-                                const Determinant::bit_t& Jb = detJ.beta_bits();
+                                const bit_t& Ia = detI.alfa_bits();
+                                const bit_t& Ib = detI.beta_bits();
+                                const bit_t& Ja = detJ.alfa_bits();
+                                const bit_t& Jb = detJ.beta_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1604,18 +1606,18 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_beta_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_beta_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
                                 // grap the alpha bits of both determinants
-                                const Determinant::bit_t& Ib = detI.beta_bits();
-                                const Determinant::bit_t& Jb = detJ.beta_bits();
+                                const bit_t& Ib = detI.beta_bits();
+                                const bit_t& Jb = detJ.beta_bits();
 
                                 // compute the sign of the matrix element
-                                HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+                                HJI *= FastDeterminant::SlaterSign(Ib,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Jb,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                 new_space_C[detJ] += tau * HJI * CI;
 
@@ -1637,7 +1639,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
     return spawned;
 }
 
-std::map<std::string,double> AdaptivePathIntegralCI::estimate_energy(std::vector<Determinant>& dets,std::vector<double>& C)
+std::map<std::string,double> FastAdaptivePathIntegralCI::estimate_energy(std::vector<FastDeterminant>& dets,std::vector<double>& C)
 {
     std::map<std::string,double> results;
 
@@ -1663,7 +1665,7 @@ static bool abs_compare(double a, double b)
     return (std::abs(a) < std::abs(b));
 }
 
-double AdaptivePathIntegralCI::estimate_proj_energy(std::vector<Determinant>& dets,std::vector<double>& C)
+double FastAdaptivePathIntegralCI::estimate_proj_energy(std::vector<FastDeterminant>& dets,std::vector<double>& C)
 {
     // Find the determinant with the largest value of C
     auto result = std::max_element(C.begin(), C.end(), abs_compare);
@@ -1680,14 +1682,14 @@ double AdaptivePathIntegralCI::estimate_proj_energy(std::vector<Determinant>& de
 }
 
 
-double AdaptivePathIntegralCI::estimate_var_energy(std::vector<Determinant> &dets, std::vector<double> &C,double tollerance)
+double FastAdaptivePathIntegralCI::estimate_var_energy(std::vector<FastDeterminant> &dets, std::vector<double> &C,double tollerance)
 {
     // Compute a variational estimator of the energy
     size_t size = dets.size();
     double variational_energy_estimator = 0.0;
 #pragma omp parallel for reduction(+:variational_energy_estimator)
     for (int I = 0; I < size; ++I){
-        const Determinant& detI = dets[I];
+        const FastDeterminant& detI = dets[I];
         variational_energy_estimator += C[I] * C[I] * detI.energy();
         for (int J = I + 1; J < size; ++J){
             if (std::fabs(C[I] * C[J]) > tollerance){
@@ -1700,10 +1702,10 @@ double AdaptivePathIntegralCI::estimate_var_energy(std::vector<Determinant> &det
 }
 
 
-double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<Determinant> &dets, std::vector<double> &C,double tollerance)
+double FastAdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<FastDeterminant> &dets, std::vector<double> &C,double tollerance)
 {
     // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
+    std::map<FastDeterminant,double> dets_C_map;
 
     double tau = time_step_;
     double variational_energy_estimator = 0.0;
@@ -1741,7 +1743,7 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<Determinan
 }
 
 
-void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vector<double>& C)
+void FastAdaptivePathIntegralCI::print_wfn(std::vector<FastDeterminant>& space,std::vector<double>& C)
 {
     outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
@@ -1758,7 +1760,7 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vect
                         C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first,
                         det_weight[I].second,
-                        space[det_weight[I].second].str().c_str());       
+                        space[det_weight[I].second].str().c_str());
     }
 
     // Compute the expectation value of the spin
@@ -1797,20 +1799,20 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vect
     outfile->Flush();
 }
 
-void AdaptivePathIntegralCI::save_wfn(std::vector<Determinant>& space,std::vector<double>& C,std::vector<std::map<Determinant,double>>& solutions)
+void FastAdaptivePathIntegralCI::save_wfn(std::vector<FastDeterminant>& space,std::vector<double>& C,std::vector<std::map<FastDeterminant,double>>& solutions)
 {
     outfile->Printf("\n\n  Saving the wave function:\n");
 
-    std::map<Determinant,double> solution;
+    std::map<FastDeterminant,double> solution;
     for (size_t I = 0; I < space.size(); ++I){
         solution[space[I]] = C[I];
     }
     solutions.push_back(std::move(solution));
 }
 
-void AdaptivePathIntegralCI::orthogonalize(std::vector<Determinant>& space,std::vector<double>& C,std::vector<std::map<Determinant,double>>& solutions)
+void FastAdaptivePathIntegralCI::orthogonalize(std::vector<FastDeterminant>& space,std::vector<double>& C,std::vector<std::map<FastDeterminant,double>>& solutions)
 {
-    std::map<Determinant,double> det_C;
+    std::map<FastDeterminant,double> det_C;
     for (size_t I = 0; I < space.size(); ++I){
         det_C[space[I]] = C[I];
     }
@@ -1822,39 +1824,39 @@ void AdaptivePathIntegralCI::orthogonalize(std::vector<Determinant>& space,std::
     copy_map_to_vec(det_C,space,C);
 }
 
-void combine_maps(std::vector<bsmap>& thread_det_C_map,bsmap& dets_C_map)
+void combine_maps(std::vector<fdmap>& thread_det_C_map,fdmap& dets_C_map)
 {
     // Combine the content of varius wave functions stored as maps
     for (size_t t = 0; t < thread_det_C_map.size(); ++t){
-        for (bsmap_it it = thread_det_C_map[t].begin(), endit = thread_det_C_map[t].end(); it != endit; ++it){
+        for (fdmap_it it = thread_det_C_map[t].begin(), endit = thread_det_C_map[t].end(); it != endit; ++it){
             dets_C_map[it->first] += it->second;
         }
     }
 }
 
-void combine_maps(bsmap& dets_C_map_A,bsmap& dets_C_map_B)
+void combine_maps(fdmap& dets_C_map_A,fdmap& dets_C_map_B)
 {
     // Combine the content of varius wave functions stored as maps
-    for (bsmap_it it = dets_C_map_A.begin(), endit = dets_C_map_A.end(); it != endit; ++it){
+    for (fdmap_it it = dets_C_map_A.begin(), endit = dets_C_map_A.end(); it != endit; ++it){
         dets_C_map_B[it->first] += it->second;
     }
 }
 
-void copy_map_to_vec(bsmap& dets_C_map,std::vector<Determinant>& dets,std::vector<double>& C)
+void copy_map_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C)
 {
     size_t size = dets_C_map.size();
     dets.resize(size);
     C.resize(size);
 
     size_t I = 0;
-    for (bsmap_it it = dets_C_map.begin(), endit = dets_C_map.end(); it != endit; ++it){
+    for (fdmap_it it = dets_C_map.begin(), endit = dets_C_map.end(); it != endit; ++it){
         dets[I] = it->first;
         C[I] = it->second;
         I++;
     }
 }
 
-double normalize(std::vector<double>& C)
+double FastAdaptivePathIntegralCI::normalize(std::vector<double>& C)
 {
     size_t size = C.size();
     double norm = 0.0;
@@ -1868,7 +1870,7 @@ double normalize(std::vector<double>& C)
     return norm;
 }
 
-double normalize(std::map<Determinant,double>& dets_C)
+double FastAdaptivePathIntegralCI::normalize(std::map<FastDeterminant,double>& dets_C)
 {
     double norm = 0.0;
     for (auto& det_C : dets_C){
@@ -1881,7 +1883,7 @@ double normalize(std::map<Determinant,double>& dets_C)
     return norm;
 }
 
-double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B)
+double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>& B)
 {
     double res = 0.0;
     for (auto& det_C : A){
@@ -1890,7 +1892,7 @@ double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B)
     return res;
 }
 
-void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B)
+void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B)
 {
     // A += beta B
     double res = 0.0;
@@ -1899,22 +1901,14 @@ void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double
     }
 }
 
-void scale(std::vector<double>& A,double alpha)
-{
-    size_t size = A.size();
-    for (size_t I = 0; I < size; ++I){
-        A[I] *= alpha;
-    }
-}
-
-void scale(std::map<Determinant,double>& A,double alpha)
+void scale(std::map<FastDeterminant,double>& A,double alpha)
 {
     for (auto& det_C : A){
         A[det_C.first] *= alpha;
     }
 }
 
-double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling)
+double FastAdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& det_C,std::pair<double,double>& max_coupling)
 {
     double result = 0.0;
 
@@ -1939,10 +1933,10 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
-                    bsmap_it it = det_C.find(detJ);
+                    fdmap_it it = det_C.find(detJ);
                     if (it != det_C.end()){
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1960,10 +1954,10 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                    Determinant detJ(detI);
+                    FastDeterminant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
-                    bsmap_it it = det_C.find(detJ);
+                    fdmap_it it = det_C.find(detJ);
                     if (it != det_C.end()){
                         double HJI = detJ.slater_rules(detI);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1990,20 +1984,20 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                             double HJI = ints_->aptei_aa(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_alfa_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_alfa_bit(bb,true);
 
-                                bsmap_it it = det_C.find(detJ);
+                                fdmap_it it = det_C.find(detJ);
                                 if (it != det_C.end()){
                                     // grap the alpha bits of both determinants
-                                    const Determinant::bit_t& Ia = detI.alfa_bits();
-                                    const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                    const bit_t& Ia = detI.alfa_bits();
+                                    const bit_t& Ja = detJ.alfa_bits();
 
                                     // compute the sign of the matrix element
-                                    HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+                                    HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ia,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Ja,bb);
 
                                     result += tau * HJI * CI * it->second;
                                     spawned++;
@@ -2028,22 +2022,22 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                             double HJI = ints_->aptei_ab(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
-                                bsmap_it it = det_C.find(detJ);
+                                fdmap_it it = det_C.find(detJ);
                                 if (it != det_C.end()){
                                     // grap the alpha bits of both determinants
-                                    const Determinant::bit_t& Ia = detI.alfa_bits();
-                                    const Determinant::bit_t& Ib = detI.beta_bits();
-                                    const Determinant::bit_t& Ja = detJ.alfa_bits();
-                                    const Determinant::bit_t& Jb = detJ.beta_bits();
+                                    const bit_t& Ia = detI.alfa_bits();
+                                    const bit_t& Ib = detI.beta_bits();
+                                    const bit_t& Ja = detJ.alfa_bits();
+                                    const bit_t& Jb = detJ.beta_bits();
 
                                     // compute the sign of the matrix element
-                                    HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+                                    HJI *= FastDeterminant::SlaterSign(Ia,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Ja,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                     result += tau * HJI * CI * it->second;
                                     spawned++;
@@ -2067,20 +2061,20 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                             double HJI = ints_->aptei_bb(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                FastDeterminant detJ(detI);
                                 detJ.set_beta_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_beta_bit(aa,true);
                                 detJ.set_beta_bit(bb,true);
 
-                                bsmap_it it = det_C.find(detJ);
+                                fdmap_it it = det_C.find(detJ);
                                 if (it != det_C.end()){
                                     // grap the alpha bits of both determinants
-                                    const Determinant::bit_t& Ib = detI.beta_bits();
-                                    const Determinant::bit_t& Jb = detJ.beta_bits();
+                                    const bit_t& Ib = detI.beta_bits();
+                                    const bit_t& Jb = detJ.beta_bits();
 
                                     // compute the sign of the matrix element
-                                    HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+                                    HJI *= FastDeterminant::SlaterSign(Ib,ii) * FastDeterminant::SlaterSign(Ib,jj) * FastDeterminant::SlaterSign(Jb,aa) * FastDeterminant::SlaterSign(Jb,bb);
 
                                     result += tau * HJI * CI * it->second;
                                     spawned++;
@@ -2095,317 +2089,4 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
     }
     return result;
 }
-
-//    // Propagate the wave function for one time step using |n+1> = (1 - tau (H-S))|n>
-//    if(do_dynamic_prescreening_){
-//        // Term 1. |n>
-//        size_t max_I = dets.size();
-//        for (size_t I = 0; I < max_I; ++I){
-////            dets_C_map[dets[I]] = C[I];
-//        }
-
-//        // Term 2. -tau (H-S)|n>
-//        std::pair<double,double> zero_pair(0.0,0.0);
-//#pragma omp parallel for
-//        for (size_t I = 0; I < max_I; ++I){
-//            int thread_id = omp_get_thread_num();
-//            size_t spawned = 0;
-//            // Update the list of couplings
-//            std::pair<double,double> max_coupling;
-//            #pragma omp critical
-//            {
-//                max_coupling = dets_max_couplings_[dets[I]];
-//            }
-//            if (max_coupling == zero_pair){
-//                spawned = apply_tau_H_det_dynamic(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
-//                #pragma omp critical
-//                {
-//                    dets_max_couplings_[dets[I]] = max_coupling;
-//                }
-//            }else{
-//                spawned = apply_tau_H_det_dynamic(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
-//            }
-//            #pragma omp critical
-//            {
-//                nspawned_ += spawned;
-//                if (spawned == 0) nzerospawn_++;
-//            }
-//        }
-//    }else{
-//        size_t max_I = dets.size();
-//        for (size_t I = 0; I < max_I; ++I){
-//            dets_C_map[dets[I]] = C[I];
-//        }
-//#pragma omp parallel for
-//        for (size_t I = 0; I < max_I; ++I){
-//            int thread_id = omp_get_thread_num();
-//            size_t spawned = apply_tau_H_det(-tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            #pragma omp critical
-//            {
-//                nspawned_ += spawned;
-//                if (spawned == 0) nzerospawn_++;
-//            }
-//        }
-//    }
-
-//    // Cobine the results of all the threads
-//    combine_maps(thread_det_C_map,dets_C_map);
-
-
-
-//    size_t wfn_size = det_C_map.size();
-//    dets.resize(wfn_size);
-//    C.resize(wfn_size);
-////        std::vector<double> C_tilde(wfn_size);
-
-//    timer_on("APICI: collect C");
-//    double new_estimate = 0.0;
-//    double normerone = 1.0;
-//    size_t I = 0;
-//    double norm_C = 0.0;
-//    for (bsmap_it it = det_C_map.begin(), endit = det_C_map.end(); it != endit; ++it){
-//        dets[I] = it->first;
-//        C[I] = it->second;
-//        norm_C += (it->second) * (it->second);
-//        double CI_n = old_space_map[it->first];
-////            normerone += CI_n * CI_n;
-//        new_estimate += CI_n * C[I];
-//        I++;
-//    }
-//    new_estimate = nuclear_repulsion_energy_ + (normerone - new_estimate) / time_step_;
-
-
-//    timer_off("APICI: collect C");
-
-//    // Normalize C and save coefficients in the map
-//    old_space_map.clear();
-//    norm_C = std::sqrt(norm_C);
-//    for (int I = 0; I < wfn_size; ++I){
-////            C_tilde[I] = C[I];
-//        C[I] /= norm_C;
-//        old_space_map[dets[I]] = C[I];
-//    }
-
-}} // EndNamespaces
-
-/*
- *
-double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
-{
-    std::vector<int> aocc = detI.get_alfa_occ();
-    std::vector<int> bocc = detI.get_beta_occ();
-    std::vector<int> avir = detI.get_alfa_vir();
-    std::vector<int> bvir = detI.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta  = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta  = bvir.size();
-
-    double gradient_norm = 0.0;
-
-    // Contribution of this determinant
-    new_space_C[detI] += (1.0 - time_step_ * (detI.energy() - E0)) * CI;
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a){
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                Determinant detJ(detI);
-                detJ.set_alfa_bit(ii,false);
-                detJ.set_alfa_bit(aa,true);
-                double HJI = detJ.slater_rules(detI);
-                if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += -time_step_ * HJI * CI;
-                    gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                    ndet_accepted_++;
-                }
-                ndet_visited_++;
-            }
-        }
-    }
-
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a){
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                Determinant detJ(detI);
-                detJ.set_beta_bit(ii,false);
-                detJ.set_beta_bit(aa,true);
-                double HJI = detJ.slater_rules(detI);
-                if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += -time_step_ * HJI * CI;
-                    gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                    ndet_accepted_++;
-                }
-                ndet_visited_++;
-            }
-        }
-    }
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = i + 1; j < noalpha; ++j){
-            int jj = aocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = a + 1; b < nvalpha; ++b){
-                    int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        double HJI_abs = ints_->aptei_aa(ii,jj,aa,bb);
-                        if (std::fabs(HJI_abs * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
-                            detJ.set_alfa_bit(ii,false);
-                            detJ.set_alfa_bit(jj,false);
-                            detJ.set_alfa_bit(aa,true);
-                            detJ.set_alfa_bit(bb,true);
-                            double HJI = detJ.slater_rules(detI);
-                            if (std::fabs(HJI * CI) >= spawning_threshold){
-                                new_space_C[detJ] += -time_step_ * HJI * CI;
-                                gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                                ndet_accepted_++;
-                            }
-                        }
-                        ndet_visited_++;
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = 0; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = 0; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        double HJI_abs = ints_->aptei_ab(ii,jj,aa,bb);
-                        if (std::fabs(HJI_abs * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
-                            detJ.set_alfa_bit(ii,false);
-                            detJ.set_beta_bit(jj,false);
-                            detJ.set_alfa_bit(aa,true);
-                            detJ.set_beta_bit(bb,true);
-                            double HJI = detJ.slater_rules(detI);
-                            if (std::fabs(HJI * CI) >= spawning_threshold){
-                                new_space_C[detJ] += -time_step_ * HJI * CI;
-                                gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                                ndet_accepted_++;
-                            }
-                        }
-                        ndet_visited_++;
-                    }
-                }
-            }
-        }
-    }
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int j = i + 1; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvbeta; ++a){
-                int aa = bvir[a];
-                for (int b = a + 1; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                        double HJI_abs = ints_->aptei_bb(ii,jj,aa,bb);
-                        if (std::fabs(HJI_abs * CI) >= spawning_threshold){
-                            Determinant detJ(detI);
-                            detJ.set_beta_bit(ii,false);
-                            detJ.set_beta_bit(jj,false);
-                            detJ.set_beta_bit(aa,true);
-                            detJ.set_beta_bit(bb,true);
-                            double HJI = detJ.slater_rules(detI);
-                            if (std::fabs(HJI * CI) >= spawning_threshold){
-                                new_space_C[detJ] += -time_step_ * HJI * CI;
-                                gradient_norm += std::fabs(-time_step_ * HJI * CI);
-                                ndet_accepted_++;
-                            }
-                        }
-                        ndet_visited_++;
-                    }
-                }
-            }
-        }
-    }
-    return gradient_norm;
-}
-
-void AdaptivePathIntegralCI::propagate_power_quadratic_extrapolation(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
-{
-    // A map that contains the pair (determinant,coefficient)
-    std::map<Determinant,double> dets_C_map;
-
-    std::vector<std::map<Determinant,double>> x(4);
-    std::vector<std::map<Determinant,double>> y(3);
-
-    // Form the xs
-    auto& x0 = x[0];
-    for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
-        x0[dets[I]] = C[I];
-    }
-    for (size_t k = 0; k < 3; ++k){
-        dets_C_map.clear();
-        double norm = normalize(C);
-        apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_map,0.0);
-        // Overwrite the input vectors with the updated wave function
-//        scale(dets_C_map,norm);
-        copy_map_to_vec(dets_C_map,dets,C);
-        auto& xk = x[k + 1];
-        for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
-            xk[dets[I]] = C[I];
-        }
-    }
-    // Form the ys
-    for (size_t k = 0; k < 3; ++k){
-        add(y[k],1.0,x[k + 1]);
-        add(y[k],-1.0,x[0]);
-    }
-    // QR factorization
-    std::vector<std::map<Determinant,double>> e(2);
-    // Form e1
-    e[0] = y[0];
-    normalize(e[0]);
-
-    // Form e2
-    e[1] = y[1];
-    double e0_y1 = dot(e[0],y[1]);
-    add(e[1],-e0_y1,e[0]);
-    normalize(e[1]);
-
-    double r11 = dot(e[0],y[0]);
-    double r12 = dot(e[0],y[1]);
-    double r22 = dot(e[1],y[1]);
-    double Qy1 = dot(e[0],y[2]);
-    double Qy2 = dot(e[1],y[2]);
-
-    double gamma3 = 1.0;
-    double gamma2 = -Qy2 / r22;
-    double gamma1 = -(Qy1 + r12 * gamma2) / r11;
-    double gamma0 = -(gamma1 + gamma2 + gamma3);
-    double beta0 = gamma1 + gamma2 + gamma3;
-    double beta1 = gamma2 + gamma3;
-    double beta2 = gamma3;
-    double b[3];
-    b[0] = beta0;
-    b[1] = beta1;
-    b[2] = beta2;
-
-    dets_C_map.clear();
-    for (size_t k = 0; k < 3; ++k){
-        outfile->Printf("\n  beta[%zu] = %f",k,b[k]);
-        add(dets_C_map,b[k],x[k + 1]);
-    }
-    copy_map_to_vec(dets_C_map,dets,C);
-}
- */
-
-
-
+}}
