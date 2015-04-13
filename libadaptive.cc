@@ -1,6 +1,8 @@
 #include <cmath>
 #include <memory>
 
+#include <ambit/tensor.h>
+
 #include "psi4-dec.h"
 #include "psifiles.h"
 #include <libplugin/plugin.h>
@@ -10,7 +12,8 @@
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
-#include <ambit/tensor.h>
+
+#include "mp2_nos.h"
 
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
@@ -39,6 +42,8 @@ read_options(std::string name, Options &options)
         /*- MODULEDESCRIPTION Libadaptive */
 
         /*- SUBSECTION Job Type */
+
+        options.add_bool("MP2_NOS",false);
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -359,6 +364,11 @@ libadaptive(Options &options)
     else
     {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+    }
+
+    if (options.get_bool("MP2_NOS")){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        MP2_NOS mp2_nos(wfn,options,ints_);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
