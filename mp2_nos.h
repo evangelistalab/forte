@@ -38,6 +38,7 @@ namespace libadaptive{
  */
 class MP2_NOS
 {
+public:
     // => Constructor <= //
     MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
 };

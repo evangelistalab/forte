@@ -175,7 +175,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     double ref_energy = wfn->reference_energy();
     outfile->Printf("\n\n    SCF energy                            = %20.15f",ref_energy);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f",mp2_correlation_energy);
-    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n",ref_energy + mp2_correlation_energy);
+    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n\n",ref_energy + mp2_correlation_energy);
 
     D1["ab"] += 0.5 * T2["ijbc"] * T2["ijac"];
     D1["ab"] += 1.0 * T2["iJbC"] * T2["iJaC"];
