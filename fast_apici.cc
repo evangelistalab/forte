@@ -370,11 +370,10 @@ double FastAdaptivePathIntegralCI::initial_guess(std::vector<FastDeterminant>& d
     std::vector<std::pair<double,size_t> > det_weight;
     for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
         det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-        dets[I].print();
     }
     std::sort(det_weight.begin(),det_weight.end());
     std::reverse(det_weight.begin(),det_weight.end());
-    size_t max_dets = std::min(size_t(100),C.size());
+    size_t max_dets = std::min(size_t(1000),C.size());
 
     SharedMatrix H(new Matrix("H",max_dets,max_dets));
     SharedMatrix evecs(new Matrix("Eigenvectors",max_dets,max_dets));
@@ -388,7 +387,8 @@ double FastAdaptivePathIntegralCI::initial_guess(std::vector<FastDeterminant>& d
             H->set(sJ,sI,HIJ);
         }
     }
-    H->print();
+
+    outfile->Printf("\n\n  Initial guess size = %zu",max_dets);
 
     H->diagonalize(evecs,evals);
 
