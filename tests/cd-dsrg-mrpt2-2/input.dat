@@ -34,12 +34,12 @@ set libadaptive{
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
-#   int_type                cholesky
+   int_type                cholesky
    cholesky_tolerance      1e-14
 }
 
 energy('mcscf')
-energy('dsrg-mrpt2')
+energy('three-dsrg-mrpt2')
 
 compare_values(refmcscf, get_variable("SCF total energy"),10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
