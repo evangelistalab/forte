@@ -343,8 +343,8 @@ void ConventionalIntegrals::retransform_integrals()
 
 void ConventionalIntegrals::gather_integrals()
 {
-    outfile->Printf("\n Getting the two electron integrals");
-    outfile->Printf("\n Size of tei: %8.6f GB", num_aptei * 8 / 1073741824.0);
+    outfile->Printf("\n  Reading the two-electron integrals from disk");
+    outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;

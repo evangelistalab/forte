@@ -31,11 +31,9 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
-
 namespace psi{ namespace libadaptive{
 
 enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList};
-
 
 /**
  * @brief The SigmaVector class
@@ -188,6 +186,9 @@ public:
     /// Enable or disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
+    /// Enable or disable printing of details
+    void set_print_details(bool print_details) {print_details_ = print_details;}
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<BitsetDeterminant>& space,
@@ -262,7 +263,6 @@ private:
     /// Print details?
     bool print_details_;
 };
-
 
 }}
 

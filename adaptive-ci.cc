@@ -556,7 +556,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         const boost::dynamic_bitset<>& Ja = new_det.alfa_bits();
 
                         // compute the sign of the matrix element
-                        HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ia,jj) * SlaterSign(Ja,aa) * SlaterSign(Ja,bb);
+                        HIJ *= BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ia,jj) * BitsetDeterminant::SlaterSign(Ja,aa) * BitsetDeterminant::SlaterSign(Ja,bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
@@ -589,7 +589,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
 
                         // compute the sign of the matrix element
-                        HIJ *= SlaterSign(Ia,ii) * SlaterSign(Ib,jj) * SlaterSign(Ja,aa) * SlaterSign(Jb,bb);
+                        HIJ *= BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ib,jj) * BitsetDeterminant::SlaterSign(Ja,aa) * BitsetDeterminant::SlaterSign(Jb,bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
@@ -619,7 +619,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
 
                         // compute the sign of the matrix element
-                        HIJ *= SlaterSign(Ib,ii) * SlaterSign(Ib,jj) * SlaterSign(Jb,aa) * SlaterSign(Jb,bb);
+                        HIJ *= BitsetDeterminant::SlaterSign(Ib,ii) * BitsetDeterminant::SlaterSign(Ib,jj) * BitsetDeterminant::SlaterSign(Jb,aa) * BitsetDeterminant::SlaterSign(Jb,bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }

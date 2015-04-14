@@ -1,203 +1,177 @@
-#include <psi4-dec.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/matrix.h>
-
 #include <boost/lexical_cast.hpp>
 
-#include "bitset_determinant.h"
+#include "fast_determinant.h"
 
 using namespace std;
 using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
-std::size_t hash_value(const BitsetDeterminant& input)
+inline bool test_bit01(bit_t a, bit_t i)
+// Return whether bit[i] is set.
 {
-    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
+    return ( 0 != (a & (1UL << i)) );
 }
 
-ExplorerIntegrals* BitsetDeterminant::ints_ = 0;
-//boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
-//boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
-
-BitsetDeterminant::BitsetDeterminant() : nmo_(0)
+inline bit_t bit_count(bit_t x)
+// Return number of bits set
 {
+    x = (0x5555555555555555UL & x) + (0x5555555555555555UL & (x>> 1));
+    x = (0x3333333333333333UL & x) + (0x3333333333333333UL & (x>> 2));
+    x = (0x0f0f0f0f0f0f0f0fUL & x) + (0x0f0f0f0f0f0f0f0fUL & (x>> 4));
+    x = (0x00ff00ff00ff00ffUL & x) + (0x00ff00ff00ff00ffUL & (x>> 8));
+    x = (0x0000ffff0000ffffUL & x) + (0x0000ffff0000ffffUL & (x>>16));
+    x = (0x00000000ffffffffUL & x) + (0x00000000ffffffffUL & (x>>32));
+    return x;
+//    x = ((x>>1) & 0x5555555555555555UL) + (x & 0x5555555555555555UL);
+//    x = ((x>>2) & 0x3333333333333333UL) + (x & 0x3333333333333333UL);
+//    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL;
+//    x+=x>>8;
+//    x += x>>16;
+//    x += x>>32;
+//    return x & 0xff;
+
+//    x -= (x>>1) & 0x5555555555555555UL;
+//    x = ((x>>2) & 0x3333333333333333UL) + (x & 0x3333333333333333UL); // 0-4 in 4 bits
+//    x = ((x>>4) + x) & 0x0f0f0f0f0f0f0f0fUL; // 0-8 in 8 bits
+//    x *= 0x0101010101010101UL;
+//    return x>>56;
+}
+
+inline bit_t bit_count_sparse(bit_t x)
+{
+    bit_t n = 0;
+    while(x) {++n; x &= (x - 1);}
+    return n;
+}
+
+inline bit_t lowest_one_idx(bit_t x)
+{
+    if (1 >= x) return x-1; // 0 if 1, ~0 if 0
+    bit_t r = 0;
+    x &= -x;  // isolate lowest bit
+    if (x & 0xffffffff00000000UL) r += 32;
+    if (x & 0xffff0000ffff0000UL) r += 16;
+    if (x & 0xff00ff00ff00ff00UL) r += 8;
+    if (x & 0xf0f0f0f0f0f0f0f0UL) r += 4;
+    if (x & 0xccccccccccccccccUL) r += 2;
+    if (x & 0xaaaaaaaaaaaaaaaaUL) r += 1;
+    return r;
+}
+
+inline bit_t clear_lowest_one(bit_t x)
+// Return word where the lowest bit set in x is cleared
+// Return 0 for input == 0
+{
+    return x & (x - 1);
+}
+
+inline std::vector<int> get_set(bit_t x,bit_t range)
+{
+    uint64_t mask = (1 << range) - 1;
+    x = x & mask;
+    std::vector<int> r(bit_count(x));
+    bit_t index = lowest_one_idx(x);
+    int i = 0;
+    while(index != -1)
+    {
+        r[i] = index;
+        x = clear_lowest_one(x);
+        index = lowest_one_idx(x);
+        i++;
+    }
+    return r;
+}
+
+ExplorerIntegrals* FastDeterminant::ints_ = 0;
+
+/// Construct the determinant from an occupation vector that
+/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+FastDeterminant::FastDeterminant(const std::vector<int>& occupation,bool print_det)
+    : nmo_(occupation.size() / 2), alfa_bits_(0UL), beta_bits_(0UL)
+{
+    for(int p = 0; p < nmo_; ++p){
+        set_alfa_bit(p,occupation[p]);
+        set_beta_bit(p,occupation[p + nmo_]);
+    }
+    if (print_det) print();
 }
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-BitsetDeterminant::BitsetDeterminant(const std::vector<int>& occupation,bool print_det)
-    : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
+FastDeterminant::FastDeterminant(const std::vector<bool>& occupation,bool print_det)
+    : nmo_(occupation.size() / 2), alfa_bits_(0UL), beta_bits_(0UL)
 {
     for(int p = 0; p < nmo_; ++p){
-        alfa_bits_[p] = occupation[p];
-        beta_bits_[p] = occupation[p + nmo_];
+        set_alfa_bit(p,occupation[p]);
+        set_beta_bit(p,occupation[p + nmo_]);
     }
     if (print_det) print();
 }
 
-/// Construct the determinant from an occupation vector that
-/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation,bool print_det)
-    : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
+FastDeterminant::FastDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
+    : nmo_(occupation_a.size()), alfa_bits_(0UL), beta_bits_(0UL)
 {
     for(int p = 0; p < nmo_; ++p){
-        alfa_bits_[p] = occupation[p];
-        beta_bits_[p] = occupation[p + nmo_];
+        set_alfa_bit(p,occupation_a[p]);
+        set_beta_bit(p,occupation_b[p]);
     }
     if (print_det) print();
 }
 
-BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
-    : nmo_(occupation_a.size()), alfa_bits_(nmo_), beta_bits_(nmo_)
+
+std::vector<int> FastDeterminant::get_alfa_occ()
 {
-    for(int p = 0; p < nmo_; ++p){
-        alfa_bits_[p] = occupation_a[p];
-        beta_bits_[p] = occupation_b[p];
-    }
-    if (print_det) print();
+    return get_set(alfa_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_occ()
+std::vector<int> FastDeterminant::get_beta_occ()
 {
-    std::vector<int> occ(alfa_bits_.count());
-    size_t index = alfa_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            occ[i] = index;
-            index = alfa_bits_.find_next(index);
-            i++;
-    }
-    return occ;
+    return get_set(beta_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_beta_occ()
+std::vector<int> FastDeterminant::get_alfa_vir()
 {
-    std::vector<int> occ(beta_bits_.count());
-    size_t index = beta_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            occ[i] = index;
-            index = beta_bits_.find_next(index);
-            i++;
-    }
-    return occ;
+    return get_set(~alfa_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_vir()
+std::vector<int> FastDeterminant::get_beta_vir()
 {
-    alfa_bits_.flip();
-    std::vector<int> vir(alfa_bits_.count());
-    size_t index = alfa_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            vir[i] = index;
-            index = alfa_bits_.find_next(index);
-            i++;
-    }
-    alfa_bits_.flip();
-    return vir;
+    return get_set(~beta_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_beta_vir()
+std::vector<int> FastDeterminant::get_alfa_occ() const
 {
-    beta_bits_.flip();
-    std::vector<int> vir(beta_bits_.count());
-    size_t index = beta_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            vir[i] = index;
-            index = beta_bits_.find_next(index);
-            i++;
-    }
-    beta_bits_.flip();
-    return vir;
+    return get_set(alfa_bits_,nmo_);
 }
 
-
-std::vector<int> BitsetDeterminant::get_alfa_occ() const
+std::vector<int> FastDeterminant::get_beta_occ() const
 {
-    std::vector<int> occ(alfa_bits_.count());
-    size_t index = alfa_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            occ[i] = index;
-            index = alfa_bits_.find_next(index);
-            i++;
-    }
-    return occ;
+    return get_set(beta_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_beta_occ() const
+std::vector<int> FastDeterminant::get_alfa_vir() const
 {
-    std::vector<int> occ(beta_bits_.count());
-    size_t index = beta_bits_.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            occ[i] = index;
-            index = beta_bits_.find_next(index);
-            i++;
-    }
-    return occ;
+    return get_set(~alfa_bits_,nmo_);
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_vir() const
+std::vector<int> FastDeterminant::get_beta_vir() const
 {
-    boost::dynamic_bitset<> alfa_bits(alfa_bits_);
-    alfa_bits.flip();
-    std::vector<int> vir(alfa_bits.count());
-    size_t index = alfa_bits.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            vir[i] = index;
-            index = alfa_bits.find_next(index);
-            i++;
-    }
-    return vir;
+    return get_set(~beta_bits_,nmo_);
 }
-
-std::vector<int> BitsetDeterminant::get_beta_vir() const
-{
-    boost::dynamic_bitset<> beta_bits(beta_bits_);
-    beta_bits.flip();
-    std::vector<int> vir(beta_bits.count());
-    size_t index = beta_bits.find_first();
-    int i = 0;
-    while(index != boost::dynamic_bitset<>::npos)
-    {
-            vir[i] = index;
-            index = beta_bits.find_next(index);
-            i++;
-    }
-    return vir;
-}
-
-///// Return a vector of occupied beta orbitals
-//std::vector<int> get_beta_occ();
-///// Return a vector of virtual alpha orbitals
-//std::vector<int> get_alfa_vir();
-///// Return a vector of virtual beta orbitals
-//std::vector<int> get_beta_vir();
 
 /**
  * Print the determinant
  */
-void BitsetDeterminant::print() const
+void FastDeterminant::print() const
 {
     outfile->Printf("\n  |");
     for(int p = 0; p < nmo_; ++p){
-        outfile->Printf("%d",alfa_bits_[p] ? 1 :0);
+        outfile->Printf("%d",get_alfa_bit(p) ? 1 :0);
     }
     outfile->Printf("|");
     for(int p = 0; p < nmo_; ++p){
-        outfile->Printf("%d",beta_bits_[p] ? 1 :0);
+        outfile->Printf("%d",get_beta_bit(p) ? 1 :0);
     }
     outfile->Printf(">");
     outfile->Flush();
@@ -206,16 +180,16 @@ void BitsetDeterminant::print() const
 /**
  * Print the determinant
  */
-std::string BitsetDeterminant::str() const
+std::string FastDeterminant::str() const
 {
     std::string s;
     s += "|";
     for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(alfa_bits_[p]);
+        s += boost::lexical_cast<std::string>(get_alfa_bit(p));
     }
     s += "|";
     for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(beta_bits_[p]);
+        s += boost::lexical_cast<std::string>(get_beta_bit(p));
     }
     s += ">";
     return s;
@@ -225,43 +199,43 @@ std::string BitsetDeterminant::str() const
  * Compute the energy of this determinant
  * @return the electronic energy (does not include the nuclear repulsion energy)
  */
-double BitsetDeterminant::energy() const
+double FastDeterminant::energy() const
 {
     double matrix_element = 0.0;
     matrix_element = ints_->frozen_core_energy();
     //    for(int p = 0; p < nmo_; ++p){
-    //        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
-    //        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
-    //        if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
+    //        if(get_alfa_bit(p)) matrix_element += ints_->diag_roei(p);
+    //        if(get_beta_bit(p)) matrix_element += ints_->diag_roei(p);
+    //        if(get_alfa_bit(p)) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
     //        for(int q = 0; q < nmo_; ++q){
-    //            if(alfa_bits_[p] and alfa_bits_[q]){
+    //            if(get_alfa_bit(p) and get_alfa_bit(q)){
     //                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
     //                outfile->Printf("\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
     //            }
-    //            if(alfa_bits_[p] and beta_bits_[q]){
+    //            if(get_alfa_bit(p) and get_beta_bit(q)){
     //                matrix_element += ints_->diag_c_rtei(p,q);
     //                outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_c_rtei(p,q));
     //            }
-    //            if(beta_bits_[p] and beta_bits_[q]){
+    //            if(get_beta_bit(p) and get_beta_bit(q)){
     //                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
     //                outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
     //            }
     //        }
     //    }
     for(int p = 0; p < nmo_; ++p){
-        if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
-        if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
-        //        if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
+        if(get_alfa_bit(p)) matrix_element += ints_->oei_a(p,p);
+        if(get_beta_bit(p)) matrix_element += ints_->oei_b(p,p);
+        //        if(get_alfa_bit(p)) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
         for(int q = 0; q < nmo_; ++q){
-            if(alfa_bits_[p] and alfa_bits_[q]){
+            if(get_alfa_bit(p) and get_alfa_bit(q)){
                 matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
                 //                outfile->Printf("\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_aa(p,q));
             }
-            if(alfa_bits_[p] and beta_bits_[q]){
+            if(get_alfa_bit(p) and get_beta_bit(q)){
                 matrix_element += ints_->diag_aptei_ab(p,q);
                 //                outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_aptei_ab(p,q));
             }
-            if(beta_bits_[p] and beta_bits_[q]){
+            if(get_beta_bit(p) and get_beta_bit(q)){
                 matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
                 //                outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_bb(p,q));
             }
@@ -275,40 +249,44 @@ double BitsetDeterminant::energy() const
  * @param rhs
  * @return
  */
-double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
+double FastDeterminant::slater_rules(const FastDeterminant& rhs) const
 {
-    const boost::dynamic_bitset<>& Ia = alfa_bits_;
-    const boost::dynamic_bitset<>& Ib = beta_bits_;
-    const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
-    const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
+    const bit_t& Ia = alfa_bits_;
+    const bit_t& Ib = beta_bits_;
+    const bit_t& Ja = rhs.alfa_bits_;
+    const bit_t& Jb = rhs.beta_bits_;
 
 
     int nadiff = 0;
     int nbdiff = 0;
     // Count how many differences in mos are there
     for (int n = 0; n < nmo_; ++n) {
-        if (Ia[n] != Ja[n]) nadiff++;
-        if (Ib[n] != Jb[n]) nbdiff++;
+        if (test_bit01(Ia,n) != test_bit01(Ja,n)) nadiff++;
+        if (test_bit01(Ib,n) != test_bit01(Jb,n)) nbdiff++;
         if (nadiff + nbdiff > 4) return 0.0; // Get out of this as soon as possible
     }
     nadiff /= 2;
     nbdiff /= 2;
+
+//    this->print();
+//    rhs.print();
+//    outfile->Printf("\n  nadiff = %d  nbdiff = %d",nadiff,nbdiff);
 
     double matrix_element = 0.0;
     // Slater rule 1 PhiI = PhiJ
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element = ints_->frozen_core_energy();
         for(int p = 0; p < nmo_; ++p){
-            if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
-            if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
+            if(get_alfa_bit(p)) matrix_element += ints_->oei_a(p,p);
+            if(get_beta_bit(p)) matrix_element += ints_->oei_b(p,p);
             for(int q = 0; q < nmo_; ++q){
-                if(alfa_bits_[p] and alfa_bits_[q])
+                if(get_alfa_bit(p) and get_alfa_bit(q))
                     matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
                 //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
-                if(beta_bits_[p] and beta_bits_[q])
+                if(get_beta_bit(p) and get_beta_bit(q))
                     matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
                 //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
-                if(alfa_bits_[p] and beta_bits_[q])
+                if(get_alfa_bit(p) and get_beta_bit(q))
                     matrix_element +=   ints_->diag_aptei_ab(p,q);
                 //                    matrix_element += ints_->diag_c_rtei(p,q);
             }
@@ -321,16 +299,16 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         int i = 0;
         int j = 0;
         for(int p = 0; p < nmo_; ++p){
-            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
-            if((Ia[p] != Ja[p]) and Ja[p]) j = p;
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ia,p)) i = p;
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ja,p)) j = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
         matrix_element = sign * ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
-            if(Ia[p] and Ja[p]){
+            if(test_bit01(Ia,p) and test_bit01(Ja,p)){
                 matrix_element += sign * ints_->aptei_aa(i,p,j,p);
             }
-            if(Ib[p] and Jb[p]){
+            if(test_bit01(Ib,p) and test_bit01(Jb,p)){
                 matrix_element += sign * ints_->aptei_ab(i,p,j,p);
             }
         }
@@ -341,16 +319,16 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         int i = 0;
         int j = 0;
         for(int p = 0; p < nmo_; ++p){
-            if((Ib[p] != Jb[p]) and Ib[p]) i = p;
-            if((Ib[p] != Jb[p]) and Jb[p]) j = p;
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Ib,p)) i = p;
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Jb,p)) j = p;
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
         matrix_element = sign * ints_->oei_b(i,j);
         for(int p = 0; p < nmo_; ++p){
-            if(Ia[p] and Ja[p]){
+            if(test_bit01(Ia,p) and test_bit01(Ja,p)){
                 matrix_element += sign * ints_->aptei_ab(p,i,p,j);
             }
-            if(Ib[p] and Jb[p]){
+            if(test_bit01(Ib,p) and test_bit01(Jb,p)){
                 matrix_element += sign * ints_->aptei_bb(i,p,j,p);
             }
         }
@@ -364,10 +342,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         int k = -1;
         int l =  0;
         for(int p = 0; p < nmo_; ++p){
-            if((Ia[p] != Ja[p]) and Ia[p]){
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ia,p)){
                 if (i == -1) { i = p; } else { j = p; }
             }
-            if((Ia[p] != Ja[p]) and Ja[p]){
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ja,p)){
                 if (k == -1) { k = p; } else { l = p; }
             }
         }
@@ -384,10 +362,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         k = -1;
         l = -1;
         for(int p = 0; p < nmo_; ++p){
-            if((Ib[p] != Jb[p]) and Ib[p]){
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Ib,p)){
                 if (i == -1) { i = p; } else { j = p; }
             }
-            if((Ib[p] != Jb[p]) and Jb[p]){
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Jb,p)){
                 if (k == -1) { k = p; } else { l = p; }
             }
         }
@@ -401,10 +379,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
         int i,j,k,l;
         i = j = k = l = -1;
         for(int p = 0; p < nmo_; ++p){
-            if((Ia[p] != Ja[p]) and Ia[p]) i = p;
-            if((Ib[p] != Jb[p]) and Ib[p]) j = p;
-            if((Ia[p] != Ja[p]) and Ja[p]) k = p;
-            if((Ib[p] != Jb[p]) and Jb[p]) l = p;
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ia,p)) i = p;
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Ib,p)) j = p;
+            if((test_bit01(Ia,p) != test_bit01(Ja,p)) and test_bit01(Ja,p)) k = p;
+            if((test_bit01(Ib,p) != test_bit01(Jb,p)) and test_bit01(Jb,p)) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
         matrix_element = sign * ints_->aptei_ab(i,j,k,l);
@@ -416,12 +394,12 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
  * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
  * @return S^2
  */
-double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
+double FastDeterminant::spin2(const FastDeterminant& rhs) const
 {
-    const boost::dynamic_bitset<>& Ia = alfa_bits_;
-    const boost::dynamic_bitset<>& Ib = beta_bits_;
-    const boost::dynamic_bitset<>& Ja = rhs.alfa_bits_;
-    const boost::dynamic_bitset<>& Jb = rhs.beta_bits_;
+    const bit_t& Ia = alfa_bits_;
+    const bit_t& Ib = beta_bits_;
+    const bit_t& Ja = rhs.alfa_bits_;
+    const bit_t& Jb = rhs.beta_bits_;
 
     // Compute the matrix elements of the operator S^2
     // S^2 = S- S+ + Sz (Sz + 1)
@@ -436,11 +414,11 @@ double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
     int nmo = nmo_;
     // Count how many differences in mos are there and the number of alpha/beta electrons
     for (int n = 0; n < nmo; ++n) {
-        if (Ia[n] != Ja[n]) nadiff++;
-        if (Ib[n] != Jb[n]) nbdiff++;
-        if (Ia[n]) na++;
-        if (Ib[n]) nb++;
-        if ((Ia[n] and Ib[n])) npair += 1;
+        if (test_bit01(Ia,n) != test_bit01(Ja,n)) nadiff++;
+        if (test_bit01(Ib,n) != test_bit01(Jb,n)) nbdiff++;
+        if (test_bit01(Ia,n)) na++;
+        if (test_bit01(Ib,n)) nb++;
+        if ((test_bit01(Ia,n) and test_bit01(Ib,n))) npair += 1;
     }
     nadiff /= 2;
     nbdiff /= 2;
@@ -459,8 +437,8 @@ double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
         int j = -1;
         // The logic here is a bit complex
         for(int p = 0; p < nmo; ++p){
-            if(Ja[p] and Ib[p] and (not Jb[p]) and  (not Ia[p])) i = p; //(p)
-            if(Jb[p] and Ia[p] and (not Ja[p]) and  (not Ib[p])) j = p; //(q)
+            if(test_bit01(Ja,p) and test_bit01(Ib,p) and (not test_bit01(Jb,p)) and  (not test_bit01(Ia,p))) i = p; //(p)
+            if(test_bit01(Jb,p) and test_bit01(Ia,p) and (not test_bit01(Ja,p)) and  (not test_bit01(Ib,p))) j = p; //(q)
         }
         if (i != j and i >= 0 and j >= 0){
             double sign = SlaterSign(Ja,i) * SlaterSign(Jb,j) * SlaterSign(Ib,i) * SlaterSign(Ia,j);
@@ -470,13 +448,12 @@ double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
     return(matrix_element);
 }
 
-double BitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
+double FastDeterminant::SlaterSign(const bit_t I,int n)
 {
     double sign = 1.0;
     for(int i = 0; i < n; ++i){  // This runs up to the operator before n
-        if(I[i]) sign *= -1.0;
+        if(test_bit01(I,i)) sign *= -1.0;
     }
     return(sign);
 }
-
 }} // end namespace
