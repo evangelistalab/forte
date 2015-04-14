@@ -55,7 +55,10 @@ public:
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}
 
-    /// Return the total number of auxiliary index(CD or DF)
+    /// Return the number of frozen core orbitals per irrep
+    Dimension& frzcpi() {return frzcpi_;}
+    /// Return the number of frozen virtual orbitals per irrep
+    Dimension& frzvpi() {return frzvpi_;}
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension& ncmopi() {return ncmopi_;}
@@ -144,11 +147,6 @@ public:
 
     /// Update the integrals with a new set of MO coefficients
     virtual void retransform_integrals() = 0;
-
-    /// Return the number of frozen core orbitals per irrep
-    Dimension& frzcpi() {return frzcpi_;}
-    /// Return the number of frozen virtual orbitals per irrep
-    Dimension& frzvpi() {return frzvpi_;}
 
     /// Compute df integrals
     /// Compute cholesky integrals

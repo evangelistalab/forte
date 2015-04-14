@@ -20,8 +20,8 @@
  *@END LICENSE
  */
 
-#ifndef _adaptive_pifci_h_
-#define _adaptive_pifci_h_
+#ifndef _fast_adaptive_pifci_h_
+#define _fast_adaptive_pifci_h_
 
 #include <fstream>
 
@@ -31,27 +31,25 @@
 
 #include "integrals.h"
 #include "string_determinant.h"
-#include "bitset_determinant.h"
+#include "fast_determinant.h"
 
 namespace psi{ namespace libadaptive{
 
-enum PropagatorType {LinearPropagator,
-                     QuadraticPropagator,
-                     CubicPropagator,
-                     QuarticPropagator,
-                     PowerPropagator,
-                     TrotterLinearPropagator,
-                     OlsenPropagator,
-                     DavidsonLiuPropagator};
-
-using Determinant = BitsetDeterminant;
 
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class AdaptivePathIntegralCI : public Wavefunction
+class FastAdaptivePathIntegralCI : public Wavefunction
 {
+    enum PropagatorType {LinearPropagator,
+                         QuadraticPropagator,
+                         CubicPropagator,
+                         QuarticPropagator,
+                         PowerPropagator,
+                         TrotterLinearPropagator,
+                         OlsenPropagator,
+                         DavidsonLiuPropagator};
 public:
     // ==> Class Constructor and Destructor <==
 
@@ -61,10 +59,10 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
 
     /// Destructor
-    ~AdaptivePathIntegralCI();
+    ~FastAdaptivePathIntegralCI();
 
     // ==> Class Interface <==
 
@@ -100,14 +98,12 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
-    std::vector<std::map<Determinant,double>> solutions_;
+    std::vector<std::map<FastDeterminant,double>> solutions_;
 
 
     // * Calculation info
     /// The threshold applied to the primary space
     double spawning_threshold_;
-    /// The maximum size of the guess wave function
-    size_t max_guess_size_;
     /// The threshold applied during the initial guess
     double initial_guess_spawning_threshold_;
     /// The size of the time step (TAU)
@@ -149,7 +145,7 @@ private:
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::map<Determinant,std::pair<double,double>> dets_max_couplings_;
+    std::map<FastDeterminant,std::pair<double,double>> dets_max_couplings_;
 
     // * Energy estimation
     /// Estimate the variational energy via a fast procedure?
@@ -179,16 +175,16 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<Determinant> &space, std::vector<double> &C);
+    void print_wfn(std::vector<FastDeterminant> &space, std::vector<double> &C);
 
     /// Save a wave function
-    void save_wfn(std::vector<Determinant> &space, std::vector<double> &C,std::vector<std::map<Determinant,double>>& solutions);
+    void save_wfn(std::vector<FastDeterminant> &space, std::vector<double> &C,std::vector<std::map<FastDeterminant,double>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(std::vector<Determinant>& space,std::vector<double>& C,std::vector<std::map<Determinant,double>>& solutions);
+    void orthogonalize(std::vector<FastDeterminant>& space,std::vector<double>& C,std::vector<std::map<FastDeterminant,double>>& solutions);
 
     /// Initial wave function guess
-    double initial_guess(std::vector<Determinant>& dets,std::vector<double>& C);
+    double initial_guess(std::vector<FastDeterminant>& dets,std::vector<double>& C);
 
     /**
     * Propagate the wave function by a step of length tau
@@ -199,71 +195,76 @@ private:
     * @param spawning_threshold The threshold used to accept or reject spawning events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(PropagatorType propagator,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate(PropagatorType propagator,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// A first-order propagator
-    void propagate_first_order(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_first_order(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// An experimental second-order propagator
-    void propagate_second_order(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_second_order(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// An experimental arbitrary-order Taylor series propagator
-    void propagate_Taylor(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Taylor(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// An experimental arbitrary-order Chebyshev series propagator
-    void propagate_Chebyshev(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Chebyshev(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The power propagator
-    void propagate_power(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_power(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The power propagator
-    void propagate_power_quadratic_extrapolation(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_power_quadratic_extrapolation(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The Trotter propagator
-    void propagate_Trotter(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Trotter(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The Olsen propagator
-    void propagate_Olsen(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Olsen(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// The Davidson-Liu propagator
-    void propagate_DavidsonLiu(std::vector<Determinant>& dets, std::vector<double>& C, double tau, double spawning_threshold);
+    void propagate_DavidsonLiu(std::vector<FastDeterminant>& dets, std::vector<double>& C, double tau, double spawning_threshold);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(std::vector<Determinant>& dets,std::vector<double>& C);
+    std::map<std::string, double> estimate_energy(std::vector<FastDeterminant>& dets,std::vector<double>& C);
 
     /// Estimates the projective energy
-    double estimate_proj_energy(std::vector<Determinant>& dets,std::vector<double>& C);
+    double estimate_proj_energy(std::vector<FastDeterminant>& dets,std::vector<double>& C);
 
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
-    double estimate_var_energy(std::vector<Determinant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
+    double estimate_var_energy(std::vector<FastDeterminant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
-    double estimate_var_energy_sparse(std::vector<Determinant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
+    double estimate_var_energy_sparse(std::vector<FastDeterminant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
     /// Perform a time step
-    double time_step_optimized(double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    double time_step_optimized(double spawning_threshold,FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0);
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<Determinant> &dets, const std::vector<double>& C, std::map<Determinant,double>& dets_C_map, double S);
-//    size_t apply_tau_H(double tau,double spawning_threshold,std::map<Determinant,double>& det_C_old, std::map<Determinant,double>& dets_C_map, double S);
+    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<FastDeterminant> &dets, const std::vector<double>& C, std::map<FastDeterminant,double>& dets_C_map, double S);
+//    size_t apply_tau_H(double tau,double spawning_threshold,std::map<FastDeterminant,double>& det_C_old, std::map<FastDeterminant,double>& dets_C_map, double S);
 
     /// Apply tau H to a determinant
-    size_t apply_tau_H_det(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det(double tau,double spawning_threshold,const FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
-    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
+    double form_H_C(double tau,double spawning_threshold,FastDeterminant& detI, double CI, std::map<FastDeterminant,double>& det_C,std::pair<double,double>& max_coupling);
+
+    static void scale(std::vector<double>& A,double alpha);
+    static double normalize(std::vector<double>& C);
+    static double normalize(std::map<FastDeterminant,double>& dets_C);
+    static bool have_omp;
 };
 
 }} // End Namespaces
 
-#endif // _adaptive_pifci_h_
+#endif // _fast_adaptive_pifci_h_
