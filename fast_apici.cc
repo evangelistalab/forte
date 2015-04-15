@@ -357,7 +357,6 @@ double FastAdaptivePathIntegralCI::initial_guess(std::vector<FastDeterminant>& d
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
     std::map<FastDeterminant,double> dets_C;
 
-
     // Do one time step starting from the reference determinant
     FastDeterminant bs_det(alfa_bits,beta_bits);
     time_step_optimized(spawning_threshold_ * 10.0,bs_det,1.0,dets_C,0.0);
