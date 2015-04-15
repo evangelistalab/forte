@@ -818,6 +818,7 @@ void DFIntegrals::gather_integrals()
     //Constructs the DF function
     //I used this version of build as this doesn't build all the apces and assume a RHF/UHF reference
     boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+
     //Pushes a C matrix that is ordered in pitzer ordering
     //into the C_matrix object
     df->set_C(C_ord);
@@ -830,7 +831,13 @@ void DFIntegrals::gather_integrals()
     df->set_memory(Process::environment.get_memory()/8L);
 
     //Finally computes the df integrals
+    //Does the timings also
+    Timer timer;
+    std::string str= "Computing DF Integrals";
+    outfile->Printf("\n    %-36s ...", str.c_str());
     df->compute();
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+
     boost::shared_ptr<Tensor> B = df->ints()["B"];
     df.reset();
 
@@ -1225,11 +1232,16 @@ void CholeskyIntegrals::gather_integrals()
 
     boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
+
     //This is creates the cholesky decomposed AO integrals
+    Timer timer;
+    std::string str= "Computing CD Integrals";
+    outfile->Printf("\n    %-36s ...", str.c_str());
     boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
     //Computes the cholesky integrals
     Ch->choleskify();
-    outfile->Printf("\nJust computed Cholesky Integrals\n");
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nthree_ = nL;
@@ -1241,9 +1253,6 @@ void CholeskyIntegrals::gather_integrals()
     SharedMatrix Lao = Ch->L();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
     SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
-    SharedMatrix Cpq_so = wfn->Ca_subset("SO", "ALL");
-
-    boost::shared_ptr<SOBasisSet> SO(new SOBasisSet(primary, integral));
 
     Cpq = wfn->Ca_subset("AO","ALL");
 
