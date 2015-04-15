@@ -1770,6 +1770,10 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vect
         if ((sum_weight < wfn_threshold) and (I < max_sample)) {
             sum_weight += std::pow(det_weight[I].first,2.0);
             max_I++;
+        }else if (std::fabs(det_weight[I].first - det_weight[I-1].first) < 1.0e-6){
+            // Special case, if there are several equivalent determinants
+            sum_weight += std::pow(det_weight[I].first,2.0);
+            max_I++;
         }else{
             break;
         }
@@ -1793,7 +1797,7 @@ void AdaptivePathIntegralCI::print_wfn(std::vector<Determinant>& space,std::vect
 
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
     std::string state_label = s2_labels[std::round(S * 2.0)];
-    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),max_I);
+    outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants,%.2f\%)",S2,S,state_label.c_str(),max_I,100.0 * sum_weight);
 
     outfile->Flush();
 }
