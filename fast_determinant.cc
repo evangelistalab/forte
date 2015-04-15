@@ -10,7 +10,7 @@ namespace psi{ namespace libadaptive{
 inline bool test_bit01(bit_t a, bit_t i)
 // Return whether bit[i] is set.
 {
-    return ( 0 != (a & (1UL << i)) );
+    return ( 0 != (a & (bit_t(1) << i)) );
 }
 
 inline bit_t bit_count(bit_t x)
@@ -68,7 +68,7 @@ inline bit_t clear_lowest_one(bit_t x)
 
 inline std::vector<int> get_set(bit_t x,bit_t range)
 {
-    uint64_t mask = (1 << range) - 1;
+    uint64_t mask = (bit_t(1) << range) - bit_t(1);
     x = x & mask;
     std::vector<int> r(bit_count(x));
     bit_t index = lowest_one_idx(x);

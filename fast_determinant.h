@@ -87,14 +87,20 @@ public:
     bit_t beta_bits() const {return beta_bits_;}
 
     /// Return the value of an alpha bit
-    bool get_alfa_bit(int n) const {return (0 != (alfa_bits_ & (1UL << n)));}
+    bool get_alfa_bit(bit_t n) const {return (0 != (alfa_bits_ & (bit_t(1) << n)));}
     /// Return the value of a beta bit
-    bool get_beta_bit(int n) const {return (0 != (beta_bits_ & (1UL << n)));}
+    bool get_beta_bit(bit_t n) const {return (0 != (beta_bits_ & (bit_t(1) << n)));}
 
     /// Set the value of an alpha bit
-    void set_alfa_bit(int n, bool v) {alfa_bits_ ^= (-v ^ alfa_bits_) & (1 << n);}
+    void set_alfa_bit(bit_t n, bool v) {
+        if(v){ alfa_bits_ |= (bit_t(1) << n); } else { alfa_bits_ &= ~(bit_t(1) << n); }
+    }
+//            alfa_bits_ ^= (-bit_t(v) ^ alfa_bits_) & (1 << n);}
     /// Set the value of a beta bit
-    void set_beta_bit(int n, bool v) {beta_bits_ ^= (-v ^ beta_bits_) & (1 << n);}
+    void set_beta_bit(bit_t n, bool v) {
+       if(v){ beta_bits_ |= (bit_t(1) << n); } else { beta_bits_ &= ~(bit_t(1) << n); }
+    }
+    //{beta_bits_ ^= (-bit_t(v) ^ beta_bits_) & (1 << n);}
 
     /// Specify the occupation numbers
     void set_alfa_bits(const bit_t alfa_bits) {alfa_bits_ = alfa_bits;}
