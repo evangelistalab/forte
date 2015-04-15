@@ -858,17 +858,13 @@ void DFIntegrals::gather_integrals()
     //Makes a gemm call very easy
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
-            for (size_t r = 0; r < nmo_; ++r){
-                for (size_t s = 0; s < nmo_; ++s){
-                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                    for(size_t B = 0; B < naux; B++){
-                        int qB = q*naux + B;
-                        tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
-                        pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
-                    }
-                }
+            // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+            for(size_t B = 0; B < naux; B++){
+                int qB = q*naux + B;
+                tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
+                pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
             }
-        }
+         }
     }
 
     ThreeIntegral_= tBpq->clone();
@@ -912,6 +908,8 @@ void DFIntegrals::retransform_integrals()
 {
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
+    //TODO:  Remove this function from retransform
+    //For DF, reread integrals and then transfrom to new basis
     gather_integrals();
     update_integrals();
 }
