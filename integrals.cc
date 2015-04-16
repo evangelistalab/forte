@@ -844,8 +844,16 @@ void DFIntegrals::gather_integrals()
     FILE* Bf = B->file_pointer();
     SharedMatrix Bpq(new Matrix("Bpq", nmo_, nmo_ * naux));
     //Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
+
+    std::string str_seek= "Seeking DF Integrals";
+    outfile->Printf("\n    %-36s ...", str_seek.c_str());
     fseek(Bf,0, SEEK_SET);
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+
+    std::string str_read = "Reading DF Integrals";
+    outfile->Printf("\n   %-36s . . .", str_read.c_str());
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
     //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
     //This is because francesco reads only the nonzero integrals
@@ -856,6 +864,8 @@ void DFIntegrals::gather_integrals()
 
     // Store the integrals in the form of nmo*nmo by B
     //Makes a gemm call very easy
+    std::string re_sort = "Resorting DF Integrals";
+    outfile->Printf("\n   %-36s ...",re_sort.c_str());
     for (size_t p = 0; p < nmo_; ++p){
         for (size_t q = 0; q < nmo_; ++q){
             // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
@@ -866,6 +876,7 @@ void DFIntegrals::gather_integrals()
             }
          }
     }
+    outfile->Printf("...Done.  Timing %15.6f s", timer.get());
 
     ThreeIntegral_= tBpq->clone();
 }
