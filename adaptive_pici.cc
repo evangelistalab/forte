@@ -94,7 +94,7 @@ void AdaptivePathIntegralCI::startup()
             occupation[ncmo_ + i + cumidx] = 1;
         }
         for (int i = 0; i < soccpi_[h]; ++i){
-            occupation[i + cumidx] = 1;
+            occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
         }
         cumidx += ncmopi_[h];
     }
