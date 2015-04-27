@@ -1,4 +1,3 @@
-import libbtl
 import libadaptive
 
 #refrhf     = -108.98300653123336 # cc-pVTZ
