@@ -48,9 +48,8 @@ public:
     size_t nmo() const {return nmo_;}
     virtual size_t nthree() const = 0;
     
-    /// Return the number of auxiliary basis functions if density fitting
-
-    /// Return the number of cholesky vectors if integrals are cholesky factorized
+    /// Return the number of irreducible representations
+    int nirrep() const {return nirrep_;}
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const {return ncmo_;}

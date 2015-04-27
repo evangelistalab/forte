@@ -27,6 +27,8 @@
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
+#include <libpsio/psio.h>
+#include <libpsio/psio.hpp>
 #include <physconst.h>
 
 #include "integrals.h"
