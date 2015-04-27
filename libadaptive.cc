@@ -25,9 +25,7 @@
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
-
-// This allows us to be lazy in getting the spaces in DPD calls
-#define ID(x) ints.DPD_ID(x)
+#include "fci_solver.h"
 
 INIT_PLUGIN
 
@@ -58,7 +56,7 @@ read_options(std::string name, Options &options)
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2");
 
@@ -402,6 +400,11 @@ libadaptive(Options &options)
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
+    }
+    if (options.get_str("JOB_TYPE") == "FCI"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_));
+        fci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")
