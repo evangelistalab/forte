@@ -15,30 +15,12 @@ namespace psi{ namespace libadaptive{
 
 FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integral_(ints)
 {
-    outfile->Printf("\n");
-    outfile->Printf("\n  ***************************************************");
-    outfile->Printf("\n  *                                                 *");
-    outfile->Printf("\n  * Complete Active Space Configuration Interaction *");
-    outfile->Printf("\n  *                                                 *");
-    outfile->Printf("\n  *                 by Chenyang Li                  *");
-    outfile->Printf("\n  *                                                 *");
-    outfile->Printf("\n  ***************************************************");
-    outfile->Printf("\n");
-    outfile->Flush();
-
-    // Print Level
-    print_ = options.get_int("PRINT");
-
 
     // Basic Preparation: Form Determinants
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     startup(options);
-    if(determinant_.size() == 0){
-        outfile->Printf("\n  There is no determinant matching the conditions!");
-        exit(1);
-    }
 
     // Form and Diagonalize the CASCI Hamiltonian
+    diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
     Diagonalize_H(determinant_, Evecs_, Evals_);
     if(print_ > 2){
         Evecs_->print();
@@ -46,164 +28,61 @@ FCI_MO::FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints) : integra
     }
 
     // Store CI Vectors in CI_vec_(vector<vector<double>>)
-    int nroot = options.get_int("NROOT");
-    double Print_CI_Vector = options.get_double("PRINT_CI_VECTOR");
-    if(nroot > Evecs_->coldim()){
-        outfile->Printf("\n  Too many roots of interest! There are only %3d roots that satisfy the condition!", Evecs_->coldim());
+    print_CI_threshold = options.get_double("PRINT_CI_VECTOR");
+    if(nroot_ > Evecs_->coldim()){
+        outfile->Printf("\n  Too many roots of interest!");
+        outfile->Printf("\n  There are only %3d roots that satisfy the condition!", Evecs_->coldim());
         throw PSIEXCEPTION("Too many roots of interest.");
     }
-    Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
-
-    int root = options.get_int("ROOT");
-    if(root >= nroot){
-        outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot, root);
-        outfile->Printf("\n  ROOT must be smaller than NROOT.");
-        throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
-    }
+    Store_CI(nroot_, print_CI_threshold, Evecs_, Evals_, determinant_);
 
     // Form Density
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = Tensor::build(kCore,"L1a", {na_, na_});
-    L1b = Tensor::build(kCore,"L1b", {na_, na_});
-//    (*L1a)(0,0) = 1.0;
-//    (*L1a)(1,1) = 2.0;
-//    (*L1a)(0,1) = 0.0;
-//    (*L1a)(1,0) = 0.0;
-//    (*L1a).print();
-    outfile->Printf("\n  Forming one-particle density matrix ...");
-    outfile->Flush();
-    FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
+    FormDensity_A(determinant_, CI_vec_, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
         print_d2("Db", Db_);
     }
-    fill_density();
 
     // Fock Matrix
-    int e_conv = -log10(options.get_double("E_CONVERGENCE"));
+    econv_ = -log10(options.get_double("E_CONVERGENCE"));
     size_t count = 0;
-    Fa_ = d2(ncmo_, d1(ncmo_));
-    Fb_ = d2(ncmo_, d1(ncmo_));
-    outfile->Printf("\n  Forming generalized Fock matrix ...\t");
-    outfile->Flush();
     Form_Fock(Fa_,Fb_);
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
-    Check_Fock(Fa_,Fb_,e_conv-1,count);
+    Check_Fock(Fa_,Fb_,econv_-1,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
     }
 
-    // Semi-Canonical Orbitals
+    // Semi-Canonicalize Orbitals
     if(count != 0 && options.get_bool("SEMI_CANONICAL")){
-        outfile->Printf("\n  Use semi-canonical orbitals.");
-        outfile->Flush();
-        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
-        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_Fock(Fa_,Fb_,Ua,Ub);
-        SharedMatrix Ca = wfn->Ca();
-        SharedMatrix Cb = wfn->Cb();
-        SharedMatrix Ca_new(Ca->clone());
-        SharedMatrix Cb_new(Cb->clone());
-        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
-        Ca->copy(Ca_new);
-        Cb->copy(Cb_new);
-
-        integral_->retransform_integrals();
-
-        // Form and Diagonalize the CASCI Hamiltonian
-        Diagonalize_H(determinant_, Evecs_, Evals_);
-        if(print_ > 2){
-            Evecs_->print();
-            Evals_->print();
-        }
-
-        // Store CI Vectors in CI_vec_(vector<vector<double>>)
-        Store_CI(nroot, Print_CI_Vector, Evecs_, Evals_, determinant_);
-
-        // Form Density
-        Da_ = d2(ncmo_, d1(ncmo_));
-        Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = Tensor::build(kCore,"L1a", {na_, na_});
-        L1b = Tensor::build(kCore,"L1b", {na_, na_});
-        outfile->Printf("\n  Forming one-particle density matrix ...");
-        outfile->Flush();
-        FormDensity_B(determinant_, CI_vec_, root, Da_, Db_);
-        outfile->Printf("\t\t\t\tDone.");
-        outfile->Flush();
-        if(print_ > 1){
-            print_d2("Da", Da_);
-            print_d2("Db", Db_);
-        }
-        fill_density();
-
-        // Fock Matrix
-        count = 0;
-        Fa_ = d2(ncmo_, d1(ncmo_));
-        Fb_ = d2(ncmo_, d1(ncmo_));
-        outfile->Printf("\n  Forming generalized Fock matrix ...\t");
-        outfile->Flush();
-        Form_Fock(Fa_,Fb_);
-        outfile->Printf("\t\t\t\tDone.");
-        outfile->Flush();
-        Check_Fock(Fa_,Fb_,e_conv-1,count);
-        if(print_ > 1){
-            print_d2("Fa", Fa_);
-            print_d2("Fb", Fb_);
-        }
+        semi_canonicalize();
     }
 
     // Form 2-PDC
-    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa = Tensor::build(kCore,"L2aa",{na_, na_, na_, na_});
-    L2ab = Tensor::build(kCore,"L2ab",{na_, na_, na_, na_});
-    L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
-    outfile->Printf("\n  Forming two-particle density cumulant ...");
-    outfile->Flush();
-    FormCumulant2_A(determinant_, CI_vec_, root, L2aa_, L2ab_, L2bb_);
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
+    FormCumulant2_A(determinant_, CI_vec_, root_, L2aa_, L2ab_, L2bb_);
     if(print_ > 2){
         print2PDC("L2aa", L2aa_, print_);
         print2PDC("L2ab", L2ab_, print_);
         print2PDC("L2bb", L2bb_, print_);
     }
-    fill_cumulant2();
 
     // Form 3-PDC
-    L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aaa = Tensor::build(kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
-    L3aab = Tensor::build(kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
-    L3abb = Tensor::build(kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
-    L3bbb = Tensor::build(kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
-
     string threepdc = options.get_str("THREEPDC");
     string t_algorithm = options.get_str("T_ALGORITHM");
-    outfile->Printf("\n  Forming three-particle density cumulant ...");
-    outfile->Flush();
     if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-        FormCumulant3_A(determinant_, CI_vec_, root, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+        FormCumulant3_A(determinant_, CI_vec_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
     }
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
+    else if (threepdc == "DIAG"){
+        FormCumulant3_DIAG(determinant_, CI_vec_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+    }
     if(print_ > 3){
         print3PDC("L3aaa", L3aaa_, print_);
         print3PDC("L3aab", L3aab_, print_);
         print3PDC("L3abb", L3abb_, print_);
         print3PDC("L3bbb", L3bbb_, print_);
     }
-    fill_cumulant3();
 
+    // Reference Energy
     compute_ref();
 }
 
@@ -218,12 +97,66 @@ void FCI_MO::cleanup(){
 
 void FCI_MO::startup(Options &options){
 
+    // Print Title
+    print_title();
+
+    // Read from options
+    read_info(options);
+
+    // Form determinants
+    form_det();
+
     // Nuclear Repulsion
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
     e_nuc_ = molecule->nuclear_repulsion_energy();
 
-    // Number of Irrep
+    // Density
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = Tensor::build(kCore,"L1a", {na_, na_});
+    L1b = Tensor::build(kCore,"L1b", {na_, na_});
+
+    // Fock
+    Fa_ = d2(ncmo_, d1(ncmo_));
+    Fb_ = d2(ncmo_, d1(ncmo_));
+
+    // Cumulants
+    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2aa = Tensor::build(kCore,"L2aa",{na_, na_, na_, na_});
+    L2ab = Tensor::build(kCore,"L2ab",{na_, na_, na_, na_});
+    L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
+
+    L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+    L3aaa = Tensor::build(kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
+    L3aab = Tensor::build(kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
+    L3abb = Tensor::build(kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
+    L3bbb = Tensor::build(kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
+}
+
+void FCI_MO::print_title(){
+    outfile->Printf("\n");
+    outfile->Printf("\n  ***************************************************");
+    outfile->Printf("\n  * Complete Active Space Configuration Interaction *");
+    outfile->Printf("\n  *                 by Chenyang Li                  *");
+    outfile->Printf("\n  ***************************************************");
+    outfile->Printf("\n");
+    outfile->Flush();
+}
+
+void FCI_MO::read_info(Options &options){
+
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+
+    // Print Level
+    print_ = options.get_int("PRINT");
+
+    // Number of Irrep
     nirrep_ = wfn->nirrep();
 
     // MOs
@@ -310,9 +243,17 @@ void FCI_MO::startup(Options &options){
         throw PSIEXCEPTION("Not enough active orbitals to arrange electrons! Check output for details.");
     }
 
-    root_sym_ = options.get_int("ROOT_SYM");  // wavefunction symmetry
-    int na_a = nalfa_ - nc_ - nfrzc_;             // No. of a electrons in active
-    int nb_a = nbeta_ - nc_ - nfrzc_;             // No. of b electrons in active
+    // Root Symmetry
+    root_sym_ = options.get_int("ROOT_SYM");
+
+    // Number of roots and root of interest
+    nroot_ = options.get_int("NROOT");
+    root_ = options.get_int("ROOT");
+    if(root_ >= nroot_){
+        outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
+        outfile->Printf("\n  ROOT must be smaller than NROOT.");
+        throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
+    }
 
     // Symmetry Index of Active Orbitals
     for(int h=0; h<nirrep_; ++h){
@@ -355,45 +296,58 @@ void FCI_MO::startup(Options &options){
 
     // Print
     options.print();
+    std::vector<std::pair<std::string,size_t>> info;
+    info.push_back({"number of atoms", natom});
+    info.push_back({"number of electrons", nelec});
+    info.push_back({"molecular charge", charge});
+    info.push_back({"number of alpha electrons", nalfa_});
+    info.push_back({"number of beta electrons", nbeta_});
+    info.push_back({"multiplicity", multi_});
+    info.push_back({"number of molecular orbitals", nmo_});
 
-    outfile->Printf("\n");
-    outfile->Printf("\n  Number of Atoms   = %10d,   Number of Electrons  = %10zu", natom, nelec);
-    outfile->Printf("\n  Molecular Charge  = %10d,   Multiplicity         = %10d", charge, multi_);
-    outfile->Printf("\n  Number of alpha   = %10zu,   Number of beta       = %10zu", nalfa_, nbeta_);
-    outfile->Printf("\n  Number of MO      = %10zu,   Number of Virtual    = %10zu", nmo_, nv_+nfrzv_);
+    outfile->Printf("\n  ==> Input Summary <==\n");
+    for (auto& str_dim: info){
+        outfile->Printf("\n    %-30s = %5zu",str_dim.first.c_str(),str_dim.second);
+    }
+
+    outfile->Printf("\n\n  ==> Orbital Spaces <==\n");
+    print_irrep("TOTAL MO", nmopi_);
+    print_irrep("FROZEN CORE", frzcpi_);
+    print_irrep("FROZEN VIRTUAL", frzvpi_);
+    print_irrep("CORRELATED MO", ncmopi_);
+    print_irrep("CORE", core_);
+    print_irrep("ACTIVE", active_);
+    print_irrep("VIRTUAL", virtual_);
+
+    outfile->Printf("\n\n  ==> Correlated Subspace Indices <==\n");
+    print_idx("CORE", idx_c_);
+    print_idx("ACTIVE", idx_a_);
+    print_idx("HOLE", idx_h_);
+    print_idx("VIRTUAL", idx_v_);
+    print_idx("PARTICLE", idx_p_);
     outfile->Printf("\n");
     outfile->Flush();
 
-    outfile->Printf("\n  Irrep:");
-    print_irrep("Basis", nmopi_);
-    print_irrep("Frozen Core", frzcpi_);
-    print_irrep("Frozen Virtual", frzvpi_);
-    print_irrep("Correlate", ncmopi_);
-    print_irrep("Core", core_);
-    print_irrep("Active", active_);
-    print_irrep("Virtual", virtual_);
-    outfile->Printf("\n");
+}
 
-    outfile->Printf("\n  Correlating Subspace Indices:");
-    print_idx("Core", idx_c_);
-    print_idx("Active", idx_a_);
-    print_idx("Virtual", idx_v_);
-    print_idx("Hole", idx_h_);
-    print_idx("Particle", idx_p_);
-    outfile->Printf("\n");
-    outfile->Flush();
+void FCI_MO::form_det(){
+
+    // Number of alpha and beta electrons in active
+    int na_a = nalfa_ - nc_ - nfrzc_;
+    int nb_a = nbeta_ - nc_ - nfrzc_;
 
     // Alpha and Beta Strings
-    outfile->Printf("\n  Forming the alpha and beta strings ...");
-    outfile->Flush();
+    Timer tstrings;
+    std::string str = "Forming alpha and beta strings";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     vector<vector<vector<bool>>> a_string = Form_String(na_a,0);
     vector<vector<vector<bool>>> b_string = Form_String(nb_a,0);
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
+    outfile->Printf("  Done. Timing %15.6f s", tstrings.get());
 
     // Form Determinant
-    outfile->Printf("\n  Forming the determinants with correct symmetry ...");
-    outfile->Flush();
+    Timer tdet;
+    str = "Forming determinants";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     libadaptive::StringDeterminant::set_ints(integral_);
     for(int i = 0; i != nirrep_; ++i){
         int j = i ^ root_sym_;
@@ -405,15 +359,28 @@ void FCI_MO::startup(Options &options){
             }
         }
     }
-    outfile->Printf("\t\t\tDone.");
-    outfile->Flush();
+    outfile->Printf("  Done. Timing %15.6f s", tdet.get());
 
-    outfile->Printf("\n  Wavefunction symmetry: %d", root_sym_);
-    outfile->Printf("\n  Number of active electrons: %5d (a = %d, b = %d)", na_a+nb_a, na_a, nb_a);
-    outfile->Printf("\n  Number of determinants:     %5lu", determinant_.size());
+    // Print
+    std::vector<std::pair<std::string,size_t>> info;
+    info.push_back({"number of alpha active electrons", na_a});
+    info.push_back({"number of beta active electrons", nb_a});
+    info.push_back({"root symmetry (zero based)", root_sym_});
+    info.push_back({"number of determinants", determinant_.size()});
+
+    outfile->Printf("\n\n  ==> Determinants Summary <==\n");
+    for (auto& str_dim: info){
+        outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+    }
     if(print_ > 2)  print_det(determinant_);
     outfile->Printf("\n");
     outfile->Flush();
+
+    if(determinant_.size() == 0){
+        outfile->Printf("\n  There is no determinant matching the conditions!");
+        outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
+        throw PSIEXCEPTION("No determinant matching the conditions!");
+    }
 }
 
 vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const bool& print){
@@ -483,8 +450,63 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     return String;
 }
 
+void FCI_MO::semi_canonicalize(){
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+    outfile->Printf("\n  Use semi-canonical orbitals.\n");
+    SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
+    SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
+    BD_Fock(Fa_,Fb_,Ua,Ub);
+    SharedMatrix Ca = wfn->Ca();
+    SharedMatrix Cb = wfn->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+    Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
+
+    integral_->retransform_integrals();
+
+    // Form and Diagonalize the CASCI Hamiltonian
+    Diagonalize_H(determinant_, Evecs_, Evals_);
+    if(print_ > 2){
+        Evecs_->print();
+        Evals_->print();
+    }
+
+    // Store CI Vectors in CI_vec_(vector<vector<double>>)
+    Store_CI(nroot_, print_CI_threshold, Evecs_, Evals_, determinant_);
+
+    // Form Density
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = Tensor::build(kCore,"L1a", {na_, na_});
+    L1b = Tensor::build(kCore,"L1b", {na_, na_});
+    FormDensity_A(determinant_, CI_vec_, root_, Da_, Db_);
+    if(print_ > 1){
+        print_d2("Da", Da_);
+        print_d2("Db", Db_);
+    }
+
+    // Fock Matrix
+    size_t count = 0;
+    Fa_ = d2(ncmo_, d1(ncmo_));
+    Fb_ = d2(ncmo_, d1(ncmo_));
+    Form_Fock(Fa_,Fb_);
+    Check_Fock(Fa_,Fb_,econv_-1,count);
+    if(print_ > 1){
+        print_d2("Fa", Fa_);
+        print_d2("Fb", Fb_);
+    }
+}
+
 void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &val){
     timer_on("Diagonalize H");
+    Timer tdiagH;
+    std::string str = "Diagonalizing Hamiltonian";
+    outfile->Printf("\n  %-35s ...", str.c_str());
+    size_t det_size = det.size();
     SharedMatrix H (new Matrix("CASCI Hamiltonian", det.size(), det.size()));
     SharedMatrix S2 (new Matrix("S^2", det.size(), det.size()));
     SharedMatrix Us (new Matrix("Unitary S^2", det.size(), det.size()));
@@ -493,8 +515,8 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
     SharedMatrix HU (new Matrix("Unitary CASCI Hamiltonian", det.size(), det.size()));
     SharedVector HV (new Vector("Eigen values CASCI Hamiltonian", det.size()));
 
-    for(size_t bra = 0; bra < det.size(); ++bra){
-        for(size_t ket = 0; ket < det.size(); ++ket){
+    for(size_t bra = 0; bra < det_size; ++bra){
+        for(size_t ket = 0; ket < det_size; ++ket){
             double Hvalue = det[bra].slater_rules(det[ket]);
             Hvalue += (bra == ket ? e_nuc_ : 0.0);
             H->set(bra,ket,Hvalue);
@@ -504,6 +526,14 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
     }
     S2->diagonalize(Us, Vs);
     H->diagonalize(HU, HV);
+//    if(det_size < 300 || diag_algorithm_ == "FULL"){
+//        S2->diagonalize(Us, Vs);
+//        H->diagonalize(HU, HV);
+//    }
+//    else{
+//        david(S2->pointer(),S2->nrow(),nroot_,Vs->pointer(),Us->pointer(),econv_,0);
+//        david(H->pointer(),H->nrow(),nroot_,HV->pointer(),HU->pointer(),econv_,0);
+//    }
     if(print_ > 2){
         H->print();
         HV->print();
@@ -517,15 +547,15 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
     // spin selection according to multiplicity
     size_t n = 0, start = 0;
     double s = (pow(multi_,2.0) - 1) / 4;
-    for(size_t i=0; i != det.size(); ++i){
+    for(size_t i=0; i != det_size; ++i){
         if(fabs(Vs->get(i) - s) < 1.0e-10){
             if(n == 0) start = i;
             ++n;
         }
     }
     SharedMatrix H_ss (new Matrix("Spin selected CASCI Hamiltonian", n, n));
-    SharedMatrix Us_ss (new Matrix("Spin selected unitary S^2", det.size(), n));
-    for(size_t i=0; i != det.size(); ++i){
+    SharedMatrix Us_ss (new Matrix("Spin selected unitary S^2", det_size, n));
+    for(size_t i=0; i != det_size; ++i){
         for(size_t j=0; j < n; ++j){
             double value = Us->get(i,j+start);
             Us_ss->set(i,j,value);
@@ -540,8 +570,12 @@ void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &v
     SharedMatrix vec_ss (new Matrix("Spin selected CI vectors", n, n));
     val = SharedVector (new Vector("Spin selected Hamiltonian eigen values", n));
     H_ss->diagonalize(vec_ss, val);
+//    if (det_size < 300 || diag_algorithm_ == "FULL")
+//        H_ss->diagonalize(vec_ss, val);
+//    else
+//        david(H_ss->pointer(),H_ss->nrow(),nroot_,val->pointer(),vec_ss->pointer(),econv_,0);
     vec = Matrix::doublet(Us_ss,vec_ss,false,false);
-
+    outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
     timer_off("Diagonalize H");
 }
 
@@ -552,7 +586,7 @@ inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, in
 void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det){
 
     timer_on("STORE CI Vectors");
-    outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
+    outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
     outfile->Printf("\n  *  CI Vectors & Configurations  *");
     outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
     outfile->Printf("\n");
@@ -602,74 +636,12 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const Shared
     timer_off("STORE CI Vectors");
 }
 
-void FCI_MO::FormDensity(const vector<libadaptive::StringDeterminant> &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &Da, d2 &Db){
-
+void FCI_MO::FormDensity_A(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B){
     timer_on("FORM Density");
-    size_t size = dets.size();
+    Timer tdensity;
+    std::string str = "Forming one-particle density";
+    outfile->Printf("\n  %-35s ...", str.c_str());
 
-    for(size_t bra = 0; bra != size; ++bra){
-        for(size_t ket = 0; ket != size; ++ket){
-
-            double value = CI_vector[root][bra] * CI_vector[root][ket];
-
-            libadaptive::StringDeterminant I = dets[bra];
-            libadaptive::StringDeterminant J = dets[ket];
-            bool *Ia = I.get_alfa_bits();
-            bool *Ib = I.get_beta_bits();
-            bool *Ja = J.get_alfa_bits();
-            bool *Jb = J.get_beta_bits();
-
-            int nadiff = 0;
-            int nbdiff = 0;
-            // Count how many differences in mos are there and the number of alpha/beta electrons
-            for(size_t i = 0; i != idx_a_.size(); ++i){
-                size_t n = idx_a_[i];
-                if (Ia[n] != Ja[n]) ++nadiff;
-                if (Ib[n] != Jb[n]) ++nbdiff;
-            }
-            nadiff /= 2;
-            nbdiff /= 2;
-            if((nadiff > 1) || (nbdiff > 1))
-                continue;
-
-            // Case 1: PhiI = PhiJ
-            if ((nadiff == 0) and (nbdiff == 0)) {
-                size_t ncmopi = 0;
-                for(int h=0; h<nirrep_; ++h){
-                    for(size_t i=0; i<(core_[h]+active_[h]); ++i){
-                        size_t n = i + ncmopi;
-                        if (Ia[n])  Da[n][n] += value;
-                        if (Ib[n])  Db[n][n] += value;
-                    }
-                    ncmopi += ncmopi_[h];
-                }
-            }
-
-            // Case 2: PhiI = a+ i PhiJ
-            size_t i = 0, a = 0;
-            if ((nadiff == 1) and (nbdiff == 0)) {
-                for(size_t m = 0; m != idx_a_.size(); ++m){
-                    size_t n = idx_a_[m];
-                    if ((Ia[n] != Ja[n]) and Ja[n]) i = n;
-                    if ((Ia[n] != Ja[n]) and Ia[n]) a = n;
-                }
-                Da[i][a] += value * CheckSign(Ia,a) * CheckSign(Ja,i);
-            }
-            if ((nadiff == 0) and (nbdiff == 1)) {
-                for(size_t m = 0; m != idx_a_.size(); ++m){
-                    size_t n = idx_a_[m];
-                    if ((Ib[n] != Jb[n]) and Jb[n]) i = n;
-                    if ((Ib[n] != Jb[n]) and Ib[n]) a = n;
-                }
-                Db[i][a] += value * CheckSign(Ib,a) * CheckSign(Jb,i);
-            }
-        }
-    }
-    timer_off("FORM Density");
-}
-
-void FCI_MO::FormDensity_B(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B){
-    timer_on("FORM Density");
     for(size_t p=0; p<nc_; ++p){
         size_t np = idx_c_[p];
             A[np][np] = 1.0;
@@ -699,6 +671,8 @@ void FCI_MO::FormDensity_B(const vecdet &dets, const vector<vector<double>> &CI_
         }
 
     }
+    fill_density();
+    outfile->Printf("  Done. Timing %15.6f s", tdensity.get());
     timer_off("FORM Density");
 }
 
@@ -724,7 +698,6 @@ double FCI_MO::OneOP(const libadaptive::StringDeterminant &J, libadaptive::Strin
     }else{timer_off("1PO"); return 0.0;}
 }
 
-
 void FCI_MO::print_d2(const string &str, const d2 &OnePD){
     timer_on("PRINT Density");
 //    size_t count = 0;
@@ -743,6 +716,9 @@ void FCI_MO::print_d2(const string &str, const d2 &OnePD){
 
 void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB){
     timer_on("FORM 2-Cumulant");
+    Timer tL2;
+    std::string str = "Forming Lambda2";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     for(size_t p=0; p<na_; ++p){
         size_t np = idx_a_[p];
         for(size_t q=0; q<na_; ++q){
@@ -780,6 +756,8 @@ void FCI_MO::FormCumulant2_A(const vecdet &dets, const vector<vector<double>> &C
             }
         }
     }
+    fill_cumulant2();
+    outfile->Printf("  Done. Timing %15.6f s", tL2.get());
     timer_off("FORM 2-Cumulant");
 }
 
@@ -804,39 +782,6 @@ void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT){
     outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
     outfile->Printf("\n");
     timer_off("PRINT 2-Cumulant");
-}
-
-double FCI_MO::TwoOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss){
-    timer_on("2PO");
-    vector<bool> Ia = I.get_alfa_bits_vector_bool();
-    vector<bool> Ib = I.get_beta_bits_vector_bool();
-    vector<vector<bool>> tmp;
-    tmp.push_back(J.get_alfa_bits_vector_bool());
-    tmp.push_back(J.get_beta_bits_vector_bool());
-
-    double sign = 1.0;
-
-    if(tmp[sr][r]){
-        sign *= CheckSign(tmp[sr],r);
-        tmp[sr][r] = 0;
-    }else{timer_off("2PO"); return 0.0;}
-
-    if(tmp[ss][s]){
-        sign *= CheckSign(tmp[ss],s);
-        tmp[ss][s] = 0;
-    }else{timer_off("2PO"); return 0.0;}
-
-    if(!tmp[sq][q]){
-        sign *= CheckSign(tmp[sq],q);
-        tmp[sq][q] = 1;
-    }else{timer_off("2PO"); return 0.0;}
-
-    if(!tmp[sp][p]){
-        sign *= CheckSign(tmp[sp],p);
-        tmp[sp][p] = 1;
-        timer_off("2PO");
-        return sign * (tmp[0] == Ia) * (tmp[1] == Ib);
-    }else{timer_off("2PO"); return 0.0;}
 }
 
 double FCI_MO::TwoOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss){
@@ -873,6 +818,9 @@ double FCI_MO::TwoOP(const libadaptive::StringDeterminant &J, libadaptive::Strin
 
 void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC){
     timer_on("FORM 3-Cumulant");
+    Timer tL3;
+    std::string str = "Forming Lambda3";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     for(size_t p=0; p<na_; ++p){
         size_t np = idx_a_[p];
         for(size_t q=0; q<na_; ++q){
@@ -928,76 +876,61 @@ void FCI_MO::FormCumulant3_A(const vecdet &dets, const vector<vector<double> > &
             }
         }
     }
+    fill_cumulant3();
+    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
     timer_off("FORM 3-Cumulant");
 }
 
-void FCI_MO::FormCumulant3_B(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
+void FCI_MO::FormCumulant3_DIAG(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
     timer_on("FORM 3-Cumulant");
-    vector<vector<vector<size_t>>> vec_tuple (nirrep_, vector<vector<size_t>>());
+    Timer tL3;
+    std::string str = "Forming Lambda3";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     for(size_t p=0; p<na_; ++p){
+        size_t np = idx_a_[p];
         for(size_t q=0; q<na_; ++q){
+            size_t nq = idx_a_[q];
             for(size_t r=0; r<na_; ++r){
-                int sym = sym_active_[p] ^ sym_active_[q] ^ sym_active_[r];
-                vector<size_t> vec;
-                vec.push_back(p);
-                vec.push_back(q);
-                vec.push_back(r);
-                vec_tuple[sym].push_back(vec);
-            }
-        }
-    }
-    for(int h=0; h<nirrep_; ++h){
-        for(size_t aop = 0; aop != vec_tuple[h].size(); ++aop){
-            size_t s = vec_tuple[h][aop][0];
-            size_t t = vec_tuple[h][aop][1];
-            size_t u = vec_tuple[h][aop][2];
-            size_t ns = idx_a_[s];
-            size_t nt = idx_a_[t];
-            size_t nu = idx_a_[u];
-
-            for(size_t cop = 0; cop != vec_tuple[h].size(); ++cop){
-                size_t p = vec_tuple[h][cop][0];
-                size_t q = vec_tuple[h][cop][1];
-                size_t r = vec_tuple[h][cop][2];
-                size_t np = idx_a_[p];
-                size_t nq = idx_a_[q];
                 size_t nr = idx_a_[r];
 
                 size_t size = dets.size();
                 for(size_t ket = 0; ket != size; ++ket){
                     libadaptive::StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                     double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
-                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[root][ket];
-                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[root][ket];
-                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[root][ket];
-                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[root][ket];
+                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,np,0,nq,0,nr,0) * CI_vector[root][ket];
+                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,np,0,nq,0,nr,1) * CI_vector[root][ket];
+                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,np,0,nq,1,nr,1) * CI_vector[root][ket];
+                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,np,1,nq,1,nr,1) * CI_vector[root][ket];
 
                     for(size_t bra = 0; bra != size; ++bra){
-                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
-                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
-                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
-                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
+                        AAA[p][q][r][p][q][r] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
+                        AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
+                        ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
+                        BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
                     }
                 }
 
-                AAA[p][q][r][s][t][u] -= P3DDD(Da_,np,nq,nr,ns,nt,nu);
-                AAA[p][q][r][s][t][u] -= P3DC(Da_,L2aa_,p,q,r,s,t,u);
 
-                AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] - Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
-                AAB[p][q][r][s][t][u] -= (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
-                AAB[p][q][r][s][t][u] -= (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
-                AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
+                AAA[p][q][r][p][q][r] -= P3DDD(Da_,np,nq,nr,np,nq,nr);
+                AAA[p][q][r][p][q][r] -= P3DC(Da_,L2aa_,p,q,r,p,q,r);
 
-                ABB[p][q][r][s][t][u] -= (Da_[np][ns] * Db_[nq][nt] * Db_[nr][nu] - Da_[np][ns] * Db_[nr][nt] * Db_[nq][nu]);
-                ABB[p][q][r][s][t][u] -= (Db_[nq][nt] * L2ab_[p][r][s][u] - Db_[nq][nu] * L2ab_[p][r][s][t]);
-                ABB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2ab_[p][q][s][t] - Db_[nr][nt] * L2ab_[p][q][s][u]);
-                ABB[p][q][r][s][t][u] -= (Da_[np][ns] * L2bb_[q][r][t][u]);
+                AAB[p][q][r][p][q][r] -= (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] - Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
+                AAB[p][q][r][p][q][r] -= (Da_[np][np] * L2ab_[q][r][q][r] - Da_[np][nq] * L2ab_[q][r][p][r]);
+                AAB[p][q][r][p][q][r] -= (Da_[nq][nq] * L2ab_[p][r][p][r] - Da_[nq][np] * L2ab_[p][r][q][r]);
+                AAB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2aa_[p][q][p][q]);
 
-                BBB[p][q][r][s][t][u] -= P3DDD(Db_,np,nq,nr,ns,nt,nu);
-                BBB[p][q][r][s][t][u] -= P3DC(Db_,L2bb_,p,q,r,s,t,u);
+                ABB[p][q][r][p][q][r] -= (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] - Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
+                ABB[p][q][r][p][q][r] -= (Db_[nq][nq] * L2ab_[p][r][p][r] - Db_[nq][nr] * L2ab_[p][r][p][q]);
+                ABB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2ab_[p][q][p][q] - Db_[nr][nq] * L2ab_[p][q][p][r]);
+                ABB[p][q][r][p][q][r] -= (Da_[np][np] * L2bb_[q][r][q][r]);
+
+                BBB[p][q][r][p][q][r] -= P3DDD(Db_,np,nq,nr,np,nq,nr);
+                BBB[p][q][r][p][q][r] -= P3DC(Db_,L2bb_,p,q,r,p,q,r);
             }
         }
     }
+    fill_cumulant3();
+    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
     timer_off("FORM 3-Cumulant");
 }
 
@@ -1026,49 +959,6 @@ void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT){
     outfile->Printf("\n  Number of Nonzero Elements: %zu", count);
     outfile->Printf("\n");
     timer_off("PRINT 3-Cumulant");
-}
-
-double FCI_MO::ThreeOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su){
-    timer_on("3PO");
-    vector<bool> Ia = I.get_alfa_bits_vector_bool();
-    vector<bool> Ib = I.get_beta_bits_vector_bool();
-    vector<vector<bool>> tmp;
-    tmp.push_back(J.get_alfa_bits_vector_bool());
-    tmp.push_back(J.get_beta_bits_vector_bool());
-
-    double sign = 1.0;
-
-    if(tmp[ss][s]){
-        sign *= CheckSign(tmp[ss],s);
-        tmp[ss][s] = 0;
-    }else{timer_off("3PO"); return 0.0;}
-
-    if(tmp[st][t]){
-        sign *= CheckSign(tmp[st],t);
-        tmp[st][t] = 0;
-    }else{timer_off("3PO"); return 0.0;}
-
-    if(tmp[su][u]){
-        sign *= CheckSign(tmp[su],u);
-        tmp[su][u] = 0;
-    }else{timer_off("3PO"); return 0.0;}
-
-    if(!tmp[sr][r]){
-        sign *= CheckSign(tmp[sr],r);
-        tmp[sr][r] = 1;
-    }else{timer_off("3PO"); return 0.0;}
-
-    if(!tmp[sq][q]){
-        sign *= CheckSign(tmp[sq],q);
-        tmp[sq][q] = 1;
-    }else{timer_off("3PO"); return 0.0;}
-
-    if(!tmp[sp][p]){
-        sign *= CheckSign(tmp[sp],p);
-        tmp[sp][p] = 1;
-        timer_off("3PO");
-        return sign * (tmp[0] == Ia) * (tmp[1] == Ib);
-    }else{timer_off("3PO"); return 0.0;}
 }
 
 double FCI_MO::ThreeOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su){
@@ -1115,33 +1005,42 @@ double FCI_MO::ThreeOP(const libadaptive::StringDeterminant &J, libadaptive::Str
 
 void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
-        for(size_t p=0; p<ncmo_; ++p){
-            for(size_t q=0; q<ncmo_; ++q){
-                double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
-                for(size_t r=0; r<nh_; ++r){
-                    size_t nr = idx_h_[r];
-                    for(size_t s=0; s<nh_; ++s){
-                        size_t ns = idx_h_[s];
-                        vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
-                        vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
-                        vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
-                        vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
-                    }
+    Timer tfock;
+    std::string str = "Forming generalized Fock matrix";
+    outfile->Printf("\n  %-35s ...", str.c_str());
+    for(size_t p=0; p<ncmo_; ++p){
+        for(size_t q=0; q<ncmo_; ++q){
+            double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
+            for(size_t r=0; r<nh_; ++r){
+                size_t nr = idx_h_[r];
+                for(size_t s=0; s<nh_; ++s){
+                    size_t ns = idx_h_[s];
+                    vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
+                    vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
+                    vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
+                    vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
                 }
-                A[p][q] = integral_->oei_a(p,q) + vaa + vab;
-                B[p][q] = integral_->oei_b(p,q) + vba + vbb;
             }
-        } timer_off("Form Fock");
+            A[p][q] = integral_->oei_a(p,q) + vaa + vab;
+            B[p][q] = integral_->oei_b(p,q) + vba + vbb;
+        }
+    }
+    outfile->Printf("  Done. Timing %15.6f s", tfock.get());
+    timer_off("Form Fock");
 }
 
 void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count){
     timer_on("Check Fock");
-    outfile->Printf("\n  Checking Fock matrices (Fa, Fb) ... ");
+    Timer tfock;
+    std::string str = "Checking Fock matrices (Fa, Fb)";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     outfile->Printf("\n  Nonzero criteria: > 1.0E-%d", E);
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "core");
     Check_FockBlock(A, B, E, count, na_, idx_a_, "active");
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "virtual");
-    outfile->Printf("\n  Done checking Fock matrices.");
+    str = "Done checking Fock matrices.";
+    outfile->Printf("\n  %-47s", str.c_str());
+    outfile->Printf("Timing %15.6f s", tfock.get());
     outfile->Printf("\n");
     outfile->Flush();
     timer_off("Check Fock");
@@ -1184,6 +1083,9 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const int &E, size_t &cou
 
 void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub){
     timer_on("Block Diagonal Fock");
+    Timer tbdfock;
+    std::string str = "Block diagonalizing Fock matrices";
+    outfile->Printf("\n  %-35s ...", str.c_str());
     size_t nc = 0, na = 0, nv = 0;
     for(int h=0; h<nirrep_; ++h){
 
@@ -1215,7 +1117,14 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         }
         CoreA->diagonalize(EvecCA,EvalCA);
         CoreB->diagonalize(EvecCB,EvalCB);
-
+//        if (core_[h] < 300 || diag_algorithm_ == "FULL"){
+//            CoreA->diagonalize(EvecCA,EvalCA);
+//            CoreB->diagonalize(EvecCB,EvalCB);
+//        }
+//        else{
+//            david(CoreA->pointer(),CoreA->nrow(),1,EvalCA->pointer(),EvecCA->pointer(),econv_,0);
+//            david(CoreB->pointer(),CoreB->nrow(),1,EvalCB->pointer(),EvecCB->pointer(),econv_,0);
+//        }
 //        EvecCA->eivprint(EvalCA);
 //        EvecCB->eivprint(EvalCB);
 
@@ -1246,7 +1155,14 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         }
         ActiveA->diagonalize(EvecAA,EvalAA);
         ActiveB->diagonalize(EvecAB,EvalAB);
-
+//        if (active_[h] < 300 || diag_algorithm_ == "FULL"){
+//            ActiveA->diagonalize(EvecAA,EvalAA);
+//            ActiveB->diagonalize(EvecAB,EvalAB);
+//        }
+//        else{
+//            david(ActiveA->pointer(),ActiveA->nrow(),1,EvalAA->pointer(),EvecAA->pointer(),econv_,0);
+//            david(ActiveB->pointer(),ActiveB->nrow(),1,EvalAB->pointer(),EvecAB->pointer(),econv_,0);
+//        }
 //        EvecAA->eivprint(EvalAA);
 //        EvecAB->eivprint(EvalAB);
 
@@ -1278,7 +1194,14 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         }
         VirA->diagonalize(EvecVA,EvalVA);
         VirB->diagonalize(EvecVB,EvalVB);
-
+//        if (nvh < 300 || diag_algorithm_ == "FULL"){
+//            VirA->diagonalize(EvecVA,EvalVA);
+//            VirB->diagonalize(EvecVB,EvalVB);
+//        }
+//        else{
+//            david(VirA->pointer(),VirA->nrow(),1,EvalVA->pointer(),EvecVA->pointer(),econv_,0);
+//            david(VirB->pointer(),VirB->nrow(),1,EvalVB->pointer(),EvecVB->pointer(),econv_,0);
+//        }
 //        EvecVA->eivprint(EvalVA);
 //        EvecVB->eivprint(EvalVB);
 
@@ -1296,6 +1219,7 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         na += active_[h];
         nv += ncmopi_[h] - core_[h] - active_[h];
     }
+    outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal Fock");
 }
 
@@ -1375,37 +1299,6 @@ Reference FCI_MO::reference()
 {
     Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
     return ref;
-}
-
-void FCI_MO::TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew){
-    timer_on("Transform C");
-    for(int h=0; h<nirrep_; ++h){
-        for(size_t i=0; i<ncmopi_[h]; ++i){
-            for(size_t j=0; j<ncmopi_[h]; ++j){
-                Cnew->set(h,i,j,0.0);
-                double value = 0.0;
-                for(size_t k=0; k<ncmopi_[h]; ++k){
-                    value += C->get(h,i,k) * U->get(h,k,j);
-                }
-                Cnew->set(h,i,j,value);
-                outfile->Printf("\n  Ca_new[%zu][%zu] = %.15lf", i, j, value);
-                outfile->Printf("\n  Ca_new[%zu][%zu] = %.15lf", i, j, Cnew->get(h,i,j));
-            }
-        }
-    }
-    timer_off("Transform C");
-}
-
-void FCI_MO::COPY(const SharedMatrix &Cnew, SharedMatrix &C){
-    for(int h=0; h<nirrep_; ++h){
-        for(size_t i=0; i<ncmopi_[h]; ++i){
-            for(size_t j=0; j<ncmopi_[h]; ++j){
-                double value = Cnew->get(h,i,j);
-                C->set(h,i,j,value);
-                outfile->Printf("\n  Ca[%zu][%zu] = %.15lf", i,j, value);
-            }
-        }
-    }
 }
 
 }}
