@@ -167,22 +167,15 @@ void FCIWfn::cleanup()
 //  return coefficients[add.alfa_sym][add.alfa_string][add.beta_string];
 //}
 
-///**
-// * Set the wave function to another wave function
-// */
-//void FCIWfn::set_to(FCIWfn& wfn)
-//{
-//  for(int h = 0; h < nirrep_; ++h){
-//    int beta_sym = h ^ symmetry_;
-//    size_t maxIa = alfa_graph_->strpi(h);
-//    size_t maxIb = beta_graph_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        coefficients[h][Ia][Ib] = wfn.coefficients[h][Ia][Ib];
-//      }
-//    }
-//  }
-//}
+/**
+ * Set the wave function to another wave function
+ */
+void FCIWfn::copy(FCIWfn& wfn)
+{
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
+    }
+}
 
 ///**
 // * Set the wave function to the nth determinant in the list
@@ -382,11 +375,14 @@ double FCIWfn::dot(FCIWfn& wfn)
 {
     double dot = 0.0;
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-        int beta_sym = alfa_sym ^ symmetry_;
-        size_t maxIa = alfa_graph_->strpi(alfa_sym);
-        size_t maxIb = beta_graph_->strpi(beta_sym);
-
         dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
+    }
+    return(dot);
+
+//        int beta_sym = alfa_sym ^ symmetry_;
+//        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+//        size_t maxIb = beta_graph_->strpi(beta_sym);
+
 //        double** Ca = C_[alfa_sym]->pointer();
 //        double** Cb = wfn.C_[alfa_sym]->pointer();
 //        for(size_t Ia = 0; Ia < maxIa; ++Ia){
@@ -394,8 +390,6 @@ double FCIWfn::dot(FCIWfn& wfn)
 //                dot += coefficients[alfa_sym][Ia][Ib] * wfn.coefficients[alfa_sym][Ia][Ib];
 //            }
 //        }
-    }
-    return(dot);
 }
 
 ///**

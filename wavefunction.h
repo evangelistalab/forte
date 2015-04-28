@@ -21,6 +21,7 @@ public:
 //    // Simple operation
     void print();
     void zero();
+    void copy(FCIWfn& wfn);
 
 
     /// Form the diagonal part of the Hamiltonian
@@ -30,7 +31,6 @@ public:
     void initial_guess(FCIWfn& diag, size_t num_dets = 100);
 
 ////    void set_to(Determinant& det);
-//    void set_to(FCIWfn& wfn);
 //    void set_to(int n);
 //    double get(int n);
 //    void plus_equal(double factor,FCIWfn& wfn);
