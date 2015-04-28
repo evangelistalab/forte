@@ -154,12 +154,17 @@ double FCISolver::compute_energy()
 
     FCIWfn Hdiag(lists_,ints_,symmetry_);
     Hdiag.form_H_diagonal();
-    Hdiag.print();
-
     FCIWfn C(lists_,ints_,symmetry_);
+    FCIWfn HC(lists_,ints_,symmetry_);
     C.initial_guess(Hdiag);
 
+    C.print();
+    C.Hamiltonian(HC,twoSubstituitionVVOO);
+    HC.print();
+    double energy = C.dot(HC);
+    HC.normalize();
 
+    outfile->Printf("\n  FCI energy = %20.12f",energy);
 
 
 //    // Create a model space object
@@ -297,7 +302,7 @@ double FCISolver::compute_energy()
 //    release2(a);
 //    release1(rho);
 //    FCIWfn::release_temp_space();
-    return 0.0;
+    return energy;
 }
 
 }}

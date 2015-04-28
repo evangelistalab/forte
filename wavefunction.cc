@@ -1,18 +1,9 @@
 #include <cmath>
-#include <numeric>
-//#include <libmoinfo/libmoinfo.h>
-//#include <liboptions/liboptions.h>
-//#include <libutil/libutil.h>
+
+#include "libmints/matrix.h"
 
 #include "helpers.h"
 #include "wavefunction.h"
-
-//using namespace std;
-//using namespace psi;
-
-
-
-//#include <psi4-dec.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -23,6 +14,11 @@ FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
 FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
 
 double FCIWfn::hdiag_timer = 0.0;
+double FCIWfn::h1_aa_timer = 0.0;
+double FCIWfn::h1_bb_timer = 0.0;
+double FCIWfn::h2_aaaa_timer = 0.0;
+double FCIWfn::h2_aabb_timer = 0.0;
+double FCIWfn::h2_bbbb_timer = 0.0;
 
 bool FCIWfn::integrals_are_set_ = false;
 std::vector<double> FCIWfn::oei_a_;
@@ -317,14 +313,13 @@ void FCIWfn::normalize()
 //  }
 //}
 
-///**
-// * Zero the wave function
-// */
-//void FCIWfn::zero()
-//{
-//  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym)
-//    zero_block(alfa_sym);
-//}
+/**
+ * Zero the wave function
+ */
+void FCIWfn::zero()
+{
+    for(SharedMatrix C_h : C_) { C_h->zero(); }
+}
 
 ///**
 // * Zero a symmetry block of the wave function
@@ -380,24 +375,28 @@ double FCIWfn::norm(double power)
 }
 
 
-///**
-// * Compute the dot product with another wave function
-// */
-//double FCIWfn::dot(FCIWfn& wfn)
-//{
-//  double dot = 0.0;
-//  for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-//    int beta_sym = alfa_sym ^ symmetry_;
-//    size_t maxIa = alfa_graph_->strpi(alfa_sym);
-//    size_t maxIb = beta_graph_->strpi(beta_sym);
-//    for(size_t Ia = 0; Ia < maxIa; ++Ia){
-//      for(size_t Ib = 0; Ib < maxIb; ++Ib){
-//        dot += coefficients[alfa_sym][Ia][Ib] * wfn.coefficients[alfa_sym][Ia][Ib];
-//      }
-//    }
-//  }
-//  return(dot);
-//}
+/**
+ * Compute the dot product with another wave function
+ */
+double FCIWfn::dot(FCIWfn& wfn)
+{
+    double dot = 0.0;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
+        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+        size_t maxIb = beta_graph_->strpi(beta_sym);
+
+        dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
+//        double** Ca = C_[alfa_sym]->pointer();
+//        double** Cb = wfn.C_[alfa_sym]->pointer();
+//        for(size_t Ia = 0; Ia < maxIa; ++Ia){
+//            for(size_t Ib = 0; Ib < maxIb; ++Ib){
+//                dot += coefficients[alfa_sym][Ia][Ib] * wfn.coefficients[alfa_sym][Ia][Ib];
+//            }
+//        }
+    }
+    return(dot);
+}
 
 ///**
 // * Find the largest element in the wave function
@@ -563,41 +562,6 @@ void FCIWfn::print()
 }
 
 
-void FCIWfn::initial_guess(FCIWfn& diag,size_t num_dets)
-{
-    // Find the lowest energy determinants
-    size_t tot_det = std::accumulate(detpi_.begin(),detpi_.end(),0);
-    std::vector<std::tuple<double,size_t,size_t,size_t>> dets(std::min(num_dets,tot_det));
-
-    for (auto& d : dets){
-        std::get<0>(d) = 1.0e10;
-    }
-
-    double emax = 1.0e100;
-
-    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-        int beta_sym = alfa_sym ^ symmetry_;
-        double** E_ha = diag.C_[alfa_sym]->pointer();
-        for(size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia){
-            for(size_t Ib = 0; Ib < beta_graph_->strpi(beta_sym); ++Ib){
-                double e = E_ha[Ia][Ib];
-                if (e < emax){
-                    // Find where to inser this determinant
-                    dets.pop_back();
-                    auto it = std::find_if(dets.begin(),dets.end(),[&e](const std::tuple<double,size_t,size_t,size_t>& t){return e < std::get<0>(t);});
-                    dets.insert(it,std::make_tuple(e,alfa_sym,Ia,Ib));
-                    emax = std::get<0>(dets.back());
-                }
-            }
-        }
-    }
-
-
-
-//    for (auto t : dets){
-//        outfile->Printf("\n %f %zu %zu %zu",std::get<0>(t),std::get<1>(t),std::get<2>(t),std::get<3>(t));
-//    }
-}
 
 
 ///**

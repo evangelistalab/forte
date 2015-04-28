@@ -71,7 +71,7 @@ public:
     std::vector<size_t> cmopi_offset() const {return cmopi_offset_;}
     std::vector<size_t> fomo_to_mo() const {return fomo_to_mo_;}
     std::vector<size_t> cmo_to_mo() const {return cmo_to_mo_;}
-    //  int get_pairpi(int h) const {return pairpi[h];}
+    size_t pairpi(int h) const {return pairpi_[h];}
     //  std::vector<int> get_cmos() const {return cmos;}
     //  std::vector<int> get_cmos_offset() const {return cmos_offset;}
     //  std::vector<int> get_cmos_to_mos() const {return cmos_to_mos;}
@@ -90,7 +90,7 @@ public:
     std::vector<StringSubstitution>& get_alfa_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
     std::vector<StringSubstitution>& get_beta_vvoo_list(size_t p, size_t q, size_t r, size_t s, int h);
 
-    //  Pair get_nn_list_pair(int h,int n) const {return nn_list[h][n];}
+    Pair get_nn_list_pair(int h,int n) const {return nn_list[h][n];}
 
     //  size_t get_nalfa_strings() const {return nas;}
     //  size_t get_nbeta_strings() const {return nbs;}

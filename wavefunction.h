@@ -20,7 +20,7 @@ public:
     
 //    // Simple operation
     void print();
-//    void zero();
+    void zero();
 
 
     /// Form the diagonal part of the Hamiltonian
@@ -38,16 +38,16 @@ public:
     double norm(double power = 2.0);
 ////    void normalize_wrt(Determinant& det);
     void normalize();
+    double dot(FCIWfn& wfn);
 //    void randomize();
 ////    double get_coefficient(Determinant& det);
-//    double dot(FCIWfn& wfn);
 //    double norm2();
 //    double min_element();
 //    double max_element();
 //    std::vector<int> get_important(double alpha);
     
-//    // Operations on the wave function
-//    void Hamiltonian(FCIWfn& result);
+    // Operations on the wave function
+    void Hamiltonian(FCIWfn& result,RequiredLists required_lists);
     
 //    // FCIWfn update routines
 //    void bendazzoli_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
@@ -101,7 +101,13 @@ private:
     static FCIWfn* tmp_wfn1;
     static FCIWfn* tmp_wfn2;
 
+    // Timers
     static double hdiag_timer;
+    static double h1_aa_timer;
+    static double h1_bb_timer;
+    static double h2_aaaa_timer;
+    static double h2_aabb_timer;
+    static double h2_bbbb_timer;
 
     // Integrals
     static bool integrals_are_set_;
@@ -133,6 +139,13 @@ private:
     double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
     double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
     double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
+
+    void H0(FCIWfn& result);
+    void H1(FCIWfn& result,bool alfa);
+    void H2_aabb(FCIWfn& result);
+    void H2_aaaa2(FCIWfn& result, bool alfa);
+    //    void H2_aaaa(FCIWfn& result, bool alfa);
+    //    void opdm(double** opdm,bool alfa);
 
 //    void zero_block(int h);
 //    void transpose_block(int h);
@@ -172,12 +185,7 @@ private:
 ////        return DetAddress(sym,alfa_string,beta_string);
 ////    };
 
-//    void H0(FCIWfn& result);
-//    void H1(FCIWfn& result,bool alfa);
-//    void H2_aabb(FCIWfn& result);
-//    void H2_aaaa(FCIWfn& result, bool alfa);
-//    void H2_aaaa2(FCIWfn& result, bool alfa);
-//    void opdm(double** opdm,bool alfa);
+
 };
 
 }}

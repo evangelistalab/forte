@@ -364,6 +364,9 @@ libadaptive(Options &options)
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
 
+    // Link the integrals to the BitsetDeterminant class
+    BitsetDeterminant::set_ints(ints_);
+
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         MP2_NOS mp2_nos(wfn,options,ints_);
