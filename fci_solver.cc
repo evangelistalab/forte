@@ -158,13 +158,15 @@ double FCISolver::compute_energy()
     FCIWfn HC(lists_,ints_,symmetry_);
     C.initial_guess(Hdiag);
 
-    C.print();
-    C.Hamiltonian(HC,twoSubstituitionVVOO);
-    HC.print();
-    double energy = C.dot(HC);
-    HC.normalize();
+    double energy = 0.0;
+    for (int n = 0; n < 1000; ++n){
+        C.Hamiltonian(HC,twoSubstituitionVVOO);
+        energy = C.dot(HC);
+        outfile->Printf("\n  FCI energy = %20.12f",energy);
+        HC.normalize();
+        C.copy(HC);
+    }
 
-    outfile->Printf("\n  FCI energy = %20.12f",energy);
 
 
 //    // Create a model space object
