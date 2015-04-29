@@ -178,6 +178,8 @@ private:
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
+    /// The number of roots
+    size_t nroot_;
 ////    int ncmos;                     // # of correlated molecular orbitals
 ////    std::vector<int> cmos;         // # of correlated molecular orbitals per irrep
 ////    std::vector<int> cmos_offset;  // Offset array for non-frozen molecular orbitals

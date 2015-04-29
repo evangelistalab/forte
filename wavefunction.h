@@ -1,5 +1,5 @@
-#ifndef _capriccio_wavefunction_h_
-#define _capriccio_wavefunction_h_
+#ifndef _fci_vector_
+#define _fci_vector_
 
 #include <vector>
 #include "boost/shared_ptr.hpp"
@@ -21,8 +21,15 @@ public:
 //    // Simple operation
     void print();
     void zero();
-    void copy(FCIWfn& wfn);
+    /// The size of the CI basis
+    size_t size() const {return ndet_;}
 
+    /// Copy the wave function object
+    void copy(FCIWfn& wfn);
+    /// Copy the coefficient from a Vector object
+    void copy(SharedVector vec);
+    /// Copy the wave function object
+    void copy_to(SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal();
@@ -77,21 +84,23 @@ private:
     std::vector<size_t> cmopi_offset_;
     /// The mapping between correlated molecular orbitals and all orbitals
     std::vector<size_t> cmo_to_mo_;
+    /// The number of determinants
+    size_t ndet_;
     /// The number of determinants per irrep
     std::vector<size_t> detpi_;
-    
+
+    /// The string list
     boost::shared_ptr<StringLists> lists_;
+    /// The integral object
     ExplorerIntegrals* ints_;
-    
     // Graphs
     /// The alpha string graph
     GraphPtr  alfa_graph_;
     /// The beta string graph
     GraphPtr  beta_graph_;
-    
     /// Coefficient matrix stored in block-matrix form
     std::vector<SharedMatrix> C_;
-    
+        
 
     // ==> Class Static Data <==
 
@@ -144,39 +153,16 @@ private:
     void H1(FCIWfn& result,bool alfa);
     void H2_aabb(FCIWfn& result);
     void H2_aaaa2(FCIWfn& result, bool alfa);
-    //    void H2_aaaa(FCIWfn& result, bool alfa);
-    //    void opdm(double** opdm,bool alfa);
 
-//    void zero_block(int h);
-//    void transpose_block(int h);
 
-//    double string_energy(bool alfa,bool*& I,int n);
-//    void   make_string_h0(bool alfa, GraphPtr graph,std::vector<double>& h0);
 
-//    // Functions to access integrals
-//    double oei_aa(int p,int q) {
-//        return ints->oei_a(cmos_to_mos[p],cmos_to_mos[q]);}
+};
 
-//    double oei_bb(int p,int q) {
-//        return ints->oei_b(cmos_to_mos[p],cmos_to_mos[q]);}
+}}
 
-//    double h_aa(int p,int q) {
-//        return ints->oei_a(cmos_to_mos[p],cmos_to_mos[q]);}
+#endif // _fci_vector_
 
-//    double h_bb(int p,int q) {
-//        return ints->oei_b(cmos_to_mos[p],cmos_to_mos[q]);}
 
-//    double tei_aaaa(int p,int q,int r,int s) {
-//        return ints->aptei_aa(cmos_to_mos[p],cmos_to_mos[q],
-//                                  cmos_to_mos[r],cmos_to_mos[s]);}
-
-//    double tei_bbbb(int p,int q,int r,int s) {
-//        return ints->aptei_bb(cmos_to_mos[p],cmos_to_mos[q],
-//                                  cmos_to_mos[r],cmos_to_mos[s]);}
-
-//    double tei_aabb(int p,int q,int r,int s) {
-//        return ints->aptei_ab(cmos_to_mos[p],cmos_to_mos[q],
-//                                  cmos_to_mos[r],cmos_to_mos[s]);}
 
 ////    DetAddress get_det_address(Determinant& det) {
 ////        int sym = alfa_graph_->sym(det.get_alfa_bits());
@@ -184,10 +170,3 @@ private:
 ////        size_t beta_string = beta_graph_->rel_add(det.get_beta_bits());
 ////        return DetAddress(sym,alfa_string,beta_string);
 ////    };
-
-
-};
-
-}}
-
-#endif // _capriccio_wavefunction_h_        

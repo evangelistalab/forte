@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include "libmints/vector.h"
 #include "libmints/matrix.h"
 
 #include "helpers.h"
@@ -101,9 +102,12 @@ void FCIWfn::startup()
     cmopi_offset_ = lists_->cmopi_offset();
     cmo_to_mo_ = lists_->cmo_to_mo();
 
+    ndet_ = 0;
     for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         size_t beta_sym = alfa_sym ^ symmetry_;
-        detpi_.push_back(alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym));
+        size_t detpi = alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
+        ndet_ += detpi;
+        detpi_.push_back(detpi);
     }
 
     // Allocate the symmetry blocks of the wave function
@@ -174,6 +178,40 @@ void FCIWfn::copy(FCIWfn& wfn)
 {
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
+    }
+}
+
+void FCIWfn::copy(SharedVector vec)
+{
+    size_t I = 0;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
+        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+        size_t maxIb = beta_graph_->strpi(beta_sym);
+        double** C_ha = C_[alfa_sym]->pointer();
+        for(size_t Ia = 0; Ia < maxIa; ++Ia){
+            for(size_t Ib = 0; Ib < maxIb; ++Ib){
+                C_ha[Ia][Ib] = vec->get(I);
+                I += 1;
+            }
+        }
+    }
+}
+
+void FCIWfn::copy_to(SharedVector vec)
+{
+    size_t I = 0;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
+        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+        size_t maxIb = beta_graph_->strpi(beta_sym);
+        double** C_ha = C_[alfa_sym]->pointer();
+        for(size_t Ia = 0; Ia < maxIa; ++Ia){
+            for(size_t Ib = 0; Ib < maxIb; ++Ib){
+                vec->set(I,C_ha[Ia][Ib]);
+                I += 1;
+            }
+        }
     }
 }
 

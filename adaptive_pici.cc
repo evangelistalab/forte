@@ -12,6 +12,7 @@
 #include <libpsio/psio.hpp>
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
+#include <libmints/vector.h>
 
 #include "cartographer.h"
 #include "adaptive_pici.h"
