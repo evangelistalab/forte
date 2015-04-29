@@ -12,6 +12,7 @@
 #include <libpsio/psio.hpp>
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
+#include <libmints/vector.h>
 
 #include "fast_determinant.h"
 #include "cartographer.h"

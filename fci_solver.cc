@@ -19,6 +19,7 @@
 #include <libpsio/psio.hpp>
 
 #include "integrals.h"
+#include "iterative_solvers.h"
 #include "fci_solver.h"
 #include "string_lists.h"
 #include "wavefunction.h"
@@ -86,7 +87,7 @@ double FCI::compute_energy()
 
 
 FCISolver::FCISolver(std::vector<size_t> core_mo,std::vector<size_t> active_mo,size_t na, size_t nb,size_t symmetry,ExplorerIntegrals* ints)
-    :core_mo_(core_mo), active_mo_(active_mo), ints_(ints), symmetry_(symmetry), na_(na), nb_(nb)
+    :core_mo_(core_mo), active_mo_(active_mo), ints_(ints), symmetry_(symmetry), na_(na), nb_(nb), nroot_(0)
 {
     startup();
 }
@@ -126,46 +127,60 @@ double FCISolver::compute_energy()
 //    // Setup the lists required by the FCI algorithm
 
     FCIWfn::allocate_temp_space(lists_,ints_,symmetry_);
-    int cycle = 0;
-    int root = 0;
-    double old_energy = 0.0;
 
-    int max_guess_vectors = 30;
-//    double** G;
-//    double** a;
-//    double*  rho;
-//    allocate2(double,G,max_guess_vectors,max_guess_vectors);
-//    allocate2(double,a,max_guess_vectors,max_guess_vectors);
-//    allocate1(double,rho,max_guess_vectors);
-
-//    // Are we selecting the CI determinants?
-//    bool select_by_e = (options_.get_str("SELECT") == "LAMBDA") ? true : false;
-//    double select_threshold = options_.get_double("SELECT_THRESHOLD");
-//    if(select_by_e){
-//        outfile->Printf("\n\n  Applying the energy selection criterium to the wave function");
-//        outfile->Printf("\n  Lambda = %f Eh\n",select_threshold);
-//    }
-
-//    vector<boost::shared_ptr<FCIWfn> > b;
-//    vector<boost::shared_ptr<FCIWfn> > sigma;
-//    FCIWfn r(lists,ints);  // the residual
-//    FCIWfn d(lists,ints);  // the delta
-
+    nroot_ = 1;
 
     FCIWfn Hdiag(lists_,ints_,symmetry_);
-    Hdiag.form_H_diagonal();
     FCIWfn C(lists_,ints_,symmetry_);
     FCIWfn HC(lists_,ints_,symmetry_);
-    C.initial_guess(Hdiag);
+
+    size_t fci_size = Hdiag.size();
+    Hdiag.form_H_diagonal();
+
+    SharedVector b(new Vector("b",fci_size));
+    SharedVector sigma(new Vector("sigma",fci_size));
+
+    DavidsonLiuSolver dls(fci_size,nroot_);
+    dls.set_print_level(1);
+    Hdiag.copy_to(sigma);
+    dls.startup(sigma);
+
+    bool converged = false;
+
+    for (int cycle = 0; cycle < 30; ++cycle){
+        outfile->Printf("\n Cycle = %3d",cycle);
+
+        bool add_sigma = true;
+        for (int r = 0; r < nroot_ * 10; ++r){
+            dls.get_b(b);
+            C.copy(b);
+            C.Hamiltonian(HC,twoSubstituitionVVOO);
+            HC.copy_to(sigma);
+            add_sigma = dls.add_sigma(sigma);
+            outfile->Printf("\n Sigma = %3d, add_sigma = %d",r,add_sigma);
+            if (not add_sigma) break;
+        }
+        converged = dls.update();
+        double energy = dls.eigenvalues()->get(0);
+        outfile->Printf("\n %3d  %20.12f",cycle,energy);
+        if (not converged) break;
+    }
+
+
+
+//    C.initial_guess(Hdiag);
 
     double energy = 0.0;
-    for (int n = 0; n < 1000; ++n){
-        C.Hamiltonian(HC,twoSubstituitionVVOO);
-        energy = C.dot(HC);
-        outfile->Printf("\n  FCI energy = %20.12f",energy);
-        HC.normalize();
-        C.copy(HC);
-    }
+
+
+
+//    for (int n = 0; n < 1000; ++n){
+//        C.Hamiltonian(HC,twoSubstituitionVVOO);
+//        energy = C.dot(HC);
+//        outfile->Printf("\n  FCI energy = %20.12f",energy);
+//        HC.normalize();
+//        C.copy(HC);
+//    }
 
 
 
