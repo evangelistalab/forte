@@ -16,6 +16,7 @@
 #include "mp2_nos.h"
 
 #include "adaptive-ci.h"
+#include "ex-aci.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
 #include "lambda-ci.h"
@@ -204,11 +205,14 @@ read_options(std::string name, Options &options)
         options.add_int("NPOP",100);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE ADAPTIVE CI
+        ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
         //////////////////////////////////////////////////////////////
 
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
+
+        /*- The type of selection parameters to use*/
+        options.add_bool("PERTURB_SELECT", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -388,6 +392,11 @@ libadaptive(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
         aci->compute_energy();
+    }
+    if ((options.get_str("JOB_TYPE") == "EX-ACI")){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<EX_ACI> ex_aci(new EX_ACI(wfn,options,ints_));
+        ex_aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
