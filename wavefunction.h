@@ -120,6 +120,7 @@ private:
 
     // Integrals
     static bool integrals_are_set_;
+    static double scalar_energy_;
     static std::vector<double> oei_a_;
     static std::vector<double> oei_b_;
     /// The alpha-alpha antisymmetrized two-electron integrals in physicist notation

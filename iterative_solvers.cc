@@ -9,31 +9,10 @@ namespace psi{ namespace libadaptive{
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size,size_t nroot)
     : size_(size), nroot_(nroot)
 {
-    collapse_size_ = collapse_per_root_ * nroot_;
-    subspace_size_ = subspace_per_root_ * nroot_;
+    collapse_size_ = std::min(collapse_per_root_ * nroot_,size);
+    subspace_size_ = std::min(subspace_per_root_ * nroot_,size);
 
     if (size_ == 0) throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
-
-    //        // current set of guess vectors stored by row
-    //        Matrix b("b",maxdim,N);
-    //        // guess vectors formed from old vectors, stored by row
-    //        Matrix bnew("bnew",maxdim,N);
-    //        // residual eigenvectors, stored by row
-    //        Matrix f("f",maxdim,N);
-    //        // sigma vectors, stored by column
-    //        Matrix sigma("sigma",N, maxdim);
-    //        // Davidson mini-Hamitonian
-    //        Matrix G("G",maxdim, maxdim);
-    //        // A metric matrix
-    //        Matrix S("S",maxdim, maxdim);
-    //        // Eigenvectors of the Davidson mini-Hamitonian
-    //        Matrix alpha("alpha",maxdim, maxdim);
-    //        // Eigenvalues of the Davidson mini-Hamitonian
-    //        Vector lambda("lambda",maxdim);
-    //        // Old eigenvalues of the Davidson mini-Hamitonian
-    //        Vector lambda_old("lambda",maxdim);
-    //        // Diagonal elements of the Hamiltonian
-    //        Vector Hdiag("Hdiag",N);
 }
 
 void DavidsonLiuSolver::startup(SharedVector diagonal)
@@ -60,6 +39,7 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
 
     //    sigma_vector->get_diagonal(Hdiag);
 
+//    h_diag->print();
 
     // Find the initial_size lowest diagonals
     {
@@ -133,13 +113,15 @@ bool DavidsonLiuSolver::update()
     double** alpha_p = alpha->pointer();
     double** sigma_p = sigma_->pointer();
 
-    bool skip_check = false;
-
     G->zero();
     G->gemm(false,false,1.0,b_,sigma_,0.0);
 
     // diagonalize mini-matrix
     G->diagonalize(alpha,lambda);
+
+    if(check_convergence()){
+        return true;
+    }
 
     check_orthogonality();
 
@@ -182,7 +164,7 @@ bool DavidsonLiuSolver::update()
         }
 
         /// Need new sigma vectors to continue, so return control to caller
-        return true;
+        return false;
     }
 
     // Step #3: Build the Correction Vectors
@@ -225,38 +207,40 @@ bool DavidsonLiuSolver::update()
         }
     }
 
-    // check convergence on all roots
-    bool has_converged = false;
-    if(!skip_check) {
-        converged_ = 0;
-        if(print_level_ > 0) {
-            outfile->Printf("\nRoot      Eigenvalue       Delta  Converged?\n");
-            outfile->Printf("---- -------------------- ------- ----------\n");
-        }
-        for(int k = 0; k < nroot_; k++) {
-            double diff = std::fabs(lambda->get(k) - lambda_old->get(k));
-            bool this_converged = false;
-            if(diff < e_convergence_) {
-                this_converged = true;
-                converged_++;
-            }
-            lambda_old->set(k,lambda->get(k));
-            if(print_level_ > 0) {
-                outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda->get(k), diff,
-                                this_converged ? "Y" : "N");
-            }
-        }
-        if (converged_ == nroot_){
-            has_converged = true;
-        }
-        outfile->Flush();
-    }
-
     iter_++;
 
     timing_ += t_davidson.elapsed();
 
-    return not has_converged;
+    return false;
+}
+
+bool DavidsonLiuSolver::check_convergence()
+{
+    // check convergence on all roots
+    bool has_converged = false;
+    converged_ = 0;
+    if(print_level_ > 0) {
+        outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
+        outfile->Printf("  ---- -------------------- --------- ----------\n");
+    }
+    for(int k = 0; k < nroot_; k++) {
+        double diff = std::fabs(lambda->get(k) - lambda_old->get(k));
+        bool this_converged = false;
+        if(diff < e_convergence_) {
+            this_converged = true;
+            converged_++;
+        }
+        lambda_old->set(k,lambda->get(k));
+        if(print_level_ > 0) {
+            outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
+                            this_converged ? "Y" : "N");
+        }
+    }
+    if (converged_ == nroot_){
+        has_converged = true;
+    }
+    outfile->Flush();
+    return has_converged;
 }
 
 void DavidsonLiuSolver::get_results()

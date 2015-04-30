@@ -61,7 +61,7 @@ void FCIWfn::Hamiltonian(FCIWfn& result,RequiredLists required_lists)
  */
 void FCIWfn::H0(FCIWfn& result)
 {
-    double core_energy = ints_->frozen_core_energy();
+    double core_energy = scalar_energy_ + ints_->frozen_core_energy();
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         result.C_[alfa_sym]->copy(C_[alfa_sym]);
         result.C_[alfa_sym]->scale(core_energy);
@@ -108,9 +108,9 @@ void FCIWfn::H1(FCIWfn& result, bool alfa)
                         double Hpq = alfa ? oei_aa(p_abs,q_abs) : oei_bb(p_abs,q_abs); // Grab the integral
                         std::vector<StringSubstitution>& vo = alfa ? lists_->get_alfa_vo_list(p_abs,q_abs,alfa_sym)
                                                                    : lists_->get_beta_vo_list(p_abs,q_abs,beta_sym);
-//                        outfile->Printf("\n  p,q = %zu,%zu <p|h|q> = %f",p_abs,q_abs,Hpq);
                         // TODO loop in a differen way
                         int maxss = vo.size();
+
                         for(int ss = 0; ss < maxss; ++ss){
 #if CAPRICCIO_USE_DAXPY
                             C_DAXPY(maxL,static_cast<double>(vo[ss].sign) * Hpq, &(Ch[vo[ss].I][0]), 1, &(Yh[vo[ss].J][0]), 1);

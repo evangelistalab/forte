@@ -177,6 +177,8 @@ private:
 
     void make_vvoo_list(GraphPtr graph,VVOOList& list);
     void make_vvoo(GraphPtr graph,VVOOList& list,int p, int q,int r, int s);
+
+    void print_string(bool* I,size_t n);
 };
 
 }}

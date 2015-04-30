@@ -92,7 +92,7 @@ public:
         size_t add = 0;
         int k = 0;  // number of 1s
         int h = 0;  // irrep of the string
-        for(int n = 0; k < nones_; ++n){
+        for(int n = 0; (k < nones_) and (n < nbits_); ++n){
             if(string[n]){
                 ++k;
                 h ^= symmetry[n];
@@ -107,7 +107,7 @@ public:
         size_t add = 0;
         int k = 0;  // number of 1s
         int h = 0;  // irrep of the string
-        for(int n = 0; k < nones_; ++n){
+        for(int n = 0; (k < nones_) and (n < nbits_); ++n){
             if(string[n]){
                 ++k;
                 h ^= symmetry[n];
@@ -122,7 +122,7 @@ public:
         size_t add = 0;
         int k = 0;  // number of 1s
         int h = 0;  // irrep of the string
-        for(int n = 0; k < nones_; ++n){
+        for(int n = 0; (k < nones_) and (n < nbits_); ++n){
             if(string[n]){
                 ++k;
                 h ^= symmetry[n];
@@ -137,7 +137,7 @@ public:
         size_t add = 0;
         int k = 0;  // number of 1s
         int h = 0;  // irrep of the string
-        for(int n = 0; k < nones_; ++n){
+        for(int n = 0; (k < nones_) and (n < nbits_); ++n){
             if(string[n]){
                 ++k;
                 h ^= symmetry[n];
@@ -177,18 +177,20 @@ public:
 private:
     void startup()
     {
-        // Allocate the weight tensors
-        weight0 = new size_t**[nbits_];
-        weight1 = new size_t**[nbits_];
-        for(int n = 0; n < nbits_; ++n){
-            weight0[n] = new size_t*[nirrep_];
-            weight1[n] = new size_t*[nirrep_];
-            for(int h = 0; h < nirrep_; ++h){
-                weight0[n][h] = new size_t[nones_ + 1];
-                weight1[n][h] = new size_t[nones_ + 1];
-                for(int k = 0; k < nones_ + 1; ++k){
-                    weight0[n][h][k] = 0;
-                    weight1[n][h][k] = 0;
+        if (nbits_ != 0){
+            // Allocate the weight tensors
+            weight0 = new size_t**[nbits_];
+            weight1 = new size_t**[nbits_];
+            for(int n = 0; n < nbits_; ++n){
+                weight0[n] = new size_t*[nirrep_];
+                weight1[n] = new size_t*[nirrep_];
+                for(int h = 0; h < nirrep_; ++h){
+                    weight0[n][h] = new size_t[nones_ + 1];
+                    weight1[n][h] = new size_t[nones_ + 1];
+                    for(int k = 0; k < nones_ + 1; ++k){
+                        weight0[n][h][k] = 0;
+                        weight1[n][h][k] = 0;
+                    }
                 }
             }
         }
@@ -200,59 +202,73 @@ private:
 
     void cleanup()
     {
-        // Deallocate the weight tensors
-        for(int n = 0; n < nbits_; ++n){
-            for(int h = 0; h < nirrep_; ++h){
-                delete[] weight0[n][h];
-                delete[] weight1[n][h];
+        if (nbits_ != 0){
+            // Deallocate the weight tensors
+            for(int n = 0; n < nbits_; ++n){
+                for(int h = 0; h < nirrep_; ++h){
+                    delete[] weight0[n][h];
+                    delete[] weight1[n][h];
+                }
             }
+            for(int n = 0; n < nbits_; ++n){
+                delete[] weight0[n];
+                delete[] weight1[n];
+            }
+            delete[] weight0;
+            delete[] weight1;
         }
-        for(int n = 0; n < nbits_; ++n){
-            delete[] weight0[n];
-            delete[] weight1[n];
-        }
-        delete[] weight0;
-        delete[] weight1;
         delete[] offset;
         delete[] strpi_;
     }
 
     void generate_weights()
     {
-        // Generate weights
-        weight0[0][0][0] = 1;
-        weight1[0][symmetry[0]][1] = 1;
-        for(int n = 1; n < nbits_; ++n){
-            // 0 path does not change symmetry
-            for(int h = 0; h < nirrep_; ++h){
-                // Grab the number of paths inherited from the 0 vertex
-                for(int k = 0; k < nones_ + 1; ++k)
-                    weight0[n][h][k] += weight0[n-1][h][k];
-                // Grab the number of paths inherited from the 1 vertex
-                for(int k = 0; k < nones_ + 1; ++k)
-                    weight0[n][h][k] += weight1[n-1][h][k];
+        if (nbits_ != 0){
+            // Generate weights
+            weight0[0][0][0] = 1;
+            weight1[0][symmetry[0]][1] = 1;
+            for(int n = 1; n < nbits_; ++n){
+                // 0 path does not change symmetry
+                for(int h = 0; h < nirrep_; ++h){
+                    // Grab the number of paths inherited from the 0 vertex
+                    for(int k = 0; k < nones_ + 1; ++k)
+                        weight0[n][h][k] += weight0[n-1][h][k];
+                    // Grab the number of paths inherited from the 1 vertex
+                    for(int k = 0; k < nones_ + 1; ++k)
+                        weight0[n][h][k] += weight1[n-1][h][k];
+                }
+
+                // 1 path changes symmetry by symmetry[n]
+                for(int h = 0; h < nirrep_; ++h){
+                    // Grab the number of paths inherited from the 0 vertex
+                    for(int k = 0; k < nones_; ++k)
+                        weight1[n][h^symmetry[n]][k + 1] += weight0[n-1][h][k];
+                    // Grab the number of paths inherited from the 1 vertex
+                    for(int k = 0; k < nones_; ++k)
+                        weight1[n][h^symmetry[n]][k + 1] += weight1[n-1][h][k];
+                }
             }
 
-            // 1 path changes symmetry by symmetry[n]
+            // Generate strings per irrep
             for(int h = 0; h < nirrep_; ++h){
-                // Grab the number of paths inherited from the 0 vertex
-                for(int k = 0; k < nones_; ++k)
-                    weight1[n][h^symmetry[n]][k + 1] += weight0[n-1][h][k];
-                // Grab the number of paths inherited from the 1 vertex
-                for(int k = 0; k < nones_; ++k)
-                    weight1[n][h^symmetry[n]][k + 1] += weight1[n-1][h][k];
+                strpi_[h] = weight0[nbits_-1][h][nones_] + weight1[nbits_-1][h][nones_];
             }
-        }
 
-        // Generate strings per irrep
-        for(int h = 0; h < nirrep_; ++h){
-            strpi_[h] = weight0[nbits_-1][h][nones_] + weight1[nbits_-1][h][nones_];
-        }
+            // Generate the offset
+            offset[0] = 0;
+            for(int h = 1; h < nirrep_; ++h){
+                offset[h] = offset[h-1] + weight0[nbits_-1][h-1][nones_] + weight1[nbits_-1][h-1][nones_];
+            }
+        }else{
+            for(int h = 0; h < nirrep_; ++h){
+                strpi_[h] = 0;
+            }
+            strpi_[0] = 1;
 
-        // Generate the offset
-        offset[0] = 0;
-        for(int h = 1; h < nirrep_; ++h){
-            offset[h] = offset[h-1] + weight0[nbits_-1][h-1][nones_] + weight1[nbits_-1][h-1][nones_];
+            // Generate the offset
+            for(int h = 0; h < nirrep_; ++h){
+                offset[h] = 0;
+            }
         }
     }
 

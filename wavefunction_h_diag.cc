@@ -154,10 +154,22 @@ void FCIWfn::initial_guess(FCIWfn& diag,size_t num_dets)
 
 double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
 {
-    double energy(ints_->frozen_core_energy());
+//    outfile->Printf("\n  Determinant: ");
+//    for(int p = 0; p < n; ++p){
+//        outfile->Printf("%1d",Ia[p]);
+//    }
+//    for(int p = 0; p < n; ++p){
+//        outfile->Printf("%1d",Ib[p]);
+//    }
+
+    double energy(scalar_energy_ + ints_->frozen_core_energy());
+
+//    outfile->Printf("\n+E0 = %f",energy);
     for(int p = 0; p < n; ++p){
         if(Ia[p]) energy += oei_aa(p,p);
         if(Ib[p]) energy += oei_bb(p,p);
+//        if(Ia[p]) outfile->Printf("\n+<%2d|%2d> = %f",p,p,oei_aa(p,p));
+//        if(Ib[p]) outfile->Printf("\n+<%2d|%2d> = %f",p,p,oei_bb(p,p));
         for(int q = 0; q < n; ++q){
             if(Ia[p] && Ia[q])
                 energy += 0.5 * tei_aaaa(p,q,p,q);
@@ -165,6 +177,9 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
                 energy += 0.5 * tei_bbbb(p,q,p,q);
             if(Ia[p] && Ib[q])
                 energy += tei_aabb(p,q,p,q);
+//            if(Ia[p] && Ia[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (aa)",p,q,p,q,0.5 * tei_aaaa(p,q,p,q));
+//            if(Ia[p] && Ib[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (ab)",p,q,p,q,0.5 * tei_aabb(p,q,p,q));
+//            if(Ib[p] && Ib[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (bb)",p,q,p,q,0.5 * tei_bbbb(p,q,p,q));
         }
     }
     return(energy);

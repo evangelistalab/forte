@@ -164,7 +164,13 @@ void StringLists::make_pair_list(GraphPtr graph,NNList& list)
     //  outfile->Flush();
 }
 
-
+void StringLists::print_string(bool* I,size_t n)
+{
+    //outfile->Printf();
+    for (size_t i = 0; i < n; ++i){
+        outfile->Printf("%1d",I[i]);
+    }
+}
 
 ///*
 //#ifdef PRINT_COMBINATIONS

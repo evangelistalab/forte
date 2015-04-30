@@ -13,8 +13,9 @@
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
 
-#include "mp2_nos.h"
+#include "helpers.h"
 
+#include "mp2_nos.h"
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
@@ -58,7 +59,7 @@ read_options(std::string name, Options &options)
         /*- The job type -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2");
+                                              " DSRG-MRPT2 MR-DSRG-PT2 NONE");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -84,11 +85,14 @@ read_options(std::string name, Options &options)
         /*- Number of restricted doubly occupied orbitals per irrep (in Cotton order) -*/
         options.add("RESTRICTED_DOCC", new ArrayType());
 
-        /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
-        options.add("FROZEN_UOCC",new ArrayType());
-
         /*- Number of active orbitals per irrep (in Cotton order) -*/
         options.add("ACTIVE",new ArrayType());
+
+        /*- Number of restricted unoccupied orbitals per irrep (in Cotton order) -*/
+        options.add("RESTRICTED_UOCC", new ArrayType());
+
+        /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
+        options.add("FROZEN_UOCC",new ArrayType());
 
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
@@ -347,6 +351,10 @@ libadaptive(Options &options)
 {
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
+    mo_space_info->read_options(options);
+
     // Get the one- and two-electron integrals in the MO basis
     // If CHOLESKY
     // create CholeskyIntegrals class
@@ -406,7 +414,7 @@ libadaptive(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_));
+        boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
         fci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){

@@ -22,6 +22,7 @@ double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
 bool FCIWfn::integrals_are_set_ = false;
+double FCIWfn::scalar_energy_;
 std::vector<double> FCIWfn::oei_a_;
 std::vector<double> FCIWfn::oei_b_;
 std::vector<double> FCIWfn::tei_aa_;
@@ -118,11 +119,29 @@ void FCIWfn::startup()
     }
 
     if (not integrals_are_set_){
+        std::vector<size_t> fomo_to_mo_ = lists_->fomo_to_mo();
+        size_t nfomo = fomo_to_mo_.size();
+
         oei_a_.resize(ncmo_ * ncmo_);
         oei_b_.resize(ncmo_ * ncmo_);
         tei_aa_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
         tei_ab_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
         tei_bb_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
+
+        // Compute the scalar contribution to the energy that comes from
+        // the restricted occupied orbitals
+        scalar_energy_ = 0.0;
+        for (size_t i = 0; i < nfomo; ++i){
+            size_t ii = fomo_to_mo_[i];
+            scalar_energy_ += ints_->oei_a(ii,ii);
+            scalar_energy_ += ints_->oei_b(ii,ii);
+            for (size_t j = 0; j < nfomo; ++j){
+                size_t jj = fomo_to_mo_[j];
+                scalar_energy_ += 0.5 * ints_->aptei_aa(ii,jj,ii,jj);
+                scalar_energy_ += 1.0 * ints_->aptei_ab(ii,jj,ii,jj);
+                scalar_energy_ += 0.5 * ints_->aptei_bb(ii,jj,ii,jj);
+            }
+        }
 
         for (size_t p = 0; p < ncmo_; ++p){
             size_t pp = cmo_to_mo_[p];
@@ -130,6 +149,16 @@ void FCIWfn::startup()
                 size_t qq = cmo_to_mo_[q];
                 oei_a_[ncmo_ * p + q] = ints_->oei_a(pp,qq);
                 oei_b_[ncmo_ * p + q] = ints_->oei_b(pp,qq);
+
+                // Compute the one-body contribution to the energy that comes from
+                // the restricted occupied orbitals
+                for (size_t f = 0; f < nfomo; ++f){
+                    size_t ff = fomo_to_mo_[f];
+                    oei_a_[ncmo_ * p + q] += ints_->aptei_aa(pp,ff,qq,ff);
+                    oei_a_[ncmo_ * p + q] += ints_->aptei_ab(pp,ff,qq,ff);
+                    oei_b_[ncmo_ * p + q] += ints_->aptei_bb(pp,ff,qq,ff);
+                    oei_b_[ncmo_ * p + q] += ints_->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
+                }
                 for (size_t r = 0; r < ncmo_; ++r){
                     size_t rr = cmo_to_mo_[r];
                     for (size_t s = 0; s < ncmo_; ++s){
