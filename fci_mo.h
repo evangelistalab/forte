@@ -10,6 +10,8 @@
 #include <string>
 #include "integrals.h"
 #include "string_determinant.h"
+#include "bitset_determinant.h"
+#include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
 #include "reference.h"
 
@@ -100,8 +102,11 @@ protected:
     SharedVector Evals_;
     std::string diag_algorithm_;
     void Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &val);
+    void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     // Store and Print the CI Vectors and Configurations
+    vector<pair<SharedVector,double>> eigen_;
+    void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
     vector<vector<double>> CI_vec_;
     double print_CI_threshold;
     void Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det);
@@ -142,14 +147,22 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     // Form Density Matrix
-    void FormDensity_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B);
+    void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B);
+    void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
 
-    // Form 2-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant2_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    // Form 2-Particle Density Cumulant
+    void FormCumulant2(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
+    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
-    // Form 3-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    // Form 3-Particle Density Cumulant
+    void FormCumulant3(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
+    void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     // N-Particle Operator
     double OneOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
@@ -160,8 +173,8 @@ protected:
     d2 Fa_;
     d2 Fb_;
     void Form_Fock(d2 &A, d2 &B);
-    void Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count);
-    void Check_FockBlock(const d2 &A, const d2 &B, const int &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
+    void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
+    void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
 
     // Reference Energy
@@ -192,17 +205,19 @@ protected:
     // Print Size of a Array with Irrep
     void print_irrep(const string &str, const Dimension &array){
         outfile->Printf("\n    %-30s", str.c_str());
+        outfile->Printf("[");
         for(int h=0; h<nirrep_; ++h){
-            outfile->Printf("%3d", array[h]);
+            outfile->Printf(" %4d ", array[h]);
         }
+        outfile->Printf("]");
     }
 
     // Print Indices
     void print_idx(const string &str, const vector<size_t> &vec){
         outfile->Printf("\n    %-30s", str.c_str());
-        size_t c = 0;
+        size_t c = 0;        
         for(size_t x: vec){
-            outfile->Printf("%3zu ", x);
+            outfile->Printf("%4zu ", x);
             ++c;
             if(c % 15 == 0) outfile->Printf("\n  %-32c", ' ');
         }
