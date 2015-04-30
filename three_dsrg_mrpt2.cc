@@ -11,10 +11,18 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-
 using namespace ambit;
 
 namespace psi{ namespace libadaptive{
+
+#ifdef _OPENMP
+	#include <omp.h>
+	bool THREE_DSRG_MRPT2::have_omp_ = true;
+#else
+   #define omp_get_max_threads() 1
+   #define omp_get_thread_num() 0
+   bool THREE_DSRG_MRPT2::have_omp_ = false;
+#endif
 
 
 THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
@@ -22,10 +30,12 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefu
 {
     // Copy the wavefunction information
     copy(wfn);
+	num_threads_ = omp_get_max_threads();
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
     outfile->Printf("\n\t                   Kevin Hannon and Chenyang (York) Li");
+outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
     startup();
@@ -803,6 +813,9 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double Efly = 0.0;
     std::string str1 = "Computing <[V, T2]> (C_2)^4 ccvv term";
     outfile->Printf("\n    %-36s ...", str1.c_str());
+	#pragma omp parallel for num_threads(num_threads_) \
+	schedule(dynamic) \
+	reduction(+:Eflyalpha, Eflybeta, Eflymixed)
     for(size_t mind = 0; mind < core_; mind++){
         for(size_t nind = 0; nind < core_; nind++){
             for(size_t eind = 0; eind < virtual_; eind++){
@@ -865,11 +878,11 @@ double THREE_DSRG_MRPT2::E_VT2_2()
                     Eflyalpha+=0.25 * vmnefalphaR * t2alpha;
                     Eflybeta+=0.25 * vmnefbetaR * t2beta;
                     Eflymixed+=vmnefmixedR * t2mixed;
-                    Efly = Eflyalpha + Eflybeta + Eflymixed;
                 }
             }
         }
     }
+    Efly = Eflyalpha + Eflybeta + Eflymixed;
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return (E + Efly);
