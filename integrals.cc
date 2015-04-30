@@ -100,7 +100,7 @@ void ExplorerIntegrals::startup()
     }
     ncmo_ = ncmopi_.sum();
 
-    outfile->Printf("\n  ==> Integral Transformation <==\n");
+    outfile->Printf("\n\n  ==> Integral Transformation <==\n");
     outfile->Printf("\n  Number of molecular orbitals:            %5d",nmopi_.sum());
     outfile->Printf("\n  Number of correlated molecular orbitals: %5zu",ncmo_);
     outfile->Printf("\n  Number of frozen occupied orbitals:      %5d",frzcpi_.sum());

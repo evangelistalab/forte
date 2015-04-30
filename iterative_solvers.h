@@ -72,6 +72,8 @@ private:
 
     /// Check that the eigenvectors are orthogonal
     bool check_orthogonality();
+    /// Check if the the iterative procedure has converged
+    bool check_convergence();
 
     // ==> Class Private Data <==
 

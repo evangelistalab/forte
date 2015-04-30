@@ -7,9 +7,11 @@
  *
  */
 
-#include "string_lists.h"
-
 #include <algorithm>
+
+#include <psi4-dec.h>
+
+#include "string_lists.h"
 
 using namespace boost;
 
@@ -64,7 +66,7 @@ void StringLists::make_vo(GraphPtr graph,VOList& list,int p, int q)
     bool* b = new bool[n];
     bool* I = new bool[ncmo_];
     bool* J = new bool[ncmo_];
-    if(k >= 0){
+    if ((k >= 0) and (k <= n)){ // check that (n > 0) makes sense.
         for(int h = 0; h < nirrep_; ++h){
             // Create the key to the map
             boost::tuple<size_t,size_t,int> pq_pair(p,q,h);
@@ -72,7 +74,7 @@ void StringLists::make_vo(GraphPtr graph,VOList& list,int p, int q)
             // Generate the strings 1111100000
             //                      { k }{n-k}
             for(int i = 0; i < n - k; ++i) b[i] = false; // 0
-            for(int i = n - k; i < n; ++i) b[i] = true;  // 1
+            for(int i = std::max(0,n - k); i < n; ++i) b[i] = true;  // 1
             do{
                 int k = 0;
                 short sign = 1;

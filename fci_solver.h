@@ -27,6 +27,7 @@
 #include <liboptions/liboptions.h>
 #include <physconst.h>
 
+#include "helpers.h"
 #include "integrals.h"
 #include "string_lists.h"
 
@@ -47,7 +48,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI() {}
 
@@ -65,6 +66,8 @@ private:
     Options& options_;   
     /// The molecular integrals
     ExplorerIntegrals* ints_;
+    /// The information about the molecular orbital spaces
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 //    /// The maximum number of threads
 //    int num_threads_;
 //    /// The wave function symmetry
@@ -94,7 +97,7 @@ class FCISolver
 public:
     // ==> Class Constructor and Destructor <==
 
-    FCISolver(std::vector<size_t> core_mo,std::vector<size_t> active_mo, size_t na, size_t nb, size_t symmetry, ExplorerIntegrals* ints);
+    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo, size_t na, size_t nb, size_t symmetry, ExplorerIntegrals* ints);
 
     ~FCISolver() {}
 
@@ -105,6 +108,9 @@ public:
 private:
 
     // ==> Class Data <==
+
+    /// The Dimension object for the active space
+    Dimension active_dim_;
 
     // The orbitals frozen at the CI level
     std::vector<size_t> core_mo_;
