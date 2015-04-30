@@ -3,8 +3,8 @@
 
 #include <fstream>
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
+#include "liboptions/liboptions.h"
+#include "libmints/wavefunction.h"
 
 #include "integrals.h"
 #include <ambit/blocked_tensor.h>
@@ -195,6 +195,11 @@ public:
 
     /// The frozen-core energy
     double frozen_core_energy;
+private:
+	//maximum number of threads
+	int num_threads_;
+	/// Do we have OpenMP?
+	static bool have_omp_;
 };
 
 }} // End Namespaces
