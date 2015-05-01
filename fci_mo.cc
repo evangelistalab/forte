@@ -30,7 +30,7 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
         }
     }
 
-    // Store CI Vectors in CI_vec_(vector<vector<double>>)
+    // Store CI Vectors in eigen_
     print_CI_threshold = options.get_double("PRINT_CI_VECTOR");
     if(nroot_ > eigen_.size()){
         outfile->Printf("\n  Too many roots of interest!");
@@ -52,7 +52,7 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
     // Fock Matrix
     size_t count = 0;
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,econv_-1,count);
+    Check_Fock(Fa_,Fb_,econv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -504,7 +504,7 @@ void FCI_MO::semi_canonicalize(){
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,econv_-1,count);
+    Check_Fock(Fa_,Fb_,econv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -1134,7 +1134,7 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count
     Timer tfock;
     std::string str = "Checking Fock matrices (Fa, Fb)";
     outfile->Printf("\n  %-35s ...", str.c_str());
-    outfile->Printf("\n  Nonzero criteria: > 1.0E-%d", E);
+    outfile->Printf("\n  Nonzero criteria: > %.2E", E);
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
     Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "VIRTUAL");

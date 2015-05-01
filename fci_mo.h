@@ -93,19 +93,17 @@ protected:
     vecdet determinant_;
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print);
 
-    // Number of roots
-    int nroot_;
-    int root_;
+    // Choice of Roots
+    int nroot_;  // number of roots
+    int root_;   // which root in nroot
 
     // Diagonalize the CASCI Hamiltonian
-    SharedMatrix Evecs_;
-    SharedVector Evals_;
+    vector<pair<SharedVector,double>> eigen_;
     std::string diag_algorithm_;
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     // Store and Print the CI Vectors and Configurations
     double print_CI_threshold;
-    vector<pair<SharedVector,double>> eigen_;
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
     // semi-canonicalize
@@ -208,7 +206,7 @@ protected:
     // Print Indices
     void print_idx(const string &str, const vector<size_t> &vec){
         outfile->Printf("\n    %-30s", str.c_str());
-        size_t c = 0;        
+        size_t c = 0;
         for(size_t x: vec){
             outfile->Printf("%4zu ", x);
             ++c;
