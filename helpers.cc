@@ -215,7 +215,8 @@ std::pair<SpaceInfo,bool> MOSpaceInfo::read_mo_space(const std::string& space,Op
 //        outfile->Printf("\n  The size of space \"%s\" (%d) does not match the number of irreducible representations (%zu).",
 //                        space.c_str(),options[space].size(),nirrep_);
     }
-    return std::make_pair(make_tuple(space_dim,vec_mo_info),read);
+    SpaceInfo space_info(space_dim,vec_mo_info);
+    return std::make_pair(space_info,read);
 }
 
 
