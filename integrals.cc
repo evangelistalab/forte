@@ -1261,46 +1261,6 @@ void CholeskyIntegrals::gather_integrals()
     outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
     SharedMatrix Lao = Ch->L();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
-    //Will remove once I know the code below works
-    //SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
-
-    //Cpq = wfn->Ca_subset("AO","ALL");
-
-    //SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
-    //SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
-
-    //std::vector<double> eval;
-    //std::vector<double> evalao;
-    //for(size_t i = 0; i < nmo_; i++){evalao.push_back(eps_ao->get(i));}
-
-    ////Try and figure out a mapping from SO to AO.
-    ////One idea I had was to grab the epsilon for SO which is
-    ////arranged by irrep.
-
-    ////This code pushes back all the eigenvalues from SO in pitzer ordering
-    //for(size_t h = 0; h < nirrep_; h++){
-    //    for(size_t i = 0; i < eps_so->dim(h); i++){
-    //        eval.push_back(eps_so->get(h,i));
-    //    }
-    //}
-
-    ////A vector of pairs for eval, index
-    //std::vector<std::pair<double, int> > eigind;
-    //for(size_t e = 0; e < eval.size(); e++){
-    //    std::pair<double, int> EI;
-    //    EI = std::make_pair(eval[e],e);
-    //    eigind.push_back(EI);
-    //}
-    ////Sorts the eigenvalues by ascending order, but keeps the same index
-    ////Hence, this is now QT ordering like my Cpq matrix
-    //std::sort(eigind.begin(), eigind.end());
-
-    //SharedMatrix Cpq_new(Cpq->clone());
-    //for(size_t p = 0; p < nmo_; p++){
-    //    for(size_t mu = 0; mu < nbf; mu++){
-    //        Cpq->set(mu,eigind[p].second,Cpq_new->get(mu,p));
-    //    }
-    //}
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
     SharedMatrix Ca = wfn->Ca();
     SharedMatrix aotoso = wfn->aotoso();
