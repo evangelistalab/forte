@@ -100,6 +100,8 @@ private:
     GraphPtr  beta_graph_;
     /// Coefficient matrix stored in block-matrix form
     std::vector<SharedMatrix> C_;
+    std::vector<double> opdm_a_;
+    std::vector<double> opdm_b_;
         
 
     // ==> Class Static Data <==
@@ -141,6 +143,7 @@ private:
 
     // ==> Class Private Functions <==
 
+    size_t oei_index(size_t p, size_t q) const {return ncmo_ * p + q;}
     size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;}
 
     double oei_aa(size_t p, size_t q) const {return oei_a_[ncmo_ * p + q];}
@@ -155,8 +158,9 @@ private:
     void H2_aabb(FCIWfn& result);
     void H2_aaaa2(FCIWfn& result, bool alfa);
 
-
-
+    void compute_1rdm(std::vector<double> &rdm, bool alfa);
+//    void compute_2rdm(bool alfa1,bool alfa2);
+//    void compute_3rdm(bool alfa1,bool alfa2,bool alfa3);
 };
 
 }}
