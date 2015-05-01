@@ -54,8 +54,8 @@ public:
     void get_b(SharedVector vec);
     bool add_sigma(SharedVector vec);
 
-    SharedVector eigenvalues() {return lambda_old;}
-    SharedMatrix eigenvectors() {return bnew;}
+    SharedVector eigenvalues() {return lambda;}
+    SharedMatrix eigenvectors() {return b_;}
 
     /// Initialize the object
     void startup(SharedVector diagonal);
