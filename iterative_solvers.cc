@@ -119,9 +119,7 @@ bool DavidsonLiuSolver::update()
     // diagonalize mini-matrix
     G->diagonalize(alpha,lambda);
 
-    if(check_convergence()){
-        return true;
-    }
+    if (size_ == 1) return true;
 
     check_orthogonality();
 
@@ -165,6 +163,10 @@ bool DavidsonLiuSolver::update()
 
         /// Need new sigma vectors to continue, so return control to caller
         return false;
+    }
+
+    if(check_convergence()){
+        return true;
     }
 
     // Step #3: Build the Correction Vectors

@@ -120,7 +120,7 @@ double FCISolver::compute_energy()
     SharedVector sigma(new Vector("sigma",fci_size));
 
     DavidsonLiuSolver dls(fci_size,nroot_);
-    dls.set_print_level(1);
+    dls.set_print_level(0);
     Hdiag.copy_to(sigma);
     dls.startup(sigma);
 
@@ -142,6 +142,15 @@ double FCISolver::compute_energy()
         outfile->Printf("\n %3d  %20.12f",cycle,energy);
         if (converged) break;
     }
+
+//    C.initial_guess(Hdiag,1);
+//    for (int cycle = 0; cycle < 1000; ++cycle){
+//        C.Hamiltonian(HC,twoSubstituitionVVOO);
+//        energy = C.dot(HC) + nuclear_repulsion_energy;
+//        outfile->Printf("\n %3d  %20.12f",cycle,energy);
+//        C.copy(HC);
+//        C.normalize();
+//    }
 
     return energy;
 }
