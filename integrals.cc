@@ -11,6 +11,7 @@
 #include <libthce/lreri.h>
 #include <lib3index/cholesky.h>
 #include <libmints/mints.h>
+#include <libqt/qt.h>
 #include <algorithm>
 
 #include "integrals.h"
@@ -787,6 +788,7 @@ void DFIntegrals::gather_integrals()
 
 
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
+    Dimension nsopi_ = wfn->nsopi();
 
     std::vector<double> eval;
     for(size_t h = 0; h < nirrep_; h++){
@@ -805,6 +807,29 @@ void DFIntegrals::gather_integrals()
     //Hence, this is now QT ordering like my Cpq matrix
     std::sort(eigind.begin(), eigind.end());
     SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
+
+
+    SharedMatrix aotoso = wfn->aotoso();
+
+    SharedMatrix Ca = wfn->Ca();
+
+    SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
+
+    // Transform from the SO to the AO basis
+    for (int h = 0, index = 0; h < nirrep_; ++h){
+        for (int i = 0; i < nmopi_[h]; ++i){
+            int nao = nso_;
+            int nso = nsopi_[h];
+
+            if (!nso) continue;
+
+            C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Ca->pointer(h)[0][i],nmopi_[h],0.0,&Ca_ao->pointer()[0][index],nmopi_.sum());
+
+            index += 1;
+        }
+
+    }
+
     SharedMatrix C_ord(Cpq->clone());
     int nbf = primary->nbf();
     for(size_t p = 0; p < nmo_; p++){
@@ -812,6 +837,7 @@ void DFIntegrals::gather_integrals()
             C_ord->set(mu,eigind[p].second,Cpq->get(mu,p));
         }
     }
+    C_ord->print();
 
     //B_{pq}^Q -> MO without frozen core
 
@@ -821,7 +847,8 @@ void DFIntegrals::gather_integrals()
 
     //Pushes a C matrix that is ordered in pitzer ordering
     //into the C_matrix object
-    df->set_C(C_ord);
+//    df->set_C(C_ord);
+    df->set_C(Ca_ao);
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
