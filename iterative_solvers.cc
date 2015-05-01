@@ -31,15 +31,6 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
     h_diag = SharedVector(new Vector("lambda",size_));
 
     h_diag->copy(*diagonal);
-    // Number of roots
-    //    int M = nroot_s;
-
-    // Maximum number of vectors stored
-    //    int maxdim = subspace_size;
-
-    //    sigma_vector->get_diagonal(Hdiag);
-
-//    h_diag->print();
 
     // Find the initial_size lowest diagonals
     {
@@ -52,7 +43,7 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
                 // Find where to inser this determinant
                 smallest.pop_back();
                 auto it = std::find_if(smallest.begin(),smallest.end(),[&value](const std::pair<double,size_t>& p){return value < p.first;});
-                smallest.insert(it,std::make_tuple(value,j));
+                smallest.insert(it,std::pair<double,size_t>(value,j));
                 max_value = smallest.back().first;
             }
         }
