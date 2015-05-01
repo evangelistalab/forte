@@ -101,15 +101,12 @@ protected:
     SharedMatrix Evecs_;
     SharedVector Evals_;
     std::string diag_algorithm_;
-    void Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &val);
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     // Store and Print the CI Vectors and Configurations
+    double print_CI_threshold;
     vector<pair<SharedVector,double>> eigen_;
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
-    vector<vector<double>> CI_vec_;
-    double print_CI_threshold;
-    void Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det);
 
     // semi-canonicalize
     void semi_canonicalize();
@@ -147,18 +144,14 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     // Form Density Matrix
-    void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B);
     void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
 
     // Form 2-Particle Density Cumulant
-    void FormCumulant2(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
     void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
     void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
     void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
     // Form 3-Particle Density Cumulant
-    void FormCumulant3(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
-    void FormCumulant3_DIAG(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
     void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
     void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);

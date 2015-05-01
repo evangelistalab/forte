@@ -21,12 +21,6 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
 
     // Form and Diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
-//    Diagonalize_H(determinant_, Evecs_, Evals_);
-//    if(print_ > 2){
-//        outfile->Printf("\n\n  Spin selected CI vectors\n");
-//        Evecs_->print();
-//        Evals_->print();
-//    }
     Diagonalize_H(determinant_, eigen_);
     if(print_ > 2){
         for(pair<SharedVector, double> x: eigen_){
@@ -38,12 +32,6 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
 
     // Store CI Vectors in CI_vec_(vector<vector<double>>)
     print_CI_threshold = options.get_double("PRINT_CI_VECTOR");
-//    if(nroot_ > Evecs_->coldim()){
-//        outfile->Printf("\n  Too many roots of interest!");
-//        outfile->Printf("\n  There are only %3d roots that satisfy the condition!", Evecs_->coldim());
-//        throw PSIEXCEPTION("Too many roots of interest.");
-//    }
-//    Store_CI(nroot_, print_CI_threshold, Evecs_, Evals_, determinant_);
     if(nroot_ > eigen_.size()){
         outfile->Printf("\n  Too many roots of interest!");
         if(eigen_.size() > 1)
@@ -55,7 +43,6 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
 
     // Form Density
-//    FormDensity(determinant_, CI_vec_, root_, Da_, Db_);
     FormDensity(determinant_, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
@@ -77,7 +64,6 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
     }
 
     // Form 2-PDC
-//    FormCumulant2(determinant_, CI_vec_, root_, L2aa_, L2ab_, L2bb_);
     FormCumulant2(determinant_, root_, L2aa_, L2ab_, L2bb_);
     if(print_ > 2){
         print2PDC("L2aa", L2aa_, print_);
@@ -89,11 +75,9 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
     string threepdc = options.get_str("THREEPDC");
     string t_algorithm = options.get_str("T_ALGORITHM");
     if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-//        FormCumulant3(determinant_, CI_vec_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
         FormCumulant3(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
     }
     else if (threepdc == "DIAG"){
-//        FormCumulant3_DIAG(determinant_, CI_vec_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
         FormCumulant3_DIAG(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
     }
     if(print_ > 3){
@@ -492,12 +476,6 @@ void FCI_MO::semi_canonicalize(){
     integral_->retransform_integrals();
 
     // Form and Diagonalize the CASCI Hamiltonian
-//    Diagonalize_H(determinant_, Evecs_, Evals_);
-//    if(print_ > 2){
-//        outfile->Printf("\n\n  Spin selected CI vectors\n");
-//        Evecs_->print();
-//        Evals_->print();
-//    }
     Diagonalize_H(determinant_, eigen_);
     if(print_ > 2){
         for(pair<SharedVector, double> x: eigen_){
@@ -507,8 +485,7 @@ void FCI_MO::semi_canonicalize(){
         }
     }
 
-    // Store CI Vectors in CI_vec_(vector<vector<double>>)
-//    Store_CI(nroot_, print_CI_threshold, Evecs_, Evals_, determinant_);
+    // Store CI Vectors in eigen_
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
 
     // Form Density
@@ -516,7 +493,6 @@ void FCI_MO::semi_canonicalize(){
     Db_ = d2(ncmo_, d1(ncmo_));
     L1a = Tensor::build(kCore,"L1a", {na_, na_});
     L1b = Tensor::build(kCore,"L1b", {na_, na_});
-//    FormDensity(determinant_, CI_vec_, root_, Da_, Db_);
     FormDensity(determinant_, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
@@ -586,76 +562,6 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     timer_off("Diagonalize H");
 }
 
-void FCI_MO::Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &val){
-    timer_on("Diagonalize H");
-    Timer tdiagH;
-    std::string str = "Diagonalizing Hamiltonian";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    size_t det_size = det.size();
-
-    SharedMatrix H (new Matrix("CASCI Hamiltonian", det.size(), det.size()));
-    SharedMatrix S2 (new Matrix("S^2", det.size(), det.size()));
-    SharedMatrix Us (new Matrix("Unitary S^2", det.size(), det.size()));
-    SharedVector Vs (new Vector("Eigen values S^2", det.size()));
-
-    for(size_t bra = 0; bra < det_size; ++bra){
-        for(size_t ket = 0; ket < det_size; ++ket){
-            double Hvalue = det[bra].slater_rules(det[ket]);
-            Hvalue += (bra == ket ? e_nuc_ : 0.0);
-            H->set(bra,ket,Hvalue);
-            double Svalue = det[bra].spin2(det[ket]);
-            S2->set(bra,ket,Svalue);
-        }
-    }
-
-    if(det_size < 1000 || diag_algorithm_ == "FULL"){
-        S2->diagonalize(Us, Vs);
-    }
-    else{
-        david(S2->pointer(),det_size,det_size,Vs->pointer(),Us->pointer(),econv_,0);
-    }
-    if(print_ > 2){
-        outfile->Printf("\n\n");
-        H->print();
-        S2->print();
-        Us->print();
-        Vs->print();
-    }
-
-    // spin selection according to multiplicity
-    size_t n = 0, start = 0;
-    double s = (pow(multi_,2.0) - 1) / 4;
-    for(size_t i=0; i != det_size; ++i){
-        if(fabs(Vs->get(i) - s) < 1.0e-10){
-            if(n == 0) start = i;
-            ++n;
-        }
-    }
-    SharedMatrix H_ss (new Matrix("Spin selected CASCI Hamiltonian", n, n));
-    SharedMatrix Us_ss (new Matrix("Spin selected unitary S^2", det_size, n));
-    for(size_t i=0; i != det_size; ++i){
-        for(size_t j=0; j < n; ++j){
-            double value = Us->get(i,j+start);
-            Us_ss->set(i,j,value);
-        }
-    }
-    H_ss = Matrix::triplet(Us_ss,H,Us_ss,true,false,false);
-    if(print_ > 2){
-        outfile->Printf("\n  Spin selected CASCI Hamiltonian\n");
-        H_ss->print();
-    }
-
-    SharedMatrix vec_ss (new Matrix("Spin selected CI vectors", n, n));
-    val = SharedVector (new Vector("Spin selected Hamiltonian eigen values", n));
-    if (n < 1000 || diag_algorithm_ == "FULL")
-        H_ss->diagonalize(vec_ss, val);
-    else
-        david(H_ss->pointer(),n,n,val->pointer(),vec_ss->pointer(),econv_,0);
-    vec = Matrix::doublet(Us_ss,vec_ss,false,false);
-    outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
-    timer_off("Diagonalize H");
-}
-
 inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, int> &rhs){
     return abs(get<0>(rhs)) < abs(get<0>(lhs));
 }
@@ -708,59 +614,6 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     timer_off("STORE CI Vectors");
 }
 
-void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det){
-
-    timer_on("STORE CI Vectors");
-    outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
-    outfile->Printf("\n  *  CI Vectors & Configurations  *");
-    outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
-    outfile->Printf("\n");
-    outfile->Flush();
-
-    CI_vec_ = vector<vector<double>> (nroot, vector<double>());
-    vector<tuple<double, int>> vec_tuple;
-
-    for(int i=0; i<nroot; ++i){
-        for(size_t j=0; j<det.size(); ++j){
-            double value = Evecs->get(j,i);
-            CI_vec_[i].push_back(value);
-            if(fabs(value) > CI_threshold)
-                vec_tuple.push_back(make_tuple(value, j));
-        }
-        sort(vec_tuple.begin(), vec_tuple.end(), ReverseAbsSort);
-
-        outfile->Printf("\n  ==> Root No. %d <==", i+1);
-        outfile->Printf("\n");
-        for(int j=0; j<vec_tuple.size(); ++j){
-            outfile->Printf("\n    ");
-            double ci = get<0>(vec_tuple[j]);
-            size_t index = get<1>(vec_tuple[j]);
-            size_t ncmopi = 0;
-            for(int h=0; h<nirrep_; ++h){
-                for(size_t k=0; k<active_[h]; ++k){
-                    size_t x = core_[h] + k + ncmopi;
-                    bool a = det[index].get_alfa_bit(x);
-                    bool b = det[index].get_beta_bit(x);
-                    if(a == b)
-                        outfile->Printf("%d", a==1 ? 2 : 0);
-                    else
-                        outfile->Printf("%c", a==1 ? 'a' : 'b');
-                }
-                if(active_[h] != 0)
-                    outfile->Printf(" ");
-                ncmopi += ncmopi_[h];
-            }
-            outfile->Printf(" %20.8f", ci);
-        }
-        outfile->Printf("\n");
-        outfile->Printf("\n    Total Energy:   %.15lf", Evals->get(i));
-        outfile->Printf("\n\n");
-        outfile->Flush();
-        vec_tuple.clear();
-    }
-    timer_off("STORE CI Vectors");
-}
-
 void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
     timer_on("FORM Density");
     Timer tdensity;
@@ -806,47 +659,6 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
     timer_off("FORM Density");
 }
 
-void FCI_MO::FormDensity(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B){
-    timer_on("FORM Density");
-    Timer tdensity;
-    std::string str = "Forming one-particle density";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-
-    for(size_t p=0; p<nc_; ++p){
-        size_t np = idx_c_[p];
-            A[np][np] = 1.0;
-            B[np][np] = 1.0;
-    }
-
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-
-            if((sym_active_[p] ^ sym_active_[q]) != 0) continue;
-
-            size_t size = dets.size();
-            for(size_t ket = 0; ket != size; ++ket){
-                StringDeterminant Ja(vector<bool> (2*ncmo_)), Jb(vector<bool> (2*ncmo_));
-                double a = 1.0, b = 1.0;
-                a *= OneOP(dets[ket],Ja,np,0,nq,0) * CI_vector[root][ket];
-                b *= OneOP(dets[ket],Jb,np,1,nq,1) * CI_vector[root][ket];
-                if(std::fabs(a) < std::pow(0.1, econv_) && std::fabs(b) < std::pow(0.1, econv_))
-                    continue;
-                for(size_t bra = 0; bra != size; ++bra){
-                    A[np][nq] += a * (dets[bra] == Ja) * CI_vector[root][bra];
-                    B[np][nq] += b * (dets[bra] == Jb) * CI_vector[root][bra];
-                }
-            }
-
-        }
-
-    }
-    fill_density();
-    outfile->Printf("  Done. Timing %15.6f s", tdensity.get());
-    timer_off("FORM Density");
-}
-
 double FCI_MO::OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq){
     timer_on("1PO");
     vector<vector<bool>> tmp;
@@ -871,17 +683,13 @@ double FCI_MO::OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const 
 
 void FCI_MO::print_d2(const string &str, const d2 &OnePD){
     timer_on("PRINT Density");
-//    size_t count = 0;
     SharedMatrix M (new Matrix(str.c_str(), OnePD.size(), OnePD[0].size()));
     for(size_t i = 0; i != OnePD.size(); ++i){
         for(size_t j = 0; j != OnePD[i].size(); ++j){
             M->pointer()[i][j] = OnePD[i][j];
-//            if(fabs(OnePD[i][j]) > 1.0e-15) ++count;
         }
     }
     M->print();
-//    outfile->Printf("  Number of Nonzero Elements: %zu", count);
-//    outfile->Printf("\n\n");
     timer_off("PRINT Density");
 }
 
@@ -974,53 +782,6 @@ void FCI_MO::FormCumulant2AB(const vecdet &dets, const int &root, d4 &AB){
     }
 }
 
-void FCI_MO::FormCumulant2(const vecdet &dets, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB){
-    timer_on("FORM 2-Cumulant");
-    Timer tL2;
-    std::string str = "Forming Lambda2";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-            for(size_t r=0; r<na_; ++r){
-                size_t nr = idx_a_[r];
-                for(size_t s=0; s<na_; ++s){
-                    size_t ns = idx_a_[s];
-
-                    if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0) continue;
-
-                    size_t size = dets.size();
-                    for(size_t ket = 0; ket != size; ++ket){
-                        StringDeterminant Jaa(vector<bool> (2*ncmo_)), Jab(vector<bool> (2*ncmo_)), Jbb(vector<bool> (2*ncmo_));
-                        double aa = 1.0, ab = 1.0, bb = 1.0;
-                        aa *= TwoOP(dets[ket],Jaa,np,0,nq,0,nr,0,ns,0) * CI_vector[root][ket];
-                        ab *= TwoOP(dets[ket],Jab,np,0,nq,1,nr,0,ns,1) * CI_vector[root][ket];
-                        bb *= TwoOP(dets[ket],Jbb,np,1,nq,1,nr,1,ns,1) * CI_vector[root][ket];
-
-                        for(size_t bra = 0; bra != size; ++bra){
-                            AA[p][q][r][s] += aa * (dets[bra] == Jaa) * CI_vector[root][bra];
-                            AB[p][q][r][s] += ab * (dets[bra] == Jab) * CI_vector[root][bra];
-                            BB[p][q][r][s] += bb * (dets[bra] == Jbb) * CI_vector[root][bra];
-                        }
-                    }
-
-                    AA[p][q][r][s] -= Da_[np][nr] * Da_[nq][ns];
-                    AA[p][q][r][s] += Da_[np][ns] * Da_[nq][nr];
-
-                    AB[p][q][r][s] -= Da_[np][nr] * Db_[nq][ns];
-
-                    BB[p][q][r][s] -= Db_[np][nr] * Db_[nq][ns];
-                    BB[p][q][r][s] += Db_[np][ns] * Db_[nq][nr];
-                }
-            }
-        }
-    }
-    fill_cumulant2();
-    outfile->Printf("  Done. Timing %15.6f s", tL2.get());
-    timer_off("FORM 2-Cumulant");
-}
-
 void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT){
     timer_on("PRINT 2-Cumulant");
     outfile->Printf("\n  ** %s **", str.c_str());
@@ -1081,62 +842,6 @@ void FCI_MO::FormCumulant3(const vecdet &dets, const int &root, d6 &AAA, d6 &AAB
     Timer tL3;
     std::string str = "Forming Lambda3";
     outfile->Printf("\n  %-35s ...", str.c_str());
-//    for(size_t p=0; p<na_; ++p){
-//        size_t np = idx_a_[p];
-//        for(size_t q=0; q<na_; ++q){
-//            size_t nq = idx_a_[q];
-//            for(size_t r=0; r<na_; ++r){
-//                size_t nr = idx_a_[r];
-//                for(size_t s=0; s<na_; ++s){
-//                    size_t ns = idx_a_[s];
-//                    for(size_t t=0; t<na_; ++t){
-//                        size_t nt = idx_a_[t];
-//                        for(size_t u=0; u<na_; ++u){
-//                            size_t nu = idx_a_[u];
-
-//                            if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0) continue;
-
-//                            if(DC == "MK"){
-//                                size_t size = dets.size();
-//                                for(size_t ket = 0; ket != size; ++ket){
-//                                    StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
-//                                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);
-//                                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * vket;
-//                                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * vket;
-//                                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * vket;
-//                                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * vket;
-
-//                                    for(size_t bra = 0; bra != size; ++bra){
-//                                        double vbra = (eigen_[root].first)->get(bra);
-//                                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * vbra;
-//                                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * vbra;
-//                                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * vbra;
-//                                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * vbra;
-//                                    }
-//                                }
-//                            }
-
-//                            AAA[p][q][r][s][t][u] -= P3DDD(Da_,np,nq,nr,ns,nt,nu);
-//                            AAA[p][q][r][s][t][u] -= P3DC(Da_,L2aa_,p,q,r,s,t,u);
-
-//                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] - Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
-//                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
-//                            AAB[p][q][r][s][t][u] -= (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
-//                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
-
-//                            ABB[p][q][r][s][t][u] -= (Da_[np][ns] * Db_[nq][nt] * Db_[nr][nu] - Da_[np][ns] * Db_[nr][nt] * Db_[nq][nu]);
-//                            ABB[p][q][r][s][t][u] -= (Db_[nq][nt] * L2ab_[p][r][s][u] - Db_[nq][nu] * L2ab_[p][r][s][t]);
-//                            ABB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2ab_[p][q][s][t] - Db_[nr][nt] * L2ab_[p][q][s][u]);
-//                            ABB[p][q][r][s][t][u] -= (Da_[np][ns] * L2bb_[q][r][t][u]);
-
-//                            BBB[p][q][r][s][t][u] -= P3DDD(Db_,np,nq,nr,ns,nt,nu);
-//                            BBB[p][q][r][s][t][u] -= P3DC(Db_,L2bb_,p,q,r,s,t,u);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
     FormCumulant3AAA(dets, root, AAA, BBB, DC);
     FormCumulant3AAB(dets, root, AAB, ABB, DC);
     fill_cumulant3();
@@ -1290,136 +995,6 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet &dets, const int &root, d6 &AAA, d6
                         AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * vbra;
                         ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * vbra;
                         BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * vbra;
-                    }
-                }
-
-
-                AAA[p][q][r][p][q][r] -= P3DDD(Da_,np,nq,nr,np,nq,nr);
-                AAA[p][q][r][p][q][r] -= P3DC(Da_,L2aa_,p,q,r,p,q,r);
-                AAA[p][q][r][p][r][q] -= AAA[p][q][r][p][q][r];
-                AAA[p][q][r][q][p][r] -= AAA[p][q][r][p][q][r];
-                AAA[p][q][r][q][r][p]  = AAA[p][q][r][p][q][r];
-                AAA[p][q][r][r][p][q]  = AAA[p][q][r][p][q][r];
-                AAA[p][q][r][r][q][p] -= AAA[p][q][r][p][q][r];
-
-                AAB[p][q][r][p][q][r] -= (Da_[np][np] * Da_[nq][nq] * Db_[nr][nr] - Da_[nq][np] * Da_[np][nq] * Db_[nr][nr]);
-                AAB[p][q][r][p][q][r] -= (Da_[np][np] * L2ab_[q][r][q][r] - Da_[np][nq] * L2ab_[q][r][p][r]);
-                AAB[p][q][r][p][q][r] -= (Da_[nq][nq] * L2ab_[p][r][p][r] - Da_[nq][np] * L2ab_[p][r][q][r]);
-                AAB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2aa_[p][q][p][q]);
-                AAB[p][q][r][q][p][r] -= AAB[p][q][r][p][q][r];
-
-                ABB[p][q][r][p][q][r] -= (Da_[np][np] * Db_[nq][nq] * Db_[nr][nr] - Da_[np][np] * Db_[nr][nq] * Db_[nq][nr]);
-                ABB[p][q][r][p][q][r] -= (Db_[nq][nq] * L2ab_[p][r][p][r] - Db_[nq][nr] * L2ab_[p][r][p][q]);
-                ABB[p][q][r][p][q][r] -= (Db_[nr][nr] * L2ab_[p][q][p][q] - Db_[nr][nq] * L2ab_[p][q][p][r]);
-                ABB[p][q][r][p][q][r] -= (Da_[np][np] * L2bb_[q][r][q][r]);
-                ABB[p][r][q][p][q][r] -= ABB[p][q][r][p][q][r];
-
-                BBB[p][q][r][p][q][r] -= P3DDD(Db_,np,nq,nr,np,nq,nr);
-                BBB[p][q][r][p][q][r] -= P3DC(Db_,L2bb_,p,q,r,p,q,r);
-                BBB[p][q][r][p][r][q] -= BBB[p][q][r][p][q][r];
-                BBB[p][q][r][q][p][r] -= BBB[p][q][r][p][q][r];
-                BBB[p][q][r][q][r][p]  = BBB[p][q][r][p][q][r];
-                BBB[p][q][r][r][p][q]  = BBB[p][q][r][p][q][r];
-                BBB[p][q][r][r][q][p] -= BBB[p][q][r][p][q][r];
-            }
-        }
-    }
-    fill_cumulant3();
-    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
-    timer_off("FORM 3-Cumulant");
-}
-
-void FCI_MO::FormCumulant3(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC){
-    timer_on("FORM 3-Cumulant");
-    Timer tL3;
-    std::string str = "Forming Lambda3";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-            for(size_t r=0; r<na_; ++r){
-                size_t nr = idx_a_[r];
-                for(size_t s=0; s<na_; ++s){
-                    size_t ns = idx_a_[s];
-                    for(size_t t=0; t<na_; ++t){
-                        size_t nt = idx_a_[t];
-                        for(size_t u=0; u<na_; ++u){
-                            size_t nu = idx_a_[u];
-
-                            if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0) continue;
-
-                            if(DC == "MK"){
-                                size_t size = dets.size();
-                                for(size_t ket = 0; ket != size; ++ket){
-                                    StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
-                                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
-                                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * CI_vector[root][ket];
-                                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * CI_vector[root][ket];
-                                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,ns,0,nt,1,nu,1) * CI_vector[root][ket];
-                                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * CI_vector[root][ket];
-
-                                    for(size_t bra = 0; bra != size; ++bra){
-                                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
-                                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
-                                        ABB[p][q][r][s][t][u] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
-                                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
-                                    }
-                                }
-                            }
-
-                            AAA[p][q][r][s][t][u] -= P3DDD(Da_,np,nq,nr,ns,nt,nu);
-                            AAA[p][q][r][s][t][u] -= P3DC(Da_,L2aa_,p,q,r,s,t,u);
-
-                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * Da_[nq][nt] * Db_[nr][nu] - Da_[nq][ns] * Da_[np][nt] * Db_[nr][nu]);
-                            AAB[p][q][r][s][t][u] -= (Da_[np][ns] * L2ab_[q][r][t][u] - Da_[np][nt] * L2ab_[q][r][s][u]);
-                            AAB[p][q][r][s][t][u] -= (Da_[nq][nt] * L2ab_[p][r][s][u] - Da_[nq][ns] * L2ab_[p][r][t][u]);
-                            AAB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2aa_[p][q][s][t]);
-
-                            ABB[p][q][r][s][t][u] -= (Da_[np][ns] * Db_[nq][nt] * Db_[nr][nu] - Da_[np][ns] * Db_[nr][nt] * Db_[nq][nu]);
-                            ABB[p][q][r][s][t][u] -= (Db_[nq][nt] * L2ab_[p][r][s][u] - Db_[nq][nu] * L2ab_[p][r][s][t]);
-                            ABB[p][q][r][s][t][u] -= (Db_[nr][nu] * L2ab_[p][q][s][t] - Db_[nr][nt] * L2ab_[p][q][s][u]);
-                            ABB[p][q][r][s][t][u] -= (Da_[np][ns] * L2bb_[q][r][t][u]);
-
-                            BBB[p][q][r][s][t][u] -= P3DDD(Db_,np,nq,nr,ns,nt,nu);
-                            BBB[p][q][r][s][t][u] -= P3DC(Db_,L2bb_,p,q,r,s,t,u);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    fill_cumulant3();
-    outfile->Printf("  Done. Timing %15.6f s", tL3.get());
-    timer_off("FORM 3-Cumulant");
-}
-
-void FCI_MO::FormCumulant3_DIAG(const vecdet &dets, const vector<vector<double> > &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB){
-    timer_on("FORM 3-Cumulant");
-    Timer tL3;
-    std::string str = "Forming Lambda3";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-            for(size_t r=0; r<na_; ++r){
-                size_t nr = idx_a_[r];
-
-                size_t size = dets.size();
-                for(size_t ket = 0; ket != size; ++ket){
-                    StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
-                    double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0;
-                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,np,0,nq,0,nr,0) * CI_vector[root][ket];
-                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,np,0,nq,0,nr,1) * CI_vector[root][ket];
-                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,np,0,nq,1,nr,1) * CI_vector[root][ket];
-                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,np,1,nq,1,nr,1) * CI_vector[root][ket];
-
-                    for(size_t bra = 0; bra != size; ++bra){
-                        AAA[p][q][r][p][q][r] += aaa * (dets[bra] == Jaaa) * CI_vector[root][bra];
-                        AAB[p][q][r][p][q][r] += aab * (dets[bra] == Jaab) * CI_vector[root][bra];
-                        ABB[p][q][r][p][q][r] += abb * (dets[bra] == Jabb) * CI_vector[root][bra];
-                        BBB[p][q][r][p][q][r] += bbb * (dets[bra] == Jbbb) * CI_vector[root][bra];
                     }
                 }
 
