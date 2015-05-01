@@ -790,25 +790,6 @@ void DFIntegrals::gather_integrals()
     SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
     Dimension nsopi_ = wfn->nsopi();
 
-    std::vector<double> eval;
-    for(size_t h = 0; h < nirrep_; h++){
-        for(size_t i = 0; i < eps_so->dim(h); i++){
-            eval.push_back(eps_so->get(h,i));
-        }
-    }
-    //A vector of pairs for eval, index
-    std::vector<std::pair<double, int> > eigind;
-    for(size_t e = 0; e < eval.size(); e++){
-        std::pair<double, int> EI;
-        EI = std::make_pair(eval[e],e);
-        eigind.push_back(EI);
-    }
-    //Sorts the eigenvalues by ascending order, but keeps the same index
-    //Hence, this is now QT ordering like my Cpq matrix
-    std::sort(eigind.begin(), eigind.end());
-    SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
-
-
     SharedMatrix aotoso = wfn->aotoso();
 
     SharedMatrix Ca = wfn->Ca();
@@ -830,14 +811,6 @@ void DFIntegrals::gather_integrals()
 
     }
 
-    SharedMatrix C_ord(Cpq->clone());
-    int nbf = primary->nbf();
-    for(size_t p = 0; p < nmo_; p++){
-        for(size_t mu = 0; mu < nbf; mu++){
-            C_ord->set(mu,eigind[p].second,Cpq->get(mu,p));
-        }
-    }
-    C_ord->print();
 
     //B_{pq}^Q -> MO without frozen core
 
@@ -1288,52 +1261,71 @@ void CholeskyIntegrals::gather_integrals()
     outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
     SharedMatrix Lao = Ch->L();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
-    SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
+    //Will remove once I know the code below works
+    //SharedMatrix Cpq = wfn->Ca_subset("AO", "ALL");
 
-    Cpq = wfn->Ca_subset("AO","ALL");
+    //Cpq = wfn->Ca_subset("AO","ALL");
 
-    SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
-    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
+    //SharedVector eps_ao= wfn->epsilon_a_subset("AO", "ALL");
+    //SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
 
-    std::vector<double> eval;
-    std::vector<double> evalao;
-    for(size_t i = 0; i < nmo_; i++){evalao.push_back(eps_ao->get(i));}
+    //std::vector<double> eval;
+    //std::vector<double> evalao;
+    //for(size_t i = 0; i < nmo_; i++){evalao.push_back(eps_ao->get(i));}
 
-    //Try and figure out a mapping from SO to AO.
-    //One idea I had was to grab the epsilon for SO which is
-    //arranged by irrep.
+    ////Try and figure out a mapping from SO to AO.
+    ////One idea I had was to grab the epsilon for SO which is
+    ////arranged by irrep.
 
-    //This code pushes back all the eigenvalues from SO in pitzer ordering
-    for(size_t h = 0; h < nirrep_; h++){
-        for(size_t i = 0; i < eps_so->dim(h); i++){
-            eval.push_back(eps_so->get(h,i));
+    ////This code pushes back all the eigenvalues from SO in pitzer ordering
+    //for(size_t h = 0; h < nirrep_; h++){
+    //    for(size_t i = 0; i < eps_so->dim(h); i++){
+    //        eval.push_back(eps_so->get(h,i));
+    //    }
+    //}
+
+    ////A vector of pairs for eval, index
+    //std::vector<std::pair<double, int> > eigind;
+    //for(size_t e = 0; e < eval.size(); e++){
+    //    std::pair<double, int> EI;
+    //    EI = std::make_pair(eval[e],e);
+    //    eigind.push_back(EI);
+    //}
+    ////Sorts the eigenvalues by ascending order, but keeps the same index
+    ////Hence, this is now QT ordering like my Cpq matrix
+    //std::sort(eigind.begin(), eigind.end());
+
+    //SharedMatrix Cpq_new(Cpq->clone());
+    //for(size_t p = 0; p < nmo_; p++){
+    //    for(size_t mu = 0; mu < nbf; mu++){
+    //        Cpq->set(mu,eigind[p].second,Cpq_new->get(mu,p));
+    //    }
+    //}
+    SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
+    SharedMatrix Ca = wfn->Ca();
+    SharedMatrix aotoso = wfn->aotoso();
+
+    // Transform from the SO to the AO basis
+    Dimension nsopi_ = wfn->nsopi();
+    for (int h = 0, index = 0; h < nirrep_; ++h){
+        for (int i = 0; i < nmopi_[h]; ++i){
+            int nao = nso_;
+            int nso = nsopi_[h];
+
+            if (!nso) continue;
+
+            C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Ca->pointer(h)[0][i],nmopi_[h],0.0,&Ca_ao->pointer()[0][index],nmopi_.sum());
+
+            index += 1;
         }
-    }
 
-    //A vector of pairs for eval, index
-    std::vector<std::pair<double, int> > eigind;
-    for(size_t e = 0; e < eval.size(); e++){
-        std::pair<double, int> EI;
-        EI = std::make_pair(eval[e],e);
-        eigind.push_back(EI);
     }
-    //Sorts the eigenvalues by ascending order, but keeps the same index
-    //Hence, this is now QT ordering like my Cpq matrix
-    std::sort(eigind.begin(), eigind.end());
-
-    SharedMatrix Cpq_new(Cpq->clone());
-    for(size_t p = 0; p < nmo_; p++){
-        for(size_t mu = 0; mu < nbf; mu++){
-            Cpq->set(mu,eigind[p].second,Cpq_new->get(mu,p));
-        }
-    }
-
     ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
     ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
     ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
 
     Cpq_tensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = Cpq->get(i[0],i[1]);
+        value = Ca_ao->get(i[0],i[1]);
     });
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i,double& value){
         value = Lao->get(i[0],i[1]*nbf + i[2]);
