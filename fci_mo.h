@@ -10,6 +10,8 @@
 #include <string>
 #include "integrals.h"
 #include "string_determinant.h"
+#include "bitset_determinant.h"
+#include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
 #include "reference.h"
 
@@ -33,16 +35,18 @@ public:
     Reference reference();
 
 protected:
+    // Basic Preparation
+    void print_title();
     void startup(Options &options);
-
+    void read_info(Options &options);
     void cleanup();
 
+    // Integrals
     libadaptive::ExplorerIntegrals *integral_;
-
-    int print_;
-
-    //Used for getting ThreeIntegral integrals
     std::string int_type_;
+
+    // Print Levels
+    int print_;
 
     // Nucear Repulsion Energy
     double e_nuc_;
@@ -51,112 +55,65 @@ protected:
     int multi_;
     int ms_;
 
-    // Number of Irrep
-    int nirrep_;
+    // Symmetry
+    int nirrep_;             // number of irrep
+    int root_sym_;           // root
+    vector<int> sym_active_; // active MOs
+    vector<int> sym_ncmo_;   // correlated MOs
 
-    // Total MOs
-    size_t nmo_;
+    // Molecular Orbitals
+    size_t nmo_;             // total MOs
     Dimension nmopi_;
-
-    // Correlating MOs
-    size_t ncmo_;
+    size_t ncmo_;            // correlated MOs
     Dimension ncmopi_;
-
-    // Frozen Orbitals
-    Dimension frzcpi_;
-    Dimension frzvpi_;
+    Dimension frzcpi_;       // frozen core
+    Dimension frzvpi_;       // frozen virtual
     size_t nfrzc_;
     size_t nfrzv_;
-
-    // Core Orbitals
-    Dimension core_;
+    Dimension core_;         // core MOs
     size_t nc_;
     vector<size_t> idx_c_;
-
-    // Active Orbitals
-    Dimension active_;
+    Dimension active_;       // active MOs
     size_t na_;
     vector<size_t> idx_a_;
-
-    // Number of Nonfrozen Virtuals
-    size_t nv_;
+    size_t nv_;              // virtual MOs
     Dimension virtual_;
     vector<size_t> idx_v_;
-
-    // Hole
-    size_t nh_;
+    size_t nh_;              // hole MOs
     vector<size_t> idx_h_;
-
-    // Particle;
-    size_t npt_;
+    size_t npt_;             // particle MOs
     vector<size_t> idx_p_;
 
-    // Number of Alpha Electrons
+    // Number of Alpha and Beta Electrons
     long int nalfa_;
-
-    // Number of Beta Electrons
     long int nbeta_;
 
-    // Symmetry of the wavefunction
-    int root_sym_;
-
-    // Symmetry of Orbitals
-    vector<int> sym_active_; // active
-    vector<int> sym_ncmo_;   // correlated mo
-
-    // Print Size of a Array with Irrep
-    void print_irrep(const string &str, const Dimension &array){
-        outfile->Printf("\n  %-15s", str.c_str());
-        for(int h=0; h<nirrep_; ++h){
-            outfile->Printf("%3d", array[h]);
-        }
-    }
-
-    // Print Indices
-    void print_idx(const string &str, const vector<size_t> &vec){
-        outfile->Printf("\n  %-15s", str.c_str());
-        size_t c = 0;
-        for(size_t x: vec){
-            outfile->Printf("%3zu ", x);
-            ++c;
-            if(c % 20 == 0) outfile->Printf("\n  %-10c", ' ');
-        }
-    }
-
-    // Form a String
+    // Determinants
+    void form_det();
+    vecdet determinant_;
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print);
 
-    // Proper Determinant
-    vecdet determinant_;
-
-    // Print Determinant
-    void print_det(const vecdet &dets){
-        outfile->Printf("\n  Determinants: |alpha|beta>");
-        for(libadaptive::StringDeterminant x: dets){
-            x.print();
-        }
-    }
-
-    // Eigen Vectors and Values of CASCI Hamiltonian
-    SharedMatrix Evecs_;
-    SharedVector Evals_;
+    // Choice of Roots
+    int nroot_;  // number of roots
+    int root_;   // which root in nroot
 
     // Diagonalize the CASCI Hamiltonian
-    void Diagonalize_H(const vecdet &det, SharedMatrix &vec, SharedVector &val);
-
-    // CI Vectors
-    vector<vector<double>> CI_vec_;
+    vector<pair<SharedVector,double>> eigen_;
+    std::string diag_algorithm_;
+    void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     // Store and Print the CI Vectors and Configurations
-    void Store_CI(const int &nroot, const double &CI_threshold, const SharedMatrix &Evecs, const SharedVector &Evals, const vecdet &det);
+    double print_CI_threshold;
+    void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
+
+    // semi-canonicalize
+    void semi_canonicalize();
 
     // Density Matrix
     d2 Da_;
     d2 Db_;
-
-    // Density Matrix in Active
-    ambit::Tensor L1a;
-    ambit::Tensor L1b;
+    ambit::Tensor L1a;    // only in active
+    ambit::Tensor L1b;    // only in active
     void fill_density();
 
     // 2-Body Density Cumulant
@@ -185,35 +142,34 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     // Form Density Matrix
-    void FormDensity(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &Da, d2 &Db);
-    void FormDensity_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d2 &A, d2 &B);
+    void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
 
-    // Form 2-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant2_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
-    void FormCumulant2_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    // Form 2-Particle Density Cumulant
+    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
+    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
-    // Form 3-Particle Density Cumulant  A: Straightforward; B: Efficient
-    void FormCumulant3_A(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
-    void FormCumulant3_B(const vecdet &determinants, const vector<vector<double>> &CI_vector, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    // Form 3-Particle Density Cumulant
+    void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
+    void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
+    void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     // N-Particle Operator
     double OneOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
-    double TwoOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
     double TwoOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
-    double ThreeOperator(const libadaptive::StringDeterminant &I, const libadaptive::StringDeterminant &J, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
     double ThreeOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
     // Fock Matrix
     d2 Fa_;
     d2 Fb_;
     void Form_Fock(d2 &A, d2 &B);
-    void Check_Fock(const d2 &A, const d2 &B, const int &E, size_t &count);
-    void Check_FockBlock(const d2 &A, const d2 &B, const int &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
+    void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
+    void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
-    void TRANS_C(const SharedMatrix &C, const SharedMatrix &U, SharedMatrix &Cnew);
-    void COPY(const SharedMatrix &Cnew, SharedMatrix &C);
 
     // Reference Energy
+    double econv_;
     double Eref_;
     void compute_ref();
 
@@ -237,19 +193,36 @@ protected:
         return pow(-1.0,count%2);
     }
 
-//    // Creation and Annihilate Operator
-//    double AOP(vector<bool> &Ja, vector<bool> &Jb, const size_t &idx, const bool &spin){
-//        double sign = 0.0;
-//        if(spin == 0 && Ja[idx]) {sign = CheckSign(Ja,idx); Ja[idx] = 0;}
-//        if(spin == 1 && Jb[idx]) {sign = CheckSign(Jb,idx); Jb[idx] = 0;}
-//        return sign;
-//    }
-//    double COP(vector<bool> &Ja, vector<bool> &Jb, const size_t &idx, const bool &spin){
-//        double sign = 0.0;
-//        if(spin == 0 && !Ja[idx]) {sign *= CheckSign(Ja,idx); Ja[idx] = 1;}
-//        if(spin == 1 && !Jb[idx]) {sign *= CheckSign(Jb,idx); Jb[idx] = 1;}
-//        return sign;
-//    }
+    // Print Size of a Array with Irrep
+    void print_irrep(const string &str, const Dimension &array){
+        outfile->Printf("\n    %-30s", str.c_str());
+        outfile->Printf("[");
+        for(int h=0; h<nirrep_; ++h){
+            outfile->Printf(" %4d ", array[h]);
+        }
+        outfile->Printf("]");
+    }
+
+    // Print Indices
+    void print_idx(const string &str, const vector<size_t> &vec){
+        outfile->Printf("\n    %-30s", str.c_str());
+        size_t c = 0;
+        for(size_t x: vec){
+            outfile->Printf("%4zu ", x);
+            ++c;
+            if(c % 15 == 0) outfile->Printf("\n  %-32c", ' ');
+        }
+    }
+
+    // Print Determinants
+    void print_det(const vecdet &dets){
+        outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
+        for(libadaptive::StringDeterminant x: dets){
+            outfile->Printf("  ");
+            x.print();
+        }
+        outfile->Printf("\n");
+    }
 
     // Permutations for 3-PDC
     double P3DDD(const d2 &Density, const size_t &p, const size_t &q, const size_t &r, const size_t &s, const size_t &t, const size_t &u){

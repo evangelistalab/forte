@@ -103,11 +103,12 @@ void FCIQMC::startup()
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
     use_initiator_ = options_.get_bool("USE_INITIATOR");
     initiator_na_ = options_.get_double("INITIATOR_NA");
+    outfile->Printf("\nDEBUG: spawn-type:%s",options_.get_str("SPAWN_TYPE").c_str());
     if (options_.get_str("SPAWN_TYPE") == "RANDOM"){
         spawn_type_ = random;
-    }else if (options_.get_str("PROPAGATOR") == "ALL"){
+    }else if (options_.get_str("SPAWN_TYPE") == "ALL"){
         spawn_type_ = all;
-    }else if (options_.get_str("PROPAGATOR") == "GROUND_AND_RANDOM"){
+    }else if (options_.get_str("SPAWN_TYPE") == "GROUND_AND_RANDOM"){
         spawn_type_ = ground_and_random;
     }
     // Read options
@@ -356,6 +357,8 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
         size_t sumgen = sumSingle+sumDouble;
         timer_off("FCIQMC:Compute_excitations");
 
+        outfile->Printf("\nspawn_type_:%d, all:%d", spawn_type_, all);
+
         switch (spawn_type_) {
         case random:
             for (size_t detW = 0; detW < nid; ++detW){
@@ -423,6 +426,8 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
                 if (rand_real() < pspawn - double(pspawn_floor)){
                     pspawn_floor++;
                 }
+
+                outfile->Printf("\nall excitation called.");
 
                 int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
 

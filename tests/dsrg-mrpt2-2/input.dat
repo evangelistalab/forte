@@ -1,4 +1,3 @@
-import libbtl
 import libadaptive
 
 #refmcscf     =  -99.972055826365903 # cc-pVTZ
