@@ -13,8 +13,9 @@
 #include <libmints/molecule.h>
 #include "multidimensional_arrays.h"
 
-#include "mp2_nos.h"
+#include "helpers.h"
 
+#include "mp2_nos.h"
 #include "adaptive-ci.h"
 #include "ex-aci.h"
 #include "adaptive_pici.h"
@@ -26,9 +27,7 @@
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
-
-// This allows us to be lazy in getting the spaces in DPD calls
-#define ID(x) ints.DPD_ID(x)
+#include "fci_solver.h"
 
 INIT_PLUGIN
 
@@ -59,9 +58,9 @@ read_options(std::string name, Options &options)
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
         /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2");
+                                              " DSRG-MRPT2 MR-DSRG-PT2 NONE");
 
         // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
@@ -87,11 +86,14 @@ read_options(std::string name, Options &options)
         /*- Number of restricted doubly occupied orbitals per irrep (in Cotton order) -*/
         options.add("RESTRICTED_DOCC", new ArrayType());
 
-        /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
-        options.add("FROZEN_UOCC",new ArrayType());
-
         /*- Number of active orbitals per irrep (in Cotton order) -*/
         options.add("ACTIVE",new ArrayType());
+
+        /*- Number of restricted unoccupied orbitals per irrep (in Cotton order) -*/
+        options.add("RESTRICTED_UOCC", new ArrayType());
+
+        /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
+        options.add("FROZEN_UOCC",new ArrayType());
 
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
@@ -356,6 +358,10 @@ libadaptive(Options &options)
 {
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
+    mo_space_info->read_options(options);
+
     // Get the one- and two-electron integrals in the MO basis
     // If CHOLESKY
     // create CholeskyIntegrals class
@@ -372,6 +378,9 @@ libadaptive(Options &options)
     {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
+
+    // Link the integrals to the BitsetDeterminant class
+    BitsetDeterminant::set_ints(ints_);
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -414,6 +423,11 @@ libadaptive(Options &options)
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
+    }
+    if (options.get_str("JOB_TYPE") == "FCI"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+        fci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")

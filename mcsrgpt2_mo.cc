@@ -108,13 +108,14 @@ void MCSRGPT2_MO::startup(Options &options){
     taylor_order_ = floor((e_conv / taylor_threshold_ + 1.0) / expo_delta_) + 1;
 
     // Print Original Orbital Indices
-    outfile->Printf("\n  Correlating Subspace Indices:");
-    print_idx("Core", idx_c_);
-    print_idx("Active", idx_a_);
-    print_idx("Virtual", idx_v_);
-    print_idx("Hole", idx_h_);
-    print_idx("Particle", idx_p_);
+    outfile->Printf("\n\n  ==> Correlated Subspace Indices <==\n");
+    print_idx("CORE", idx_c_);
+    print_idx("ACTIVE", idx_a_);
+    print_idx("HOLE", idx_h_);
+    print_idx("VIRTUAL", idx_v_);
+    print_idx("PARTICLE", idx_p_);
     outfile->Printf("\n");
+    outfile->Flush();
 
     // Compute Reference Energy
     outfile->Printf("\n  Computing reference energy using density cumulant ...");

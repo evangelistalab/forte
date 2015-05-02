@@ -25,9 +25,6 @@
 
 #include "bitset_determinant.h"
 
-#include <libmints/vector.h>
-#include <libmints/matrix.h>
-
 #define BIGNUM 1E100
 #define MAXIT 100
 
@@ -143,15 +140,12 @@ protected:
  * This class diagonalizes the Hamiltonian in a basis
  * of determinants.
  */
-
 class SparseCISolver
 {
 public:    
     // ==> Class Constructor and Destructor <==
 
-    /**
-     * Constructor
-     */
+    /// Constructor
     SparseCISolver() : parallel_(false), print_details_(false) {};
 
     /// Destructor

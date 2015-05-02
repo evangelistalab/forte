@@ -14,8 +14,8 @@
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
 
+#include "helpers.h"
 #include "adaptive-ci.h"
-#include "cartographer.h"
 #include "sparse_ci_solver.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
@@ -143,6 +143,8 @@ AdaptiveCI::~AdaptiveCI()
 
 void AdaptiveCI::print_info()
 {
+    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info{
         {"Symmetry",wavefunction_symmetry_},
