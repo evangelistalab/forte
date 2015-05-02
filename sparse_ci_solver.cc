@@ -1,8 +1,10 @@
 #include <cmath>
 
 #include <boost/timer.hpp>
-#include <boost/format.hpp>
+//#include <boost/format.hpp>
 
+#include <libmints/matrix.h>
+#include <libmints/vector.h>
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
@@ -158,11 +160,11 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
     }
     size_t mem_tuple_singles = num_tuples_sigles * (sizeof(size_t) + sizeof(short));
 
-//    outfile->Printf("\n  Size of lists:");
-//    outfile->Printf("\n  |I> ->  a_p |I>: %zu",a_ann_list.size());
-//    outfile->Printf("\n  |I> ->  a_p |I>: %zu",b_ann_list.size());
-//    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
-//    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
+    //    outfile->Printf("\n  Size of lists:");
+    //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",a_ann_list.size());
+    //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",b_ann_list.size());
+    //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
+    //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
 
 
     outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
@@ -295,13 +297,13 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
 
     size_t mem_tuple_doubles = num_tuples_doubles * (sizeof(size_t) + 2 * sizeof(short));
 
-//    outfile->Printf("\n  Size of lists:");
-//    outfile->Printf("\n  |I> ->  a_p |I>: %zu",aa_ann_list.size());
-//    outfile->Printf("\n  |I> ->  a_p |I>: %zu",ab_ann_list.size());
-//    outfile->Printf("\n  |I> ->  a_p |I>: %zu",bb_ann_list.size());
-//    outfile->Printf("\n  |A> -> a+_q |A>: %zu",aa_cre_list.size());
-//    outfile->Printf("\n  |A> -> a+_q |A>: %zu",ab_cre_list.size());
-//    outfile->Printf("\n  |A> -> a+_q |A>: %zu",bb_cre_list.size());
+    //    outfile->Printf("\n  Size of lists:");
+    //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",aa_ann_list.size());
+    //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",ab_ann_list.size());
+    //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",bb_ann_list.size());
+    //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",aa_cre_list.size());
+    //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",ab_cre_list.size());
+    //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",bb_cre_list.size());
     outfile->Printf("\n  Memory for singles: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
     outfile->Printf("\n  Memory for doubles: %f MB",double(mem_tuple_doubles) / (1024. * 1024.) );
 }
@@ -891,17 +893,17 @@ void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedBit
 
 void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
-//    outfile->Printf("\n\n  Davidson-liu list algorithm");
-//    outfile->Flush();
+    //    outfile->Printf("\n\n  Davidson-liu list algorithm");
+    //    outfile->Flush();
 
-//    size_t dim_space = space.size();
-//    evecs.reset(new Matrix("U",dim_space,nroot));
-//    evals.reset(new Vector("e",nroot));
+    //    size_t dim_space = space.size();
+    //    evecs.reset(new Matrix("U",dim_space,nroot));
+    //    evals.reset(new Vector("e",nroot));
 
-//    // Diagonalize H
-//    SigmaVectorList svs (space);
-//    SigmaVector* sigma_vector = &svs;
-//    davidson_liu(sigma_vector,evals,evecs,nroot);
+    //    // Diagonalize H
+    //    SigmaVectorList svs (space);
+    //    SigmaVector* sigma_vector = &svs;
+    //    davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
 SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBitsetDeterminant> &space)
@@ -984,7 +986,7 @@ std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_spar
                 }
             }
         }
-//        H_sparse.push_back(make_pair(index_row,H_row));
+        //        H_sparse.push_back(make_pair(index_row,H_row));
     }
     outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
     outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
@@ -1223,7 +1225,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
                 lambda_old.set(k,lambda.get(k));
                 if(print) {
                     outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k), diff,
-                           this_converged ? "Y" : "N");
+                                    this_converged ? "Y" : "N");
                 }
             }
         }
