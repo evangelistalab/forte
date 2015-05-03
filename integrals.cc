@@ -726,43 +726,50 @@ void DFIntegrals::allocate()
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 {
-    double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-    for(size_t g = 0; g < nthree_; g++){
-        vpqrsalphaC += (get_three_integral(g, p, r)
-                        * get_three_integral(g,q, s));
-        vpqrsalphaE += (get_three_integral(g, p, s)
-                        * get_three_integral(g, q, r));
+    //for(size_t g = 0; g < nthree_; g++){
+    //    vpqrsalphaC += (get_three_integral(g, p, r)
+    //                    * get_three_integral(g,q, s));
+    //    vpqrsalphaE += (get_three_integral(g, p, s)
+    //                    * get_three_integral(g, q, r));
 
-    }
+    //}
+    double vpqrsalphaC = 0.0;
+    double vpqrsalphaE = 0.0;
+    vpqrsalphaC = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+     vpqrsalphaE = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
+
     return (vpqrsalphaC - vpqrsalphaE);
 
 }
 
 double DFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
-    double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-    for(size_t g = 0; g < nthree_; g++){
-        vpqrsalphaC += (get_three_integral(g, p, r)
-                        * get_three_integral(g,q, s));
-    }
+    double vpqrsalphaC = 0.0;
+    vpqrsalphaC = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+
     return (vpqrsalphaC);
 
 }
 
 double DFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
-    {
-        double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-        for(size_t g = 0; g < nthree_; g++){
-            vpqrsalphaC += (get_three_integral(g, p, r)
-                            * get_three_integral(g,q, s));
-            vpqrsalphaE += (get_three_integral(g, p, s)
-                            * get_three_integral(g, q, r));
+        double vpqrsalphaC = 0.0;
+        double vpqrsalphaE = 0.0;
+        vpqrsalphaC = C_DDOT(nthree_,
+                &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
+                &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+         vpqrsalphaE = C_DDOT(nthree_,
+                &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
+                &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
 
-        }
         return (vpqrsalphaC - vpqrsalphaE);
 
-    }
 }
 
 void DFIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
@@ -1194,14 +1201,25 @@ void CholeskyIntegrals::make_diagonal_integrals()
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 {
-    double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-    for(size_t g = 0; g < nthree_; g++){
-        vpqrsalphaC += (get_three_integral(g, p, r)
-                        * get_three_integral(g,q, s));
-        vpqrsalphaE += (get_three_integral(g, p, s)
-                        * get_three_integral(g, q, r));
+    //double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
+    ////Slow Version
+    //for(size_t g = 0; g < nthree_; g++){
+    //    vpqrsalphaC += (get_three_integral(g, p, r)
+    //                    * get_three_integral(g,q, s));
+    //    vpqrsalphaE += (get_three_integral(g, p, s)
+    //                    * get_three_integral(g, q, r));
 
-    }
+    //}
+    //Fast Version
+    double vpqrsalphaC = 0.0;
+    double vpqrsalphaE = 0.0;
+    vpqrsalphaC = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_*nmo_);
+     vpqrsalphaE = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
+
     return (vpqrsalphaC - vpqrsalphaE);
 
 }
@@ -1209,24 +1227,33 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0;
-    for(size_t g = 0; g < nthree_; g++){
-        vpqrsalphaC += (get_three_integral(g, p, r)
-                        * get_three_integral(g, q, s));
+    //for(size_t g = 0; g < nthree_; g++){
+    //    vpqrsalphaC += (get_three_integral(g, p, r)
+    //                    * get_three_integral(g, q, s));
 
-    }
+    //}
+    vpqrsalphaC = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_ ,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_ );
     return (vpqrsalphaC);
 }
 
 double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-    for(size_t g = 0; g < nthree_; g++){
-        vpqrsalphaC += (get_three_integral(g, p, r)
-                        * get_three_integral(g,q, s));
-        vpqrsalphaE += (get_three_integral(g, p, s)
-                        * get_three_integral(g, q, r));
+    //for(size_t g = 0; g < nthree_; g++){
+    //    vpqrsalphaC += (get_three_integral(g, p, r)
+    //                    * get_three_integral(g,q, s));
+    //    vpqrsalphaE += (get_three_integral(g, p, s)
+    //                    * get_three_integral(g, q, r));
+    vpqrsalphaC = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+     vpqrsalphaE = C_DDOT(nthree_,
+            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
+    //}
 
-    }
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
