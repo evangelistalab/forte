@@ -161,11 +161,12 @@ private:
     void H2_aabb(FCIWfn& result);
     void H2_aaaa2(FCIWfn& result, bool alfa);
 
+    void rdm_test();
     void compute_1rdm(std::vector<double> &rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
-    void compute_2rdm_ab(std::vector<double>& rdm, bool alfa);
-//    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
-//    void compute_3rdm_aab(std::vector<double>& rdm, bool alfa);
+    void compute_2rdm_ab(std::vector<double>& rdm);
+    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    void compute_3rdm_aab(std::vector<double>& rdm, bool alfa);
 
 };
 
