@@ -813,7 +813,11 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double Efly = 0.0;
     std::string str1 = "Computing <[V, T2]> (C_2)^4 ccvv term";
     outfile->Printf("\n    %-36s ...", str1.c_str());
-	#pragma omp parallel for num_threads(num_threads_) \
+    size_t nthree = ints_->nthree();
+    size_t ncmo   = ints_->ncmo();
+    size_t nmo_   = ints_->nmo();
+
+    #pragma omp parallel for num_threads(num_threads_) \
 	schedule(dynamic) \
 	reduction(+:Eflyalpha, Eflybeta, Eflymixed)
     for(size_t mind = 0; mind < core_; mind++){
@@ -847,18 +851,33 @@ double THREE_DSRG_MRPT2::E_VT2_2()
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
                     //Perform the contracted for the g index with the correct index
-                    for(size_t g = 0; g < ints_->nthree(); g++){
-                        vmnefalphaC += (ints_->get_three_integral(g, m, e)
-                                      * ints_->get_three_integral(g, n, f));
-                        vmnefalphaE += (ints_->get_three_integral(g, m, f)
-                                      * ints_->get_three_integral(g, n, e));
-                        vmnefbetaC += (ints_->get_three_integral(g, mb,  eb)
-                                     * ints_->get_three_integral(g, nb,  fb));
-                        vmnefbetaE += (ints_->get_three_integral(g, mb,  fb)
-                                     * ints_->get_three_integral(g, nb,  eb));
-                        vmnefmixedC += (ints_->get_three_integral(g, m, eb)
-                                      * ints_->get_three_integral(g, n, fb));
-                    }
+                    //for(size_t g = 0; g < ints_->nthree(); g++){
+                    //    vmnefalphaC += (ints_->get_three_integral(g, m, e)
+                    //                  * ints_->get_three_integral(g, n, f));
+                    //    vmnefalphaE += (ints_->get_three_integral(g, m, f)
+                    //                  * ints_->get_three_integral(g, n, e));
+                    //    vmnefbetaC += (ints_->get_three_integral(g, mb,  eb)
+                    //                 * ints_->get_three_integral(g, nb,  fb));
+                    //    vmnefbetaE += (ints_->get_three_integral(g, mb,  fb)
+                    //                 * ints_->get_three_integral(g, nb,  eb));
+                    //    vmnefmixedC += (ints_->get_three_integral(g, m, eb)
+                    //                  * ints_->get_three_integral(g, n, fb));
+                    //}
+                    vmnefalphaC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
+                     vmnefalphaE = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + f]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + e]),nmo_ * nmo_);
+                    vmnefbetaC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + fb]),nmo_ * nmo_);
+                     vmnefbetaE = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + fb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + eb]),nmo_ * nmo_);
+                    vmnefmixedC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + fb]),nmo_ * nmo_);
 
                     vmnefalpha = vmnefalphaC - vmnefalphaE;
                     vmnefbeta = vmnefbetaC - vmnefbetaE;

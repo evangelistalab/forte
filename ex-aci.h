@@ -92,6 +92,9 @@ private:
     int nroot_;
     ///Use threshold from perturbation theory
     bool perturb_select_;
+    ///The function of the q-space criteria per root
+    std::string q_function_;
+
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
