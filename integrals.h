@@ -146,6 +146,7 @@ public:
 
     /// Update the integrals with a new set of MO coefficients
     virtual void retransform_integrals() = 0;
+    virtual double** get_three_integral_pointer() = 0;
 
     /// Compute df integrals
     /// Compute cholesky integrals
@@ -274,8 +275,15 @@ public:
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual double get_three_integral(size_t A, size_t p, size_t q)
-    {outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
-        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");}
+    {
+        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    }
+    virtual double** get_three_integral_pointer()
+    {
+        outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+    }
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
@@ -344,6 +352,7 @@ public:
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
+    virtual double** get_three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     ///Do not use this if you are using CD/DF integrals
@@ -403,6 +412,7 @@ public:
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
+    virtual double** get_three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
