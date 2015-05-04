@@ -1111,15 +1111,22 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     for(size_t p=0; p<ncmo_; ++p){
         for(size_t q=0; q<ncmo_; ++q){
             double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
-            for(size_t r=0; r<nh_; ++r){
-                size_t nr = idx_h_[r];
-                for(size_t s=0; s<nh_; ++s){
-                    size_t ns = idx_h_[s];
+            for(size_t r=0; r<na_; ++r){
+                size_t nr = idx_a_[r];
+                for(size_t s=0; s<na_; ++s){
+                    size_t ns = idx_a_[s];
                     vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
                     vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
                     vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
                     vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
                 }
+            }
+            for(size_t r=0; r<nc_; ++r){
+                size_t nr = idx_c_[r];
+                vaa += integral_->aptei_aa(q,nr,p,nr);
+                vab += integral_->aptei_ab(q,nr,p,nr);
+                vba += integral_->aptei_ab(nr,q,nr,p);
+                vbb += integral_->aptei_bb(q,nr,p,nr);
             }
             A[p][q] = integral_->oei_a(p,q) + vaa + vab;
             B[p][q] = integral_->oei_b(p,q) + vba + vbb;
