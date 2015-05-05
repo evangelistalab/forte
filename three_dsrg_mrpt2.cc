@@ -850,19 +850,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
                     double t2alpha = 0.0;
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
-                    //Perform the contracted for the g index with the correct index
-                    //for(size_t g = 0; g < ints_->nthree(); g++){
-                    //    vmnefalphaC += (ints_->get_three_integral(g, m, e)
-                    //                  * ints_->get_three_integral(g, n, f));
-                    //    vmnefalphaE += (ints_->get_three_integral(g, m, f)
-                    //                  * ints_->get_three_integral(g, n, e));
-                    //    vmnefbetaC += (ints_->get_three_integral(g, mb,  eb)
-                    //                 * ints_->get_three_integral(g, nb,  fb));
-                    //    vmnefbetaE += (ints_->get_three_integral(g, mb,  fb)
-                    //                 * ints_->get_three_integral(g, nb,  eb));
-                    //    vmnefmixedC += (ints_->get_three_integral(g, m, eb)
-                    //                  * ints_->get_three_integral(g, n, fb));
-                    //}
                     vmnefalphaC = C_DDOT(nthree,
                             &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
                             &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
