@@ -147,21 +147,24 @@ void FCIWfn::H1(FCIWfn& result, bool alfa)
  */
 void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
 {
-    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-        int beta_sym = alfa_sym ^ symmetry_;
-        if(detpi_[alfa_sym] > 0){
-            SharedMatrix C = alfa ? C_[alfa_sym] : C1;
-            SharedMatrix Y = alfa ? result.C_[alfa_sym] : Y1;
+    // Notation
+    // ha - symmetry of alpha strings
+    // hb - symmetry of beta strings
+    for(int ha = 0; ha < nirrep_; ++ha){
+        int hb = ha ^ symmetry_;
+        if(detpi_[ha] > 0){
+            SharedMatrix C = alfa ? C_[ha] : C1;
+            SharedMatrix Y = alfa ? result.C_[ha] : Y1;
             double** Ch = C->pointer();
             double** Yh = Y->pointer();
 
             if(!alfa){
                 C->zero();
                 Y->zero();
-                size_t maxIa = alfa_graph_->strpi(alfa_sym);
-                size_t maxIb = beta_graph_->strpi(beta_sym);
+                size_t maxIa = alfa_graph_->strpi(ha);
+                size_t maxIb = beta_graph_->strpi(hb);
 
-                double** C0h = C_[alfa_sym]->pointer();
+                double** C0h = C_[ha]->pointer();
 
                 // Copy C0 transposed in C1
                 for(size_t Ia = 0; Ia < maxIa; ++Ia)
@@ -169,7 +172,7 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
                         Ch[Ib][Ia] = C0h[Ia][Ib];
             }
 
-            size_t maxL = alfa ? beta_graph_->strpi(beta_sym) : alfa_graph_->strpi(alfa_sym);
+            size_t maxL = alfa ? beta_graph_->strpi(hb) : alfa_graph_->strpi(ha);
             // Loop over (p>q) == (p>q)
             for(int pq_sym = 0; pq_sym < nirrep_; ++pq_sym){
                 size_t max_pq = lists_->pairpi(pq_sym);
@@ -180,8 +183,8 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
 
                     double integral = alfa ? tei_aaaa(p_abs,q_abs,p_abs,q_abs) : tei_bbbb(p_abs,q_abs,p_abs,q_abs);
 
-                    std::vector<StringSubstitution>& OO = alfa ? lists_->get_alfa_oo_list(pq_sym,pq,alfa_sym)
-                                                               : lists_->get_beta_oo_list(pq_sym,pq,beta_sym);
+                    std::vector<StringSubstitution>& OO = alfa ? lists_->get_alfa_oo_list(pq_sym,pq,ha)
+                                                               : lists_->get_beta_oo_list(pq_sym,pq,hb);
 
                     size_t maxss = OO.size();
                     for(size_t ss = 0; ss < maxss; ++ss)
@@ -202,16 +205,16 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
                         double integral = alfa ? tei_aaaa(p_abs,q_abs,r_abs,s_abs) : tei_bbbb(p_abs,q_abs,r_abs,s_abs);
 
                         {
-                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,alfa_sym)
-                                                                         : lists_->get_beta_vvoo_list(p_abs,q_abs,r_abs,s_abs,beta_sym);
+                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,ha)
+                                                                         : lists_->get_beta_vvoo_list(p_abs,q_abs,r_abs,s_abs,hb);
                             // TODO loop in a differen way
                             size_t maxss = VVOO.size();
                             for(size_t ss = 0; ss < maxss; ++ss)
                                 C_DAXPY(maxL,static_cast<double>(VVOO[ss].sign) * integral, &(C->pointer()[VVOO[ss].I][0]), 1, &(Y->pointer()[VVOO[ss].J][0]), 1);
                         }
                         {
-                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(r_abs,s_abs,p_abs,q_abs,alfa_sym)
-                                                                         : lists_->get_beta_vvoo_list(r_abs,s_abs,p_abs,q_abs,beta_sym);
+                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(r_abs,s_abs,p_abs,q_abs,ha)
+                                                                         : lists_->get_beta_vvoo_list(r_abs,s_abs,p_abs,q_abs,hb);
                             // TODO loop in a differen way
                             size_t maxss = VVOO.size();
                             for(size_t ss = 0; ss < maxss; ++ss)
@@ -221,10 +224,10 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
                 }
             }
             if(!alfa){
-                size_t maxIa = alfa_graph_->strpi(alfa_sym);
-                size_t maxIb = beta_graph_->strpi(beta_sym);
+                size_t maxIa = alfa_graph_->strpi(ha);
+                size_t maxIb = beta_graph_->strpi(hb);
 
-                double** HC = result.C_[alfa_sym]->pointer();
+                double** HC = result.C_[ha]->pointer();
 
                 // Add Y1 transposed to Y
                 for(size_t Ia = 0; Ia < maxIa; ++Ia)
