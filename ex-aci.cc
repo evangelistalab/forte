@@ -122,6 +122,8 @@ void EX_ACI::startup()
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
     q_function_ = options_.get_str("Q_FUNCTION");
+    q_rel_ = options_.get_bool("Q_REL");
+    q_reference_ = options_.get_str("Q_REFERENCE");
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -161,7 +163,8 @@ void EX_ACI::print_info()
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"Parameter type", perturb_select_ ? "PT" : "Non-PT"},
-        {"Q Function",options_.get_str("Q_FUNCTION")}};
+        {"Q Function",options_.get_str("Q_FUNCTION")},
+        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
 //    {"Number of correlated beta electrons",nbeta_},
@@ -338,6 +341,9 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
 
+    //Make vector of pairs for ∆e_n,0
+    std::vector<std::pair<double,double> > dE2(nroot_,make_pair(0.0,0.0));
+
     std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
 
     // Check the coupling between the reference and the SD space
@@ -357,41 +363,63 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
             C1[n] = make_pair(std::fabs(C1_I),C1_I);
             E2[n] = make_pair(std::fabs(E2_I),E2_I);
+
+        }
+
+        //f_E2 and f_C1 will store the selected function of the chosen q-criteria
+        std::pair<double,double> f_C1;
+        std::pair<double,double> f_E2;
+
+        //Compute a determinant's effect on ground state or adjacent state transition
+        if(q_rel_ == true and nroot > 1){
+            for(int n = 0; n < nroot; ++n){
+                if( q_reference_ == "GS"){
+                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[0].first),E2[n].second - E2[0].second );
+                }
+            }
+            for(int n = 1; n < nroot; ++n){
+                if( q_reference_ == "ADJACENT"){
+                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[n-1].first),E2[n].second - E2[n-1].second );
+                }
+            }
         }
 
         //Choose the function of couplings for each root.
         //If nroot = 1, choose the max
-
-        std::pair<double,double> f_C1;
-        std::pair<double,double> f_E2;
-
         if(q_function_ == "MAX" or nroot == 1){
             f_C1 = *std::max_element(C1.begin(),C1.end());
-            f_E2 = *std::max_element(E2.begin(),E2.end());
+            f_E2 = q_rel_ and (nroot!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
+                                           *std::max_element(E2.begin(),E2.end());
         }
         else if(q_function_ == "MIN"){
             f_C1 = *std::min_element(C1.begin(),C1.end());
-            f_E2 = *std::min_element(E2.begin(),E2.end());
+            f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
+                            *std::min_element(E2.begin(),E2.end());
         }
         else if(q_function_ == "AVERAGE"){
             double C1_average = 0.0;
             double E2_average = 0.0;
+            double dE2_average = 0.0;
             for(int n = 0; n < nroot; ++n){
                 C1_average += C1[n].first / nroot;
                 E2_average += E2[n].first / nroot;
             }
+            for(int n = 1; n < nroot; ++n){
+                dE2_average += dE2[n].first / (nroot-1.0);
+            }
             f_C1 = make_pair(C1_average, 0);
-            f_E2 = make_pair(E2_average, 0);
+            f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
         }
         else{
             throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
         }
 
-//        Prints selection criteria for each root, and the value used in screening
+//        //Prints selection criteria for each root, and the value used in screening
 //        for(int n = 0; n < nroot; ++n){
-//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, E2[n].first);
+//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, q_rel_ ? dE2[n].first : E2[n].first);
 //        }
 //        outfile->Printf("Selected Criteria: %2.20f \n", f_E2.first);
+
 
         if (aimed_selection_){
             double aimed_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
@@ -421,7 +449,8 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 const std::vector<double>& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n){
                     double V = V_vec[n];
-                    double E2_I = -V * V / (EI - evals->get(n));
+                    double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
+                                                    ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
                     ept2[n] += E2_I;
                 }
             }else{

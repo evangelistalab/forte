@@ -56,6 +56,7 @@ public:
     // Operations on the wave function
     void Hamiltonian(FCIWfn& result,RequiredLists required_lists);
     
+    void compute_rdms(int max_order = 2);
 //    // FCIWfn update routines
 //    void bendazzoli_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
 //    void davidson_update(double E,FCIWfn& H,FCIWfn& R);
@@ -102,7 +103,9 @@ private:
     std::vector<SharedMatrix> C_;
     std::vector<double> opdm_a_;
     std::vector<double> opdm_b_;
-        
+    std::vector<double> tpdm_aa_;
+    std::vector<double> tpdm_ab_;
+    std::vector<double> tpdm_bb_;
 
     // ==> Class Static Data <==
 
@@ -158,9 +161,13 @@ private:
     void H2_aabb(FCIWfn& result);
     void H2_aaaa2(FCIWfn& result, bool alfa);
 
+    void rdm_test();
     void compute_1rdm(std::vector<double> &rdm, bool alfa);
-//    void compute_2rdm(bool alfa1,bool alfa2);
-//    void compute_3rdm(bool alfa1,bool alfa2,bool alfa3);
+    void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    void compute_2rdm_ab(std::vector<double>& rdm);
+    void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    void compute_3rdm_aab(std::vector<double>& rdm, bool alfa);
+
 };
 
 }}

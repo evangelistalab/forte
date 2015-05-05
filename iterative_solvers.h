@@ -56,6 +56,7 @@ public:
 
     SharedVector eigenvalues() {return lambda;}
     SharedMatrix eigenvectors() {return b_;}
+    SharedVector eigenvector(size_t n);
 
     /// Initialize the object
     void startup(SharedVector diagonal);

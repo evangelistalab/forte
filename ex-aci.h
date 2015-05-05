@@ -94,7 +94,10 @@ private:
     bool perturb_select_;
     ///The function of the q-space criteria per root
     std::string q_function_;
-
+    ///The type of q criteria
+    bool q_rel_;
+    ///The q reference
+    std::string q_reference_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
