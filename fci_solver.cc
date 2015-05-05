@@ -143,6 +143,12 @@ double FCISolver::compute_energy()
         if (converged) break;
     }
 
+
+    if (converged){
+        dls.get_results();
+        C.copy(dls.eigenvector(0));
+        C.compute_rdms();
+    }
 //    C.initial_guess(Hdiag,1);
 //    for (int cycle = 0; cycle < 1000; ++cycle){
 //        C.Hamiltonian(HC,twoSubstituitionVVOO);
