@@ -179,12 +179,34 @@ std::vector<int> BitsetDeterminant::get_beta_vir() const
     return vir;
 }
 
-///// Return a vector of occupied beta orbitals
-//std::vector<int> get_beta_occ();
-///// Return a vector of virtual alpha orbitals
-//std::vector<int> get_alfa_vir();
-///// Return a vector of virtual beta orbitals
-//std::vector<int> get_beta_vir();
+double BitsetDeterminant::create_alfa_bit(int n)
+{
+    if (alfa_bits_[n]) return 0.0;
+    alfa_bits_[n] = true;
+    return SlaterSign(alfa_bits_,n);
+}
+
+double BitsetDeterminant::create_beta_bit(int n)
+{
+    if (beta_bits_[n]) return 0.0;
+    beta_bits_[n] = true;
+    return SlaterSign(beta_bits_,n);
+}
+
+double BitsetDeterminant::destroy_alfa_bit(int n)
+{
+    if (not alfa_bits_[n]) return 0.0;
+    alfa_bits_[n] = false;
+    return SlaterSign(alfa_bits_,n);
+}
+
+/// Set the value of a beta bit
+double BitsetDeterminant::destroy_beta_bit(int n)
+{
+    if (not beta_bits_[n]) return 0.0;
+    beta_bits_[n] = false;
+    return SlaterSign(beta_bits_,n);
+}
 
 /**
  * Print the determinant

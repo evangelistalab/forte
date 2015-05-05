@@ -1105,34 +1105,60 @@ double FCI_MO::ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, cons
 
 void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
+    boost::shared_ptr<Matrix> DaM(new Matrix("DaM", ncmo_, ncmo_));
+    boost::shared_ptr<Matrix> DbM(new Matrix("DbM", ncmo_, ncmo_));
+    //for(size_t p=0; p<ncmo_; ++p){
+    //    for(size_t q=0; q<ncmo_; ++q){
+    //        double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
+    //        for(size_t r=0; r<na_; ++r){
+    //            size_t nr = idx_a_[r];
+    //            for(size_t s=0; s<na_; ++s){
+    //                size_t ns = idx_a_[s];
+    //                vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
+    //                vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
+    //                vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
+    //                vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
+    //            }
+    //        }
+    //        for(size_t r=0; r<nc_; ++r){
+    //            size_t nr = idx_c_[r];
+    //            vaa += integral_->aptei_aa(q,nr,p,nr);
+    //            vab += integral_->aptei_ab(q,nr,p,nr);
+    //            vba += integral_->aptei_ab(nr,q,nr,p);
+    //            vbb += integral_->aptei_bb(q,nr,p,nr);
+    //        }
+    //        A[p][q] = integral_->oei_a(p,q) + vaa + vab;
+    //        B[p][q] = integral_->oei_b(p,q) + vba + vbb;
+    //    }
+    //}
+    for (size_t m = 0; m < nc_; m++) {
+        for( size_t n = 0; n < nc_; n++){
+            size_t nm = idx_c_[m];
+            size_t nn = idx_c_[n];
+            DaM->set(nm,nn,Da_[nm][nn]);
+            DbM->set(nm,nn,Db_[nm][nn]);
+        }
+    }
+    for (size_t u = 0; u < na_; u++){
+        for(size_t v = 0; v < na_; v++){
+            size_t nu = idx_a_[u];
+            size_t nv = idx_a_[v];
+            DaM->set(nu,nv, Da_[nu][nv]);
+            DbM->set(nu,nv, Db_[nu][nv]);
+        }
+    }
     Timer tfock;
     std::string str = "Forming generalized Fock matrix";
     outfile->Printf("\n  %-35s ...", str.c_str());
+    integral_->make_fock_matrix(DaM, DbM);
+    outfile->Printf("  Done. Timing %15.6f s", tfock.get());
+
     for(size_t p=0; p<ncmo_; ++p){
         for(size_t q=0; q<ncmo_; ++q){
-            double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
-            for(size_t r=0; r<na_; ++r){
-                size_t nr = idx_a_[r];
-                for(size_t s=0; s<na_; ++s){
-                    size_t ns = idx_a_[s];
-                    vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
-                    vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
-                    vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
-                    vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
-                }
-            }
-            for(size_t r=0; r<nc_; ++r){
-                size_t nr = idx_c_[r];
-                vaa += integral_->aptei_aa(q,nr,p,nr);
-                vab += integral_->aptei_ab(q,nr,p,nr);
-                vba += integral_->aptei_ab(nr,q,nr,p);
-                vbb += integral_->aptei_bb(q,nr,p,nr);
-            }
-            A[p][q] = integral_->oei_a(p,q) + vaa + vab;
-            B[p][q] = integral_->oei_b(p,q) + vba + vbb;
+            A[p][q] = integral_->get_fock_a(p,q);
+            B[p][q] = integral_->get_fock_b(p,q);
         }
     }
-    outfile->Printf("  Done. Timing %15.6f s", tfock.get());
     timer_off("Form Fock");
 }
 

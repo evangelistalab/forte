@@ -88,8 +88,9 @@ public:
 
     void copy(const BitsetDeterminant &rhs)
     {
-       alfa_bits_ = rhs.alfa_bits_;
-       beta_bits_ = rhs.beta_bits_;
+        nmo_ = rhs.nmo_;
+        alfa_bits_ = rhs.alfa_bits_;
+        beta_bits_ = rhs.beta_bits_;
     }
 
     /// Get a pointer to the alpha bits
@@ -131,6 +132,15 @@ public:
     std::vector<int> get_alfa_vir() const;
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir() const;
+
+    /// Set the value of an alpha bit
+    double create_alfa_bit(int n);
+    /// Set the value of a beta bit
+    double create_beta_bit(int n);
+    /// Set the value of an alpha bit
+    double destroy_alfa_bit(int n);
+    /// Set the value of a beta bit
+    double destroy_beta_bit(int n);
 
     /// Print the Slater determinant
     void print() const;

@@ -531,6 +531,43 @@ void ConventionalIntegrals::make_diagonal_integrals()
     }
 }
 
+void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
+{
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = 0; q < ncmo_; ++q){
+            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
+            fock_matrix_b[p * ncmo_ + q] = oei_b(p,q);
+        }
+    }
+    double zero = 1.0e-15;
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
+            double gamma_a_rs = gamma_a->get(r,s);
+            if (std::fabs(gamma_a_rs) > zero){
+                for(size_t p = 0; p < ncmo_; ++p){
+                    for(size_t q = 0; q < ncmo_; ++q){
+                        fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,r,q,s) * gamma_a_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_ab(r,p,s,q) * gamma_a_rs;
+                    }
+                }
+            }
+        }
+    }
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
+            double gamma_b_rs = gamma_b->get(r,s);
+            if (std::fabs(gamma_b_rs) > zero){
+                for(size_t p = 0; p < ncmo_; ++p){
+                    for(size_t q = 0; q < ncmo_; ++q){
+                        fock_matrix_a[p * ncmo_ + q] += aptei_ab(p,r,q,s) * gamma_b_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,r,q,s) * gamma_b_rs;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void ConventionalIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
     for(size_t p = 0; p < ncmo_; ++p){
@@ -877,7 +914,7 @@ void DFIntegrals::gather_integrals()
         for (size_t q = 0; q < nmo_; ++q){
             // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
             for(size_t B = 0; B < naux; B++){
-                int qB = q*naux + B;
+                size_t qB = q * naux + B;
                 tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
                 pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
             }
@@ -942,6 +979,53 @@ void DFIntegrals::deallocate()
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
     //delete[] qt_pitzer_;
+}
+void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
+{
+    TensorType tensor_type = kCore;
+    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
+    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
+    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    ambit::Tensor oneint_a = ambit::Tensor::build(tensor_type, "oneint_a",{ncmo_, ncmo_});
+    ambit::Tensor oneint_b = ambit::Tensor::build(tensor_type, "oneint_b",{ncmo_, ncmo_});
+
+    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
+    });
+    gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_aM->get(i[0],i[1]);
+    });
+    gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_bM->get(i[0],i[1]);
+    });
+
+    oneint_a.iterate([&](const std::vector<size_t>& i,double& value){
+        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+    });
+
+    oneint_b.iterate([&](const std::vector<size_t>& i,double& value){
+        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+    });
+
+    fock_a("p,q") = oneint_a("p,q");
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    fock_a("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+
+    fock_b("p,q") = oneint_b("p,q");
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    fock_b("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+
+
+    fock_a.iterate([&](const std::vector<size_t>& i,double& value){
+        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+    });
+    fock_b.iterate([&](const std::vector<size_t>& i,double& value){
+        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+    });
 }
 
 void DFIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
@@ -1368,6 +1452,54 @@ void CholeskyIntegrals::deallocate()
     delete[] diagonal_aphys_tei_bb;
 
     //delete[] qt_pitzer_;
+}
+
+void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
+{
+    TensorType tensor_type = kCore;
+    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
+    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
+    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
+    ambit::Tensor oneint_a = ambit::Tensor::build(tensor_type, "oneint_a",{ncmo_, ncmo_});
+    ambit::Tensor oneint_b = ambit::Tensor::build(tensor_type, "oneint_b",{ncmo_, ncmo_});
+
+    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = ThreeIntegral_->get(i[0],i[1]*ncmo_ + i[2]);
+    });
+    gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_aM->get(i[0],i[1]);
+    });
+    gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_bM->get(i[0],i[1]);
+    });
+
+    oneint_a.iterate([&](const std::vector<size_t>& i,double& value){
+        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+    });
+
+    oneint_b.iterate([&](const std::vector<size_t>& i,double& value){
+        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+    });
+
+
+    fock_a("p,q") = oneint_a("p,q");
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    fock_a("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+
+    fock_b("p,q") = oneint_b("p,q");
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    fock_b("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+
+    fock_a.iterate([&](const std::vector<size_t>& i,double& value){
+        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+    });
+    fock_b.iterate([&](const std::vector<size_t>& i,double& value){
+        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+    });
 }
 
 void CholeskyIntegrals::make_fock_matrix(bool* Ia, bool* Ib)

@@ -245,29 +245,41 @@ void DavidsonLiuSolver::get_results()
     double** b_p = b_->pointer();
     double* eps = lambda_old->pointer();
     double** v = bnew->pointer();
+    bnew->zero();
 
     for(int i = 0; i < nroot_; i++) {
         eps[i] = lambda->get(i);
-        for(int I = 0; I < size_; I++){
-            v[I][i] = 0.0;
-        }
+//        for(int I = 0; I < size_; I++){
+//            v[I][i] = 0.0;
+//        }
         for(int j = 0; j < basis_size_; j++) {
-            for(int I=0; I < size_; I++) {
-                v[I][i] += alpha_p[j][i] * b_p[j][I];
+            for(size_t I = 0; I < size_; I++) {
+                v[i][I] += alpha_p[j][i] * b_p[j][I];
             }
         }
         // Normalize v
         double norm = 0.0;
         for(int I = 0; I < size_; I++) {
-            norm += v[I][i] * v[I][i];
+            norm += v[i][I] * v[i][I];
         }
         norm = std::sqrt(norm);
         for(int I = 0; I < size_; I++) {
-            v[I][i] /= norm;
+            v[i][I] /= norm;
         }
     }
     outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter_);
     outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",timing_);
+}
+
+SharedVector DavidsonLiuSolver::eigenvector(size_t n)
+{
+    double** v = bnew->pointer();
+
+    SharedVector evec(new Vector("V",size_));
+    for(int I = 0; I < size_; I++) {
+        evec->set(I,v[n][I]);
+    }
+    return evec;
 }
 
 
