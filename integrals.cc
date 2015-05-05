@@ -531,6 +531,43 @@ void ConventionalIntegrals::make_diagonal_integrals()
     }
 }
 
+void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
+{
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = 0; q < ncmo_; ++q){
+            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
+            fock_matrix_b[p * ncmo_ + q] = oei_b(p,q);
+        }
+    }
+    double zero = 1.0e-15;
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
+            double gamma_a_rs = gamma_a->get(r,s);
+            if (std::fabs(gamma_a_rs) > zero){
+                for(size_t p = 0; p < ncmo_; ++p){
+                    for(size_t q = 0; q < ncmo_; ++q){
+                        fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,r,q,s) * gamma_a_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_ab(r,p,s,q) * gamma_a_rs;
+                    }
+                }
+            }
+        }
+    }
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
+            double gamma_b_rs = gamma_b->get(r,s);
+            if (std::fabs(gamma_b_rs) > zero){
+                for(size_t p = 0; p < ncmo_; ++p){
+                    for(size_t q = 0; q < ncmo_; ++q){
+                        fock_matrix_a[p * ncmo_ + q] += aptei_ab(p,r,q,s) * gamma_b_rs;
+                        fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,r,q,s) * gamma_b_rs;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void ConventionalIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
     for(size_t p = 0; p < ncmo_; ++p){
@@ -870,7 +907,7 @@ void DFIntegrals::gather_integrals()
         for (size_t q = 0; q < nmo_; ++q){
             // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
             for(size_t B = 0; B < naux; B++){
-                int qB = q*naux + B;
+                size_t qB = q * naux + B;
                 tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
                 pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
             }
@@ -935,6 +972,10 @@ void DFIntegrals::deallocate()
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
     //delete[] qt_pitzer_;
+}
+
+void DFIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
+{
 }
 
 void DFIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
@@ -1381,6 +1422,10 @@ void CholeskyIntegrals::deallocate()
     delete[] diagonal_aphys_tei_bb;
 
     //delete[] qt_pitzer_;
+}
+
+void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
+{
 }
 
 void CholeskyIntegrals::make_fock_matrix(bool* Ia, bool* Ib)

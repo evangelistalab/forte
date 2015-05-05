@@ -69,17 +69,22 @@ public:
     double scalar() const {return scalar_;}
 
     /// The alpha one-electron integrals
-    double oei_a(int p,int q) {return one_electron_integrals_a[p * aptei_idx_ + q];}
+    double oei_a(size_t p,size_t q) {return one_electron_integrals_a[p * aptei_idx_ + q];}
 
     /// The beta one-electron integrals
-    double oei_b(int p,int q) {return one_electron_integrals_b[p * aptei_idx_ + q];}
-
-
-    /// The diagonal fock matrix integrals
-    virtual double diag_fock_a(int p) = 0;
+    double oei_b(size_t p,size_t q) {return one_electron_integrals_b[p * aptei_idx_ + q];}
 
     /// The diagonal fock matrix integrals
-    virtual double diag_fock_b(int p) = 0;
+    double fock_a(size_t p,size_t q) {return fock_matrix_a[p * aptei_idx_ + q];}
+
+    /// The diagonal fock matrix integrals
+    double fock_b(size_t p,size_t q) {return fock_matrix_b[p * aptei_idx_ + q];}
+
+    /// The diagonal fock matrix integrals
+    double diag_fock_a(size_t p) {return fock_matrix_a[p * aptei_idx_ + p];}
+
+    /// The diagonal fock matrix integrals
+    double diag_fock_b(size_t p) {return fock_matrix_b[p * aptei_idx_ + p];}
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
     virtual double aptei_aa(size_t p,size_t q,size_t r, size_t s) = 0;
@@ -99,6 +104,9 @@ public:
 
     /// The diagonal antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||pq>
     virtual double diag_aptei_bb(size_t p,size_t q) = 0;
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib) = 0;
@@ -276,6 +284,9 @@ public:
     virtual double get_three_integral(size_t A, size_t p, size_t q)
     {outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");}
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
+
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
@@ -286,8 +297,6 @@ public:
     virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
     virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-    virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
     virtual size_t nthree() const
     {
         throw PSIEXCEPTION("Wrong Int_Type");
@@ -348,6 +357,8 @@ public:
     virtual void update_integrals(bool freeze_core = true);
     ///Do not use this if you are using CD/DF integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
@@ -358,8 +369,6 @@ public:
     virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
     virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-    virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
     virtual size_t nthree() const {return nthree_;}
 
 private:
@@ -408,6 +417,9 @@ public:
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
     DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
     virtual ~DFIntegrals();
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
+
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
@@ -418,8 +430,6 @@ public:
     virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
     virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual double diag_fock_a(int p){return fock_matrix_a[p * aptei_idx_ + p];}
-    virtual double diag_fock_b(int p){return fock_matrix_a[p * aptei_idx_ + p];}
     virtual size_t nthree() const {return nthree_;}
 private:
     virtual void gather_integrals();
