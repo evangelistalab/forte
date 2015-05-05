@@ -1,10 +1,11 @@
-#! This tests the EX-CI procedure using energy selection
+#
+#This tests the EX-CI procedure using energy selection
 
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.888681221669 #TEST
-refacipt2 = -14.890314474716 #TEST
+refaci = -14.888681366664 #TEST
+refacipt2 = -14.890314792677 #TEST
 
 molecule li2{
    Li
@@ -26,12 +27,13 @@ set mcscf {
 set libadaptive {
   frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE energy
-  perturb_select true
-  excited_algorithm state_average
-  q_function max
-  TAUP 0.001000
+  perturb_select false
+  q_function average
+  excited_algorithm ground_reference
+  TAUP 0.000100
   TAUQ 0.00001000
-  nroot 1
+  ex_root 4
+  nroot 2
   charge 0
 }
 
