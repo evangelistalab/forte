@@ -216,6 +216,15 @@ read_options(std::string name, Options &options)
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
 
+        /*Function of q-space criteria, per root*/
+        options.add_str("Q_FUNCTION", "MAX", "MIN AVERAGE");
+
+        /*Type of  q-space criteria to use (only change for excited states)*/
+        options.add_bool("Q_REL", false);
+
+        /*Reference to be used in calculating ∆e (q_rel has to be true)*/
+        options.add_str("Q_REFERENCE", "GS", "ADJACENT");
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////

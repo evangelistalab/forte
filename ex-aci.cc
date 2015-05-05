@@ -121,6 +121,9 @@ void EX_ACI::startup()
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
+    q_function_ = options_.get_str("Q_FUNCTION");
+    q_rel_ = options_.get_bool("Q_REL");
+    q_reference_ = options_.get_str("Q_REFERENCE");
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -159,7 +162,9 @@ void EX_ACI::print_info()
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
-        {"Parameter type", perturb_select_ ? "PT" : "Non-PT"}};
+        {"Parameter type", perturb_select_ ? "PT" : "Non-PT"},
+        {"Q Function",options_.get_str("Q_FUNCTION")},
+        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
 //    {"Number of correlated beta electrons",nbeta_},
@@ -336,68 +341,124 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
 
+    //Make vector of pairs for ∆e_n,0
+    std::vector<std::pair<double,double> > dE2(nroot_,make_pair(0.0,0.0));
+
     std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
 
     // Check the coupling between the reference and the SD space
 
-    //For the PT parameters
- //   if(perturb_select_ == true){
-        for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
-            double EI = it->first.energy();
-            for (int n = 0; n < nroot; ++n){
-                double V = it->second[n];
-                double C1_I = -V / (EI - evals->get(n));
-                double E2_I = -V * V / (EI - evals->get(n));
+    for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
+        double EI = it->first.energy();
 
-                C1[n] = make_pair(std::fabs(C1_I),C1_I);
-                E2[n] = make_pair(std::fabs(E2_I),E2_I);
+        //Loop over roots
+        //The tau_q parameter type is chosen here ( keyword bool "perturb_select" )
+        for (int n = 0; n < nroot; ++n){
+            double V = it->second[n];
+
+            double C1_I = perturb_select_ ? -V / (EI - evals->get(n)) :
+                                            ( ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0)) ) / V;
+            double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
+                                            ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
+
+            C1[n] = make_pair(std::fabs(C1_I),C1_I);
+            E2[n] = make_pair(std::fabs(E2_I),E2_I);
+
+        }
+
+        //f_E2 and f_C1 will store the selected function of the chosen q-criteria
+        std::pair<double,double> f_C1;
+        std::pair<double,double> f_E2;
+
+        //Compute a determinant's effect on ground state or adjacent state transition
+        if(q_rel_ == true and nroot > 1){
+            for(int n = 0; n < nroot; ++n){
+                if( q_reference_ == "GS"){
+                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[0].first),E2[n].second - E2[0].second );
+                }
             }
-
-            std::pair<double,double> max_C1 = *std::max_element(C1.begin(),C1.end());
-            std::pair<double,double> max_E2 = *std::max_element(E2.begin(),E2.end());
-
-            if (aimed_selection_){
-                double aimed_value = energy_selection_ ? max_E2.first : std::pow(max_C1.first,2.0);
-                sorted_dets.push_back(std::make_pair(aimed_value,it->first));
-            }else{
-                double select_value = energy_selection_ ? max_E2.first : max_C1.first;
-                if (std::fabs(select_value) > tau_q_){
-                    PQ_space_.push_back(it->first);
-                }else{
-                    for (int n = 0; n < nroot; ++n){
-                        ept2[n] += E2[n].second;
-                    }
+            for(int n = 1; n < nroot; ++n){
+                if( q_reference_ == "ADJACENT"){
+                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[n-1].first),E2[n].second - E2[n-1].second );
                 }
             }
         }
+
+        //Choose the function of couplings for each root.
+        //If nroot = 1, choose the max
+        if(q_function_ == "MAX" or nroot == 1){
+            f_C1 = *std::max_element(C1.begin(),C1.end());
+            f_E2 = q_rel_ and (nroot!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
+                                           *std::max_element(E2.begin(),E2.end());
+        }
+        else if(q_function_ == "MIN"){
+            f_C1 = *std::min_element(C1.begin(),C1.end());
+            f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
+                            *std::min_element(E2.begin(),E2.end());
+        }
+        else if(q_function_ == "AVERAGE"){
+            double C1_average = 0.0;
+            double E2_average = 0.0;
+            double dE2_average = 0.0;
+            for(int n = 0; n < nroot; ++n){
+                C1_average += C1[n].first / nroot;
+                E2_average += E2[n].first / nroot;
+            }
+            for(int n = 1; n < nroot; ++n){
+                dE2_average += dE2[n].first / (nroot-1.0);
+            }
+            f_C1 = make_pair(C1_average, 0);
+            f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
+        }
+        else{
+            throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
+        }
+
+//        //Prints selection criteria for each root, and the value used in screening
+//        for(int n = 0; n < nroot; ++n){
+//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, q_rel_ ? dE2[n].first : E2[n].first);
+//        }
+//        outfile->Printf("Selected Criteria: %2.20f \n", f_E2.first);
+
 
         if (aimed_selection_){
-            // Sort the CI coefficients in ascending order
-            std::sort(sorted_dets.begin(),sorted_dets.end());
-
-            double sum = 0.0;
-            for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
-                const BitsetDeterminant& det = sorted_dets[I].second;
-                if (sum + sorted_dets[I].first < tau_q_){
-                    sum += sorted_dets[I].first;
-                    double EI = det.energy();
-                    const std::vector<double>& V_vec = V_hash[det];
-                    for (int n = 0; n < nroot; ++n){
-                        double V = V_vec[n];
-                        double E2_I = -V * V / (EI - evals->get(n));
-                        ept2[n] += E2_I;
-                    }
-                }else{
-                    PQ_space_.push_back(sorted_dets[I].second);
+            double aimed_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
+            sorted_dets.push_back(std::make_pair(aimed_value,it->first));
+        }else{
+            double select_value = energy_selection_ ? f_E2.first : f_C1.first;
+            if (std::fabs(select_value) > tau_q_){
+                PQ_space_.push_back(it->first);
+            }else{
+                for (int n = 0; n < nroot; ++n){
+                    ept2[n] += E2[n].second;
                 }
             }
         }
-        multistate_pt2_energy_correction_ = ept2;
-//    }
+    } //end loop over determinants
 
-//    if(perturb_select_ == false){
+    if (aimed_selection_){
+        // Sort the CI coefficients in ascending order
+        std::sort(sorted_dets.begin(),sorted_dets.end());
 
-//    }
+        double sum = 0.0;
+        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+            const BitsetDeterminant& det = sorted_dets[I].second;
+            if (sum + sorted_dets[I].first < tau_q_){
+                sum += sorted_dets[I].first;
+                double EI = det.energy();
+                const std::vector<double>& V_vec = V_hash[det];
+                for (int n = 0; n < nroot; ++n){
+                    double V = V_vec[n];
+                    double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
+                                                    ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
+                    ept2[n] += E2_I;
+                }
+            }else{
+                PQ_space_.push_back(sorted_dets[I].second);
+            }
+        }
+    }
+    multistate_pt2_energy_correction_ = ept2;
 
     outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
