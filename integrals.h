@@ -156,6 +156,10 @@ public:
     virtual void retransform_integrals() = 0;
     virtual double** get_three_integral_pointer() = 0;
 
+    /// Get the fock matrix elements
+    double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
+    double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
+
     /// Compute df integrals
     /// Compute cholesky integrals
     /// Return value of df/cd integral
