@@ -830,14 +830,9 @@ void DFIntegrals::gather_integrals()
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * 8/1073741824.0));
 
-
-    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
     Dimension nsopi_ = wfn->nsopi();
-
     SharedMatrix aotoso = wfn->aotoso();
-
     SharedMatrix Ca = wfn->Ca();
-
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
 
     // Transform from the SO to the AO basis
@@ -1299,7 +1294,7 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
     double vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_*nmo_);
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
      vpqrsalphaE = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
             &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
