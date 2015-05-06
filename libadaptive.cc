@@ -227,6 +227,12 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
 
+        /* Method to calculate excited state */
+        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE");
+
+        /*Number of roots to compute on final re-diagonalization*/
+        options.add_int("EX_ROOT",1);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////

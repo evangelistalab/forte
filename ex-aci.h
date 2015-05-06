@@ -98,6 +98,8 @@ private:
     bool q_rel_;
     ///The q reference
     std::string q_reference_;
+    ///Algorithm for computing excited states
+    std::string ex_alg_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -106,6 +108,8 @@ private:
     bool do_smooth_;
     /// The threshold for smoothing elements of the Hamiltonian
     double smooth_threshold_;
+    ///Number of roots to calculate for final excited state
+    int ex_root_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -134,6 +138,9 @@ private:
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
+
+    /// Generate set of state-averaged q-criteria and determinants
+    double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1, std::vector<double> V, SharedVector evals);
 
     /// Find all the relevant excitations out of the P space - single root version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
