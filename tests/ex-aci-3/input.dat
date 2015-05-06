@@ -28,6 +28,7 @@ set libadaptive {
   frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE aimed_energy
   perturb_select false
+  excited_algorithm state_average
   q_rel true
   q_reference adjacent
   q_function average
