@@ -128,6 +128,7 @@ void EX_ACI::startup()
     ex_root_ = options_.get_int("EX_ROOT");
 
 
+
     aimed_selection_ = false;
     energy_selection_ = false;
     if (options_.get_str("SELECT_TYPE") == "AIMED_AMP"){
@@ -300,9 +301,12 @@ double EX_ACI::compute_energy()
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        if(ex_alg_ == "GROUND_REFERENCE" and i < root){
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+        if(ex_alg_ != "GROUND_REFERENCE"){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        }else if(ex_alg_ == "GROUND_REFERENCE" and i < root){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
     }
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
@@ -379,14 +383,10 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         }
         //make q space in a number of ways with C1 and E1 as input, produces PQ_space
         if(ex_alg_ == "STATE_AVERAGE"){
-            criteria = average_q_values(nroot, C1, E2, V, evals);
+            criteria = average_q_values(nroot, C1, E2);
         }
-        else if(ex_alg_ == "GROUND_REFERENCE"){
-            if(aimed_selection_){
-                criteria = energy_selection_ ? E2[0].first : std::pow(C1[0].first,2.0);
-            }else{
-                criteria = energy_selection_ ? E2[0].first : C1[0].first;
-            }
+        else if(ex_alg_ == "ROOT_SELECT"){
+            criteria = root_select(nroot, C1, E2);
         }
 
 
@@ -435,8 +435,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 }
 
 
-double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2,
-                              std::vector<double> V, SharedVector evals)
+double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
 {
 
 
@@ -492,12 +491,6 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
         throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
     }
 
-//        //Prints selection criteria for each root, and the value used in screening
-//        for(int n = 0; n < nroot; ++n){
-//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, q_rel_ ? dE2[n].first : E2[n].first);
-//        }
-//        outfile->Printf("Selected Criteria: %2.20f \n", f_E2.first);
-
     double select_value = 0.0;
     if (aimed_selection_){
         select_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
@@ -506,6 +499,28 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
     }
     return select_value;
 
+}
+
+double EX_ACI::root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+{
+    double select_value;
+    ref_root_ = options_.get_int("REF_ROOT");
+
+    if(ref_root_ +1 > nroot_){
+        throw PSIEXCEPTION("Your selection is not a valid reference option. Check REF_ROOT in options.");
+    }
+
+    if(nroot == 1){
+        ref_root_ = 0;
+    }
+
+    if(aimed_selection_){
+        select_value = energy_selection_ ? E2[ref_root_].first : std::pow(C1[ref_root_].first,2.0);
+    }else{
+        select_value = energy_selection_ ? E2[ref_root_].first : C1[ref_root_].first;
+    }
+
+    return select_value;
 }
 
 

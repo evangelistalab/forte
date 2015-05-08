@@ -100,6 +100,8 @@ private:
     std::string q_reference_;
     ///Algorithm for computing excited states
     std::string ex_alg_;
+    ///The reference root
+    int ref_root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -140,7 +142,10 @@ private:
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1, std::vector<double> V, SharedVector evals);
+    double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1);
+
+    ///Select specific root to create q space
+    double root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2);
 
     /// Find all the relevant excitations out of the P space - single root version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
