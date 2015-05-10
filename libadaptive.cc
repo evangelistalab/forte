@@ -232,7 +232,10 @@ read_options(std::string name, Options &options)
         options.add_int("REF_ROOT",0);
 
         /*Number of roots to compute on final re-diagonalization*/
-        options.add_int("EX_ROOT",1);
+        options.add_int("POST_ROOT",1);
+
+        /*Diagonalize after ACI procedure with higher number of roots*/
+        options.add_bool("POST_DIAGONALIZE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI

@@ -125,7 +125,8 @@ void EX_ACI::startup()
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
-    ex_root_ = options_.get_int("EX_ROOT");
+    post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
+    post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
 
 
 
@@ -288,12 +289,12 @@ double EX_ACI::compute_energy()
     }
 
     //Re-diagonalize H, solving for more roots
-    if(ex_alg_ == "GROUND_REFERENCE"){
+    if(post_diagonalize_){
         root = nroot_;
-        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,ex_root_, DavidsonLiuSparse);
-        outfile->Printf(" \n  Re-diagonalizing the Hamiltonian with %zu roots.\n", ex_root_);
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,post_root_, DavidsonLiuSparse);
+        outfile->Printf(" \n  Re-diagonalizing the Hamiltonian with %zu roots.\n", post_root_);
         outfile->Printf(" \n  WARNING: EPT2 is meaningless for roots %zu and higher. I'm not even printing them.", root+1);
-        nroot_ = ex_root_;
+        nroot_ = post_root_;
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
@@ -301,10 +302,10 @@ double EX_ACI::compute_energy()
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        if(ex_alg_ != "GROUND_REFERENCE"){
+        if(post_diagonalize_ == false){
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-        }else if(ex_alg_ == "GROUND_REFERENCE" and i < root){
+        }else if(post_diagonalize_ and i < root){
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                     exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
