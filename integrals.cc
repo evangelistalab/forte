@@ -830,21 +830,16 @@ void DFIntegrals::gather_integrals()
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * 8/1073741824.0));
 
-
-    SharedVector eps_so= wfn->epsilon_a_subset("SO", "ALL");
     Dimension nsopi_ = wfn->nsopi();
-
     SharedMatrix aotoso = wfn->aotoso();
-
     SharedMatrix Ca = wfn->Ca();
-
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
 
     // Transform from the SO to the AO basis
-    for (int h = 0, index = 0; h < nirrep_; ++h){
-        for (int i = 0; i < nmopi_[h]; ++i){
-            int nao = nso_;
-            int nso = nsopi_[h];
+    for (size_t h = 0, index = 0; h < nirrep_; ++h){
+        for (size_t i = 0; i < nmopi_[h]; ++i){
+            size_t nao = nso_;
+            size_t nso = nsopi_[h];
 
             if (!nso) continue;
 
@@ -922,7 +917,8 @@ void DFIntegrals::gather_integrals()
     }
     outfile->Printf("...Done.  Timing %15.6f s", timer.get());
 
-    ThreeIntegral_= tBpq->clone();
+    //ThreeIntegral_= tBpq->clone();
+    ThreeIntegral_ = tBpq;
 }
 
 void DFIntegrals::make_diagonal_integrals()
@@ -1011,12 +1007,12 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 
     fock_a("p,q") = oneint_a("p,q");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
+    fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
 
     fock_b("p,q") = oneint_b("p,q");
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
+    fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
 
 
@@ -1193,7 +1189,6 @@ void DFIntegrals::freeze_core_orbitals()
 void DFIntegrals::compute_frozen_core_energy()
 {
     frozen_core_energy_ = 0.0;
-    double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
@@ -1299,7 +1294,7 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
     double vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_*nmo_);
+            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
      vpqrsalphaE = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
             &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
@@ -1401,7 +1396,7 @@ void CholeskyIntegrals::gather_integrals()
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i,double& value){
         value = Lao->get(i[0],i[1]*nbf + i[2]);
     });
-    ThreeIntegral_ = L->clone();
+    ThreeIntegral_ = L;
 
     ThreeIntegral_->zero();
 

@@ -210,6 +210,16 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     D1OO.diagonalize(D1OO_evecs,D1OO_evals);
     D1VV.diagonalize(D1VV_evecs,D1VV_evals);
 
+    //Print natural orbitals
+    if(options.get_bool("NAT_ORBS_PRINT"))
+
+    {
+        D1oo_evals.print();
+        D1vv_evals.print();
+        D1OO_evals.print();
+        D1VV_evals.print();
+    }
+
     Matrix Ua("Ua",nmopi,nmopi);
     // Patch together the transformation matrices
     for (size_t h = 0; h < nirrep; ++h){
