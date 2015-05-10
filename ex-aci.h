@@ -111,7 +111,9 @@ private:
     /// The threshold for smoothing elements of the Hamiltonian
     double smooth_threshold_;
     ///Number of roots to calculate for final excited state
-    int ex_root_;
+    int post_root_;
+    ///Rediagonalize Hamiltonian?
+    bool post_diagonalize_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
