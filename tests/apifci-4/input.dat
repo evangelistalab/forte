@@ -1,0 +1,37 @@
+#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
+
+import libadaptive
+
+refscf = -14.6097447388741113 #TEST
+refapifci = -14.646160290078 #TEST
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis sto-3g
+  e_convergence 8
+}
+
+set libadaptive {
+  nroot 1
+  charge 0
+  tau 1.0
+  spawning_threshold 0.0001
+  ENERGY_ESTIMATE_FREQ 100
+  FAST_EVAR true
+  USE_INTER_NORM true
+  ENERGY_ESTIMATE_THRESHOLD 1e-5
+  DYNAMIC_PRESCREENING true
+  PROPAGATOR POWER
+  MP2_NOS true
+  maxbeta 100000.00
+}
+
+energy('fapici')
+
+compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
+compare_values(refapifci, get_variable("APIFCI ENERGY"),7, "APIFCI energy") #TEST
+
