@@ -278,7 +278,6 @@ double AdaptivePathIntegralCI::compute_energy()
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
         if (use_inter_norm_) {
-            outfile->Printf("\nIntermediate normalization used");
             auto minmax_C = std::minmax_element(C.begin(),C.end());
             double min_C_abs = fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
