@@ -263,6 +263,8 @@ read_options(std::string name, Options &options)
         options.add_int("ENERGY_ESTIMATE_FREQ",25);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
+        /*- Use intermediate normalization -*/
+        options.add_bool("USE_INTER_NORM",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
         /*- Prescreen the spawning of excitations -*/
