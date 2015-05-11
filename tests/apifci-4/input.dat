@@ -3,7 +3,7 @@
 import libadaptive
 
 refscf = -14.6097447388741113 #TEST
-refapifci = -14.646160290078 #TEST
+refapifci = -14.646162307429 #TEST
 
 molecule li2{
    Li
@@ -30,7 +30,7 @@ set libadaptive {
   maxbeta 100000.00
 }
 
-energy('fapici')
+energy('apici')
 
 compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
 compare_values(refapifci, get_variable("APIFCI ENERGY"),7, "APIFCI energy") #TEST
