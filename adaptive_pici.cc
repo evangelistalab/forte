@@ -123,6 +123,7 @@ void AdaptivePathIntegralCI::startup()
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
     fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
     do_shift_ = options_.get_bool("USE_SHIFT");
+    use_inter_norm_ = options_.get_bool("USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
