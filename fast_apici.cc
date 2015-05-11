@@ -123,6 +123,7 @@ void FastAdaptivePathIntegralCI::startup()
     adaptive_beta_ = options_.get_bool("ADAPTIVE_BETA");
     fast_variational_estimate_ = options_.get_bool("FAST_EVAR");
     do_shift_ = options_.get_bool("USE_SHIFT");
+    use_inter_norm_ = options_.get_bool("USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
 
@@ -186,6 +187,7 @@ void FastAdaptivePathIntegralCI::print_info()
         {"Propagator type",propagator_description_},
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy",do_shift_ ? "YES" : "NO"},
+        {"Use intermediate normalization", use_inter_norm_ ? "YES" : "NO"},
         {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
         {"Dynamic prescreening",do_dynamic_prescreening_ ? "YES" : "NO"},
         {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
@@ -274,7 +276,15 @@ double FastAdaptivePathIntegralCI::compute_energy()
 
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
-        propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
+        if (use_inter_norm_) {
+            auto minmax_C = std::minmax_element(C.begin(),C.end());
+            double min_C_abs = fabs(*minmax_C.first);
+            double max_C = *minmax_C.second;
+            max_C = max_C > min_C_abs ? max_C : min_C_abs;
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_ * max_C,shift);
+        } else {
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
+        }
         timer_off("PIFCI:Step");
         if (propagator_ == DavidsonLiuPropagator) break;
 
