@@ -30,7 +30,7 @@ set libadaptive {
   maxbeta 100000.00
 }
 
-energy('apici')
+energy('fapici')
 
 compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
 compare_values(refapifci, get_variable("APIFCI ENERGY"),7, "APIFCI energy") #TEST
