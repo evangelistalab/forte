@@ -81,6 +81,8 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
+    ///Current interation cycle
+    int cycle_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
 
@@ -169,6 +171,9 @@ private:
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
+
+    ///Check if the procedure is stuck
+    bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
