@@ -224,13 +224,16 @@ double EX_ACI::compute_energy()
     sparse_solver.set_parallel(true);
     int root;
     int maxcycle = 20;
-    for (int cycle = 0; cycle < maxcycle; ++cycle){
+    for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 
-        outfile->Printf("\n\n  Cycle %3d",cycle);
+        outfile->Printf("\n\n  Cycle %3d",cycle_);
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
+
+        //save the dimention of the previous iteration
+        int PQ_space_init = PQ_space_.size();
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuList);
@@ -271,16 +274,28 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n");
         outfile->Flush();
 
+        //get final dimention of P space
+        int PQ_space_final = PQ_space_.size();
+        outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
         if (converged) break;
 
-        // Step 5. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
+        //Step 5. Check if the procedure is stuck
+        bool stuck = check_stuck(energy_history,PQ_evals);
+        if(stuck){
+            outfile->Printf("\n  The procedure is stuck! Printing final energy (but be careful).");
+            break;
+        }
+
+        // Step 6. Prune the P + Q space to get an updated P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
+
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
+
     }
 
     // Do Hamiltonian smoothing
@@ -1031,6 +1046,31 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
     //            }
     //            if(stuck) break; // exit the cycle
     //        }
+}
+
+bool EX_ACI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
+{
+    int nroot = evals->dim();
+    if(cycle_ < 3){
+        return false;
+    }
+    else{
+        std::vector<double> av_energies;
+        av_energies.clear();
+
+        for(int i = 0; i < cycle_; ++i){
+            double energy = 0.0;
+            for(int n = 0; n < nroot; ++n){
+                energy += energy_history[i][n] / static_cast<double>(nroot);
+            }
+            av_energies.push_back(energy);
+        }
+
+        if( std::fabs(av_energies[cycle_-1]- av_energies[cycle_ - 3]) < options_.get_double("E_CONVERGENCE")
+                and std::fabs(av_energies[cycle_ - 2]- av_energies[cycle_ - 4]) < options_.get_double("E_CONVERGENCE") ){
+            return true;
+        }else{ return false;}
+    }
 }
 
 void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,

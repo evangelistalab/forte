@@ -4,8 +4,8 @@
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.888681366664 #TEST
-refacipt2 = -14.890314792677 #TEST
+refaci = -14.8797641587 #TEST
+refacipt2 = -14.889463445 #TEST
 
 molecule li2{
    Li
@@ -29,10 +29,10 @@ set libadaptive {
   SELECT_TYPE energy
   perturb_select false
   q_function average
-  excited_algorithm ground_reference
+  excited_algorithm root_select
+  ref_root 0
   TAUP 0.000100
-  TAUQ 0.00001000
-  ex_root 4
+  TAUQ 0.001000
   nroot 2
   charge 0
 }
