@@ -71,11 +71,9 @@ void StringLists::startup()
 
     nas_ = 0;
     nbs_ = 0;
-    size_t ndfci = 0;
     for(int h = 0; h < nirrep_; ++h){
         nas_ += alfa_graph_->strpi(h);
         nbs_ += beta_graph_->strpi(h);
-        ndfci += alfa_graph_->strpi(h) * beta_graph_->strpi(h);
     }
 
     outfile->Printf("\n  ==> String Lists <==\n");
@@ -83,7 +81,6 @@ void StringLists::startup()
     outfile->Printf("\n  Number of beta electrons  = %zu",nb_);
     outfile->Printf("\n  Number of alpha strings   = %zu",nas_);
     outfile->Printf("\n  Number of beta strings    = %zu",nbs_);
-    outfile->Printf("\n  Number of determinants    = %zu",ndfci);
     outfile->Flush();
 
     {

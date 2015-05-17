@@ -70,8 +70,38 @@ double FCI::compute_energy()
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
-    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
+    int charge       = Process::environment.molecule()->molecular_charge();
+    int multiplicity = Process::environment.molecule()->multiplicity();
+    int nel = 0;
+
+    // If the charge has changed, recompute the number of electrons
+    // Or if you cannot find the number of electrons
+    if((nel == 0) or options_["CHARGE"].has_changed()){
+        charge = options_.get_int("CHARGE");
+        nel = 0;
+        int natom = Process::environment.molecule()->natom();
+        for(int i=0; i < natom;i++){
+            nel += static_cast<int>(Process::environment.molecule()->Z(i));
+        }
+        nel -= charge;
+    }
+
+    if(options_["MULTIPLICITY"].has_changed()){
+        multiplicity = options_.get_int("MULTIPLICITY");
+    }
+
+    if( ((nel + 1 - multiplicity) % 2) != 0)
+        throw PSIEXCEPTION("\n\n  FCI: Wrong multiplicity.\n\n");
+    nel -= 2 * nfdocc - rdocc.size();
+
+
+    size_t na = (nel + multiplicity - 1) / 2;
+    size_t nb =  nel - na;
+
+    outfile->Printf("\n  Multiplicity: %d",multiplicity);
+
+//    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
+//    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
     FCISolver fcisolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
 
@@ -85,7 +115,7 @@ double FCI::compute_energy()
 
 
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,std::vector<size_t> active_mo,size_t na, size_t nb,size_t symmetry,ExplorerIntegrals* ints)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints), symmetry_(symmetry), na_(na), nb_(nb), nroot_(0)
+    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), nroot_(0)
 {
     startup();
 }
@@ -94,6 +124,15 @@ void FCISolver::startup()
 {
     // Create the string lists
     lists_ = boost::shared_ptr<StringLists>(new StringLists(twoSubstituitionVVOO,active_dim_,core_mo_,active_mo_,na_,nb_));
+
+    size_t ndfci = 0;
+    for (int h = 0; h < nirrep_; ++h){
+        size_t nastr = lists_->alfa_graph()->strpi(h);
+        size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
+        ndfci += nastr * nbstr;
+    }
+    outfile->Printf("\n  Number of determinants    = %zu",ndfci);
+
 }
 
 /*
