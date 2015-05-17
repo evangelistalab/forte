@@ -1,15 +1,8 @@
-///*
-// *  wavefunction_hamiltonian.cpp
-// *  Capriccio
-// *
-// *  Created by Francesco Evangelista on 3/9/09.
-// *  Copyright 2009 __MyCompanyName__. All rights reserved.
-// *
-// */
-
 #include <cmath>
 
 #include <boost/timer.hpp>
+
+#include "libmints/molecule.h"
 
 #include <libqt/qt.h>
 
@@ -24,12 +17,57 @@ namespace psi{ namespace libadaptive{
  */
 void FCIWfn::compute_rdms(int max_order)
 {
-    compute_1rdm(opdm_a_,true);
-    compute_1rdm(opdm_b_,false);
-    compute_2rdm_aa(tpdm_aa_,true);
-    compute_2rdm_ab(tpdm_ab_);
+    if (max_order >= 1){
+        compute_1rdm(opdm_a_,true);
+        compute_1rdm(opdm_b_,false);
+    }
 
-//    rdm_test();
+    if (max_order >= 2){
+        compute_2rdm_aa(tpdm_aa_,true);
+        compute_2rdm_aa(tpdm_bb_,false);
+        compute_2rdm_ab(tpdm_ab_);
+    }
+
+
+    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+
+    double energy_1rdm = 0.0;
+    double energy_2rdm = 0.0;
+
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            energy_1rdm += opdm_a_[ncmo_ * p + q] * ints_->oei_a(p,q);
+            energy_1rdm += opdm_b_[ncmo_ * p + q] * ints_->oei_b(p,q);
+        }
+    }
+
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    energy_2rdm += 0.25 * tpdm_aa_[tei_index(p,q,r,s)] * ints_->aptei_aa(p,q,r,s);
+                    energy_2rdm += tpdm_ab_[tei_index(p,q,r,s)] * ints_->aptei_ab(p,q,r,s);
+                    energy_2rdm += 0.25 * tpdm_bb_[tei_index(p,q,r,s)] * ints_->aptei_bb(p,q,r,s);
+                }
+            }
+        }
+    }
+
+    outfile->Printf("\n Energy          %20.12f",nuclear_repulsion_energy + energy_1rdm + energy_2rdm);
+    outfile->Printf("\n Energy (1RDM)   %20.12f",energy_1rdm);
+    outfile->Printf("\n Energy (2RDM)   %20.12f",energy_2rdm);
+    outfile->Printf("\n Energy (NUCE)   %20.12f",nuclear_repulsion_energy);
+
+    if (max_order >= 3){
+//        compute_3rdm_aaa(tpdm_aaa_,true);
+//        compute_3rdm_aaa(tpdm_bbb_,false);
+//        compute_3rdm_aab(tpdm_aab_,true);
+//        compute_3rdm_aab(tpdm_abb_,false);
+    }
+
+    if (max_order >= 4){
+    }
+    rdm_test();
 }
 
 /**
@@ -83,6 +121,8 @@ void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa)
             }
         }
     } // End loop over h
+
+#if 0
     outfile->Printf("\n OPDM:");
     for (int p = 0; p < ncmo_; ++p) {
         outfile->Printf("\n");
@@ -90,6 +130,7 @@ void FCIWfn::compute_1rdm(std::vector<double>& rdm, bool alfa)
             outfile->Printf("%15.12f ",rdm[oei_index(p,q)]);
         }
     }
+#endif
 }
 
 
@@ -133,16 +174,21 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa)
 
                     std::vector<StringSubstitution>& OO = alfa ? lists_->get_alfa_oo_list(pq_sym,pq,ha)
                                                                : lists_->get_beta_oo_list(pq_sym,pq,hb);
-
+                    double rdm_element = 0.0;
                     size_t maxss = OO.size();
                     for(size_t ss = 0; ss < maxss; ++ss){
                         double H = static_cast<double>(OO[ss].sign);
                         double* y = &(Ch[OO[ss].J][0]);
                         double* c = &(Ch[OO[ss].I][0]);
                         for(size_t L = 0; L < maxL; ++L){
-                            rdm[tei_index(p_abs,q_abs,p_abs,q_abs)] += c[L] * y[L] * H;
+                            rdm_element += c[L] * y[L] * H;
                         }
                     }
+
+                    rdm[tei_index(p_abs,q_abs,p_abs,q_abs)] += rdm_element;
+                    rdm[tei_index(p_abs,q_abs,q_abs,p_abs)] -= rdm_element;
+                    rdm[tei_index(q_abs,p_abs,p_abs,q_abs)] -= rdm_element;
+                    rdm[tei_index(q_abs,p_abs,q_abs,p_abs)] += rdm_element;
                 }
             }
             // Loop over (p>q) > (r>s)
@@ -158,40 +204,35 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa)
                         int s_abs = rs_pair.second;
                         double integral = alfa ? tei_aaaa(p_abs,q_abs,r_abs,s_abs) : tei_bbbb(p_abs,q_abs,r_abs,s_abs);
 
-                        {
-                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,ha)
-                                                                         : lists_->get_beta_vvoo_list(p_abs,q_abs,r_abs,s_abs,hb);
-                            // TODO loop in a differen way
-                            size_t maxss = VVOO.size();
-                            for(size_t ss = 0; ss < maxss; ++ss){
-                                double H = static_cast<double>(VVOO[ss].sign);
-                                double* y = &(Ch[VVOO[ss].J][0]);
-                                double* c = &(Ch[VVOO[ss].I][0]);
-                                for(size_t L = 0; L < maxL; ++L){
-                                    rdm[tei_index(p_abs,q_abs,r_abs,s_abs)] += 0.5 * c[L] * y[L] * H;
-                                }
+                        double rdm_element = 0.0;
+                        std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,ha)
+                                                                     : lists_->get_beta_vvoo_list(p_abs,q_abs,r_abs,s_abs,hb);
+
+                        // TODO loop in a differen way
+                        size_t maxss = VVOO.size();
+                        for(size_t ss = 0; ss < maxss; ++ss){
+                            double H = static_cast<double>(VVOO[ss].sign);
+                            double* y = &(Ch[VVOO[ss].J][0]);
+                            double* c = &(Ch[VVOO[ss].I][0]);
+                            for(size_t L = 0; L < maxL; ++L){
+                                rdm_element += c[L] * y[L] * H;
                             }
                         }
-                        {
-                            std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(r_abs,s_abs,p_abs,q_abs,ha)
-                                                                         : lists_->get_beta_vvoo_list(r_abs,s_abs,p_abs,q_abs,hb);
-                            // TODO loop in a differen way
-                            size_t maxss = VVOO.size();
-                            for(size_t ss = 0; ss < maxss; ++ss){
-                                double H = static_cast<double>(VVOO[ss].sign);
-                                double* y = &(Ch[VVOO[ss].J][0]);
-                                double* c = &(Ch[VVOO[ss].I][0]);
-                                for(size_t L = 0; L < maxL; ++L){
-                                    rdm[tei_index(p_abs,q_abs,r_abs,s_abs)] += 0.5 * c[L] * y[L] * H;
-                                }
-                            }
-                        }
+
+                        rdm[tei_index(p_abs,q_abs,r_abs,s_abs)] += rdm_element;
+                        rdm[tei_index(q_abs,p_abs,r_abs,s_abs)] -= rdm_element;
+                        rdm[tei_index(p_abs,q_abs,s_abs,r_abs)] -= rdm_element;
+                        rdm[tei_index(q_abs,p_abs,s_abs,r_abs)] += rdm_element;
+                        rdm[tei_index(r_abs,s_abs,p_abs,q_abs)] += rdm_element;
+                        rdm[tei_index(r_abs,s_abs,q_abs,p_abs)] -= rdm_element;
+                        rdm[tei_index(s_abs,r_abs,p_abs,q_abs)] -= rdm_element;
+                        rdm[tei_index(s_abs,r_abs,q_abs,p_abs)] += rdm_element;
                     }
                 }
             }
         }
     } // End loop over h
-
+#if 0
     outfile->Printf("\n TPDM:");
     for (int p = 0; p < ncmo_; ++p) {
         for (int q = 0; q <= p; ++q) {
@@ -205,9 +246,7 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa)
             }
         }
     }
-
-    //    outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", i, j, k, l, TwoPDC[i][j][k][l]);
-
+#endif
 }
 
 
@@ -257,7 +296,7 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
                                     for(size_t SSa = 0; SSa < maxSSa; ++SSa){
                                         for(size_t SSb = 0; SSb < maxSSb; ++SSb){
                                             double V = static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
-                                            rdm[tei_index(p_abs,q_abs,r_abs,s_abs)] += Y[vo_alfa[SSa].J][vo_beta[SSb].J] * C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
+                                            rdm[tei_index(p_abs,r_abs,q_abs,s_abs)] += Y[vo_alfa[SSa].J][vo_beta[SSb].J] * C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
                                         }
                                     }
                                 }
@@ -268,6 +307,7 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
             }
         }
     }
+#if 0
     outfile->Printf("\n TPDM (ab):");
     for (int p = 0; p < ncmo_; ++p) {
         for (int q = 0; q < ncmo_; ++q) {
@@ -281,6 +321,7 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
             }
         }
     }
+#endif
 }
 
 
@@ -299,6 +340,7 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa)
  */
 void FCIWfn::compute_3rdm_aab(std::vector<double>& rdm, bool alfa)
 {
+    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_,0.0);
 
 }
 
@@ -320,42 +362,93 @@ void FCIWfn::rdm_test()
     for(int i = ncmo_ - nb; i < ncmo_; ++i) Ib[i] = true;  // 1
 
     std::vector<BitsetDeterminant> dets;
+    std::map<BitsetDeterminant,size_t> dets_map;
+
     std::vector<double> C;
     std::vector<bool> a_occ(ncmo_);
     std::vector<bool> b_occ(ncmo_);
+
+    size_t num_det = 0;
     do{
         for (int i = 0; i < ncmo_; ++i) a_occ[i] = Ia[i];
         do{
             for (int i = 0; i < ncmo_; ++i) b_occ[i] = Ib[i];
             if((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == symmetry_){
-                dets.push_back(BitsetDeterminant(a_occ,b_occ));
+                BitsetDeterminant d(a_occ,b_occ);
+                dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),beta_graph_->rel_add(Ib));
                 C.push_back(c);
+                dets_map[d] = num_det;
+                num_det++;
             }
         } while (std::next_permutation(Ib,Ib + ncmo_));
     } while (std::next_permutation(Ia,Ia + ncmo_));
 
 
-    BitsetDeterminant I,J;
-    for(int pq_sym = 0; pq_sym < nirrep_; ++pq_sym){
-        size_t max_pq = lists_->pairpi(pq_sym);
-        for(size_t pq = 0; pq < max_pq; ++pq){
-            const Pair& pq_pair = lists_->get_nn_list_pair(pq_sym,pq);
-            int p = pq_pair.first;
-            int q = pq_pair.second;
-            double rdm = 0.0;
-            for (size_t i = 0; i < dets.size(); ++i){
-                I.copy(dets[i]);
-                double sign = 1.0;
-                sign *= I.destroy_alfa_bit(p);
-                sign *= I.destroy_alfa_bit(q);
-                sign *= I.create_alfa_bit(q);
-                sign *= I.create_alfa_bit(p);
-                rdm += sign * C[i] * C[i];
+    BitsetDeterminant I;
+#if 0
+    double error_2rdm_aa = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    double rdm = 0.0;
+                    for (size_t i = 0; i < dets.size(); ++i){
+                        I.copy(dets[i]);
+                        double sign = 1.0;
+                        sign *= I.destroy_alfa_bit(r);
+                        sign *= I.destroy_alfa_bit(s);
+                        sign *= I.create_alfa_bit(q);
+                        sign *= I.create_alfa_bit(p);
+                        if (sign != 0){
+                            if (dets_map.count(I) != 0){
+                                rdm += sign * C[i] * C[dets_map[I]];
+                            }
+                        }
+                    }
+                    if (std::fabs(rdm) > 1.0e-12){
+                        outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q,r,s,rdm-tpdm_aa_[tei_index(p,q,r,s)],rdm,tpdm_aa_[tei_index(p,q,r,s)]);
+                        error_2rdm_aa += std::fabs(rdm-tpdm_aa_[tei_index(p,q,r,s)]);
+                    }
+                }
             }
-            outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.12lf", p,q,p,q,rdm);
         }
     }
+    outfile->Printf("\n\n  Error in AAAA 2-RDM: %f",error_2rdm_aa);
+#endif
+
+#if 0
+    outfile->Printf("\n\n  ABAB 2-RDM");
+    double error_2rdm_ab = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = 0; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    double rdm = 0.0;
+                    for (size_t i = 0; i < dets.size(); ++i){
+                        I.copy(dets[i]);
+                        double sign = 1.0;
+                        sign *= I.destroy_alfa_bit(r);
+                        sign *= I.destroy_beta_bit(s);
+                        sign *= I.create_beta_bit(q);
+                        sign *= I.create_alfa_bit(p);
+                        if (sign != 0){
+                            if (dets_map.count(I) != 0){
+                                rdm += sign * C[i] * C[dets_map[I]];
+                            }
+                        }
+                    }
+                    if (std::fabs(rdm) > 1.0e-12){
+                        outfile->Printf("\n  D2(abab)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q,r,s,rdm-tpdm_ab_[tei_index(p,q,r,s)],rdm,tpdm_ab_[tei_index(p,q,r,s)]);
+                        error_2rdm_ab += std::fabs(rdm-tpdm_ab_[tei_index(p,q,r,s)]);
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Error in ABAB 2-RDM: %f",error_2rdm_ab);
+#endif
+
 
     delete[] Ia;
     delete[] Ib;

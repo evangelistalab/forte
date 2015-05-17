@@ -74,7 +74,7 @@ void DSRG_MRPT2::startup()
         exit(1);
     }
 
-    // Populate the core, active, and virtuall arrays
+    // Populate the core, active, and virtual arrays
     for (int h = 0, p = 0; h < nirrep_; ++h){
         for (int i = 0; i < rdoccpi_[h]; ++i,++p){
             acore_mos.push_back(p);
