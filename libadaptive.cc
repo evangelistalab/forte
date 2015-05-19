@@ -28,6 +28,7 @@
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
 #include "fci_solver.h"
+#include "blockedtensorfactory.h"
 
 INIT_PLUGIN
 

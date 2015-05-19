@@ -11,6 +11,7 @@
 #include "reference.h"
 #include <string>
 #include <vector>
+#include "blockedtensorfactory.h"
 
 namespace psi{
 
@@ -122,7 +123,8 @@ protected:
     /// Print a summary of the options
     void print_summary();
     /// Print some information about sizes
-    void memory_info();
+    /// Print memory information for BlockedTensors
+    void memory_tensor(ambit::BlockedTensor BT);
 
     double renormalized_denominator(double D);
 
@@ -177,6 +179,7 @@ protected:
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
     std::vector<std::string> generate_all_indices(const std::string, std::string);
+    boost::shared_ptr<BlockedTensorFactory> BTF;
 
 
 public:
