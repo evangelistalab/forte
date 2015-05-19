@@ -113,6 +113,7 @@ void EX_ACI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
+    max_det_ = options_.get_int("MAX_DET");
 
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
@@ -224,6 +225,7 @@ double EX_ACI::compute_energy()
     sparse_solver.set_parallel(true);
     int root;
     int maxcycle = 20;
+    bool shrink = false;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
@@ -252,8 +254,8 @@ double EX_ACI::compute_energy()
         outfile->Flush();
 
 
-        // Step 2. Find determinants in the Q space
-        find_q_space(num_ref_roots,P_evals,P_evecs);
+        // Step 2. Find determinants in the Q space, shrink if needed
+        find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -279,8 +281,11 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
 
         // Step 4. Check convergence and break if needed
+        //If the second criteria is met, there is no PQ shrinking
         bool converged = check_convergence(energy_history,PQ_evals);
-        if (converged) break;
+        if(converged and PQ_space_.size() <= max_det_ ){
+            break;
+        }
 
         //Step 5. Check if the procedure is stuck
         bool stuck = check_stuck(energy_history,PQ_evals);
@@ -292,16 +297,22 @@ double EX_ACI::compute_energy()
         // Step 6. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
 
+        // Step 7. Confine PQ space to size max_det_ if max_det_ is limiting
+        if(converged){
+            shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
+            shrink = true;
+        }
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
 
-    }
+    }//end cycle
 
     // Do Hamiltonian smoothing
     if (do_smooth_){
         smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
     }
+
 
     //Re-diagonalize H, solving for more roots
     if(post_diagonalize_){
@@ -339,7 +350,7 @@ double EX_ACI::compute_energy()
 }
 
 
-void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
+void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool shrink)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -404,46 +415,64 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         else if(ex_alg_ == "ROOT_SELECT"){
             criteria = root_select(nroot, C1, E2);
         }
+        else if(nroot_ == 1){
+            criteria = root_select(nroot, C1, E2);
+        }
 
-
-        if (aimed_selection_){
+        if(aimed_selection_ and !shrink){
             sorted_dets.push_back(std::make_pair(criteria,it->first));
-        }else{
-            if (std::fabs(criteria) > tau_q_){
-            PQ_space_.push_back(it->first);
+        }else if(!aimed_selection_ and !shrink){
+            if(std::fabs(criteria) > tau_q_){
+                PQ_space_.push_back(it->first);
             }else{
                 for (int n = 0; n < nroot; ++n){
                     ept2[n] += E2[n].second;
                 }
             }
         }
-
     }// end loop over determinants
 
-    if (aimed_selection_){
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
+    if(shrink){
+        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
+    }
 
+    if(shrink or aimed_selection_){
+    // Sort the CI coefficients in ascending order
+    std::sort(sorted_dets.begin(),sorted_dets.end());
+    }
+
+    if (aimed_selection_){
         double sum = 0.0;
-        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+        auto I_init = shrink ? sorted_dets.size() - max_det_ : 0;
+        for (size_t I = I_init, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
-                const std::vector<double>& V_vec = V_hash[det];
+                const auto& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n){
                     double V = V_vec[n];
                     double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
                                                     ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
                     ept2[n] += E2_I;
                 }
-            }else{
+            }
+            else{
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
+    }else if(shrink){
+        for(size_t I = sorted_dets.size() - max_det_; I < sorted_dets.size(); ++I){
+            PQ_space_.push_back(sorted_dets[I].second);
+        }
+    }
+    std::vector<double> ept2_last;
+    if(!shrink){
+        ept2_last = ept2;
     }
 
-    multistate_pt2_energy_correction_ = ept2;
+
+    multistate_pt2_energy_correction_ = ept2_last;
 
     outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
@@ -1034,18 +1063,6 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
 
     // Check for convergence
     return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("E_CONVERGENCE"));
-    //        // Check the history of energies to avoid cycling in a loop
-    //        if(cycle > 3){
-    //            bool stuck = true;
-    //            for(int cycle_test = cycle - 2; cycle_test < cycle; ++cycle_test){
-    //                for (int n = 0; n < nroot_; ++n){
-    //                    if(std::fabs(energy_history[cycle_test][n] - energies[n]) < 1.0e-12){
-    //                        stuck = true;
-    //                    }
-    //                }
-    //            }
-    //            if(stuck) break; // exit the cycle
-    //        }
 }
 
 bool EX_ACI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
@@ -1095,7 +1112,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION");
+        outfile->Printf("AIMED SELECTION \n");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
@@ -1111,7 +1128,9 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
     // Include all determinants such that |C_I| > tau_p
     else{
-        for (size_t I = 0; I < large_space.size(); ++I){
+
+        std::sort(dm_det_list.begin(),dm_det_list.end());
+        for (size_t I = 0 ; I < large_space.size(); ++I){
             if (dm_det_list[I].first > tau_p_){
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
@@ -1120,6 +1139,33 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
 }
 
+void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
+                             std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
+{
+    outfile->Printf("\n Calculation has converged. Shrinking P space to %zu determinants.", max_det_);
+
+    // Create a vector that stores the absolute value of the CI coefficients
+    std::vector<std::pair<double,size_t> > dm_det_list;
+
+    pruned_space.clear();
+    pruned_space_map.clear();
+
+    for (size_t I = 0; I < total_space.size(); ++I){
+        double max_dm = 0.0;
+        for (int n = 0; n < nroot; ++n){
+            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
+        }
+        dm_det_list.push_back(std::make_pair(max_dm,I));
+    }
+
+    //Sort determinants in ascending order
+    std::sort(dm_det_list.begin(),dm_det_list.end());
+    auto dif = total_space.size() - max_det_;
+    for(size_t I = dif; I < total_space.size();++I){
+        pruned_space.push_back(total_space[dm_det_list[I].second]);
+        pruned_space_map[total_space[dm_det_list[I].second]] = 1;
+    }
+}
 
 void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
 {
