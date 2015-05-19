@@ -219,30 +219,24 @@ read_options(std::string name, Options &options)
 
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
-
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
-
         /*Function of q-space criteria, per root*/
         options.add_str("Q_FUNCTION", "MAX", "MIN AVERAGE");
-
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
-
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
-
         /* Method to calculate excited state */
         options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE ROOT_SELECT SINGLE_STATE");
-
         /*- Root to determine Q criteria*/
         options.add_int("REF_ROOT",0);
-
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
-
         /*Diagonalize after ACI procedure with higher number of roots*/
         options.add_bool("POST_DIAGONALIZE", false);
+        /*Maximum number of determinants*/
+        options.add_int("MAX_DET", 1e6);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
