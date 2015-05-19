@@ -125,7 +125,9 @@ void EX_ACI::startup()
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
-    ex_root_ = options_.get_int("EX_ROOT");
+    post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
+    post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
+
 
 
     aimed_selection_ = false;
@@ -222,13 +224,16 @@ double EX_ACI::compute_energy()
     sparse_solver.set_parallel(true);
     int root;
     int maxcycle = 20;
-    for (int cycle = 0; cycle < maxcycle; ++cycle){
+    for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 
-        outfile->Printf("\n\n  Cycle %3d",cycle);
+        outfile->Printf("\n\n  Cycle %3d",cycle_);
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
+
+        //save the dimention of the previous iteration
+        int PQ_space_init = PQ_space_.size();
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuList);
@@ -269,16 +274,28 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n");
         outfile->Flush();
 
+        //get final dimention of P space
+        int PQ_space_final = PQ_space_.size();
+        outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
         if (converged) break;
 
-        // Step 5. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
+        //Step 5. Check if the procedure is stuck
+        bool stuck = check_stuck(energy_history,PQ_evals);
+        if(stuck){
+            outfile->Printf("\n  The procedure is stuck! Printing final energy (but be careful).");
+            break;
+        }
+
+        // Step 6. Prune the P + Q space to get an updated P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
+
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
+
     }
 
     // Do Hamiltonian smoothing
@@ -287,12 +304,12 @@ double EX_ACI::compute_energy()
     }
 
     //Re-diagonalize H, solving for more roots
-    if(ex_alg_ == "GROUND_REFERENCE"){
+    if(post_diagonalize_){
         root = nroot_;
-        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,ex_root_, DavidsonLiuSparse);
-        outfile->Printf(" \n  Re-diagonalizing the Hamiltonian with %zu roots.\n", ex_root_);
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,post_root_, DavidsonLiuSparse);
+        outfile->Printf(" \n  Re-diagonalizing the Hamiltonian with %zu roots.\n", post_root_);
         outfile->Printf(" \n  WARNING: EPT2 is meaningless for roots %zu and higher. I'm not even printing them.", root+1);
-        nroot_ = ex_root_;
+        nroot_ = post_root_;
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
@@ -300,9 +317,12 @@ double EX_ACI::compute_energy()
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        if(ex_alg_ == "GROUND_REFERENCE" and i < root){
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+        if(post_diagonalize_ == false){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        }else if(post_diagonalize_ and i < root){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
     }
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
@@ -379,14 +399,10 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         }
         //make q space in a number of ways with C1 and E1 as input, produces PQ_space
         if(ex_alg_ == "STATE_AVERAGE"){
-            criteria = average_q_values(nroot, C1, E2, V, evals);
+            criteria = average_q_values(nroot, C1, E2);
         }
-        else if(ex_alg_ == "GROUND_REFERENCE"){
-            if(aimed_selection_){
-                criteria = energy_selection_ ? E2[0].first : std::pow(C1[0].first,2.0);
-            }else{
-                criteria = energy_selection_ ? E2[0].first : C1[0].first;
-            }
+        else if(ex_alg_ == "ROOT_SELECT"){
+            criteria = root_select(nroot, C1, E2);
         }
 
 
@@ -435,8 +451,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 }
 
 
-double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2,
-                              std::vector<double> V, SharedVector evals)
+double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
 {
 
 
@@ -492,12 +507,6 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
         throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
     }
 
-//        //Prints selection criteria for each root, and the value used in screening
-//        for(int n = 0; n < nroot; ++n){
-//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, q_rel_ ? dE2[n].first : E2[n].first);
-//        }
-//        outfile->Printf("Selected Criteria: %2.20f \n", f_E2.first);
-
     double select_value = 0.0;
     if (aimed_selection_){
         select_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
@@ -506,6 +515,28 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
     }
     return select_value;
 
+}
+
+double EX_ACI::root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+{
+    double select_value;
+    ref_root_ = options_.get_int("REF_ROOT");
+
+    if(ref_root_ +1 > nroot_){
+        throw PSIEXCEPTION("Your selection is not a valid reference option. Check REF_ROOT in options.");
+    }
+
+    if(nroot == 1){
+        ref_root_ = 0;
+    }
+
+    if(aimed_selection_){
+        select_value = energy_selection_ ? E2[ref_root_].first : std::pow(C1[ref_root_].first,2.0);
+    }else{
+        select_value = energy_selection_ ? E2[ref_root_].first : C1[ref_root_].first;
+    }
+
+    return select_value;
 }
 
 
@@ -1015,6 +1046,31 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
     //            }
     //            if(stuck) break; // exit the cycle
     //        }
+}
+
+bool EX_ACI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
+{
+    int nroot = evals->dim();
+    if(cycle_ < 3){
+        return false;
+    }
+    else{
+        std::vector<double> av_energies;
+        av_energies.clear();
+
+        for(int i = 0; i < cycle_; ++i){
+            double energy = 0.0;
+            for(int n = 0; n < nroot; ++n){
+                energy += energy_history[i][n] / static_cast<double>(nroot);
+            }
+            av_energies.push_back(energy);
+        }
+
+        if( std::fabs(av_energies[cycle_-1]- av_energies[cycle_ - 3]) < options_.get_double("E_CONVERGENCE")
+                and std::fabs(av_energies[cycle_ - 2]- av_energies[cycle_ - 4]) < options_.get_double("E_CONVERGENCE") ){
+            return true;
+        }else{ return false;}
+    }
 }
 
 void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,

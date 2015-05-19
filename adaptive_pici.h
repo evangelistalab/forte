@@ -116,6 +116,8 @@ private:
     bool adaptive_beta_;
     /// Shift the Hamiltonian?
     bool do_shift_;
+    /// Use intermediate normalization?
+    bool use_inter_norm_;
     /// The number of roots computed
     int nroot_;
     /// The energy convergence criterium
