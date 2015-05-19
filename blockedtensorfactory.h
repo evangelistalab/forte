@@ -25,9 +25,10 @@ protected:
     int number_of_tensors_;
     //String of all the tensors
     std::vector<std::string> tensor_names_;
-    //Name of Tensor, number of blocks, and memory requirements
+    //Name of Tensor and memory requirements
     std::vector<std::pair<std::string, double > > tensors_information_;
     std::vector<size_t> number_of_blocks_;
+    //Used to control printing for memory summary
     bool print_memory_ = false;
 
 public:
@@ -59,9 +60,13 @@ public:
     /// for a four character string
     */
     std::vector<std::string> generate_indices(const std::string in_str, const std::string type);
+    //Lets the user know how much memory is left
     double memory_left(){return memory_;}
+    //Calculates the amount of memory BlockedTensor takes up
     void memory_information(ambit::BlockedTensor);
+    //Array of all things memory
     void memory_summary();
+    //controls printing information
     void print_memory_info(){print_memory_=true;}
 };
 }}

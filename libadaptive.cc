@@ -44,9 +44,13 @@ read_options(std::string name, Options &options)
 
         /*- SUBSECTION Job Type */
 
+        /// Compute natural orbitals using MP2
         options.add_bool("MP2_NOS",false);
         /// View the natural orbitals with their symmetry information
         options.add_bool("NAT_ORBS_PRINT", false);
+        /// Use Natural Orbitals to suggest active space
+        options.add_bool("NAT_ACT", false);
+
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
