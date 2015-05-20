@@ -128,6 +128,11 @@ private:
     std::vector<double> tpdm_aa_;
     std::vector<double> tpdm_ab_;
     std::vector<double> tpdm_bb_;
+    std::vector<double> tpdm_aaa_;
+    std::vector<double> tpdm_aab_;
+    std::vector<double> tpdm_abb_;
+    std::vector<double> tpdm_bbb_;
+
 
     // ==> Class Static Data <==
 
@@ -170,6 +175,9 @@ private:
 
     size_t oei_index(size_t p, size_t q) const {return ncmo_ * p + q;}
     size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;}
+    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
+        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    }
 
     double oei_aa(size_t p, size_t q) const {return oei_a_[ncmo_ * p + q];}
     double oei_bb(size_t p, size_t q) const {return oei_b_[ncmo_ * p + q];}

@@ -7,7 +7,7 @@
 #include <libqt/qt.h>
 
 #include "bitset_determinant.h"
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -18,14 +18,28 @@ namespace psi{ namespace libadaptive{
 void FCIWfn::compute_rdms(int max_order)
 {
     if (max_order >= 1){
+        boost::timer t1;
         compute_1rdm(opdm_a_,true);
         compute_1rdm(opdm_b_,false);
+        outfile->Printf("\n  Timing for 1RDM           = %10.3f s\n",t1.elapsed());
     }
 
     if (max_order >= 2){
+        boost::timer t2;
         compute_2rdm_aa(tpdm_aa_,true);
         compute_2rdm_aa(tpdm_bb_,false);
         compute_2rdm_ab(tpdm_ab_);
+        outfile->Printf("\n  Timing for 2RDM           = %10.3f s\n",t2.elapsed());
+    }
+
+    if (max_order >= 3){
+        boost::timer t3;
+        compute_3rdm_aaa(tpdm_aaa_,true);
+        compute_3rdm_aaa(tpdm_bbb_,false);
+//        compute_3rdm_aab(tpdm_aab_,true);
+        //        compute_3rdm_aaa(tpdm_bbb_,false);
+        //        compute_3rdm_aab(tpdm_abb_,false);
+        outfile->Printf("\n  Timing for 3RDM           = %10.3f s\n",t3.elapsed());
     }
 
 
@@ -58,12 +72,7 @@ void FCIWfn::compute_rdms(int max_order)
     outfile->Printf("\n Energy (2RDM)   %20.12f",energy_2rdm);
     outfile->Printf("\n Energy (NUCE)   %20.12f",nuclear_repulsion_energy);
 
-    if (max_order >= 3){
-//        compute_3rdm_aaa(tpdm_aaa_,true);
-//        compute_3rdm_aaa(tpdm_bbb_,false);
-//        compute_3rdm_aab(tpdm_aab_,true);
-//        compute_3rdm_aab(tpdm_abb_,false);
-    }
+
 
     if (max_order >= 4){
     }
@@ -266,7 +275,9 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
 
         // Loop over all r,s
         for(int rs_sym = 0; rs_sym < nirrep_; ++rs_sym){
-            int Ja_sym = Ia_sym ^ rs_sym;
+            int Jb_sym = Ib_sym ^ rs_sym; // <- Looks like it should fail for states with symmetry != A1  URGENT
+            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for states with symmetry != A1  URGENT
+            //            int Ja_sym = Ia_sym ^ rs_sym;
             size_t maxJa = alfa_graph_->strpi(Ja_sym);
             double** Y = C_[Ja_sym]->pointer();
             for(int r_sym = 0; r_sym < nirrep_; ++r_sym){
@@ -324,15 +335,149 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
 #endif
 }
 
-
-/**
- * Compute the aaa three-particle density matrix for a given wave function
- * @param alfa flag for alfa or beta component, true = aa, false = bb
- */
+#if 0
 void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa)
 {
+    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_,0.0);
 
+    for (int h_Ja = 0; h_Ja < nirrep_; ++h_Ja){
+        int h_Jb = h_Ja ^ symmetry_;
+
+        if(detpi_[h_Ja] > 0){
+
+            size_t maxJ = alfa ? alfa_graph_->strpi(h_Ja) : beta_graph_->strpi(h_Jb);
+            size_t maxL = alfa ? beta_graph_->strpi(h_Jb) : alfa_graph_->strpi(h_Ja);
+
+            SharedMatrix C = alfa ? C_[h_Ja] : C1;
+            double** Ch = C->pointer();
+
+            if(!alfa){
+                C->zero();
+                size_t maxIa = alfa_graph_->strpi(h_Ja);
+                size_t maxIb = beta_graph_->strpi(h_Jb);
+
+                double** C0h = C_[h_Ja]->pointer();
+
+                // Copy C0 transposed in C1
+                for(size_t Ia = 0; Ia < maxIa; ++Ia)
+                    for(size_t Ib = 0; Ib < maxIb; ++Ib)
+                        Ch[Ib][Ia] = C0h[Ia][Ib];
+            }
+
+            for (size_t J = 0; J < maxJ; ++J){
+                for (int h_K = 0; h_K < nirrep_; ++h_K){
+                    std::vector<KHStringSubstitution>& Klist = alfa ? lists_->get_alfa_kh_list(h_Ja,J,h_K) :
+                                                                      lists_->get_beta_kh_list(h_Jb,J,h_K);
+                    for (const auto Kel : Klist){
+                        size_t s = Kel.p;
+                        size_t r = Kel.q;
+                        short sr_sign = Kel.sign;
+                        size_t K = Kel.J;
+
+                        for (int h_L = 0; h_L < nirrep_; ++h_L){
+                            std::vector<KHStringSubstitution>& Llist = alfa ? lists_->get_alfa_kh_list(h_K,K,h_L) :
+                                                                              lists_->get_beta_kh_list(h_K,K,h_L);
+                            for (const auto Lel : Llist){
+                                size_t q = Lel.p;
+                                size_t t = Lel.q;
+                                short qt_sign = Lel.sign;
+                                size_t L = Lel.J;
+
+                                std::vector<KHStringSubstitution>& Ilist = alfa ? lists_->get_alfa_kh_list(h_L,L,h_Ja) :
+                                                                                  lists_->get_beta_kh_list(h_L,L,h_Jb);
+                                for (const auto Iel : Ilist){
+                                    size_t p = Iel.p;
+                                    size_t u = Iel.q;
+                                    short pu_sign = Iel.sign;
+                                    size_t I = Iel.J;
+
+                                    double rdm_value = 0.0;
+
+                                    double* y = &(Ch[J][0]);
+                                    double* c = &(Ch[I][0]);
+                                    for(size_t L = 0; L < maxL; ++L){
+                                        rdm_value += c[L] * y[L];
+                                    }
+
+                                    double sign = sr_sign * qt_sign * pu_sign;
+                                    rdm_value *= sign;
+
+                                    rdm[six_index(p,q,r,s,t,u)] -= rdm_value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } // End loop over h
+    }
 }
+#else
+void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa)
+{
+    rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_,0.0);
+
+    for (int h_K = 0; h_K < nirrep_; ++h_K){
+        size_t maxK = lists_->alfa_graph_3h()->strpi(h_K);
+        for (int h_I = 0; h_I < nirrep_; ++h_I){
+            int h_Ib = h_I ^ symmetry_;
+            int h_J = h_I;
+            SharedMatrix C = alfa ? C_[h_J] : C1;
+            double** Ch = C->pointer();
+
+            if(!alfa){
+                C->zero();
+                size_t maxIa = alfa_graph_->strpi(h_I);
+                size_t maxIb = beta_graph_->strpi(h_Ib);
+
+                double** C0h = C_[h_I]->pointer();
+
+                // Copy C0 transposed in C1
+                for(size_t Ia = 0; Ia < maxIa; ++Ia)
+                    for(size_t Ib = 0; Ib < maxIb; ++Ib)
+                        Ch[Ib][Ia] = C0h[Ia][Ib];
+            }
+
+            size_t maxL = alfa ? beta_graph_->strpi(h_Ib) : alfa_graph_->strpi(h_I);
+
+            for (size_t K = 0; K < maxK; ++K){
+                std::vector<H3StringSubstitution>& Klist = alfa ? lists_->get_alfa_3h_list(h_K,K,h_I) :
+                                                                  lists_->get_beta_3h_list(h_K,K,h_Ib);
+                for (size_t L = 0; L < maxK; ++L){
+                    std::vector<H3StringSubstitution>& Llist = alfa ? lists_->get_alfa_3h_list(h_K,L,h_J) :
+                                                                      lists_->get_beta_3h_list(h_K,L,h_Ib);
+
+
+                    for (auto& Kel : Klist){
+                        size_t p = Kel.p;
+                        size_t q = Kel.q;
+                        size_t r = Kel.r;
+                        size_t I = Kel.J;
+                        for (auto& Lel : Llist){
+                            size_t s = Lel.p;
+                            size_t t = Lel.q;
+                            size_t u = Lel.r;
+                            short sign = Kel.sign * Lel.sign;
+                            size_t J = Lel.J;
+
+                            double* y = &(Ch[J][0]);
+                            double* c = &(Ch[I][0]);
+                            double rdm_value = 0.0;
+                            for(size_t L = 0; L < maxL; ++L){
+                                rdm_value += c[L] * y[L];
+                            }
+
+                            rdm_value *= sign;
+
+                            rdm[six_index(p,q,r,s,t,u)] += rdm_value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+#endif
 
 /**
  * Compute the aab three-particle density matrix for a given wave function
@@ -342,6 +487,57 @@ void FCIWfn::compute_3rdm_aab(std::vector<double>& rdm, bool alfa)
 {
     rdm.assign(ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_,0.0);
 
+    // Loop over blocks of matrix C
+    for(int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym){
+        size_t maxIa = alfa_graph_->strpi(Ia_sym);
+        int Ib_sym = Ia_sym ^ symmetry_;
+        double** C = C_[Ia_sym]->pointer();
+
+        // Loop over all r,s
+        for(int rs_sym = 0; rs_sym < nirrep_; ++rs_sym){
+            int Jb_sym = Ib_sym ^ rs_sym; // <- Looks like it should fail for states with symmetry != A1  URGENT
+            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for states with symmetry != A1  URGENT
+            //            int Ja_sym = Ia_sym ^ rs_sym;
+            size_t maxJa = alfa_graph_->strpi(Ja_sym);
+            double** Y = C_[Ja_sym]->pointer();
+            for(int r_sym = 0; r_sym < nirrep_; ++r_sym){
+                int s_sym = rs_sym ^ r_sym;
+
+                for(int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel){
+                    for(int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel){
+                        int r_abs = r_rel + cmopi_offset_[r_sym];
+                        int s_abs = s_rel + cmopi_offset_[s_sym];
+
+                        // Grab list (r,s,Ib_sym)
+                        std::vector<StringSubstitution>& vo_beta = lists_->get_beta_vo_list(r_abs,s_abs,Ib_sym);
+                        size_t maxSSb = vo_beta.size();
+
+                        // Loop over all p,q
+                        int pq_sym = rs_sym;
+                        for(int p_sym = 0; p_sym < nirrep_; ++p_sym){
+                            int q_sym = pq_sym ^ p_sym;
+                            for(int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel){
+                                int p_abs = p_rel + cmopi_offset_[p_sym];
+                                for(int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel){
+                                    int q_abs = q_rel + cmopi_offset_[q_sym];
+
+                                    std::vector<StringSubstitution>& vo_alfa = lists_->get_alfa_vo_list(p_abs,q_abs,Ia_sym);
+
+                                    size_t maxSSa = vo_alfa.size();
+                                    for(size_t SSa = 0; SSa < maxSSa; ++SSa){
+                                        for(size_t SSb = 0; SSb < maxSSb; ++SSb){
+                                            double V = static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
+                                            rdm[tei_index(p_abs,r_abs,q_abs,s_abs)] += Y[vo_alfa[SSa].J][vo_beta[SSb].J] * C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
+                                        }
+                                    }
+                                }
+                            }
+                        } // End loop over p,q
+                    }
+                } // End loop over r_rel,s_rel
+            }
+        }
+    }
 }
 
 void FCIWfn::rdm_test()
@@ -449,7 +645,129 @@ void FCIWfn::rdm_test()
     outfile->Printf("\n  Error in ABAB 2-RDM: %f",error_2rdm_ab);
 #endif
 
+#if 1
+    outfile->Printf("\n\n  AABAAB 3-RDM");
+    double error_3rdm_aab = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t a = 0; a < ncmo_; ++a){
+                            double rdm = 0.0;
+                            for (size_t i = 0; i < dets.size(); ++i){
+                                I.copy(dets[i]);
+                                double sign = 1.0;
+                                sign *= I.destroy_alfa_bit(s);
+                                sign *= I.destroy_alfa_bit(t);
+                                sign *= I.destroy_beta_bit(a);
+                                sign *= I.create_beta_bit(r);
+                                sign *= I.create_alfa_bit(q);
+                                sign *= I.create_alfa_bit(p);
+                                if (sign != 0){
+                                    if (dets_map.count(I) != 0){
+                                        rdm += sign * C[i] * C[dets_map[I]];
+                                    }
+                                }
+                            }
+                            if (std::fabs(rdm) > 1.0e-12){
+                                size_t index = six_index(p,q,r,s,t,a);
+                                double rdm_comp = tpdm_aab_[index];
+                                outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                error_3rdm_aab += std::fabs(rdm-tpdm_aab_[six_index(p,q,r,s,t,a)]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Error in AABAAB 3-RDM: %f",error_3rdm_aab);
+#endif
 
+#if 1
+    outfile->Printf("\n\n  AAAAAA 3-RDM");
+    double error_3rdm_aaa = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t r = q + 1; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t a = t + 1; a < ncmo_; ++a){
+                            double rdm = 0.0;
+                            for (size_t i = 0; i < dets.size(); ++i){
+                                I.copy(dets[i]);
+                                double sign = 1.0;
+                                sign *= I.destroy_alfa_bit(s);
+                                sign *= I.destroy_alfa_bit(t);
+                                sign *= I.destroy_alfa_bit(a);
+                                sign *= I.create_alfa_bit(r);
+                                sign *= I.create_alfa_bit(q);
+                                sign *= I.create_alfa_bit(p);
+                                if (sign != 0){
+                                    if (dets_map.count(I) != 0){
+                                        rdm += sign * C[i] * C[dets_map[I]];
+                                    }
+                                }
+                            }
+                            if (std::fabs(rdm) > 1.0e-12){
+                                size_t index = six_index(p,q,r,s,t,a);
+                                double rdm_comp = tpdm_aaa_[index];
+//                                outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+//                                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                error_3rdm_aaa += std::fabs(rdm-rdm_comp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Error in AAAAAA 3-RDM: %f",error_3rdm_aaa);
+#endif
+
+
+#if 1
+    outfile->Printf("\n\n  BBBBBB 3-RDM");
+    double error_3rdm_bbb = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t r = q + 1; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t a = t + 1; a < ncmo_; ++a){
+                            double rdm = 0.0;
+                            for (size_t i = 0; i < dets.size(); ++i){
+                                I.copy(dets[i]);
+                                double sign = 1.0;
+                                sign *= I.destroy_beta_bit(s);
+                                sign *= I.destroy_beta_bit(t);
+                                sign *= I.destroy_beta_bit(a);
+                                sign *= I.create_beta_bit(r);
+                                sign *= I.create_beta_bit(q);
+                                sign *= I.create_beta_bit(p);
+                                if (sign != 0){
+                                    if (dets_map.count(I) != 0){
+                                        rdm += sign * C[i] * C[dets_map[I]];
+                                    }
+                                }
+                            }
+                            if (std::fabs(rdm) > 1.0e-12){
+                                size_t index = six_index(p,q,r,s,t,a);
+                                double rdm_comp = tpdm_bbb_[index];
+//                                outfile->Printf("\n  D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+//                                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                error_3rdm_aaa += std::fabs(rdm-rdm_comp);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Error in BBBBBB 3-RDM: %f",error_3rdm_aaa);
+#endif
     delete[] Ia;
     delete[] Ib;
 }

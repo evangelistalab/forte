@@ -1,12 +1,6 @@
-//#include <vector>
-//#include <utility>
-
 #include <boost/timer.hpp>
 
 #include <psi4-dec.h>
-//#include <libmoinfo/libmoinfo.h>
-//#include <liboptions/liboptions.h>
-//#include <libutil/memory_manager.h>
 
 #include "string_lists.h"
 
@@ -18,40 +12,10 @@ StringLists::StringLists(RequiredLists required_lists,Dimension cmopi,std::vecto
     startup();
 }
 
-/**
- * Startup function, no quick modifications
-           * of the code should be done before it.
- */
 void StringLists::startup()
 {
-    //  // Grab data from moinfo
     nirrep_ = cmopi_.n();
     ncmo_ = cmopi_.sum();
-
-    //  // 1. active MOs
-    //  if(correlated_mos == Active){
-    //    cmos = moinfo->get_actv();
-    //    ncmos = moinfo->get_nactv();
-    //    cmos_to_mos = moinfo->get_actv_to_mo();
-    //    na   = moinfo->get_nael() - moinfo->get_nfocc() - moinfo->get_ndocc();
-    //    nb   = moinfo->get_nbel() - moinfo->get_nfocc() - moinfo->get_ndocc();
-    //  }
-    //  // 2. core + active MOs
-    //  if(correlated_mos == CoreActive){
-    //    cmos = moinfo->get_occ();
-    //    ncmos = moinfo->get_nocc();
-    //    cmos_to_mos = moinfo->get_occ_to_mo();
-    //    na   = moinfo->get_nael() - moinfo->get_nfocc();
-    //    nb   = moinfo->get_nbel() - moinfo->get_nfocc();
-    //  }
-    //  // 3. all MOs
-    //  if(correlated_mos == CoreActiveVirtual){
-    //    cmos = moinfo->get_all();
-    //    ncmos = moinfo->get_nall();
-    //    cmos_to_mos = moinfo->get_all_to_mo();
-    //    na   = moinfo->get_nael() - moinfo->get_nfocc();
-    //    nb   = moinfo->get_nbel() - moinfo->get_nfocc();
-    //  }
 
     cmopi_offset_.push_back(0);
     for(int h = 1; h < nirrep_; ++h){
@@ -68,6 +32,13 @@ void StringLists::startup()
     alfa_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_,cmopi_int));
     beta_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_,cmopi_int));
     pair_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,2,cmopi_int));
+    if (na_ >= 3){
+        alfa_graph_3h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 3,cmopi_int));
+    }
+    if (nb_ >= 3){
+        beta_graph_3h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 3,cmopi_int));
+    }
+
 
     nas_ = 0;
     nbs_ = 0;
@@ -77,11 +48,26 @@ void StringLists::startup()
     }
 
     outfile->Printf("\n  ==> String Lists <==\n");
-    outfile->Printf("\n  Number of alpha electrons = %zu",na_);
-    outfile->Printf("\n  Number of beta electrons  = %zu",nb_);
-    outfile->Printf("\n  Number of alpha strings   = %zu",nas_);
-    outfile->Printf("\n  Number of beta strings    = %zu",nbs_);
+    outfile->Printf("\n  Number of alpha electrons     = %zu",na_);
+    outfile->Printf("\n  Number of beta electrons      = %zu",nb_);
+    outfile->Printf("\n  Number of alpha strings       = %zu",alfa_graph_->nstr());
+    outfile->Printf("\n  Number of beta strings        = %zu",nbs_);
+    if (na_ >= 3){
+        outfile->Printf("\n  Number of alpha strings (N-3) = %zu",alfa_graph_3h_->nstr());
+    }
+    if (nb_ >= 3){
+        outfile->Printf("\n  Number of beta strings (N-3)  = %zu",beta_graph_3h_->nstr());
+    }
+
     outfile->Flush();
+
+    // Timers
+    double vo_list_timer = 0.0;
+    double nn_list_timer = 0.0;
+    double oo_list_timer = 0.0;
+    double kh_list_timer = 0.0;
+    double vovo_list_timer = 0.0;
+    double vvoo_list_timer = 0.0;
 
     {
         boost::timer t;
@@ -103,6 +89,20 @@ void StringLists::startup()
         oo_list_timer += t.elapsed();
     }
 
+    {
+        boost::timer t;
+        make_kh_list(alfa_graph_,alfa_kh_list);
+        make_kh_list(beta_graph_,beta_kh_list);
+        kh_list_timer += t.elapsed();
+    }
+
+    {
+        boost::timer t;
+        make_3h_list(alfa_graph_,alfa_graph_3h_,alfa_3h_list);
+        make_3h_list(beta_graph_,beta_graph_3h_,beta_3h_list);
+        kh_list_timer += t.elapsed();
+    }
+
     if(required_lists_ == twoSubstituitionVVOO){
         boost::timer t;
         make_vvoo_list(alfa_graph_,alfa_vvoo_list);
@@ -119,6 +119,7 @@ void StringLists::startup()
     outfile->Printf("\n  Timing for NN strings     = %10.3f s",nn_list_timer);
     outfile->Printf("\n  Timing for VO strings     = %10.3f s",vo_list_timer);
     outfile->Printf("\n  Timing for OO strings     = %10.3f s",oo_list_timer);
+    outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",kh_list_timer);
     outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",vvoo_list_timer);
     outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",vovo_list_timer);
     outfile->Printf("\n  Total timing              = %10.3f s",total_time);
@@ -159,6 +160,15 @@ void StringLists::make_pair_list(GraphPtr graph,NNList& list)
     //    h++;
     //  }
     //  outfile->Flush();
+}
+
+short StringLists::string_sign(const bool* I,size_t n)
+{
+    short sign = 1;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if (I[i]) sign *= -1;
+    }
+    return(sign);
 }
 
 void StringLists::print_string(bool* I,size_t n)

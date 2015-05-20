@@ -435,7 +435,7 @@ libadaptive(Options &options)
         boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
         fci->compute_energy();
 
-        FCI_MO fci_mo(options,ints_);
+//        FCI_MO fci_mo(options,ints_);
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")
