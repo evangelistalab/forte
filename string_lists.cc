@@ -47,7 +47,7 @@ void StringLists::startup()
         nbs_ += beta_graph_->strpi(h);
     }
 
-    outfile->Printf("\n  ==> String Lists <==\n");
+    outfile->Printf("\n\n  ==> String Lists <==\n");
     outfile->Printf("\n  Number of alpha electrons     = %zu",na_);
     outfile->Printf("\n  Number of beta electrons      = %zu",nb_);
     outfile->Printf("\n  Number of alpha strings       = %zu",alfa_graph_->nstr());
@@ -66,6 +66,7 @@ void StringLists::startup()
     double nn_list_timer = 0.0;
     double oo_list_timer = 0.0;
     double kh_list_timer = 0.0;
+    double h3_list_timer = 0.0;
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
 
@@ -100,7 +101,7 @@ void StringLists::startup()
         boost::timer t;
         make_3h_list(alfa_graph_,alfa_graph_3h_,alfa_3h_list);
         make_3h_list(beta_graph_,beta_graph_3h_,beta_3h_list);
-        kh_list_timer += t.elapsed();
+        h3_list_timer += t.elapsed();
     }
 
     if(required_lists_ == twoSubstituitionVVOO){
@@ -122,6 +123,7 @@ void StringLists::startup()
     outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",kh_list_timer);
     outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",vvoo_list_timer);
     outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",vovo_list_timer);
+    outfile->Printf("\n  Timing for 3-hole strings = %10.3f s",h3_list_timer);
     outfile->Printf("\n  Total timing              = %10.3f s",total_time);
     outfile->Flush();
 }

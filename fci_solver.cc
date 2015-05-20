@@ -42,6 +42,8 @@ extern double vo_list_timer;
 extern double vovo_list_timer;
 extern double vvoo_list_timer;
 
+int fci_debug_level = 0;
+
 namespace psi{ namespace libadaptive{
 
 class MOSpaceInfo;
@@ -117,7 +119,7 @@ double FCI::compute_energy()
 
     FCISolver fcisolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
 
-    double fci_energy = fcisolver.compute_energy() + nuclear_repulsion_energy;
+    double fci_energy = fcisolver.compute_energy();
 
     Process::environment.globals["CURRENT ENERGY"] = fci_energy;
     Process::environment.globals["FCI ENERGY"] = fci_energy;
@@ -143,6 +145,7 @@ void FCISolver::startup()
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
+    outfile->Printf("\n\n  ==> FCI Solver <==\n");
     outfile->Printf("\n  Number of determinants    = %zu",ndfci);
 
 }
@@ -176,8 +179,13 @@ double FCISolver::compute_energy()
     dls.startup(sigma);
 
     bool converged = false;
-    double energy = 0.0;
 
+    outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+    outfile->Printf("\n  ----------------------------------------");
+    outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+    outfile->Printf("\n  ----------------------------------------");
+
+    double old_avg_energy = 0.0;
     for (int cycle = 0; cycle < 30; ++cycle){
         bool add_sigma = true;
         for (int r = 0; r < nroot_ * 10; ++r){ // TODO : fix this loop
@@ -189,27 +197,40 @@ double FCISolver::compute_energy()
             if (not add_sigma) break;
         }
         converged = dls.update();
-        energy = dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
-        outfile->Printf("\n %3d  %20.12f",cycle,energy);
+
+        double avg_energy = 0.0;
+        for (int r = 0; r < nroot_; ++r){
+            avg_energy += dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
+        }
+        avg_energy /= static_cast<double>(nroot_);
+
+        outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
+        old_avg_energy = avg_energy;
+
         if (converged) break;
     }
 
+    outfile->Printf("\n  ----------------------------------------");
 
     if (converged){
         dls.get_results();
+    }
+
+    for (int r = 0; r < nroot_; ++r){ // TODO : fix this loop
+        outfile->Printf("\n\n  ==> Root No. %d <==",r);
+        double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+        outfile->Printf("\n    Total Energy: %25.15f",root_energy);
+    }
+
+    // Compute the RDMs
+    size_t rdm_root = 0;
+    if (converged){
         C.copy(dls.eigenvector(0));
+        outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
         C.compute_rdms(3);
     }
-//    C.initial_guess(Hdiag,1);
-//    for (int cycle = 0; cycle < 1000; ++cycle){
-//        C.Hamiltonian(HC,twoSubstituitionVVOO);
-//        energy = C.dot(HC) + nuclear_repulsion_energy;
-//        outfile->Printf("\n %3d  %20.12f",cycle,energy);
-//        C.copy(HC);
-//        C.normalize();
-//    }
 
-    return energy;
+    return dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
 }
 
 }}
