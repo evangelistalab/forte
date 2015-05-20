@@ -9,6 +9,8 @@
 #include "bitset_determinant.h"
 #include "fci_vector.h"
 
+extern int fci_debug_level;
+
 namespace psi{ namespace libadaptive{
 
 /**
@@ -17,32 +19,37 @@ namespace psi{ namespace libadaptive{
  */
 void FCIWfn::compute_rdms(int max_order)
 {
+    std::vector<double> rdm_timing;
+
     if (max_order >= 1){
-        boost::timer t1;
+        boost::timer t;
         compute_1rdm(opdm_a_,true);
         compute_1rdm(opdm_b_,false);
-        outfile->Printf("\n  Timing for 1RDM           = %10.3f s\n",t1.elapsed());
+        rdm_timing.push_back(t.elapsed());
     }
 
     if (max_order >= 2){
-        boost::timer t2;
+        boost::timer t;
         compute_2rdm_aa(tpdm_aa_,true);
         compute_2rdm_aa(tpdm_bb_,false);
         compute_2rdm_ab(tpdm_ab_);
-        outfile->Printf("\n  Timing for 2RDM           = %10.3f s\n",t2.elapsed());
+        rdm_timing.push_back(t.elapsed());
+
     }
 
     if (max_order >= 3){
-        boost::timer t3;
+        boost::timer t;
         compute_3rdm_aaa(tpdm_aaa_,true);
         compute_3rdm_aaa(tpdm_bbb_,false);
-//        compute_3rdm_aab(tpdm_aab_,true);
-        //        compute_3rdm_aaa(tpdm_bbb_,false);
-        //        compute_3rdm_aab(tpdm_abb_,false);
-        outfile->Printf("\n  Timing for 3RDM           = %10.3f s\n",t3.elapsed());
+        compute_3rdm_aab(tpdm_aab_,true);
+//        compute_3rdm_aab(tpdm_abb_,false);
+        rdm_timing.push_back(t.elapsed());
     }
 
+    if (max_order >= 4){
+    }
 
+    // Compute the energy from the 1-RDM and 2-RDM
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
     double energy_1rdm = 0.0;
@@ -67,16 +74,16 @@ void FCIWfn::compute_rdms(int max_order)
         }
     }
 
-    outfile->Printf("\n Energy          %20.12f",nuclear_repulsion_energy + energy_1rdm + energy_2rdm);
-    outfile->Printf("\n Energy (1RDM)   %20.12f",energy_1rdm);
-    outfile->Printf("\n Energy (2RDM)   %20.12f",energy_2rdm);
-    outfile->Printf("\n Energy (NUCE)   %20.12f",nuclear_repulsion_energy);
+    outfile->Printf("\n    Total Energy: %25.15f\n",nuclear_repulsion_energy + energy_1rdm + energy_2rdm);
 
-
-
-    if (max_order >= 4){
+    // Print RDM timings
+    for (size_t n = 0; n < rdm_timing.size();++n){
+        outfile->Printf("\n    Timing for %d-RDM: %.3f s",n + 1,rdm_timing[n]);
     }
-    rdm_test();
+
+    if (fci_debug_level > 3){
+        rdm_test();
+    }
 }
 
 /**
@@ -686,7 +693,48 @@ void FCIWfn::rdm_test()
     outfile->Printf("\n  Error in AABAAB 3-RDM: %f",error_3rdm_aab);
 #endif
 
-#if 1
+#if 0
+    outfile->Printf("\n\n  ABBABB 3-RDM");
+    double error_3rdm_abb = 0.0;
+    for (size_t p = 0; p < ncmo_; ++p){
+        for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t r = 0; r < ncmo_; ++r){
+                for (size_t s = 0; s < ncmo_; ++s){
+                    for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t a = 0; a < ncmo_; ++a){
+                            double rdm = 0.0;
+                            for (size_t i = 0; i < dets.size(); ++i){
+                                I.copy(dets[i]);
+                                double sign = 1.0;
+                                sign *= I.destroy_alfa_bit(s);
+                                sign *= I.destroy_beta_bit(t);
+                                sign *= I.destroy_beta_bit(a);
+                                sign *= I.create_beta_bit(r);
+                                sign *= I.create_beta_bit(q);
+                                sign *= I.create_alfa_bit(p);
+                                if (sign != 0){
+                                    if (dets_map.count(I) != 0){
+                                        rdm += sign * C[i] * C[dets_map[I]];
+                                    }
+                                }
+                            }
+                            if (std::fabs(rdm) > 1.0e-12){
+                                size_t index = six_index(p,q,r,s,t,a);
+                                double rdm_comp = tpdm_aab_[index];
+                                outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                error_3rdm_abb += std::fabs(rdm-tpdm_aab_[six_index(p,q,r,s,t,a)]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  Error in AABAAB 3-RDM: %f",error_3rdm_abb);
+#endif
+
+#if 0
     outfile->Printf("\n\n  AAAAAA 3-RDM");
     double error_3rdm_aaa = 0.0;
     for (size_t p = 0; p < ncmo_; ++p){
@@ -728,7 +776,7 @@ void FCIWfn::rdm_test()
 #endif
 
 
-#if 1
+#if 0
     outfile->Printf("\n\n  BBBBBB 3-RDM");
     double error_3rdm_bbb = 0.0;
     for (size_t p = 0; p < ncmo_; ++p){

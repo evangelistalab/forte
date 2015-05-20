@@ -28,6 +28,27 @@ def run_libadaptive(name, **kwargs):
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
+def run_forte_fci(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('forte-fci')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Call SCF
+    scf_helper(name, **kwargs)
+
+    # Set job_type
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','FCI')
+
+    # Call the plugin
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
 def run_adaptive_ci(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -332,6 +353,7 @@ def run_three_dsrg_mrpt2(name, **kwargs):
 
 # Integration with driver routines
 procedures['energy']['libadaptive'] = run_libadaptive
+procedures['energy']['forte-fci'] = run_forte_fci
 procedures['energy']['aci'] = run_adaptive_ci
 procedures['energy']['ex-aci'] = run_ex_aci
 procedures['energy']['apici'] = run_adaptive_pici

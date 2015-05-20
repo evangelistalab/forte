@@ -33,12 +33,11 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I,size_t 
  */
 void StringLists::make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list)
 {
-
     int n = graph->nbits();
     int k = graph->nones();
     bool* I = new bool[ncmo_];
     bool* J = new bool[ncmo_];
-    outfile->Printf("\n\n >>make_3h_list: n = %d, k = %d",n,k);
+
     if ((k >= 0) and (k <= n)){ // check that (n > 0) makes sense.
         for(int h_I = 0; h_I < nirrep_; ++h_I){
             // Generate the strings 1111100000
@@ -73,9 +72,9 @@ void StringLists::make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list)
                                             std::tuple<int,size_t,int> I_tuple(h_J,add_J,h_I);
                                             list[I_tuple].push_back(H3StringSubstitution(sign,p,q,r,add_I));
 
-                                            outfile->Printf("\n Adding (%d,%zu,%d) -> (%d,%zu,%zu,%zu,%zu)",
-                                                            h_J,add_J,h_I,
-                                                            sign,p,q,r,add_I);
+//                                            outfile->Printf("\n Adding (%d,%zu,%d) -> (%d,%zu,%zu,%zu,%zu)",
+//                                                            h_J,add_J,h_I,
+//                                                            sign,p,q,r,add_I);
                                         }
                                     }
                                 }
@@ -89,7 +88,6 @@ void StringLists::make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list)
         delete[] J;
         delete[] I;
     }
-    outfile->Printf("\n\n <<make_3h_list");
 }
 
 

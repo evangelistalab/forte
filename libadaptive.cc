@@ -434,7 +434,6 @@ libadaptive(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
         fci->compute_energy();
-
 //        FCI_MO fci_mo(options,ints_);
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
