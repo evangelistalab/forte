@@ -511,7 +511,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -525,7 +525,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
@@ -544,7 +544,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
@@ -575,7 +575,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -607,7 +607,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -648,7 +648,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -669,7 +669,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
@@ -695,7 +695,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
@@ -724,7 +724,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -752,7 +752,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -791,7 +791,7 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -812,7 +812,7 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
