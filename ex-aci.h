@@ -81,8 +81,12 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     StringDeterminant reference_determinant_;
+    ///Current interation cycle
+    int cycle_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
+    ///The maximum number of determinants
+    unsigned long max_det_;
 
     /// The threshold applied to the primary space
     double tau_p_;
@@ -98,6 +102,10 @@ private:
     bool q_rel_;
     ///The q reference
     std::string q_reference_;
+    ///Algorithm for computing excited states
+    std::string ex_alg_;
+    ///The reference root
+    int ref_root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -106,6 +114,10 @@ private:
     bool do_smooth_;
     /// The threshold for smoothing elements of the Hamiltonian
     double smooth_threshold_;
+    ///Number of roots to calculate for final excited state
+    int post_root_;
+    ///Rediagonalize Hamiltonian?
+    bool post_diagonalize_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -133,7 +145,13 @@ private:
     void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
+    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs, bool shrink);
+
+    /// Generate set of state-averaged q-criteria and determinants
+    double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1);
+
+    ///Select specific root to create q space
+    double root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2);
 
     /// Find all the relevant excitations out of the P space - single root version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
@@ -155,6 +173,13 @@ private:
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
+
+    ///Check if the procedure is stuck
+    bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
+
+    /// Shrink the PQ space to include only max_det_ determinants
+    void shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
+                         std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs, int nroot);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

@@ -6,6 +6,7 @@
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
 #include <libqt/qt.h>
+#include "blockedtensorfactory.h"
 
 #include "three_dsrg_mrpt2.h"
 #include <vector>
@@ -26,18 +27,20 @@ namespace psi{ namespace libadaptive{
 
 
 THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore)
+    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore), BTF(new BlockedTensorFactory(options))
 {
+    ///Need to erase all mo_space information
+    ambit::BlockedTensor::reset_mo_spaces();
     // Copy the wavefunction information
     copy(wfn);
+
 	num_threads_ = omp_get_max_threads();
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
     outfile->Printf("\n\t                   Kevin Hannon and Chenyang (York) Li");
-outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
+    outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
-
     startup();
     //if(false){
     //frozen_natural_orbitals();}
@@ -117,79 +120,98 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::set_expert_mode(true);
 
-    BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
+    //boost::shared_ptr<BlockedTensorFactory> BTFBlockedTensorFactory(options);
+
+    //BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
+    //BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
+    BTF->add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
+    BTF->add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
+
     core_ = acore_mos.size();
 
-    BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
+    //BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
+    //BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
+    BTF->add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
+    BTF->add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
     active_ = aactv_mos.size();
 
-    BlockedTensor::add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
-    BlockedTensor::add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
+    //BlockedTensor::add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
+    //BlockedTensor::add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
+    BTF->add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
+    BTF->add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
     virtual_ = avirt_mos.size();
 
-    BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
-    BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
+    //BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
+    //BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
 
-    BlockedTensor::add_composite_mo_space("p","abcd",{"a","v"});
-    BlockedTensor::add_composite_mo_space("P","ABCD",{"A","V"});
+    //BlockedTensor::add_composite_mo_space("p","abcd",{"a","v"});
+    //BlockedTensor::add_composite_mo_space("P","ABCD",{"A","V"});
 
-    BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
-    BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
+    //BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
+    //BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
+
+    BTF->add_composite_mo_space("h","ijkl",{"c","a"});
+    BTF->add_composite_mo_space("H","IJKL",{"C","A"});
+
+    BTF->add_composite_mo_space("p","abcd",{"a","v"});
+    BTF->add_composite_mo_space("P","ABCD",{"A","V"});
+
+    BTF->add_composite_mo_space("g","pqrs",{"c","a","v"});
+    BTF->add_composite_mo_space("G","PQRS",{"C","A","V"});
+    // These two blocks of functions create a Blocked tensor
 
 
     // These two blocks of functions create a Blocked tensor
     // And fill the tensor
     // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
-    outfile->Printf("\n Building cholesky integrals");
+
     size_t nthree = ints_->nthree();
     std::vector<size_t> nauxpi(nthree);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
-    BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+    //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+    BTF->add_mo_space("d","g",nauxpi,NoSpin);
 
-    ThreeIntegral = BlockedTensor::build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    //ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ints_->get_three_integral(i[0],i[1],i[2]);
     });
 
 
-    H = BlockedTensor::build(tensor_type_,"H",spin_cases({"gg"}));
+    H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
     //Returns a vector of all combinations for gggg
     std::vector<std::string> list_of_entire_space = generate_all_indices("cav", "all");
 
-    V = BlockedTensor::build(tensor_type_,"V",spin_cases_avoid(list_of_entire_space));
+    V = BTF->build(tensor_type_,"V",spin_cases_avoid(list_of_entire_space));
 
 
-    Gamma1 = BlockedTensor::build(tensor_type_,"Gamma1",spin_cases({"hh"}));
-    Eta1 = BlockedTensor::build(tensor_type_,"Eta1",spin_cases({"pp"}));
-    Lambda2 = BlockedTensor::build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3 = BlockedTensor::build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
-    F = BlockedTensor::build(tensor_type_,"Fock",spin_cases({"gg"}));
-    Delta1 = BlockedTensor::build(tensor_type_,"Delta1",spin_cases({"hp"}));
+    Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
+    Eta1 = BTF->build(tensor_type_,"Eta1",spin_cases({"pp"}));
+    Lambda2 = BTF->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
+    Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+    F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
+    Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"hp"}));
 
-    Delta2 = BlockedTensor::build(tensor_type_,"Delta2",spin_cases({"hhvv"}));
+    Delta2 = BTF->build(tensor_type_,"Delta2",spin_cases({"hhvv"}));
 
-    RDelta1 = BlockedTensor::build(tensor_type_,"RDelta1",spin_cases({"hp"}));
+    RDelta1 = BTF->build(tensor_type_,"RDelta1",spin_cases({"hp"}));
 
     //Need to avoid building ccvv part of this
     //ccvv only used for creating T2
     std::vector<std::string> hhpp_no_cv = generate_all_indices("cav", "hhpp");
-    RDelta2 = BlockedTensor::build(tensor_type_,"RDelta2",spin_cases_avoid(hhpp_no_cv));
+    RDelta2 = BTF->build(tensor_type_,"RDelta2",spin_cases_avoid(hhpp_no_cv));
 
 
-    T1 = BlockedTensor::build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-    T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
+    T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
 
-    RExp1 = BlockedTensor::build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BlockedTensor::build(tensor_type_,"RExp2",spin_cases_avoid(hhpp_no_cv));
+    RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
+    RExp2 = BTF->build(tensor_type_,"RExp2",spin_cases_avoid(hhpp_no_cv));
     //all_spin = RExp2.get.();
-    memory_info();
     no_hhpp_ = hhpp_no_cv;
-    T2pr   = BlockedTensor::build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
+    T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -208,7 +230,6 @@ void THREE_DSRG_MRPT2::startup()
     ambit::Tensor Eta1_AA = Eta1.block("AA");
     ambit::Tensor Eta1_VV = Eta1.block("VV");
 
-//<<<<<<< HEAD
     Gamma1_cc.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
     Gamma1_CC.iterate([&](const std::vector<size_t>& i,double& value){
@@ -376,6 +397,7 @@ void THREE_DSRG_MRPT2::startup()
         Eta1.print(stdout);
         F.print(stdout);
         H.print(stdout);
+        BTF->print_memory_info();
     }
     if(print_ > 2){
         V.print(stdout);
@@ -583,13 +605,13 @@ void THREE_DSRG_MRPT2::compute_t1()
     outfile->Printf("\n    %-36s ...", str.c_str());
     Timer timer;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
+    temp = BTF->build(tensor_type_,"temp",spin_cases({"aa"}));
     temp["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp["XU"] = Gamma1["XU"] * Delta1["XU"];
 
     //Form the T1 amplitudes
 
-    BlockedTensor N = BlockedTensor::build(tensor_type_,"N",spin_cases({"hp"}));
+    BlockedTensor N = BTF->build(tensor_type_,"N",spin_cases({"hp"}));
 
     N["ia"]  = F["ia"];
     N["ia"] += temp["xu"] * T2pr["iuax"];
@@ -623,7 +645,7 @@ void THREE_DSRG_MRPT2::renormalize_V()
     outfile->Printf("\n    %-36s ...", str.c_str());
 
     // Put RExp2 into a shared matrix.
-    BlockedTensor v = BlockedTensor::build(tensor_type_,"v",no_hhpp_);
+    BlockedTensor v = BTF->build(tensor_type_,"v",no_hhpp_);
     v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
     //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
     v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
@@ -639,6 +661,7 @@ void THREE_DSRG_MRPT2::renormalize_V()
     V["abij"] += v["ijab"] * RExp2["ijab"];
     V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
     V["ABIJ"] += v["IJAB"] * RExp2["IJAB"];
+    std::vector<std::string> Vblocks = V.block_labels();
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -650,12 +673,12 @@ void THREE_DSRG_MRPT2::renormalize_F()
     std::string str = "Renormalizing F";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    BlockedTensor temp_aa = BlockedTensor::build(tensor_type_,"temp_aa",spin_cases({"aa"}));
+    BlockedTensor temp_aa = BTF->build(tensor_type_,"temp_aa",spin_cases({"aa"}));
     temp_aa["xu"] = Gamma1["xu"] * Delta1["xu"];
     temp_aa["XU"] = Gamma1["XU"] * Delta1["XU"];
 
-    BlockedTensor temp1 = BlockedTensor::build(tensor_type_,"temp1",spin_cases({"hp"}));
-    BlockedTensor temp2 = BlockedTensor::build(tensor_type_,"temp2",spin_cases({"hp"}));
+    BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"hp"}));
+    BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"hp"}));
 
     temp1["ia"] += temp_aa["xu"] * T2pr["iuax"];
     temp1["ia"] += temp_aa["XU"] * T2pr["iUaX"];
@@ -690,7 +713,7 @@ double THREE_DSRG_MRPT2::E_FT1()
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"hp"}));
+    temp = BTF->build(tensor_type_,"temp",spin_cases({"hp"}));
 
     temp["jb"] += T1["ia"] * Eta1["ab"] * Gamma1["ji"];
     temp["JB"] += T1["IA"] * Eta1["AB"] * Gamma1["JI"];
@@ -712,7 +735,7 @@ double THREE_DSRG_MRPT2::E_VT1()
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaa"}));
+    temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaa"}));
 
     temp["uvxy"] += V["evxy"] * T1["ue"];
     temp["uvxy"] -= V["uvmy"] * T1["mx"];
@@ -741,7 +764,7 @@ double THREE_DSRG_MRPT2::E_FT2()
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
+    temp = BTF->build(tensor_type_,"temp",spin_cases({"aaaa"}));
 
 
     temp["uvxy"] += F["ex"] * T2pr["uvey"];
@@ -772,8 +795,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type_,"temp1",no_hhpp_);
-    temp2 = BlockedTensor::build(tensor_type_,"temp2",no_hhpp_);
+    temp1 = BTF->build(tensor_type_,"temp1",no_hhpp_);
+    temp2 = BTF->build(tensor_type_,"temp2",no_hhpp_);
 
 
     //Calculates all but ccvv, cCvV, and CCVV energies
@@ -850,19 +873,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
                     double t2alpha = 0.0;
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
-                    //Perform the contracted for the g index with the correct index
-                    //for(size_t g = 0; g < ints_->nthree(); g++){
-                    //    vmnefalphaC += (ints_->get_three_integral(g, m, e)
-                    //                  * ints_->get_three_integral(g, n, f));
-                    //    vmnefalphaE += (ints_->get_three_integral(g, m, f)
-                    //                  * ints_->get_three_integral(g, n, e));
-                    //    vmnefbetaC += (ints_->get_three_integral(g, mb,  eb)
-                    //                 * ints_->get_three_integral(g, nb,  fb));
-                    //    vmnefbetaE += (ints_->get_three_integral(g, mb,  fb)
-                    //                 * ints_->get_three_integral(g, nb,  eb));
-                    //    vmnefmixedC += (ints_->get_three_integral(g, m, eb)
-                    //                  * ints_->get_three_integral(g, n, fb));
-                    //}
                     vmnefalphaC = C_DDOT(nthree,
                             &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
                             &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
@@ -915,8 +925,8 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"aahh"}));
-    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+    temp1 = BTF->build(tensor_type_,"temp1", spin_cases({"aahh"}));
+    temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["uvij"] += V["uvkl"] * Gamma1["ki"] * Gamma1["lj"];
     temp1["UVIJ"] += V["UVKL"] * Gamma1["KI"] * Gamma1["LJ"];
@@ -945,8 +955,8 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     std::string str = "Computing <V, T2]> 4PP";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    temp1 = BlockedTensor::build(tensor_type_,"temp1", spin_cases({"aapp"}));
-    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+    temp1 = BTF->build(tensor_type_,"temp1", spin_cases({"aapp"}));
+    temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["uvcd"] += T2pr["uvab"] * Eta1["ac"] * Eta1["bd"];
     temp1["UVCD"] += T2pr["UVAB"] * Eta1["AC"] * Eta1["BD"];
@@ -971,7 +981,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     std::string str = "Computing [V, T2] 4PH";
     outfile->Printf("\n    %-36s ...", str.c_str());
 //    BlockedTensor temp;
-//    temp = BlockedTensor::build(tensor_type_,"temp", "aaaa");
+//    temp = BTF->build(tensor_type_,"temp", "aaaa");
 
 //    temp["uvxy"] += V["vbjx"] * T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
 //    temp["uvxy"] -= V["vBxJ"] * T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
@@ -991,8 +1001,8 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BlockedTensor::build(tensor_type_,"temp1", no_hhpp_);
-    temp2 = BlockedTensor::build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+    temp1 = BTF->build(tensor_type_,"temp1", no_hhpp_);
+    temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["juby"]  = T2pr["iuay"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uvxy"] += V["vbjx"] * temp1["juby"];
@@ -1038,7 +1048,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
-    temp = BlockedTensor::build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
+    temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
     temp["uvwxyz"] += V["uviz"] * T2pr["iwxy"];      //  aaaaaa from hole
     temp["uvwxyz"] += V["waxy"] * T2pr["uvaz"];      //  aaaaaa from particle
@@ -1169,24 +1179,13 @@ std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::strin
 void THREE_DSRG_MRPT2::frozen_natural_orbitals()
 {
      //outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
-    BlockedTensor Dfv = BlockedTensor::build(tensor_type_,"MP2Density", spin_cases({"pp"}));
-    BlockedTensor Vhap = BlockedTensor::build(tensor_type_,"V", spin_cases({"ppvv"}));
+    BlockedTensor Dfv = BTF->build(tensor_type_,"MP2Density", spin_cases({"pp"}));
+    BlockedTensor Vhap = BTF->build(tensor_type_,"V", spin_cases({"ppvv"}));
     Vhap = V;
     
     Dfv["ef"] += 0.5 * Vhap["εfij"]*Vhap["ijεe"] * Delta2["εfij"] * Delta2["εeij"];
      
 
-
-}
-void THREE_DSRG_MRPT2::memory_info()
-{
-     size_t nthree = ints_->nthree();
-     outfile->Printf("\n Memory info \n");
-     outfile->Printf("\n Size of V: %6.6f Gb \n", std::pow(core_ + active_ + virtual_,4)*8/1073741824);
-     outfile->Printf("\n Size of Lambda2: %6.6f Gb\n", std::pow(active_,4)*8/1073741824);
-     outfile->Printf("\n Size of Lambda3: %6.6f Gb\n", std::pow(active_,6)*8/1073741824);
-     outfile->Printf("\n Size of T2: %6.6f Gb\n", std::pow(core_ + active_,2)*std::pow(active_ + virtual_,2)*8/1073741824);
-     outfile->Printf("\n Size of DF/CD Integrals: %6.6f Gb\n",(nthree*(core_ + active_ + virtual_)*(core_ + active_ + virtual_) * 8.0 / 1073741824.0));
 
 }
 }} // End Namespaces

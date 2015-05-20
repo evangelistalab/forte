@@ -357,7 +357,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
         size_t sumgen = sumSingle+sumDouble;
         timer_off("FCIQMC:Compute_excitations");
 
-        outfile->Printf("\nspawn_type_:%d, all:%d", spawn_type_, all);
+//        outfile->Printf("\nspawn_type_:%d, all:%d", spawn_type_, all);
 
         switch (spawn_type_) {
         case random:
@@ -427,7 +427,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
                     pspawn_floor++;
                 }
 
-                outfile->Printf("\nall excitation called.");
+//                outfile->Printf("\nall excitation called.");
 
                 int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
 
