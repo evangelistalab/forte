@@ -23,7 +23,7 @@
 #include "iterative_solvers.h"
 #include "fci_solver.h"
 #include "string_lists.h"
-#include "wavefunction.h"
+#include "fci_vector.h"
 #include "helpers.h"
 
 #include <psi4-dec.h>
@@ -72,23 +72,36 @@ double FCI::compute_energy()
 
     int charge       = Process::environment.molecule()->molecular_charge();
     int multiplicity = Process::environment.molecule()->multiplicity();
+    int ms = options_.get_int("MS");
     int nel = 0;
+    int natom = Process::environment.molecule()->natom();
+    for(int i=0; i < natom;i++){
+        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+    }
 
     // If the charge has changed, recompute the number of electrons
     // Or if you cannot find the number of electrons
-    if((nel == 0) or options_["CHARGE"].has_changed()){
+    if(options_["CHARGE"].has_changed()){
         charge = options_.get_int("CHARGE");
-        nel = 0;
-        int natom = Process::environment.molecule()->natom();
-        for(int i=0; i < natom;i++){
-            nel += static_cast<int>(Process::environment.molecule()->Z(i));
-        }
-        nel -= charge;
     }
+    nel -= charge;
 
     if(options_["MULTIPLICITY"].has_changed()){
         multiplicity = options_.get_int("MULTIPLICITY");
     }
+
+    if(ms < 0){
+        outfile->Printf("\n  Ms must be no less than 0.");
+        outfile->Printf("\n  Ms = %2d, MULTI = %2d", ms, multiplicity);
+        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
+        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+    }
+
+    outfile->Printf("\n  Number of electrons: %d",nel);
+    outfile->Printf("\n  Charge: %d",charge);
+    outfile->Printf("\n  Multiplicity: %d",multiplicity);
+    outfile->Printf("\n  M_s: %d",ms);
+
 
     if( ((nel + 1 - multiplicity) % 2) != 0)
         throw PSIEXCEPTION("\n\n  FCI: Wrong multiplicity.\n\n");
@@ -98,7 +111,6 @@ double FCI::compute_energy()
     size_t na = (nel + multiplicity - 1) / 2;
     size_t nb =  nel - na;
 
-    outfile->Printf("\n  Multiplicity: %d",multiplicity);
 
 //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
 //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
@@ -186,7 +198,7 @@ double FCISolver::compute_energy()
     if (converged){
         dls.get_results();
         C.copy(dls.eigenvector(0));
-        C.compute_rdms();
+        C.compute_rdms(3);
     }
 //    C.initial_guess(Hdiag,1);
 //    for (int cycle = 0; cycle < 1000; ++cycle){

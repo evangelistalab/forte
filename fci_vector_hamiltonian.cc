@@ -1,17 +1,8 @@
-///*
-// *  wavefunction_hamiltonian.cpp
-// *  Capriccio
-// *
-// *  Created by Francesco Evangelista on 3/9/09.
-// *  Copyright 2009 __MyCompanyName__. All rights reserved.
-// *
-// */
-
 #include <boost/timer.hpp>
 
 #include <libqt/qt.h>
 
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 

@@ -7,7 +7,7 @@
 #include "libmints/vector.h"
 
 #include "bitset_determinant.h"
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 
