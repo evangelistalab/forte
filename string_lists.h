@@ -28,11 +28,38 @@ struct StringSubstitution {
     StringSubstitution(const int& sign_, const size_t& I_, const size_t& J_) : sign(sign_), I(I_), J(J_) {}
 };
 
+/// Knowles-Handy string substitution
+struct KHStringSubstitution {
+    short sign;
+    short p;
+    short q;
+    size_t J;
+    KHStringSubstitution(const short sign_,const short p_,const short q_,const size_t J_) : sign(sign_), p(p_), q(q_), J(J_) {}
+};
+
+/// Knowles-Handy string substitution
+struct H3StringSubstitution {
+    short sign;
+    short p;
+    short q;
+    short r;
+    size_t J;
+    H3StringSubstitution(short sign_,short p_,short q_,short r_,size_t J_) : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
+};
+
 typedef boost::shared_ptr<BinaryGraph> GraphPtr;
 typedef std::map<boost::tuple<size_t,size_t,int>,std::vector<StringSubstitution> > VOList;
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VOVOList;
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VVOOList;
 typedef std::map<boost::tuple<int,size_t,int>,std::vector<StringSubstitution> > OOList;
+
+/// (irrep,I,irrep J) -> list of sgn,p,q,J
+typedef std::map<std::tuple<int,size_t,int>,std::vector<KHStringSubstitution> > KHList;
+
+/// 3-hole list
+typedef std::map<std::tuple<int,size_t,int>,std::vector<H3StringSubstitution> > H3List;
+
+
 typedef std::pair<int,int>          Pair;
 typedef std::vector<Pair>           PairList;
 typedef std::vector<PairList>       NNList;
@@ -78,9 +105,21 @@ public:
 
     GraphPtr alfa_graph() {return alfa_graph_;}
     GraphPtr beta_graph() {return beta_graph_;}
+    GraphPtr alfa_graph_3h() {return alfa_graph_3h_;}
+    GraphPtr beta_graph_3h() {return beta_graph_3h_;}
+
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q,int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q,int h);
+
+    /// Return the Knowles-Handy alpha list
+    std::vector<KHStringSubstitution>& get_alfa_kh_list(int h_I,size_t add_I,int h_J);
+    /// Return the Knowles-Handy beta list
+    std::vector<KHStringSubstitution>& get_beta_kh_list(int h_I,size_t add_I,int h_J);
+
+    std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I,size_t add_I,int h_J);
+
     std::vector<StringSubstitution>& get_alfa_vovo_list(size_t p, size_t q,size_t r, size_t s,int h);
     std::vector<StringSubstitution>& get_beta_vovo_list(size_t p, size_t q,size_t r, size_t s,int h);
 
@@ -131,18 +170,24 @@ private:
     // String lists
     /// The pair string list
     NNList    nn_list;
-    /// The VO string list
+    /// The VO string lists
     VOList    alfa_vo_list;
     VOList    beta_vo_list;
-    /// The OO string list
+    /// The OO string lists
     OOList    alfa_oo_list;
     OOList    beta_oo_list;
-    /// The VOVO string list
+    /// The Knowles-Handy string lists
+    KHList    alfa_kh_list;
+    KHList    beta_kh_list;
+    /// The VOVO string lists
     VOVOList  alfa_vovo_list;
     VOVOList  beta_vovo_list;
-    /// The VVIO string list
+    /// The VVOO string lists
     VVOOList  alfa_vvoo_list;
     VVOOList  beta_vvoo_list;
+    /// The 3-hole lists
+    H3List alfa_3h_list;
+    H3List beta_3h_list;
     
     // Graphs
     /// The alpha string graph
@@ -151,15 +196,10 @@ private:
     GraphPtr  beta_graph_;
     /// The orbital pair graph
     GraphPtr  pair_graph_;
-
-    // Timers
-    double vo_list_timer = 0.0;
-    double nn_list_timer = 0.0;
-    double oo_list_timer = 0.0;
-    double vovo_list_timer = 0.0;
-    double vvoo_list_timer = 0.0;
-
-
+    /// The alpha string graph for N - 3 electrons
+    GraphPtr  alfa_graph_3h_;
+    /// The beta string graph for N - 3 electrons
+    GraphPtr  beta_graph_3h_;
     // ==> Class Functions <==
 
     void startup();
@@ -172,11 +212,19 @@ private:
     void make_oo_list(GraphPtr graph,OOList& list);
     void make_oo(GraphPtr graph,OOList& list,int pq_sym,size_t pq);
 
+    /// Make the Knowles-Handy lists (I -> a^{+}_p a_q I = sgn J)
+    void make_kh_list(GraphPtr graph,KHList& list);
+
+    /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
+    void make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list);
+
     void make_vovo_list(GraphPtr graph,VOVOList& list);
     void make_VOVO(GraphPtr graph,VOVOList& list,int p, int q,int r, int s);
 
     void make_vvoo_list(GraphPtr graph,VVOOList& list);
     void make_vvoo(GraphPtr graph,VVOOList& list,int p, int q,int r, int s);
+
+    short string_sign(const bool *I, size_t n);
 
     void print_string(bool* I,size_t n);
 };
