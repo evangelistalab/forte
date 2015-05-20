@@ -169,6 +169,15 @@ public:
         return h;
     }
 
+    size_t nstr()
+    {
+        size_t sum = 0;
+        for (int h = 0; h < nirrep_; ++h){
+            sum += strpi_[h];
+        }
+        return sum;
+    }
+
     size_t strpi(int h) const {return strpi_[h];}
     int nbits() const {return nbits_;}
     int nones() const {return nones_;}

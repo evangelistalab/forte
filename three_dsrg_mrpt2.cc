@@ -29,6 +29,8 @@ namespace psi{ namespace libadaptive{
 THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore), BTF(new BlockedTensorFactory(options))
 {
+    ///Need to erase all mo_space information
+    ambit::BlockedTensor::reset_mo_spaces();
     // Copy the wavefunction information
     copy(wfn);
 

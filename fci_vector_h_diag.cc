@@ -7,7 +7,7 @@
 #include "libmints/vector.h"
 
 #include "bitset_determinant.h"
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -54,7 +54,7 @@ void FCIWfn::form_H_diagonal()
     } while (std::next_permutation(Ia,Ia+n));
 
     hdiag_timer += t.elapsed();
-    outfile->Printf("\n  Timing for Hdiag          = %10.3f s\n",hdiag_timer);
+    outfile->Printf("\n  Timing for Hdiag          = %10.3f s",hdiag_timer);
     outfile->Flush();
 }
 
