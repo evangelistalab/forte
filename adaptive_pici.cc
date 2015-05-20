@@ -1022,7 +1022,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
                     Determinant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
@@ -1044,7 +1044,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
                     Determinant detJ(detI);
                     detJ.set_beta_bit(ii,false);
@@ -1074,7 +1074,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         double HJI = ints_->aptei_aa(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
@@ -1110,7 +1110,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         double HJI = ints_->aptei_ab(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
@@ -1147,7 +1147,7 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         double HJI = ints_->aptei_bb(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
@@ -1213,7 +1213,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
             int ii = aocc[i];
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                     Determinant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
@@ -1232,7 +1232,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
             int ii = bocc[i];
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                     Determinant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
@@ -1258,7 +1258,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                     int aa = avir[a];
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_aa(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
@@ -1296,7 +1296,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                     int aa = avir[a];
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_ab(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
@@ -1335,7 +1335,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                     int aa = bvir[a];
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                             double HJI = ints_->aptei_bb(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
@@ -1488,7 +1488,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
             int ii = aocc[i];
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                     Determinant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
@@ -1507,7 +1507,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
             int ii = bocc[i];
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                     Determinant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
@@ -1533,7 +1533,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                     int aa = avir[a];
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_aa(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
@@ -1571,7 +1571,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                     int aa = avir[a];
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_ab(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
@@ -1610,7 +1610,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawni
                     int aa = bvir[a];
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                             double HJI = ints_->aptei_bb(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
@@ -1954,7 +1954,7 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
             int ii = aocc[i];
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                     Determinant detJ(detI);
                     detJ.set_alfa_bit(ii,false);
                     detJ.set_alfa_bit(aa,true);
@@ -1975,7 +1975,7 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
             int ii = bocc[i];
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
-                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                     Determinant detJ(detI);
                     detJ.set_beta_bit(ii,false);
                     detJ.set_beta_bit(aa,true);
@@ -2002,7 +2002,7 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                     int aa = avir[a];
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_aa(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -2040,7 +2040,7 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                     int aa = avir[a];
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                             double HJI = ints_->aptei_ab(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -2079,7 +2079,7 @@ double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Det
                     int aa = bvir[a];
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
-                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                             double HJI = ints_->aptei_bb(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -2228,7 +2228,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& 
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 Determinant detJ(detI);
                 detJ.set_alfa_bit(ii,false);
                 detJ.set_alfa_bit(aa,true);
@@ -2247,7 +2247,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& 
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 Determinant detJ(detI);
                 detJ.set_beta_bit(ii,false);
                 detJ.set_beta_bit(aa,true);
@@ -2271,7 +2271,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& 
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         double HJI_abs = ints_->aptei_aa(ii,jj,aa,bb);
                         if (std::fabs(HJI_abs * CI) >= spawning_threshold){
                             Determinant detJ(detI);
@@ -2301,7 +2301,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& 
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         double HJI_abs = ints_->aptei_ab(ii,jj,aa,bb);
                         if (std::fabs(HJI_abs * CI) >= spawning_threshold){
                             Determinant detJ(detI);
@@ -2330,7 +2330,7 @@ double AdaptivePathIntegralCI::time_step(double spawning_threshold,Determinant& 
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         double HJI_abs = ints_->aptei_bb(ii,jj,aa,bb);
                         if (std::fabs(HJI_abs * CI) >= spawning_threshold){
                             Determinant detJ(detI);

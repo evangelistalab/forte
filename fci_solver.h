@@ -52,10 +52,15 @@ public:
 
     ~FCI() {}
 
+
     // ==> Class Interface <==
 
     /// Compute the energy
     virtual double compute_energy();
+
+    /// Return a reference object
+//    Reference reference();
+
 
 private:
 
