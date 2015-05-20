@@ -113,6 +113,7 @@ void EX_ACI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
+    max_det_ = options_.get_int("MAX_DET");
 
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
@@ -124,6 +125,11 @@ void EX_ACI::startup()
     q_function_ = options_.get_str("Q_FUNCTION");
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
+    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+    post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
+    post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
+
+
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -217,15 +223,19 @@ double EX_ACI::compute_energy()
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
-
+    int root;
     int maxcycle = 20;
-    for (int cycle = 0; cycle < maxcycle; ++cycle){
+    bool shrink = false;
+    for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 
-        outfile->Printf("\n\n  Cycle %3d",cycle);
+        outfile->Printf("\n\n  Cycle %3d",cycle_);
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
+
+        //save the dimention of the previous iteration
+        int PQ_space_init = PQ_space_.size();
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,nroot_,DavidsonLiuList);
@@ -244,9 +254,8 @@ double EX_ACI::compute_energy()
         outfile->Flush();
 
 
-        // Step 2. Find determinants in the Q space        
-        find_q_space(num_ref_roots,P_evals,P_evecs);
-
+        // Step 2. Find determinants in the Q space, shrink if needed
+        find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -267,21 +276,51 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n");
         outfile->Flush();
 
+        //get final dimention of P space
+        int PQ_space_final = PQ_space_.size();
+        outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
 
         // Step 4. Check convergence and break if needed
+        //If the second criteria is met, there is no PQ shrinking
         bool converged = check_convergence(energy_history,PQ_evals);
-        if (converged) break;
+        if(converged and PQ_space_.size() <= max_det_ ){
+            break;
+        }
 
-        // Step 5. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);        
+        //Step 5. Check if the procedure is stuck
+        bool stuck = check_stuck(energy_history,PQ_evals);
+        if(stuck){
+            outfile->Printf("\n  The procedure is stuck! Printing final energy (but be careful).");
+            break;
+        }
+
+        // Step 6. Prune the P + Q space to get an updated P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
+
+        // Step 7. Confine PQ space to size max_det_ if max_det_ is limiting
+        if(converged){
+            shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
+            shrink = true;
+        }
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
-    }
+
+    }//end cycle
 
     // Do Hamiltonian smoothing
     if (do_smooth_){
         smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
+    }
+
+
+    //Re-diagonalize H, solving for more roots
+    if(post_diagonalize_){
+        root = nroot_;
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,post_root_, DavidsonLiuSparse);
+        outfile->Printf(" \n  Re-diagonalizing the Hamiltonian with %zu roots.\n", post_root_);
+        outfile->Printf(" \n  WARNING: EPT2 is meaningless for roots %zu and higher. I'm not even printing them.", root+1);
+        nroot_ = post_root_;
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
@@ -289,8 +328,13 @@ double EX_ACI::compute_energy()
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+        if(post_diagonalize_ == false){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        }else if(post_diagonalize_ and i < root){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        }
     }
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
@@ -306,7 +350,7 @@ double EX_ACI::compute_energy()
 }
 
 
-void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
+void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool shrink)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -339,94 +383,46 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
     std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
-    std::vector<double> ept2(nroot_,0.0);
-
-    //Make vector of pairs for ∆e_n,0
-    std::vector<std::pair<double,double> > dE2(nroot_,make_pair(0.0,0.0));
-
+    std::vector<double> V(nroot_, 0.0);
+    BitsetDeterminant det;
     std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
+    std::vector<double> ept2(nroot_,0.0);
+    double criteria;
 
     // Check the coupling between the reference and the SD space
-
     for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
         double EI = it->first.energy();
 
         //Loop over roots
         //The tau_q parameter type is chosen here ( keyword bool "perturb_select" )
         for (int n = 0; n < nroot; ++n){
-            double V = it->second[n];
+            det = it->first;
+            V[n] = it->second[n];
 
-            double C1_I = perturb_select_ ? -V / (EI - evals->get(n)) :
-                                            ( ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0)) ) / V;
-            double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
-                                            ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
+            double C1_I = perturb_select_ ? -V[n] / (EI - evals->get(n)) :
+                                            ( ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V[n],2.0)) ) / V[n];
+            double E2_I = perturb_select_ ? -V[n] * V[n] / (EI - evals->get(n)) :
+                                            ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V[n],2.0) );
 
             C1[n] = make_pair(std::fabs(C1_I),C1_I);
             E2[n] = make_pair(std::fabs(E2_I),E2_I);
 
         }
-
-        //f_E2 and f_C1 will store the selected function of the chosen q-criteria
-        std::pair<double,double> f_C1;
-        std::pair<double,double> f_E2;
-
-        //Compute a determinant's effect on ground state or adjacent state transition
-        if(q_rel_ == true and nroot > 1){
-            for(int n = 0; n < nroot; ++n){
-                if( q_reference_ == "GS"){
-                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[0].first),E2[n].second - E2[0].second );
-                }
-            }
-            for(int n = 1; n < nroot; ++n){
-                if( q_reference_ == "ADJACENT"){
-                    dE2[n] = make_pair(std::fabs(E2[n].first - E2[n-1].first),E2[n].second - E2[n-1].second );
-                }
-            }
+        //make q space in a number of ways with C1 and E1 as input, produces PQ_space
+        if(ex_alg_ == "STATE_AVERAGE"){
+            criteria = average_q_values(nroot, C1, E2);
+        }
+        else if(ex_alg_ == "ROOT_SELECT"){
+            criteria = root_select(nroot, C1, E2);
+        }
+        else if(nroot_ == 1){
+            criteria = root_select(nroot, C1, E2);
         }
 
-        //Choose the function of couplings for each root.
-        //If nroot = 1, choose the max
-        if(q_function_ == "MAX" or nroot == 1){
-            f_C1 = *std::max_element(C1.begin(),C1.end());
-            f_E2 = q_rel_ and (nroot!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
-                                           *std::max_element(E2.begin(),E2.end());
-        }
-        else if(q_function_ == "MIN"){
-            f_C1 = *std::min_element(C1.begin(),C1.end());
-            f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
-                            *std::min_element(E2.begin(),E2.end());
-        }
-        else if(q_function_ == "AVERAGE"){
-            double C1_average = 0.0;
-            double E2_average = 0.0;
-            double dE2_average = 0.0;
-            for(int n = 0; n < nroot; ++n){
-                C1_average += C1[n].first / nroot;
-                E2_average += E2[n].first / nroot;
-            }
-            for(int n = 1; n < nroot; ++n){
-                dE2_average += dE2[n].first / (nroot-1.0);
-            }
-            f_C1 = make_pair(C1_average, 0);
-            f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
-        }
-        else{
-            throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
-        }
-
-//        //Prints selection criteria for each root, and the value used in screening
-//        for(int n = 0; n < nroot; ++n){
-//            outfile->Printf("  E2 for root %zu : %2.20f \n", n, q_rel_ ? dE2[n].first : E2[n].first);
-//        }
-//        outfile->Printf("Selected Criteria: %2.20f \n", f_E2.first);
-
-
-        if (aimed_selection_){
-            double aimed_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
-            sorted_dets.push_back(std::make_pair(aimed_value,it->first));
-        }else{
-            double select_value = energy_selection_ ? f_E2.first : f_C1.first;
-            if (std::fabs(select_value) > tau_q_){
+        if(aimed_selection_ and !shrink){
+            sorted_dets.push_back(std::make_pair(criteria,it->first));
+        }else if(!aimed_selection_ and !shrink){
+            if(std::fabs(criteria) > tau_q_){
                 PQ_space_.push_back(it->first);
             }else{
                 for (int n = 0; n < nroot; ++n){
@@ -434,35 +430,142 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 }
             }
         }
-    } //end loop over determinants
+    }// end loop over determinants
+
+    if(shrink){
+        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
+    }
+
+    if(shrink or aimed_selection_){
+    // Sort the CI coefficients in ascending order
+    std::sort(sorted_dets.begin(),sorted_dets.end());
+    }
 
     if (aimed_selection_){
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
-
         double sum = 0.0;
-        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+        auto I_init = shrink ? sorted_dets.size() - max_det_ : 0;
+        for (size_t I = I_init, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
-                const std::vector<double>& V_vec = V_hash[det];
+                const auto& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n){
                     double V = V_vec[n];
                     double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
                                                     ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
                     ept2[n] += E2_I;
                 }
-            }else{
+            }
+            else{
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
+    }else if(shrink){
+        for(size_t I = sorted_dets.size() - max_det_; I < sorted_dets.size(); ++I){
+            PQ_space_.push_back(sorted_dets[I].second);
+        }
     }
-    multistate_pt2_energy_correction_ = ept2;
+    std::vector<double> ept2_last;
+    if(!shrink){
+        ept2_last = ept2;
+    }
+
+
+    multistate_pt2_energy_correction_ = ept2_last;
 
     outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
     outfile->Flush();
+}
+
+
+double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+{
+
+
+    //f_E2 and f_C1 will store the selected function of the chosen q-criteria
+    std::pair<double,double> f_C1;
+    std::pair<double,double> f_E2;
+
+    //Make vector of pairs for ∆e_n,0
+    std::vector<std::pair<double,double> > dE2(nroot_,make_pair(0.0,0.0));
+
+
+    //Compute a determinant's effect on ground state or adjacent state transition
+    if(q_rel_ == true and nroot > 1){
+        for(int n = 0; n < nroot; ++n){
+            if( q_reference_ == "GS"){
+                dE2[n] = make_pair(std::fabs(E2[n].first - E2[0].first),E2[n].second - E2[0].second );
+            }
+        }
+        for(int n = 1; n < nroot; ++n){
+            if( q_reference_ == "ADJACENT"){
+                dE2[n] = make_pair(std::fabs(E2[n].first - E2[n-1].first),E2[n].second - E2[n-1].second );
+            }
+        }
+    }
+
+    //Choose the function of couplings for each root.
+    //If nroot = 1, choose the max
+    if(q_function_ == "MAX" or nroot == 1){
+        f_C1 = *std::max_element(C1.begin(),C1.end());
+        f_E2 = q_rel_ and (nroot!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
+                                       *std::max_element(E2.begin(),E2.end());
+    }
+    else if(q_function_ == "MIN"){
+        f_C1 = *std::min_element(C1.begin(),C1.end());
+        f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
+                        *std::min_element(E2.begin(),E2.end());
+    }
+    else if(q_function_ == "AVERAGE"){
+        double C1_average = 0.0;
+        double E2_average = 0.0;
+        double dE2_average = 0.0;
+        for(int n = 0; n < nroot; ++n){
+            C1_average += C1[n].first / nroot;
+            E2_average += E2[n].first / nroot;
+        }
+        for(int n = 1; n < nroot; ++n){
+            dE2_average += dE2[n].first / (nroot-1.0);
+        }
+        f_C1 = make_pair(C1_average, 0);
+        f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
+    }
+    else{
+        throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
+    }
+
+    double select_value = 0.0;
+    if (aimed_selection_){
+        select_value = energy_selection_ ? f_E2.first : std::pow(f_C1.first,2.0);
+    }else{
+        select_value = energy_selection_ ? f_E2.first : f_C1.first;
+    }
+    return select_value;
+
+}
+
+double EX_ACI::root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+{
+    double select_value;
+    ref_root_ = options_.get_int("REF_ROOT");
+
+    if(ref_root_ +1 > nroot_){
+        throw PSIEXCEPTION("Your selection is not a valid reference option. Check REF_ROOT in options.");
+    }
+
+    if(nroot == 1){
+        ref_root_ = 0;
+    }
+
+    if(aimed_selection_){
+        select_value = energy_selection_ ? E2[ref_root_].first : std::pow(C1[ref_root_].first,2.0);
+    }else{
+        select_value = energy_selection_ ? E2[ref_root_].first : C1[ref_root_].first;
+    }
+
+    return select_value;
 }
 
 
@@ -960,18 +1063,31 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
 
     // Check for convergence
     return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("E_CONVERGENCE"));
-    //        // Check the history of energies to avoid cycling in a loop
-    //        if(cycle > 3){
-    //            bool stuck = true;
-    //            for(int cycle_test = cycle - 2; cycle_test < cycle; ++cycle_test){
-    //                for (int n = 0; n < nroot_; ++n){
-    //                    if(std::fabs(energy_history[cycle_test][n] - energies[n]) < 1.0e-12){
-    //                        stuck = true;
-    //                    }
-    //                }
-    //            }
-    //            if(stuck) break; // exit the cycle
-    //        }
+}
+
+bool EX_ACI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
+{
+    int nroot = evals->dim();
+    if(cycle_ < 3){
+        return false;
+    }
+    else{
+        std::vector<double> av_energies;
+        av_energies.clear();
+
+        for(int i = 0; i < cycle_; ++i){
+            double energy = 0.0;
+            for(int n = 0; n < nroot; ++n){
+                energy += energy_history[i][n] / static_cast<double>(nroot);
+            }
+            av_energies.push_back(energy);
+        }
+
+        if( std::fabs(av_energies[cycle_-1]- av_energies[cycle_ - 3]) < options_.get_double("E_CONVERGENCE")
+                and std::fabs(av_energies[cycle_ - 2]- av_energies[cycle_ - 4]) < options_.get_double("E_CONVERGENCE") ){
+            return true;
+        }else{ return false;}
+    }
 }
 
 void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
@@ -996,7 +1112,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION");
+        outfile->Printf("AIMED SELECTION \n");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
@@ -1012,7 +1128,9 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
     // Include all determinants such that |C_I| > tau_p
     else{
-        for (size_t I = 0; I < large_space.size(); ++I){
+
+        std::sort(dm_det_list.begin(),dm_det_list.end());
+        for (size_t I = 0 ; I < large_space.size(); ++I){
             if (dm_det_list[I].first > tau_p_){
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
@@ -1021,6 +1139,33 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
 }
 
+void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
+                             std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
+{
+    outfile->Printf("\n Calculation has converged. Shrinking P space to %zu determinants.", max_det_);
+
+    // Create a vector that stores the absolute value of the CI coefficients
+    std::vector<std::pair<double,size_t> > dm_det_list;
+
+    pruned_space.clear();
+    pruned_space_map.clear();
+
+    for (size_t I = 0; I < total_space.size(); ++I){
+        double max_dm = 0.0;
+        for (int n = 0; n < nroot; ++n){
+            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
+        }
+        dm_det_list.push_back(std::make_pair(max_dm,I));
+    }
+
+    //Sort determinants in ascending order
+    std::sort(dm_det_list.begin(),dm_det_list.end());
+    auto dif = total_space.size() - max_det_;
+    for(size_t I = dif; I < total_space.size();++I){
+        pruned_space.push_back(total_space[dm_det_list[I].second]);
+        pruned_space_map[total_space[dm_det_list[I].second]] = 1;
+    }
+}
 
 void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
 {

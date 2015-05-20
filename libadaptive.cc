@@ -28,6 +28,7 @@
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
 #include "fci_solver.h"
+#include "blockedtensorfactory.h"
 
 INIT_PLUGIN
 
@@ -43,7 +44,13 @@ read_options(std::string name, Options &options)
 
         /*- SUBSECTION Job Type */
 
+        /// Compute natural orbitals using MP2
         options.add_bool("MP2_NOS",false);
+        /// View the natural orbitals with their symmetry information
+        options.add_bool("NAT_ORBS_PRINT", false);
+        /// Use Natural Orbitals to suggest active space
+        options.add_bool("NAT_ACT", false);
+
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -212,18 +219,24 @@ read_options(std::string name, Options &options)
 
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
-
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
-
         /*Function of q-space criteria, per root*/
         options.add_str("Q_FUNCTION", "MAX", "MIN AVERAGE");
-
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
-
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
+        /* Method to calculate excited state */
+        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE ROOT_SELECT SINGLE_STATE");
+        /*- Root to determine Q criteria*/
+        options.add_int("REF_ROOT",0);
+        /*Number of roots to compute on final re-diagonalization*/
+        options.add_int("POST_ROOT",1);
+        /*Diagonalize after ACI procedure with higher number of roots*/
+        options.add_bool("POST_DIAGONALIZE", false);
+        /*Maximum number of determinants*/
+        options.add_int("MAX_DET", 1e6);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -249,6 +262,8 @@ read_options(std::string name, Options &options)
         options.add_int("ENERGY_ESTIMATE_FREQ",25);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
+        /*- Use intermediate normalization -*/
+        options.add_bool("USE_INTER_NORM",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
         /*- Prescreen the spawning of excitations -*/
