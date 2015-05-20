@@ -1,3 +1,25 @@
+/*
+ *@BEGIN LICENSE
+ *
+ * Libadaptive: an ab initio quantum chemistry software package
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *@END LICENSE
+ */
+
 #ifndef _fci_vector_
 #define _fci_vector_
 
@@ -106,6 +128,11 @@ private:
     std::vector<double> tpdm_aa_;
     std::vector<double> tpdm_ab_;
     std::vector<double> tpdm_bb_;
+    std::vector<double> tpdm_aaa_;
+    std::vector<double> tpdm_aab_;
+    std::vector<double> tpdm_abb_;
+    std::vector<double> tpdm_bbb_;
+
 
     // ==> Class Static Data <==
 
@@ -148,6 +175,9 @@ private:
 
     size_t oei_index(size_t p, size_t q) const {return ncmo_ * p + q;}
     size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * q + ncmo_ * r + s;}
+    size_t six_index(size_t p, size_t q, size_t r, size_t s, size_t t, size_t u) const {
+        return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
+    }
 
     double oei_aa(size_t p, size_t q) const {return oei_a_[ncmo_ * p + q];}
     double oei_bb(size_t p, size_t q) const {return oei_b_[ncmo_ * p + q];}

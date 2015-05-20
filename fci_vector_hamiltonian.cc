@@ -1,17 +1,8 @@
-///*
-// *  wavefunction_hamiltonian.cpp
-// *  Capriccio
-// *
-// *  Created by Francesco Evangelista on 3/9/09.
-// *  Copyright 2009 __MyCompanyName__. All rights reserved.
-// *
-// */
-
 #include <boost/timer.hpp>
 
 #include <libqt/qt.h>
 
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -252,7 +243,10 @@ void FCIWfn::H2_aabb(FCIWfn& result)
 
         // Loop over all r,s
         for(int rs_sym = 0; rs_sym < nirrep_; ++rs_sym){
-            int Ja_sym = Ia_sym ^ rs_sym;
+            int Jb_sym = Ib_sym ^ rs_sym; // <- Looks like it should fail for states with symmetry != A1  URGENT
+            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for states with symmetry != A1  URGENT
+//            int Ja_sym = Ia_sym ^ rs_sym; // <- Looks like it should fail for states with symmetry != A1  URGENT
+
             size_t maxJa = alfa_graph_->strpi(Ja_sym);
             double** Y = result.C_[Ja_sym]->pointer();
             for(int r_sym = 0; r_sym < nirrep_; ++r_sym){

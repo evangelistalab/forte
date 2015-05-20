@@ -21,6 +21,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     outfile->Printf("\n      ------------------------------------------------\n");
     outfile->Flush();
 
+    //ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
     BlockedTensor::set_expert_mode(true);
 
     /// List of alpha occupied MOs
@@ -219,6 +220,56 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
         D1OO_evals.print();
         D1VV_evals.print();
     }
+    //This will suggested a restricted_docc and a active
+    //Does not take in account frozen_docc
+    if(options.get_bool("NAT_ACT"))
+    {
+        std::vector<size_t> restricted_docc(nirrep);
+        std::vector<size_t> active(nirrep);
+        outfile->Printf("\n Suggested Active Space \n");
+        outfile->Printf("\n Occupied orbitals with an occupation less than 0.985 are active");
+        outfile->Printf("\n Virtual orbitals with an occupation greater than 0.015 are active");
+        outfile->Printf("\n Remember, these are suggestions  :-)!\n");
+        for(size_t h = 0; h < nirrep; ++h){
+            size_t restricted_docc_number = 0;
+            size_t active_number          = 0;
+           for(size_t i = 0; i < aoccpi[h]; ++i) {
+               if(D1oo_evals.get(h,i) < 0.985)
+               {
+                   active_number++;
+                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,i, D1oo_evals.get(h,i));
+                   active[h] = active_number;
+               }
+               else if(D1oo_evals.get(h,i) >= 0.985)
+               {
+                   restricted_docc_number++;
+                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h, i, D1oo_evals.get(h,i));
+                   restricted_docc[h] = restricted_docc_number;
+               }
+           }
+           for(size_t a = 0; a < avirpi[h]; ++a){
+               if(D1vv_evals.get(h,a) > 0.015)
+               {
+                   active_number++;
+                   active[h] = active_number++;
+                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
+               }
+           }
+
+        }
+        outfile->Printf("\n By occupation analysis, your restricted docc should be\n");
+        outfile->Printf("\n Restricted_docc = [");
+        for(auto &rocc : restricted_docc){
+            outfile->Printf("%u, ", rocc);
+        }
+        outfile->Printf("]\n");
+        outfile->Printf("\n By occupation analysis, active space should be \n");
+        outfile->Printf("\n Active = [");
+        for(auto &ract : active){
+            outfile->Printf("%u, ", ract);
+        }
+        outfile->Printf("]\n");
+    }
 
     Matrix Ua("Ua",nmopi,nmopi);
     // Patch together the transformation matrices
@@ -304,6 +355,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     ints->retransform_integrals();
 
     BlockedTensor::set_expert_mode(false);
+    //ambit::finalize();
 }
 
 Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims)

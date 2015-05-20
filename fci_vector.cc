@@ -4,7 +4,7 @@
 #include "libmints/matrix.h"
 
 #include "helpers.h"
-#include "wavefunction.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace libadaptive{
 
