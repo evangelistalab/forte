@@ -324,6 +324,13 @@ double EX_ACI::compute_energy()
     }
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+
+    outfile->Printf("\n  Printing Wavefunction Information:");
+    print_wfn(PQ_space_,PQ_evecs,nroot_);
+    outfile->Printf("\n\n     Order       # of Dets        Total |c^2|  ");
+    outfile->Printf("\n   ---------   -------------   -----------------  ");
+
+    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -336,6 +343,8 @@ double EX_ACI::compute_energy()
                     exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
     }
+
+
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
@@ -347,6 +356,7 @@ double EX_ACI::compute_energy()
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+
 }
 
 
@@ -1226,6 +1236,53 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
     }
 }
 
+void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot)
+{
+    for(int n = 0; n < nroot; ++n){
+        std::vector<std::pair<size_t,double> > excitation_counter( 1 + (1 + cycle_)*2 );
+        std::vector<std::pair<double,size_t> > det_weight;
+        for (size_t I = 0; I < det_space.size(); ++I){
+            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+        }
+
+        std::sort(det_weight.begin(),det_weight.end());
+        std::reverse(det_weight.begin(),det_weight.end());
+
+        BitsetDeterminant ref;
+        ref.copy( det_space[det_weight[0].second] );
+
+        auto alfa_bits = ref.alfa_bits();
+        auto beta_bits = ref.beta_bits();
+
+        for(size_t I = 0; I < det_space.size(); ++I ){
+            int ndiff = 0;
+            auto ex_alfa_bits = det_space[det_weight[I].second].alfa_bits();
+            auto ex_beta_bits = det_space[det_weight[I].second].beta_bits();
+
+            //Compute number of differences in both alpha and beta strings wrt ref
+            for(int a = 0; a < alfa_bits.size(); ++a){
+                if(alfa_bits[a] != ex_alfa_bits[a]){
+                    ++ndiff;
+                }
+                if(beta_bits[a] != ex_beta_bits[a]){
+                    ++ndiff;
+                }
+            }
+            ndiff /= 2;
+            excitation_counter[ndiff] = std::make_pair(excitation_counter[ndiff].first + 1,
+                                                       excitation_counter[ndiff].second + std::pow(det_weight[I].first,2.0));
+
+        }
+        int order = 0;
+        for(auto i: excitation_counter){
+            outfile->Printf("\n      %2d          %4zu           %.11f", order, i.first, i.second);
+            ++order;
+        }
+        outfile->Printf("\n");
+
+    }
+
+}
 }} // EndNamespaces
 
 
