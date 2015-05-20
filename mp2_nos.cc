@@ -220,14 +220,16 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
         D1OO_evals.print();
         D1VV_evals.print();
     }
+    //This will suggested a restricted_docc and a active
+    //Does not take in account frozen_docc
     if(options.get_bool("NAT_ACT"))
     {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
         outfile->Printf("\n Suggested Active Space \n");
-        outfile->Printf("\n Occupied orbitals with an occupation greater than 0.985 are active");
+        outfile->Printf("\n Occupied orbitals with an occupation less than 0.985 are active");
         outfile->Printf("\n Virtual orbitals with an occupation greater than 0.015 are active");
-        outfile->Printf("\n Remember, these are suggestions  :-)\n");
+        outfile->Printf("\n Remember, these are suggestions  :-)!\n");
         for(size_t h = 0; h < nirrep; ++h){
             size_t restricted_docc_number = 0;
             size_t active_number          = 0;
