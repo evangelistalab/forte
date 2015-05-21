@@ -79,6 +79,7 @@ public:
     void Hamiltonian(FCIWfn& result,RequiredLists required_lists);
     
     void compute_rdms(int max_order = 2);
+    void rdm_test();
 //    // FCIWfn update routines
 //    void bendazzoli_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
 //    void davidson_update(double E,FCIWfn& H,FCIWfn& R);
@@ -191,13 +192,12 @@ private:
     void H2_aabb(FCIWfn& result);
     void H2_aaaa2(FCIWfn& result, bool alfa);
 
-    void rdm_test();
     void compute_1rdm(std::vector<double> &rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_ab(std::vector<double>& rdm);
     void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
-    void compute_3rdm_aab(std::vector<double>& rdm, bool alfa);
-
+    void compute_3rdm_aab(std::vector<double>& rdm);
+    void compute_3rdm_abb(std::vector<double>& rdm);
 };
 
 }}

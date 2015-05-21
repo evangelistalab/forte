@@ -30,6 +30,7 @@
 #include "helpers.h"
 #include "integrals.h"
 #include "string_lists.h"
+#include "reference.h"
 
 namespace psi{ namespace libadaptive{
 
@@ -58,9 +59,11 @@ public:
     /// Compute the energy
     virtual double compute_energy();
 
-    /// Return a reference object
-//    Reference reference();
+    /// Semi-canonicalize the molecular orbitals
+    void semi_canonicalize();
 
+    /// Return a reference object
+    Reference reference();
 
 private:
 
@@ -109,6 +112,9 @@ public:
     /// Compute the FCI energy
     double compute_energy();
 
+    /// When set to true before calling compute_energy(), it will test the
+    /// reduce density matrices.  Watch out, this function is very slow!
+    void test_rdms(bool value) {test_rdms_ = value;}
 
 private:
 
@@ -191,6 +197,9 @@ private:
     size_t nb_;
     /// The number of roots
     size_t nroot_;
+    /// Test the RDMs?
+    bool test_rdms_ = false;
+
 ////    int ncmos;                     // # of correlated molecular orbitals
 ////    std::vector<int> cmos;         // # of correlated molecular orbitals per irrep
 ////    std::vector<int> cmos_offset;  // Offset array for non-frozen molecular orbitals

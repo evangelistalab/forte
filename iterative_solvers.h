@@ -50,6 +50,11 @@ public:
 
     void set_print_level(size_t n) {print_level_ = n;}
 
+    /// Set the energy convergence
+    void set_e_convergence(double value) {e_convergence_ = value;}
+    /// Set the residual convergence
+    void set_r_convergence(double value) {r_convergence_ = value;}
+
     void add_b(SharedVector vec);
     void get_b(SharedVector vec);
     bool add_sigma(SharedVector vec);
