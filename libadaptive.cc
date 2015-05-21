@@ -214,6 +214,13 @@ read_options(std::string name, Options &options)
         options.add_int("NPOP",100);
 
         //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE FULL CI CODE
+        //////////////////////////////////////////////////////////////
+
+        /*- Test the FCI reduced density matrices? -*/
+        options.add_bool("TEST_RDMS",false);
+
+        //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
         //////////////////////////////////////////////////////////////
 
@@ -460,14 +467,23 @@ libadaptive(Options &options)
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }
-        else
+        if(options.get_str("CASTYPE")=="FCI")
         {
-            Reference reference("DMRG");
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->compute_energy();
+            Reference reference = fci->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
-
         }
+//        else
+//        {
+//            Reference reference("DMRG");
+//            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+//            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+//            dsrg_mrpt2->compute_energy();
+
+//        }
 
     }
     if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
