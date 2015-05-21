@@ -235,7 +235,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE ROOT_SELECT SINGLE_STATE");
+        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE","ROOT_SELECT SINGLE_STATE");
         /*- Root to determine Q criteria*/
         options.add_int("REF_ROOT",0);
         /*Number of roots to compute on final re-diagonalization*/
