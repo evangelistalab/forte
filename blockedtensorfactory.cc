@@ -144,6 +144,11 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
     tensors_information_.push_back(std::make_pair(BT.name(), memory_of_tensor));
     number_of_blocks_.push_back(BT.numblocks());
     memory_ -= memory_of_tensor;
+    if(print_memory_)
+    {
+        outfile->Printf("\n For tensor %s, this will take up %6.6f GB", BT.name().c_str(), memory_of_tensor);
+        outfile->Printf("\n %6.6f GB of memory left over", memory_);
+    }
 
 }
 void BlockedTensorFactory::memory_summary()
