@@ -374,7 +374,7 @@ read_options(std::string name, Options &options)
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
-        options.add_str("CASTYPE", "CAS", "CAS DMRG");
+        options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
         
     }
 
