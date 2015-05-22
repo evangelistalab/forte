@@ -27,74 +27,15 @@
 #include <liboptions/liboptions.h>
 #include <physconst.h>
 
+#include "fci_vector.h"
+
 #include "helpers.h"
 #include "integrals.h"
 #include "string_lists.h"
 #include "reference.h"
 
+
 namespace psi{ namespace libadaptive{
-
-/**
- * @brief The FCI class
- * This class implements FCI
- */
-class FCI : public Wavefunction
-{
-public:
-    // ==> Class Constructor and Destructor <==
-
-    /**
-     * Constructor
-     * @param wfn The main wavefunction object
-     * @param options The main options object
-     * @param ints A pointer to an allocated integral object
-     */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-    ~FCI() {}
-
-
-    // ==> Class Interface <==
-
-    /// Compute the energy
-    virtual double compute_energy();
-
-    /// Semi-canonicalize the molecular orbitals
-    void semi_canonicalize();
-
-    /// Return a reference object
-    Reference reference();
-
-private:
-
-    // ==> Class data <==
-
-    // * Calculation data
-    /// A reference to the options object
-    Options& options_;   
-    /// The molecular integrals
-    ExplorerIntegrals* ints_;
-    /// The information about the molecular orbital spaces
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-//    /// The maximum number of threads
-//    int num_threads_;
-//    /// The wave function symmetry
-//    int wavefunction_symmetry_;
-//    /// The symmetry of each orbital in Pitzer ordering
-//    std::vector<int> mo_symmetry_;
-//    /// The number of correlated molecular orbitals
-//    int ncmo_;
-//    /// The number of correlated molecular orbitals per irrep
-//    Dimension ncmopi_;
-//    /// The nuclear repulsion energy
-//    double nuclear_repulsion_energy_;
-
-    // ==> Class functions <==
-
-    /// All that happens before we compute the energy
-    void startup();
-};
-
 
 /**
  * @brief The FCISolver class
@@ -111,6 +52,9 @@ public:
 
     /// Compute the FCI energy
     double compute_energy();
+
+    /// Return a reference object
+    Reference reference();
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -134,6 +78,9 @@ private:
 
     /// The molecular integrals
     ExplorerIntegrals* ints_;
+
+    double energy_;
+    std::shared_ptr<FCIWfn> C_;
 
 ////    /// Use a OMP parallel algorithm?
 ////    bool parallel_;
@@ -226,6 +173,73 @@ private:
 ////    static FCIWfn* tmp_wfn1;
 ////    static FCIWfn* tmp_wfn2;
 };
+
+
+/**
+ * @brief The FCI class
+ * This class implements FCI
+ */
+class FCI : public Wavefunction
+{
+public:
+    // ==> Class Constructor and Destructor <==
+
+    /**
+     * Constructor
+     * @param wfn The main wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     */
+    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    ~FCI();
+
+
+    // ==> Class Interface <==
+
+    /// Compute the energy
+    virtual double compute_energy();
+
+    /// Semi-canonicalize the molecular orbitals
+    void semi_canonicalize();
+
+    /// Return a reference object
+    Reference reference();
+
+private:
+
+    // ==> Class data <==
+
+    // * Calculation data
+    /// A reference to the options object
+    Options& options_;
+    /// The molecular integrals
+    ExplorerIntegrals* ints_;
+    /// The information about the molecular orbital spaces
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// The information about the molecular orbital spaces
+    FCISolver* fcisolver_ = nullptr;
+
+
+//    /// The maximum number of threads
+//    int num_threads_;
+//    /// The wave function symmetry
+//    int wavefunction_symmetry_;
+//    /// The symmetry of each orbital in Pitzer ordering
+//    std::vector<int> mo_symmetry_;
+//    /// The number of correlated molecular orbitals
+//    int ncmo_;
+//    /// The number of correlated molecular orbitals per irrep
+//    Dimension ncmopi_;
+//    /// The nuclear repulsion energy
+//    double nuclear_repulsion_energy_;
+
+    // ==> Class functions <==
+
+    /// All that happens before we compute the energy
+    void startup();
+};
+
 
 }}
 

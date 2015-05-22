@@ -23,7 +23,6 @@
 #include "iterative_solvers.h"
 #include "fci_solver.h"
 #include "string_lists.h"
-#include "fci_vector.h"
 #include "helpers.h"
 #include "reference.h"
 
@@ -57,6 +56,11 @@ FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegral
     copy(wfn);
 
     startup();
+}
+
+FCI::~FCI()
+{
+    if (fcisolver_ != nullptr) delete fcisolver_;
 }
 
 void FCI::startup()
@@ -108,22 +112,23 @@ double FCI::compute_energy()
 
     if( ((nel + 1 - multiplicity) % 2) != 0)
         throw PSIEXCEPTION("\n\n  FCI: Wrong multiplicity.\n\n");
-    nel -= 2 * nfdocc - rdocc.size();
+
+    // Adjust the number of for frozen and restricted doubly occupied
+    size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
+
+    size_t na = (nactel + multiplicity - 1) / 2;
+    size_t nb =  nactel - na;
 
 
-    size_t na = (nel + multiplicity - 1) / 2;
-    size_t nb =  nel - na;
+    //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
+    //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
+
+    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
 
 
-//    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
-//    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
+    fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
 
-    FCISolver fcisolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
-
-
-    fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
-
-    double fci_energy = fcisolver.compute_energy();
+    double fci_energy = fcisolver_->compute_energy();
 
 
     Process::environment.globals["CURRENT ENERGY"] = fci_energy;
@@ -133,13 +138,12 @@ double FCI::compute_energy()
 }
 
 void FCI::semi_canonicalize()
-{
+{    
 }
 
 Reference FCI::reference()
 {
-    Reference ref;
-    return ref;
+    return fcisolver_->reference();
 }
 
 
@@ -179,7 +183,7 @@ double FCISolver::compute_energy()
     nroot_ = 1;
 
     FCIWfn Hdiag(lists_,ints_,symmetry_);
-    FCIWfn C(lists_,ints_,symmetry_);
+    C_ = std::make_shared<FCIWfn>(lists_,ints_,symmetry_);
     FCIWfn HC(lists_,ints_,symmetry_);
 
     size_t fci_size = Hdiag.size();
@@ -189,7 +193,7 @@ double FCISolver::compute_energy()
     SharedVector sigma(new Vector("sigma",fci_size));
 
     DavidsonLiuSolver dls(fci_size,nroot_);
-//    dls.set_e_convergence(1.0e-6);
+    //    dls.set_e_convergence(1.0e-6);
     dls.set_print_level(0);
     Hdiag.copy_to(sigma);
     dls.startup(sigma);
@@ -206,8 +210,8 @@ double FCISolver::compute_energy()
         bool add_sigma = true;
         for (int r = 0; r < nroot_ * 10; ++r){ // TODO : fix this loop
             dls.get_b(b);
-            C.copy(b);
-            C.Hamiltonian(HC,twoSubstituitionVVOO);
+            C_->copy(b);
+            C_->Hamiltonian(HC,twoSubstituitionVVOO);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
             if (not add_sigma) break;
@@ -228,6 +232,8 @@ double FCISolver::compute_energy()
 
     outfile->Printf("\n  ----------------------------------------");
 
+    converged = true;
+
     if (converged){
         dls.get_results();
     }
@@ -241,15 +247,210 @@ double FCISolver::compute_energy()
     // Compute the RDMs
     size_t rdm_root = 0;
     if (converged){
-        C.copy(dls.eigenvector(0));
+        C_->copy(dls.eigenvector(0));
         outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
-        C.compute_rdms(3);
+        C_->compute_rdms(3);
 
         // Optionally, test the RDMs
-        if (test_rdms_) C.rdm_test();
+        if (test_rdms_) C_->rdm_test();
     }
 
-    return dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
+    energy_ = dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
+
+    return energy_;
+}
+
+Reference FCISolver::reference()
+{
+    size_t nact = active_dim_.sum();
+    size_t nact2 = nact * nact;
+    size_t nact3 = nact2 * nact;
+    size_t nact4 = nact3 * nact;
+    size_t nact5 = nact4 * nact;
+
+    // One-particle density matrices in the active space
+    std::vector<double>& opdm_a = C_->opdm_a();
+    std::vector<double>& opdm_b = C_->opdm_b();
+    Tensor L1a = Tensor::build(kCore,"L1a",{nact,nact});
+    Tensor L1b = Tensor::build(kCore,"L1b",{nact,nact});
+    L1a.iterate([&](const::vector<size_t>& i,double& value){
+        value = opdm_a[i[0] * nact + i[1]]; });
+    L1b.iterate([&](const::vector<size_t>& i,double& value){
+        value = opdm_b[i[0] * nact + i[1]]; });
+
+    // Two-particle density matrices in the active space
+    Tensor L2aa = Tensor::build(kCore,"L2aa",{nact,nact,nact,nact});
+    Tensor L2ab = Tensor::build(kCore,"L2ab",{nact,nact,nact,nact});
+    Tensor L2bb = Tensor::build(kCore,"L2bb",{nact,nact,nact,nact});
+
+    outfile->Printf("\n\n** L2aa **");
+    L2aa.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+
+    if (na_ >= 2){
+        std::vector<double>& tpdm_aa = C_->tpdm_aa();
+        L2aa.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+    }
+    if ((na_ >= 1) and (nb_ >= 1)){
+        std::vector<double>& tpdm_ab = C_->tpdm_ab();
+        L2ab.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+    }
+    if (nb_ >= 2){
+        std::vector<double>& tpdm_bb = C_->tpdm_bb();
+        L2bb.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+    }
+
+    outfile->Printf("\n\n** L2aa **");
+    L2aa.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+
+    L2aa("pqrs") -= L1a("pr") * L1a("qs");
+    L2aa("pqrs") += L1a("ps") * L1a("qr");
+
+    outfile->Printf("\n\n** L2aa **");
+    L2aa.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+
+    L2ab("pqrs") -= L1a("pr") * L1a("qs");
+
+    L2bb("pqrs") -= L1b("pr") * L1b("qs");
+    L2bb("pqrs") += L1b("ps") * L1b("qr");
+
+    // Three-particle density matrices in the active space
+    Tensor L3aaa = Tensor::build(kCore,"L3aaa",{nact,nact,nact,nact,nact,nact});
+    Tensor L3aab = Tensor::build(kCore,"L3aab",{nact,nact,nact,nact,nact,nact});
+    Tensor L3abb = Tensor::build(kCore,"L3abb",{nact,nact,nact,nact,nact,nact});
+    Tensor L3bbb = Tensor::build(kCore,"L3bbb",{nact,nact,nact,nact,nact,nact});
+    if (na_ >= 3){
+        std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
+        L3aaa.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+    }
+    if ((na_ >= 2) and (nb_ >= 1)){
+        std::vector<double>& tpdm_aab = C_->tpdm_aab();
+        L3aab.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+    }
+    if ((na_ >= 1) and (nb_ >= 2)){
+        std::vector<double>& tpdm_abb = C_->tpdm_abb();
+        L3abb.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+    }
+    if (nb_ >= 3){
+        std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
+        L3bbb.iterate([&](const::vector<size_t>& i,double& value){
+            value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+    }
+
+    L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+    L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+    L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+    L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+    L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+    L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+    L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+    L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+    L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+    L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+    L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+    L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+    L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+    L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+    L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+
+    L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+    L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+    L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+    L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+    L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+    L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+    L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+
+    L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+    L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+    L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+    L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+    L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+    L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+    L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+
+    L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
+    L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
+    L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
+
+    L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
+    L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
+    L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
+
+    L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
+    L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
+    L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
+
+    L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
+    L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
+    L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
+
+    L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
+    L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
+    L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+
+
+    outfile->Printf("\n\n** L2aa **");
+    L2aa.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+    outfile->Printf("\n\n** L2ab **");
+    L2ab.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+    outfile->Printf("\n\n** L2bb **");
+    L2bb.iterate([&](const::vector<size_t>& i,double& value){
+        if (std::fabs(value) > 1.0e-15)
+        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+    });
+
+    for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
+        outfile->Printf("\n\n** %s **",L3.name().c_str());
+        L3.iterate([&](const::vector<size_t>& i,double& value){
+            if (std::fabs(value) > 1.0e-15)
+            outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
+        });
+    }
+
+//    L2aa.print();
+//    L2ab.print();
+//    L2bb.print();
+//    L3aaa.print();
+//    L3aab.print();
+//    L3abb.print();
+//    L3bbb.print();
+
+    Reference fci_ref(energy_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
+    return fci_ref;
 }
 
 }}
