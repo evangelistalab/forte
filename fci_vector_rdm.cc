@@ -21,18 +21,21 @@ void FCIWfn::compute_rdms(int max_order)
 {
     std::vector<double> rdm_timing;
 
+    size_t na = alfa_graph_->nones();
+    size_t nb = beta_graph_->nones();
+
     if (max_order >= 1){
         boost::timer t;
-        if (alfa_graph_->nones() >= 1) compute_1rdm(opdm_a_,true);
-        if (beta_graph_->nones() >= 1) compute_1rdm(opdm_b_,false);
+        if (na >= 1) compute_1rdm(opdm_a_,true);
+        if (nb >= 1) compute_1rdm(opdm_b_,false);
         rdm_timing.push_back(t.elapsed());
     }
 
     if (max_order >= 2){
         boost::timer t;
-        if (alfa_graph_->nones() >= 2) compute_2rdm_aa(tpdm_aa_,true);
-        if (beta_graph_->nones() >= 2) compute_2rdm_aa(tpdm_bb_,false);
-        if ((alfa_graph_->nones() >= 1) and (beta_graph_->nones() >= 1))
+        if (na >= 2) compute_2rdm_aa(tpdm_aa_,true);
+        if (nb >= 2) compute_2rdm_aa(tpdm_bb_,false);
+        if ((na >= 1) and (nb >= 1))
             compute_2rdm_ab(tpdm_ab_);
         rdm_timing.push_back(t.elapsed());
 
@@ -40,11 +43,11 @@ void FCIWfn::compute_rdms(int max_order)
 
     if (max_order >= 3){
         boost::timer t;
-        if (alfa_graph_->nones() >= 3) compute_3rdm_aaa(tpdm_aaa_,true);
-        if (beta_graph_->nones() >= 3) compute_3rdm_aaa(tpdm_bbb_,false);
-        if ((alfa_graph_->nones() >= 2) and (beta_graph_->nones() >= 1))
+        if (na >= 3) compute_3rdm_aaa(tpdm_aaa_,true);
+        if (nb >= 3) compute_3rdm_aaa(tpdm_bbb_,false);
+        if ((na >= 2) and (nb >= 1))
             compute_3rdm_aab(tpdm_aab_);
-        if ((alfa_graph_->nones() >= 1) and (beta_graph_->nones() >= 2))
+        if ((na >= 1) and (nb >= 2))
             compute_3rdm_abb(tpdm_abb_);
         rdm_timing.push_back(t.elapsed());
     }
@@ -69,9 +72,12 @@ void FCIWfn::compute_rdms(int max_order)
         for (size_t q = 0; q < ncmo_; ++q){
             for (size_t r = 0; r < ncmo_; ++r){
                 for (size_t s = 0; s < ncmo_; ++s){
-                    energy_2rdm += 0.25 * tpdm_aa_[tei_index(p,q,r,s)] * ints_->aptei_aa(p,q,r,s);
-                    energy_2rdm += tpdm_ab_[tei_index(p,q,r,s)] * ints_->aptei_ab(p,q,r,s);
-                    energy_2rdm += 0.25 * tpdm_bb_[tei_index(p,q,r,s)] * ints_->aptei_bb(p,q,r,s);
+                    if (na >= 2)
+                        energy_2rdm += 0.25 * tpdm_aa_[tei_index(p,q,r,s)] * ints_->aptei_aa(p,q,r,s);
+                    if ((na >= 1) and (nb >= 1))
+                        energy_2rdm += tpdm_ab_[tei_index(p,q,r,s)] * ints_->aptei_ab(p,q,r,s);
+                    if (nb >= 2)
+                        energy_2rdm += 0.25 * tpdm_bb_[tei_index(p,q,r,s)] * ints_->aptei_bb(p,q,r,s);
                 }
             }
         }
