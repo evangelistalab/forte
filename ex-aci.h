@@ -180,6 +180,8 @@ private:
     /// Shrink the PQ space to include only max_det_ determinants
     void shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
                          std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs, int nroot);
+    ///Analyze the wavefunction
+    void wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
