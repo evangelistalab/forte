@@ -156,4 +156,17 @@ void BlockedTensorFactory::memory_summary()
     }
     outfile->Printf("\n Memory left over: %8.6f GB\n", memory_/1073741824);
 }
+std::vector<std::string> BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
+{
+
+    std::vector<std::string> out_str_vec;
+    for(const std::string spin : in_str_vec){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            out_str_vec.push_back(spin);
+        }
+    }
+    return out_str_vec;
+}
 }}

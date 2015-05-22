@@ -54,6 +54,9 @@ read_options(std::string name, Options &options)
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
+        /// Print summary of memory
+        options.add_bool("MEMORY_SUMMARY", false);
+         
 
         /*- The algorithm used to screen the determinant
          *  - CONVENTIONAL Conventional two-electron integrals
