@@ -223,7 +223,7 @@ std::vector<int> EX_ACI::get_occupation()
             int nsym = wavefunction_multiplicity_ - 1;
             int orb_sym = wavefunction_symmetry_;
 
-            for(int i = 1; i < nsym; ++i){
+            for(int i = 1; i <= nsym; ++i){
                 orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha()-i].second.first, orb_sym );
             }
 
@@ -246,7 +246,7 @@ std::vector<int> EX_ACI::get_occupation()
             int nsym = wavefunction_multiplicity_ - 1;
             int orb_sym = wavefunction_symmetry_;
 
-            for(int i = 1; i < nsym; ++i){
+            for(int i = 1; i <= nsym; ++i){
                 orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta()-i].second.first, orb_sym );
             }
 
