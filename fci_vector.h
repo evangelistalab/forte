@@ -68,6 +68,19 @@ public:
 ////    void normalize_wrt(Determinant& det);
     void normalize();
     double dot(FCIWfn& wfn);
+
+
+    std::vector<double>& opdm_a() {return opdm_a_;}
+    std::vector<double>& opdm_b() {return opdm_b_;}
+    std::vector<double>& tpdm_aa() {return tpdm_aa_;}
+    std::vector<double>& tpdm_ab() {return tpdm_ab_;}
+    std::vector<double>& tpdm_bb() {return tpdm_bb_;}
+    std::vector<double>& tpdm_aaa() {return tpdm_aaa_;}
+    std::vector<double>& tpdm_aab() {return tpdm_aab_;}
+    std::vector<double>& tpdm_abb() {return tpdm_abb_;}
+    std::vector<double>& tpdm_bbb() {return tpdm_bbb_;}
+
+
 //    void randomize();
 ////    double get_coefficient(Determinant& det);
 //    double norm2();
