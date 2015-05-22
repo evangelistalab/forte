@@ -106,7 +106,6 @@ void EX_ACI::startup()
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
 
-
     //Build the reference determinant with correct symmetry
     reference_determinant_ = StringDeterminant(get_occupation());
 
@@ -159,49 +158,104 @@ std::vector<int> EX_ACI::get_occupation()
 
     std::vector<int> occupation(2 * ncmo_,0);
 
-    //Build reference determinant
-
+    // Get reference type
     std::string ref_type = options_.get_str("REFERENCE");
     outfile->Printf("\n  Using %s reference.", ref_type.c_str());
 
+    // Grab an ordered list of orbital energies, symmetry labels, and Pitzer-indices
     std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en;
-    if(ref_type == "RHF" or ref_type == "RKS"){
+    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_alfa;
+    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_beta;
+
+    if(ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
        labeled_orb_en = sym_labeled_orbitals("RHF");
     }
-    else if(ref_type == "ROHF"){
-       labeled_orb_en = sym_labeled_orbitals("ROHF");
+    else if(ref_type == "UHF"){
+        labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
+        labeled_orb_en_beta = sym_labeled_orbitals("BETA");
     }
-//    else if(ref_type == "UHF"){
-//        auto labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
-//        auto labeled_orb_en_beta = sym_labeled_orbitals("BETA");
-//    } I'll code this later
 
-    //For closed and open-shell singlets
-    if(ref_type ==  "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
-        int cumidx = 0;
-        for(int h = 0; h < nirrep_; ++h){
-            for(int i = 0; i < doccpi_[h]; ++i){
-                occupation[i + cumidx] = 1;
-                occupation[i + cumidx + ncmo_] = 1;
-            }
-            for (int i = 0; i < soccpi_[h]; ++i){
-                occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
-            }
-            //remove electron from highest-energy docc
-            if(h == labeled_orb_en[(ncel_/2)-1].second.first){
-                occupation[labeled_orb_en[(ncel_/2)-1].second.second] = 0;
-                outfile->Printf("\n electron removed from %d, out of %d",labeled_orb_en[(ncel_/2)-1].second.second, ncel_ );
-            }
-            cumidx += ncmopi_[h];
+    //For a restricted reference
+    if (ref_type ==  "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
+
+        // Build initial reference determinant from restricted reference
+        for(int i = 0;  i < nalpha(); ++i){
+            occupation[labeled_orb_en[i].second.second] = 1;
         }
+        for(int i = 0;  i < nbeta(); ++i){
+            occupation[ncmo_ + labeled_orb_en[i].second.second] = 1;
+        }
+
+        //remove electron from highest-energy docc
+        occupation[labeled_orb_en[(ncel_/2)-1].second.second] = 0;
+        outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[(ncel_/2)-1].second.second, ncel_ );
 
         //add electron to lowest-energy orbital of proper symmetry
         int orb_sym = direct_sym_product(labeled_orb_en[(ncel_/2)-1].second.first, wavefunction_symmetry_);
         for(int i = (ncel_/2)-1; i < ncmo_;  ++i){
-            if(orb_sym == labeled_orb_en[i].second.first){
+            if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] !=1){
                 occupation[labeled_orb_en[i].second.second] = 1;
-                outfile->Printf("\n Added electron to %d",labeled_orb_en[i].second.second);
+                outfile->Printf("\n  Added electron to %d",labeled_orb_en[i].second.second);
                 break;
+            }
+        }
+
+
+    }
+    // For an unrestricted reference
+    else if(ref_type == "UHF"){
+
+        //Make the reference
+        for(int i = 0;  i < nalpha(); ++i){
+            occupation[labeled_orb_en_alfa[i].second.second] = 1;
+        }
+        for(int i = 0;  i < nbeta(); ++i){
+            occupation[ncmo_ + labeled_orb_en_beta[i].second.second] = 1;
+        }
+        if( nalpha() >= nbeta() ){
+
+            //remove highest energy alpha electron
+            occupation[labeled_orb_en_alfa[nalpha()-1].second.second] = 0;
+            outfile->Printf("\n Electron removed from %d",labeled_orb_en_alfa[nalpha()-1].second.second);
+
+            //add electron to lowest-energy alpha orbital of required symmetry
+
+            int nsym = wavefunction_multiplicity_ - 1;
+            int orb_sym = wavefunction_symmetry_;
+
+            for(int i = 1; i < nsym; ++i){
+                orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha()-i].second.first, orb_sym );
+            }
+
+            for(int i = nalpha()-1; i < ncmo_;  ++i){
+                if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] != 1){
+                    occupation[labeled_orb_en_alfa[i].second.second] = 1;
+                    outfile->Printf("\n Added electron to %d",labeled_orb_en_alfa[i].second.second);
+                    break;
+                }
+            }
+        }
+        if( nalpha() < nbeta() ){
+
+            //remove highest energy alpha electron
+            occupation[labeled_orb_en_beta[nbeta()-1].second.second] = 0;
+            outfile->Printf("\n Electron removed from %d",labeled_orb_en_beta[nbeta()-1].second.second);
+
+            //add electron to lowest-energy alpha orbital of required symmetry
+
+            int nsym = wavefunction_multiplicity_ - 1;
+            int orb_sym = wavefunction_symmetry_;
+
+            for(int i = 1; i < nsym; ++i){
+                orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta()-i].second.first, orb_sym );
+            }
+
+            for(int i = nalpha()-1; i < ncmo_;  ++i){
+                if(orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] !=1){
+                    occupation[labeled_orb_en_beta[i].second.second] = 1;
+                    outfile->Printf("\n Added electron to %d",labeled_orb_en_beta[i].second.second);
+                    break;
+                }
             }
         }
 
@@ -1400,7 +1454,7 @@ std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals
 {
     std::vector<std::pair<double, std::pair<int,int> > > labeled_orb;
 
-    if(type == "RHF" or type == "ROHF"){
+    if(type == "RHF" or type == "ROHF" or type == "ALFA"){
 
         //Create a vector of orbital energy and index pairs (Pitzer ordered)
         std::vector<std::pair<double,int> > orb_e;
@@ -1423,8 +1477,29 @@ std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals
 
     }
 
-//    if(type == "UHF"){
+    if(type == "BETA"){
+        //Create a vector of orbital energy and index pairs (Pitzer ordered)
+        std::vector<std::pair<double,int> > orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; h++) {
+            for (int a = 0; a < ncmopi_[h]; a++){
+                orb_e.push_back(make_pair(epsilon_b_->get(h,a), a+cumidx));
+            }
+            cumidx += ncmopi_[h];
+        }
 
+        //Create a vector that stores the orbital energy, symmetry, and Pitzer-ordered index
+        for (int a = 0; a < ncmo_; ++a){
+            labeled_orb.push_back( make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ) );
+        }
+
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+
+    }
+
+//    for(int i = 0; i < ncmo_; ++i){
+//        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
 //    }
 
     return labeled_orb;
