@@ -107,6 +107,9 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
             value = ints->oei_b(i[0],i[1]);
     });
 
+    size_t nmo = ints->nmo();
+    if(nmo > 200){outfile->Printf("\n I would be suprised if this works");}
+
     // Fill in the two-electron operator (V)
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints->aptei_aa(i[0],i[1],i[2],i[3]);

@@ -73,8 +73,12 @@ private:
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
     std::vector<int> mo_symmetry_;
+    ///The multiplicity of the reference
+    int wavefunction_multiplicity_;
     /// The number of correlated molecular orbitals
     int ncmo_;
+    /// The number of correlated electrons
+    int ncel_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
     /// The nuclear repulsion energy
@@ -132,6 +136,9 @@ private:
     /// All that happens before we compute the energy
     void startup();
 
+    ///Get the reference occupation
+    std::vector<int> get_occupation();
+
     /// Print information about this calculation
     void print_info();
 
@@ -182,6 +189,12 @@ private:
                          std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs, int nroot);
     ///Analyze the wavefunction
     void wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot);
+
+    ///Take the direct product of two symmetry elements (int)
+    int direct_sym_product(int sym1, int sym2);
+
+    /// Returns a vector of orbital energy,sym label pairs
+    std::vector<std::pair<double, std::pair<int, int> > > sym_labeled_orbitals(std::string type);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

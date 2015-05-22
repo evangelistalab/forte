@@ -183,9 +183,9 @@ void THREE_DSRG_MRPT2::startup()
 
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
     //Returns a vector of all combinations for gggg
-    std::vector<std::string> list_of_entire_space = generate_all_indices("cav", "all");
+    std::vector<std::string> list_of_entire_space = BTF->generate_indices("cav", "all");
 
-    V = BTF->build(tensor_type_,"V",spin_cases_avoid(list_of_entire_space));
+    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_entire_space));
 
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -392,12 +392,16 @@ void THREE_DSRG_MRPT2::startup()
 
     // Print levels
     print_ = options_.get_int("PRINT");
+    if(options_.get_bool("MEMORY_SUMMARY"))
+    {
+        BTF->print_memory_info();
+    }
+
     if(print_ > 1){
         Gamma1.print(stdout);
         Eta1.print(stdout);
         F.print(stdout);
         H.print(stdout);
-        BTF->print_memory_info();
     }
     if(print_ > 2){
         V.print(stdout);
@@ -839,6 +843,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     size_t nthree = ints_->nthree();
     size_t ncmo   = ints_->ncmo();
     size_t nmo_   = ints_->nmo();
+    //First go at a batches algorithm
+    outfile->Printf("\n V_{mn}^{ef} takes up %8.6f", core_ * core_ * virtual_ * virtual_ * 8.0 /1073741824 );
 
     #pragma omp parallel for num_threads(num_threads_) \
 	schedule(dynamic) \
