@@ -37,7 +37,24 @@ struct KHStringSubstitution {
     KHStringSubstitution(const short sign_,const short p_,const short q_,const size_t J_) : sign(sign_), p(p_), q(q_), J(J_) {}
 };
 
-/// Knowles-Handy string substitution
+/// 1-hole string substitution
+struct H1StringSubstitution {
+    short sign;
+    short p;
+    size_t J;
+    H1StringSubstitution(short sign_,short p_,size_t J_) : sign(sign_), p(p_), J(J_) {}
+};
+
+/// 2-hole string substitution
+struct H2StringSubstitution {
+    short sign;
+    short p;
+    short q;
+    size_t J;
+    H2StringSubstitution(short sign_,short p_,short q_,size_t J_) : sign(sign_), p(p_), q(q_), J(J_) {}
+};
+
+/// 3-hole string substitution
 struct H3StringSubstitution {
     short sign;
     short p;
@@ -53,12 +70,14 @@ typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<Strin
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VVOOList;
 typedef std::map<boost::tuple<int,size_t,int>,std::vector<StringSubstitution> > OOList;
 
-/// (irrep,I,irrep J) -> list of sgn,p,q,J
+/// Knowles-Handy list (irrep,I,irrep J) -> list of sgn,p,q,J
 typedef std::map<std::tuple<int,size_t,int>,std::vector<KHStringSubstitution> > KHList;
-
+/// 1-hole list
+typedef std::map<std::tuple<int,size_t,int>,std::vector<H1StringSubstitution> > H1List;
+/// 2-hole list
+typedef std::map<std::tuple<int,size_t,int>,std::vector<H2StringSubstitution> > H2List;
 /// 3-hole list
 typedef std::map<std::tuple<int,size_t,int>,std::vector<H3StringSubstitution> > H3List;
-
 
 typedef std::pair<int,int>          Pair;
 typedef std::vector<Pair>           PairList;
@@ -105,9 +124,12 @@ public:
 
     GraphPtr alfa_graph() {return alfa_graph_;}
     GraphPtr beta_graph() {return beta_graph_;}
+    GraphPtr alfa_graph_1h() {return alfa_graph_1h_;}
+    GraphPtr beta_graph_1h() {return beta_graph_1h_;}
+    GraphPtr alfa_graph_2h() {return alfa_graph_2h_;}
+    GraphPtr beta_graph_2h() {return beta_graph_2h_;}
     GraphPtr alfa_graph_3h() {return alfa_graph_3h_;}
     GraphPtr beta_graph_3h() {return beta_graph_3h_;}
-
 
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q,int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q,int h);
@@ -116,6 +138,12 @@ public:
     std::vector<KHStringSubstitution>& get_alfa_kh_list(int h_I,size_t add_I,int h_J);
     /// Return the Knowles-Handy beta list
     std::vector<KHStringSubstitution>& get_beta_kh_list(int h_I,size_t add_I,int h_J);
+
+    std::vector<H1StringSubstitution>& get_alfa_1h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H1StringSubstitution>& get_beta_1h_list(int h_I,size_t add_I,int h_J);
+
+    std::vector<H2StringSubstitution>& get_alfa_2h_list(int h_I,size_t add_I,int h_J);
+    std::vector<H2StringSubstitution>& get_beta_2h_list(int h_I,size_t add_I,int h_J);
 
     std::vector<H3StringSubstitution>& get_alfa_3h_list(int h_I,size_t add_I,int h_J);
     std::vector<H3StringSubstitution>& get_beta_3h_list(int h_I,size_t add_I,int h_J);
@@ -185,6 +213,12 @@ private:
     /// The VVOO string lists
     VVOOList  alfa_vvoo_list;
     VVOOList  beta_vvoo_list;
+    /// The 1-hole lists
+    H1List alfa_1h_list;
+    H1List beta_1h_list;
+    /// The 2-hole lists
+    H2List alfa_2h_list;
+    H2List beta_2h_list;
     /// The 3-hole lists
     H3List alfa_3h_list;
     H3List beta_3h_list;
@@ -196,6 +230,14 @@ private:
     GraphPtr  beta_graph_;
     /// The orbital pair graph
     GraphPtr  pair_graph_;
+    /// The alpha string graph for N - 1 electrons
+    GraphPtr  alfa_graph_1h_;
+    /// The beta string graph for N - 1 electrons
+    GraphPtr  beta_graph_1h_;
+    /// The alpha string graph for N - 2 electrons
+    GraphPtr  alfa_graph_2h_;
+    /// The beta string graph for N - 2 electrons
+    GraphPtr  beta_graph_2h_;
     /// The alpha string graph for N - 3 electrons
     GraphPtr  alfa_graph_3h_;
     /// The beta string graph for N - 3 electrons
@@ -215,6 +257,10 @@ private:
     /// Make the Knowles-Handy lists (I -> a^{+}_p a_q I = sgn J)
     void make_kh_list(GraphPtr graph,KHList& list);
 
+    /// Make 1-hole lists (I -> a_p I = sgn J)
+    void make_1h_list(GraphPtr graph,GraphPtr graph_1h,H1List& list);
+    /// Make 2-hole lists (I -> a_p a_q I = sgn J)
+    void make_2h_list(GraphPtr graph,GraphPtr graph_2h,H2List& list);
     /// Make 3-hole lists (I -> a_p a_q a_r I = sgn J)
     void make_3h_list(GraphPtr graph,GraphPtr graph_3h,H3List& list);
 

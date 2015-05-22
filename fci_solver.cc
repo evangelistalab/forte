@@ -25,6 +25,7 @@
 #include "string_lists.h"
 #include "fci_vector.h"
 #include "helpers.h"
+#include "reference.h"
 
 #include <psi4-dec.h>
 
@@ -42,7 +43,7 @@ extern double vo_list_timer;
 extern double vovo_list_timer;
 extern double vvoo_list_timer;
 
-int fci_debug_level = 0;
+int fci_debug_level = 4;
 
 namespace psi{ namespace libadaptive{
 
@@ -119,12 +120,26 @@ double FCI::compute_energy()
 
     FCISolver fcisolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
 
+
+    fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
+
     double fci_energy = fcisolver.compute_energy();
+
 
     Process::environment.globals["CURRENT ENERGY"] = fci_energy;
     Process::environment.globals["FCI ENERGY"] = fci_energy;
 
     return fci_energy;
+}
+
+void FCI::semi_canonicalize()
+{
+}
+
+Reference FCI::reference()
+{
+    Reference ref;
+    return ref;
 }
 
 
@@ -174,6 +189,7 @@ double FCISolver::compute_energy()
     SharedVector sigma(new Vector("sigma",fci_size));
 
     DavidsonLiuSolver dls(fci_size,nroot_);
+//    dls.set_e_convergence(1.0e-6);
     dls.set_print_level(0);
     Hdiag.copy_to(sigma);
     dls.startup(sigma);
@@ -228,6 +244,9 @@ double FCISolver::compute_energy()
         C.copy(dls.eigenvector(0));
         outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
         C.compute_rdms(3);
+
+        // Optionally, test the RDMs
+        if (test_rdms_) C.rdm_test();
     }
 
     return dls.eigenvalues()->get(0) + nuclear_repulsion_energy;

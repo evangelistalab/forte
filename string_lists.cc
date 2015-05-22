@@ -32,6 +32,21 @@ void StringLists::startup()
     alfa_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_,cmopi_int));
     beta_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_,cmopi_int));
     pair_graph_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,2,cmopi_int));
+
+    if (na_ >= 1){
+        alfa_graph_1h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 1,cmopi_int));
+    }
+    if (nb_ >= 1){
+        beta_graph_1h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 1,cmopi_int));
+    }
+
+    if (na_ >= 2){
+        alfa_graph_2h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 2,cmopi_int));
+    }
+    if (nb_ >= 2){
+        beta_graph_2h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,nb_ - 2,cmopi_int));
+    }
+
     if (na_ >= 3){
         alfa_graph_3h_ = boost::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_,na_ - 3,cmopi_int));
     }
@@ -66,6 +81,8 @@ void StringLists::startup()
     double nn_list_timer = 0.0;
     double oo_list_timer = 0.0;
     double kh_list_timer = 0.0;
+    double h1_list_timer = 0.0;
+    double h2_list_timer = 0.0;
     double h3_list_timer = 0.0;
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
@@ -99,6 +116,20 @@ void StringLists::startup()
 
     {
         boost::timer t;
+        make_1h_list(alfa_graph_,alfa_graph_1h_,alfa_1h_list);
+        make_1h_list(beta_graph_,beta_graph_1h_,beta_1h_list);
+        h1_list_timer += t.elapsed();
+    }
+
+    {
+        boost::timer t;
+        make_2h_list(alfa_graph_,alfa_graph_2h_,alfa_2h_list);
+        make_2h_list(beta_graph_,beta_graph_2h_,beta_2h_list);
+        h2_list_timer += t.elapsed();
+    }
+
+    {
+        boost::timer t;
         make_3h_list(alfa_graph_,alfa_graph_3h_,alfa_3h_list);
         make_3h_list(beta_graph_,beta_graph_3h_,beta_3h_list);
         h3_list_timer += t.elapsed();
@@ -123,6 +154,8 @@ void StringLists::startup()
     outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",kh_list_timer);
     outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",vvoo_list_timer);
     outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",vovo_list_timer);
+    outfile->Printf("\n  Timing for 1-hole strings = %10.3f s",h1_list_timer);
+    outfile->Printf("\n  Timing for 2-hole strings = %10.3f s",h2_list_timer);
     outfile->Printf("\n  Timing for 3-hole strings = %10.3f s",h3_list_timer);
     outfile->Printf("\n  Total timing              = %10.3f s",total_time);
     outfile->Flush();
