@@ -4,6 +4,7 @@
 #include <functional>
 #include <algorithm>
 #include <unordered_map>
+#include <numeric>
 
 #include <boost/timer.hpp>
 #include <boost/format.hpp>
@@ -75,6 +76,13 @@ void EX_ACI::startup()
     ncmo_ = ints_->ncmo();
     ncmopi_ = ints_->ncmopi();
 
+    // Number of correlated electrons
+    ncel_ = 0;
+    for(int h = 0; h < nirrep_; ++h){
+        ncel_ += 2*doccpi_[h] + soccpi_[h];
+    }
+    outfile->Printf("\n  Number of electrons: %d", ncel_);
+
     // Overwrite the frozen orbitals arrays
     frzcpi_ = ints_->frzcpi();
     frzvpi_ = ints_->frzvpi();
@@ -88,25 +96,19 @@ void EX_ACI::startup()
         }
     }
 
+    //Collect information about the reference wavefunction
+    wavefunction_multiplicity_ = 1;
+    if(options_["MULTIPLICITY"].has_changed()){
+        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    }
     wavefunction_symmetry_ = 0;
     if(options_["ROOT_SYM"].has_changed()){
         wavefunction_symmetry_ = options_.get_int("ROOT_SYM");
     }
 
-    // Build the reference determinant and compute its energy
-    std::vector<int> occupation(2 * ncmo_,0);
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h){
-        for (int i = 0; i < doccpi_[h] - frzcpi_[h]; ++i){
-            occupation[i + cumidx] = 1;
-            occupation[ncmo_ + i + cumidx] = 1;
-        }
-        for (int i = 0; i < soccpi_[h]; ++i){
-            occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
-        }
-        cumidx += ncmopi_[h];
-    }
-    reference_determinant_ = StringDeterminant(occupation);
+
+    //Build the reference determinant with correct symmetry
+    reference_determinant_ = StringDeterminant(get_occupation());
 
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
@@ -150,6 +152,62 @@ void EX_ACI::startup()
 
 EX_ACI::~EX_ACI()
 {
+}
+
+std::vector<int> EX_ACI::get_occupation()
+{
+
+    std::vector<int> occupation(2 * ncmo_,0);
+
+    //Build reference determinant
+
+    std::string ref_type = options_.get_str("REFERENCE");
+    outfile->Printf("\n  Using %s reference.", ref_type.c_str());
+
+    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en;
+    if(ref_type == "RHF" or ref_type == "RKS"){
+       labeled_orb_en = sym_labeled_orbitals("RHF");
+    }
+    else if(ref_type == "ROHF"){
+       labeled_orb_en = sym_labeled_orbitals("ROHF");
+    }
+//    else if(ref_type == "UHF"){
+//        auto labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
+//        auto labeled_orb_en_beta = sym_labeled_orbitals("BETA");
+//    } I'll code this later
+
+    //For closed and open-shell singlets
+    if(ref_type ==  "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
+        int cumidx = 0;
+        for(int h = 0; h < nirrep_; ++h){
+            for(int i = 0; i < doccpi_[h]; ++i){
+                occupation[i + cumidx] = 1;
+                occupation[i + cumidx + ncmo_] = 1;
+            }
+            for (int i = 0; i < soccpi_[h]; ++i){
+                occupation[i + cumidx + doccpi_[h] - frzcpi_[h]] = 1;
+            }
+            //remove electron from highest-energy docc
+            if(h == labeled_orb_en[(ncel_/2)-1].second.first){
+                occupation[labeled_orb_en[(ncel_/2)-1].second.second] = 0;
+                outfile->Printf("\n electron removed from %d, out of %d",labeled_orb_en[(ncel_/2)-1].second.second, ncel_ );
+            }
+            cumidx += ncmopi_[h];
+        }
+
+        //add electron to lowest-energy orbital of proper symmetry
+        int orb_sym = direct_sym_product(labeled_orb_en[(ncel_/2)-1].second.first, wavefunction_symmetry_);
+        for(int i = (ncel_/2)-1; i < ncmo_;  ++i){
+            if(orb_sym == labeled_orb_en[i].second.first){
+                occupation[labeled_orb_en[i].second.second] = 1;
+                outfile->Printf("\n Added electron to %d",labeled_orb_en[i].second.second);
+                break;
+            }
+        }
+
+    }
+
+    return occupation;
 }
 
 void EX_ACI::print_info()
@@ -693,7 +751,7 @@ void EX_ACI::generate_excited_determinants_single_root(int nroot,int I,SharedMat
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -707,7 +765,7 @@ void EX_ACI::generate_excited_determinants_single_root(int nroot,int I,SharedMat
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
@@ -726,7 +784,7 @@ void EX_ACI::generate_excited_determinants_single_root(int nroot,int I,SharedMat
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
@@ -757,7 +815,7 @@ void EX_ACI::generate_excited_determinants_single_root(int nroot,int I,SharedMat
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -789,7 +847,7 @@ void EX_ACI::generate_excited_determinants_single_root(int nroot,int I,SharedMat
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -830,7 +888,7 @@ void EX_ACI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,Bi
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -851,7 +909,7 @@ void EX_ACI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,Bi
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
@@ -877,7 +935,7 @@ void EX_ACI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,Bi
                 int aa = avir[a];
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
@@ -906,7 +964,7 @@ void EX_ACI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,Bi
                 int aa = avir[a];
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -934,7 +992,7 @@ void EX_ACI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,Bi
                 int aa = bvir[a];
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
                         BitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
@@ -973,7 +1031,7 @@ void EX_ACI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix eve
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
@@ -994,7 +1052,7 @@ void EX_ACI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix eve
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
                 BitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
@@ -1236,6 +1294,60 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
     }
 }
 
+int EX_ACI::direct_sym_product(int sym1, int sym2)
+{
+
+    /*Create a matrix for direct products of Abelian symmetry groups
+    *
+    * This matrix is 8x8, but it works for molecules of both D2H and
+    * C2V symmetry
+    *
+    * Due to properties of groups, direct_sym_product(a,b) solves both
+    *
+    * a (x) b = ?
+    * and
+    * a (x) ? = b
+    */
+
+    boost::shared_ptr<Matrix> dp(new Matrix("dp",8,8));
+
+    for(int p = 0; p < 2; ++p){
+        for(int q = 0; q < 2; ++q){
+            if(p != q){
+                dp->set(p,q, 1);
+            }
+        }
+    }
+
+    for(int p = 2; p < 4; ++p){
+        for(int q = 0; q < 2; ++q){
+            dp->set(p,q, dp->get(p-2,q) + 2);
+            dp->set(q,p, dp->get(p-2,q) + 2);
+        }
+    }
+
+    for(int p = 2; p < 4; ++p){
+        for(int q = 2; q < 4; ++q){
+            dp->set(p,q, dp->get(p-2,q-2));
+        }
+    }
+
+    for(int p = 4; p < 8; ++p){
+        for(int q = 0; q < 4; ++q){
+            dp->set(p,q, dp->get(p-4,q)+4);
+            dp->set(q,p, dp->get(p-4,q)+4);
+        }
+    }
+
+    for(int p = 4; p < 8; ++p){
+        for(int q = 4; q < 8; ++q){
+            dp->set(p,q, dp->get(p-4,q-4));
+        }
+    }
+
+    return dp->get(sym1, sym2);
+}
+
 void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot)
 {
     for(int n = 0; n < nroot; ++n){
@@ -1283,6 +1395,41 @@ void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix
     }
 
 }
+
+std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals(std::string type)
+{
+    std::vector<std::pair<double, std::pair<int,int> > > labeled_orb;
+
+    if(type == "RHF" or type == "ROHF"){
+
+        //Create a vector of orbital energy and index pairs (Pitzer ordered)
+        std::vector<std::pair<double,int> > orb_e;
+        int cumidx = 0;
+        for (int h = 0; h < nirrep_; h++) {
+            for (int a = 0; a < ncmopi_[h]; a++){
+                orb_e.push_back(make_pair(epsilon_a_->get(h,a), a+cumidx));
+            }
+            cumidx += ncmopi_[h];
+        }
+
+        //Create a vector that stores the orbital energy, symmetry, and Pitzer-ordered index
+        for (int a = 0; a < ncmo_; ++a){
+            labeled_orb.push_back( make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ) );
+        }
+
+        // Order by energy, low to high
+        std::sort(labeled_orb.begin(), labeled_orb.end());
+
+
+    }
+
+//    if(type == "UHF"){
+
+//    }
+
+    return labeled_orb;
+}
+
 }} // EndNamespaces
 
 
