@@ -377,7 +377,7 @@ read_options(std::string name, Options &options)
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
-        options.add_str("CASTYPE", "FCI", "CAS FCI DMRG");
+        options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
         
     }
 
@@ -483,7 +483,6 @@ libadaptive(Options &options)
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
             fci->compute_energy();
             Reference reference = fci->reference();
-//            SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }
