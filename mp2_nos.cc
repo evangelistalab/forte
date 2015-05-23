@@ -470,8 +470,8 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         // core block
         for (int i = 0; i < rdocc[h]; ++i){
             for (int j = 0; j < rdocc[h]; ++j){
-                Ua.set(h,offset + i, offset + j,evecs[0]->get(i,j));
-                Ub.set(h,offset + i, offset + j,evecs[1]->get(i,j));
+                Ua.set(h,offset + i, offset + j,evecs[0]->get(h,i,j));
+                Ub.set(h,offset + i, offset + j,evecs[1]->get(h,i,j));
             }
         }
         offset += rdocc[h];
@@ -479,8 +479,8 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         // active block
         for (int u = 0; u < actv[h]; ++u){
             for (int v = 0; v < actv[h]; ++v){
-                Ua.set(h,offset + u, offset + v,evecs[2]->get(u,v));
-                Ub.set(h,offset + u, offset + v,evecs[3]->get(u,v));
+                Ua.set(h,offset + u, offset + v,evecs[2]->get(h,u,v));
+                Ub.set(h,offset + u, offset + v,evecs[3]->get(h,u,v));
             }
         }
         offset += actv[h];
@@ -488,8 +488,8 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         // virtual block
         for (int a = 0; a < ruocc[h]; ++a){
             for (int b = 0; b < ruocc[h]; ++b){
-                Ua.set(h,offset + a, offset + b,evecs[4]->get(a,b));
-                Ub.set(h,offset + a, offset + b,evecs[5]->get(a,b));
+                Ua.set(h,offset + a, offset + b,evecs[4]->get(h,a,b));
+                Ub.set(h,offset + a, offset + b,evecs[5]->get(h,a,b));
             }
         }
     }
@@ -500,7 +500,7 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
     SharedMatrix Ca_new(Ca->clone());
     SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-    Cb_new->gemm(false,false,1.0,Cb,Ua,0.0);
+    Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
 
