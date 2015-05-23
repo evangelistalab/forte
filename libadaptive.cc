@@ -462,7 +462,7 @@ libadaptive(Options &options)
 //        FCI_MO fci_mo(options,ints_);
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
-        if(options.get_str("CASTYPE")=="CAS")
+        if(options.get_str("CASTYPE")=="FCI")
         {
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
@@ -470,12 +470,19 @@ libadaptive(Options &options)
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }
-        if(options.get_str("CASTYPE")=="FCI")
+        if(options.get_str("CASTYPE")=="CAS")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            {
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->compute_energy();
+                Reference reference = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
+            }
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
             fci->compute_energy();
             Reference reference = fci->reference();
+            SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
         }

@@ -1,5 +1,3 @@
-#include "mp2_nos.h"
-
 #include "ambit/blocked_tensor.h"
 
 #include <libpsio/psio.h>
@@ -8,10 +6,12 @@
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
 
+#include "helpers.h"
+#include "mp2_nos.h"
+
 namespace psi{ namespace libadaptive{
 
 using namespace ambit;
-Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims);
 
 MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
 {
@@ -21,7 +21,6 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     outfile->Printf("\n      ------------------------------------------------\n");
     outfile->Flush();
 
-    //ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
     BlockedTensor::set_expert_mode(true);
 
     /// List of alpha occupied MOs
@@ -236,28 +235,28 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
         for(size_t h = 0; h < nirrep; ++h){
             size_t restricted_docc_number = 0;
             size_t active_number          = 0;
-           for(size_t i = 0; i < aoccpi[h]; ++i) {
-               if(D1oo_evals.get(h,i) < 0.985)
-               {
-                   active_number++;
-                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,i, D1oo_evals.get(h,i));
-                   active[h] = active_number;
-               }
-               else if(D1oo_evals.get(h,i) >= 0.985)
-               {
-                   restricted_docc_number++;
-                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h, i, D1oo_evals.get(h,i));
-                   restricted_docc[h] = restricted_docc_number;
-               }
-           }
-           for(size_t a = 0; a < avirpi[h]; ++a){
-               if(D1vv_evals.get(h,a) > 0.015)
-               {
-                   active_number++;
-                   active[h] = active_number++;
-                   outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
-               }
-           }
+            for(size_t i = 0; i < aoccpi[h]; ++i) {
+                if(D1oo_evals.get(h,i) < 0.985)
+                {
+                    active_number++;
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,i, D1oo_evals.get(h,i));
+                    active[h] = active_number;
+                }
+                else if(D1oo_evals.get(h,i) >= 0.985)
+                {
+                    restricted_docc_number++;
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h, i, D1oo_evals.get(h,i));
+                    restricted_docc[h] = restricted_docc_number;
+                }
+            }
+            for(size_t a = 0; a < avirpi[h]; ++a){
+                if(D1vv_evals.get(h,a) > 0.015)
+                {
+                    active_number++;
+                    active[h] = active_number++;
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
+                }
+            }
 
         }
         outfile->Printf("\n By occupation analysis, your restricted docc should be\n");
@@ -358,30 +357,162 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     ints->retransform_integrals();
 
     BlockedTensor::set_expert_mode(false);
-    //ambit::finalize();
 }
 
-Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims)
+SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
+                             Options &options, ExplorerIntegrals *ints,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, Reference &reference)
 {
-    // Copy the tensor to a plain matrix
-    size_t size = dims.sum();
-    Matrix M("M",size,size);
-    t.iterate([&](const std::vector<size_t>& i,double& value){
-        M.set(i[0],i[1],value);
-    });
+    print_method_banner({"Semi-Canonical Orbitals","Francesco A. Evangelista"});
 
-    Matrix M_sym("M",dims,dims);
-    size_t offset = 0;
-    for (size_t h = 0; h < dims.n(); ++h){
-        for (size_t p = 0; p < dims[h]; ++p){
-            for (size_t q = 0; q < dims[h]; ++q){
-                double value = M.get(p + offset,q + offset);
-                M_sym.set(h,p,q,value);
+    // 1. Build the Fock matrix
+    int nirrep = ints->nirrep();
+    size_t ncmo = ints->ncmo();
+    Dimension nmopi = wfn->nmopi();
+    Dimension ncmopi = ints->ncmopi();
+    Dimension fdocc = mo_space_info->get_dimension("FROZEN_DOCC");
+    Dimension rdocc = mo_space_info->get_dimension("RESTRICTED_DOCC");
+    Dimension actv = mo_space_info->get_dimension("ACTIVE");
+    Dimension ruocc = mo_space_info->get_dimension("RESTRICTED_UOCC");
+
+    SharedMatrix Da(new Matrix("Da", ncmo, ncmo));
+    SharedMatrix Db(new Matrix("Db", ncmo, ncmo));
+
+    Matrix L1a = tensor_to_matrix(reference.L1a(),actv);
+    Matrix L1b = tensor_to_matrix(reference.L1b(),actv);
+
+    //    L1a.print();
+    //    L1b.print();
+
+    for (int h = 0, offset = 0; h < nirrep; ++h){
+        // core block (diagonal)
+        for (int i = 0; i < rdocc[h]; ++i){
+            Da->set(offset + i, offset + i,1.0);
+            Db->set(offset + i, offset + i,1.0);
+        }
+
+        offset += rdocc[h];
+
+        // active block
+        for (int u = 0; u < actv[h]; ++u){
+            for (int v = 0; v < actv[h]; ++v){
+                Da->set(offset + u, offset + v,L1a.get(h,u,v));
+                Db->set(offset + u, offset + v,L1b.get(h,u,v));
             }
         }
-        offset += dims[h];
+
+        offset += ncmopi[h] - rdocc[h];
     }
-    return M_sym;
+
+    ints->make_fock_matrix(Da,Db);
+
+    // 2. Diagonalize the diagonal blocks of the Fock matrix
+    SharedMatrix Fc_a(new Matrix("Fock core alpha",rdocc,rdocc));
+    SharedMatrix Fc_b(new Matrix("Fock core beta",rdocc,rdocc));
+    SharedMatrix Fa_a(new Matrix("Fock active alpha",actv,actv));
+    SharedMatrix Fa_b(new Matrix("Fock active beta",actv,actv));
+    SharedMatrix Fv_a(new Matrix("Fock virtual alpha",ruocc,ruocc));
+    SharedMatrix Fv_b(new Matrix("Fock virtual beta",ruocc,ruocc));
+
+    for (int h = 0, offset = 0; h < nirrep; ++h){
+        // core block
+        for (int i = 0; i < rdocc[h]; ++i){
+            for (int j = 0; j < rdocc[h]; ++j){
+                Fc_a->set(h,i,j,ints->fock_a(offset + i,offset + j));
+                Fc_b->set(h,i,j,ints->fock_b(offset + i,offset + j));
+            }
+        }
+        offset += rdocc[h];
+
+        // active block
+        for (int u = 0; u < actv[h]; ++u){
+            for (int v = 0; v < actv[h]; ++v){
+                Fa_a->set(h,u,v,ints->fock_a(offset + u,offset + v));
+                Fa_b->set(h,u,v,ints->fock_b(offset + u,offset + v));
+
+            }
+        }
+        offset += actv[h];
+
+        // virtual block
+        for (int a = 0; a < ruocc[h]; ++a){
+            for (int b = 0; b < ruocc[h]; ++b){
+                Fv_a->set(h,a,b,ints->fock_a(offset + a,offset + b));
+                Fv_b->set(h,a,b,ints->fock_b(offset + a,offset + b));
+            }
+        }
+        offset += ruocc[h];
+    }
+
+    // Diagonalize each block of the Fock matrix
+    std::vector<SharedMatrix> evecs;
+    std::vector<SharedVector> evals;
+    for (auto F : {Fc_a,Fc_b,Fa_a,Fa_b,Fv_a,Fv_b}){
+        SharedMatrix U(new Matrix("U",F->rowspi(),F->colspi()));
+        SharedVector lambda(new Vector("lambda",F->rowspi()));
+        F->diagonalize(U,lambda);
+        F->print();
+        evecs.push_back(U);
+        evals.push_back(lambda);
+    }
+
+    // 3. Build the unitary matrices
+    Matrix Ua("Ua",nmopi,nmopi);
+    Matrix Ub("Ub",nmopi,nmopi);
+    for (int h = 0; h < nirrep; ++h){
+        size_t offset = 0;
+
+        // Set the matrices to the identity,
+        // this takes care of the frozen core and virtual spaces
+        for (int p = 0; p < nmopi[h]; ++p){
+            Ua.set(h,p,p,1.0);
+            Ub.set(h,p,p,1.0);
+        }
+
+        offset += fdocc[h];
+
+        // core block
+        for (int i = 0; i < rdocc[h]; ++i){
+            for (int j = 0; j < rdocc[h]; ++j){
+                Ua.set(h,offset + i, offset + j,evecs[0]->get(i,j));
+                Ub.set(h,offset + i, offset + j,evecs[1]->get(i,j));
+            }
+        }
+        offset += rdocc[h];
+
+        // active block
+        for (int u = 0; u < actv[h]; ++u){
+            for (int v = 0; v < actv[h]; ++v){
+                Ua.set(h,offset + u, offset + v,evecs[2]->get(u,v));
+                Ub.set(h,offset + u, offset + v,evecs[3]->get(u,v));
+            }
+        }
+        offset += actv[h];
+
+        // virtual block
+        for (int a = 0; a < ruocc[h]; ++a){
+            for (int b = 0; b < ruocc[h]; ++b){
+                Ua.set(h,offset + a, offset + b,evecs[4]->get(a,b));
+                Ub.set(h,offset + a, offset + b,evecs[5]->get(a,b));
+            }
+        }
+    }
+
+    Ua.print();
+    Ub.print();
+
+    // 4. Transform the MO coefficients
+    SharedMatrix Ca = wfn->Ca();
+    SharedMatrix Cb = wfn->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+    Cb_new->gemm(false,false,1.0,Cb,Ua,0.0);
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
+
+    // 5. Retransform the integrals in the new basis
+    ints->retransform_integrals();
 }
 
 }} // End Namespaces
