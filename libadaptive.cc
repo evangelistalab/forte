@@ -476,8 +476,8 @@ libadaptive(Options &options)
             {
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->compute_energy();
-                Reference reference = fci->reference();
-                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
             fci->compute_energy();

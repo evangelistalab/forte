@@ -55,16 +55,28 @@ void FCIWfn::compute_rdms(int max_order)
     if (max_order >= 4){
     }
 
+    // Print RDM timings
+    for (size_t n = 0; n < rdm_timing.size();++n){
+        outfile->Printf("\n    Timing for %d-RDM: %.3f s",n + 1,rdm_timing[n]);
+    }
+}
+
+double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints)
+{
     // Compute the energy from the 1-RDM and 2-RDM
+    size_t na = alfa_graph_->nones();
+    size_t nb = beta_graph_->nones();
+
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
+    double scalar_energy = fci_ints->frozen_core_energy() + fci_ints->scalar_energy();
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
 
     for (size_t p = 0; p < ncmo_; ++p){
         for (size_t q = 0; q < ncmo_; ++q){
-            energy_1rdm += opdm_a_[ncmo_ * p + q] * ints_->oei_a(p,q);
-            energy_1rdm += opdm_b_[ncmo_ * p + q] * ints_->oei_b(p,q);
+            energy_1rdm += opdm_a_[ncmo_ * p + q] * fci_ints->oei_a(p,q);
+            energy_1rdm += opdm_b_[ncmo_ * p + q] * fci_ints->oei_b(p,q);
         }
     }
 
@@ -73,22 +85,18 @@ void FCIWfn::compute_rdms(int max_order)
             for (size_t r = 0; r < ncmo_; ++r){
                 for (size_t s = 0; s < ncmo_; ++s){
                     if (na >= 2)
-                        energy_2rdm += 0.25 * tpdm_aa_[tei_index(p,q,r,s)] * ints_->aptei_aa(p,q,r,s);
+                        energy_2rdm += 0.25 * tpdm_aa_[tei_index(p,q,r,s)] * fci_ints->tei_aa(p,q,r,s);
                     if ((na >= 1) and (nb >= 1))
-                        energy_2rdm += tpdm_ab_[tei_index(p,q,r,s)] * ints_->aptei_ab(p,q,r,s);
+                        energy_2rdm += tpdm_ab_[tei_index(p,q,r,s)] * fci_ints->tei_ab(p,q,r,s);
                     if (nb >= 2)
-                        energy_2rdm += 0.25 * tpdm_bb_[tei_index(p,q,r,s)] * ints_->aptei_bb(p,q,r,s);
+                        energy_2rdm += 0.25 * tpdm_bb_[tei_index(p,q,r,s)] * fci_ints->tei_bb(p,q,r,s);
                 }
             }
         }
     }
-
-    outfile->Printf("\n    Total Energy: %25.15f\n",nuclear_repulsion_energy + energy_1rdm + energy_2rdm);
-
-    // Print RDM timings
-    for (size_t n = 0; n < rdm_timing.size();++n){
-        outfile->Printf("\n    Timing for %d-RDM: %.3f s",n + 1,rdm_timing[n]);
-    }
+    double total_energy = nuclear_repulsion_energy + scalar_energy + energy_1rdm + energy_2rdm;
+    outfile->Printf("\n    Total Energy: %25.15f\n",total_energy);
+    return total_energy;
 }
 
 /**
@@ -223,7 +231,6 @@ void FCIWfn::compute_2rdm_aa(std::vector<double>& rdm, bool alfa)
                         const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym,rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
-                        double integral = alfa ? tei_aaaa(p_abs,q_abs,r_abs,s_abs) : tei_bbbb(p_abs,q_abs,r_abs,s_abs);
 
                         double rdm_element = 0.0;
                         std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,ha)

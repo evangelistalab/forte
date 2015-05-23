@@ -381,9 +381,6 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
     Matrix L1a = tensor_to_matrix(reference.L1a(),actv);
     Matrix L1b = tensor_to_matrix(reference.L1b(),actv);
 
-    //    L1a.print();
-    //    L1b.print();
-
     for (int h = 0, offset = 0; h < nirrep; ++h){
         // core block (diagonal)
         for (int i = 0; i < rdocc[h]; ++i){
@@ -451,7 +448,6 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         SharedMatrix U(new Matrix("U",F->rowspi(),F->colspi()));
         SharedVector lambda(new Vector("lambda",F->rowspi()));
         F->diagonalize(U,lambda);
-        F->print();
         evecs.push_back(U);
         evals.push_back(lambda);
     }
@@ -498,9 +494,6 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         }
     }
 
-    Ua.print();
-    Ub.print();
-
     // 4. Transform the MO coefficients
     SharedMatrix Ca = wfn->Ca();
     SharedMatrix Cb = wfn->Cb();
@@ -512,6 +505,7 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
     Cb->copy(Cb_new);
 
     // 5. Retransform the integrals in the new basis
+    print_h2("Integral transformation");
     ints->retransform_integrals();
 }
 

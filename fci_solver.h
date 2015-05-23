@@ -60,6 +60,7 @@ public:
     /// reduce density matrices.  Watch out, this function is very slow!
     void test_rdms(bool value) {test_rdms_ = value;}
 
+    void set_print(int value) {print_ = value;}
 private:
 
     // ==> Class Data <==
@@ -67,19 +68,22 @@ private:
     /// The Dimension object for the active space
     Dimension active_dim_;
 
-    // The orbitals frozen at the CI level
+    /// The orbitals frozen at the CI level
     std::vector<size_t> core_mo_;
 
-    // The orbitals treated at the CI level
+    /// The orbitals treated at the CI level
     std::vector<size_t> active_mo_;
 
-    // A object that stores string information
-    boost::shared_ptr<StringLists> lists_;
+    /// A object that stores string information
+    std::shared_ptr<StringLists> lists_;
 
     /// The molecular integrals
     ExplorerIntegrals* ints_;
 
+    /// The FCI energy
     double energy_;
+
+    /// The FCI wave function
     std::shared_ptr<FCIWfn> C_;
 
     /// The number of irreps
@@ -94,6 +98,8 @@ private:
     size_t nroot_;
     /// Test the RDMs?
     bool test_rdms_ = false;
+    ///
+    int print_ = 0;
 
     // ==> Class functions <==
 
