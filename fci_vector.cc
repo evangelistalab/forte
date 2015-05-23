@@ -11,8 +11,8 @@ namespace psi{ namespace libadaptive{
 SharedMatrix FCIWfn::C1;
 SharedMatrix FCIWfn::Y1;
 size_t   FCIWfn::sizeC1 = 0;
-FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
-FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
+//FCIWfn* FCIWfn::tmp_wfn1 = nullptr;
+//FCIWfn* FCIWfn::tmp_wfn2 = nullptr;
 
 double FCIWfn::hdiag_timer = 0.0;
 double FCIWfn::h1_aa_timer = 0.0;
@@ -21,19 +21,73 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
-bool FCIWfn::integrals_are_set_ = false;
-double FCIWfn::scalar_energy_;
-std::vector<double> FCIWfn::oei_a_;
-std::vector<double> FCIWfn::oei_b_;
-std::vector<double> FCIWfn::tei_aa_;
-std::vector<double> FCIWfn::tei_ab_;
-std::vector<double> FCIWfn::tei_bb_;
+FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ExplorerIntegrals* ints)
+{
+    ncmo = lists->ncmo();
+    std::vector<size_t> cmo_to_mo = lists->cmo_to_mo();
 
-void FCIWfn::allocate_temp_space(boost::shared_ptr<StringLists> lists_,ExplorerIntegrals* ints_,size_t symmetry)
+    std::vector<size_t> fomo_to_mo = lists->fomo_to_mo();
+    size_t nfomo = fomo_to_mo.size();
+
+    oei_a_.resize(ncmo * ncmo);
+    oei_b_.resize(ncmo * ncmo);
+    tei_aa_.resize(ncmo * ncmo * ncmo * ncmo);
+    tei_ab_.resize(ncmo * ncmo * ncmo * ncmo);
+    tei_bb_.resize(ncmo * ncmo * ncmo * ncmo);
+
+
+    frozen_core_energy_ = ints->frozen_core_energy();
+
+    // Compute the scalar contribution to the energy that comes from
+    // the restricted occupied orbitals
+    scalar_energy_ = 0.0;
+    for (size_t i = 0; i < nfomo; ++i){
+        size_t ii = fomo_to_mo[i];
+        scalar_energy_ += ints->oei_a(ii,ii);
+        scalar_energy_ += ints->oei_b(ii,ii);
+        for (size_t j = 0; j < nfomo; ++j){
+            size_t jj = fomo_to_mo[j];
+            scalar_energy_ += 0.5 * ints->aptei_aa(ii,jj,ii,jj);
+            scalar_energy_ += 1.0 * ints->aptei_ab(ii,jj,ii,jj);
+            scalar_energy_ += 0.5 * ints->aptei_bb(ii,jj,ii,jj);
+        }
+    }
+
+    for (size_t p = 0; p < ncmo; ++p){
+        size_t pp = cmo_to_mo[p];
+        for (size_t q = 0; q < ncmo; ++q){
+            size_t qq = cmo_to_mo[q];
+            oei_a_[ncmo * p + q] = ints->oei_a(pp,qq);
+            oei_b_[ncmo * p + q] = ints->oei_b(pp,qq);
+
+            // Compute the one-body contribution to the energy that comes from
+            // the restricted occupied orbitals
+            for (size_t f = 0; f < nfomo; ++f){
+                size_t ff = fomo_to_mo[f];
+                oei_a_[ncmo * p + q] += ints->aptei_aa(pp,ff,qq,ff);
+                oei_a_[ncmo * p + q] += ints->aptei_ab(pp,ff,qq,ff);
+                oei_b_[ncmo * p + q] += ints->aptei_bb(pp,ff,qq,ff);
+                oei_b_[ncmo * p + q] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
+            }
+            for (size_t r = 0; r < ncmo; ++r){
+                size_t rr = cmo_to_mo[r];
+                for (size_t s = 0; s < ncmo; ++s){
+                    size_t ss = cmo_to_mo[s];
+                    size_t tei_index = ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;
+                    tei_aa_[tei_index] = ints->aptei_aa(pp,qq,rr,ss);
+                    tei_ab_[tei_index] = ints->aptei_ab(pp,qq,rr,ss);
+                    tei_bb_[tei_index] = ints->aptei_bb(pp,qq,rr,ss);
+                }
+            }
+        }
+    }
+}
+
+void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t symmetry)
 {
     // TODO Avoid allocating and deallocating these temp
 
-    size_t nirreps = ints_->nirrep();
+    size_t nirreps = lists_->nirrep();
     size_t maxC1 = 0;
     for(int Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym){
         maxC1 = std::max(maxC1,lists_->alfa_graph()->strpi(Ia_sym));
@@ -51,15 +105,15 @@ void FCIWfn::allocate_temp_space(boost::shared_ptr<StringLists> lists_,ExplorerI
     sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
 
     outfile->Printf("\n  Allocating temporary CI vectors");
-    tmp_wfn1 = new FCIWfn(lists_,ints_,symmetry);
-    tmp_wfn2 = new FCIWfn(lists_,ints_,symmetry);
+//    tmp_wfn1 = new FCIWfn(lists_,fci_ints,symmetry);
+//    tmp_wfn2 = new FCIWfn(lists_,fci_ints,symmetry);
 }
 
 void FCIWfn::release_temp_space()
 {
-    outfile->Printf("\n  Deallocating temporary space and scratch vector");
-    delete tmp_wfn1;
-    delete tmp_wfn2;
+//    outfile->Printf("\n  Deallocating temporary space and scratch vector");
+//    delete tmp_wfn1;
+//    delete tmp_wfn2;
 }
 
 //void FCIWfn::check_temp_space()
@@ -71,8 +125,8 @@ void FCIWfn::release_temp_space()
 //  }
 //}
 
-FCIWfn::FCIWfn(boost::shared_ptr<StringLists> lists, ExplorerIntegrals* ints, size_t symmetry)
-    : lists_(lists), ints_(ints), symmetry_(symmetry),
+FCIWfn::FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry)
+    : lists_(lists), symmetry_(symmetry),
       alfa_graph_(lists_->alfa_graph()), beta_graph_(lists_->beta_graph())
 {
     startup();
@@ -97,11 +151,11 @@ void FCIWfn::startup()
     //    exit(1);
     //  }
 
-    nirrep_ = ints_->nirrep();
+    nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
     cmopi_ = lists_->cmopi();
     cmopi_offset_ = lists_->cmopi_offset();
-    cmo_to_mo_ = lists_->cmo_to_mo();
+//    cmo_to_mo_ = lists_->cmo_to_mo();
 
     ndet_ = 0;
     for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
@@ -116,61 +170,6 @@ void FCIWfn::startup()
         size_t beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d * %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
         C_.push_back(SharedMatrix(new Matrix("C",alfa_graph_->strpi(alfa_sym),beta_graph_->strpi(beta_sym))));
-    }
-
-    if (not integrals_are_set_){
-        std::vector<size_t> fomo_to_mo_ = lists_->fomo_to_mo();
-        size_t nfomo = fomo_to_mo_.size();
-
-        oei_a_.resize(ncmo_ * ncmo_);
-        oei_b_.resize(ncmo_ * ncmo_);
-        tei_aa_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
-        tei_ab_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
-        tei_bb_.resize(ncmo_ * ncmo_ * ncmo_ * ncmo_);
-
-        // Compute the scalar contribution to the energy that comes from
-        // the restricted occupied orbitals
-        scalar_energy_ = 0.0;
-        for (size_t i = 0; i < nfomo; ++i){
-            size_t ii = fomo_to_mo_[i];
-            scalar_energy_ += ints_->oei_a(ii,ii);
-            scalar_energy_ += ints_->oei_b(ii,ii);
-            for (size_t j = 0; j < nfomo; ++j){
-                size_t jj = fomo_to_mo_[j];
-                scalar_energy_ += 0.5 * ints_->aptei_aa(ii,jj,ii,jj);
-                scalar_energy_ += 1.0 * ints_->aptei_ab(ii,jj,ii,jj);
-                scalar_energy_ += 0.5 * ints_->aptei_bb(ii,jj,ii,jj);
-            }
-        }
-
-        for (size_t p = 0; p < ncmo_; ++p){
-            size_t pp = cmo_to_mo_[p];
-            for (size_t q = 0; q < ncmo_; ++q){
-                size_t qq = cmo_to_mo_[q];
-                oei_a_[ncmo_ * p + q] = ints_->oei_a(pp,qq);
-                oei_b_[ncmo_ * p + q] = ints_->oei_b(pp,qq);
-
-                // Compute the one-body contribution to the energy that comes from
-                // the restricted occupied orbitals
-                for (size_t f = 0; f < nfomo; ++f){
-                    size_t ff = fomo_to_mo_[f];
-                    oei_a_[ncmo_ * p + q] += ints_->aptei_aa(pp,ff,qq,ff);
-                    oei_a_[ncmo_ * p + q] += ints_->aptei_ab(pp,ff,qq,ff);
-                    oei_b_[ncmo_ * p + q] += ints_->aptei_bb(pp,ff,qq,ff);
-                    oei_b_[ncmo_ * p + q] += ints_->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
-                }
-                for (size_t r = 0; r < ncmo_; ++r){
-                    size_t rr = cmo_to_mo_[r];
-                    for (size_t s = 0; s < ncmo_; ++s){
-                        size_t ss = cmo_to_mo_[s];
-                        tei_aa_[tei_index(p,q,r,s)] = ints_->aptei_aa(pp,qq,rr,ss);
-                        tei_ab_[tei_index(p,q,r,s)] = ints_->aptei_ab(pp,qq,rr,ss);
-                        tei_bb_[tei_index(p,q,r,s)] = ints_->aptei_bb(pp,qq,rr,ss);
-                    }
-                }
-            }
-        }
-        integrals_are_set_ = true;
     }
 }
 

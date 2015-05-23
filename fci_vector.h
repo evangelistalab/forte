@@ -35,9 +35,55 @@
 
 namespace psi{ namespace libadaptive{
 
+
+/**
+ * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
+ */
+class FCIIntegrals
+{
+public:
+    FCIIntegrals(std::shared_ptr<StringLists> lists, ExplorerIntegrals* ints);
+
+    double frozen_core_energy() const {return frozen_core_energy_;}
+    double scalar_energy() const {return scalar_energy_;}
+    double oei_a(size_t n) const {return oei_a_[n];}
+    double oei_b(size_t n) const {return oei_b_[n];}
+    double tei_aa(size_t n) const {return tei_aa_[n];}
+    double tei_ab(size_t n) const {return tei_ab_[n];}
+    double tei_bb(size_t n) const {return tei_bb_[n];}
+
+    double oei_a(size_t p,size_t q) const {return oei_a_[p * ncmo + q];}
+    double oei_b(size_t p,size_t q) const {return oei_b_[p * ncmo + q];}
+    double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
+    double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
+    double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
+private:
+
+    // ==> Class Data <==
+
+    size_t ncmo;
+    /// The frozen core energy
+    double frozen_core_energy_;
+    /// The scalar contribution to the energy
+    double scalar_energy_;
+    /// The alpha one-electron integrals
+    std::vector<double> oei_a_;
+    /// The beta one-electron integrals
+    std::vector<double> oei_b_;
+    /// The alpha-alpha antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> tei_aa_;
+    /// The alpha-beta antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> tei_ab_;
+    /// The beta-beta antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> tei_bb_;
+
+    // ==> Class Functions <==
+    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;}
+};
+
 class FCIWfn{
 public:
-    FCIWfn(boost::shared_ptr<StringLists> lists, ExplorerIntegrals* ints,size_t symmetry);
+    FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry);
     ~FCIWfn();
     
 //    // Simple operation
@@ -54,10 +100,10 @@ public:
     void copy_to(SharedVector vec);
 
     /// Form the diagonal part of the Hamiltonian
-    void form_H_diagonal();
+    void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
 
-    /// Initial guess
-    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
+//    /// Initial guess
+//    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
 
 ////    void set_to(Determinant& det);
 //    void set_to(int n);
@@ -89,8 +135,10 @@ public:
 //    std::vector<int> get_important(double alpha);
     
     // Operations on the wave function
-    void Hamiltonian(FCIWfn& result,RequiredLists required_lists);
+    void Hamiltonian(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, RequiredLists required_lists);
     
+    double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
+
     void compute_rdms(int max_order = 2);
     void rdm_test();
 //    // FCIWfn update routines
@@ -102,7 +150,7 @@ public:
 //    void read(std::string filename = "wfn.dat");
         
     // Temporary memory allocation
-    static void allocate_temp_space(boost::shared_ptr<StringLists> lists_, ExplorerIntegrals* ints_, size_t symmetry);
+    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t symmetry);
     static void release_temp_space();
 //    void check_temp_space();
 private:
@@ -119,17 +167,15 @@ private:
     Dimension  cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
-    /// The mapping between correlated molecular orbitals and all orbitals
-    std::vector<size_t> cmo_to_mo_;
+//    /// The mapping between correlated molecular orbitals and all orbitals
+//    std::vector<size_t> cmo_to_mo_;
     /// The number of determinants
     size_t ndet_;
     /// The number of determinants per irrep
     std::vector<size_t> detpi_;
 
     /// The string list
-    boost::shared_ptr<StringLists> lists_;
-    /// The integral object
-    ExplorerIntegrals* ints_;
+    std::shared_ptr<StringLists> lists_;
     // Graphs
     /// The alpha string graph
     GraphPtr  alfa_graph_;
@@ -153,8 +199,8 @@ private:
     static SharedMatrix C1;
     static SharedMatrix Y1;
     static size_t   sizeC1;
-    static FCIWfn* tmp_wfn1;
-    static FCIWfn* tmp_wfn2;
+//    static FCIWfn* tmp_wfn1;
+//    static FCIWfn* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -164,17 +210,6 @@ private:
     static double h2_aabb_timer;
     static double h2_bbbb_timer;
 
-    // Integrals
-    static bool integrals_are_set_;
-    static double scalar_energy_;
-    static std::vector<double> oei_a_;
-    static std::vector<double> oei_b_;
-    /// The alpha-alpha antisymmetrized two-electron integrals in physicist notation
-    static std::vector<double> tei_aa_;
-    /// The alpha-beta antisymmetrized two-electron integrals in physicist notation
-    static std::vector<double> tei_ab_;
-    /// The beta-beta antisymmetrized two-electron integrals in physicist notation
-    static std::vector<double> tei_bb_;
 
     // ==> Class Public Functions <==
 
@@ -182,7 +217,7 @@ private:
     void cleanup();
 
     /// Compute the energy of a determinant
-    double determinant_energy(bool*& Ia,bool*& Ib,int n);
+    double determinant_energy(bool*& Ia,bool*& Ib,int n, std::shared_ptr<FCIIntegrals> fci_ints);
 
 
     // ==> Class Private Functions <==
@@ -193,17 +228,17 @@ private:
         return (ncmo_ * ncmo_ * ncmo_ * ncmo_ * ncmo_ * p + ncmo_ * ncmo_ * ncmo_ * ncmo_ * q + ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-    double oei_aa(size_t p, size_t q) const {return oei_a_[ncmo_ * p + q];}
-    double oei_bb(size_t p, size_t q) const {return oei_b_[ncmo_ * p + q];}
+//    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_ * p + q);}
+//    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_ * p + q);}
 
-    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
-    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
-    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
+//    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_aa(tei_index(p,q,r,s));}
+//    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_ab(tei_index(p,q,r,s));}
+//    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return fci_ints_->tei_ab(tei_index(p,q,r,s));}
 
-    void H0(FCIWfn& result);
-    void H1(FCIWfn& result,bool alfa);
-    void H2_aabb(FCIWfn& result);
-    void H2_aaaa2(FCIWfn& result, bool alfa);
+    void H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
+    void H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
+    void H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints);
+    void H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa);
 
     void compute_1rdm(std::vector<double> &rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);

@@ -152,7 +152,7 @@ FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,std::vecto
 void FCISolver::startup()
 {
     // Create the string lists
-    lists_ = boost::shared_ptr<StringLists>(new StringLists(twoSubstituitionVVOO,active_dim_,core_mo_,active_mo_,na_,nb_));
+    lists_ = std::shared_ptr<StringLists>(new StringLists(twoSubstituitionVVOO,active_dim_,core_mo_,active_mo_,na_,nb_));
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h){
@@ -174,16 +174,18 @@ double FCISolver::compute_energy()
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
-    FCIWfn::allocate_temp_space(lists_,ints_,symmetry_);
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_);
+
+    FCIWfn::allocate_temp_space(lists_,symmetry_);
 
     nroot_ = 1;
 
-    FCIWfn Hdiag(lists_,ints_,symmetry_);
-    C_ = std::make_shared<FCIWfn>(lists_,ints_,symmetry_);
-    FCIWfn HC(lists_,ints_,symmetry_);
+    FCIWfn Hdiag(lists_,symmetry_);
+    C_ = std::make_shared<FCIWfn>(lists_,symmetry_);
+    FCIWfn HC(lists_,symmetry_);
 
     size_t fci_size = Hdiag.size();
-    Hdiag.form_H_diagonal();
+    Hdiag.form_H_diagonal(fci_ints);
 
     SharedVector b(new Vector("b",fci_size));
     SharedVector sigma(new Vector("sigma",fci_size));
@@ -207,7 +209,7 @@ double FCISolver::compute_energy()
         for (int r = 0; r < nroot_ * 10; ++r){ // TODO : fix this loop
             dls.get_b(b);
             C_->copy(b);
-            C_->Hamiltonian(HC,twoSubstituitionVVOO);
+            C_->Hamiltonian(HC,fci_ints,twoSubstituitionVVOO);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
             if (not add_sigma) break;
@@ -396,6 +398,7 @@ Reference FCISolver::reference()
     L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 
+    if (print_ > 1)
     for (auto L1 : {L1a,L1b}){
         outfile->Printf("\n\n** %s **",L1.name().c_str());
         L1.iterate([&](const::vector<size_t>& i,double& value){
@@ -404,6 +407,8 @@ Reference FCISolver::reference()
         });
 
     }
+
+    if (print_ > 2)
     for (auto L2 : {L2aa,L2ab,L2bb}){
         outfile->Printf("\n\n** %s **",L2.name().c_str());
         L2.iterate([&](const::vector<size_t>& i,double& value){
@@ -412,6 +417,8 @@ Reference FCISolver::reference()
         });
 
     }
+
+    if (print_ > 3)
     for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
         outfile->Printf("\n\n** %s **",L3.name().c_str());
         L3.iterate([&](const::vector<size_t>& i,double& value){
