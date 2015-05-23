@@ -127,6 +127,7 @@ double FCI::compute_energy()
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver_->set_print(options_.get_int("PRINT"));
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -191,7 +192,7 @@ double FCISolver::compute_energy()
     SharedVector sigma(new Vector("sigma",fci_size));
 
     DavidsonLiuSolver dls(fci_size,nroot_);
-    //    dls.set_e_convergence(1.0e-6);
+    dls.set_e_convergence(1.0e-13);
     dls.set_print_level(0);
     Hdiag.copy_to(sigma);
     dls.startup(sigma);
