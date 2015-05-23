@@ -137,10 +137,6 @@ double FCI::compute_energy()
     return fci_energy;
 }
 
-void FCI::semi_canonicalize()
-{    
-}
-
 Reference FCI::reference()
 {
     return fcisolver_->reference();
@@ -283,12 +279,6 @@ Reference FCISolver::reference()
     Tensor L2ab = Tensor::build(kCore,"L2ab",{nact,nact,nact,nact});
     Tensor L2bb = Tensor::build(kCore,"L2bb",{nact,nact,nact,nact});
 
-    outfile->Printf("\n\n** L2aa **");
-    L2aa.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
-
     if (na_ >= 2){
         std::vector<double>& tpdm_aa = C_->tpdm_aa();
         L2aa.iterate([&](const::vector<size_t>& i,double& value){
@@ -305,20 +295,9 @@ Reference FCISolver::reference()
             value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
     }
 
-    outfile->Printf("\n\n** L2aa **");
-    L2aa.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
-
+    // Convert the 2-RDMs to 2-RCMs
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
-
-    outfile->Printf("\n\n** L2aa **");
-    L2aa.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
 
     L2ab("pqrs") -= L1a("pr") * L1a("qs");
 
@@ -351,6 +330,7 @@ Reference FCISolver::reference()
             value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
     }
 
+    // Convert the 3-RDMs to 3-RCMs
     L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
     L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
     L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
@@ -416,38 +396,29 @@ Reference FCISolver::reference()
     L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 
+    for (auto L1 : {L1a,L1b}){
+        outfile->Printf("\n\n** %s **",L1.name().c_str());
+        L1.iterate([&](const::vector<size_t>& i,double& value){
+            if (std::fabs(value) > 1.0e-15)
+                outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1], value);
+        });
 
-    outfile->Printf("\n\n** L2aa **");
-    L2aa.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
-    outfile->Printf("\n\n** L2ab **");
-    L2ab.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
-    outfile->Printf("\n\n** L2bb **");
-    L2bb.iterate([&](const::vector<size_t>& i,double& value){
-        if (std::fabs(value) > 1.0e-15)
-        outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-    });
+    }
+    for (auto L2 : {L2aa,L2ab,L2bb}){
+        outfile->Printf("\n\n** %s **",L2.name().c_str());
+        L2.iterate([&](const::vector<size_t>& i,double& value){
+            if (std::fabs(value) > 1.0e-15)
+                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+        });
 
+    }
     for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
         outfile->Printf("\n\n** %s **",L3.name().c_str());
         L3.iterate([&](const::vector<size_t>& i,double& value){
             if (std::fabs(value) > 1.0e-15)
-            outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
+                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
         });
     }
-
-//    L2aa.print();
-//    L2ab.print();
-//    L2bb.print();
-//    L3aaa.print();
-//    L3aab.print();
-//    L3abb.print();
-//    L3bbb.print();
 
     Reference fci_ref(energy_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
     return fci_ref;

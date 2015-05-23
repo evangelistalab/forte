@@ -242,4 +242,34 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
     outfile->Flush();
 }
 
+
+void print_h2(const std::string& text, const std::string& left_separator, const std::string& right_separator)
+{
+    outfile->Printf("\n\n   %s %s %s\n",left_separator.c_str(),
+                    text.c_str(),right_separator.c_str());
+}
+
+Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims)
+{
+    // Copy the tensor to a plain matrix
+    size_t size = dims.sum();
+    Matrix M("M",size,size);
+    t.iterate([&](const std::vector<size_t>& i,double& value){
+        M.set(i[0],i[1],value);
+    });
+
+    Matrix M_sym("M",dims,dims);
+    size_t offset = 0;
+    for (size_t h = 0; h < dims.n(); ++h){
+        for (size_t p = 0; p < dims[h]; ++p){
+            for (size_t q = 0; q < dims[h]; ++q){
+                double value = M.get(p + offset,q + offset);
+                M_sym.set(h,p,q,value);
+            }
+        }
+        offset += dims[h];
+    }
+    return M_sym;
+}
+
 }} // End Namespaces
