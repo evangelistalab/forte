@@ -1331,9 +1331,6 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         na += active_[h];
         nv += ncmopi_[h] - core_[h] - active_[h];
     }
-
-    Ua->print();
-    Ub->print();
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal Fock");
 }
