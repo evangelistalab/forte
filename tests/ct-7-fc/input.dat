@@ -2,7 +2,7 @@
 #! This tests CT frozen core energy.
 #! The reference value is from a spin-integrated code.
 
-import libbtl
+
 import libadaptive
 
 refscf = -105.359494997675554 #TEST

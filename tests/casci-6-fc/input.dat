@@ -1,6 +1,6 @@
 # HF, RHF canonical orbitals, CAS-CI(2,2)
 
-import libbtl
+
 import libadaptive
 
 refscf = -99.983408932712

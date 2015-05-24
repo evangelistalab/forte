@@ -88,7 +88,7 @@ private:
     /// The print level
     size_t print_level_ = 1;
     /// Eigenvalue convergence threshold
-    double e_convergence_ = 1.0e-12;
+    double e_convergence_ = 1.0e-15;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
     /// The dimension of the vectors

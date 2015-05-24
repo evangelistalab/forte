@@ -1,4 +1,4 @@
-import libbtl
+
 import libadaptive
 
 refmcscf     = -15.569761360883527 #TEST

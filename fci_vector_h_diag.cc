@@ -11,7 +11,7 @@
 
 namespace psi{ namespace libadaptive{
 
-void FCIWfn::form_H_diagonal()
+void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints)
 {
     boost::timer t;
 
@@ -45,7 +45,7 @@ void FCIWfn::form_H_diagonal()
             if(beta_graph_->sym(Ib) == beta_sym){
                 size_t addIa = alfa_graph_->rel_add(Ia);
                 size_t addIb = beta_graph_->rel_add(Ib);
-                C_ha[addIa][addIb] = determinant_energy(Ia,Ib,n);
+                C_ha[addIa][addIb] = determinant_energy(Ia,Ib,n,fci_ints);
                 //        outfile->Printf("\n |[%1d][%3d][%3d]> energy = %20.12f",alfa_sym,static_cast<int> (addIa),
                 //                                                                         static_cast<int> (addIb),coefficients[alfa_sym][addIa][addIb]);
             }
@@ -58,6 +58,26 @@ void FCIWfn::form_H_diagonal()
     outfile->Flush();
 }
 
+
+double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n, std::shared_ptr<FCIIntegrals> fci_ints)
+{
+    double energy(fci_ints->scalar_energy() + fci_ints->frozen_core_energy());
+
+    for(int p = 0; p < n; ++p){
+        if(Ia[p]) energy += fci_ints->oei_a(p,p);
+        if(Ib[p]) energy += fci_ints->oei_b(p,p);
+        for(int q = 0; q < n; ++q){
+            if(Ia[p] && Ia[q])
+                energy += 0.5 * fci_ints->tei_aa(p,q,p,q);
+            if(Ib[p] && Ib[q])
+                energy += 0.5 * fci_ints->tei_bb(p,q,p,q);
+            if(Ia[p] && Ib[q])
+                energy += fci_ints->tei_ab(p,q,p,q);
+        }
+    }
+    return(energy);
+}
+/*
 void FCIWfn::initial_guess(FCIWfn& diag,size_t num_dets)
 {
     // Find the lowest energy determinants
@@ -151,6 +171,24 @@ void FCIWfn::initial_guess(FCIWfn& diag,size_t num_dets)
     outfile->Flush();
 }
 
+ if(Ia[p]) energy += oei_aa(p,p);
+        if(Ib[p]) energy += oei_bb(p,p);
+//        if(Ia[p]) outfile->Printf("\n+<%2d|%2d> = %f",p,p,oei_aa(p,p));
+//        if(Ib[p]) outfile->Printf("\n+<%2d|%2d> = %f",p,p,oei_bb(p,p));
+        for(int q = 0; q < n; ++q){
+            if(Ia[p] && Ia[q])
+                energy += 0.5 * tei_aaaa(p,q,p,q);
+            if(Ib[p] && Ib[q])
+                energy += 0.5 * tei_bbbb(p,q,p,q);
+            if(Ia[p] && Ib[q])
+                energy += tei_aabb(p,q,p,q);
+//            if(Ia[p] && Ia[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (aa)",p,q,p,q,0.5 * tei_aaaa(p,q,p,q));
+//            if(Ia[p] && Ib[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (ab)",p,q,p,q,0.5 * tei_aabb(p,q,p,q));
+//            if(Ib[p] && Ib[q]) outfile->Printf("\n+<%2d,%2d|%2d,%2d> = %f (bb)",p,q,p,q,0.5 * tei_bbbb(p,q,p,q));
+        }
+    }
+    return(energy);
+}
 
 double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
 {
@@ -185,4 +223,5 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n)
     return(energy);
 }
 
+*/
 }}

@@ -144,6 +144,11 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
     tensors_information_.push_back(std::make_pair(BT.name(), memory_of_tensor));
     number_of_blocks_.push_back(BT.numblocks());
     memory_ -= memory_of_tensor;
+    if(print_memory_)
+    {
+        outfile->Printf("\n For tensor %s, this will take up %6.6f GB", BT.name().c_str(), memory_of_tensor);
+        outfile->Printf("\n %6.6f GB of memory left over", memory_);
+    }
 
 }
 void BlockedTensorFactory::memory_summary()
@@ -155,5 +160,18 @@ void BlockedTensorFactory::memory_summary()
         outfile->Printf("\n %-25s  %u    %8.8 GB", tensors_information_[i].first.c_str(), number_of_blocks_[i],tensors_information_[i].second);
     }
     outfile->Printf("\n Memory left over: %8.6f GB\n", memory_/1073741824);
+}
+std::vector<std::string> BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
+{
+
+    std::vector<std::string> out_str_vec;
+    for(const std::string spin : in_str_vec){
+        size_t spin_ind  = spin.find('a');
+        size_t spin_ind2 = spin.find('A');
+        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+            out_str_vec.push_back(spin);
+        }
+    }
+    return out_str_vec;
 }
 }}

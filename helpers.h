@@ -27,13 +27,30 @@
 #include <vector>
 #include <string>
 
+#include "ambit/blocked_tensor.h"
+#include <libmints/matrix.h>
+#include <libmints/vector.h>
+
 namespace psi{ namespace libadaptive{
 
 /// MOInfo stores information about an orbital: (absolute index,irrep,relative index in irrep)
 using MOInfo = std::tuple<size_t,size_t,size_t>;
-/// SpaceInfo stores information about a space: (Dimension,vector of MOInfo)
+
+/// SpaceInfo stores information about a MO space: (Dimension,vector of MOInfo)
 using SpaceInfo = std::pair<Dimension,std::vector<MOInfo>>;
 
+/**
+ * @brief The MOSpaceInfo class
+ *
+ * This class reads and holds information about orbital spaces
+ *
+ * Irrep:                 A1         A2        B1      B2
+ * ALL:             | 0 1 2 3 4 | 5 6 7 8 9 |10 11 | 12 13 |
+ * FROZEN_DOCC        *           *
+ * RESTRICTED_DOCC      *           *         *       *
+ * ACTIVE                 * *         * *
+ * FROZEN_UOCC                *           *      *       *
+ */
 class MOSpaceInfo
 {
 public:
@@ -46,9 +63,9 @@ public:
     size_t size(const std::string& space);
     /// @return The Dimension object for space
     Dimension get_dimension(const std::string& space);
-    /// @return The list of the absolute index of the molecular orbitals in space
+    /// @return The list of the absolute index of the molecular orbitals in a space
     std::vector<size_t> get_absolute_mo(const std::string& space);
-    /// @return The list of the absolute index of the molecular orbitals in space
+    /// @return The list of the absolute index of the molecular orbitals in a space
     ///         excluding the frozen core/virtual orbitals
     std::vector<size_t> get_corr_abs_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular orbitals in space
@@ -77,8 +94,34 @@ private:
     std::vector<size_t> mo_to_cmo_;
 };
 
+/**
+ * @brief tensor_to_matrix
+ * @param t The input tensor
+ * @param dims Dimensions of the matrix extracted from the tensor
+ * @return A copy of the tensor data in symmetry blocked form
+ */
+Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims);
+
+/**
+ * @brief print_method_banner Print a banner
+ * @param text A vector of strings to print in the banner. Each string is a line.
+ * @param separator A string The separator used in the banner (defalut = "-").
+ */
 void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
 
+/**
+ * @brief print_h2 Print a header
+ * @param text The string to print in the header.
+ * @param separator
+ */
+void print_h2(const std::string& text, const std::string& left_separator = "==>", const std::string& right_separator  = "<==");
+
+/**
+ * @brief Compute the memory (in GB) required to store arrays
+ * @typename T The data typename
+ * @param num_el The number of elements to store
+ * @return The size in GB
+ */
 template <typename T>
 double to_gb(T num_el){
     return static_cast<double>(num_el) * static_cast<double>(sizeof(T)) / 1073741824.0;

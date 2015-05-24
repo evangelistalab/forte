@@ -1,7 +1,7 @@
 #! L-CTSD cc-pVDZ energy for a H4 molecule.  This tests CT without symmetry.
 #! The reference value is from a spin-integrated code.
 
-import libbtl
+
 import libadaptive
 
 refscf = -2.03108138291133 #TEST

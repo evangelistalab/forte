@@ -54,6 +54,9 @@ read_options(std::string name, Options &options)
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
+        /// Print summary of memory
+        options.add_bool("MEMORY_SUMMARY", false);
+         
 
         /*- The algorithm used to screen the determinant
          *  - CONVENTIONAL Conventional two-electron integrals
@@ -374,7 +377,7 @@ read_options(std::string name, Options &options)
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
-        options.add_str("CASTYPE", "CAS", "CAS DMRG");
+        options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
         
     }
 
@@ -470,6 +473,13 @@ libadaptive(Options &options)
         if(options.get_str("CASTYPE")=="FCI")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+            if (options.get_bool("SEMI_CANONICAL")){
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
             fci->compute_energy();
             Reference reference = fci->reference();
