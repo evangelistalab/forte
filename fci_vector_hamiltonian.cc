@@ -10,38 +10,38 @@ namespace psi{ namespace libadaptive{
  * Apply the Hamiltonian to the wave function
  * @param result Wave function object which stores the resulting vector
  */
-void FCIWfn::Hamiltonian(FCIWfn& result,RequiredLists required_lists)
+void FCIWfn::Hamiltonian(FCIWfn& result,std::shared_ptr<FCIIntegrals> fci_ints,RequiredLists required_lists)
 {
 //    check_temp_space();
     result.zero();
 
     // H0
     {
-        H0(result);
+        H0(result,fci_ints);
     }
     // H1_aa
     { boost::timer t;
-        H1(result,true);
+        H1(result,fci_ints,true);
         h1_aa_timer += t.elapsed();
     }
     // H1_bb
     { boost::timer t;
-        H1(result,false);
+        H1(result,fci_ints,false);
         h1_bb_timer += t.elapsed();
     }
     // H2_aabb
     { boost::timer t;
-        H2_aabb(result);
+        H2_aabb(result,fci_ints);
         h2_aabb_timer += t.elapsed();
     }
     // H2_aaaa
     { boost::timer t;
-        H2_aaaa2(result,true);
+        H2_aaaa2(result,fci_ints,true);
         h2_aaaa_timer += t.elapsed();
     }
     // H2_bbbb
     { boost::timer t;
-        H2_aaaa2(result,false);
+        H2_aaaa2(result,fci_ints,false);
         h2_bbbb_timer += t.elapsed();
     }
 }
@@ -50,9 +50,9 @@ void FCIWfn::Hamiltonian(FCIWfn& result,RequiredLists required_lists)
 /**
  * Apply the scalar part of the Hamiltonian to the wave function
  */
-void FCIWfn::H0(FCIWfn& result)
+void FCIWfn::H0(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints)
 {
-    double core_energy = scalar_energy_ + ints_->frozen_core_energy();
+    double core_energy = fci_ints->scalar_energy() + fci_ints->frozen_core_energy();
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         result.C_[alfa_sym]->copy(C_[alfa_sym]);
         result.C_[alfa_sym]->scale(core_energy);
@@ -63,7 +63,7 @@ void FCIWfn::H0(FCIWfn& result)
  * Apply the one-particle Hamiltonian to the wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::H1(FCIWfn& result, bool alfa)
+void FCIWfn::H1(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa)
 {
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
@@ -96,7 +96,7 @@ void FCIWfn::H1(FCIWfn& result, bool alfa)
                         int p_abs = p_rel + cmopi_offset_[p_sym];
                         int q_abs = q_rel + cmopi_offset_[q_sym];
 
-                        double Hpq = alfa ? oei_aa(p_abs,q_abs) : oei_bb(p_abs,q_abs); // Grab the integral
+                        double Hpq = alfa ? fci_ints->oei_a(p_abs,q_abs) : fci_ints->oei_b(p_abs,q_abs); // Grab the integral
                         std::vector<StringSubstitution>& vo = alfa ? lists_->get_alfa_vo_list(p_abs,q_abs,alfa_sym)
                                                                    : lists_->get_beta_vo_list(p_abs,q_abs,beta_sym);
                         // TODO loop in a differen way
@@ -136,7 +136,7 @@ void FCIWfn::H1(FCIWfn& result, bool alfa)
  * Apply the same-spin two-particle Hamiltonian to the wave function
  * @param alfa flag for alfa or beta component, true = alfa, false = beta
  */
-void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
+void FCIWfn::H2_aaaa2(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints, bool alfa)
 {
     // Notation
     // ha - symmetry of alpha strings
@@ -172,7 +172,7 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
                     int p_abs = pq_pair.first;
                     int q_abs = pq_pair.second;
 
-                    double integral = alfa ? tei_aaaa(p_abs,q_abs,p_abs,q_abs) : tei_bbbb(p_abs,q_abs,p_abs,q_abs);
+                    double integral = alfa ? fci_ints->tei_aa(p_abs,q_abs,p_abs,q_abs) : fci_ints->tei_bb(p_abs,q_abs,p_abs,q_abs);
 
                     std::vector<StringSubstitution>& OO = alfa ? lists_->get_alfa_oo_list(pq_sym,pq,ha)
                                                                : lists_->get_beta_oo_list(pq_sym,pq,hb);
@@ -193,7 +193,7 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
                         const Pair& rs_pair = lists_->get_nn_list_pair(pq_sym,rs);
                         int r_abs = rs_pair.first;
                         int s_abs = rs_pair.second;
-                        double integral = alfa ? tei_aaaa(p_abs,q_abs,r_abs,s_abs) : tei_bbbb(p_abs,q_abs,r_abs,s_abs);
+                        double integral = alfa ? fci_ints->tei_aa(p_abs,q_abs,r_abs,s_abs) : fci_ints->tei_bb(p_abs,q_abs,r_abs,s_abs);
 
                         {
                             std::vector<StringSubstitution>& VVOO = alfa ? lists_->get_alfa_vvoo_list(p_abs,q_abs,r_abs,s_abs,ha)
@@ -233,7 +233,7 @@ void FCIWfn::H2_aaaa2(FCIWfn& result, bool alfa)
 /**
  * Apply the different-spin component of two-particle Hamiltonian to the wave function
  */
-void FCIWfn::H2_aabb(FCIWfn& result)
+void FCIWfn::H2_aabb(FCIWfn& result, std::shared_ptr<FCIIntegrals> fci_ints)
 {
     // Loop over blocks of matrix C
     for(int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym){
@@ -285,7 +285,7 @@ void FCIWfn::H2_aabb(FCIWfn& result)
                                 for(int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel){
                                     int q_abs = q_rel + cmopi_offset_[q_sym];
                                     // Grab the integral
-                                    double integral = tei_aabb(p_abs,r_abs,q_abs,s_abs);
+                                    double integral = fci_ints->tei_ab(p_abs,r_abs,q_abs,s_abs);
 
                                     std::vector<StringSubstitution>& vo_alfa = lists_->get_alfa_vo_list(p_abs,q_abs,Ia_sym);
 

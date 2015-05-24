@@ -2,7 +2,7 @@
 #! correct up to fourth-order.  The reference value is from a spin-integrated
 #! code.
 
-import libbtl
+
 import libadaptive
 
 refscf = -7.983684364189 #TEST

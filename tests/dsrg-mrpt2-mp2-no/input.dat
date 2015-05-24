@@ -1,0 +1,48 @@
+#! Tests MP2 Natural Orbitals with DSRG-MRMP2.
+#!
+#! MP2-NOs can be used in place of CASSCF orbitals.
+
+import libadaptive
+
+refmcscf     =  -99.872852472896 #TEST cc-pVDZ/RHF
+refdsrgpt2   = -100.098693790898 #TEST cc-pVDZ
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+   basis                   cc-pvdz
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           15
+}
+
+set mcscf{
+   docc                   [3,0,1,1]
+   socc                   [0,0,0,0]
+   maxiter                 1000
+   level_shift             2.0
+}
+
+set libadaptive{
+   frozen_docc            [1,0,0,0]
+   restricted_docc        [1,0,1,1]
+   active                 [2,0,0,0]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  1.0
+   mp2_nos                 true
+}
+
+energy('mcscf')
+energy('dsrg-mrpt2')
+
+compare_values(refmcscf, get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

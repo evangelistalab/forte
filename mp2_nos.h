@@ -26,7 +26,9 @@
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
 
+#include "helpers.h"
 #include "integrals.h"
+#include "reference.h"
 
 namespace psi{
 
@@ -44,23 +46,18 @@ public:
     //  => Destructor <= //
 };
 
+
+/**
+ * @brief The SemiCanonical class
+ * Computes semi-canonical orbitals
+ */
+class SemiCanonical
+{
+public:
+    // => Constructor <= //
+    SemiCanonical(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
+};
+
 }} // End Namespaces
 
 #endif // _mp2_nos_h_
-
-//protected:
-
-//    // => Class data <= //
-
-//    /// The molecular integrals required by MethodBase
-//    ExplorerIntegrals* ints_;
-
-//    /// A pointer to the Wavefunction object
-//    boost::shared_ptr<Wavefunction> wfn_;
-
-//    // => Class initialization and termination <= //
-
-//    /// Called in the constructor
-//    void startup();
-//    /// Called in the destructor
-//    void cleanup();

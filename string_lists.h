@@ -112,6 +112,7 @@ public:
 
     size_t na() const {return na_;}
     size_t nb() const {return nb_;}
+    size_t nirrep() const {return nirrep_;}
     size_t ncmo() const {return ncmo_;}
     Dimension cmopi() const {return cmopi_;}
     std::vector<size_t> cmopi_offset() const {return cmopi_offset_;}

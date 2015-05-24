@@ -1,6 +1,6 @@
 #! L-CTSD cc-pVDZ energy for Be.
 
-import libbtl
+
 import libadaptive
 
 refscf = -14.57233763095337 #TEST
