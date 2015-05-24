@@ -1,6 +1,5 @@
 #! This tests the Adaptive-CI procedure using energy selection
 
-import libbtl
 import libadaptive
 
 refscf = -14.839846512738 #TEST

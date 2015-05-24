@@ -1,7 +1,7 @@
 #! RHF-SR-LCTSD DZ energy for the H2O molecule, with Z matrix input.
 #! Reference energy from a spin-orbit pilot code
 
-import libbtl
+
 import libadaptive
 
 refscf = -76.005679425830 #TEST

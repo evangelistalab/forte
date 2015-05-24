@@ -15,11 +15,8 @@ using namespace ambit;
 
 MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
 {
-    outfile->Printf("\n\n      ------------------------------------------------");
-    outfile->Printf("\n          Second-Order Moller-Plesset Natural Orbitals");
-    outfile->Printf("\n               written by Francesco A. Evangelista");
-    outfile->Printf("\n      ------------------------------------------------\n");
-    outfile->Flush();
+    print_method_banner({"Second-Order Moller-Plesset Natural Orbitals",
+                         "written by Francesco A. Evangelista"});
 
     BlockedTensor::set_expert_mode(true);
 
@@ -349,7 +346,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     SharedMatrix Ca_new(Ca->clone());
     SharedMatrix Cb_new(Cb->clone());
     Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-    Cb_new->gemm(false,false,1.0,Cb,Ua,0.0);
+    Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
     Ca->copy(Ca_new);
     Cb->copy(Cb_new);
 
@@ -357,6 +354,8 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     ints->retransform_integrals();
 
     BlockedTensor::set_expert_mode(false);
+    // Erase all mo_space information
+    BlockedTensor::reset_mo_spaces();
 }
 
 SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
