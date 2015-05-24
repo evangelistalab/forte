@@ -713,8 +713,6 @@ void ConventionalIntegrals::compute_frozen_core_energy()
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
             frozen_core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
-            outfile->Printf("\n %12.8f", oei_a(p + i, p + i));
-
             for (int hj = 0, q = 0; hj < nirrep_; ++hj){
                 for (int j = 0; j < frzcpi_[hj]; ++j){
                     frozen_core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
