@@ -167,6 +167,13 @@ std::vector<int> EX_ACI::get_occupation()
     std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_alfa;
     std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_beta;
 
+    int nsym = wavefunction_multiplicity_ - 1;
+    int orb_sym = wavefunction_symmetry_;
+
+    if(wavefunction_multiplicity_ == 1){
+        nsym = 2;
+    }
+
     if(ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
        labeled_orb_en = sym_labeled_orbitals("RHF");
     }
@@ -179,25 +186,55 @@ std::vector<int> EX_ACI::get_occupation()
     if (ref_type ==  "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
 
         // Build initial reference determinant from restricted reference
-        for(int i = 0;  i < nalpha(); ++i){
+        for(size_t i = 0;  i < nalpha(); ++i){
             occupation[labeled_orb_en[i].second.second] = 1;
         }
-        for(int i = 0;  i < nbeta(); ++i){
+        for(size_t i = 0;  i < nbeta(); ++i){
             occupation[ncmo_ + labeled_orb_en[i].second.second] = 1;
         }
 
-        //remove electron from highest-energy docc
-        occupation[labeled_orb_en[(ncel_/2)-1].second.second] = 0;
-        outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[(ncel_/2)-1].second.second, ncel_ );
+        for(int k = 1; k < nsym;){
 
-        //add electron to lowest-energy orbital of proper symmetry
-        int orb_sym = direct_sym_product(labeled_orb_en[(ncel_/2)-1].second.first, wavefunction_symmetry_);
-        for(int i = (ncel_/2)-1; i < ncmo_;  ++i){
-            if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] !=1){
-                occupation[labeled_orb_en[i].second.second] = 1;
-                outfile->Printf("\n  Added electron to %d",labeled_orb_en[i].second.second);
+            bool add = false;
+            //remove electron from highest-energy docc
+            occupation[labeled_orb_en[nalpha()-k].second.second] = 0;
+            outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[nalpha() - k].second.second, ncel_ );
+
+            // Determine proper symmetry for new occupation
+            orb_sym = wavefunction_symmetry_;
+
+            if(wavefunction_multiplicity_ == 1){
+                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - 1].second.first, orb_sym);
+            }else{
+                for(int i = 1; i <= nsym; ++i){
+                    orb_sym = direct_sym_product(labeled_orb_en[nalpha() - i].second.first, orb_sym);
+                }
+                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - k].second.first, orb_sym);
+            }
+
+
+            outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+
+            //add electron to lowest-energy orbital of proper symmetry
+            for(int i = nalpha() - k; i < ncmo_; ++i){
+                if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] !=1 ){
+                    occupation[labeled_orb_en[i].second.second] = 1;
+                    outfile->Printf("\n  Added electron to %d",labeled_orb_en[i].second.second);
+                    add = true;
+                    break;
+                }
+            }
+
+            // If a new occupation could not be created, add the electron back and remove a different one
+            if(!add){
+                occupation[labeled_orb_en[nalpha() - k].second.second] = 1;
+                outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
+                ++k;
+            }
+            else{
                 break;
             }
+
         }
 
 
@@ -206,56 +243,105 @@ std::vector<int> EX_ACI::get_occupation()
     else if(ref_type == "UHF"){
 
         //Make the reference
-        for(int i = 0;  i < nalpha(); ++i){
+        //For singlets, this will be "ground-state", closed-shell
+
+        for(size_t i = 0;  i < nalpha(); ++i){
             occupation[labeled_orb_en_alfa[i].second.second] = 1;
         }
-        for(int i = 0;  i < nbeta(); ++i){
+        for(size_t i = 0;  i < nbeta(); ++i){
             occupation[ncmo_ + labeled_orb_en_beta[i].second.second] = 1;
         }
         if( nalpha() >= nbeta() ){
 
-            //remove highest energy alpha electron
-            occupation[labeled_orb_en_alfa[nalpha()-1].second.second] = 0;
-            outfile->Printf("\n Electron removed from %d",labeled_orb_en_alfa[nalpha()-1].second.second);
+            for(int k = 1; k < nsym;){
 
-            //add electron to lowest-energy alpha orbital of required symmetry
+                bool add = false;
+                //remove electron from highest-energy docc
+                occupation[labeled_orb_en_alfa[nalpha()-k].second.second] = 0;
+                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_alfa[nalpha() - k].second.second, ncel_ );
 
-            int nsym = wavefunction_multiplicity_ - 1;
-            int orb_sym = wavefunction_symmetry_;
+                // Determine proper symmetry for new occupation
+                orb_sym = wavefunction_symmetry_;
 
-            for(int i = 1; i <= nsym; ++i){
-                orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha()-i].second.first, orb_sym );
-            }
+                if(wavefunction_multiplicity_ == 1){
+                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - 1].second.first, orb_sym);
+                }else{
+                    for(int i = 1; i <= nsym; ++i){
+                        orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - i].second.first, orb_sym);
+                    }
+                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - k].second.first, orb_sym);
+                }
 
-            for(int i = nalpha()-1; i < ncmo_;  ++i){
-                if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] != 1){
-                    occupation[labeled_orb_en_alfa[i].second.second] = 1;
-                    outfile->Printf("\n Added electron to %d",labeled_orb_en_alfa[i].second.second);
+
+                outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+
+                //add electron to lowest-energy orbital of proper symmetry
+                for(int i = nalpha() - k; i < ncmo_; ++i){
+                    if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] !=1 ){
+                        occupation[labeled_orb_en_alfa[i].second.second] = 1;
+                        outfile->Printf("\n  Added electron to %d",labeled_orb_en_alfa[i].second.second);
+                        add = true;
+                        break;
+                    }
+                }
+
+                // If a new occupation could not be created, add the electron back and remove a different one
+                if(!add){
+                    occupation[labeled_orb_en_alfa[nalpha() - k].second.second] = 1;
+                    outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
+                    ++k;
+                }
+                else{
                     break;
                 }
+
             }
         }
+
         if( nalpha() < nbeta() ){
 
-            //remove highest energy alpha electron
-            occupation[labeled_orb_en_beta[nbeta()-1].second.second] = 0;
-            outfile->Printf("\n Electron removed from %d",labeled_orb_en_beta[nbeta()-1].second.second);
+            for(int k = 1; k < nsym;){
 
-            //add electron to lowest-energy alpha orbital of required symmetry
+                bool add = false;
+                //remove electron from highest-energy docc
+                occupation[labeled_orb_en_beta[nbeta()-k].second.second] = 0;
+                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_beta[nbeta() - k].second.second, ncel_ );
 
-            int nsym = wavefunction_multiplicity_ - 1;
-            int orb_sym = wavefunction_symmetry_;
+                // Determine proper symmetry for new occupation
+                orb_sym = wavefunction_symmetry_;
 
-            for(int i = 1; i <= nsym; ++i){
-                orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta()-i].second.first, orb_sym );
-            }
+                if(wavefunction_multiplicity_ == 1){
+                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - 1].second.first, orb_sym);
+                }else{
+                    for(int i = 1; i <= nsym; ++i){
+                        orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - i].second.first, orb_sym);
+                    }
+                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - k].second.first, orb_sym);
+                }
 
-            for(int i = nalpha()-1; i < ncmo_;  ++i){
-                if(orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] !=1){
-                    occupation[labeled_orb_en_beta[i].second.second] = 1;
-                    outfile->Printf("\n Added electron to %d",labeled_orb_en_beta[i].second.second);
+
+                outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+
+                //add electron to lowest-energy orbital of proper symmetry
+                for(int i = nbeta() - k; i < ncmo_; ++i){
+                    if(orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] !=1 ){
+                        occupation[labeled_orb_en_beta[i].second.second] = 1;
+                        outfile->Printf("\n  Added electron to %d",labeled_orb_en_beta[i].second.second);
+                        add = true;
+                        break;
+                    }
+                }
+
+                // If a new occupation could not be created, add the electron back and remove a different one
+                if(!add){
+                    occupation[labeled_orb_en_beta[nbeta() - k].second.second] = 1;
+                    outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
+                    ++k;
+                }
+                else{
                     break;
                 }
+
             }
         }
 
@@ -1498,9 +1584,9 @@ std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals
 
     }
 
-//    for(int i = 0; i < ncmo_; ++i){
-//        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-//    }
+    for(int i = 0; i < ncmo_; ++i){
+        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
+    }
 
     return labeled_orb;
 }
