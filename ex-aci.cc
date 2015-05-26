@@ -1584,9 +1584,9 @@ std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals
 
     }
 
-    for(int i = 0; i < ncmo_; ++i){
-        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-    }
+//    for(int i = 0; i < ncmo_; ++i){
+//        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
+//    }
 
     return labeled_orb;
 }
