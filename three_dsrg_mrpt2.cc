@@ -41,6 +41,12 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefu
     outfile->Printf("\n\t                   Kevin Hannon and Chenyang (York) Li");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
+
+    if(options_.get_bool("MEMORY_SUMMARY"))
+    {
+        BTF->print_memory_info();
+    }
+
     startup();
     //if(false){
     //frozen_natural_orbitals();}
@@ -159,6 +165,8 @@ void THREE_DSRG_MRPT2::startup()
     BTF->add_composite_mo_space("g","pqrs",{"c","a","v"});
     BTF->add_composite_mo_space("G","PQRS",{"C","A","V"});
     // These two blocks of functions create a Blocked tensor
+    std::vector<std::string> hhpp_no_cv = BTF->generate_indices("cav", "hhpp");
+    no_hhpp_ = hhpp_no_cv;
 
 
     // These two blocks of functions create a Blocked tensor
@@ -184,8 +192,16 @@ void THREE_DSRG_MRPT2::startup()
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
     //Returns a vector of all combinations for gggg
     std::vector<std::string> list_of_entire_space = BTF->generate_indices("cav", "all");
+    //Function below will return a list of pphh
+    std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
+    for(auto string_list : list_of_pphh_V)
+    {
+        outfile->Printf("\n String : %s", string_list.c_str());
+    }
 
-    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_entire_space));
+    //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
+    //See Vpphh
+    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V));
 
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -195,23 +211,22 @@ void THREE_DSRG_MRPT2::startup()
     F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
     Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"hp"}));
 
-    Delta2 = BTF->build(tensor_type_,"Delta2",spin_cases({"hhvv"}));
+    Delta2 = BTF->build(tensor_type_,"Delta2",BTF->spin_cases_avoid(hhpp_no_cv));
 
     RDelta1 = BTF->build(tensor_type_,"RDelta1",spin_cases({"hp"}));
 
     //Need to avoid building ccvv part of this
     //ccvv only used for creating T2
-    std::vector<std::string> hhpp_no_cv = generate_all_indices("cav", "hhpp");
-    RDelta2 = BTF->build(tensor_type_,"RDelta2",spin_cases_avoid(hhpp_no_cv));
+    RDelta2 = BTF->build(tensor_type_,"RDelta2",BTF->spin_cases_avoid(hhpp_no_cv));
 
 
     T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
 
     RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BTF->build(tensor_type_,"RExp2",spin_cases_avoid(hhpp_no_cv));
+    RExp2 = BTF->build(tensor_type_,"RExp2",BTF->spin_cases_avoid(hhpp_no_cv));
     //all_spin = RExp2.get.();
-    no_hhpp_ = hhpp_no_cv;
-    T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all", no_hhpp_);
+    T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
+             BTF->spin_cases_avoid(no_hhpp_));
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -258,13 +273,13 @@ void THREE_DSRG_MRPT2::startup()
     //    if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     //});
 
-    V["pqrs"] =  ThreeIntegral["gpr"]*ThreeIntegral["gqs"];
-    V["pqrs"] -= ThreeIntegral["gps"]*ThreeIntegral["gqr"];
+    V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+    V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
 
-    V["pQrS"] =  ThreeIntegral["gpr"]*ThreeIntegral["gQS"];
+    V["aBiJ"] =  ThreeIntegral["gai"]*ThreeIntegral["gBJ"];
 
-    V["PQRS"] =  ThreeIntegral["gPR"]*ThreeIntegral["gQS"];
-    V["PQRS"] -= ThreeIntegral["gPS"]*ThreeIntegral["gQR"];
+    V["ABIJ"] =  ThreeIntegral["gAI"]*ThreeIntegral["gBJ"];
+    V["ABIJ"] -= ThreeIntegral["gAJ"]*ThreeIntegral["gBI"];
 
 
 
@@ -392,10 +407,6 @@ void THREE_DSRG_MRPT2::startup()
 
     // Print levels
     print_ = options_.get_int("PRINT");
-    if(options_.get_bool("MEMORY_SUMMARY"))
-    {
-        BTF->print_memory_info();
-    }
 
     if(print_ > 1){
         Gamma1.print(stdout);
@@ -506,7 +517,6 @@ double THREE_DSRG_MRPT2::compute_energy()
         Etemp  = E_VT2_4PP();
         EVT2 += Etemp;
         energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
-        energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
 
         Etemp  = E_VT2_4PH();
         EVT2 += Etemp;
@@ -568,9 +578,9 @@ void THREE_DSRG_MRPT2::compute_t2()
     outfile->Printf("\n    %-36s ...", str.c_str());
     Timer timer;
 
-    T2pr["ijab"] = V["ijab"] * RDelta2["ijab"];
-    T2pr["iJaB"] = V["iJaB"] * RDelta2["iJaB"];
-    T2pr["IJAB"] = V["IJAB"] * RDelta2["IJAB"];
+    T2pr["ijab"] = V["abij"] * RDelta2["ijab"];
+    T2pr["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
+    T2pr["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
 
     // zero internal amplitudes
     T2pr.block("aaaa").zero();
@@ -657,10 +667,9 @@ void THREE_DSRG_MRPT2::renormalize_V()
     v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
     v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
 
-    //V["ijab"] += V["ijab"] * RExp2["ijab"];
-    V["ijab"] += v["ijab"] * RExp2["ijab"];
-    V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
-    V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
+    //V["ijab"] += v["ijab"] * RExp2["ijab"];
+    //V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
+    //V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
 
     V["abij"] += v["ijab"] * RExp2["ijab"];
     V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
@@ -1142,7 +1151,7 @@ std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::strin
             }
         }
     }
-    else if(type=="hhpp")
+    else 
     {
         
         for(int i = 0; i < 2; i++){
