@@ -77,6 +77,7 @@ void StringLists::startup()
     outfile->Flush();
 
     // Timers
+    double str_list_timer = 0.0;
     double vo_list_timer = 0.0;
     double nn_list_timer = 0.0;
     double oo_list_timer = 0.0;
@@ -87,6 +88,13 @@ void StringLists::startup()
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
 
+
+    {
+        boost::timer t;
+        make_strings(alfa_graph_,alfa_list_);
+        make_strings(beta_graph_,beta_list_);
+        str_list_timer += t.elapsed();
+    }
     {
         boost::timer t;
         make_pair_list(pair_graph_,nn_list);
@@ -147,7 +155,8 @@ void StringLists::startup()
         vovo_list_timer += t.elapsed();
     }
 
-    double total_time = nn_list_timer + vo_list_timer + oo_list_timer + vvoo_list_timer + vovo_list_timer;
+    double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer + vvoo_list_timer + vovo_list_timer;
+    outfile->Printf("\n  Timing for strings        = %10.3f s",str_list_timer);
     outfile->Printf("\n  Timing for NN strings     = %10.3f s",nn_list_timer);
     outfile->Printf("\n  Timing for VO strings     = %10.3f s",vo_list_timer);
     outfile->Printf("\n  Timing for OO strings     = %10.3f s",oo_list_timer);
@@ -195,6 +204,38 @@ void StringLists::make_pair_list(GraphPtr graph,NNList& list)
     //    h++;
     //  }
     //  outfile->Flush();
+}
+
+
+void StringLists::make_strings(GraphPtr graph,StringList& list)
+{
+    for (int h = 0; h < nirrep_; ++h){
+        list.push_back(std::vector<boost::dynamic_bitset<>>(graph->strpi(h)));
+    }
+
+    int n = graph->nbits();
+    int k = graph->nones();
+
+    if ((k >= 0) and (k <= n)){ // check that (n > 0) makes sense.
+        bool* I = new bool[n];
+        boost::dynamic_bitset<> I_bs(n);
+
+        // Generate the strings 1111100000
+        //                      { k }{n-k}
+        for(int i = 0; i < n - k; ++i) I[i] = false; // 0
+        for(int i = std::max(0,n - k); i < n; ++i) I[i] = true;  // 1
+        do{
+            size_t sym_I = graph->sym(I);
+            size_t add_I = graph->rel_add(I);
+            // copy I to J
+            for(int i = 0; i < n; ++i) I_bs[i] = I[i];
+
+            list[sym_I][add_I] = I_bs;
+
+        } while (std::next_permutation(I,I+n));
+
+        delete[] I;
+    }
 }
 
 short StringLists::string_sign(const bool* I,size_t n)

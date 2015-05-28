@@ -9,6 +9,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
+#include "boost/dynamic_bitset.hpp"
 #include "binary_graph.hpp"
 
 namespace psi{ namespace libadaptive{
@@ -65,6 +66,7 @@ struct H3StringSubstitution {
 };
 
 typedef boost::shared_ptr<BinaryGraph> GraphPtr;
+typedef std::vector<std::vector<boost::dynamic_bitset<>>> StringList;
 typedef std::map<boost::tuple<size_t,size_t,int>,std::vector<StringSubstitution> > VOList;
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VOVOList;
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VVOOList;
@@ -132,6 +134,9 @@ public:
     GraphPtr alfa_graph_3h() {return alfa_graph_3h_;}
     GraphPtr beta_graph_3h() {return beta_graph_3h_;}
 
+    boost::dynamic_bitset<> alfa_str(size_t h, size_t I) const {return alfa_list_[h][I];}
+    boost::dynamic_bitset<> beta_str(size_t h, size_t I) const {return beta_list_[h][I];}
+
     std::vector<StringSubstitution>& get_alfa_vo_list(size_t p, size_t q,int h);
     std::vector<StringSubstitution>& get_beta_vo_list(size_t p, size_t q,int h);
 
@@ -197,6 +202,9 @@ private:
     std::vector<int> pair_offset_;
 
     // String lists
+    /// The string lists
+    StringList alfa_list_;
+    StringList beta_list_;
     /// The pair string list
     NNList    nn_list;
     /// The VO string lists
@@ -246,6 +254,8 @@ private:
     // ==> Class Functions <==
 
     void startup();
+
+    void make_strings(GraphPtr graph,StringList& list);
 
     void make_pair_list(GraphPtr graph,NNList& list);
 
