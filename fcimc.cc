@@ -346,7 +346,8 @@ double FCIQMC::compute_energy()
 }
 
 void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
-    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
+    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/shift_num_walkers_);
+//    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
     outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f, pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter, nWalkers_, pre_nWalker,shift_);
 }
 
@@ -1539,13 +1540,12 @@ void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,s
 double FCIQMC::count_walkers(walker_map& walkers) {
     timer_on("FCIQMC:CountWalker");
     double countWalkers = 0;
-    nDets_=0;
     for (auto walker:walkers){
         double Cwalker = walker.second;
         countWalkers+=std::fabs(Cwalker);
-        nDets_++;
     }
     timer_off("FCIQMC:CountWalker");
+    nDets_ = walkers.size();
     nWalkers_ = countWalkers;
     return countWalkers;
 }
@@ -1586,7 +1586,7 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
 }
 
 void FCIQMC::print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar){
-    outfile->Printf("\niter:%zu ended with %zu dets",iter, nDets_);
+    outfile->Printf("\niter:%zu ended with %zu dets",iter, (size_t)nDets_);
     if (countWalkers)
         outfile->Printf(", %lf walkers", nWalkers_);
     if (calcEproj)
