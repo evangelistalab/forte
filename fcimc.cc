@@ -103,9 +103,10 @@ void FCIQMC::startup()
         cumidx += ncmopi_[h];
     }
     BitsetDeterminant reference_determinant(occupation);
+    reference_ = reference_determinant;
 
     outfile->Printf("\n  The reference determinant is:\n");
-    reference_determinant.print();
+    reference_.print();
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
     start_num_walkers_ = options_.get_double("START_NUM_WALKERS");
@@ -227,31 +228,30 @@ double FCIQMC::compute_energy()
     // Print a summary of the options
     print_info();
 
-    // Build the reference determinant and compute its energy
-    std::vector<bool> occupation_a(ncmo_,false);
-    std::vector<bool> occupation_b(ncmo_,false);
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h){
-        for (int i = 0; i < doccpi_[h]; ++i){
-            occupation_a[i + cumidx] = true;
-            occupation_b[i + cumidx] = true;
-        }
-        for (int i = 0; i < soccpi_[h]; ++i){
-            occupation_a[i + doccpi_[h] + cumidx] = true;
-        }
-        cumidx += nmopi_[h];
-    }
-    BitsetDeterminant reference(occupation_a,occupation_b);
-    reference.print();
+//    // Build the reference determinant and compute its energy
+//    std::vector<bool> occupation_a(ncmo_,false);
+//    std::vector<bool> occupation_b(ncmo_,false);
+//    int cumidx = 0;
+//    for (int h = 0; h < nirrep_; ++h){
+//        for (int i = 0; i < doccpi_[h]; ++i){
+//            occupation_a[i + cumidx] = true;
+//            occupation_b[i + cumidx] = true;
+//        }
+//        for (int i = 0; i < soccpi_[h]; ++i){
+//            occupation_a[i + doccpi_[h] + cumidx] = true;
+//        }
+//        cumidx += nmopi_[h];
+//    }
+    reference_.print();
 
-    Ehf_ = reference.slater_rules(reference);
+    Ehf_ = reference_.energy();
 
     double nre = molecule_->nuclear_repulsion_energy();
     outfile->Printf("\nnuclear_repulsion_energy:%lf, Ehf:%lf",nre, Ehf_);
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = start_num_walkers_;
+    walkers[reference_] = start_num_walkers_;
 
     bool shift_flag = false;
     double pre_nWalker = 0;
@@ -282,7 +282,7 @@ double FCIQMC::compute_energy()
 
         spawn(walkers,new_walkers);
         timer_off("FCIQMC:Spawn");
-        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference]);
+        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference_]);
 
         if (death_parent_only_) {
             // Step #2.  Death/Clone
@@ -290,28 +290,28 @@ double FCIQMC::compute_energy()
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
 
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
         } else {
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
 
             // Step #2.  Death/Clone
             timer_on("FCIQMC:Death_Clone");
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
         }
 
 
@@ -323,7 +323,7 @@ double FCIQMC::compute_energy()
 
         // calculate iter info
         count_walkers(walkers);
-        Eprojs.push_back(compute_proj_energy(reference, walkers));
+        Eprojs.push_back(compute_proj_energy(reference_, walkers));
 
         if (iter_ % energy_estimate_freq_ == 0){
             compute_var_energy(walkers);
@@ -475,6 +475,56 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
             }
             break;
         case ground_and_random:
+            timer_on("FCIQMC:Compute_excitations");
+            sumgen = compute_irrep_divided_excitations(det, excitationDivides, excitationType, obtCount);
+
+            timer_off("FCIQMC:Compute_excitations");
+
+            for (size_t detW = 0; detW < nid; ++detW){
+                BitsetDeterminant new_det(det);
+                size_t rand_ext = rand_int() % sumgen;
+                detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
+                if (new_det == reference_) {
+                    double HIJ = new_det.slater_rules(det);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
+                    int pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[new_det] += double(nspawn);
+                    }
+                } else {
+                    double HIJ = new_det.slater_rules(det);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen-1);
+                    int pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[new_det] += double(nspawn);
+                    }
+                    HIJ = reference_.slater_rules(det);
+                    pspawn = time_step_ * std::fabs(HIJ);
+                    pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[reference_] += double(nspawn);
+                    }
+                }
+
+            }
             break;
         default:
             break;

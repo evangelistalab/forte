@@ -79,12 +79,12 @@ private:
 //    std::vector<int> frzv_;
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
-//    /// The reference determinant
-//    StringDeterminant reference_determinant_;
+
 //    /// The determinant with minimum energy
 //    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
-
+    /// The reference determinant
+    BitsetDeterminant reference_;
     /// The maximum number of threads
     int num_threads_;
     /// Do we have OpenMP?
