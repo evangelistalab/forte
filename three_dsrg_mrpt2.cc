@@ -27,7 +27,11 @@ namespace psi{ namespace libadaptive{
 
 
 THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore), BTF(new BlockedTensorFactory(options))
+    : Wavefunction(options,_default_psio_lib_),
+      reference_(reference),
+      ints_(ints),
+      tensor_type_(kCore),
+      BTF(new BlockedTensorFactory(options))
 {
     ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
@@ -194,10 +198,6 @@ void THREE_DSRG_MRPT2::startup()
     std::vector<std::string> list_of_entire_space = BTF->generate_indices("cav", "all");
     //Function below will return a list of pphh
     std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
-    for(auto string_list : list_of_pphh_V)
-    {
-        outfile->Printf("\n String : %s", string_list.c_str());
-    }
 
     //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
     //See Vpphh
