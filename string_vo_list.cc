@@ -138,9 +138,9 @@ void StringLists::make_kh_list(GraphPtr graph,KHList& list)
 {
     int n = graph->nbits();
     int k = graph->nones();
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
     if ((k >= 0) and (k <= n)){ // check that (n > 0) makes sense.
+        bool* I = new bool[ncmo_];
+        bool* J = new bool[ncmo_];
         for(int h_I = 0; h_I < nirrep_; ++h_I){
             // Generate the strings 1111100000
             //                      { k }{n-k}

@@ -32,27 +32,27 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
 
     h_diag->copy(*diagonal);
 
-    // Find the initial_size lowest diagonals
-    {
-        double max_value = 1.e100;
-        std::vector<std::pair<double,size_t>> smallest(collapse_size_,std::make_pair(1.0e100,0));
+//    // Find the initial_size lowest diagonals
+//    {
+//        double max_value = 1.e100;
+//        std::vector<std::pair<double,size_t>> smallest(collapse_size_,std::make_pair(1.0e100,0));
 
-        for (size_t j = 0; j < size_; ++j){
-            double value = h_diag->get(j);
-            if (value < max_value){
-                // Find where to inser this determinant
-                smallest.pop_back();
-                auto it = std::find_if(smallest.begin(),smallest.end(),[&value](const std::pair<double,size_t>& p){return value < p.first;});
-                smallest.insert(it,std::pair<double,size_t>(value,j));
-                max_value = smallest.back().first;
-            }
-        }
-        for(int i = 0; i < collapse_size_; i++) {
-            b_->set(i,smallest[i].second,1.0);
-        }
-    }
+//        for (size_t j = 0; j < size_; ++j){
+//            double value = h_diag->get(j);
+//            if (value < max_value){
+//                // Find where to inser this determinant
+//                smallest.pop_back();
+//                auto it = std::find_if(smallest.begin(),smallest.end(),[&value](const std::pair<double,size_t>& p){return value < p.first;});
+//                smallest.insert(it,std::pair<double,size_t>(value,j));
+//                max_value = smallest.back().first;
+//            }
+//        }
+//        for(int i = 0; i < collapse_size_; i++) {
+//            b_->set(i,smallest[i].second,1.0);
+//        }
+//    }
 
-    basis_size_ = collapse_size_; //collapse_size_;
+    basis_size_ = 0; //collapse_size_; //collapse_size_;
     sigma_size_ = 0; // at the beginning we do not have sigmas for the guess vectors
     iter_ = 0;
     converged_ = 0;
