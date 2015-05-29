@@ -298,24 +298,8 @@ void THREE_DSRG_MRPT2::startup()
     F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
     F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
 
-    //F["pq"]  = H["pq"];
-    //F["pq"] += V["pjqi"] * Gamma1["ij"];
-    //F["pq"] += V["pJqI"] * Gamma1["IJ"];
-
-    //F["PQ"] =  H["PQ"];
-    //F["PQ"] += V["jPiQ"] * Gamma1["ij"];
-    //F["PQ"] += V["PJQI"] * Gamma1["IJ"];
-
-  // Tensor Fa_cc = F.block("cc");
-  // Tensor Fa_aa = F.block("aa");
-  // Tensor Fa_vv = F.block("vv");
-  // Tensor Fb_CC = F.block("CC");
-  // Tensor Fb_AA = F.block("AA");
-  // Tensor Fb_VV = F.block("VV");
-
     size_t ncmo_ = ints_->ncmo();
-    //std::vector<double> Fa(ncmo_);
-    //std::vector<double> Fb(ncmo_);
+
     Fa.reserve(ncmo_);
     Fb.reserve(ncmo_);
 
@@ -350,9 +334,6 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
         }
     });
-    size_t nh = core_ + active_;
-    size_t np = active_ + virtual_;
-
     RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -853,7 +834,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     size_t ncmo   = ints_->ncmo();
     size_t nmo_   = ints_->nmo();
     //First go at a batches algorithm
-    outfile->Printf("\n V_{mn}^{ef} takes up %8.6f", core_ * core_ * virtual_ * virtual_ * 8.0 /1073741824 );
 
     #pragma omp parallel for num_threads(num_threads_) \
 	schedule(dynamic) \
