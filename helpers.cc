@@ -245,7 +245,7 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
 
 void print_h2(const std::string& text, const std::string& left_separator, const std::string& right_separator)
 {
-    outfile->Printf("\n\n   %s %s %s\n",left_separator.c_str(),
+    outfile->Printf("\n\n  %s %s %s\n",left_separator.c_str(),
                     text.c_str(),right_separator.c_str());
 }
 
