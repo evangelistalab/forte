@@ -638,24 +638,21 @@ void THREE_DSRG_MRPT2::renormalize_V()
     Timer timer;
     std::string str = "Renormalizing V";
     outfile->Printf("\n    %-36s ...", str.c_str());
+    std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
 
     // Put RExp2 into a shared matrix.
-    BlockedTensor v = BTF->build(tensor_type_,"v",no_hhpp_);
-    v["ijab"] =  ThreeIntegral["gia"]*ThreeIntegral["gjb"];
-    //v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["ijab"] -= ThreeIntegral["gib"]*ThreeIntegral["gja"];
-    v["iJaB"]  = ThreeIntegral["gia"]*ThreeIntegral["gJB"];
-    v["IJAB"]  = ThreeIntegral["gIA"]*ThreeIntegral["gJB"];
-    v["IJAB"] -= ThreeIntegral["gIB"]*ThreeIntegral["gJA"];
+    BlockedTensor v = BTF->build(tensor_type_,"v",BTF->spin_cases_avoid(list_of_pphh_V));
+    v["abij"] = V["abij"];
+    v["aBiJ"] = V["aBiJ"];
+    v["ABIJ"] = V["ABIJ"];
 
     //V["ijab"] += v["ijab"] * RExp2["ijab"];
     //V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
     //V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
 
-    V["abij"] += v["ijab"] * RExp2["ijab"];
-    V["aBiJ"] += v["iJaB"] * RExp2["iJaB"];
-    V["ABIJ"] += v["IJAB"] * RExp2["IJAB"];
-    std::vector<std::string> Vblocks = V.block_labels();
+    V["abij"] += v["abij"] * RExp2["ijab"];
+    V["aBiJ"] += v["aBiJ"] * RExp2["iJaB"];
+    V["ABIJ"] += v["ABIJ"] * RExp2["IJAB"];
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -1133,7 +1130,8 @@ std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::strin
     }
     else 
     {
-        
+       //This batch of code will take a string of three letter string specifiying core, active, or virtual
+       //cav-> generates all possible kinds of spaces
         for(int i = 0; i < 2; i++){
             for(int j = 0; j < 2; j++){
                 for(int k = 0; k < 2; k++){
