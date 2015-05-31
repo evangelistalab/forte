@@ -786,8 +786,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BTF->build(tensor_type_,"temp1",no_hhpp_);
-    temp2 = BTF->build(tensor_type_,"temp2",no_hhpp_);
+    temp1 = BTF->build(tensor_type_,"temp1",BTF->spin_cases_avoid(no_hhpp_));
+    temp2 = BTF->build(tensor_type_,"temp2",BTF->spin_cases_avoid(no_hhpp_));
 
 
     //Calculates all but ccvv, cCvV, and CCVV energies
@@ -1176,6 +1176,7 @@ void THREE_DSRG_MRPT2::frozen_natural_orbitals()
     BlockedTensor Vhap = BTF->build(tensor_type_,"V", spin_cases({"ppvv"}));
     Vhap = V;
     
+
     Dfv["ef"] += 0.5 * Vhap["εfij"]*Vhap["ijεe"] * Delta2["εfij"] * Delta2["εeij"];
      
 
