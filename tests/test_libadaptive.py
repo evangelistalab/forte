@@ -16,7 +16,7 @@ elif len(sys.argv) == 2:
 
 print "Running test using psi4 executable found in:\n%s" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-rdms-1","fci-rdms-2"]
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-rdms-1","fci-rdms-2"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",

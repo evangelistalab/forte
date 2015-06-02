@@ -32,6 +32,7 @@
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
+#include "blockedtensorfactory.h"
 
 namespace psi{
 
@@ -106,6 +107,7 @@ protected:
     int taylor_order_;
 
     TensorType tensor_type_;
+    std::shared_ptr<BlockedTensorFactory> BTF;
 
     // => Tensors <= //
 
