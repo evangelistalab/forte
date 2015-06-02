@@ -513,14 +513,15 @@ double EX_ACI::compute_energy()
             break;
         }
 
-        // Step 6. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
-
-        // Step 7. Confine PQ space to size max_det_ if max_det_ is limiting
+        // Step 6. Confine PQ space to size max_det_ if max_det_ is limiting
         if(converged and max_det_ < PQ_space_.size()){
             shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
             shrink = true;
         }
+
+        // Step 7. Prune the P + Q space to get an updated P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
+
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
@@ -648,9 +649,9 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
             criteria = root_select(nroot, C1, E2);
         }
 
-        if(aimed_selection_ and !shrink){
+        if(aimed_selection_ or shrink){
             sorted_dets.push_back(std::make_pair(criteria,it->first));
-        }else if(!aimed_selection_ and !shrink){
+        }else{
             if(std::fabs(criteria) > tau_q_){
                 PQ_space_.push_back(it->first);
             }else{
@@ -672,8 +673,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
     if (aimed_selection_){
         double sum = 0.0;
-        auto I_init = shrink ? sorted_dets.size() - max_det_ : 0;
-        for (size_t I = I_init, max_I = sorted_dets.size(); I < max_I; ++I){
+        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
@@ -690,11 +690,15 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
-    }else if(shrink){
-        for(size_t I = sorted_dets.size() - max_det_; I < sorted_dets.size(); ++I){
+    }
+    if(shrink){
+        PQ_space_.clear();
+        std::reverse(sorted_dets.begin(),sorted_dets.end());
+        for(size_t I = 0; I < max_det_; ++I){
             PQ_space_.push_back(sorted_dets[I].second);
         }
     }
+
     std::vector<double> ept2_last;
     if(!shrink){
         ept2_last = ept2;
@@ -1371,7 +1375,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
 void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
                              std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
 {
-    outfile->Printf("\n Calculation has converged. Shrinking P space to %zu determinants.", max_det_);
+    outfile->Printf("\n Calculation has converged. Limiting PQ space to %zu determinants.", max_det_);
 
     // Create a vector that stores the absolute value of the CI coefficients
     pVector<double,size_t> dm_det_list;
