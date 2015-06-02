@@ -102,11 +102,13 @@ public:
     /// Form the diagonal part of the Hamiltonian
     void form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints);
 
+//    double approximate_spin(double )
+
 //    /// Initial guess
 //    void initial_guess(FCIWfn& diag, size_t num_dets = 100);
 
 ////    void set_to(Determinant& det);
-//    void set_to(int n);
+    void set(std::vector<std::tuple<size_t,size_t,size_t,double>>& sparse_vec);
 //    double get(int n);
 //    void plus_equal(double factor,FCIWfn& wfn);
 //    void scale(double factor);
@@ -141,6 +143,8 @@ public:
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
+
+    std::vector<std::tuple<double,size_t,size_t,size_t>> get_largest_contributions(size_t num_dets);
 //    // FCIWfn update routines
 //    void bendazzoli_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
 //    void davidson_update(double E,FCIWfn& H,FCIWfn& R);
