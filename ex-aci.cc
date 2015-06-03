@@ -24,7 +24,23 @@
 using namespace std;
 using namespace psi;
 
+
 namespace psi{ namespace libadaptive{
+
+/**
+ * Template to store 3-index quantity of any type
+ * I use it to store c_I, symmetry label, and ordered labels
+ * for determinants
+ **/
+template <typename a, typename b, typename c>
+using oVector = std::vector<std::pair< a,std::pair< b,c >> >;
+
+
+/**
+ * Used for initializing a vector of pairs of any type
+ */
+template <typename a, typename b>
+using pVector = std::vector<std::pair< a,b > >;
 
 
 inline double clamp(double x, double a, double b)
@@ -160,19 +176,21 @@ std::vector<int> EX_ACI::get_occupation()
 
     // Get reference type
     std::string ref_type = options_.get_str("REFERENCE");
-    outfile->Printf("\n  Using %s reference.", ref_type.c_str());
+    outfile->Printf("\n  Using %s reference.\n", ref_type.c_str());
 
-    // Grab an ordered list of orbital energies, symmetry labels, and Pitzer-indices
-    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en;
-    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_alfa;
-    std::vector<std::pair<double,std::pair<int,int>> > labeled_orb_en_beta;
 
+    //nsym denotes the number of electrons needed to assign symmetry and multiplicity
     int nsym = wavefunction_multiplicity_ - 1;
     int orb_sym = wavefunction_symmetry_;
 
     if(wavefunction_multiplicity_ == 1){
         nsym = 2;
     }
+
+    // Grab an ordered list of orbital energies, symmetry labels, and Pitzer-indices
+    oVector<double,int,int> labeled_orb_en;
+    oVector<double,int,int> labeled_orb_en_alfa;
+    oVector<double,int,int> labeled_orb_en_beta;
 
     if(ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
        labeled_orb_en = sym_labeled_orbitals("RHF");
@@ -193,9 +211,11 @@ std::vector<int> EX_ACI::get_occupation()
             occupation[ncmo_ + labeled_orb_en[i].second.second] = 1;
         }
 
-        for(int k = 1; k < nsym;){
+        //Loop over as many outer-shell electrons needed to get correct symmetry
+        for(int k = 1; k <= nsym;){
 
             bool add = false;
+
             //remove electron from highest-energy docc
             occupation[labeled_orb_en[nalpha()-k].second.second] = 0;
             outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[nalpha() - k].second.second, ncel_ );
@@ -216,6 +236,7 @@ std::vector<int> EX_ACI::get_occupation()
             outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
             //add electron to lowest-energy orbital of proper symmetry
+            //Loop from current occupation to max MO until correct orbital is reached
             for(int i = nalpha() - k; i < ncmo_; ++i){
                 if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] !=1 ){
                     occupation[labeled_orb_en[i].second.second] = 1;
@@ -492,14 +513,15 @@ double EX_ACI::compute_energy()
             break;
         }
 
-        // Step 6. Prune the P + Q space to get an updated P space
-        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
-
-        // Step 7. Confine PQ space to size max_det_ if max_det_ is limiting
-        if(converged){
+        // Step 6. Confine PQ space to size max_det_ if max_det_ is limiting
+        if(converged and max_det_ < PQ_space_.size()){
             shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
             shrink = true;
         }
+
+        // Step 7. Prune the P + Q space to get an updated P space
+        prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
+
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
@@ -589,11 +611,11 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
     boost::timer t_ms_screen;
 
     typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
-    std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
-    std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
+    pVector<double,double> C1(nroot_,make_pair(0.0,0.0));
+    pVector<double,double> E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> V(nroot_, 0.0);
     BitsetDeterminant det;
-    std::vector<std::pair<double,BitsetDeterminant>> sorted_dets;
+    pVector<double,BitsetDeterminant> sorted_dets;
     std::vector<double> ept2(nroot_,0.0);
     double criteria;
 
@@ -627,9 +649,9 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
             criteria = root_select(nroot, C1, E2);
         }
 
-        if(aimed_selection_ and !shrink){
+        if(aimed_selection_ or shrink){
             sorted_dets.push_back(std::make_pair(criteria,it->first));
-        }else if(!aimed_selection_ and !shrink){
+        }else{
             if(std::fabs(criteria) > tau_q_){
                 PQ_space_.push_back(it->first);
             }else{
@@ -651,8 +673,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
     if (aimed_selection_){
         double sum = 0.0;
-        auto I_init = shrink ? sorted_dets.size() - max_det_ : 0;
-        for (size_t I = I_init, max_I = sorted_dets.size(); I < max_I; ++I){
+        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
@@ -669,11 +690,15 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
-    }else if(shrink){
-        for(size_t I = sorted_dets.size() - max_det_; I < sorted_dets.size(); ++I){
+    }
+    if(shrink){
+        PQ_space_.clear();
+        std::reverse(sorted_dets.begin(),sorted_dets.end());
+        for(size_t I = 0; I < max_det_; ++I){
             PQ_space_.push_back(sorted_dets[I].second);
         }
     }
+
     std::vector<double> ept2_last;
     if(!shrink){
         ept2_last = ept2;
@@ -688,7 +713,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 }
 
 
-double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<double,double> E2)
 {
 
 
@@ -697,7 +722,7 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
     std::pair<double,double> f_E2;
 
     //Make vector of pairs for ∆e_n,0
-    std::vector<std::pair<double,double> > dE2(nroot_,make_pair(0.0,0.0));
+    pVector<double,double> dE2(nroot_,make_pair(0.0,0.0));
 
 
     //Compute a determinant's effect on ground state or adjacent state transition
@@ -754,7 +779,7 @@ double EX_ACI::average_q_values(int nroot, std::vector<std::pair<double,double> 
 
 }
 
-double EX_ACI::root_select(int nroot,std::vector<std::pair<double,double> > C1, std::vector<std::pair<double,double> > E2)
+double EX_ACI::root_select(int nroot,pVector<double,double> C1, pVector<double,double> E2)
 {
     double select_value;
     ref_root_ = options_.get_int("REF_ROOT");
@@ -1306,7 +1331,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     pruned_space_map.clear();
 
     // Create a vector that stores the absolute value of the CI coefficients
-    std::vector<std::pair<double,size_t> > dm_det_list;
+    pVector<double,size_t> dm_det_list;
     for (size_t I = 0; I < large_space.size(); ++I){
         double max_dm = 0.0;
         for (int n = 0; n < nroot; ++n){
@@ -1350,10 +1375,10 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
 void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
                              std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
 {
-    outfile->Printf("\n Calculation has converged. Shrinking P space to %zu determinants.", max_det_);
+    outfile->Printf("\n Calculation has converged. Limiting PQ space to %zu determinants.", max_det_);
 
     // Create a vector that stores the absolute value of the CI coefficients
-    std::vector<std::pair<double,size_t> > dm_det_list;
+    pVector<double,size_t> dm_det_list;
 
     pruned_space.clear();
     pruned_space_map.clear();
@@ -1416,7 +1441,7 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
     for (int n = 0; n < nroot; ++n){
         outfile->Printf("\n\n  Most important contributions to root %3d:",n);
 
-        std::vector<std::pair<double,size_t> > det_weight;
+        pVector<double,size_t> det_weight;
         for (size_t I = 0; I < space.size(); ++I){
             det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
         }
@@ -1491,8 +1516,8 @@ int EX_ACI::direct_sym_product(int sym1, int sym2)
 void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot)
 {
     for(int n = 0; n < nroot; ++n){
-        std::vector<std::pair<size_t,double> > excitation_counter( 1 + (1 + cycle_)*2 );
-        std::vector<std::pair<double,size_t> > det_weight;
+        pVector<size_t,double> excitation_counter( 1 + (1 + cycle_)*2 );
+        pVector<double,size_t> det_weight;
         for (size_t I = 0; I < det_space.size(); ++I){
             det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
         }
@@ -1536,14 +1561,14 @@ void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix
 
 }
 
-std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals(std::string type)
+oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
 {
-    std::vector<std::pair<double, std::pair<int,int> > > labeled_orb;
+    oVector<double,int,int> labeled_orb;
 
     if(type == "RHF" or type == "ROHF" or type == "ALFA"){
 
         //Create a vector of orbital energy and index pairs (Pitzer ordered)
-        std::vector<std::pair<double,int> > orb_e;
+        pVector<double,int> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
             for (int a = 0; a < ncmopi_[h]; a++){
@@ -1565,7 +1590,7 @@ std::vector<std::pair<double, std::pair<int,int>> > EX_ACI::sym_labeled_orbitals
 
     if(type == "BETA"){
         //Create a vector of orbital energy and index pairs (Pitzer ordered)
-        std::vector<std::pair<double,int> > orb_e;
+        pVector<double,int> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
             for (int a = 0; a < ncmopi_[h]; a++){
