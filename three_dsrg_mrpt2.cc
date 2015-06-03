@@ -811,14 +811,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double E2beta = 0.0;
     double E2mixed = 0.0;
     double E2 = 0.0;
-    //E += 0.25 * Vr["EFMN"] * T2ph["MNEF"];
-    //E += 0.25 * Vr["efmn"] * T2ph["mnef"];
-    //E += Vr["eFmN"] * T2ph["mNeF"];
-    //E2alpha += 0.25 * Vr["EFMN"] * T2ph["MNEF"];
-    //E2beta += 0.25 * Vr["efmn"] * T2ph["mnef"];
-    //E2mixed += Vr["eFmN"] * T2ph["mNeF"];
-    //E2 = E2alpha + E2beta + E2mixed;
-
     ///Calculating the last three E without storing any ccvv quantities
     ///
     double Eflyalpha = 0.0;
@@ -993,7 +985,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BTF->build(tensor_type_,"temp1", no_hhpp_);
+    temp1 = BTF->build(tensor_type_,"temp1", BTF->spin_cases_avoid(no_hhpp_));
     temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
     temp1["juby"]  = T2pr["iuay"] * Gamma1["ji"] * Eta1["ab"];
