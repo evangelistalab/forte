@@ -195,7 +195,7 @@ std::vector<int> EX_ACI::get_occupation()
     if(ref_type == "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
        labeled_orb_en = sym_labeled_orbitals("RHF");
     }
-    else if(ref_type == "UHF"){
+    else if(ref_type == "UHF" or ref_type == "UKS"){
         labeled_orb_en_alfa = sym_labeled_orbitals("ALFA");
         labeled_orb_en_beta = sym_labeled_orbitals("BETA");
     }
@@ -261,7 +261,7 @@ std::vector<int> EX_ACI::get_occupation()
 
     }
     // For an unrestricted reference
-    else if(ref_type == "UHF"){
+    else if(ref_type == "UHF" or ref_type == "UKS"){
 
         //Make the reference
         //For singlets, this will be "ground-state", closed-shell
@@ -610,7 +610,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
     boost::timer t_ms_screen;
 
-    typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
+    using bsmap_it = std::map<BitsetDeterminant,std::vector<double> >::const_iterator;
     pVector<double,double> C1(nroot_,make_pair(0.0,0.0));
     pVector<double,double> E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> V(nroot_, 0.0);
@@ -662,10 +662,6 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
         }
     }// end loop over determinants
 
-    if(shrink){
-        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
-    }
-
     if(shrink or aimed_selection_){
     // Sort the CI coefficients in ascending order
     std::sort(sorted_dets.begin(),sorted_dets.end());
@@ -691,19 +687,19 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
             }
         }
     }
+
+    //Now we have a PQ space for AIMED or THRESH selection, shrink it here if called
+    std::vector<double> ept2_last;
     if(shrink){
+        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
         PQ_space_.clear();
         std::reverse(sorted_dets.begin(),sorted_dets.end());
         for(size_t I = 0; I < max_det_; ++I){
             PQ_space_.push_back(sorted_dets[I].second);
         }
-    }
-
-    std::vector<double> ept2_last;
-    if(!shrink){
+    }else{
         ept2_last = ept2;
     }
-
 
     multistate_pt2_energy_correction_ = ept2_last;
 
@@ -832,7 +828,7 @@ void EX_ACI::find_q_space_single_root(int nroot,SharedVector evals,SharedMatrix 
 
     boost::timer t_ms_screen;
 
-    typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
+    using bsmap_it =  std::map<BitsetDeterminant,std::vector<double> >::const_iterator;
     std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
@@ -1551,11 +1547,14 @@ void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix
 
         }
         int order = 0;
+        size_t det = 0;
         for(auto i: excitation_counter){
             outfile->Printf("\n      %2d          %4zu           %.11f", order, i.first, i.second);
+            det += i.first;
+            if(det == det_space.size()) break;
             ++order;
         }
-        outfile->Printf("\n");
+        outfile->Printf("\n\n  Highest-order exitation searched:     %zu  \n", excitation_counter.size()-1);
 
     }
 
@@ -1584,8 +1583,6 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
 
         // Order by energy, low to high
         std::sort(labeled_orb.begin(), labeled_orb.end());
-
-
     }
 
     if(type == "BETA"){
