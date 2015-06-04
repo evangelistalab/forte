@@ -897,7 +897,6 @@ void DFIntegrals::gather_integrals()
     //This is because francesco reads only the nonzero integrals
     //I store all of them into this array.
 
-    SharedMatrix pqB(new Matrix("pqB", nmo_*nmo_, naux));
     SharedMatrix tBpq(new Matrix("Bpqtensor", naux, nmo_*nmo_));
 
     // Store the integrals in the form of nmo*nmo by B
@@ -910,7 +909,6 @@ void DFIntegrals::gather_integrals()
             for(size_t B = 0; B < naux; B++){
                 size_t qB = q * naux + B;
                 tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
-                pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
             }
          }
     }
