@@ -243,6 +243,17 @@ void FCIWfn::copy_to(SharedVector vec)
     }
 }
 
+void FCIWfn::set(std::vector<std::tuple<size_t,size_t,size_t,double>>& sparse_vec)
+{
+    zero();
+    double C;
+    size_t h,Ia,Ib;
+    for (auto& el : sparse_vec){
+        std::tie(h,Ia,Ib,C) = el;
+        C_[h]->set(Ia,Ib,C);
+    }
+}
+
 ///**
 // * Set the wave function to the nth determinant in the list
 // */

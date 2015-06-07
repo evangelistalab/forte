@@ -14,7 +14,7 @@ namespace psi{ namespace libadaptive{
 BlockedTensorFactory::BlockedTensorFactory(Options& options)
 
 {
-    memory_ = Process::environment.get_memory()/8L;
+    memory_ = Process::environment.get_memory() / 1073741824.0;
     number_of_tensors_ = 0;
 
 }
@@ -29,6 +29,10 @@ BlockedTensorFactory::~BlockedTensorFactory()
 
 ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const std::string& name,const std::vector<std::string>& spin_stuff)
 {
+    if(print_memory_)
+    {
+    outfile->Printf("\n Creating %s ", name.c_str());
+    }
     ambit::BlockedTensor BT = ambit::BlockedTensor::build(storage, name, spin_stuff);
     number_of_tensors_+= 1;
     memory_information(BT);
@@ -92,7 +96,7 @@ std::vector<std::string> BlockedTensorFactory::generate_indices(const std::strin
             }
         }
     }
-    else if(type=="hhpp")
+    else 
     {
 
         for(int i = 0; i < 2; i++){
@@ -140,8 +144,9 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
         ambit::Tensor temp = BT.block(block);
         size_of_tensor += temp.numel();
     }
-    double memory_of_tensor = size_of_tensor * 8.0 /1073741824;
-    tensors_information_.push_back(std::make_pair(BT.name(), memory_of_tensor));
+    double memory_of_tensor = size_of_tensor / 1073741824;
+    tensors_information_.push_back(std::make_pair(BT.name(),
+    memory_of_tensor));
     number_of_blocks_.push_back(BT.numblocks());
     memory_ -= memory_of_tensor;
     if(print_memory_)
@@ -149,17 +154,14 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
         outfile->Printf("\n For tensor %s, this will take up %6.6f GB", BT.name().c_str(), memory_of_tensor);
         outfile->Printf("\n %6.6f GB of memory left over", memory_);
     }
-
-}
-void BlockedTensorFactory::memory_summary()
-{
-    outfile->Printf("\n Memory Summary of all tensors \n");
+} void BlockedTensorFactory::memory_summary() {
+    outfile->Printf("\n Memory Summary of the %u tensors \n", number_of_tensors_);
     outfile->Printf("\n TensorName \t Number_of_blocks \t memory gb");
     for(int i = 0; i < tensors_information_.size(); i++)
     {
-        outfile->Printf("\n %-25s  %u    %8.8 GB", tensors_information_[i].first.c_str(), number_of_blocks_[i],tensors_information_[i].second);
+        outfile->Printf("\n %-25s  %u    %8.8f GB", tensors_information_[i].first.c_str(), number_of_blocks_[i],tensors_information_[i].second);
     }
-    outfile->Printf("\n Memory left over: %8.6f GB\n", memory_/1073741824);
+    outfile->Printf("\n Memory left over: %8.6f GB\n", memory_);
 }
 std::vector<std::string> BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
 {

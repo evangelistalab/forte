@@ -67,17 +67,24 @@ read_options(std::string name, Options &options)
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
          
-        /*- The job type -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI"
+        /*- The job type
+         *  - FCI Full configuration interaction (Francesco's code)
+         *  - CAS Full configuration interaction (York's code)
+         *  - ACI Adaptive configuration interaction
+         *  - APICI Adaptive path-integral CI
+         *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
+        -*/
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 NONE");
 
-        // Options for the Explorer class
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
 
-        /*- The multiplicity of the electronic state.  If a value is provided
-            it overrides the multiplicity of the SCF solution. -*/
+        /*- The multiplicity (2S + 1 )of the electronic state.
+         *  For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
+         *  If a value is provided it overrides the multiplicity
+         *  of the SCF solution. -*/
         options.add_int("MULTIPLICITY",0);
 
         /*- The charge of the molecule.  If a value is provided
@@ -459,7 +466,10 @@ libadaptive(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
         fci->compute_energy();
-//        FCI_MO fci_mo(options,ints_);
+    }
+    if(options.get_str("JOB_TYPE")=="CAS")
+    {
+        FCI_MO fci_mo(options,ints_);
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")

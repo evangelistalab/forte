@@ -63,14 +63,15 @@ void FCIQMC::startup()
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h){
         if (h==0) {
-            cume_ncmopi_[0] = 0;
+            cume_ncmopi_.push_back(0);
         } else {
-            cume_ncmopi_[h] = cume_ncmopi_[h-1] + ncmopi_[h-1];
+            cume_ncmopi_.push_back(cume_ncmopi_[h-1] + ncmopi_[h-1]);
         }
         for (int p = 0; p < ncmopi_[h]; ++p){
             mo_symmetry_.push_back(h);
         }
     }
+    cume_ncmopi_.push_back(ncmo_);
 
     // compute the number of irrep combination catagories per alpha beta combination
     cume_excit_irrep_[0] = nirrep_*nirrep_*nirrep_;
@@ -102,9 +103,10 @@ void FCIQMC::startup()
         cumidx += ncmopi_[h];
     }
     BitsetDeterminant reference_determinant(occupation);
+    reference_ = reference_determinant;
 
     outfile->Printf("\n  The reference determinant is:\n");
-    reference_determinant.print();
+    reference_.print();
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXITER");
     start_num_walkers_ = options_.get_double("START_NUM_WALKERS");
@@ -116,7 +118,6 @@ void FCIQMC::startup()
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
     use_initiator_ = options_.get_bool("USE_INITIATOR");
     initiator_na_ = options_.get_double("INITIATOR_NA");
-    outfile->Printf("\nDEBUG: spawn-type:%s",options_.get_str("SPAWN_TYPE").c_str());
     if (options_.get_str("SPAWN_TYPE") == "RANDOM"){
         spawn_type_ = random;
     }else if (options_.get_str("SPAWN_TYPE") == "ALL"){
@@ -219,7 +220,7 @@ double FCIQMC::compute_energy()
 {
     timer_on("FCIQMC:Energy");
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
+    outfile->Printf("\n\t      Full Configuration Interaction QUANTUM MONTE-CARLO");
     outfile->Printf("\n\t         by Tianyuan Zhang and Francesco A. Evangelista");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
@@ -227,31 +228,30 @@ double FCIQMC::compute_energy()
     // Print a summary of the options
     print_info();
 
-    // Build the reference determinant and compute its energy
-    std::vector<bool> occupation_a(ncmo_,false);
-    std::vector<bool> occupation_b(ncmo_,false);
-    int cumidx = 0;
-    for (int h = 0; h < nirrep_; ++h){
-        for (int i = 0; i < doccpi_[h]; ++i){
-            occupation_a[i + cumidx] = true;
-            occupation_b[i + cumidx] = true;
-        }
-        for (int i = 0; i < soccpi_[h]; ++i){
-            occupation_a[i + doccpi_[h] + cumidx] = true;
-        }
-        cumidx += nmopi_[h];
-    }
-    BitsetDeterminant reference(occupation_a,occupation_b);
-    reference.print();
+//    // Build the reference determinant and compute its energy
+//    std::vector<bool> occupation_a(ncmo_,false);
+//    std::vector<bool> occupation_b(ncmo_,false);
+//    int cumidx = 0;
+//    for (int h = 0; h < nirrep_; ++h){
+//        for (int i = 0; i < doccpi_[h]; ++i){
+//            occupation_a[i + cumidx] = true;
+//            occupation_b[i + cumidx] = true;
+//        }
+//        for (int i = 0; i < soccpi_[h]; ++i){
+//            occupation_a[i + doccpi_[h] + cumidx] = true;
+//        }
+//        cumidx += nmopi_[h];
+//    }
+    reference_.print();
 
-    Ehf_ = reference.slater_rules(reference);
+    Ehf_ = reference_.energy();
 
     double nre = molecule_->nuclear_repulsion_energy();
     outfile->Printf("\nnuclear_repulsion_energy:%lf, Ehf:%lf",nre, Ehf_);
 
     // Create the initial walker population
     std::map<BitsetDeterminant,double> walkers;
-    walkers[reference] = start_num_walkers_;
+    walkers[reference_] = start_num_walkers_;
 
     bool shift_flag = false;
     double pre_nWalker = 0;
@@ -278,9 +278,11 @@ double FCIQMC::compute_energy()
 
         // Step #1.  Spawning
         timer_on("FCIQMC:Spawn");
+
+
         spawn(walkers,new_walkers);
         timer_off("FCIQMC:Spawn");
-        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference]);
+        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference_]);
 
         if (death_parent_only_) {
             // Step #2.  Death/Clone
@@ -288,28 +290,28 @@ double FCIQMC::compute_energy()
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
 
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
         } else {
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
 
             // Step #2.  Death/Clone
             timer_on("FCIQMC:Death_Clone");
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference]);
+            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
         }
 
 
@@ -321,7 +323,7 @@ double FCIQMC::compute_energy()
 
         // calculate iter info
         count_walkers(walkers);
-        Eprojs.push_back(compute_proj_energy(reference, walkers));
+        Eprojs.push_back(compute_proj_energy(reference_, walkers));
 
         if (iter_ % energy_estimate_freq_ == 0){
             compute_var_energy(walkers);
@@ -344,7 +346,8 @@ double FCIQMC::compute_energy()
 }
 
 void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
-    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
+    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/shift_num_walkers_);
+//    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
     outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f, pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter, nWalkers_, pre_nWalker,shift_);
 }
 
@@ -369,27 +372,33 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 
         ObtCount obtCount;
         std::vector<size_t> excitationDivides;
-        std::vector<std::tuple<int, int, int>> excitationType;
+        std::vector<std::tuple<int, int, int, int>> excitationType;
 
-//        outfile->Printf("\nspawn_type_:%d, all:%d", spawn_type_, all);
+//        outfile->Printf("\nspawn_type_:%d", spawn_type_);
 
         switch (spawn_type_) {
         case random:
             timer_on("FCIQMC:Compute_excitations");
             sumgen = compute_irrep_divided_excitations(det, excitationDivides, excitationType, obtCount);
+//            outfile->Printf("\nreached sumgen! sumgen= %d", sumgen);
+
             timer_off("FCIQMC:Compute_excitations");
 
             for (size_t detW = 0; detW < nid; ++detW){
                 BitsetDeterminant new_det(det);
                 // Select a random number within the range of allowed determinants
     //            singleWalkerSpawn(new_det,det,pgen,sumgen);
+
                 size_t rand_ext = rand_int() % sumgen;
 //                if (rand_ext<sumDouble)
 //                    detDoubleExcitation(new_det, doubleExcitations[rand_ext]);
 //                else
 //                    detSingleExcitation(new_det, singleExcitations[rand_ext-sumDouble]);
+//                outfile->Printf("\nreached here!");
+
                 detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
 
+//                outfile->Printf("\nreached here 2!");
 
                 double HIJ = new_det.slater_rules(det);
                 double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
@@ -397,6 +406,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
                 if (rand_real() < pspawn - double(pspawn_floor)){
                     pspawn_floor++;
                 }
+
 
                 int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
 
@@ -465,6 +475,56 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
             }
             break;
         case ground_and_random:
+            timer_on("FCIQMC:Compute_excitations");
+            sumgen = compute_irrep_divided_excitations(det, excitationDivides, excitationType, obtCount);
+
+            timer_off("FCIQMC:Compute_excitations");
+
+            for (size_t detW = 0; detW < nid; ++detW){
+                BitsetDeterminant new_det(det);
+                size_t rand_ext = rand_int() % sumgen;
+                detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
+                if (new_det == reference_) {
+                    double HIJ = new_det.slater_rules(det);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen);
+                    int pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[new_det] += double(nspawn);
+                    }
+                } else {
+                    double HIJ = new_det.slater_rules(det);
+                    double pspawn = time_step_ * std::fabs(HIJ) * double(sumgen-1);
+                    int pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    int nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[new_det] += double(nspawn);
+                    }
+                    HIJ = reference_.slater_rules(det);
+                    pspawn = time_step_ * std::fabs(HIJ);
+                    pspawn_floor = std::floor(pspawn);
+                    if (rand_real() < pspawn - double(pspawn_floor)){
+                        pspawn_floor++;
+                    }
+                    nspawn = coef * HIJ > 0 ? -pspawn_floor : pspawn_floor;
+
+                    // TODO: check
+                    if (nspawn != 0){
+                        new_walkers[reference_] += double(nspawn);
+                    }
+                }
+
+            }
             break;
         default:
             break;
@@ -862,18 +922,24 @@ void FCIQMC::compute_double_excitations(const BitsetDeterminant &det, std::vecto
  * @return
  * total number of excitations
  */
-size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int> > &excitationType, ObtCount &obtCount) {
+size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
     const std::vector<int> bvir = det.get_beta_vir();
     size_t totalExcitation = 0;
+    obtCount.naocc.clear();
+    obtCount.nbocc.clear();
+    obtCount.navir.clear();
+    obtCount.nbvir.clear();
     for (int i = 0; i<nirrep_; i++) {
         obtCount.naocc.push_back(0);
         obtCount.nbocc.push_back(0);
         obtCount.navir.push_back(0);
         obtCount.nbvir.push_back(0);
     }
+    excitationDivides.clear();
+    excitationType.clear();
     for (int i = 0; i<aocc.size(); i++) {
         obtCount.naocc[mo_symmetry_[aocc[i]]]++;
     }
@@ -892,7 +958,7 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
                 int l = i^j^k;
                 totalExcitation += obtCount.naocc[i]*obtCount.nbocc[j]*obtCount.navir[k]*obtCount.nbvir[l];
                 excitationDivides.push_back(totalExcitation);
-                excitationType.push_back(std::make_tuple(i,j,k));
+                excitationType.push_back(std::make_tuple(0,i,j,k));
             }
         }
     }
@@ -900,7 +966,7 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
         for (int j = 0; j<nirrep_; j++) {
             totalExcitation += obtCount.naocc[i]*(obtCount.naocc[i]-1)*obtCount.navir[j]*(obtCount.navir[j]-1)/4;
             excitationDivides.push_back(totalExcitation);
-            excitationType.push_back(std::make_tuple(i,i,j));
+            excitationType.push_back(std::make_tuple(1,i,i,j));
         }
     }
     for (int i = 0; i<nirrep_; i++) {
@@ -909,7 +975,7 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
                 int l = i^j^k;
                 totalExcitation += obtCount.naocc[i]*obtCount.naocc[j]*obtCount.navir[k]*obtCount.navir[l];
                 excitationDivides.push_back(totalExcitation);
-                excitationType.push_back(std::make_tuple(i,j,k));
+                excitationType.push_back(std::make_tuple(2,i,j,k));
             }
         }
     }
@@ -917,7 +983,7 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
         for (int j = 0; j<nirrep_; j++) {
             totalExcitation += obtCount.nbocc[i]*(obtCount.nbocc[i]-1)*obtCount.nbvir[j]*(obtCount.nbvir[j]-1)/4;
             excitationDivides.push_back(totalExcitation);
-            excitationType.push_back(std::make_tuple(i,i,j));
+            excitationType.push_back(std::make_tuple(3,i,i,j));
         }
     }
     for (int i = 0; i<nirrep_; i++) {
@@ -926,117 +992,565 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
                 int l = i^j^k;
                 totalExcitation += obtCount.nbocc[i]*obtCount.nbocc[j]*obtCount.nbvir[k]*obtCount.nbvir[l];
                 excitationDivides.push_back(totalExcitation);
-                excitationType.push_back(std::make_tuple(i,j,k));
+                excitationType.push_back(std::make_tuple(4,i,j,k));
             }
         }
     }
     for (int i = 0; i<nirrep_; i++) {
         totalExcitation += obtCount.naocc[i]*obtCount.navir[i];
         excitationDivides.push_back(totalExcitation);
-        excitationType.push_back(std::make_tuple(i,i,-1));
+        excitationType.push_back(std::make_tuple(5,i,i,-1));
     }
     for (int i = 0; i<nirrep_; i++) {
         totalExcitation += obtCount.nbocc[i]*obtCount.nbvir[i];
         excitationDivides.push_back(totalExcitation);
-        excitationType.push_back(std::make_tuple(i,i,-1));
+        excitationType.push_back(std::make_tuple(6,i,i,-1));
     }
     return totalExcitation;
 }
 
-void FCIQMC::detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int> > &excitationType, ObtCount &obtCount) {
+void FCIQMC::detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
     size_t begin=0, end=excitationDivides.size()-1;
     size_t middle = (begin+end)/2;
     rand_ext++;
-    while (begin < end) {
-        if (rand_ext <= excitationDivides[middle]) {
+    while (begin+1 < end) {
+        if (rand_ext < excitationDivides[middle]) {
             end = middle;
         } else {
             begin = middle;
         }
         middle = (begin+end)/2;
+//        outfile->Printf("\nreached here 3! middle %d, begin %d, end %d", middle, begin, end);
     }
-    while (excitationDivides[middle-1]==rand_ext){
-        middle--;
+
+//    outfile->Printf("\nreached here 3! end %d, rand_ext %d", end, rand_ext);
+    while (end > 0 && excitationDivides[end-1]>=rand_ext){
+        end--;
     }
 
     if (rand_ext==0) {
-        while (excitationDivides[middle]==0){
-            middle++;
+        while (excitationDivides[end]==0){
+            end++;
         }
     }
 
-    int i,j,k,l,randI,randJ,randK,randL;
-    std::tie (i,j,k) = excitationType[middle];
-    if (middle<cume_excit_irrep_[0]) {
+//    outfile->Printf("\nreached here 3! end %d, cume_excit_irrep: %d %d %d %d %d %d %d", end,
+//                    cume_excit_irrep_[0], cume_excit_irrep_[1], cume_excit_irrep_[2], cume_excit_irrep_[3],
+//                    cume_excit_irrep_[4], cume_excit_irrep_[5], cume_excit_irrep_[6]);
+//    outfile->Printf("\nreached here 3! excitationDivides: 1090: %d %d %d %d", excitationDivides[1090], excitationDivides[1091], excitationDivides[1092], excitationDivides[1093]);
+
+    int t,i,j,k,l,randI,randJ,randK,randL, obtI, obtJ, obtK, obtL;
+    std::tie (t,i,j,k) = excitationType[end];
+
+    switch (t) {
+    case 0:
         l=i^j^k;
-        randI = rand_int()/obtCount.naocc[i];
-        randJ = rand_int()/obtCount.nbocc[j];
-        randK = rand_int()/obtCount.navir[k];
-        randL = rand_int()/obtCount.nbvir[l];
-        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,false);
-        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
-        new_det.set_beta_bit(cume_ncmopi_[l]+randL,true);
-    }else if (middle<cume_excit_irrep_[1]) {
-        randI = rand_int()/obtCount.naocc[i];
-        randJ = rand_int()/(obtCount.naocc[i]-1);
+        randI = rand_int()%obtCount.naocc[i];
+        randJ = rand_int()%obtCount.nbocc[j];
+        randK = rand_int()%obtCount.navir[k];
+        randL = rand_int()%obtCount.nbvir[l];
+
+        for (obtI = cume_ncmopi_[i]; obtI < cume_ncmopi_[i+1]; obtI++) {
+            if (new_det.get_alfa_bit(obtI)==true) {
+                if (randI == 0) {
+                    break;
+                } else {
+                    randI--;
+                }
+            }
+        }
+
+        for (obtJ = cume_ncmopi_[j]; obtJ < cume_ncmopi_[j+1]; obtJ++) {
+            if (new_det.get_beta_bit(obtJ)==true) {
+                if (randJ == 0) {
+                    break;
+                } else {
+                    randJ--;
+                }
+            }
+        }
+
+        for (obtK = cume_ncmopi_[k]; obtK < cume_ncmopi_[k+1]; obtK++) {
+            if (new_det.get_alfa_bit(obtK)==false) {
+                if (randK == 0) {
+                    break;
+                } else {
+                    randK--;
+                }
+            }
+        }
+
+        for (obtL = cume_ncmopi_[l]; obtL < cume_ncmopi_[l+1]; obtL++) {
+            if (new_det.get_beta_bit(obtL)==false) {
+                if (randL == 0) {
+                    break;
+                } else {
+                    randL--;
+                }
+            }
+        }
+        if (obtI == cume_ncmopi_[i+1] || obtJ == cume_ncmopi_[j+1] || obtK == cume_ncmopi_[k+1] || obtL == cume_ncmopi_[l+1]) {
+            outfile->Printf("\nError in det excitation type 0: orbital out of bond");
+        }
+
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1001: Error in det excitation type 0:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[j]+randJ) == false){
+//            outfile->Printf("\nline 1005: Error in det excitation type 0:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[k]+randK) == true){
+//            outfile->Printf("\nline 1009: Error in det excitation type 0:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[l]+randL) == true){
+//            outfile->Printf("\nline 1013: Error in det excitation type 0:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_alfa_bit(obtI,false);
+        new_det.set_beta_bit(obtJ,false);
+        new_det.set_alfa_bit(obtK,true);
+        new_det.set_beta_bit(obtL,true);
+        break;
+    case 1:
+        randI = rand_int()%obtCount.naocc[i];
+        randJ = rand_int()%(obtCount.naocc[i]-1);
         if (randJ >= randI) randJ++;
-        randK = rand_int()/obtCount.navir[k];
-        randL = rand_int()/(obtCount.navir[k]-1);
+        else std::swap(randI, randJ);
+        randK = rand_int()%obtCount.navir[k];
+        randL = rand_int()%(obtCount.navir[k]-1);
         if (randL >= randK) randL++;
-        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_alfa_bit(cume_ncmopi_[i]+randJ,false);
-        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
-        new_det.set_alfa_bit(cume_ncmopi_[k]+randL,true);
-    }else if (middle<cume_excit_irrep_[2]) {
+        else std::swap(randK, randL);
+        obtI = -1;
+        for (obtJ = cume_ncmopi_[i]; obtJ < cume_ncmopi_[i+1]; obtJ++) {
+            if (new_det.get_alfa_bit(obtJ)==true) {
+                if (randI == 0) {
+                    obtI = obtJ;
+                    randI = -1;
+                } else if (randI>0) {
+                    randI--;
+                }
+                if (randJ == 0) {
+                    break;
+                } else {
+                    randJ--;
+                }
+            }
+        }
+        obtK = -1;
+        for (obtL = cume_ncmopi_[k]; obtL < cume_ncmopi_[k+1]; obtL++) {
+            if (new_det.get_alfa_bit(obtL)==false) {
+                if (randK == 0) {
+                    obtK = obtL;
+                    randK = -1;
+                } else if (randK>0) {
+                    randK--;
+                }
+                if (randL == 0) {
+                    break;
+                } else {
+                    randL--;
+                }
+            }
+        }
+        if (obtI == -1 || obtJ == cume_ncmopi_[i+1] || obtK ==-1 || obtL == cume_ncmopi_[k+1]) {
+            outfile->Printf("\nError in det excitation type 1: orbital out of bond");
+        }
+
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1029: Error in det excitation type 1:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randJ) == false){
+//            outfile->Printf("\nline 1033: Error in det excitation type 1:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[k]+randK) == true){
+//            outfile->Printf("\nline 1037: Error in det excitation type 1:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[k]+randL) == true){
+//            outfile->Printf("\nline 1041: Error in det excitation type 1:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_alfa_bit(obtI,false);
+        new_det.set_alfa_bit(obtJ,false);
+        new_det.set_alfa_bit(obtK,true);
+        new_det.set_alfa_bit(obtL,true);
+        break;
+    case 2:
         l=i^j^k;
-        randI = rand_int()/obtCount.naocc[i];
-        randJ = rand_int()/obtCount.naocc[j];
-        randK = rand_int()/obtCount.navir[k];
-        randL = rand_int()/obtCount.navir[l];
-        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_alfa_bit(cume_ncmopi_[j]+randJ,false);
-        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
-        new_det.set_alfa_bit(cume_ncmopi_[l]+randL,true);
-    }else if (middle<cume_excit_irrep_[3]) {
-        randI = rand_int()/obtCount.nbocc[i];
-        randJ = rand_int()/(obtCount.nbocc[i]-1);
+        randI = rand_int()%obtCount.naocc[i];
+        randJ = rand_int()%obtCount.naocc[j];
+        randK = rand_int()%obtCount.navir[k];
+        randL = rand_int()%obtCount.navir[l];
+
+        for (obtI = cume_ncmopi_[i]; obtI < cume_ncmopi_[i+1]; obtI++) {
+            if (new_det.get_alfa_bit(obtI)==true) {
+                if (randI == 0) {
+                    break;
+                } else {
+                    randI--;
+                }
+            }
+        }
+
+        for (obtJ = cume_ncmopi_[j]; obtJ < cume_ncmopi_[j+1]; obtJ++) {
+            if (new_det.get_alfa_bit(obtJ)==true) {
+                if (randJ == 0) {
+                    break;
+                } else {
+                    randJ--;
+                }
+            }
+        }
+
+        for (obtK = cume_ncmopi_[k]; obtK < cume_ncmopi_[k+1]; obtK++) {
+            if (new_det.get_alfa_bit(obtK)==false) {
+                if (randK == 0) {
+                    break;
+                } else {
+                    randK--;
+                }
+            }
+        }
+
+        for (obtL = cume_ncmopi_[l]; obtL < cume_ncmopi_[l+1]; obtL++) {
+            if (new_det.get_alfa_bit(obtL)==false) {
+                if (randL == 0) {
+                    break;
+                } else {
+                    randL--;
+                }
+            }
+        }
+        if (obtI == cume_ncmopi_[i+1] || obtJ == cume_ncmopi_[j+1] || obtK == cume_ncmopi_[k+1] || obtL == cume_ncmopi_[l+1]) {
+            outfile->Printf("\nError in det excitation type 2: orbital out of bond");
+        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1056: Error in det excitation type 2:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[j]+randJ) == false){
+//            outfile->Printf("\nline 1060: Error in det excitation type 2:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[k]+randK) == true){
+//            outfile->Printf("\nline 1064: Error in det excitation type 2:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[l]+randL) == true){
+//            outfile->Printf("\nline 1068: Error in det excitation type 2:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_alfa_bit(obtI,false);
+        new_det.set_alfa_bit(obtJ,false);
+        new_det.set_alfa_bit(obtK,true);
+        new_det.set_alfa_bit(obtL,true);
+        break;
+    case 3:
+        randI = rand_int()%obtCount.nbocc[i];
+        randJ = rand_int()%(obtCount.nbocc[i]-1);
         if (randJ >= randI) randJ++;
-        randK = rand_int()/obtCount.nbvir[k];
-        randL = rand_int()/(obtCount.nbvir[k]-1);
+        else std::swap(randI, randJ);
+        randK = rand_int()%obtCount.nbvir[k];
+        randL = rand_int()%(obtCount.nbvir[k]-1);
         if (randL >= randK) randL++;
-        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_beta_bit(cume_ncmopi_[i]+randJ,false);
-        new_det.set_beta_bit(cume_ncmopi_[k]+randK,true);
-        new_det.set_beta_bit(cume_ncmopi_[k]+randL,true);
-    }else if (middle<cume_excit_irrep_[4]) {
+        else std::swap(randK, randL);
+        obtI = -1;
+        for (obtJ = cume_ncmopi_[i]; obtJ < cume_ncmopi_[i+1]; obtJ++) {
+            if (new_det.get_beta_bit(obtJ)==true) {
+                if (randI == 0) {
+                    obtI = obtJ;
+                    randI = -1;
+                } else if (randI>0) {
+                    randI--;
+                }
+                if (randJ == 0) {
+                    break;
+                } else {
+                    randJ--;
+                }
+            }
+        }
+        obtK = -1;
+        for (obtL = cume_ncmopi_[k]; obtL < cume_ncmopi_[k+1]; obtL++) {
+            if (new_det.get_beta_bit(obtL)==false) {
+                if (randK == 0) {
+                    obtK = obtL;
+                    randK = -1;
+                } else if (randK>0) {
+                    randK--;
+                }
+                if (randL == 0) {
+                    break;
+                } else {
+                    randL--;
+                }
+            }
+        }
+        if (obtI == -1 || obtJ == cume_ncmopi_[i+1] || obtK ==-1 || obtL == cume_ncmopi_[k+1]) {
+            outfile->Printf("\nError in det excitation type 3: orbital out of bond");
+        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1084: Error in det excitation type 3:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[i]+randJ) == false){
+//            outfile->Printf("\nline 1088: Error in det excitation type 3:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[k]+randK) == true){
+//            outfile->Printf("\nline 1092: Error in det excitation type 3:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[k]+randL) == true){
+//            outfile->Printf("\nline 1096: Error in det excitation type 3:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_beta_bit(obtI,false);
+        new_det.set_beta_bit(obtJ,false);
+        new_det.set_beta_bit(obtK,true);
+        new_det.set_beta_bit(obtL,true);
+        break;
+    case 4:
         l=i^j^k;
-        randI = rand_int()/obtCount.nbocc[i];
-        randJ = rand_int()/obtCount.nbocc[j];
-        randK = rand_int()/obtCount.nbvir[k];
-        randL = rand_int()/obtCount.nbvir[l];
-        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,false);
-        new_det.set_beta_bit(cume_ncmopi_[k]+randK,true);
-        new_det.set_beta_bit(cume_ncmopi_[l]+randL,true);
-    }else if (middle<cume_excit_irrep_[5]) {
-        randI = rand_int()/obtCount.naocc[i];
-        randJ = rand_int()/obtCount.navir[j];
-        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_alfa_bit(cume_ncmopi_[j]+randJ,true);
+        randI = rand_int()%obtCount.nbocc[i];
+        randJ = rand_int()%obtCount.nbocc[j];
+        randK = rand_int()%obtCount.nbvir[k];
+        randL = rand_int()%obtCount.nbvir[l];
+
+        for (obtI = cume_ncmopi_[i]; obtI < cume_ncmopi_[i+1]; obtI++) {
+            if (new_det.get_beta_bit(obtI)==true) {
+                if (randI == 0) {
+                    break;
+                } else {
+                    randI--;
+                }
+            }
+        }
+
+        for (obtJ = cume_ncmopi_[j]; obtJ < cume_ncmopi_[j+1]; obtJ++) {
+            if (new_det.get_beta_bit(obtJ)==true) {
+                if (randJ == 0) {
+                    break;
+                } else {
+                    randJ--;
+                }
+            }
+        }
+
+        for (obtK = cume_ncmopi_[k]; obtK < cume_ncmopi_[k+1]; obtK++) {
+            if (new_det.get_beta_bit(obtK)==false) {
+                if (randK == 0) {
+                    break;
+                } else {
+                    randK--;
+                }
+            }
+        }
+
+        for (obtL = cume_ncmopi_[l]; obtL < cume_ncmopi_[l+1]; obtL++) {
+            if (new_det.get_beta_bit(obtL)==false) {
+                if (randL == 0) {
+                    break;
+                } else {
+                    randL--;
+                }
+            }
+        }
+        if (obtI == cume_ncmopi_[i+1] || obtJ == cume_ncmopi_[j+1] || obtK == cume_ncmopi_[k+1] || obtL == cume_ncmopi_[l+1]) {
+            outfile->Printf("\nError in det excitation type 4: orbital out of bond");
+        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1111: Error in det excitation type 4:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[j]+randJ) == false){
+//            outfile->Printf("\nline 1115: Error in det excitation type 4:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[k]+randK) == true){
+//            outfile->Printf("\nline 1119: Error in det excitation type 4:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[l]+randL) == true){
+//            outfile->Printf("\nline 1123: Error in det excitation type 4:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_beta_bit(obtI,false);
+        new_det.set_beta_bit(obtJ,false);
+        new_det.set_beta_bit(obtK,true);
+        new_det.set_beta_bit(obtL,true);
+        break;
+    case 5:
+        randI = rand_int()%obtCount.naocc[i];
+        randJ = rand_int()%obtCount.navir[i];
+        obtI = -1;
+        obtJ = -1;
+        for (obtK = cume_ncmopi_[i]; obtK < cume_ncmopi_[i+1]; obtK++) {
+            if (new_det.get_alfa_bit(obtK)==true) {
+                if (randI == 0) {
+                    obtI = obtK;
+                    randI = -1;
+                } else if (randI>0) {
+                    randI--;
+                }
+            } else {
+                if (randJ == 0) {
+                    obtJ = obtK;
+                    randJ = -1;
+                } else if (randJ>0) {
+                    randJ--;
+                }
+            }
+        }
+        if (obtI == -1 || obtJ ==-1) {
+            outfile->Printf("\nError in det excitation type 5: orbital out of bond");
+        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1135: Error in det excitation type 5:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_alfa_bit(cume_ncmopi_[j]+randJ) == true){
+//            outfile->Printf("\nline 1139: Error in det excitation type 5:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_alfa_bit(obtI,false);
+        new_det.set_alfa_bit(obtJ,true);
         if (k != -1) {
             outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
         }
-    }else if (middle<cume_excit_irrep_[6]) {
-        randI = rand_int()/obtCount.nbocc[i];
-        randJ = rand_int()/obtCount.nbvir[j];
-        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
-        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,true);
+        break;
+    case 6:
+        randI = rand_int()%obtCount.nbocc[i];
+        randJ = rand_int()%obtCount.nbvir[j];
+        obtI = -1;
+        obtJ = -1;
+        for (obtK = cume_ncmopi_[i]; obtK < cume_ncmopi_[i+1]; obtK++) {
+            if (new_det.get_beta_bit(obtK)==true) {
+                if (randI == 0) {
+                    obtI = obtK;
+                    randI = -1;
+                } else if (randI>0) {
+                    randI--;
+                }
+            } else {
+                if (randJ == 0) {
+                    obtJ = obtK;
+                    randJ = -1;
+                } else if (randJ>0) {
+                    randJ--;
+                }
+            }
+        }
+        if (obtI == -1 || obtJ ==-1) {
+            outfile->Printf("\nError in det excitation type 5: orbital out of bond");
+        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 1135: Error in det excitation type 5:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        if (new_det.get_beta_bit(cume_ncmopi_[j]+randJ) == true){
+//            outfile->Printf("\nline 1139: Error in det excitation type 5:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+        new_det.set_beta_bit(obtI,false);
+        new_det.set_beta_bit(obtJ,true);
         if (k != -1) {
             outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
         }
+        break;
+    default:
+        outfile->Printf("Error in spawning excitation:end of choice");
+        break;
     }
-    outfile->Printf("Error in spawning excitation:end of choice");
+
+//    outfile->Printf("\nreached here 5! i %d j %d k %d", i,j,k);
+
+//    if (end<cume_excit_irrep_[0]) {
+//        l=i^j^k;
+//        randI = rand_int()%obtCount.naocc[i];
+//        randJ = rand_int()%obtCount.nbocc[j];
+//        randK = rand_int()%obtCount.navir[k];
+//        randL = rand_int()%obtCount.nbvir[l];
+//        if (new_det.get_alfa_bit(cume_ncmopi_[i]+randI) == false){
+//            outfile->Printf("\nline 996: Error in det excitation:\n sym: i %d j %d k %d l %d\nrand: i %d j %d k %d l %d", i,j,k,l,randI,randJ,randK,randL);
+//            new_det.print();
+//        }
+//        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
+//        new_det.set_beta_bit(cume_ncmopi_[l]+randL,true);
+//        return;
+//    }else if (end<cume_excit_irrep_[1]) {
+//        randI = rand_int()%obtCount.naocc[i];
+//        randJ = rand_int()%(obtCount.naocc[i]-1);
+//        if (randJ >= randI) randJ++;
+//        randK = rand_int()%obtCount.navir[k];
+//        randL = rand_int()%(obtCount.navir[k]-1);
+//        if (randL >= randK) randL++;
+//        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[i]+randJ,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
+//        new_det.set_alfa_bit(cume_ncmopi_[k]+randL,true);
+//        return;
+//    }else if (end<cume_excit_irrep_[2]) {
+//        l=i^j^k;
+//        randI = rand_int()%obtCount.naocc[i];
+//        randJ = rand_int()%obtCount.naocc[j];
+//        randK = rand_int()%obtCount.navir[k];
+//        randL = rand_int()%obtCount.navir[l];
+//        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[j]+randJ,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[k]+randK,true);
+//        new_det.set_alfa_bit(cume_ncmopi_[l]+randL,true);
+//        return;
+//    }else if (end<cume_excit_irrep_[3]) {
+//        randI = rand_int()%obtCount.nbocc[i];
+//        randJ = rand_int()%(obtCount.nbocc[i]-1);
+//        if (randJ >= randI) randJ++;
+//        randK = rand_int()%obtCount.nbvir[k];
+//        randL = rand_int()%(obtCount.nbvir[k]-1);
+//        if (randL >= randK) randL++;
+//        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_beta_bit(cume_ncmopi_[i]+randJ,false);
+//        new_det.set_beta_bit(cume_ncmopi_[k]+randK,true);
+//        new_det.set_beta_bit(cume_ncmopi_[k]+randL,true);
+//        return;
+//    }else if (end<cume_excit_irrep_[4]) {
+//        l=i^j^k;
+//        randI = rand_int()%obtCount.nbocc[i];
+//        randJ = rand_int()%obtCount.nbocc[j];
+//        randK = rand_int()%obtCount.nbvir[k];
+//        randL = rand_int()%obtCount.nbvir[l];
+//        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,false);
+//        new_det.set_beta_bit(cume_ncmopi_[k]+randK,true);
+//        new_det.set_beta_bit(cume_ncmopi_[l]+randL,true);
+//        return;
+//    }else if (end<cume_excit_irrep_[5]) {
+//        randI = rand_int()%obtCount.naocc[i];
+//        randJ = rand_int()%obtCount.navir[j];
+//        new_det.set_alfa_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_alfa_bit(cume_ncmopi_[j]+randJ,true);
+//        if (k != -1) {
+//            outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
+//        }
+//        return;
+//    }else if (end<cume_excit_irrep_[6]) {
+//        randI = rand_int()%obtCount.nbocc[i];
+//        randJ = rand_int()%obtCount.nbvir[j];
+//        new_det.set_beta_bit(cume_ncmopi_[i]+randI,false);
+//        new_det.set_beta_bit(cume_ncmopi_[j]+randJ,true);
+//        if (k != -1) {
+//            outfile->Printf("Error in spawning excitation:k is not -1 for single ext");
+//        }
+//        return;
+//    }
+//    outfile->Printf("Error in spawning excitation:end of choice");
 }
 
 void FCIQMC::detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext){
@@ -1081,6 +1595,7 @@ double FCIQMC::count_walkers(walker_map& walkers) {
         countWalkers+=std::fabs(Cwalker);
     }
     timer_off("FCIQMC:CountWalker");
+    nDets_ = walkers.size();
     nWalkers_ = countWalkers;
     return countWalkers;
 }
@@ -1121,7 +1636,7 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
 }
 
 void FCIQMC::print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar){
-    outfile->Printf("\niter:%zu ended with %zu dets",iter, nDets_);
+    outfile->Printf("\niter:%zu ended with %zu dets",iter, (size_t)nDets_);
     if (countWalkers)
         outfile->Printf(", %lf walkers", nWalkers_);
     if (calcEproj)

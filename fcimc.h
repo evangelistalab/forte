@@ -79,12 +79,12 @@ private:
 //    std::vector<int> frzv_;
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
-//    /// The reference determinant
-//    StringDeterminant reference_determinant_;
+
 //    /// The determinant with minimum energy
 //    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
-
+    /// The reference determinant
+    BitsetDeterminant reference_;
     /// The maximum number of threads
     int num_threads_;
     /// Do we have OpenMP?
@@ -166,10 +166,10 @@ private:
     void compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
     void compute_single_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
     void compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
-    size_t compute_irrep_divided_excitations(const BitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int> > &excitationType, ObtCount &obtCount);
+    size_t compute_irrep_divided_excitations(const BitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
     void detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
     void detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
-    void detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int> > &excitationType, ObtCount &obtCount);
+    void detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
     double count_walkers(walker_map& walkers);
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
