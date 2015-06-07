@@ -538,16 +538,15 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     for (int i = 0; i != nroot; ++i){
         double S2 = 0.0;
         for (int I = 0; I < det_size; ++I){
-            double S2II = P_space[I].spin2(P_space[I]);
-            S2 += S2II * std::pow(vec_tmp->get(I,i), 2.0);
-        }
-        for (int I = 0; I < det_size; ++I){
-            for (int J = I + 1; J < det_size; ++J){
+            for (int J = 0; J < det_size; ++J){
                 double S2IJ = P_space[I].spin2(P_space[J]);
-                S2 += 2 * S2IJ * vec_tmp->get(I,i) * vec_tmp->get(J,i);
+                S2 += S2IJ * vec_tmp->get(I,i) * vec_tmp->get(J,i);
             }
         }
-        if(std::fabs(S2 - multi_ + 1) > 1.0e-4) continue;
+        if(std::fabs(S2 - multi_ + 1) > 1.0e-4){
+            outfile->Printf("\n\n  Ask for S^2 = %5.2f, this S^2 = %5.2f, continue...", multi_, S2);
+            continue;
+        }
         else{
             ++count;
             eigen.push_back(make_pair(vec_tmp->get_column(0,i), val_tmp->get(i) + e_nuc_));
