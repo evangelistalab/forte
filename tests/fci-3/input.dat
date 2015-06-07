@@ -1,0 +1,32 @@
+import libadaptive
+
+refscf = -7.862246310410
+reffci = -7.696581880925145
+
+molecule {
+0 1
+Li
+H 1 R
+
+R = 3.0
+units bohr 
+}
+
+set {
+  basis sto-3g
+  reference rhf
+}
+
+set libadaptive {
+  print 1
+  job_type fci
+  active [4,0,1,1]
+  restricted_docc [0,0,0,0]
+  root_sym 2
+  ms 0
+}
+
+energy('forte-fci')
+
+compare_values(refscf, get_variable("SCF total energy"),11, "SCF energy") #TEST
+compare_values(reffci, get_variable("CURRENT ENERGY"),11, "FCI energy") #TEST

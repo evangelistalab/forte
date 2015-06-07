@@ -55,12 +55,14 @@ public:
     /// Set the residual convergence
     void set_r_convergence(double value) {r_convergence_ = value;}
 
+    size_t collapse_size() const {return collapse_size_;}
+
     void add_b(SharedVector vec);
     void get_b(SharedVector vec);
     bool add_sigma(SharedVector vec);
 
-    SharedVector eigenvalues() {return lambda;}
-    SharedMatrix eigenvectors() {return b_;}
+    SharedVector eigenvalues() const {return lambda;}
+    SharedMatrix eigenvectors() const {return b_;}
     SharedVector eigenvector(size_t n);
 
     /// Initialize the object

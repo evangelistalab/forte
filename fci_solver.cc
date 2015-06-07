@@ -18,7 +18,10 @@
 #include <libmints/molecule.h>
 #include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
+#include "libmints/matrix.h"
+#include "libmints/vector.h"
 
+#include "bitset_determinant.h"
 #include "integrals.h"
 #include "iterative_solvers.h"
 #include "fci_solver.h"
@@ -48,7 +51,8 @@ namespace psi{ namespace libadaptive{
 
 class MOSpaceInfo;
 
-FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
+         ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options), ints_(ints), mo_space_info_(mo_space_info)
 {
@@ -65,7 +69,7 @@ FCI::~FCI()
 
 void FCI::startup()
 {  
-    print_method_banner({"String-based Full Configuration Interaction","written by Francesco A. Evangelista"});
+    print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
 }
 
 double FCI::compute_energy()
@@ -78,23 +82,27 @@ double FCI::compute_energy()
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     int charge       = Process::environment.molecule()->molecular_charge();
-    int multiplicity = Process::environment.molecule()->multiplicity();
-    int ms = options_.get_int("MS");
+    if(options_["CHARGE"].has_changed()){
+        charge = options_.get_int("CHARGE");
+    }
+
     int nel = 0;
     int natom = Process::environment.molecule()->natom();
     for(int i=0; i < natom;i++){
         nel += static_cast<int>(Process::environment.molecule()->Z(i));
     }
-
     // If the charge has changed, recompute the number of electrons
     // Or if you cannot find the number of electrons
-    if(options_["CHARGE"].has_changed()){
-        charge = options_.get_int("CHARGE");
-    }
     nel -= charge;
 
+    int multiplicity = Process::environment.molecule()->multiplicity();
     if(options_["MULTIPLICITY"].has_changed()){
         multiplicity = options_.get_int("MULTIPLICITY");
+    }
+
+    int ms = multiplicity - 1;
+    if(options_["MS"].has_changed()){
+        ms = options_.get_int("MS");
     }
 
     if(ms < 0){
@@ -107,23 +115,25 @@ double FCI::compute_energy()
     outfile->Printf("\n  Number of electrons: %d",nel);
     outfile->Printf("\n  Charge: %d",charge);
     outfile->Printf("\n  Multiplicity: %d",multiplicity);
-    outfile->Printf("\n  M_s: %d",ms);
+    if (ms % 2 == 0){
+        outfile->Printf("\n  M_s: %d",ms / 2);
+    }else{
+        outfile->Printf("\n  M_s: %d/2",ms);
+    }
 
-
-    if( ((nel + 1 - multiplicity) % 2) != 0)
-        throw PSIEXCEPTION("\n\n  FCI: Wrong multiplicity.\n\n");
+    if( ((nel - ms) % 2) != 0)
+        throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
-    size_t na = (nactel + multiplicity - 1) / 2;
+    size_t na = (nactel + ms) / 2;
     size_t nb =  nactel - na;
-
 
     //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
-    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,options_.get_int("ROOT_SYM"),ints_);
+    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_);
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
@@ -144,8 +154,13 @@ Reference FCI::reference()
 }
 
 
-FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,std::vector<size_t> active_mo,size_t na, size_t nb,size_t symmetry,ExplorerIntegrals* ints)
-    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo), ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry), na_(na), nb_(nb), nroot_(0)
+FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
+                     std::vector<size_t> active_mo,
+                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
+                     ExplorerIntegrals* ints)
+    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
+      ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0)
 {
     startup();
 }
@@ -191,11 +206,27 @@ double FCISolver::compute_energy()
     SharedVector b(new Vector("b",fci_size));
     SharedVector sigma(new Vector("sigma",fci_size));
 
+    Hdiag.copy_to(sigma);
+
+
     DavidsonLiuSolver dls(fci_size,nroot_);
     dls.set_e_convergence(1.0e-13);
     dls.set_print_level(0);
-    Hdiag.copy_to(sigma);
     dls.startup(sigma);
+
+    size_t guess_size = dls.collapse_size();
+    auto guess = initial_guess(Hdiag,guess_size,multiplicity_);
+
+    guess_size = std::min(guess.size(),guess_size);
+    if (guess_size == 0){
+        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+    }
+    for (size_t n = 0; n < guess_size; ++n){
+        HC.set(guess[n]);
+        HC.copy_to(sigma);
+        dls.add_b(sigma);
+    }
+
 
     bool converged = false;
 
@@ -257,6 +288,103 @@ double FCISolver::compute_energy()
     energy_ = dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
 
     return energy_;
+}
+
+std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::initial_guess(FCIWfn& diag,size_t n,size_t multiplicity)
+{
+    boost::timer t;
+
+    double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+
+    size_t ntrial = n * ntrial_per_root_;
+
+    // Get the list of most important determinants
+    std::vector<std::tuple<double,size_t,size_t,size_t>> dets = diag.get_largest_contributions(ntrial);
+
+    size_t num_dets = dets.size();
+
+    std::vector<BitsetDeterminant> bsdets;
+
+    // Build the full determinants
+    size_t nact = active_mo_.size();
+    for (auto det : dets){
+        double e;
+        size_t h, add_Ia, add_Ib;
+        std::tie(e,h,add_Ia,add_Ib) = det;
+        boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h,add_Ia);
+        boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_,add_Ib);
+
+        std::vector<bool> Ia(lists_->ncmo(),false);
+        std::vector<bool> Ib(lists_->ncmo(),false);
+        for (size_t i : core_mo_){
+            Ia[i] = true;
+            Ib[i] = true;
+        }
+        for (size_t i = 0; i < nact; ++i){
+            if (Ia_v[i]) Ia[active_mo_[i]] = true;
+            if (Ib_v[i]) Ib[active_mo_[i]] = true;
+        }
+        BitsetDeterminant bsdet(Ia,Ib);
+        bsdets.push_back(bsdet);
+    }
+
+    Matrix H("H",num_dets,num_dets);
+    Matrix evecs("Evecs",num_dets,num_dets);
+    Vector evals("Evals",num_dets);
+
+    for (size_t I = 0; I < num_dets; ++I){
+        for (size_t J = I; J < num_dets; ++J){
+            double HIJ = bsdets[I].slater_rules(bsdets[J]);
+            H.set(I,J,HIJ);
+            H.set(J,I,HIJ);
+        }
+    }
+
+    H.diagonalize(evecs,evals);
+
+    std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> guess;
+
+    print_h2("FCI Initial Guess");
+    outfile->Printf("\n  ---------------------------------------------");
+    outfile->Printf("\n    Root            Energy     <S^2>   Spin");
+    outfile->Printf("\n  ---------------------------------------------");
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et"});
+
+    for (size_t r = 0; r < num_dets; ++r){
+        double energy = evals.get(r) + nuclear_repulsion_energy;
+        double norm = 0.0;
+        double S2 = 0.0;
+        for (int I = 0; I < num_dets; ++I){
+            for (int J = 0; J < num_dets; ++J){
+                const double S2IJ = bsdets[I].spin2(bsdets[J]);
+                S2 += evecs.get(I,r) * evecs.get(J,r) * S2IJ;
+            }
+            norm += std::pow(evecs.get(I,r),2.0);
+        }
+        S2 /= norm;
+        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        int SS = std::round(S * 2.0);
+        size_t state_multp = SS + 1;
+        std::string state_label = s2_labels[SS];
+        outfile->Printf("\n    %3d  %20.12f  %.3f  %s",r,energy,std::fabs(S2),state_label.c_str());
+        // Save states of the desired multiplicity
+        if (state_multp == multiplicity){
+            std::vector<std::tuple<size_t,size_t,size_t,double>> solution;
+            for (int I = 0; I < num_dets; ++I){
+                auto det = dets[I];
+                double e;
+                size_t h, add_Ia, add_Ib;
+                std::tie(e,h,add_Ia,add_Ib) = det;
+                solution.push_back(std::make_tuple(h,add_Ia,add_Ib,evecs.get(I,r)));
+            }
+            guess.push_back(solution);
+        }
+    }
+    outfile->Printf("\n  ---------------------------------------------");
+    outfile->Printf("\n  Timing for initial guess  = %10.3f s\n",t.elapsed());
+    outfile->Flush();
+
+    return guess;
 }
 
 Reference FCISolver::reference()

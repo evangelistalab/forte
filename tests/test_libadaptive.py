@@ -16,7 +16,7 @@ elif len(sys.argv) == 2:
 
 print "Running test using psi4 executable found in:\n%s" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-rdms-1","fci-rdms-2"]
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-rdms-1","fci-rdms-2"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
@@ -33,7 +33,7 @@ srg_tests = [] #["srg-1","srg-2"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
 dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3","dsrg-mrpt2-4",
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4",
-                    "dsrg-mrpt2-mp2-nos"]
+                    "dsrg-mrpt2-mp2-no"]
 
 tests =  fci_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + ct_tests + srg_tests + dsrg_tests
 maindir = os.getcwd()

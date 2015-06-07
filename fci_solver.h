@@ -46,7 +46,20 @@ class FCISolver
 public:
     // ==> Class Constructor and Destructor <==
 
-    FCISolver(Dimension active_dim, std::vector<size_t> core_mo, std::vector<size_t> active_mo, size_t na, size_t nb, size_t symmetry, ExplorerIntegrals* ints);
+    /**
+     * @brief FCISolver
+     * @param active_dim The dimension of the active orbital space
+     * @param core_mo A vector of doubly occupied orbitals
+     * @param active_mo A vector of active orbitals
+     * @param na Number of alpha electrons
+     * @param nb Number of beta electrons
+     * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 = doublet, ...
+     * @param symmetry The irrep of the FCI wave function
+     * @param ints An integral object
+     */
+    FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+              std::vector<size_t> active_mo, size_t na, size_t nb,
+              size_t multiplicity, size_t symmetry, ExplorerIntegrals* ints);
 
     ~FCISolver() {}
 
@@ -94,8 +107,13 @@ private:
     size_t na_;
     /// The number of beta electrons
     size_t nb_;
+    /// The multiplicity (2S + 1) of the state to target.
+    /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
+    size_t multiplicity_;
     /// The number of roots
     size_t nroot_;
+    /// The number of trial guess vectors to generate per root
+    size_t ntrial_per_root_ = 10;
     /// Test the RDMs?
     bool test_rdms_ = false;
     ///
@@ -105,6 +123,9 @@ private:
 
     /// All that happens before we compute the energy
     void startup();
+
+    /// Initial CI wave function guess
+    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > > initial_guess(FCIWfn& diag,size_t n,size_t multiplicity);
 };
 
 
