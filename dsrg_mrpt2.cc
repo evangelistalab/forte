@@ -141,6 +141,10 @@ void DSRG_MRPT2::startup()
     T2 = BTF->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
     RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp2 = BTF->build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
+    RF = BlockedTensor::build(tensor_type_,"RF for 2nd-order Hbar",spin_cases({"gg"}));
+    RV = BlockedTensor::build(tensor_type_,"RV for 2nd-order Hbar",spin_cases({"gggg"}));
+    Hbar1 = BlockedTensor::build(tensor_type_,"One-body Hbar",spin_cases({"gg"}));
+    Hbar2 = BlockedTensor::build(tensor_type_,"Two-body Hbar",spin_cases({"gggg"}));
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -155,6 +159,10 @@ void DSRG_MRPT2::startup()
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
         if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
+
+    RV["pqrs"] = V["pqrs"];
+    RV["pQrS"] = V["pQrS"];
+    RV["PQRS"] = V["PQRS"];
 
     ambit::Tensor Gamma1_cc = Gamma1.block("cc");
     ambit::Tensor Gamma1_aa = Gamma1.block("aa");
@@ -209,9 +217,12 @@ void DSRG_MRPT2::startup()
     F["pq"] += V["pjqi"] * Gamma1["ij"];
     F["pq"] += V["pJqI"] * Gamma1["IJ"];
 
-    F["PQ"] += H["PQ"];
+    F["PQ"]  = H["PQ"];
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
+
+    RF["pq"] = F["pq"];
+    RF["PQ"] = F["PQ"];
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
@@ -530,6 +541,7 @@ double DSRG_MRPT2::compute_energy()
     energy.push_back({"<[V, T2]>", EVT2});
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+    Hbar0 = Etotal;
 
     // Analyze T1 and T2
     check_t1();
@@ -720,9 +732,21 @@ void DSRG_MRPT2::renormalize_V()
     V["iJaB"] += temp["iJaB"];
     V["IJAB"] += temp["IJAB"];
 
+    RV["ijab"] += 0.5 * temp["ijab"];
+    RV["iJaB"] += 0.5 * temp["iJaB"];
+    RV["IJAB"] += 0.5 * temp["IJAB"];
+
+    temp.block("aaaa").zero();
+    temp.block("aAaA").zero();
+    temp.block("AAAA").zero();
+
     V["abij"] += temp["ijab"];
     V["aBiJ"] += temp["iJaB"];
     V["ABIJ"] += temp["IJAB"];
+
+    RV["abij"] += 0.5 * temp["ijab"];
+    RV["aBiJ"] += 0.5 * temp["iJaB"];
+    RV["ABIJ"] += 0.5 * temp["IJAB"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -760,13 +784,17 @@ void DSRG_MRPT2::renormalize_F()
         temp2["IA"] += F["IA"] * RExp1["IA"];
         temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
-        F["ia"] += temp2["ia"];
+        F["ia"]  += temp2["ia"];
+        RF["ia"] += 0.5 * temp2["ia"];
         temp2.block("aa").zero();
-        F["ai"] += temp2["ia"];
+        F["ai"]  += temp2["ia"];
+        RF["ai"] += 0.5 * temp2["ia"];
 
-        F["IA"] += temp2["IA"];
+        F["IA"]  += temp2["IA"];
+        RF["IA"] += 0.5 * temp2["IA"];
         temp2.block("AA").zero();
-        F["AI"] += temp2["IA"];
+        F["AI"]  += temp2["IA"];
+        RF["AI"] += 0.5 * temp2["IA"];
         break;
     }
     }
@@ -1057,6 +1085,41 @@ double DSRG_MRPT2::E_VT2_6()
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;
+}
+
+void DSRG_MRPT2::compute_Hbar2(){
+
+    // Zeroth- and first-order Hbar2 (V is renormalized after compute_energy())
+    Hbar2["pqrs"] = V["pqrs"];
+    Hbar2["pQrS"] = V["pQrS"];
+    Hbar2["PQRS"] = V["PQRS"];
+
+    // Second-order Hbar2
+    Hbar2["pjab"] -= 2.0 * T2["ijab"] * RF["pi"];
+    Hbar2["pJaB"] -= 2.0 * T2["iJaB"] * RF["pi"];
+    Hbar2["jPbA"] -= 2.0 * T2["jIbA"] * RF["PI"];
+    Hbar2["PJAB"] -= 2.0 * T2["IJAB"] * RF["PI"];
+
+    Hbar2["abpj"] -= 2.0 * T2["ijab"] * RF["pi"];
+    Hbar2["aBpJ"] -= 2.0 * T2["iJaB"] * RF["pi"];
+    Hbar2["bAjP"] -= 2.0 * T2["jIbA"] * RF["PI"];
+    Hbar2["ABPJ"] -= 2.0 * T2["IJAB"] * RF["PI"];
+}
+
+void DSRG_MRPT2::compute_Hbar1(){
+
+}
+
+void DSRG_MRPT2::transfer_integrals(){
+
+    // Compute one- and two-body Hbar
+    compute_Hbar2();
+    compute_Hbar1();
+
+    // Scalar Term
+    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    double Enuc = molecule->nuclear_repulsion_energy();
+    double scalar = Hbar0 - Enuc;
 }
 
 }} // End Namespaces
