@@ -394,6 +394,7 @@ read_options(std::string name, Options &options)
 extern "C" PsiReturnType
 libadaptive(Options &options)
 {
+    Timer overall_time;
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
 
@@ -563,6 +564,7 @@ libadaptive(Options &options)
 
     ambit::finalize();
 
+    outfile->Printf("\n Your calculation took %8.8f", overall_time.get());
     return Success;
 }
 
