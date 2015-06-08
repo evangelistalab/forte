@@ -483,6 +483,7 @@ double EX_ACI::compute_energy()
             sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
         }
 
+
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < nroot_; ++ i){
@@ -572,8 +573,8 @@ double EX_ACI::compute_energy()
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
-    Process::environment.globals["ACI ENERGY"] = root_energy;
-    Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    Process::environment.globals["EX-ACI ENERGY"] = root_energy;
+    Process::environment.globals["EX-ACI+PT2 ENERGY"] = root_energy_pt2;
 
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
 
@@ -663,12 +664,13 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
     }// end loop over determinants
 
     if(shrink or aimed_selection_){
-    // Sort the CI coefficients in ascending order
-    std::sort(sorted_dets.begin(),sorted_dets.end());
+        // Sort the CI coefficients in ascending order
+        std::sort(sorted_dets.begin(),sorted_dets.end());
     }
 
     if (aimed_selection_){
         double sum = 0.0;
+        double E2_I = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
@@ -677,12 +679,11 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
                 const auto& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n){
                     double V = V_vec[n];
-                    double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
+                    E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
                                                     ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
                     ept2[n] += E2_I;
                 }
-            }
-            else{
+            }else{
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
@@ -1432,40 +1433,20 @@ void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVect
     outfile->Printf("\n  * sAdaptive-CI Energy Root %3d        = %.12f Eh",1,evals_s->get(0) + nuclear_repulsion_energy_);
 }
 
-void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,int nroot)
+pVector<std::pair<double,double>,std::pair<size_t,double> > EX_ACI::compute_spin(std::vector<BitsetDeterminant> space,
+                                                                                    SharedMatrix evecs, int nroot,
+                                                                                    pVector<double,size_t> det_weight)
 {
-    pVector<double,size_t> det_weight;
-    double sum_weight;
     double norm;
     double S2;
     double S;
-    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
-    string state_label;
+    pVector<std::pair<double,double>, std::pair<size_t,double> > spin_vec;
 
-    for (int n = 0; n < nroot; ++n){
-        det_weight.clear();
-        outfile->Printf("\n\n  Most important contributions to root %3d:",n);
-
-        for (size_t I = 0; I < space.size(); ++I){
-            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
-        }
-        std::sort(det_weight.begin(),det_weight.end());
-        std::reverse(det_weight.begin(),det_weight.end());
-        size_t max_dets = std::min(10,evecs->nrow());
-        for (size_t I = 0; I < max_dets; ++I){
-            outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
-                    I,
-                    evecs->get(det_weight[I].second,n),
-                    det_weight[I].first * det_weight[I].first,
-                    det_weight[I].second,
-                    space[det_weight[I].second].str().c_str());
-        }
-
-
+    for(int n = 0; n < nroot; ++n){
         // Compute the expectation value of the spin
         size_t max_sample = 1000;
         size_t max_I = 0;
-        sum_weight = 0.0;
+        double sum_weight = 0.0;
 
         const double wfn_threshold = 0.95;
         for (size_t I = 0; I < space.size(); ++I){
@@ -1497,6 +1478,47 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
 
         S2 /= norm;
         S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        spin_vec.push_back( make_pair(make_pair(S,S2),make_pair(max_I,sum_weight)) );
+    }
+   return spin_vec;
+}
+
+void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,int nroot)
+{
+    pVector<double,size_t> det_weight;
+    pVector<std::pair<double,double>, std::pair<size_t,double> > spins;
+    double sum_weight;
+    double S2;
+    double S;
+    size_t max_I;
+
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
+    string state_label;
+
+    for (int n = 0; n < nroot; ++n){
+        det_weight.clear();
+        outfile->Printf("\n\n  Most important contributions to root %3d:",n);
+
+        for (size_t I = 0; I < space.size(); ++I){
+            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+        }
+        std::sort(det_weight.begin(),det_weight.end());
+        std::reverse(det_weight.begin(),det_weight.end());
+        size_t max_dets = std::min(10,evecs->nrow());
+        for (size_t I = 0; I < max_dets; ++I){
+            outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
+                    I,
+                    evecs->get(det_weight[I].second,n),
+                    det_weight[I].first * det_weight[I].first,
+                    det_weight[I].second,
+                    space[det_weight[I].second].str().c_str());
+        }
+
+        spins = compute_spin(space,evecs,nroot,det_weight);
+        S = spins[n].first.first;
+        S2 = spins[n].first.second;
+        max_I = spins[n].second.first;
+        sum_weight = spins[n].second.second;
 
         state_label = s2_labels[std::round(S * 2.0)];
         outfile->Printf("\n\n  Spin State for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants,%.2f\%)",n,S2,S,state_label.c_str(),max_I,100.0 * sum_weight);

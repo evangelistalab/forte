@@ -42,5 +42,5 @@ energy('mcscf')
 energy('ex-aci')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
-compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("EX-ACI ENERGY"),9, "EX-ACI energy") #TEST
+compare_values(refacipt2, get_variable("EX-ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST
