@@ -196,6 +196,9 @@ private:
     /// Returns a vector of orbital energy,sym label pairs
     std::vector<std::pair<double, std::pair<int, int> > > sym_labeled_orbitals(std::string type);
 
+    ///Computes S^2 and S
+    std::vector< std::pair<std::pair<double,double>, std::pair<size_t,double> > >compute_spin(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot,std::vector<std::pair<double,size_t> >det_weight);
+
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
 //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
