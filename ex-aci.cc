@@ -560,7 +560,7 @@ double EX_ACI::compute_energy()
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }else if(post_diagonalize_ and i < root){
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
     }
 
@@ -1434,10 +1434,18 @@ void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVect
 
 void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,int nroot)
 {
+    pVector<double,size_t> det_weight;
+    double sum_weight;
+    double norm;
+    double S2;
+    double S;
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
+    string state_label;
+
     for (int n = 0; n < nroot; ++n){
+        det_weight.clear();
         outfile->Printf("\n\n  Most important contributions to root %3d:",n);
 
-        pVector<double,size_t> det_weight;
         for (size_t I = 0; I < space.size(); ++I){
             det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
         }
@@ -1452,7 +1460,49 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
                     det_weight[I].second,
                     space[det_weight[I].second].str().c_str());
         }
+
+
+        // Compute the expectation value of the spin
+        size_t max_sample = 1000;
+        size_t max_I = 0;
+        sum_weight = 0.0;
+
+        const double wfn_threshold = 0.95;
+        for (size_t I = 0; I < space.size(); ++I){
+            if ((sum_weight < wfn_threshold) and (I < max_sample)) {
+                sum_weight += std::pow(det_weight[I].first,2.0);
+                max_I++;
+            }else if (std::fabs(det_weight[I].first - det_weight[I-1].first) < 1.0e-6){
+                // Special case, if there are several equivalent determinants
+                sum_weight += std::pow(det_weight[I].first,2.0);
+                max_I++;
+            }else{
+                break;
+            }
+        }
+
+        S2 = 0.0;
+        norm = 0.0;
+        for (int sI = 0; sI < max_I; ++sI){
+            size_t I = det_weight[sI].second;
+            for (int sJ = 0; sJ < max_I; ++sJ){
+                size_t J = det_weight[sJ].second;
+                if (std::fabs(evecs->get(I,n) * evecs->get(J,n)) > 1.0e-12){
+                    const double S2IJ = space[I].spin2(space[J]);
+                    S2 += evecs->get(I,n) * evecs->get(J,n) * S2IJ;
+                }
+            }
+            norm += std::pow(evecs->get(I,n),2.0);
+        }
+
+        S2 /= norm;
+        S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+
+        state_label = s2_labels[std::round(S * 2.0)];
+        outfile->Printf("\n\n  Spin State for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants,%.2f\%)",n,S2,S,state_label.c_str(),max_I,100.0 * sum_weight);
+
     }
+    outfile->Flush();
 }
 
 int EX_ACI::direct_sym_product(int sym1, int sym2)
