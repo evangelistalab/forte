@@ -122,6 +122,10 @@ private:
     int post_root_;
     ///Rediagonalize Hamiltonian?
     bool post_diagonalize_;
+    ///Print warning?
+    bool print_warning_;
+    ///Spin tolerance
+    double spin_tol_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -129,8 +133,8 @@ private:
     std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
-    ///Here is a vector that will store the root indices
-    std::vector<int> root_index_;
+    ///Vector to store spin of each root
+    std::vector<std::pair<double,double> > root_spin_vec_;
 
 
     // ==> Class functions <==
@@ -154,7 +158,7 @@ private:
     void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(SharedVector evals, SharedMatrix evecs, bool shrink);
+    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs, bool shrink);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1);
