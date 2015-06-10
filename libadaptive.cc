@@ -254,6 +254,8 @@ read_options(std::string name, Options &options)
         options.add_bool("POST_DIAGONALIZE", false);
         /*Maximum number of determinants*/
         options.add_int("MAX_DET", 1e6);
+        /*Threshold value for defining multiplicity from S^2*/
+        options.add_double("SPIN_TOL", 1.0e-4);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
