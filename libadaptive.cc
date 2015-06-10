@@ -76,7 +76,7 @@ read_options(std::string name, Options &options)
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2 NONE");
+                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 NONE");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -493,43 +493,56 @@ libadaptive(Options &options)
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
-            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-            fci->compute_energy();
-            Reference reference = fci->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
-            dsrg_mrpt2->compute_energy();
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->compute_energy();
+                Reference reference = fci->reference();
+                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+                dsrg_mrpt2->compute_energy();
         }
-//        else
-//        {
-//            Reference reference("DMRG");
-//            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-//            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
-//            dsrg_mrpt2->compute_energy();
-
-//        }
+        else if(options.get_str("CASTYPE")=="DMRG")
+        {
+            outfile->Printf("\n Buy Kevin a beer and he will maybe implement DMRG into libadaptive\n");
+            throw PSIEXCEPTION("DMRG is not available quite yet");
+        }
 
     }
     if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
-        //if(options.get_str("CASTYPE")=="CAS")
-        //{
-            if(options.get_str("INT_TYPE")=="CONVENTIONAL")
-            {
-                outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
-                throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
-            }
-            FCI_MO fci_mo(options,ints_);
-            Reference reference = fci_mo.reference();
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
-            three_dsrg_mrpt2->compute_energy();
-        //}
-        /*else
-        {
-            Reference reference("DMRG");
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
-            three_dsrg_mrpt2->compute_energy();
-        }*/
+       if(options.get_str("INT_TYPE")=="CONVENTIONAL")
+       {
+           outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
+           throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+       }
+       if(options.get_str("CASTYPE")=="CAS")
+       {
+           FCI_MO fci_mo(options,ints_);
+           Reference reference = fci_mo.reference();
+           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+           three_dsrg_mrpt2->compute_energy();
+       }
+       else if(options.get_str("CASTYPE")=="FCI")
+       {
+           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+           if (options.get_bool("SEMI_CANONICAL")){
+               boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+               fci->compute_energy();
+               Reference reference2 = fci->reference();
+               SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+           }
+           boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+           fci->compute_energy();
+           Reference reference = fci->reference();
+           boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+           dsrg_mrpt2->compute_energy();
+       }
+       else if(options.get_str("CASTYPE")=="DMRG")
+       {
+           outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
+           throw PSIEXCEPTION("NO DMRG Reference available yet");
+       }
+
+
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -566,7 +579,7 @@ libadaptive(Options &options)
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %8.8f", overall_time.get());
+    outfile->Printf("\n Your calculation took %8.8f seconds", overall_time.get());
     return Success;
 }
 
