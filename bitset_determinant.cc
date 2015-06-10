@@ -208,6 +208,12 @@ double BitsetDeterminant::destroy_beta_bit(int n)
     return SlaterSign(beta_bits_,n);
 }
 
+/// Switch alfa and beta bits
+void BitsetDeterminant::spin_flip()
+{
+    std::swap(alfa_bits_,beta_bits_);
+}
+
 /**
  * Print the determinant
  */

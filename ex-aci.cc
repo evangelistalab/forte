@@ -125,6 +125,7 @@ void EX_ACI::startup()
     //Build the reference determinant with correct symmetry
     reference_determinant_ = StringDeterminant(get_occupation());
 
+
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
 
@@ -430,6 +431,16 @@ double EX_ACI::compute_energy()
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
     BitsetDeterminant bs_det(alfa_bits,beta_bits);
     P_space_.push_back(bs_det);
+
+    if(alfa_bits != beta_bits){
+        BitsetDeterminant ref2 = bs_det;
+        ref2.spin_flip();
+        P_space_.push_back(ref2);
+        outfile->Printf("\n  The initial reference space is: ");
+        ref2.print();
+        bs_det.print();
+    }
+
     P_space_map_[bs_det] = 1;
 
 
@@ -442,12 +453,20 @@ double EX_ACI::compute_energy()
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
+
+
     int root;
     int maxcycle = 20;
     bool shrink = false;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
+
+        root_index_.clear();
+        //Set the roots as the lowest possible as initial guess
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
+        for(int n = 0; n < num_ref_roots; ++n){
+            root_index_.push_back(n);
+        }
 
         outfile->Printf("\n\n  Cycle %3d",cycle_);
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
@@ -465,8 +484,8 @@ double EX_ACI::compute_energy()
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < num_ref_roots; ++i){
-            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_;
-            double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
+            double abs_energy = P_evals->get(root_index_[i]) + nuclear_repulsion_energy_;
+            double exc_energy = pc_hartree2ev * (P_evals->get(root_index_[i]) - P_evals->get(root_index_[0]));
             outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
         }
         outfile->Printf("\n");
@@ -474,7 +493,7 @@ double EX_ACI::compute_energy()
 
 
         // Step 2. Find determinants in the Q space, shrink if needed
-        find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
+        find_q_space(P_evals,P_evecs, shrink);
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -483,10 +502,22 @@ double EX_ACI::compute_energy()
             sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
         }
 
+        //Check if the spin is conserved, switch to a higher root if needed
+//        pVector<double, size_t> det_weight;
+//        for(int n = 0; n < num_ref_roots; ++n){
+//            for(size_t I = 0; I < PQ_space_.size(); ++I){
+//                det_weight.push_back(make_pair(std::fabs(PQ_evecs->get(I,n)),I));
+//            }
+//            auto spin_vec = compute_spin(PQ_space_,PQ_evecs,num_ref_roots,det_weight);
+//            if(spin_vec[n].first.second > 1.0e-6){
+
+//            }
+//        }
+
 
         // Print the energy
         outfile->Printf("\n");
-        for (int i = 0; i < nroot_; ++ i){
+        for ( const auto &i : root_index_){
             double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
             double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
             outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
@@ -552,7 +583,7 @@ double EX_ACI::compute_energy()
     outfile->Printf("\n   ---------   -------------   -----------------  ");
 
     wfn_analyzer(PQ_space_, PQ_evecs, nroot_);
-    for (int i = 0; i < nroot_; ++ i){
+    for (const auto &i : root_index_){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
@@ -581,7 +612,7 @@ double EX_ACI::compute_energy()
 }
 
 
-void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool shrink)
+void EX_ACI::find_q_space(SharedVector evals,SharedMatrix evecs, bool shrink)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -594,7 +625,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
         BitsetDeterminant& det = P_space_[I];
-        generate_excited_determinants(nroot,I,evecs,det,V_hash);
+        generate_excited_determinants(root_index_.size(),I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
     outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
@@ -626,7 +657,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
         //Loop over roots
         //The tau_q parameter type is chosen here ( keyword bool "perturb_select" )
-        for (int n = 0; n < nroot; ++n){
+        for (const auto &n : root_index_){
             det = it->first;
             V[n] = it->second[n];
 
@@ -641,13 +672,13 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
         }
         //make q space in a number of ways with C1 and E1 as input, produces PQ_space
         if(ex_alg_ == "STATE_AVERAGE"){
-            criteria = average_q_values(nroot, C1, E2);
+            criteria = average_q_values(root_index_.size(), C1, E2);
         }
         else if(ex_alg_ == "ROOT_SELECT"){
-            criteria = root_select(nroot, C1, E2);
+            criteria = root_select(root_index_.size(), C1, E2);
         }
         else if(nroot_ == 1){
-            criteria = root_select(nroot, C1, E2);
+            criteria = root_select(root_index_.size(), C1, E2);
         }
 
         if(aimed_selection_ or shrink){
@@ -656,7 +687,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
             if(std::fabs(criteria) > tau_q_){
                 PQ_space_.push_back(it->first);
             }else{
-                for (int n = 0; n < nroot; ++n){
+                for (const auto &n : root_index_){
                     ept2[n] += E2[n].second;
                 }
             }
@@ -677,7 +708,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
                 const auto& V_vec = V_hash[det];
-                for (int n = 0; n < nroot; ++n){
+                for (const auto &n : root_index_){
                     double V = V_vec[n];
                     E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
                                                     ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
