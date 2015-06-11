@@ -286,9 +286,10 @@ void ConventionalIntegrals::transform_integrals()
 
     // Keep the SO integrals on disk in case we want to retransform them
     ints_->set_keep_iwl_so_ints(true);
+    Timer int_timer;
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
-    outfile->Printf("\n  Integral transformation done.");
+    outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
 
     //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
@@ -896,7 +897,6 @@ void DFIntegrals::gather_integrals()
     //This is because francesco reads only the nonzero integrals
     //I store all of them into this array.
 
-    SharedMatrix pqB(new Matrix("pqB", nmo_*nmo_, naux));
     SharedMatrix tBpq(new Matrix("Bpqtensor", naux, nmo_*nmo_));
 
     // Store the integrals in the form of nmo*nmo by B
@@ -909,7 +909,6 @@ void DFIntegrals::gather_integrals()
             for(size_t B = 0; B < naux; B++){
                 size_t qB = q * naux + B;
                 tBpq->set(B,p*nmo_+q,Bpq->get(p,qB));
-                pqB->set(p*nmo_ + q, B, Bpq->get(p,qB));
             }
          }
     }

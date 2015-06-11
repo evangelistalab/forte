@@ -114,6 +114,9 @@ public:
     /// Specify the occupation numbers
     void set_beta_bits(const bit_t& beta_bits) {beta_bits_ = beta_bits;}
 
+    /// Switch the alpha and beta occupations
+    void spin_flip();
+
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
     /// Return a vector of occupied beta orbitals
