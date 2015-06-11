@@ -29,7 +29,10 @@ BlockedTensorFactory::~BlockedTensorFactory()
 
 ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const std::string& name,const std::vector<std::string>& spin_stuff)
 {
+    if(print_memory_)
+    {
     outfile->Printf("\n Creating %s ", name.c_str());
+    }
     ambit::BlockedTensor BT = ambit::BlockedTensor::build(storage, name, spin_stuff);
     number_of_tensors_+= 1;
     memory_information(BT);
