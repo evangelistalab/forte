@@ -116,6 +116,8 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  */
 void print_h2(const std::string& text, const std::string& left_separator = "==>", const std::string& right_separator  = "<==");
 
+std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
+
 /**
  * @brief Compute the memory (in GB) required to store arrays
  * @typename T The data typename
