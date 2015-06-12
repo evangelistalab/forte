@@ -38,6 +38,14 @@ public:
     SqOperator();
     /// Initialize with vector
     SqOperator(const std::vector<int>& cre,const std::vector<int>& ann);
+    /// Return the number of creation operators
+    size_t ncre() const {return cre_.size();}
+    /// Return the number of annihilation operators
+    size_t nann() const {return ann_.size();}
+    /// Return the creation operators
+    const std::vector<int>& cre() const {return cre_;}
+    /// Return the annihilation operators
+    const std::vector<int>& ann() const {return ann_;}
     /// Return a string representation of this object
     std::string str() const;
     /// A hash function
@@ -47,7 +55,7 @@ public:
     /// A hash function
     std::size_t hash();
     /// Sort and return the sign of the permutation
-    bool sort();
+    double sort();
     /// Test the sorting
     void test_sort();
 private:
@@ -56,7 +64,7 @@ private:
     /// List of annihilation operators
     std::vector<int> ann_;
 
-    bool sort(std::vector<int>& vec);
+    double sort(std::vector<int>& vec);
 };
 
 
@@ -93,6 +101,10 @@ public:
     /// Apply Wick's theorem to a product of operators
     Operator evaluate(Operator& lhs,Operator& rhs);
 private:
+    /// Contract a pair of SqOperators in all possible ways
+    void contract(const SqOperator &lhs, const SqOperator &rhs, Operator& res);
+    /// Contract a pair of SqOperators using a fixed contraction pattern
+    std::pair<double, SqOperator> simple_contract(const SqOperator& lhs, const SqOperator& rhs, const std::vector<std::vector<int>>& pattern);
 };
 
 
