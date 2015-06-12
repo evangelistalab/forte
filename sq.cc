@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <cmath>
+
 #include "psi4-dec.h"
 
 #include "sq.h"
@@ -14,7 +17,7 @@ namespace psi{ namespace libadaptive{
  * @param vec the permutation to test
  * @return a boolean: false = even permutation, true = odd permutation
  */
-bool permutation_sign(const std::vector<int>& vec)
+double permutation_sign(const std::vector<int>& vec)
 {
     // Quadratic algorithm to determine the sign of a permutation
     // From:
@@ -26,7 +29,7 @@ bool permutation_sign(const std::vector<int>& vec)
             if (vec[i] > vec[j]) count++;
         }
     }
-    return (count % 2 != 0);
+    return (count % 2 != 0) ? -1.0 : 1.0;
 }
 
 
@@ -77,32 +80,31 @@ size_t SqOperator::hash() {
     return h;
 }
 
-bool SqOperator::sort(std::vector<int>& vec)
+double SqOperator::sort(std::vector<int>& vec)
 {
-    if (std::is_sorted(vec.begin(),vec.end())) return false;
-    bool sign = permutation_sign(vec);
+    if (std::is_sorted(vec.begin(),vec.end())){
+        return (adjacent_find(vec.begin(),vec.end() ) == vec.end()) ? 1.0 : 0.0;
+    }
+    double sign = permutation_sign(vec);
     std::sort(vec.begin(),vec.end());
-    return sign;
+
+    return (adjacent_find(vec.begin(),vec.end() ) == vec.end()) ? sign : 0.0;
 }
 
-bool SqOperator::sort()
+double SqOperator::sort()
 {
-    bool signc = sort(cre_);
-    bool signa = sort(ann_);
-    return signc ^ signa;
+    double signc = sort(cre_);
+    double signa = sort(ann_);
+    return signc * signa;
 }
 
 void SqOperator::test_sort()
 {
-
     outfile->Printf("\nBefore sort: %s",str().c_str());
-    bool signc = sort(cre_);
-    bool signa = sort(ann_);
-    bool sign = signc ^ signa;
-    outfile->Printf("\nAfter sort: %f %f %f %s",
-                    sign ? -1.0 : 1.0,
-                    signc ? -1.0 : 1.0,
-                    signa ? -1.0 : 1.0,str().c_str());
+    double signc = sort(cre_);
+    double signa = sort(ann_);
+    double sign = signc * signa;
+    outfile->Printf("\nAfter sort: %f %f %f %s",sign,signc,signa,str().c_str());
 }
 
 
@@ -113,24 +115,27 @@ Operator::Operator() {}
 
 void Operator::add(double value, const SqOperator &op)
 {
-    SqOperator sorted_op = op;
-    double sign = sorted_op.sort() ? -1.0 : 1.0;
-    ops_[sorted_op] += sign * value;
+    if (std::fabs(value) != 0.0){
+        SqOperator sorted_op = op;
+        double sign = sorted_op.sort();
+        ops_[sorted_op] += sign * value;
+    }
 }
 
 std::string Operator::str() const
 {
-    std::string s;
+    std::vector<std::string> vec_str;
     for (auto& c_op : ops_){
-        s += std::to_string(c_op.second) + " " + c_op.first.str();
+        vec_str.push_back(std::to_string(c_op.second) + " " + c_op.first.str());
     }
-    return s;
+    return to_string(vec_str,"\n ");
 }
 
 const op_hash &Operator::ops()
 {
     return ops_;
 }
+
 
 
 // => WickTheorem class function <=
@@ -145,10 +150,84 @@ Operator WickTheorem::evaluate(Operator& lhs,Operator& rhs)
         for (auto& opr : rhs.ops()){
             outfile->Printf("\n  Contracting:");
             outfile->Printf("\n  %+f x %+f { %s } { %s }",opl.second,opr.second,opl.first.str().c_str(),opr.first.str().c_str());
+            contract(opl.first,opr.first,res);
         }
     }
     return res;
 }
+
+void WickTheorem::contract(const SqOperator& lhs,const SqOperator& rhs,Operator& res)
+{
+    outfile->Printf("\n  Contracting:");
+    outfile->Printf("\n  { %s } { %s }",lhs.str().c_str(),rhs.str().c_str());
+
+    // Partitions of the number 2n into even numbers
+    std::vector<std::vector<std::vector<int>>> even_partitions {
+        {{0}},
+        {{2}},
+        {{2,2}, {4}},
+        {{2,2,2}, {4,2}, {6}},
+        {{2,2,2,2}, {4,2,2}, {4,4}, {6,2}, {8}},
+        {{2,2,2,2,2}, {4,2,2,2}, {4,4,2}, {6,2,2}, {8,2}, {10}},
+        {{2,2,2,2,2,2}, {4,2,2,2,2}, {4,4,2,2}, {4,4,4}, {6,2,2,2}, {6,4,2}, {6,6}, {8,2,2}, {8,4}, {10,2}, {12}}
+    };
+
+    int ncl = lhs.ncre();
+    int nal = lhs.nann();
+    int ncr = rhs.ncre();
+    int nar = rhs.nann();
+
+    int max_contr = ncl + nal + ncr + nar;
+
+    // Operator table
+    std::map<std::vector<int>,Operator> op_table;
+
+    // The product term
+    outfile->Printf("\n  Contraction rank %d",0);
+    std::pair<double,SqOperator> prod_term = simple_contract(lhs,rhs,{});
+    res.add(prod_term.first,prod_term.second);
+
+    for (int rank = 2; rank <= max_contr; rank += 2){
+        outfile->Printf("\n  Contraction rank %d",rank);
+        for (auto& contractions : even_partitions[rank / 2]){
+            outfile->Printf("\n    Contraction: ",rank);
+            for (int k = 0; k < contractions.size(); ++k){
+//            for (auto& contraction : contractions){
+                outfile->Printf(" %d",contractions[k]);
+            }
+        }
+    }
+}
+
+std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs,const SqOperator& rhs,const std::vector<std::vector<int>>& pattern)
+{
+    std::vector<int> lc = lhs.cre();
+    std::vector<int> la = lhs.ann();
+    std::vector<int> rc = rhs.cre();
+    std::vector<int> ra = rhs.ann();
+
+
+    // Remove the contracted operators and compute sign
+    double sign_contraction = 1.0;
+
+    // TODO needs implementation
+
+    // Parity of transposition (lcre)(lann)(rcre)(rann) -> (lcre)(rcre)(lann)(rann)
+    double sign = 1.0;
+    sign *= ((la.size() * rc.size()) % 2 != 0) ? -1.0 : 1.0;
+
+    lc.insert(lc.end(), rc.begin(), rc.end());
+    la.insert(la.end(), ra.begin(), ra.end());
+
+    SqOperator op(lc,la);
+    sign *= op.sort();
+
+    return std::make_pair(sign,op);
+}
+
+
+
+// => SqTest class function <=
 
 SqTest::SqTest()
 {
@@ -176,7 +255,8 @@ SqTest::SqTest()
     outfile->Printf("\n%s",op.str().c_str());
 
     WickTheorem wt;
-    wt.evaluate(op,op);
+    Operator op_op = wt.evaluate(op,op);
+    outfile->Printf("\n%s",op_op.str().c_str());
 }
 
 }}
