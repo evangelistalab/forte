@@ -127,8 +127,6 @@ protected:
     ambit::BlockedTensor T2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
-    ambit::BlockedTensor RF;     // < effective 1st-order one-body term for 2nd-order Hbar
-    ambit::BlockedTensor RV;     // < effective 1st-order two-body term for 2nd-order Hbar
     ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
     ambit::BlockedTensor Hbar2;  // < two-body term of effective Hamiltonian
 
@@ -179,8 +177,17 @@ protected:
 
     /// Compute Hbar truncated to 2nd-order
     double Hbar0;
-    void compute_Hbar1();
-    void compute_Hbar2();
+    void Hbar1_FT1();
+    void Hbar1_FT2();
+    void Hbar1_VT1();
+    void Hbar1_VT2_2();
+    void Hbar1_VT2_4_22();
+    void Hbar1_VT2_4_13();
+    void Hbar2_FT2();
+    void Hbar2_VT1();
+    void Hbar2_VT2_PP();
+    void Hbar2_VT2_HH();
+    void Hbar2_VT2_PH();
 
     // Print levels
     int print_;
@@ -228,7 +235,7 @@ public:
     double frozen_core_energy;
 
     /// Transfer integrals
-    void transfer_integrals();
+    void transform_integrals();
 };
 
 }} // End Namespaces
