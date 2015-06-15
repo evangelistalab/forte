@@ -122,6 +122,10 @@ private:
     int post_root_;
     ///Rediagonalize Hamiltonian?
     bool post_diagonalize_;
+    ///Print warning?
+    bool print_warning_;
+    ///Spin tolerance
+    double spin_tol_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -129,6 +133,8 @@ private:
     std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
+    ///Vector to store spin of each root
+    std::vector<std::pair<double,double> > root_spin_vec_;
 
 
     // ==> Class functions <==
@@ -193,8 +199,12 @@ private:
     ///Take the direct product of two symmetry elements (int)
     int direct_sym_product(int sym1, int sym2);
 
+
     /// Returns a vector of orbital energy,sym label pairs
     std::vector<std::pair<double, std::pair<int, int> > > sym_labeled_orbitals(std::string type);
+
+    ///Computes S^2 and S
+    std::vector< std::pair<std::pair<double,double>, std::pair<size_t,double> > >compute_spin(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot,std::vector<std::pair<double,size_t> >det_weight);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

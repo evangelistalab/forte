@@ -125,6 +125,7 @@ void EX_ACI::startup()
     //Build the reference determinant with correct symmetry
     reference_determinant_ = StringDeterminant(get_occupation());
 
+
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
 
@@ -137,6 +138,12 @@ void EX_ACI::startup()
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
+
+    spin_tol_ = options_.get_double("SPIN_TOL");
+    //set the initial S^2 guess as input multiplicity
+    for(int n = 0; n < nroot_; ++n){
+        root_spin_vec_.push_back(make_pair((wavefunction_multiplicity_ - 1.0)/2.0, wavefunction_multiplicity_-1.0) );
+    }
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
     q_function_ = options_.get_str("Q_FUNCTION");
@@ -430,6 +437,16 @@ double EX_ACI::compute_energy()
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
     BitsetDeterminant bs_det(alfa_bits,beta_bits);
     P_space_.push_back(bs_det);
+
+    if(alfa_bits != beta_bits){
+        BitsetDeterminant ref2 = bs_det;
+        ref2.spin_flip();
+        P_space_.push_back(ref2);
+        outfile->Printf("\n  The initial reference space is: ");
+        ref2.print();
+        bs_det.print();
+    }
+
     P_space_map_[bs_det] = 1;
 
 
@@ -442,11 +459,14 @@ double EX_ACI::compute_energy()
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
+
     int root;
     int maxcycle = 20;
     bool shrink = false;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
+
+        //Set the roots as the lowest possible as initial guess
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 
         outfile->Printf("\n\n  Cycle %3d",cycle_);
@@ -472,6 +492,9 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n");
         outfile->Flush();
 
+        for(int n = 0; n < num_ref_roots; ++n){
+            outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
+        }
 
         // Step 2. Find determinants in the Q space, shrink if needed
         find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
@@ -483,9 +506,11 @@ double EX_ACI::compute_energy()
             sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
         }
 
+
+
         // Print the energy
         outfile->Printf("\n");
-        for (int i = 0; i < nroot_; ++ i){
+        for ( int i = 0; i < num_ref_roots; ++i){
             double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
             double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
             outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
@@ -522,7 +547,6 @@ double EX_ACI::compute_energy()
         // Step 7. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
 
-
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
 
@@ -551,7 +575,7 @@ double EX_ACI::compute_energy()
     outfile->Printf("\n   ---------   -------------   -----------------  ");
 
     wfn_analyzer(PQ_space_, PQ_evecs, nroot_);
-    for (int i = 0; i < nroot_; ++ i){
+    for (int i = 0; i < nroot_; ++i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
@@ -560,7 +584,7 @@ double EX_ACI::compute_energy()
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }else if(post_diagonalize_ and i < root){
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         }
     }
 
@@ -572,15 +596,15 @@ double EX_ACI::compute_energy()
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
-    Process::environment.globals["ACI ENERGY"] = root_energy;
-    Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    Process::environment.globals["EX-ACI ENERGY"] = root_energy;
+    Process::environment.globals["EX-ACI+PT2 ENERGY"] = root_energy_pt2;
 
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
 
 }
 
 
-void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool shrink)
+void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool shrink)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -591,13 +615,29 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
     // This hash saves the determinant coupling to the model space eigenfunction
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
+    //Need det_weight to compute S^2 of each root in P_space
+ //   pVector<double, size_t> det_weight;
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+
+//        for(int n = 0; n < nroot; ++n){
+//            det_weight.push_back(make_pair(std::fabs(evecs->get(I,n)),I));
+//        }
+
         BitsetDeterminant& det = P_space_[I];
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
     outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
     outfile->Flush();
+
+    //Compute S^2 for each root
+//    pVector<std::pair<double,double>, std::pair<size_t,double> > spins;
+//    for(int n = 0; n < nroot; ++n){
+//        spins = compute_spin(P_space_,evecs,nroot,det_weight);
+//        root_spin_vec_.push_back(make_pair(spins[n].first.first, spins[n].first.second));
+//        outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
+//    }
+
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -639,7 +679,7 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
         }
         //make q space in a number of ways with C1 and E1 as input, produces PQ_space
-        if(ex_alg_ == "STATE_AVERAGE"){
+        if(ex_alg_ == "STATE_AVERAGE" and nroot_ != 1){
             criteria = average_q_values(nroot, C1, E2);
         }
         else if(ex_alg_ == "ROOT_SELECT"){
@@ -662,13 +702,19 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
         }
     }// end loop over determinants
 
+    if(ex_alg_ == "STATE_AVERAGE" and print_warning_){
+        outfile->Printf("\n  WARNING: There are not enough roots with the correct S^2 to compute dE2! You should increase nroot.");
+        outfile->Printf("\n  Setting q_rel = false for this iteration.\n");
+    }
+
     if(shrink or aimed_selection_){
-    // Sort the CI coefficients in ascending order
-    std::sort(sorted_dets.begin(),sorted_dets.end());
+        // Sort the CI coefficients in ascending order
+        std::sort(sorted_dets.begin(),sorted_dets.end());
     }
 
     if (aimed_selection_){
         double sum = 0.0;
+        double E2_I = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const BitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
@@ -677,12 +723,11 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
                 const auto& V_vec = V_hash[det];
                 for (int n = 0; n < nroot; ++n){
                     double V = V_vec[n];
-                    double E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
+                    E2_I = perturb_select_ ? -V * V / (EI - evals->get(n)) :
                                                     ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V,2.0) );
                     ept2[n] += E2_I;
                 }
-            }
-            else{
+            }else{
                 PQ_space_.push_back(sorted_dets[I].second);
             }
         }
@@ -711,52 +756,70 @@ void EX_ACI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs, bool 
 
 double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<double,double> E2)
 {
+    pVector<double,double> C_s;
+    pVector<double,double> E_s;
 
-
+    C_s.clear();
+    E_s.clear();
+    //If the spin is correct, use the C1 and E2 values
+    for(int n = 0; n < nroot; ++n){
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+            C_s.push_back(make_pair(C1[n].first,C1[n].second));
+            E_s.push_back(make_pair(E2[n].first,E2[n].second));
+        }
+    }
+    int dim = C_s.size();
     //f_E2 and f_C1 will store the selected function of the chosen q-criteria
     std::pair<double,double> f_C1;
     std::pair<double,double> f_E2;
 
     //Make vector of pairs for ∆e_n,0
-    pVector<double,double> dE2(nroot_,make_pair(0.0,0.0));
-
+    pVector<double,double> dE2(dim,make_pair(0.0,0.0));
 
     //Compute a determinant's effect on ground state or adjacent state transition
-    if(q_rel_ == true and nroot > 1){
-        for(int n = 0; n < nroot; ++n){
-            if( q_reference_ == "GS"){
-                dE2[n] = make_pair(std::fabs(E2[n].first - E2[0].first),E2[n].second - E2[0].second );
+    q_rel_ = options_.get_bool("Q_REL");
+    print_warning_ = false;
+
+    if(q_rel_ == true and dim > 1){
+        if( q_reference_ == "GS"){
+            for(int n = 0; n < dim; ++n){
+                dE2[n] = make_pair(std::fabs(E_s[n].first - E_s[0].first),E_s[n].second - E_s[0].second );
             }
         }
-        for(int n = 1; n < nroot; ++n){
-            if( q_reference_ == "ADJACENT"){
-                dE2[n] = make_pair(std::fabs(E2[n].first - E2[n-1].first),E2[n].second - E2[n-1].second );
+        if( q_reference_ == "ADJACENT"){
+            for(int n = 1; n < dim; ++n){
+                dE2[n] = make_pair(std::fabs(E_s[n].first - E_s[n-1].first),E_s[n].second - E_s[n-1].second );
             }
         }
+    }else if(q_rel_ == true and dim == 1){
+        print_warning_ = true;
+        q_rel_ = false;
     }
 
     //Choose the function of couplings for each root.
     //If nroot = 1, choose the max
-    if(q_function_ == "MAX" or nroot == 1){
-        f_C1 = *std::max_element(C1.begin(),C1.end());
-        f_E2 = q_rel_ and (nroot!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
-                                       *std::max_element(E2.begin(),E2.end());
+    if(q_function_ == "MAX" or dim == 1){
+        f_C1 = *std::max_element(C_s.begin(),C_s.end());
+        f_E2 = q_rel_ and (dim!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
+                                       *std::max_element(E_s.begin(),E_s.end());
     }
     else if(q_function_ == "MIN"){
-        f_C1 = *std::min_element(C1.begin(),C1.end());
+        f_C1 = *std::min_element(C_s.begin(),C_s.end());
         f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
-                        *std::min_element(E2.begin(),E2.end());
+                        *std::min_element(E_s.begin(),E_s.end());
     }
     else if(q_function_ == "AVERAGE"){
         double C1_average = 0.0;
         double E2_average = 0.0;
         double dE2_average = 0.0;
-        for(int n = 0; n < nroot; ++n){
-            C1_average += C1[n].first / nroot;
-            E2_average += E2[n].first / nroot;
+        for(int n = 0; n < dim; ++n){
+            C1_average += C_s[n].first / dim;
+            E2_average += E_s[n].first / dim;
         }
-        for(int n = 1; n < nroot; ++n){
-            dE2_average += dE2[n].first / (nroot-1.0);
+        if(q_rel_){
+            for(int n = 1; n < dim; ++n){
+                dE2_average += dE2[n].first / (dim-1.0);
+            }
         }
         f_C1 = make_pair(C1_average, 0);
         f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
@@ -1279,14 +1342,20 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
 
     std::vector<double> new_energies;
     std::vector<double> old_energies = energy_history[energy_history.size() - 1];
+
+    //Only average over roots with correct S^2
+    int denom = 0;
     for (int n = 0; n < nroot; ++ n){
         double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
         new_energies.push_back(state_n_energy);
-        new_avg_energy += state_n_energy;
-        old_avg_energy += old_energies[n];
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+            new_avg_energy += state_n_energy;
+            old_avg_energy += old_energies[n];
+            ++denom;
+        }
     }
-    old_avg_energy /= static_cast<double>(nroot);
-    new_avg_energy /= static_cast<double>(nroot);
+    old_avg_energy /= static_cast<double>(denom);
+    new_avg_energy /= static_cast<double>(denom);
 
     energy_history.push_back(new_energies);
 
@@ -1432,12 +1501,78 @@ void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVect
     outfile->Printf("\n  * sAdaptive-CI Energy Root %3d        = %.12f Eh",1,evals_s->get(0) + nuclear_repulsion_energy_);
 }
 
+pVector<std::pair<double,double>,std::pair<size_t,double> > EX_ACI::compute_spin(std::vector<BitsetDeterminant> space,
+                                                                                 SharedMatrix evecs,
+                                                                                 int nroot,
+                                                                                 pVector<double,size_t> det_weight)
+{
+    double norm;
+    double S2;
+    double S;
+    pVector<std::pair<double,double>, std::pair<size_t,double> > spin_vec;
+
+    for(int n = 0; n < nroot; ++n){
+        // Compute the expectation value of the spin
+        size_t max_sample = 1000;
+        size_t max_I = 0;
+        double sum_weight = 0.0;
+
+        //Don't require the determinants to be pre-sorted
+        std::sort(det_weight.begin(),det_weight.end());
+        std::reverse(det_weight.begin(),det_weight.end());
+
+        const double wfn_threshold = 0.95;
+        for (size_t I = 0; I < space.size(); ++I){
+            if ((sum_weight < wfn_threshold) and (I < max_sample)) {
+                sum_weight += std::pow(det_weight[I].first,2.0);
+                max_I++;
+            }else if (std::fabs(det_weight[I].first - det_weight[I-1].first) < 1.0e-6){
+                // Special case, if there are several equivalent determinants
+                sum_weight += std::pow(det_weight[I].first,2.0);
+                max_I++;
+            }else{
+                break;
+            }
+        }
+
+        S2 = 0.0;
+        norm = 0.0;
+        for (int sI = 0; sI < max_I; ++sI){
+            size_t I = det_weight[sI].second;
+            for (int sJ = 0; sJ < max_I; ++sJ){
+                size_t J = det_weight[sJ].second;
+                if (std::fabs(evecs->get(I,n) * evecs->get(J,n)) > 1.0e-12){
+                    const double S2IJ = space[I].spin2(space[J]);
+                    S2 += evecs->get(I,n) * evecs->get(J,n) * S2IJ;
+                }
+            }
+            norm += std::pow(evecs->get(I,n),2.0);
+        }
+
+        S2 /= norm;
+        S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        spin_vec.push_back( make_pair(make_pair(S,S2),make_pair(max_I,sum_weight)) );
+
+    }
+   return spin_vec;
+}
+
 void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,int nroot)
 {
+    pVector<double,size_t> det_weight;
+    pVector<std::pair<double,double>, std::pair<size_t,double> > spins;
+    double sum_weight;
+    double S2;
+    double S;
+    size_t max_I;
+
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
+    string state_label;
+
     for (int n = 0; n < nroot; ++n){
+        det_weight.clear();
         outfile->Printf("\n\n  Most important contributions to root %3d:",n);
 
-        pVector<double,size_t> det_weight;
         for (size_t I = 0; I < space.size(); ++I){
             det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
         }
@@ -1452,7 +1587,19 @@ void EX_ACI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix evecs,i
                     det_weight[I].second,
                     space[det_weight[I].second].str().c_str());
         }
+
+        spins = compute_spin(space,evecs,nroot,det_weight);
+        S = spins[n].first.first;
+        S2 = spins[n].first.second;
+        max_I = spins[n].second.first;
+        sum_weight = spins[n].second.second;
+
+        state_label = s2_labels[std::round(S * 2.0)];
+        outfile->Printf("\n\n  Spin State for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants,%.2f\%)",n,S2,S,state_label.c_str(),max_I,100.0 * sum_weight);
+        root_spin_vec_.clear();
+        root_spin_vec_[n] = make_pair(S, S2);
     }
+    outfile->Flush();
 }
 
 int EX_ACI::direct_sym_product(int sym1, int sym2)
