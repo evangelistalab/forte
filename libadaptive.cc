@@ -388,6 +388,8 @@ read_options(std::string name, Options &options)
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
         options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
+        /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
+        options.add_str("CCVV_ALGORITHM", "fly_openmp", "core fly fly_openmp");
         
     }
 
