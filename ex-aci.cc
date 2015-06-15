@@ -146,7 +146,7 @@ void EX_ACI::startup()
     }
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
-    q_function_ = options_.get_str("Q_FUNCTION");
+    pq_function_ = options_.get_str("PQ_FUNCTION");
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
@@ -395,7 +395,7 @@ void EX_ACI::print_info()
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"Parameter type", perturb_select_ ? "PT" : "Non-PT"},
-        {"Q Function",options_.get_str("Q_FUNCTION")},
+        {"PQ Function",options_.get_str("PQ_FUNCTION")},
         {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
@@ -798,17 +798,12 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
 
     //Choose the function of couplings for each root.
     //If nroot = 1, choose the max
-    if(q_function_ == "MAX" or dim == 1){
+    if(pq_function_ == "MAX" or dim == 1){
         f_C1 = *std::max_element(C_s.begin(),C_s.end());
         f_E2 = q_rel_ and (dim!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
                                        *std::max_element(E_s.begin(),E_s.end());
     }
-    else if(q_function_ == "MIN"){
-        f_C1 = *std::min_element(C_s.begin(),C_s.end());
-        f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
-                        *std::min_element(E_s.begin(),E_s.end());
-    }
-    else if(q_function_ == "AVERAGE"){
+    else if(pq_function_ == "AVERAGE"){
         double C1_average = 0.0;
         double E2_average = 0.0;
         double dE2_average = 0.0;
@@ -825,7 +820,7 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
         f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
     }
     else{
-        throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
+        throw PSIEXCEPTION(options_.get_str("PQ_FUNCTION") + " is not a valid option");
     }
 
     double select_value = 0.0;
@@ -1396,13 +1391,23 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     pruned_space_map.clear();
 
     // Create a vector that stores the absolute value of the CI coefficients
+    // Use a function of the CI coefficients for each root as the criteria
+    // This function will be the same one used when selecting the PQ space
     pVector<double,size_t> dm_det_list;
     for (size_t I = 0; I < large_space.size(); ++I){
-        double max_dm = 0.0;
+        double criteria = 0.0;
+        int dim = 1;
         for (int n = 0; n < nroot; ++n){
-            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
+            if(pq_function_ == "MAX" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
+                criteria = std::max(criteria,std::fabs(evecs->get(I,n)));
+            }
+            else if(pq_function_ == "AVERAGE" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
+                criteria += std::fabs(evecs->get(I,n)) / dim;
+                ++dim;
+            }
+
         }
-        dm_det_list.push_back(std::make_pair(max_dm,I));
+        dm_det_list.push_back(std::make_pair(criteria,I));
     }
 
     // Decide which determinants will go in pruned_space

@@ -101,7 +101,7 @@ private:
     ///Use threshold from perturbation theory
     bool perturb_select_;
     ///The function of the q-space criteria per root
-    std::string q_function_;
+    std::string pq_function_;
     ///The type of q criteria
     bool q_rel_;
     ///The q reference

@@ -30,7 +30,7 @@ set libadaptive {
   frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE energy
   perturb_select false
-  q_function average
+  pq_function average
   excited_algorithm state_average
   TAUP 0.000100
   TAUQ 0.00001000
