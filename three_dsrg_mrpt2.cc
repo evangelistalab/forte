@@ -898,6 +898,65 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     Efly = Eflyalpha + Eflybeta + Eflymixed;
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
+
+    // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
+    // For a given m and n, form Bm(L|e) and Bn(L|f)
+    // Bef(ef) = Bm(L|e) * Bn(L|f)
+    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
+    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
+    Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
+    Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
+    ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
+    ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
+    ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
+    ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
+    ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
+    ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
+    ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
+    size_t dim = nthree * virtual_;
+    double Emp2 = 0.0;
+
+    for(size_t m = 0; m < core_; ++m){
+        size_t ma = acore_mos[m];
+        size_t mb = bcore_mos[m];
+        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], Bma.data().begin());
+        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], Bmb.data().begin());
+        for(size_t n = 0; n < core_; ++n){
+            size_t na = acore_mos[n];
+            size_t nb = bcore_mos[n];
+            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], Bna.data().begin());
+            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], Bnb.data().begin());
+
+            // alpha-aplha
+            Bef("ef") = Bma("ge") * Bna("gf");
+            BefJK("ef")  = Bef("ef") * Bef("ef");
+            BefJK("ef") -= Bef("ef") * Bef("fe");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa[ma] + Fa[na] - Fa[avirt_mos[i[0]]] - Fa[avirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += 0.5 * BefJK("ef") * RD("ef");
+
+            // beta-beta
+            Bef("EF") = Bmb("gE") * Bnb("gF");
+            BefJK("EF")  = Bef("EF") * Bef("EF");
+            BefJK("EF") -= Bef("EF") * Bef("FE");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fb[mb] + Fb[nb] - Fb[bvirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += 0.5 * BefJK("EF") * RD("EF");
+
+            // alpha-beta
+            Bef("eF") = Bma("ge") * Bnb("gF");
+            BefJK("eF")  = Bef("eF") * Bef("eF");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa[ma] + Fb[nb] - Fa[avirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += BefJK("eF") * RD("eF");
+        }
+    }
+    outfile->Printf("\n    Target energy = %.15f", Efly);
+    outfile->Printf("\n    Emp2 = %.15f", Emp2);
+
     return (E + Efly);
 }
 
