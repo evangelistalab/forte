@@ -902,19 +902,10 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
     // Bef(ef) = Bm(L|e) * Bn(L|f)
-    double Emp2 = 0.0;
-    // ==> Can we somehow eliminate this step?
-    // I have to permute the ThreeIntegral from naux * ncore * nvir to ncore * naux * nvir,
-    // so that I can copy a block of naux * nvir to Bm.
-    // Why do we have to store ThreeIntegral as naux * ncore * nvir??
-    ambit::Tensor ThreeIntegral_aa = ThreeIntegral.block("dcv");
-    ambit::Tensor ThreeIntegral_bb = ThreeIntegral.block("dCV");
     ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
     ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
-    Ba("mge") = ThreeIntegral_aa("gme");
-    Bb("MgE") = ThreeIntegral_bb("gME");
-    // <==
-    // ==> Move to startup()?
+    Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
+    Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
     ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
     ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
     ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
@@ -922,8 +913,9 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
     ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
     ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
-    // <==
     size_t dim = nthree * virtual_;
+    double Emp2 = 0.0;
+
     for(size_t m = 0; m < core_; ++m){
         size_t ma = acore_mos[m];
         size_t mb = bcore_mos[m];
