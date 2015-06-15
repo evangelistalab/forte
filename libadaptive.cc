@@ -29,6 +29,7 @@
 #include "mcsrgpt2_mo.h"
 #include "fci_solver.h"
 #include "blockedtensorfactory.h"
+#include "sq.h"
 
 INIT_PLUGIN
 
@@ -76,7 +77,7 @@ read_options(std::string name, Options &options)
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 NONE");
+                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -572,6 +573,10 @@ libadaptive(Options &options)
             auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_);
             apici->compute_energy();
         }
+    }
+
+    if (options.get_str("JOB_TYPE") == "SQ"){
+        SqTest sqtest;
     }
 
     // Delete ints_;
