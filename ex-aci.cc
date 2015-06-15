@@ -462,7 +462,6 @@ double EX_ACI::compute_energy()
 
     int root;
     int maxcycle = 20;
-    bool shrink = false;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
 
@@ -496,8 +495,8 @@ double EX_ACI::compute_energy()
             outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
         }
 
-        // Step 2. Find determinants in the Q space, shrink if needed
-        find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
+        // Step 2. Find determinants in the Q space
+        find_q_space(num_ref_roots,P_evals,P_evecs);
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -524,10 +523,8 @@ double EX_ACI::compute_energy()
         int PQ_space_final = PQ_space_.size();
         outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
 
-        // Step 4. Check convergence and break if needed
-        //If the second criteria is met, there is no PQ shrinking
-        bool converged = check_convergence(energy_history,PQ_evals);
-        if(converged and PQ_space_.size() <= max_det_ ){
+        // Step 4. Check convergence and break if needed 
+        if(check_convergence(energy_history,PQ_evals)){
             break;
         }
 
@@ -538,13 +535,7 @@ double EX_ACI::compute_energy()
             break;
         }
 
-        // Step 6. Confine PQ space to size max_det_ if max_det_ is limiting
-        if(converged and max_det_ < PQ_space_.size()){
-            shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
-            shrink = true;
-        }
-
-        // Step 7. Prune the P + Q space to get an updated P space
+        // Step 6. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
 
         // Print information about the wave function
@@ -604,7 +595,7 @@ double EX_ACI::compute_energy()
 }
 
 
-void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool shrink)
+void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -615,29 +606,13 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
     // This hash saves the determinant coupling to the model space eigenfunction
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
-    //Need det_weight to compute S^2 of each root in P_space
- //   pVector<double, size_t> det_weight;
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-
-//        for(int n = 0; n < nroot; ++n){
-//            det_weight.push_back(make_pair(std::fabs(evecs->get(I,n)),I));
-//        }
-
         BitsetDeterminant& det = P_space_[I];
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
     outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
     outfile->Flush();
-
-    //Compute S^2 for each root
-//    pVector<std::pair<double,double>, std::pair<size_t,double> > spins;
-//    for(int n = 0; n < nroot; ++n){
-//        spins = compute_spin(P_space_,evecs,nroot,det_weight);
-//        root_spin_vec_.push_back(make_pair(spins[n].first.first, spins[n].first.second));
-//        outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
-//    }
-
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -689,7 +664,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
             criteria = root_select(nroot, C1, E2);
         }
 
-        if(aimed_selection_ or shrink){
+        if(aimed_selection_){
             sorted_dets.push_back(std::make_pair(criteria,it->first));
         }else{
             if(std::fabs(criteria) > tau_q_){
@@ -707,12 +682,9 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
         outfile->Printf("\n  Setting q_rel = false for this iteration.\n");
     }
 
-    if(shrink or aimed_selection_){
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
-    }
 
     if (aimed_selection_){
+        std::sort(sorted_dets.begin(),sorted_dets.end());
         double sum = 0.0;
         double E2_I = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
@@ -733,20 +705,8 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
         }
     }
 
-    //Now we have a PQ space for AIMED or THRESH selection, shrink it here if called
-    std::vector<double> ept2_last;
-    if(shrink){
-        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
-        PQ_space_.clear();
-        std::reverse(sorted_dets.begin(),sorted_dets.end());
-        for(size_t I = 0; I < max_det_; ++I){
-            PQ_space_.push_back(sorted_dets[I].second);
-        }
-    }else{
-        ept2_last = ept2;
-    }
 
-    multistate_pt2_energy_correction_ = ept2_last;
+    multistate_pt2_energy_correction_ = ept2;
 
     outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
@@ -763,12 +723,18 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
     E_s.clear();
     //If the spin is correct, use the C1 and E2 values
     for(int n = 0; n < nroot; ++n){
-        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_ ){
             C_s.push_back(make_pair(C1[n].first,C1[n].second));
             E_s.push_back(make_pair(E2[n].first,E2[n].second));
         }
     }
     int dim = C_s.size();
+
+    if(dim == 0){
+        throw PSIEXCEPTION(" There are no roots of with correct S^2 value! ");
+    }
+
+
     //f_E2 and f_C1 will store the selected function of the chosen q-criteria
     std::pair<double,double> f_C1;
     std::pair<double,double> f_E2;
@@ -1343,12 +1309,21 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
     for (int n = 0; n < nroot; ++ n){
         double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
         new_energies.push_back(state_n_energy);
-        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_ ){
             new_avg_energy += state_n_energy;
             old_avg_energy += old_energies[n];
             ++denom;
         }
     }
+
+    if(denom == 0){
+        for(int n = 0; n < nroot; ++n){
+            outfile->Printf("\n  S^2, S for root %d : %6.12f  %6.12f", n, root_spin_vec_[n].second,root_spin_vec_[n].first);
+        }
+        outfile->Printf("\n");
+        throw PSIEXCEPTION("  No roots have the correct S^2! ");
+    }
+
     old_avg_energy /= static_cast<double>(denom);
     new_avg_energy /= static_cast<double>(denom);
 
@@ -1396,18 +1371,20 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     pVector<double,size_t> dm_det_list;
     for (size_t I = 0; I < large_space.size(); ++I){
         double criteria = 0.0;
-        int dim = 1;
+        int dim = 0;
         for (int n = 0; n < nroot; ++n){
             if(pq_function_ == "MAX" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
-                criteria = std::max(criteria,std::fabs(evecs->get(I,n)));
+                criteria = std::max(criteria, std::fabs(evecs->get(I,n)));
+                dim = 1;
             }
             else if(pq_function_ == "AVERAGE" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
-                criteria += std::fabs(evecs->get(I,n)) / dim;
-                ++dim;
+                criteria += std::fabs(evecs->get(I,n));
+                dim++;
             }
 
         }
-        dm_det_list.push_back(std::make_pair(criteria,I));
+        criteria /= static_cast<double>(dim);
+        dm_det_list.push_back(make_pair(criteria,I));
     }
 
     // Decide which determinants will go in pruned_space
@@ -1415,7 +1392,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION \n");
+        outfile->Printf("  AIMED SELECTION \n");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
@@ -1442,33 +1419,6 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
 }
 
-void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
-                             std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
-{
-    outfile->Printf("\n Calculation has converged. Limiting PQ space to %zu determinants.", max_det_);
-
-    // Create a vector that stores the absolute value of the CI coefficients
-    pVector<double,size_t> dm_det_list;
-
-    pruned_space.clear();
-    pruned_space_map.clear();
-
-    for (size_t I = 0; I < total_space.size(); ++I){
-        double max_dm = 0.0;
-        for (int n = 0; n < nroot; ++n){
-            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
-        }
-        dm_det_list.push_back(std::make_pair(max_dm,I));
-    }
-
-    //Sort determinants in ascending order
-    std::sort(dm_det_list.begin(),dm_det_list.end());
-    auto dif = total_space.size() - max_det_;
-    for(size_t I = dif; I < total_space.size();++I){
-        pruned_space.push_back(total_space[dm_det_list[I].second]);
-        pruned_space_map[total_space[dm_det_list[I].second]] = 1;
-    }
-}
 
 void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
 {
