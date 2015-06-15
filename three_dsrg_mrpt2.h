@@ -152,6 +152,13 @@ protected:
     double E_VT1();
     double E_FT2();
     double E_VT2_2();
+    ///Different algorithms for handling ccvv term
+    /// Core -> builds everything in core.  Probably fastest
+    double E_VT2_2_core();
+    /// ambit -> Uses ambit library to perform contractions
+    double E_VT2_2_ambit();
+    ///fly_open-> Code Kevin wrote at first with open mp threading
+    double E_VT2_2_fly_openmp();
     double E_VT2_4PP();
     double E_VT2_4HH();
     double E_VT2_4PH();

@@ -415,7 +415,8 @@ void THREE_DSRG_MRPT2::print_summary()
         {"Taylor expansion threshold",std::pow(10.0,-double(taylor_threshold_))}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"int_type", options_.get_str("INT_TYPE")}};
+        {"int_type", options_.get_str("INT_TYPE")},
+        {"ccvv_algorithm",options_.get_str("ccvv_algorithm")}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -806,158 +807,34 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += V["cDkL"] * temp2["kLcD"];
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
-    // This part needs to be computed on the fly rather than what is like here
-    double E2alpha = 0.0;
-    double E2beta = 0.0;
-    double E2mixed = 0.0;
-    double E2 = 0.0;
-    ///Calculating the last three E without storing any ccvv quantities
-    ///
-    double Eflyalpha = 0.0;
-    double Eflybeta = 0.0;
-    double Eflymixed = 0.0;
-    double Efly = 0.0;
-    std::string str1 = "Computing <[V, T2]> (C_2)^4 ccvv term";
-    outfile->Printf("\n    %-36s ...", str1.c_str());
-    size_t nthree = ints_->nthree();
-    size_t ncmo   = ints_->ncmo();
-    size_t nmo_   = ints_->nmo();
-    //First go at a batches algorithm
 
-    #pragma omp parallel for num_threads(num_threads_) \
-	schedule(dynamic) \
-	reduction(+:Eflyalpha, Eflybeta, Eflymixed)
-    for(size_t mind = 0; mind < core_; mind++){
-        for(size_t nind = 0; nind < core_; nind++){
-            for(size_t eind = 0; eind < virtual_; eind++){
-                for(size_t find = 0; find < virtual_; find++){
-                    //These are used because active is not partitioned as simple as
-                    //core orbs -- active orbs -- virtual
-                    //This also takes in account symmetry labeled
-                    size_t m = acore_mos[mind];
-                    size_t n = acore_mos[nind];
-                    size_t e = avirt_mos[eind];
-                    size_t f = bvirt_mos[find];
-                    size_t mb = bcore_mos[mind];
-                    size_t nb = bcore_mos[nind];
-                    size_t eb = bvirt_mos[eind];
-                    size_t fb = bvirt_mos[find];
-                    double vmnefalpha = 0.0;
+    double Eccvv = 0.0;
+    std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
+    outfile->Printf("\n    %-36s ...", strccvv.c_str());
+    Timer ccvv_timer;
 
-                    double vmnefalphaR = 0.0;
-                    double vmnefbeta = 0.0;
-                    double vmnefalphaC = 0.0;
-                    double vmnefalphaE = 0.0;
-                    double vmnefbetaC = 0.0;
-                    double vmnefbetaE = 0.0;
-                    double vmnefbetaR = 0.0;
-                    double vmnefmixed = 0.0;
-                    double vmnefmixedC = 0.0;
-                    double vmnefmixedR = 0.0;
-                    double t2alpha = 0.0;
-                    double t2mixed = 0.0;
-                    double t2beta = 0.0;
-                    vmnefalphaC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
-                     vmnefalphaE = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + f]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + e]),nmo_ * nmo_);
-                    vmnefbetaC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + fb]),nmo_ * nmo_);
-                     vmnefbetaE = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + fb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + eb]),nmo_ * nmo_);
-                    vmnefmixedC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + fb]),nmo_ * nmo_);
+    if(options_.get_str("ccvv_algorithm")=="CORE")
+    {
+        Eccvv = E_VT2_2_core();
 
-                    vmnefalpha = vmnefalphaC - vmnefalphaE;
-                    vmnefbeta = vmnefbetaC - vmnefbetaE;
-                    vmnefmixed = vmnefmixedC;
-
-                    t2alpha = vmnefalpha * renormalized_denominator(Fa[m] + Fa[n] - Fa[e] - Fa[f ]);
-                    t2beta  = vmnefbeta  * renormalized_denominator(Fb[m] + Fb[n] - Fb[e] - Fb[f ]);
-                    t2mixed = vmnefmixed * renormalized_denominator(Fa[m] + Fb[n] - Fa[e] - Fb[f ]);
-
-                    vmnefalphaR  = vmnefalpha;
-                    vmnefbetaR   = vmnefbeta;
-                    vmnefmixedR  = vmnefmixed;
-                    vmnefalphaR += vmnefalpha * renormalized_exp(Fa[m] + Fa[n] - Fa[e] - Fa[f]);
-                    vmnefbetaR  += vmnefbeta * renormalized_exp(Fb[m] + Fb[n]  - Fb[e] - Fb[f]);
-                    vmnefmixedR += vmnefmixed * renormalized_exp(Fa[m] + Fb[n] - Fa[e] - Fb[f]);
-
-                    Eflyalpha+=0.25 * vmnefalphaR * t2alpha;
-                    Eflybeta+=0.25 * vmnefbetaR * t2beta;
-                    Eflymixed+=vmnefmixedR * t2mixed;
-                }
-            }
-        }
     }
-    Efly = Eflyalpha + Eflybeta + Eflymixed;
-
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
-    // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
-    // For a given m and n, form Bm(L|e) and Bn(L|f)
-    // Bef(ef) = Bm(L|e) * Bn(L|f)
-    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
-    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
-    Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
-    Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
-    ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
-    ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
-    ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
-    ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
-    ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
-    ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
-    ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
-    size_t dim = nthree * virtual_;
-    double Emp2 = 0.0;
-
-    for(size_t m = 0; m < core_; ++m){
-        size_t ma = acore_mos[m];
-        size_t mb = bcore_mos[m];
-        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], Bma.data().begin());
-        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], Bmb.data().begin());
-        for(size_t n = 0; n < core_; ++n){
-            size_t na = acore_mos[n];
-            size_t nb = bcore_mos[n];
-            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], Bna.data().begin());
-            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], Bnb.data().begin());
-
-            // alpha-aplha
-            Bef("ef") = Bma("ge") * Bna("gf");
-            BefJK("ef")  = Bef("ef") * Bef("ef");
-            BefJK("ef") -= Bef("ef") * Bef("fe");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
-                double D = Fa[ma] + Fa[na] - Fa[avirt_mos[i[0]]] - Fa[avirt_mos[i[1]]];
-                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("ef") * RD("ef");
-
-            // beta-beta
-            Bef("EF") = Bmb("gE") * Bnb("gF");
-            BefJK("EF")  = Bef("EF") * Bef("EF");
-            BefJK("EF") -= Bef("EF") * Bef("FE");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
-                double D = Fb[mb] + Fb[nb] - Fb[bvirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
-                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("EF") * RD("EF");
-
-            // alpha-beta
-            Bef("eF") = Bma("ge") * Bnb("gF");
-            BefJK("eF")  = Bef("eF") * Bef("eF");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
-                double D = Fa[ma] + Fb[nb] - Fa[avirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
-                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += BefJK("eF") * RD("eF");
-        }
+    else if(options_.get_str("ccvv_algorithm")=="FLY_OPENMP")
+    {
+        Eccvv = E_VT2_2_fly_openmp();
     }
-    outfile->Printf("\n    Target energy = %.15f", Efly);
-    outfile->Printf("\n    Emp2 = %.15f", Emp2);
+    else if(options_.get_str("ccvv_algorithm")=="FLY")
+    {
+        Eccvv = E_VT2_2_ambit();
+    }
+    else
+    {
+        outfile->Printf("\n Specify a correct algorithm string");
 
-    return (E + Efly);
+    }
+    outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
+
+
+    return (E + Eccvv);
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4HH()
@@ -1233,4 +1110,202 @@ void THREE_DSRG_MRPT2::frozen_natural_orbitals()
 
 
 }
+double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
+{
+    double Eflyalpha = 0.0;
+    double Eflybeta = 0.0;
+    double Eflymixed = 0.0;
+    double Efly = 0.0;
+    size_t nthree = ints_->nthree();
+    size_t ncmo   = ints_->ncmo();
+    size_t nmo_   = ints_->nmo();
+    #pragma omp parallel for num_threads(num_threads_) \
+    schedule(dynamic) \
+    reduction(+:Eflyalpha, Eflybeta, Eflymixed)
+    for(size_t mind = 0; mind < core_; mind++){
+        for(size_t nind = 0; nind < core_; nind++){
+            for(size_t eind = 0; eind < virtual_; eind++){
+                for(size_t find = 0; find < virtual_; find++){
+                    //These are used because active is not partitioned as simple as
+                    //core orbs -- active orbs -- virtual
+                    //This also takes in account symmetry labeled
+                    size_t m = acore_mos[mind];
+                    size_t n = acore_mos[nind];
+                    size_t e = avirt_mos[eind];
+                    size_t f = bvirt_mos[find];
+                    size_t mb = bcore_mos[mind];
+                    size_t nb = bcore_mos[nind];
+                    size_t eb = bvirt_mos[eind];
+                    size_t fb = bvirt_mos[find];
+                    double vmnefalpha = 0.0;
+
+                    double vmnefalphaR = 0.0;
+                    double vmnefbeta = 0.0;
+                    double vmnefalphaC = 0.0;
+                    double vmnefalphaE = 0.0;
+                    double vmnefbetaC = 0.0;
+                    double vmnefbetaE = 0.0;
+                    double vmnefbetaR = 0.0;
+                    double vmnefmixed = 0.0;
+                    double vmnefmixedC = 0.0;
+                    double vmnefmixedR = 0.0;
+                    double t2alpha = 0.0;
+                    double t2mixed = 0.0;
+                    double t2beta = 0.0;
+                    vmnefalphaC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
+                     vmnefalphaE = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + f]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + e]),nmo_ * nmo_);
+                    vmnefbetaC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + fb]),nmo_ * nmo_);
+                     vmnefbetaE = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + fb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + eb]),nmo_ * nmo_);
+                    vmnefmixedC = C_DDOT(nthree,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo + fb]),nmo_ * nmo_);
+
+                    vmnefalpha = vmnefalphaC - vmnefalphaE;
+                    vmnefbeta = vmnefbetaC - vmnefbetaE;
+                    vmnefmixed = vmnefmixedC;
+
+                    t2alpha = vmnefalpha * renormalized_denominator(Fa[m] + Fa[n] - Fa[e] - Fa[f ]);
+                    t2beta  = vmnefbeta  * renormalized_denominator(Fb[m] + Fb[n] - Fb[e] - Fb[f ]);
+                    t2mixed = vmnefmixed * renormalized_denominator(Fa[m] + Fb[n] - Fa[e] - Fb[f ]);
+
+                    vmnefalphaR  = vmnefalpha;
+                    vmnefbetaR   = vmnefbeta;
+                    vmnefmixedR  = vmnefmixed;
+                    vmnefalphaR += vmnefalpha * renormalized_exp(Fa[m] + Fa[n] - Fa[e] - Fa[f]);
+                    vmnefbetaR  += vmnefbeta * renormalized_exp(Fb[m] + Fb[n]  - Fb[e] - Fb[f]);
+                    vmnefmixedR += vmnefmixed * renormalized_exp(Fa[m] + Fb[n] - Fa[e] - Fb[f]);
+
+                    Eflyalpha+=0.25 * vmnefalphaR * t2alpha;
+                    Eflybeta+=0.25 * vmnefbetaR * t2beta;
+                    Eflymixed+=vmnefmixedR * t2mixed;
+                }
+            }
+        }
+    }
+    Efly = Eflyalpha + Eflybeta + Eflymixed;
+
+    return Efly;
+}
+double THREE_DSRG_MRPT2::E_VT2_2_ambit()
+{
+    double Efly = 0.0;
+    size_t nthree= ints_->nthree();
+    // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
+    // For a given m and n, form Bm(L|e) and Bn(L|f)
+    // Bef(ef) = Bm(L|e) * Bn(L|f)
+    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
+    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
+    Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
+    Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
+    ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
+    ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
+    ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
+    ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
+    ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
+    ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
+    ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
+
+    size_t dim = nthree * virtual_;
+    double Emp2 = 0.0;
+
+    for(size_t m = 0; m < core_; ++m){
+        size_t ma = acore_mos[m];
+        size_t mb = bcore_mos[m];
+        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], Bma.data().begin());
+        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], Bmb.data().begin());
+        for(size_t n = 0; n < core_; ++n){
+            size_t na = acore_mos[n];
+            size_t nb = bcore_mos[n];
+            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], Bna.data().begin());
+            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], Bnb.data().begin());
+
+            // alpha-aplha
+            Bef("ef") = Bma("ge") * Bna("gf");
+            BefJK("ef")  = Bef("ef") * Bef("ef");
+            BefJK("ef") -= Bef("ef") * Bef("fe");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa[ma] + Fa[na] - Fa[avirt_mos[i[0]]] - Fa[avirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += 0.5 * BefJK("ef") * RD("ef");
+
+            // beta-beta
+            Bef("EF") = Bmb("gE") * Bnb("gF");
+            BefJK("EF")  = Bef("EF") * Bef("EF");
+            BefJK("EF") -= Bef("EF") * Bef("FE");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fb[mb] + Fb[nb] - Fb[bvirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += 0.5 * BefJK("EF") * RD("EF");
+
+            // alpha-beta
+            Bef("eF") = Bma("ge") * Bnb("gF");
+            BefJK("eF")  = Bef("eF") * Bef("eF");
+            RD.iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa[ma] + Fb[nb] - Fa[avirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
+                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+            Emp2 += BefJK("eF") * RD("eF");
+        }
+    }
+
+    return Emp2;
+}
+double THREE_DSRG_MRPT2::E_VT2_2_core()
+{
+    double E2_core = 0.0;
+    BlockedTensor T2ccvv = BTF->build(tensor_type_,"T2ccvv", spin_cases({"ccvv"}));
+    BlockedTensor RD2_ccvv = BTF->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
+    BlockedTensor v    = BTF->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
+    BlockedTensor RExp2ccvv = BTF->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
+
+    v("mnef") = ThreeIntegral("gme") * ThreeIntegral("gnf");
+    v("mnef") -= ThreeIntegral("gmf") * ThreeIntegral("gne");
+    v("MNEF") = ThreeIntegral("gME") * ThreeIntegral("gNF");
+    v("MNEF") -= ThreeIntegral("gMF") * ThreeIntegral("gNE");
+    v("mNeF") = ThreeIntegral("gme") * ThreeIntegral("gNF");
+
+    RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+    });
+    RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+    });
+    BlockedTensor Rv = BTF->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
+    Rv("mnef") = v("mnef");
+    Rv("mNeF") = v("mNeF");
+    Rv("MNEF") = v("MNEF");
+    Rv("mnef") += v("mnef")*RExp2ccvv("mnef");
+    Rv("MNEF") += v("MNEF")*RExp2ccvv("MNEF");
+    Rv("mNeF") += v("mNeF")*RExp2ccvv("mNeF");
+
+
+    T2ccvv["MNEF"] = v["MNEF"] * RD2_ccvv["MNEF"];
+    T2ccvv["mnef"] = v["mnef"] * RD2_ccvv["mnef"];
+    T2ccvv["mNeF"] = v["mNeF"] * RD2_ccvv["mNeF"];
+    E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
+    E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
+    E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
+
+    return E2_core;
+}
+
 }} // End Namespaces
