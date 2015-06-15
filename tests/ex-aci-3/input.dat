@@ -4,8 +4,8 @@
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.8894884700 #TEST
-refacipt2 = -14.890283480 #TEST
+refaci = -14.889470140101 #TEST
+refacipt2 = -14.890219672162#TEST
 
 molecule li2{
 0 1
