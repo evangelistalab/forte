@@ -4,8 +4,8 @@
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.889511432927 #TEST
-refacipt2 = -14.890262934187 #TEST
+refaci = -14.8894884700 #TEST
+refacipt2 = -14.890283480 #TEST
 
 molecule li2{
 0 1
@@ -30,7 +30,7 @@ set libadaptive {
   excited_algorithm state_average
   q_rel true
   q_reference adjacent
-  q_function average
+  pq_function average
   TAUP 0.001000
   TAUQ 0.001000
   nroot 3
