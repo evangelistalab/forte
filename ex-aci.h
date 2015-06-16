@@ -158,7 +158,7 @@ private:
     void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
-    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs, bool shrink);
+    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate set of state-averaged q-criteria and determinants
     double average_q_values(int nroot, std::vector<std::pair<double,double> >C1, std::vector<std::pair<double,double> > E1);
