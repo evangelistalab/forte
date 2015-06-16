@@ -416,7 +416,8 @@ void THREE_DSRG_MRPT2::print_summary()
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
-        {"ccvv_algorithm",options_.get_str("ccvv_algorithm")}};
+        {"ccvv_algorithm",options_.get_str("ccvv_algorithm")},
+        {"ccvv_source", options_.get_str("CCVV_SOURCE")}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -809,20 +810,25 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
 
     double Eccvv = 0.0;
+    //double memory_cost_ccvv = (core_ * core_ * virtual_ * virtual_) * 3 * 8 / 1073741824.0;
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
-    outfile->Printf("\n    %-36s ...", strccvv.c_str());
+    outfile->Printf("\n%-36s with %-8s", strccvv.c_str(), options_.get_str("CCVV_ALGORITHM").c_str());
+
     Timer ccvv_timer;
+    //TODO:  Make this smarter and automatically switch to right algorithm for size
+    //Small size -> use core algorithm
+    //Large size -> use fly_ambit
 
     if(options_.get_str("ccvv_algorithm")=="CORE")
     {
         Eccvv = E_VT2_2_core();
 
     }
-    else if(options_.get_str("ccvv_algorithm")=="FLY_OPENMP")
+    else if(options_.get_str("ccvv_algorithm")=="FLY_LOOP")
     {
         Eccvv = E_VT2_2_fly_openmp();
     }
-    else if(options_.get_str("ccvv_algorithm")=="FLY")
+    else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
         Eccvv = E_VT2_2_ambit();
     }
@@ -1300,9 +1306,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
 {
     double E2_core = 0.0;
     BlockedTensor T2ccvv = BTF->build(tensor_type_,"T2ccvv", spin_cases({"ccvv"}));
-    BlockedTensor RD2_ccvv = BTF->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
     BlockedTensor v    = BTF->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
-    BlockedTensor RExp2ccvv = BTF->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
 
     v("mnef") = ThreeIntegral("gme") * ThreeIntegral("gnf");
     v("mnef") -= ThreeIntegral("gmf") * ThreeIntegral("gne");
@@ -1310,39 +1314,65 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
     v("MNEF") -= ThreeIntegral("gMF") * ThreeIntegral("gNE");
     v("mNeF") = ThreeIntegral("gme") * ThreeIntegral("gNF");
 
-    RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-    RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-    BlockedTensor Rv = BTF->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
-    Rv("mnef") = v("mnef");
-    Rv("mNeF") = v("mNeF");
-    Rv("MNEF") = v("MNEF");
-    Rv("mnef") += v("mnef")*RExp2ccvv("mnef");
-    Rv("MNEF") += v("MNEF")*RExp2ccvv("MNEF");
-    Rv("mNeF") += v("mNeF")*RExp2ccvv("mNeF");
+    if(options_.get_str("CCVV_SOURCE")=="NORMAL")
+    {
+        BlockedTensor RD2_ccvv = BTF->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
+        BlockedTensor RExp2ccvv = BTF->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
+        RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+        RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+        BlockedTensor Rv = BTF->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
+        Rv("mnef") = v("mnef");
+        Rv("mNeF") = v("mNeF");
+        Rv("MNEF") = v("MNEF");
+        Rv("mnef") += v("mnef")*RExp2ccvv("mnef");
+        Rv("MNEF") += v("MNEF")*RExp2ccvv("MNEF");
+        Rv("mNeF") += v("mNeF")*RExp2ccvv("mNeF");
 
 
-    T2ccvv["MNEF"] = v["MNEF"] * RD2_ccvv["MNEF"];
-    T2ccvv["mnef"] = v["mnef"] * RD2_ccvv["mnef"];
-    T2ccvv["mNeF"] = v["mNeF"] * RD2_ccvv["mNeF"];
-    E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
-    E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
-    E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
+        T2ccvv["MNEF"] = v["MNEF"] * RD2_ccvv["MNEF"];
+        T2ccvv["mnef"] = v["mnef"] * RD2_ccvv["mnef"];
+        T2ccvv["mNeF"] = v["mNeF"] * RD2_ccvv["mNeF"];
+        E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
+        E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
+        E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
+    }
+    else if (options_.get_str("CCVV_SOURCE")=="ZERO")
+    {
+        BlockedTensor Denom = BTF->build(tensor_type_,"Mp2Denom", spin_cases({"ccvv"}));
+        Denom.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = 1.0/(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = 1.0/(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = 1.0/(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+    });
+        T2ccvv["MNEF"] = v["MNEF"]*Denom["MNEF"];
+        T2ccvv["mnef"] = v["mnef"]*Denom["mnef"];
+        T2ccvv["mNeF"] = v["mNeF"]*Denom["mNeF"];
+
+        E2_core += 0.25 * T2ccvv["mnef"] * v["mnef"];
+        E2_core += 0.25 * T2ccvv["MNEF"] * v["MNEF"];
+        E2_core += T2ccvv["mNeF"] * v["mNeF"];
+
+    }
 
     return E2_core;
 }
