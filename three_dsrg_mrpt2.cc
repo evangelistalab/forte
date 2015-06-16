@@ -1205,57 +1205,96 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
     Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
     Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
-    ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
-    ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
-    ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
-    ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
-    ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
-    ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
-    ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
 
     size_t dim = nthree * virtual_;
     double Emp2 = 0.0;
 
+    double Ealpha = 0.0;
+    double Ebeta  = 0.0;
+    double Emixed = 0.0;
+    //ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
+    //ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
+    //ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
+    //ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
+    //ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
+    //ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
+    //ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
+    int nthread = 1;
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+    #endif
+    std::vector<ambit::Tensor> BmaVec;
+    std::vector<ambit::Tensor> BnaVec;
+    std::vector<ambit::Tensor> BmbVec;
+    std::vector<ambit::Tensor> BnbVec;
+    std::vector<ambit::Tensor> BefVec;
+    std::vector<ambit::Tensor> BefJKVec;
+    std::vector<ambit::Tensor> RDVec;
+    for (int i = 0; i < nthread; i++)
+    {
+     BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_}));
+     BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_}));
+     BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_}));
+     BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_}));
+     BefVec.push_back(ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_}));
+     BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
+     RDVec.push_back(ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_}));
+    }
+    #pragma omp parallel for num_threads(num_threads_) \
+    schedule(dynamic) \
+    reduction(+:Ealpha, Ebeta, Emixed) \
+    shared(Ba,Bb)
+
     for(size_t m = 0; m < core_; ++m){
+        int thread = 0;
+        #ifdef _OPENMP
+            thread = omp_get_thread_num();
+        #endif
         size_t ma = acore_mos[m];
         size_t mb = bcore_mos[m];
-        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], Bma.data().begin());
-        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], Bmb.data().begin());
+        #pragma omp critical
+        {
+        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmaVec[thread].data().begin());
+        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
+        }
         for(size_t n = 0; n < core_; ++n){
             size_t na = acore_mos[n];
             size_t nb = bcore_mos[n];
-            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], Bna.data().begin());
-            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], Bnb.data().begin());
+            #pragma omp critical
+            {
+            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
+            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
+            }
 
             // alpha-aplha
-            Bef("ef") = Bma("ge") * Bna("gf");
-            BefJK("ef")  = Bef("ef") * Bef("ef");
-            BefJK("ef") -= Bef("ef") * Bef("fe");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
+            BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
+            BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fa[ma] + Fa[na] - Fa[avirt_mos[i[0]]] - Fa[avirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("ef") * RD("ef");
+            Ealpha += 0.5 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
             // beta-beta
-            Bef("EF") = Bmb("gE") * Bnb("gF");
-            BefJK("EF")  = Bef("EF") * Bef("EF");
-            BefJK("EF") -= Bef("EF") * Bef("FE");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+            BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+            BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fb[mb] + Fb[nb] - Fb[bvirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("EF") * RD("EF");
+            Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
             // alpha-beta
-            Bef("eF") = Bma("ge") * Bnb("gF");
-            BefJK("eF")  = Bef("eF") * Bef("eF");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
+            BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fa[ma] + Fb[nb] - Fa[avirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += BefJK("eF") * RD("eF");
+            Emixed += BefJKVec[thread]("eF") * RDVec[thread]("eF");
         }
     }
 
-    return Emp2;
+    return (Ealpha + Ebeta + Emixed);
 }
 double THREE_DSRG_MRPT2::E_VT2_2_core()
 {
