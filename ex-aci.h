@@ -79,6 +79,8 @@ private:
     int ncmo_;
     /// The number of correlated electrons
     int ncel_;
+    ///The number of frozen core orbitals
+    int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
     /// The nuclear repulsion energy
@@ -89,8 +91,6 @@ private:
     int cycle_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    ///The maximum number of determinants
-    unsigned long max_det_;
 
     /// The threshold applied to the primary space
     double tau_p_;
