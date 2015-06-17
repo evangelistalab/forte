@@ -226,7 +226,7 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpin
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
-    outfile->Printf("\n Conventional integrals take %8.8s", ConvTime.get());
+    outfile->Printf("\n Conventional integrals take %8.8f s", ConvTime.get());
 }
 
 ConventionalIntegrals::~ConventionalIntegrals()
