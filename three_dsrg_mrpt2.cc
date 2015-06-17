@@ -416,7 +416,8 @@ void THREE_DSRG_MRPT2::print_summary()
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
-        {"ccvv_algorithm",options_.get_str("ccvv_algorithm")}};
+        {"ccvv_algorithm",options_.get_str("ccvv_algorithm")},
+        {"ccvv_source", options_.get_str("CCVV_SOURCE")}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
@@ -809,20 +810,25 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
 
     double Eccvv = 0.0;
+    //double memory_cost_ccvv = (core_ * core_ * virtual_ * virtual_) * 3 * 8 / 1073741824.0;
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
-    outfile->Printf("\n    %-36s ...", strccvv.c_str());
+    outfile->Printf("\n%-36s with %-8s", strccvv.c_str(), options_.get_str("CCVV_ALGORITHM").c_str());
+
     Timer ccvv_timer;
+    //TODO:  Make this smarter and automatically switch to right algorithm for size
+    //Small size -> use core algorithm
+    //Large size -> use fly_ambit
 
     if(options_.get_str("ccvv_algorithm")=="CORE")
     {
         Eccvv = E_VT2_2_core();
 
     }
-    else if(options_.get_str("ccvv_algorithm")=="FLY_OPENMP")
+    else if(options_.get_str("ccvv_algorithm")=="FLY_LOOP")
     {
         Eccvv = E_VT2_2_fly_openmp();
     }
-    else if(options_.get_str("ccvv_algorithm")=="FLY")
+    else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
         Eccvv = E_VT2_2_ambit();
     }
@@ -1205,65 +1211,102 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
     Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
     Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
-    ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
-    ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
-    ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
-    ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
-    ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
-    ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
-    ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
 
     size_t dim = nthree * virtual_;
     double Emp2 = 0.0;
 
+    double Ealpha = 0.0;
+    double Ebeta  = 0.0;
+    double Emixed = 0.0;
+    //ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
+    //ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
+    //ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
+    //ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
+    //ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
+    //ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
+    //ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
+    int nthread = 1;
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+    #endif
+    std::vector<ambit::Tensor> BmaVec;
+    std::vector<ambit::Tensor> BnaVec;
+    std::vector<ambit::Tensor> BmbVec;
+    std::vector<ambit::Tensor> BnbVec;
+    std::vector<ambit::Tensor> BefVec;
+    std::vector<ambit::Tensor> BefJKVec;
+    std::vector<ambit::Tensor> RDVec;
+    for (int i = 0; i < nthread; i++)
+    {
+     BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_}));
+     BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_}));
+     BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_}));
+     BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_}));
+     BefVec.push_back(ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_}));
+     BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
+     RDVec.push_back(ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_}));
+    }
+    #pragma omp parallel for num_threads(num_threads_) \
+    schedule(dynamic) \
+    reduction(+:Ealpha, Ebeta, Emixed) \
+    shared(Ba,Bb)
+
     for(size_t m = 0; m < core_; ++m){
+        int thread = 0;
+        #ifdef _OPENMP
+            thread = omp_get_thread_num();
+        #endif
         size_t ma = acore_mos[m];
         size_t mb = bcore_mos[m];
-        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], Bma.data().begin());
-        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], Bmb.data().begin());
+        #pragma omp critical
+        {
+        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmaVec[thread].data().begin());
+        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
+        }
         for(size_t n = 0; n < core_; ++n){
             size_t na = acore_mos[n];
             size_t nb = bcore_mos[n];
-            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], Bna.data().begin());
-            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], Bnb.data().begin());
+            #pragma omp critical
+            {
+            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
+            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
+            }
 
             // alpha-aplha
-            Bef("ef") = Bma("ge") * Bna("gf");
-            BefJK("ef")  = Bef("ef") * Bef("ef");
-            BefJK("ef") -= Bef("ef") * Bef("fe");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
+            BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
+            BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fa[ma] + Fa[na] - Fa[avirt_mos[i[0]]] - Fa[avirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("ef") * RD("ef");
+            Ealpha += 0.5 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
             // beta-beta
-            Bef("EF") = Bmb("gE") * Bnb("gF");
-            BefJK("EF")  = Bef("EF") * Bef("EF");
-            BefJK("EF") -= Bef("EF") * Bef("FE");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+            BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+            BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fb[mb] + Fb[nb] - Fb[bvirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += 0.5 * BefJK("EF") * RD("EF");
+            Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
             // alpha-beta
-            Bef("eF") = Bma("ge") * Bnb("gF");
-            BefJK("eF")  = Bef("eF") * Bef("eF");
-            RD.iterate([&](const std::vector<size_t>& i,double& value){
+            BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
+            BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
+            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fa[ma] + Fb[nb] - Fa[avirt_mos[i[0]]] - Fb[bvirt_mos[i[1]]];
                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-            Emp2 += BefJK("eF") * RD("eF");
+            Emixed += BefJKVec[thread]("eF") * RDVec[thread]("eF");
         }
     }
 
-    return Emp2;
+    return (Ealpha + Ebeta + Emixed);
 }
 double THREE_DSRG_MRPT2::E_VT2_2_core()
 {
     double E2_core = 0.0;
     BlockedTensor T2ccvv = BTF->build(tensor_type_,"T2ccvv", spin_cases({"ccvv"}));
-    BlockedTensor RD2_ccvv = BTF->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
     BlockedTensor v    = BTF->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
-    BlockedTensor RExp2ccvv = BTF->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
 
     v("mnef") = ThreeIntegral("gme") * ThreeIntegral("gnf");
     v("mnef") -= ThreeIntegral("gmf") * ThreeIntegral("gne");
@@ -1271,39 +1314,65 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
     v("MNEF") -= ThreeIntegral("gMF") * ThreeIntegral("gNE");
     v("mNeF") = ThreeIntegral("gme") * ThreeIntegral("gNF");
 
-    RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-    RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-    BlockedTensor Rv = BTF->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
-    Rv("mnef") = v("mnef");
-    Rv("mNeF") = v("mNeF");
-    Rv("MNEF") = v("MNEF");
-    Rv("mnef") += v("mnef")*RExp2ccvv("mnef");
-    Rv("MNEF") += v("MNEF")*RExp2ccvv("MNEF");
-    Rv("mNeF") += v("mNeF")*RExp2ccvv("mNeF");
+    if(options_.get_str("CCVV_SOURCE")=="NORMAL")
+    {
+        BlockedTensor RD2_ccvv = BTF->build(tensor_type_, "RDelta2ccvv", spin_cases({"ccvv"}));
+        BlockedTensor RExp2ccvv = BTF->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
+        RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+        RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+            }
+        });
+        BlockedTensor Rv = BTF->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
+        Rv("mnef") = v("mnef");
+        Rv("mNeF") = v("mNeF");
+        Rv("MNEF") = v("MNEF");
+        Rv("mnef") += v("mnef")*RExp2ccvv("mnef");
+        Rv("MNEF") += v("MNEF")*RExp2ccvv("MNEF");
+        Rv("mNeF") += v("mNeF")*RExp2ccvv("mNeF");
 
 
-    T2ccvv["MNEF"] = v["MNEF"] * RD2_ccvv["MNEF"];
-    T2ccvv["mnef"] = v["mnef"] * RD2_ccvv["mnef"];
-    T2ccvv["mNeF"] = v["mNeF"] * RD2_ccvv["mNeF"];
-    E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
-    E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
-    E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
+        T2ccvv["MNEF"] = v["MNEF"] * RD2_ccvv["MNEF"];
+        T2ccvv["mnef"] = v["mnef"] * RD2_ccvv["mnef"];
+        T2ccvv["mNeF"] = v["mNeF"] * RD2_ccvv["mNeF"];
+        E2_core += 0.25 * T2ccvv["mnef"] * Rv["mnef"];
+        E2_core += 0.25 * T2ccvv["MNEF"] * Rv["MNEF"];
+        E2_core += T2ccvv["mNeF"] * Rv["mNeF"];
+    }
+    else if (options_.get_str("CCVV_SOURCE")=="ZERO")
+    {
+        BlockedTensor Denom = BTF->build(tensor_type_,"Mp2Denom", spin_cases({"ccvv"}));
+        Denom.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = 1.0/(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = 1.0/(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = 1.0/(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+    });
+        T2ccvv["MNEF"] = v["MNEF"]*Denom["MNEF"];
+        T2ccvv["mnef"] = v["mnef"]*Denom["mnef"];
+        T2ccvv["mNeF"] = v["mNeF"]*Denom["mNeF"];
+
+        E2_core += 0.25 * T2ccvv["mnef"] * v["mnef"];
+        E2_core += 0.25 * T2ccvv["MNEF"] * v["MNEF"];
+        E2_core += T2ccvv["mNeF"] * v["mNeF"];
+
+    }
 
     return E2_core;
 }

@@ -215,6 +215,8 @@ void ExplorerIntegrals::transform_one_electron_integrals()
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core), ints_(nullptr){
 
+    outfile->Printf("\n Overall Conventional Integrals timings");
+    Timer ConvTime;
     allocate();
     transform_integrals();
     gather_integrals();
@@ -224,6 +226,7 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpin
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
+    outfile->Printf("\n Conventional integrals take %8.8s", ConvTime.get());
 }
 
 ConventionalIntegrals::~ConventionalIntegrals()
@@ -931,6 +934,8 @@ void DFIntegrals::make_diagonal_integrals()
 
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    outfile->Printf("\n DFIntegrals overall time");
+    Timer DFInt;
     allocate();
     gather_integrals();
     make_diagonal_integrals();
@@ -939,6 +944,7 @@ DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restrict
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
+    outfile->Printf("\n DFIntegrals take %15.8f s", DFInt.get());
 }
 
 void DFIntegrals::update_integrals(bool freeze_core)
@@ -1176,11 +1182,13 @@ void DFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
 
 void DFIntegrals::freeze_core_orbitals()
 {
+    Timer freezeOrbs;
     compute_frozen_core_energy();
     compute_frozen_one_body_operator();
     if (resort_frozen_core_ == RemoveFrozenMOs){
         resort_integrals_after_freezing();
     }
+    outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
 }
 
 void DFIntegrals::compute_frozen_core_energy()
@@ -1250,6 +1258,8 @@ void DFIntegrals::resort_integrals_after_freezing()
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    outfile->Printf("\n Cholesky integrals time");
+    Timer CholInt;
     allocate();
     gather_integrals();
     make_diagonal_integrals();
@@ -1258,6 +1268,7 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestrict
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
+    outfile->Printf("\n CholeskyIntegrals take %8.8f", CholInt.get());
 }
 
 CholeskyIntegrals::~CholeskyIntegrals()
@@ -1303,11 +1314,6 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0;
-    //for(size_t g = 0; g < nthree_; g++){
-    //    vpqrsalphaC += (get_three_integral(g, p, r)
-    //                    * get_three_integral(g, q, s));
-
-    //}
     vpqrsalphaC = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_ ,
             &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_ );
@@ -1317,11 +1323,6 @@ double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
-    //for(size_t g = 0; g < nthree_; g++){
-    //    vpqrsalphaC += (get_three_integral(g, p, r)
-    //                    * get_three_integral(g,q, s));
-    //    vpqrsalphaE += (get_three_integral(g, p, s)
-    //                    * get_three_integral(g, q, r));
     vpqrsalphaC = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
             &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
@@ -1960,7 +1961,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //    // Create the mapping from the pairs [A,A] to the irrep and the index
 //    nmo_ = wfn->nmo();
 //    pair_irrep_map.resize(nmo_ * nmo_);
-//    pair_index_map.resize(nmo_ * nmo_);
+//    pair_index_map.resize(mo_ * nmo_);
 //    Dimension nmopi = wfn->nmopi();
 //    vector<int> mooff;
 //    vector<int> irrep_off(nirrep_,0);
