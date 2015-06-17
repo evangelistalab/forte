@@ -389,7 +389,10 @@ read_options(std::string name, Options &options)
         /*- DMRG-CI or CAS-CI reference -*/
         options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "fly_openmp", "core fly fly_openmp");
+        options.add_str("CCVV_ALGORITHM", "FLY_LOOP", "CORE FLY_AMBIT FLY_LOOP");
+        /*- Defintion for source operator for ccvv term -*/
+        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
+
         
     }
 
