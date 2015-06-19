@@ -13,6 +13,7 @@ Contents:
 
    apfci
    adaptive
+   three-dsrg-mrpt2
 
 
 
