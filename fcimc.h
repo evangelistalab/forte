@@ -144,6 +144,8 @@ private:
     double initiator_na_;
     /// The frequency of approximate variational estimation of the energy
     int energy_estimate_freq_;
+    /// The frequency of print information
+    int print_freq_;
     /// number of iterations
     size_t iter_;
 
@@ -182,7 +184,7 @@ private:
     double count_walkers(walker_map& walkers);
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
-    void print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar);
+    void print_iter_info(size_t iter);
     void print_Eproj_info(std::vector<double> Eprojs);
     void print_shift_info(std::vector<double> shifts);
 };

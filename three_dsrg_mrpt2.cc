@@ -835,7 +835,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     else
     {
         outfile->Printf("\n Specify a correct algorithm string");
-
+        throw PSIEXCEPTION("Specify either CORE FLY_LOOP or FLY_AMBIT");
     }
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
 
