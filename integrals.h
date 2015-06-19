@@ -203,6 +203,8 @@ protected:
 
     size_t aptei_idx_;
     size_t nso_;
+    static bool have_omp_;
+    int num_threads_;
 
     /// Number of one electron integrals
     size_t num_oei;
