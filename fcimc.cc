@@ -115,7 +115,8 @@ void FCIQMC::startup()
     shift_damp_ = options_.get_double("SHIFT_DAMP");
     shift_num_walkers_ = options_.get_double("SHIFT_NUM_WALKERS");
     death_parent_only_ = options_.get_bool("DEATH_PARENT_ONLY");
-    energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
+    energy_estimate_freq_ = options_.get_int("VAR_ENERGY_ESTIMATE_FREQ");
+    print_freq_ = options_.get_int("PRINT_FREQ");
     use_initiator_ = options_.get_bool("USE_INITIATOR");
     initiator_na_ = options_.get_double("INITIATOR_NA");
     if (options_.get_str("SPAWN_TYPE") == "RANDOM"){
@@ -173,7 +174,8 @@ void FCIQMC::print_info()
 //        {"Number of roots",nroot_},
 //        {"Root used for properties",options_.get_int("ROOT")},
         {"Maximum number of steps",maxiter_},
-        {"Energy estimation frequency",energy_estimate_freq_},
+        {"Var. Energy estimation frequency",energy_estimate_freq_},
+        {"Print info frequency",print_freq_},
         {"Number of threads",num_threads_}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
@@ -268,6 +270,12 @@ double FCIQMC::compute_energy()
     std::vector<double> shifts;
     std::vector<double> Eprojs;
 
+    outfile->Printf("\n\n  ==> FCIQMC Iterations <==");
+
+    outfile->Printf("\n\n -------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n   Steps  Beta/Eh   Nwalkers      Ndets      Proj. Energy/Eh   Avg.Proj.Energy/Eh             Shift/Eh        Avg. Shift/Eh    Shifted Energy/Eh  Avg.Shifted Energy/Eh");
+    outfile->Printf("\n -------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+
     for (iter_ = 1; iter_ <= maxiter_; ++iter_){
         if (!shift_flag && do_shift_ && nWalkers_ > shift_num_walkers_) {
             shift_flag = true;
@@ -291,7 +299,7 @@ double FCIQMC::compute_energy()
         spawn(walkers,new_walkers);
 //        spawn_generative(walkers,new_walkers);
         timer_off("FCIQMC:Spawn");
-        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference_]);
+//        outfile->Printf("\nRef walkers: %f after Spawn", new_walkers[reference_]);
 
         if (death_parent_only_) {
             // Step #2.  Death/Clone
@@ -299,28 +307,28 @@ double FCIQMC::compute_energy()
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
+//            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
 
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
+//            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
         } else {
             // Step #3.  Merge parents and spawned
             timer_on("FCIQMC:Merge");
             merge(walkers, new_walkers);
             timer_off("FCIQMC:Merge");
 
-            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
+//            outfile->Printf("\nRef walkers: %f after merge", walkers[reference_]);
 
             // Step #2.  Death/Clone
             timer_on("FCIQMC:Death_Clone");
             death_clone(walkers, shift_);
             timer_off("FCIQMC:Death_Clone");
 
-            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
+//            outfile->Printf("\nRef walkers: %f after Death/Clone", walkers[reference_]);
         }
 
 
@@ -334,18 +342,20 @@ double FCIQMC::compute_energy()
         count_walkers(walkers);
         Eprojs.push_back(compute_proj_energy(reference_, walkers));
 
-        if (iter_ % energy_estimate_freq_ == 0){
+        if (iter_ % print_freq_ == 0){
             compute_var_energy(walkers);
-            print_iter_info(iter_, true, true, true);
+            print_iter_info(iter_);
         } else
-            print_iter_info(iter_, true, true, false);
+            print_iter_info(iter_);
     }
+
+    outfile->Printf("\n -------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
     outfile->Printf("\n\nFCIQMC calculation ended with:");
     outfile->Printf("\nFinal iter:");
-    print_iter_info(--iter_, true, true, true);
+//    print_iter_info(--iter_);
     outfile->Printf("\nProjectional Energy info:");
-    print_Eproj_info(Eprojs);
+//    print_Eproj_info(Eprojs);
     if (do_shift_) {
         outfile->Printf("\nShift info:");
         print_shift_info(shifts);
@@ -357,7 +367,7 @@ double FCIQMC::compute_energy()
 void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
 //    shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/shift_num_walkers_);
     shift_ = shift_ - (shift_damp_/((iter_-pre_iter)*time_step_))*std::log(nWalkers_/pre_nWalker);
-    outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f, pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter, nWalkers_, pre_nWalker,shift_);
+//    outfile->Printf("\niter=%d,pre_iter=%d,nWalkers=%.0f, pre_nWalkers=%.0f, Shift adjusted to %.12lf",iter_, pre_iter, nWalkers_, pre_nWalker,shift_);
 }
 
 void FCIQMC::spawn_generative(walker_map& walkers,walker_map& new_walkers) {
@@ -1069,9 +1079,11 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
         for (int j = i+1; j<nirrep_; j++) {
             for (int k = 0; k<nirrep_; k++){
                 int l = i^j^k;
-                totalExcitation += obtCount.naocc[i]*obtCount.naocc[j]*obtCount.navir[k]*obtCount.navir[l];
-                excitationDivides.push_back(totalExcitation);
-                excitationType.push_back(std::make_tuple(2,i,j,k));
+                if (l > k) {
+                    totalExcitation += obtCount.naocc[i]*obtCount.naocc[j]*obtCount.navir[k]*obtCount.navir[l];
+                    excitationDivides.push_back(totalExcitation);
+                    excitationType.push_back(std::make_tuple(2,i,j,k));
+                }
             }
         }
     }
@@ -1086,9 +1098,11 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
         for (int j = i+1; j<nirrep_; j++) {
             for (int k = 0; k<nirrep_; k++){
                 int l = i^j^k;
-                totalExcitation += obtCount.nbocc[i]*obtCount.nbocc[j]*obtCount.nbvir[k]*obtCount.nbvir[l];
-                excitationDivides.push_back(totalExcitation);
-                excitationType.push_back(std::make_tuple(4,i,j,k));
+                if (l > k) {
+                    totalExcitation += obtCount.nbocc[i]*obtCount.nbocc[j]*obtCount.nbvir[k]*obtCount.nbvir[l];
+                    excitationDivides.push_back(totalExcitation);
+                    excitationType.push_back(std::make_tuple(4,i,j,k));
+                }
             }
         }
     }
@@ -1820,16 +1834,17 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
     return Evar_;
 }
 
-void FCIQMC::print_iter_info(size_t iter, bool countWalkers, bool calcEproj, bool calcEvar){
-    outfile->Printf("\niter:%zu ended with %zu dets",iter, (size_t)nDets_);
-    if (countWalkers)
-        outfile->Printf(", %lf walkers", nWalkers_);
-    if (calcEproj)
-        outfile->Printf(", proj E=%.12lf", Eproj_);
-    if (calcEvar)
-        outfile->Printf(", var E=%.12lf", Evar_);
-    if (do_shift_)
-        outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
+void FCIQMC::print_iter_info(size_t iter){
+    outfile->Printf("\n%8zu %8.4lf %10zu %10zu %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf",iter, iter*time_step_, (size_t)nDets_, (size_t)nWalkers_, Eproj_, Eproj_, shift_, shift_, shift_+Ehf_+nuclear_repulsion_energy_, shift_+Ehf_+nuclear_repulsion_energy_);
+//    outfile->Printf("\niter:%zu ended with %zu dets",iter, (size_t)nDets_);
+//    if (countWalkers)
+//        outfile->Printf(", %lf walkers", nWalkers_);
+//    if (calcEproj)
+//        outfile->Printf(", proj E=%.12lf", Eproj_);
+//    if (calcEvar)
+//        outfile->Printf(", var E=%.12lf", Evar_);
+//    if (do_shift_)
+//        outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
 }
 
 void FCIQMC::print_Eproj_info(std::vector<double> Eprojs){
