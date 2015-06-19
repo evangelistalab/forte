@@ -25,6 +25,15 @@ using namespace ambit;
 
 namespace psi{ namespace libadaptive{
 
+#ifdef _OPENMP
+    #include <omp.h>
+    bool ExplorerIntegrals::have_omp_ = true;
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num()  0
+    bool ExplorerIntegrals::have_omp_ = false;
+#endif
+
 
 ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0)
@@ -114,6 +123,7 @@ void ExplorerIntegrals::startup()
     num_oei = INDEX2(nmo_ - 1, nmo_ - 1) + 1;
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
+    num_threads_ = omp_get_max_threads();
 }
 
 void ExplorerIntegrals::allocate()
@@ -731,11 +741,14 @@ void ConventionalIntegrals::compute_frozen_core_energy()
 
 void ConventionalIntegrals::compute_frozen_one_body_operator()
 {
+    int nthread = 1;
     size_t f = 0;
     for (int hi = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %zu",r);
+            #pragma omp parallel for num_threads(num_threads_)\
+            schedule(dynamic) 
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
@@ -1218,6 +1231,8 @@ void DFIntegrals::compute_frozen_one_body_operator()
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %zu",r);
+            #pragma omp parallel for num_threads(num_threads_)\
+            schedule(dynamic) 
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
@@ -1716,6 +1731,8 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %lu",r);
+            #pragma omp parallel for num_threads(num_threads_)\
+            schedule(dynamic) 
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);

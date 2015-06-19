@@ -309,6 +309,10 @@ read_options(std::string name, Options &options)
         /*- initiator -*/
         options.add_bool("USE_INITIATOR", false);
         options.add_double("INITIATOR_NA", 3.0);
+        /*- Iterations in between variational estimation of the energy -*/
+        options.add_int("VAR_ENERGY_ESTIMATE_FREQ",1000);
+        /*- Iterations in between printing information -*/
+        options.add_int("PRINT_FREQ",100);
 
         //////////////////////////////////////////////////////////////
         ///
@@ -389,11 +393,11 @@ read_options(std::string name, Options &options)
         /*- DMRG-CI or CAS-CI reference -*/
         options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "FLY_LOOP", "CORE FLY_AMBIT FLY_LOOP");
+        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
-
-        
+        /*- Reference Relaxation -*/
+        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
     }
 
     return true;
@@ -488,6 +492,11 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
+            if(options.get_str("RELAX_REF") == "ONCE"){
+                dsrg_mrpt2->transform_integrals();
+
+                FCI_MO fci(options,ints_);
+            }
         }
         if(options.get_str("CASTYPE")=="FCI")
         {
