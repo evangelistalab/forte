@@ -105,12 +105,16 @@ void EX_ACI::startup()
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
-    // Create the array with mo symmetry
+    // Create the array with mo symmetry and compute the number of frozen orbitals
+    nfrzc_ = 0;
     for (int h = 0; h < nirrep_; ++h){
+        nfrzc_ += frzcpi_[h];
         for (int p = 0; p < ncmopi_[h]; ++p){
             mo_symmetry_.push_back(h);
         }
     }
+
+    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
 
     //Collect information about the reference wavefunction
     wavefunction_multiplicity_ = 1;
@@ -131,7 +135,6 @@ void EX_ACI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-    max_det_ = options_.get_int("MAX_DET");
 
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
@@ -146,7 +149,7 @@ void EX_ACI::startup()
     }
 
     perturb_select_ = options_.get_bool("PERTURB_SELECT");
-    q_function_ = options_.get_str("Q_FUNCTION");
+    pq_function_ = options_.get_str("PQ_FUNCTION");
     q_rel_ = options_.get_bool("Q_REL");
     q_reference_ = options_.get_str("Q_REFERENCE");
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
@@ -211,10 +214,10 @@ std::vector<int> EX_ACI::get_occupation()
     if (ref_type ==  "RHF" or ref_type == "RKS" or ref_type == "ROHF"){
 
         // Build initial reference determinant from restricted reference
-        for(size_t i = 0;  i < nalpha(); ++i){
+        for(size_t i = 0;  i < nalpha() - nfrzc_; ++i){
             occupation[labeled_orb_en[i].second.second] = 1;
         }
-        for(size_t i = 0;  i < nbeta(); ++i){
+        for(size_t i = 0;  i < nbeta() - nfrzc_; ++i){
             occupation[ncmo_ + labeled_orb_en[i].second.second] = 1;
         }
 
@@ -224,19 +227,19 @@ std::vector<int> EX_ACI::get_occupation()
             bool add = false;
 
             //remove electron from highest-energy docc
-            occupation[labeled_orb_en[nalpha()-k].second.second] = 0;
-            outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[nalpha() - k].second.second, ncel_ );
+            occupation[labeled_orb_en[nalpha()-k- nfrzc_].second.second] = 0;
+            outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en[nalpha() - k- nfrzc_].second.second, ncel_ );
 
             // Determine proper symmetry for new occupation
             orb_sym = wavefunction_symmetry_;
 
             if(wavefunction_multiplicity_ == 1){
-                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - 1].second.first, orb_sym);
+                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - 1 - nfrzc_].second.first, orb_sym);
             }else{
                 for(int i = 1; i <= nsym; ++i){
-                    orb_sym = direct_sym_product(labeled_orb_en[nalpha() - i].second.first, orb_sym);
+                    orb_sym = direct_sym_product(labeled_orb_en[nalpha() - i - nfrzc_].second.first, orb_sym);
                 }
-                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - k].second.first, orb_sym);
+                orb_sym = direct_sym_product(labeled_orb_en[nalpha() - k - nfrzc_].second.first, orb_sym);
             }
 
 
@@ -244,7 +247,7 @@ std::vector<int> EX_ACI::get_occupation()
 
             //add electron to lowest-energy orbital of proper symmetry
             //Loop from current occupation to max MO until correct orbital is reached
-            for(int i = nalpha() - k; i < ncmo_; ++i){
+            for(int i = nalpha() - k - nfrzc_; i < ncmo_ - nfrzc_; ++i){
                 if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] !=1 ){
                     occupation[labeled_orb_en[i].second.second] = 1;
                     outfile->Printf("\n  Added electron to %d",labeled_orb_en[i].second.second);
@@ -255,7 +258,7 @@ std::vector<int> EX_ACI::get_occupation()
 
             // If a new occupation could not be created, add the electron back and remove a different one
             if(!add){
-                occupation[labeled_orb_en[nalpha() - k].second.second] = 1;
+                occupation[labeled_orb_en[nalpha() - k- nfrzc_].second.second] = 1;
                 outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
                 ++k;
             }
@@ -273,10 +276,10 @@ std::vector<int> EX_ACI::get_occupation()
         //Make the reference
         //For singlets, this will be "ground-state", closed-shell
 
-        for(size_t i = 0;  i < nalpha(); ++i){
+        for(size_t i = 0;  i < nalpha()- nfrzc_; ++i){
             occupation[labeled_orb_en_alfa[i].second.second] = 1;
         }
-        for(size_t i = 0;  i < nbeta(); ++i){
+        for(size_t i = 0;  i < nbeta()- nfrzc_; ++i){
             occupation[ncmo_ + labeled_orb_en_beta[i].second.second] = 1;
         }
         if( nalpha() >= nbeta() ){
@@ -285,26 +288,26 @@ std::vector<int> EX_ACI::get_occupation()
 
                 bool add = false;
                 //remove electron from highest-energy docc
-                occupation[labeled_orb_en_alfa[nalpha()-k].second.second] = 0;
-                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_alfa[nalpha() - k].second.second, ncel_ );
+                occupation[labeled_orb_en_alfa[nalpha()-k- nfrzc_].second.second] = 0;
+                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_alfa[nalpha() - k- nfrzc_].second.second, ncel_ );
 
                 // Determine proper symmetry for new occupation
                 orb_sym = wavefunction_symmetry_;
 
                 if(wavefunction_multiplicity_ == 1){
-                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - 1].second.first, orb_sym);
+                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - 1- nfrzc_].second.first, orb_sym);
                 }else{
                     for(int i = 1; i <= nsym; ++i){
-                        orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - i].second.first, orb_sym);
+                        orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - i- nfrzc_].second.first, orb_sym);
                     }
-                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - k].second.first, orb_sym);
+                    orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha() - k- nfrzc_].second.first, orb_sym);
                 }
 
 
                 outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
                 //add electron to lowest-energy orbital of proper symmetry
-                for(int i = nalpha() - k; i < ncmo_; ++i){
+                for(int i = nalpha() - k- nfrzc_; i < ncmo_; ++i){
                     if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] !=1 ){
                         occupation[labeled_orb_en_alfa[i].second.second] = 1;
                         outfile->Printf("\n  Added electron to %d",labeled_orb_en_alfa[i].second.second);
@@ -315,7 +318,7 @@ std::vector<int> EX_ACI::get_occupation()
 
                 // If a new occupation could not be created, add the electron back and remove a different one
                 if(!add){
-                    occupation[labeled_orb_en_alfa[nalpha() - k].second.second] = 1;
+                    occupation[labeled_orb_en_alfa[nalpha() - k- nfrzc_].second.second] = 1;
                     outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
                     ++k;
                 }
@@ -332,26 +335,26 @@ std::vector<int> EX_ACI::get_occupation()
 
                 bool add = false;
                 //remove electron from highest-energy docc
-                occupation[labeled_orb_en_beta[nbeta()-k].second.second] = 0;
-                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_beta[nbeta() - k].second.second, ncel_ );
+                occupation[labeled_orb_en_beta[nbeta()-k- nfrzc_].second.second] = 0;
+                outfile->Printf("\n  Electron removed from %d, out of %d",labeled_orb_en_beta[nbeta() - k- nfrzc_].second.second, ncel_ );
 
                 // Determine proper symmetry for new occupation
                 orb_sym = wavefunction_symmetry_;
 
                 if(wavefunction_multiplicity_ == 1){
-                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - 1].second.first, orb_sym);
+                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - 1- nfrzc_].second.first, orb_sym);
                 }else{
                     for(int i = 1; i <= nsym; ++i){
-                        orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - i].second.first, orb_sym);
+                        orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - i- nfrzc_].second.first, orb_sym);
                     }
-                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - k].second.first, orb_sym);
+                    orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta() - k- nfrzc_].second.first, orb_sym);
                 }
 
 
                 outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
                 //add electron to lowest-energy orbital of proper symmetry
-                for(int i = nbeta() - k; i < ncmo_; ++i){
+                for(int i = nbeta() - k- nfrzc_; i < ncmo_; ++i){
                     if(orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] !=1 ){
                         occupation[labeled_orb_en_beta[i].second.second] = 1;
                         outfile->Printf("\n  Added electron to %d",labeled_orb_en_beta[i].second.second);
@@ -362,7 +365,7 @@ std::vector<int> EX_ACI::get_occupation()
 
                 // If a new occupation could not be created, add the electron back and remove a different one
                 if(!add){
-                    occupation[labeled_orb_en_beta[nbeta() - k].second.second] = 1;
+                    occupation[labeled_orb_en_beta[nbeta() - k- nfrzc_].second.second] = 1;
                     outfile->Printf("\n  No orbital of %d symmetry available! Putting electron back. \n", orb_sym);
                     ++k;
                 }
@@ -395,7 +398,7 @@ void EX_ACI::print_info()
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
         {"Parameter type", perturb_select_ ? "PT" : "Non-PT"},
-        {"Q Function",options_.get_str("Q_FUNCTION")},
+        {"PQ Function",options_.get_str("PQ_FUNCTION")},
         {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"}};
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
@@ -462,7 +465,6 @@ double EX_ACI::compute_energy()
 
     int root;
     int maxcycle = 20;
-    bool shrink = false;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
 
@@ -496,8 +498,8 @@ double EX_ACI::compute_energy()
             outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
         }
 
-        // Step 2. Find determinants in the Q space, shrink if needed
-        find_q_space(num_ref_roots,P_evals,P_evecs, shrink);
+        // Step 2. Find determinants in the Q space
+        find_q_space(num_ref_roots,P_evals,P_evecs);
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -522,12 +524,10 @@ double EX_ACI::compute_energy()
 
         //get final dimention of P space
         int PQ_space_final = PQ_space_.size();
-        outfile->Printf("\n PQ space dimention difference (last interation - current) : %d \n", PQ_space_final - PQ_space_init);
+        outfile->Printf("\n PQ space dimention difference (current - previous) : %d \n", PQ_space_final - PQ_space_init);
 
-        // Step 4. Check convergence and break if needed
-        //If the second criteria is met, there is no PQ shrinking
-        bool converged = check_convergence(energy_history,PQ_evals);
-        if(converged and PQ_space_.size() <= max_det_ ){
+        // Step 4. Check convergence and break if needed 
+        if(check_convergence(energy_history,PQ_evals)){
             break;
         }
 
@@ -538,13 +538,7 @@ double EX_ACI::compute_energy()
             break;
         }
 
-        // Step 6. Confine PQ space to size max_det_ if max_det_ is limiting
-        if(converged and max_det_ < PQ_space_.size()){
-            shrink_pq_space(PQ_space_, P_space_, P_space_map_, PQ_evecs, nroot_);
-            shrink = true;
-        }
-
-        // Step 7. Prune the P + Q space to get an updated P space
+        // Step 6. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
 
         // Print information about the wave function
@@ -604,7 +598,7 @@ double EX_ACI::compute_energy()
 }
 
 
-void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool shrink)
+void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
 {
     // Find the SD space out of the reference
     std::vector<BitsetDeterminant> sd_dets_vec;
@@ -615,29 +609,13 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
     // This hash saves the determinant coupling to the model space eigenfunction
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
-    //Need det_weight to compute S^2 of each root in P_space
- //   pVector<double, size_t> det_weight;
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-
-//        for(int n = 0; n < nroot; ++n){
-//            det_weight.push_back(make_pair(std::fabs(evecs->get(I,n)),I));
-//        }
-
         BitsetDeterminant& det = P_space_[I];
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
     outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
     outfile->Flush();
-
-    //Compute S^2 for each root
-//    pVector<std::pair<double,double>, std::pair<size_t,double> > spins;
-//    for(int n = 0; n < nroot; ++n){
-//        spins = compute_spin(P_space_,evecs,nroot,det_weight);
-//        root_spin_vec_.push_back(make_pair(spins[n].first.first, spins[n].first.second));
-//        outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
-//    }
-
 
     // This will contain all the determinants
     PQ_space_.clear();
@@ -658,6 +636,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
     pVector<double,BitsetDeterminant> sorted_dets;
     std::vector<double> ept2(nroot_,0.0);
     double criteria;
+    print_warning_ = false;
 
     // Check the coupling between the reference and the SD space
     for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
@@ -689,7 +668,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
             criteria = root_select(nroot, C1, E2);
         }
 
-        if(aimed_selection_ or shrink){
+        if(aimed_selection_){
             sorted_dets.push_back(std::make_pair(criteria,it->first));
         }else{
             if(std::fabs(criteria) > tau_q_){
@@ -707,12 +686,9 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
         outfile->Printf("\n  Setting q_rel = false for this iteration.\n");
     }
 
-    if(shrink or aimed_selection_){
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
-    }
 
     if (aimed_selection_){
+        std::sort(sorted_dets.begin(),sorted_dets.end());
         double sum = 0.0;
         double E2_I = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
@@ -733,20 +709,8 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs, bool
         }
     }
 
-    //Now we have a PQ space for AIMED or THRESH selection, shrink it here if called
-    std::vector<double> ept2_last;
-    if(shrink){
-        outfile->Printf("\n  Searching full PQ space, then truncating to %zu determinants",max_det_ );
-        PQ_space_.clear();
-        std::reverse(sorted_dets.begin(),sorted_dets.end());
-        for(size_t I = 0; I < max_det_; ++I){
-            PQ_space_.push_back(sorted_dets[I].second);
-        }
-    }else{
-        ept2_last = ept2;
-    }
 
-    multistate_pt2_energy_correction_ = ept2_last;
+    multistate_pt2_energy_correction_ = ept2;
 
     outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
@@ -763,12 +727,18 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
     E_s.clear();
     //If the spin is correct, use the C1 and E2 values
     for(int n = 0; n < nroot; ++n){
-        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_ ){
             C_s.push_back(make_pair(C1[n].first,C1[n].second));
             E_s.push_back(make_pair(E2[n].first,E2[n].second));
         }
     }
     int dim = C_s.size();
+
+    if(dim == 0){
+        throw PSIEXCEPTION(" There are no roots with correct S^2 value! ");
+    }
+
+
     //f_E2 and f_C1 will store the selected function of the chosen q-criteria
     std::pair<double,double> f_C1;
     std::pair<double,double> f_E2;
@@ -798,17 +768,12 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
 
     //Choose the function of couplings for each root.
     //If nroot = 1, choose the max
-    if(q_function_ == "MAX" or dim == 1){
+    if(pq_function_ == "MAX" or dim == 1){
         f_C1 = *std::max_element(C_s.begin(),C_s.end());
         f_E2 = q_rel_ and (dim!=1) ? *std::max_element(dE2.begin(),dE2.end()) :
                                        *std::max_element(E_s.begin(),E_s.end());
     }
-    else if(q_function_ == "MIN"){
-        f_C1 = *std::min_element(C_s.begin(),C_s.end());
-        f_E2 = q_rel_ ? *std::min_element(std::next(dE2.begin()),dE2.end()) :
-                        *std::min_element(E_s.begin(),E_s.end());
-    }
-    else if(q_function_ == "AVERAGE"){
+    else if(pq_function_ == "AVERAGE"){
         double C1_average = 0.0;
         double E2_average = 0.0;
         double dE2_average = 0.0;
@@ -825,7 +790,7 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
         f_E2 = q_rel_ ? make_pair(dE2_average,0) : make_pair(E2_average, 0);
     }
     else{
-        throw PSIEXCEPTION(options_.get_str("Q_FUNCTION") + " is not a valid option");
+        throw PSIEXCEPTION(options_.get_str("PQ_FUNCTION") + " is not a valid option");
     }
 
     double select_value = 0.0;
@@ -1348,12 +1313,21 @@ bool EX_ACI::check_convergence(std::vector<std::vector<double>>& energy_history,
     for (int n = 0; n < nroot; ++ n){
         double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
         new_energies.push_back(state_n_energy);
-        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < 1.0e-3 ){
+        if(std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_ ){
             new_avg_energy += state_n_energy;
             old_avg_energy += old_energies[n];
             ++denom;
         }
     }
+
+    if(denom == 0){
+        for(int n = 0; n < nroot; ++n){
+            outfile->Printf("\n  S^2, S for root %d : %6.12f  %6.12f", n, root_spin_vec_[n].second,root_spin_vec_[n].first);
+        }
+        outfile->Printf("\n");
+        throw PSIEXCEPTION("  No roots have the correct S^2! ");
+    }
+
     old_avg_energy /= static_cast<double>(denom);
     new_avg_energy /= static_cast<double>(denom);
 
@@ -1396,13 +1370,25 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     pruned_space_map.clear();
 
     // Create a vector that stores the absolute value of the CI coefficients
+    // Use a function of the CI coefficients for each root as the criteria
+    // This function will be the same one used when selecting the PQ space
     pVector<double,size_t> dm_det_list;
     for (size_t I = 0; I < large_space.size(); ++I){
-        double max_dm = 0.0;
+        double criteria = 0.0;
+        int dim = 0;
         for (int n = 0; n < nroot; ++n){
-            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
+            if(pq_function_ == "MAX" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
+                criteria = std::max(criteria, std::fabs(evecs->get(I,n)));
+                dim = 1;
+            }
+            else if(pq_function_ == "AVERAGE" and std::fabs(root_spin_vec_[n].second - wavefunction_multiplicity_ + 1.0) < spin_tol_){
+                criteria += std::fabs(evecs->get(I,n));
+                dim++;
+            }
+
         }
-        dm_det_list.push_back(std::make_pair(max_dm,I));
+        criteria /= static_cast<double>(dim);
+        dm_det_list.push_back(make_pair(criteria,I));
     }
 
     // Decide which determinants will go in pruned_space
@@ -1410,7 +1396,7 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION \n");
+        outfile->Printf("  AIMED SELECTION \n");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
@@ -1437,33 +1423,6 @@ void EX_ACI::prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vect
     }
 }
 
-void EX_ACI::shrink_pq_space(std::vector<BitsetDeterminant>& total_space,std::vector<BitsetDeterminant>& pruned_space,
-                             std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
-{
-    outfile->Printf("\n Calculation has converged. Limiting PQ space to %zu determinants.", max_det_);
-
-    // Create a vector that stores the absolute value of the CI coefficients
-    pVector<double,size_t> dm_det_list;
-
-    pruned_space.clear();
-    pruned_space_map.clear();
-
-    for (size_t I = 0; I < total_space.size(); ++I){
-        double max_dm = 0.0;
-        for (int n = 0; n < nroot; ++n){
-            max_dm = std::max(max_dm,std::fabs(evecs->get(I,n)));
-        }
-        dm_det_list.push_back(std::make_pair(max_dm,I));
-    }
-
-    //Sort determinants in ascending order
-    std::sort(dm_det_list.begin(),dm_det_list.end());
-    auto dif = total_space.size() - max_det_;
-    for(size_t I = dif; I < total_space.size();++I){
-        pruned_space.push_back(total_space[dm_det_list[I].second]);
-        pruned_space_map[total_space[dm_det_list[I].second]] = 1;
-    }
-}
 
 void EX_ACI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
 {
@@ -1718,7 +1677,7 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
             for (int a = 0; a < ncmopi_[h]; a++){
-                orb_e.push_back(make_pair(epsilon_a_->get(h,a), a+cumidx));
+                orb_e.push_back(make_pair(epsilon_a_->get(h,a+frzcpi_[h]), a+cumidx));
             }
             cumidx += ncmopi_[h];
         }
@@ -1737,14 +1696,15 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
         pVector<double,int> orb_e;
         int cumidx = 0;
         for (int h = 0; h < nirrep_; h++) {
-            for (int a = 0; a < ncmopi_[h]; a++){
-                orb_e.push_back(make_pair(epsilon_b_->get(h,a), a+cumidx));
+            for (int a = 0; a < ncmopi_[h]- frzcpi_[h]; a++){
+                orb_e.push_back(make_pair(epsilon_b_->get(h,a+frzcpi_[h]), a+cumidx));
             }
-            cumidx += ncmopi_[h];
+            cumidx += (ncmopi_[h]);
         }
 
+
         //Create a vector that stores the orbital energy, symmetry, and Pitzer-ordered index
-        for (int a = 0; a < ncmo_; ++a){
+        for (int a = 0; a < ncmo_ ; ++a){
             labeled_orb.push_back( make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ) );
         }
 
@@ -1756,6 +1716,7 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
 //    for(int i = 0; i < ncmo_; ++i){
 //        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
 //    }
+
 
     return labeled_orb;
 }
