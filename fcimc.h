@@ -121,13 +121,13 @@ private:
     /// HartreeForkEnergy
     double Ehf_;
     /// Projectional energy
-    double Eproj_;
+    double Eproj_, AvgEproj_, ErrEproj_;
     /// Variational energy
     double Evar_;
     /// Start Number of walkers
     double start_num_walkers_;
     /// The shift of energy
-    double shift_;
+    double shift_, AvgShift_, ErrShift_;
     /// Number of walkers
     double nWalkers_;
     /// Number of determinants
@@ -185,8 +185,10 @@ private:
     double compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
     void print_iter_info(size_t iter);
-    void print_Eproj_info(std::vector<double> Eprojs);
-    void print_shift_info(std::vector<double> shifts);
+    void compute_avg_Eproj(std::vector<double> Eprojs);
+    void compute_err_Eproj(std::vector<double> Eprojs);
+    void compute_avg_shift(std::vector<double> shifts);
+    void compute_err_shift(std::vector<double> shifts);
 };
 
 }} // End Namespaces
