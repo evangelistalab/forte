@@ -309,6 +309,10 @@ read_options(std::string name, Options &options)
         /*- initiator -*/
         options.add_bool("USE_INITIATOR", false);
         options.add_double("INITIATOR_NA", 3.0);
+        /*- Iterations in between variational estimation of the energy -*/
+        options.add_int("VAR_ENERGY_ESTIMATE_FREQ",1000);
+        /*- Iterations in between printing information -*/
+        options.add_int("PRINT_FREQ",100);
 
         //////////////////////////////////////////////////////////////
         ///

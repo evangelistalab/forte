@@ -46,6 +46,7 @@ enum PropagatorType {LinearPropagator,
 
 using Determinant = BitsetDeterminant;
 
+
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
@@ -256,13 +257,16 @@ private:
 //    size_t apply_tau_H(double tau,double spawning_threshold,std::map<Determinant,double>& det_C_old, std::map<Determinant,double>& dets_C_map, double S);
 
     /// Apply tau H to a determinant
+    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
+    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
     size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
+    double form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
 };
 
