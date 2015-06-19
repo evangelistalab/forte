@@ -388,7 +388,8 @@ read_options(std::string name, Options &options)
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
         options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
-        
+        /*- Reference Relaxation -*/
+        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
     }
 
     return true;
@@ -483,6 +484,11 @@ libadaptive(Options &options)
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
+            if(options.get_str("RELAX_REF") == "ONCE"){
+                dsrg_mrpt2->transform_integrals();
+
+                FCI_MO fci(options,ints_);
+            }
         }
         if(options.get_str("CASTYPE")=="FCI")
         {
