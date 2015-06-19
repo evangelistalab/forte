@@ -260,6 +260,7 @@ The output produced by this input: ::
          ||T1||                         =      0.006990654164021
          ||T2||                         =      2.004482652834453
          Your calculation took 2.03655700 seconds
+
 A Second Example
 ^^^^^^^^^^^^^^^^
 
