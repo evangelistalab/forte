@@ -17,18 +17,14 @@ set {
   e_convergence 10
   d_convergence 10
   r_convergence 10
-}
-
-set mcscf {
   reference rhf
   docc = [2,0,0,0,0,1,0,0]
 }
 
 set libadaptive {
-  frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE energy
   perturb_select false
-  q_function average
+  pq_function average
   excited_algorithm root_select
   ref_root 0
   TAUP 0.000100
@@ -37,7 +33,6 @@ set libadaptive {
   charge 0
 }
 
-energy('mcscf')
 energy('ex-aci')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST

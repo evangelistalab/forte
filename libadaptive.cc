@@ -240,7 +240,7 @@ read_options(std::string name, Options &options)
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
         /*Function of q-space criteria, per root*/
-        options.add_str("Q_FUNCTION", "MAX", "MIN AVERAGE");
+        options.add_str("PQ_FUNCTION", "MAX", "AVERAGE");
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
@@ -388,6 +388,10 @@ read_options(std::string name, Options &options)
         options.add_double("ISA_B", 0.02);
         /*- DMRG-CI or CAS-CI reference -*/
         options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
+        /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
+        options.add_str("CCVV_ALGORITHM", "FLY_LOOP", "CORE FLY_AMBIT FLY_LOOP");
+        /*- Defintion for source operator for ccvv term -*/
+        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Reference Relaxation -*/
         options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
     }
