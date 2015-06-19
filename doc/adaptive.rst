@@ -185,3 +185,184 @@ the effect of the truncated virtual space. The ``Est.Disp22(T)``
 value used in the SAPT energy and dispersion component (see [Hohenstein:2010:104107]_ 
 for details).
 
+.. include:: autodoc_abbr_options_c.rst
+
+.. index::
+   single: THREE-DSRG-MRPT2
+   pair: THREE-DSRG-MRPT2; theory
+
+.. _`sec:THREE-DSRG-MRPT2`:
+
+THREE-DSRG-MRPT2: The Driven Similarity Renormalization Group: a  Multireference Pertubation Theory with CD and DF integrals
+=============================================================
+
+.. codeauthor:: Kevin P. Hannon and Chenyang Li
+.. sectionauthor:: Kevin P. Hannon
+
+This section describes the THREE-DSRG-MRPT2 method in libadaptive.  This method is an efficient implementation of the DSRG-MRPT2 method.  The memory requirements are much less and this allows applications up to 1000 basis functions.  As a reminder, Density-Fitting and Cholesky decomposition approaches seek to factorize the two integral integrals.
+
+.. math:: \langle ij || ab \rangle = b_{ia}^{Q}b_{jb}^{Q} - b_{ib}^{Q}b_{ja}^{Q}
+
+Note: The equations in implemented in this method use physicist notation for the two electron integrals, but the DF/CD literature use chemist notation.  The main difference between DF and CD is the formation of the B tensors. 
+In DF, the b tensor is defined as 
+
+.. math:: b_{pq}^{Q} = \sum_p (pq | P)[(P | Q)^{-1/2}]_{PQ}
+
+and P and Q refer to the auxiliary basis set.  
+
+In the CD approach, the b tensor is formed by performing a cholesky decomposition of the two electron integrals.  The accuracy of this decomposition is determined by a user defined tolerance.  The accuracy of the two electron integral is directly determined by the tolerance.    
+
+A First Example
+^^^^^^^^^^^^^^^
+
+The following input performs a THREE_DSRG-MRPT2 calculation on N2. Since this is a multireference perturbation theory, the user typically has to select an active space, a restricted_docc and if the user wants to freeze any core orbitals, a frozen_docc.  If the system is small enough, the active space can be specified by itself.  When using DF, one needs to specify the df_basis_mp2 keyword in the globals bracket.  INT_TYPE has either the options cholesky or DF.  This input has taken from DF-DSRG-MRPT2-4 in the test folder.   ::
+
+       import libadaptive
+       molecule N2{
+         0 1
+         N
+         N  1 R
+         R = 1.1
+       }
+       
+       set globals{
+          basis                   cc-pvdz
+          df_basis_mp2            cc-pvdz-ri
+          reference               rhf
+          scf_type                pk
+          d_convergence           12
+          e_convergence           15
+       }
+       
+       set libadaptive{
+          restricted_docc        [2,0,0,0,0,2,0,0]
+          active                 [1,0,1,1,0,1,1,1]
+          dsrg_s                  1.0
+          int_type                df
+       }
+The output produced by this input: ::
+
+       ==> DSRG-MRPT2 Energy Summary <==
+         E0 (reference)                 =   -109.023271814349570
+         <[F, T1]>                      =     -0.000030401784533
+         <[F, T2]>                      =     -0.000158216679810
+         <[V, T1]>                      =     -0.000192286736389
+         <[V, T2]> (C_2)^4              =     -0.265177905968907
+         <[V, T2]> C_4 (C_2)^2 HH       =      0.003654264803308
+         <[V, T2]> C_4 (C_2)^2 PP       =      0.015965766856248
+         <[V, T2]> C_4 (C_2)^2 PH       =      0.017506302404369
+         <[V, T2]> C_6 C_2              =     -0.000193839261787
+         <[V, T2]>                      =     -0.228245411166769
+         DSRG-MRPT2 correlation energy  =     -0.228626316367502
+         DSRG-MRPT2 total energy        =   -109.251898130717066
+         max(T1)                        =      0.002246022946733
+         max(T2)                        =      0.082589536601635
+         ||T1||                         =      0.006990654164021
+         ||T2||                         =      2.004482652834453
+         Your calculation took 2.03655700 seconds
+A Second Example
+^^^^^^^^^^^^^^^^
+
+This calculation runs a calculation on N2 with the cholesky integrals. ::
+
+       import libadaptive
+       molecule N2{
+         0 1
+         N
+         N  1 R
+         R = 1.1
+       }
+       set globals{
+          basis                   cc-pvdz
+          reference               rhf
+          scf_type                pk
+          d_convergence           12
+          e_convergence           15
+       }
+       set libadaptive{
+          restricted_docc        [2,0,0,0,0,2,0,0]
+          active                 [1,0,1,1,0,1,1,1]
+          dsrg_s                  1.0
+          int_type                cholesky
+          cholesky_tolerance      1e-5
+       }
+Running cholesky_tolerance with 1e-5 provides energies accurate to this tolerance.  The cholesky algorithm, as currently written, does not allow application to larger systems.  If one is interested in larger systems, they would be wise to use the int_type DF.  
+
+In addition to this, timings are printed for each term.  For larger systems, one energy term of the <[V, T2]> becomes the rate limiting step and the memory bottleneck of the code.  This algorithm never stores the (me | nf) integrals in core.  This integrals correspond to the core, core, virtual, virtual block of the two electron integrals.  By avoiding the storage of the ccvv term for the integrals and all other intermediates, larger systems are within reach with the THREE-DSRG-MRPT2 method.  
+
+The algorithm for the most expensive term is 
+
+.. math::
+
+    \tilde{v}_{kl}^{cd}t_{ab}^{ij}\gamma_i^k\gamma_j^l\eta_c^a\eta_d^b = \sum_{ijab}^{\text{one active}}\quad \sum_{klcd}^{\text{one active}}
+    \tilde{v}_{kl}^{cd}t_{ab}^{ij}\gamma_{i}^{k}\gamma_{j}^{l}\eta_c^a\eta_b^d
+    +  \sum_{mnef}\tilde{v}_{mn}^{ef}t_{ef}^{mn}
+
+By specifing either ccvv_algorithm core, the program will just build the every block of v.  This algorithm will fail for large systems.  
+
+For larger systems, the user should select ccvv_algorithm fly_ambit or ccvv_algorithm fly_loop if the system is large (600 basis functions).  Both the fly_ambit and fly_loop are openmp paralleized, so please use those.  
+
+The last option worth mentioning is the dsrg_s.  Our method has a severe dependence on the s.  For the best results (one without intruders and satisfactory agreement), s should be between 0.01 and 1.  
+
+Basic THREE-DSRG-MRPT2 Keywords
+^^^^^^^^^^^^^^
+
+These keywords are actually controlled by the integral class so they affect all areas of the code, not just THREE-DSRG-MRPT2.  
+
+**INT_TYPE**
+
+If one is going to use THREE-DSRG-MRPT2, this keyword needs to be set to either DF or CHOLESKY.  
+The default value for integrals is actually conventional, but the code won't work if conventional is used.  
+
+INT_TYPE tells what type of integals will be used in the calculation
+
+* Type: string
+
+* Possible Values: DF, CHOLESKY
+
+* Default: CONVENTIONAL
+
+**CHOLESKY_TOLERANCE**
+
+The tolerance for the cholesky decomposition.  This keyword determines the accuracy of the computation.  
+A smaller tolerance is a more accurate computation.  
+The tolerance for the cholesky decomposition:
+
+* Type: double in scientific notation (ie 1e-5 or 0.0001)
+* Default:1.0e-6
+
+**DF_BASIS_MP2**
+
+The type of basis set used for DF.  This keyword needs to be placed in the globals section.  
+A common advice for these is to use the basis set designed for the primary basis set, ie cc-pVDZ should use cc-pVDZ-RI.  
+
+* Type: string specifing basis set
+
+* Default: none
+
+Advanced THREE-DSRG-MRPT2 keywords
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**MEMORY_SUMMARY**
+
+A debug option for letting the user know how much each intermediate takes up in memory.  If the code is seg faulting in random places, this keyword
+should be enabled so you can see which tensor is responsible for the seg fault.  
+
+This keyword will tell how big every tensor is, how many blocks are used, and will provide a summary of the total amount of memory the tensor took up.  
+
+* Type: bool
+* Default: false
+
+**CCVV_ALGORITHM**
+
+The type of algorithm used for the ccvv term.  The fastest algorutm is the ccvv_ambit.  Both fly methods have the same memory requirements and are well
+paralleized through openmp.  
+
+* Type: string
+* Possible values: CORE FLY_AMBIT FLY_LOOP
+* Default: FLY_LOOP
+
+
+
+
+
