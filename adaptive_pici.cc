@@ -1185,6 +1185,296 @@ double AdaptivePathIntegralCI::time_step_optimized(double spawning_threshold,Det
 }
 
 
+size_t AdaptivePathIntegralCI::apply_tau_H_det_sym(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
+{
+    std::vector<std::vector<int>> naoccs(nirrep_), navirs(nirrep_), nboccs(nirrep_), nbvirs(nirrep_);
+
+    for (int i = 0; i<ncmo_; i++) {
+        if (detI.get_alfa_bit(i)) {
+            naoccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            navirs[mo_symmetry_[i]].push_back(i);
+        }
+        if (detI.get_beta_bit(i)) {
+            nboccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            nbvirs[mo_symmetry_[i]].push_back(i);
+        }
+    }
+
+    double my_new_max_one_HJI = 0.0;
+    double my_new_max_two_HJI = 0.0;
+
+
+    double det_energy = detI.energy();
+    // Diagonal contributions
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
+
+    size_t spawned = 0;
+
+    if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
+        // Generate aa excitations
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<naoccs[i].size(); ix++) {
+                int ii = naoccs[i][ix];
+                for (int ax=0; ax<navirs[i].size(); ax++) {
+                    int aa = navirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += tau * HJI * CI;
+                        spawned++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<nboccs[i].size(); ix++) {
+                int ii = nboccs[i][ix];
+                for (int ax=0; ax<nbvirs[i].size(); ax++) {
+                    int aa = nbvirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += tau * HJI * CI;
+                        spawned++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+    }
+
+    if (std::fabs(prescreening_tollerance_factor_ * old_max_two_HJI_ * CI) >= spawning_threshold){
+        // Generate aa excitations
+
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = 0; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    for (int ix=0; ix<naoccs[i].size(); ix++) {
+                        int ii = naoccs[i][ix];
+                        for (int jx=0; jx<nboccs[j].size(); jx++) {
+                            int jj = nboccs[j][jx];
+                            for (int ax=0; ax<navirs[a].size(); ax++) {
+                                int aa = navirs[a][ax];
+                                for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                    int bb = nbvirs[b][bx];
+                                    double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                                        Determinant detJ(detI);
+                                        detJ.set_alfa_bit(ii,false);
+                                        detJ.set_beta_bit(jj,false);
+                                        detJ.set_alfa_bit(aa,true);
+                                        detJ.set_beta_bit(bb,true);
+
+                                        // grap the alpha bits of both determinants
+                                        const Determinant::bit_t& Ia = detI.alfa_bits();
+                                        const Determinant::bit_t& Ib = detI.beta_bits();
+                                        const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                        const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                        // compute the sign of the matrix element
+                                        HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                        new_space_C[detJ] += tau * HJI * CI;
+
+
+                                        spawned++;
+                                    }
+                                    ndet_visited_++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<naoccs[i].size(); ix++) {
+                    int ii = naoccs[i][ix];
+                    for (int jx=ix+1; jx<naoccs[i].size(); jx++) {
+                        int jj = naoccs[i][jx];
+                        for (int ax=0; ax<navirs[a].size(); ax++) {
+                            int aa = navirs[a][ax];
+                            for (int bx=ax+1; bx<navirs[a].size(); bx++) {
+                                int bb = navirs[a][bx];
+                                double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                                my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_alfa_bit(ii,false);
+                                    detJ.set_alfa_bit(jj,false);
+                                    detJ.set_alfa_bit(aa,true);
+                                    detJ.set_alfa_bit(bb,true);
+
+                                    // grap the alpha bits of both determinants
+                                    const Determinant::bit_t& Ia = detI.alfa_bits();
+                                    const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                    // compute the sign of the matrix element
+                                    HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                    new_space_C[detJ] += tau * HJI * CI;
+
+
+                                    spawned++;
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<naoccs[i].size(); ix++) {
+                            int ii = naoccs[i][ix];
+                            for (int jx=0; jx<naoccs[j].size(); jx++) {
+                                int jj = naoccs[j][jx];
+                                for (int ax=0; ax<navirs[a].size(); ax++) {
+                                    int aa = navirs[a][ax];
+                                    for (int bx=0; bx<navirs[b].size(); bx++) {
+                                        int bb = navirs[b][bx];
+                                        double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                                        my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_alfa_bit(ii,false);
+                                            detJ.set_alfa_bit(jj,false);
+                                            detJ.set_alfa_bit(aa,true);
+                                            detJ.set_alfa_bit(bb,true);
+
+                                            // grap the alpha bits of both determinants
+                                            const Determinant::bit_t& Ia = detI.alfa_bits();
+                                            const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                            // compute the sign of the matrix element
+                                            HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                            new_space_C[detJ] += tau * HJI * CI;
+
+
+                                            spawned++;
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<nboccs[i].size(); ix++) {
+                    int ii = nboccs[i][ix];
+                    for (int jx=ix+1; jx<nboccs[i].size(); jx++) {
+                        int jj = nboccs[i][jx];
+                        for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                            int aa = nbvirs[a][ax];
+                            for (int bx=ax+1; bx<nbvirs[a].size(); bx++) {
+                                int bb = nbvirs[a][bx];
+                                double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                                my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_beta_bit(ii,false);
+                                    detJ.set_beta_bit(jj,false);
+                                    detJ.set_beta_bit(aa,true);
+                                    detJ.set_beta_bit(bb,true);
+
+                                    // grap the alpha bits of both determinants
+                                    const Determinant::bit_t& Ib = detI.beta_bits();
+                                    const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                    // compute the sign of the matrix element
+                                    HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                    new_space_C[detJ] += tau * HJI * CI;
+
+
+                                    spawned++;
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<nboccs[i].size(); ix++) {
+                            int ii = nboccs[i][ix];
+                            for (int jx=0; jx<nboccs[j].size(); jx++) {
+                                int jj = nboccs[j][jx];
+                                for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                                    int aa = nbvirs[a][ax];
+                                    for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                        int bb = nbvirs[b][bx];
+                                        double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                                        my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_beta_bit(ii,false);
+                                            detJ.set_beta_bit(jj,false);
+                                            detJ.set_beta_bit(aa,true);
+                                            detJ.set_beta_bit(bb,true);
+
+                                            // grap the alpha bits of both determinants
+                                            const Determinant::bit_t& Ib = detI.beta_bits();
+                                            const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                            // compute the sign of the matrix element
+                                            HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                            new_space_C[detJ] += tau * HJI * CI;
+
+
+                                            spawned++;
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Reduce race condition
+    new_max_one_HJI_ = std::max(my_new_max_one_HJI,new_max_one_HJI_);
+    new_max_two_HJI_ = std::max(my_new_max_two_HJI,new_max_two_HJI_);
+
+    return spawned;
+}
+
 size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
@@ -1393,12 +1683,14 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
             }
             if (max_coupling == zero_pair){
                 spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
+//                spawned[thread_id] += apply_tau_H_det_dynamic_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
                 #pragma omp critical
                 {
                     dets_max_couplings_[dets[I]] = max_coupling;
                 }
             }else{
                 spawned[thread_id] += apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
+//                spawned[thread_id] += apply_tau_H_det_dynamic_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
             }
         }
     }else{
@@ -1406,6 +1698,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
+//            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
             spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
         }
     }
@@ -1463,6 +1756,290 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 //    return nspawned_;
 //}
 
+
+size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic_sym(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
+{
+    std::vector<std::vector<int>> naoccs(nirrep_), navirs(nirrep_), nboccs(nirrep_), nbvirs(nirrep_);
+
+    for (int i = 0; i<ncmo_; i++) {
+        if (detI.get_alfa_bit(i)) {
+            naoccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            navirs[mo_symmetry_[i]].push_back(i);
+        }
+        if (detI.get_beta_bit(i)) {
+            nboccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            nbvirs[mo_symmetry_[i]].push_back(i);
+        }
+    }
+
+    size_t spawned = 0;
+
+    // Diagonal contributions
+    double det_energy = detI.energy();
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
+
+    if ((max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold)){
+        // Generate aa excitations
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<naoccs[i].size(); ix++) {
+                int ii = naoccs[i][ix];
+                for (int ax=0; ax<navirs[i].size(); ax++) {
+                    int aa = navirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += tau * HJI * CI;
+                        spawned++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<nboccs[i].size(); ix++) {
+                int ii = nboccs[i][ix];
+                for (int ax=0; ax<nbvirs[i].size(); ax++) {
+                    int aa = nbvirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    double HJI = detJ.slater_rules(detI);
+                    max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        new_space_C[detJ] += tau * HJI * CI;
+                        spawned++;
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+    }
+
+    if ((max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold)){
+        // Generate aa excitations
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = 0; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    for (int ix=0; ix<naoccs[i].size(); ix++) {
+                        int ii = naoccs[i][ix];
+                        for (int jx=0; jx<nboccs[j].size(); jx++) {
+                            int jj = nboccs[j][jx];
+                            for (int ax=0; ax<navirs[a].size(); ax++) {
+                                int aa = navirs[a][ax];
+                                for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                    int bb = nbvirs[b][bx];
+                                    double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                                    max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+
+                                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                                        Determinant detJ(detI);
+                                        detJ.set_alfa_bit(ii,false);
+                                        detJ.set_beta_bit(jj,false);
+                                        detJ.set_alfa_bit(aa,true);
+                                        detJ.set_beta_bit(bb,true);
+
+                                        // grap the alpha bits of both determinants
+                                        const Determinant::bit_t& Ia = detI.alfa_bits();
+                                        const Determinant::bit_t& Ib = detI.beta_bits();
+                                        const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                        const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                        // compute the sign of the matrix element
+                                        HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                        new_space_C[detJ] += tau * HJI * CI;
+
+
+                                        spawned++;
+                                    }
+                                    ndet_visited_++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<naoccs[i].size(); ix++) {
+                    int ii = naoccs[i][ix];
+                    for (int jx=ix+1; jx<naoccs[i].size(); jx++) {
+                        int jj = naoccs[i][jx];
+                        for (int ax=0; ax<navirs[a].size(); ax++) {
+                            int aa = navirs[a][ax];
+                            for (int bx=ax+1; bx<navirs[a].size(); bx++) {
+                                int bb = navirs[a][bx];
+                                double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                                max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_alfa_bit(ii,false);
+                                    detJ.set_alfa_bit(jj,false);
+                                    detJ.set_alfa_bit(aa,true);
+                                    detJ.set_alfa_bit(bb,true);
+
+                                    // grap the alpha bits of both determinants
+                                    const Determinant::bit_t& Ia = detI.alfa_bits();
+                                    const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                    // compute the sign of the matrix element
+                                    HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                    new_space_C[detJ] += tau * HJI * CI;
+
+
+                                    spawned++;
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<naoccs[i].size(); ix++) {
+                            int ii = naoccs[i][ix];
+                            for (int jx=0; jx<naoccs[j].size(); jx++) {
+                                int jj = naoccs[j][jx];
+                                for (int ax=0; ax<navirs[a].size(); ax++) {
+                                    int aa = navirs[a][ax];
+                                    for (int bx=0; bx<navirs[b].size(); bx++) {
+                                        int bb = navirs[b][bx];
+                                        double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                                        max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_alfa_bit(ii,false);
+                                            detJ.set_alfa_bit(jj,false);
+                                            detJ.set_alfa_bit(aa,true);
+                                            detJ.set_alfa_bit(bb,true);
+
+                                            // grap the alpha bits of both determinants
+                                            const Determinant::bit_t& Ia = detI.alfa_bits();
+                                            const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                            // compute the sign of the matrix element
+                                            HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                            new_space_C[detJ] += tau * HJI * CI;
+
+
+                                            spawned++;
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<nboccs[i].size(); ix++) {
+                    int ii = nboccs[i][ix];
+                    for (int jx=ix+1; jx<nboccs[i].size(); jx++) {
+                        int jj = nboccs[i][jx];
+                        for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                            int aa = nbvirs[a][ax];
+                            for (int bx=ax+1; bx<nbvirs[a].size(); bx++) {
+                                int bb = nbvirs[a][bx];
+                                double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                                max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_beta_bit(ii,false);
+                                    detJ.set_beta_bit(jj,false);
+                                    detJ.set_beta_bit(aa,true);
+                                    detJ.set_beta_bit(bb,true);
+
+                                    // grap the alpha bits of both determinants
+                                    const Determinant::bit_t& Ib = detI.beta_bits();
+                                    const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                    // compute the sign of the matrix element
+                                    HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                    new_space_C[detJ] += tau * HJI * CI;
+
+
+                                    spawned++;
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<nboccs[i].size(); ix++) {
+                            int ii = nboccs[i][ix];
+                            for (int jx=0; jx<nboccs[j].size(); jx++) {
+                                int jj = nboccs[j][jx];
+                                for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                                    int aa = nbvirs[a][ax];
+                                    for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                        int bb = nbvirs[b][bx];
+                                        double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                                        max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_beta_bit(ii,false);
+                                            detJ.set_beta_bit(jj,false);
+                                            detJ.set_beta_bit(aa,true);
+                                            detJ.set_beta_bit(bb,true);
+
+                                            // grap the alpha bits of both determinants
+                                            const Determinant::bit_t& Ib = detI.beta_bits();
+                                            const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                            // compute the sign of the matrix element
+                                            HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                            new_space_C[detJ] += tau * HJI * CI;
+
+
+                                            spawned++;
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Reduce race condition
+    new_max_one_HJI_ = std::max(max_coupling.first,new_max_one_HJI_);
+    new_max_two_HJI_ = std::max(max_coupling.second,new_max_two_HJI_);
+
+    return spawned;
+}
 
 size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0, std::pair<double,double>& max_coupling)
 {
@@ -1738,6 +2315,7 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<Determinan
         if (max_coupling == zero){
             max_coupling = {1.0,1.0};
         }
+//        energy[thread_id] += form_H_C_sym(1.0,tollerance,dets[I],C[I],dets_C_map,max_coupling);
         energy[thread_id] += form_H_C(1.0,tollerance,dets[I],C[I],dets_C_map,max_coupling);
     }
 
@@ -1929,6 +2507,296 @@ void scale(std::map<Determinant,double>& A,double alpha)
         A[det_C.first] *= alpha;
     }
 }
+
+double AdaptivePathIntegralCI::form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling)
+{
+    double result = 0.0;
+
+    if ((max_coupling.second != 0.0) and (std::fabs(max_coupling.second  * CI) < spawning_threshold) and (std::fabs(max_coupling.first * CI) < spawning_threshold)){
+        return result;
+    }
+
+    std::vector<std::vector<int>> naoccs(nirrep_), navirs(nirrep_), nboccs(nirrep_), nbvirs(nirrep_);
+
+    for (int i = 0; i<ncmo_; i++) {
+        if (detI.get_alfa_bit(i)) {
+            naoccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            navirs[mo_symmetry_[i]].push_back(i);
+        }
+        if (detI.get_beta_bit(i)) {
+            nboccs[mo_symmetry_[i]].push_back(i);
+        } else {
+            nbvirs[mo_symmetry_[i]].push_back(i);
+        }
+    }
+
+    size_t spawned = 0;
+
+    // No diagonal contributions
+
+    if ((std::fabs(max_coupling.first * CI) >= spawning_threshold)){
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<naoccs[i].size(); ix++) {
+                int ii = naoccs[i][ix];
+                for (int ax=0; ax<navirs[i].size(); ax++) {
+                    int aa = navirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    bsmap_it it = det_C.find(detJ);
+                    if (it != det_C.end()){
+                        double HJI = detJ.slater_rules(detI);
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            result += tau * HJI * CI * it->second;
+                            spawned++;
+                        }
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int ix=0; ix<nboccs[i].size(); ix++) {
+                int ii = nboccs[i][ix];
+                for (int ax=0; ax<nbvirs[i].size(); ax++) {
+                    int aa = nbvirs[i][ax];
+                    Determinant detJ(detI);
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    bsmap_it it = det_C.find(detJ);
+                    if (it != det_C.end()){
+                        double HJI = detJ.slater_rules(detI);
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            result += tau * HJI * CI * it->second;
+                            spawned++;
+                        }
+                    }
+                    ndet_visited_++;
+                }
+            }
+        }
+    }
+
+    if ((max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold)){
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = 0; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    for (int ix=0; ix<naoccs[i].size(); ix++) {
+                        int ii = naoccs[i][ix];
+                        for (int jx=0; jx<nboccs[j].size(); jx++) {
+                            int jj = nboccs[j][jx];
+                            for (int ax=0; ax<navirs[a].size(); ax++) {
+                                int aa = navirs[a][ax];
+                                for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                    int bb = nbvirs[b][bx];
+                                    double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+
+                                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                                        Determinant detJ(detI);
+                                        detJ.set_alfa_bit(ii,false);
+                                        detJ.set_beta_bit(jj,false);
+                                        detJ.set_alfa_bit(aa,true);
+                                        detJ.set_beta_bit(bb,true);
+
+                                        bsmap_it it = det_C.find(detJ);
+                                        if (it != det_C.end()){
+                                            // grap the alpha bits of both determinants
+                                            const Determinant::bit_t& Ia = detI.alfa_bits();
+                                            const Determinant::bit_t& Ib = detI.beta_bits();
+                                            const Determinant::bit_t& Ja = detJ.alfa_bits();
+                                            const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                            // compute the sign of the matrix element
+                                            HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                            result += tau * HJI * CI * it->second;
+                                            spawned++;
+                                        }
+                                    }
+                                    ndet_visited_++;
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<naoccs[i].size(); ix++) {
+                    int ii = naoccs[i][ix];
+                    for (int jx=ix+1; jx<naoccs[i].size(); jx++) {
+                        int jj = naoccs[i][jx];
+                        for (int ax=0; ax<navirs[a].size(); ax++) {
+                            int aa = navirs[a][ax];
+                            for (int bx=ax+1; bx<navirs[a].size(); bx++) {
+                                int bb = navirs[a][bx];
+                                double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_alfa_bit(ii,false);
+                                    detJ.set_alfa_bit(jj,false);
+                                    detJ.set_alfa_bit(aa,true);
+                                    detJ.set_alfa_bit(bb,true);
+
+                                    bsmap_it it = det_C.find(detJ);
+                                    if (it != det_C.end()){
+                                        // grap the alpha bits of both determinants
+                                        const Determinant::bit_t& Ia = detI.alfa_bits();
+                                        const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                        // compute the sign of the matrix element
+                                        HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                        result += tau * HJI * CI * it->second;
+                                        spawned++;
+                                    }
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<naoccs[i].size(); ix++) {
+                            int ii = naoccs[i][ix];
+                            for (int jx=0; jx<naoccs[j].size(); jx++) {
+                                int jj = naoccs[j][jx];
+                                for (int ax=0; ax<navirs[a].size(); ax++) {
+                                    int aa = navirs[a][ax];
+                                    for (int bx=0; bx<navirs[b].size(); bx++) {
+                                        int bb = navirs[b][bx];
+                                        double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_alfa_bit(ii,false);
+                                            detJ.set_alfa_bit(jj,false);
+                                            detJ.set_alfa_bit(aa,true);
+                                            detJ.set_alfa_bit(bb,true);
+
+                                            bsmap_it it = det_C.find(detJ);
+                                            if (it != det_C.end()){
+                                                // grap the alpha bits of both determinants
+                                                const Determinant::bit_t& Ia = detI.alfa_bits();
+                                                const Determinant::bit_t& Ja = detJ.alfa_bits();
+
+                                                // compute the sign of the matrix element
+                                                HJI *= Determinant::SlaterSign(Ia,ii) * Determinant::SlaterSign(Ia,jj) * Determinant::SlaterSign(Ja,aa) * Determinant::SlaterSign(Ja,bb);
+
+                                                result += tau * HJI * CI * it->second;
+                                                spawned++;
+                                            }
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int a = 0; a<nirrep_; a++) {
+                for (int ix=0; ix<nboccs[i].size(); ix++) {
+                    int ii = nboccs[i][ix];
+                    for (int jx=ix+1; jx<nboccs[i].size(); jx++) {
+                        int jj = nboccs[i][jx];
+                        for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                            int aa = nbvirs[a][ax];
+                            for (int bx=ax+1; bx<nbvirs[a].size(); bx++) {
+                                int bb = nbvirs[a][bx];
+                                double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    detJ.set_beta_bit(ii,false);
+                                    detJ.set_beta_bit(jj,false);
+                                    detJ.set_beta_bit(aa,true);
+                                    detJ.set_beta_bit(bb,true);
+
+                                    bsmap_it it = det_C.find(detJ);
+                                    if (it != det_C.end()){
+                                        // grap the alpha bits of both determinants
+                                        const Determinant::bit_t& Ib = detI.beta_bits();
+                                        const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                        // compute the sign of the matrix element
+                                        HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                        result += tau * HJI * CI * it->second;
+                                        spawned++;
+                                    }
+                                }
+                                ndet_visited_++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (int i = 0; i<nirrep_; i++) {
+            for (int j = i+1; j<nirrep_; j++) {
+                for (int a = 0; a<nirrep_; a++){
+                    int b = i^j^a;
+                    if (b > a) {
+                        for (int ix=0; ix<nboccs[i].size(); ix++) {
+                            int ii = nboccs[i][ix];
+                            for (int jx=0; jx<nboccs[j].size(); jx++) {
+                                int jj = nboccs[j][jx];
+                                for (int ax=0; ax<nbvirs[a].size(); ax++) {
+                                    int aa = nbvirs[a][ax];
+                                    for (int bx=0; bx<nbvirs[b].size(); bx++) {
+                                        int bb = nbvirs[b][bx];
+                                        double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+
+                                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                                            Determinant detJ(detI);
+                                            detJ.set_beta_bit(ii,false);
+                                            detJ.set_beta_bit(jj,false);
+                                            detJ.set_beta_bit(aa,true);
+                                            detJ.set_beta_bit(bb,true);
+
+                                            bsmap_it it = det_C.find(detJ);
+                                            if (it != det_C.end()){
+                                                // grap the alpha bits of both determinants
+                                                const Determinant::bit_t& Ib = detI.beta_bits();
+                                                const Determinant::bit_t& Jb = detJ.beta_bits();
+
+                                                // compute the sign of the matrix element
+                                                HJI *= Determinant::SlaterSign(Ib,ii) * Determinant::SlaterSign(Ib,jj) * Determinant::SlaterSign(Jb,aa) * Determinant::SlaterSign(Jb,bb);
+
+                                                result += tau * HJI * CI * it->second;
+                                                spawned++;
+                                            }
+                                        }
+                                        ndet_visited_++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 
 double AdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling)
 {
