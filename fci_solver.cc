@@ -307,7 +307,8 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
 
     // Build the full determinants
     size_t nact = active_mo_.size();
-    size_t nmo = core_mo_.size() + lists_->ncmo();
+    size_t nmo = ints_->ncmo();
+
     for (auto det : dets){
         double e;
         size_t h, add_Ia, add_Ib;
@@ -317,6 +318,7 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
 
         std::vector<bool> Ia(nmo,false);
         std::vector<bool> Ib(nmo,false);
+
         for (size_t i : core_mo_){
             Ia[i] = true;
             Ib[i] = true;
