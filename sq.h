@@ -36,7 +36,7 @@ class SqOperator
 public:
     /// Default constructor
     SqOperator();
-    /// Initialize with vector
+    /// Initialize with vector with a list of creation and annihilation operators
     SqOperator(const std::vector<int>& cre,const std::vector<int>& ann);
     /// Return the number of creation operators
     size_t ncre() const {return cre_.size();}
@@ -104,7 +104,7 @@ private:
     /// Contract a pair of SqOperators in all possible ways
     void contract(const SqOperator &lhs, const SqOperator &rhs, Operator& res);
     /// Contract a pair of SqOperators using a fixed contraction pattern
-    std::pair<double, SqOperator> simple_contract(const SqOperator& lhs, const SqOperator& rhs, const std::vector<std::vector<int>>& pattern);
+    std::pair<double, SqOperator> simple_contract(const SqOperator& lhs, const SqOperator& rhs, const std::vector<std::pair<int,int>>& pattern);
 };
 
 

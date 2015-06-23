@@ -10,6 +10,29 @@ using namespace psi;
 
 namespace psi{ namespace libadaptive{
 
+// Partitions of the number n
+std::vector<std::vector<std::vector<int>>> partitions {
+    {{0}},
+    {{1}},
+    {{1,1}, {2}},
+    {{1,1,1}, {2,1}, {3}},
+    {{1,1,1,1}, {2,1,1}, {2,2}, {3,1}, {4}},
+    {{1,1,1,1,1}, {2,1,1,1}, {2,2,1}, {3,1,1}, {4,1}, {5}},
+    {{1,1,1,1,1,1}, {2,1,1,1,1}, {2,2,1,1}, {2,2,2}, {3,1,1,1}, {3,2,1}, {3,3}, {4,1,1}, {4,2}, {5,1}, {6}},
+    {{1,1,1,1,1,1,1}, {2,1,1,1,1,1}, {2,2,1,1,1}, {2,2,2,1}, {3,1,1,1,1}, {3,2,1,1}, {3,2,2}, {3,3,1}, {4,1,1,1}, {4,2,1}, {4,3}, {5,1,1}, {5,2}, {6,1}, {7}}
+};
+
+// Partitions of the number 2n into even numbers
+std::vector<std::vector<std::vector<int>>> even_partitions {
+    {{0}},
+    {{2}},
+    {{2,2}, {4}},
+    {{2,2,2}, {4,2}, {6}},
+    {{2,2,2,2}, {4,2,2}, {4,4}, {6,2}, {8}},
+    {{2,2,2,2,2}, {4,2,2,2}, {4,4,2}, {6,2,2}, {8,2}, {10}},
+    {{2,2,2,2,2,2}, {4,2,2,2,2}, {4,4,2,2}, {4,4,4}, {6,2,2,2}, {6,4,2}, {6,6}, {8,2,2}, {8,4}, {10,2}, {12}}
+};
+
 // => Helper functions <=
 
 /**
@@ -83,11 +106,12 @@ size_t SqOperator::hash() {
 double SqOperator::sort(std::vector<int>& vec)
 {
     if (std::is_sorted(vec.begin(),vec.end())){
+        // test for repeated indices
         return (adjacent_find(vec.begin(),vec.end() ) == vec.end()) ? 1.0 : 0.0;
     }
     double sign = permutation_sign(vec);
     std::sort(vec.begin(),vec.end());
-
+    // test for repeated indices
     return (adjacent_find(vec.begin(),vec.end() ) == vec.end()) ? sign : 0.0;
 }
 
@@ -115,6 +139,7 @@ Operator::Operator() {}
 
 void Operator::add(double value, const SqOperator &op)
 {
+    // add only if has nonzero coefficient
     if (std::fabs(value) != 0.0){
         SqOperator sorted_op = op;
         double sign = sorted_op.sort();
@@ -148,8 +173,8 @@ Operator WickTheorem::evaluate(Operator& lhs,Operator& rhs)
 
     for (auto& opl : lhs.ops()){
         for (auto& opr : rhs.ops()){
-            outfile->Printf("\n  Contracting:");
-            outfile->Printf("\n  %+f x %+f { %s } { %s }",opl.second,opr.second,opl.first.str().c_str(),opr.first.str().c_str());
+//            outfile->Printf("\n  Contracting:");
+//            outfile->Printf("\n  %+f x %+f { %s } { %s }",opl.second,opr.second,opl.first.str().c_str(),opr.first.str().c_str());
             contract(opl.first,opr.first,res);
         }
     }
@@ -158,19 +183,8 @@ Operator WickTheorem::evaluate(Operator& lhs,Operator& rhs)
 
 void WickTheorem::contract(const SqOperator& lhs,const SqOperator& rhs,Operator& res)
 {
-    outfile->Printf("\n  Contracting:");
-    outfile->Printf("\n  { %s } { %s }",lhs.str().c_str(),rhs.str().c_str());
-
-    // Partitions of the number 2n into even numbers
-    std::vector<std::vector<std::vector<int>>> even_partitions {
-        {{0}},
-        {{2}},
-        {{2,2}, {4}},
-        {{2,2,2}, {4,2}, {6}},
-        {{2,2,2,2}, {4,2,2}, {4,4}, {6,2}, {8}},
-        {{2,2,2,2,2}, {4,2,2,2}, {4,4,2}, {6,2,2}, {8,2}, {10}},
-        {{2,2,2,2,2,2}, {4,2,2,2,2}, {4,4,2,2}, {4,4,4}, {6,2,2,2}, {6,4,2}, {6,6}, {8,2,2}, {8,4}, {10,2}, {12}}
-    };
+//    outfile->Printf("\n  Contracting:");
+//    outfile->Printf("\n  { %s } { %s }",lhs.str().c_str(),rhs.str().c_str());
 
     int ncl = lhs.ncre();
     int nal = lhs.nann();
@@ -183,29 +197,78 @@ void WickTheorem::contract(const SqOperator& lhs,const SqOperator& rhs,Operator&
     std::map<std::vector<int>,Operator> op_table;
 
     // The product term
-    outfile->Printf("\n  Contraction rank %d",0);
+//    outfile->Printf("\n  Contraction rank %d",0);
     std::pair<double,SqOperator> prod_term = simple_contract(lhs,rhs,{});
     res.add(prod_term.first,prod_term.second);
 
     for (int rank = 2; rank <= max_contr; rank += 2){
-        outfile->Printf("\n  Contraction rank %d",rank);
+//        outfile->Printf("\n  Contraction rank %d",rank);
         for (auto& contractions : even_partitions[rank / 2]){
-            outfile->Printf("\n    Contraction: ",rank);
+//            outfile->Printf("\n    Contraction: ",rank);
             for (int k = 0; k < contractions.size(); ++k){
 //            for (auto& contraction : contractions){
-                outfile->Printf(" %d",contractions[k]);
+//                outfile->Printf(" %d",contractions[k]);
             }
         }
     }
 }
 
-std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs,const SqOperator& rhs,const std::vector<std::vector<int>>& pattern)
+std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs, const SqOperator& rhs, const std::vector<std::pair<int,int>> &pattern)
 {
+    // Compute the contraction of two operators with a k-legged contraction
+    // specified by the pattern vector.  The pattern vector stores a list of
+    // pairs (group,operator) that specifies where all the "legs" of the
+    // contraction fall.
+    // For example, pattern = {{0,2},{1,1},{2,0},{2,1}} corresponds to:
+    //       _____________
+    //      |       |   | |
+    // {a b c d} {e f} {g h i j}
+    //      ^       ^
+    //    (0,2)   (1,1)
+
+    // (lcre)(lann)(rcre)(rann)
+    std::vector<std::vector<int>> op_groups{lhs.cre(),lhs.ann(),rhs.cre(),rhs.ann()};
+
     std::vector<int> lc = lhs.cre();
     std::vector<int> la = lhs.ann();
     std::vector<int> rc = rhs.cre();
     std::vector<int> ra = rhs.ann();
 
+    // Stores the pairs (mo,creation) of operators that have been contracted
+    std::vector<std::pair<int,bool>> contr_indices;
+
+    // 1. determine the indices of the one-density/cumulant
+    //   _____
+    //  | | | |
+    //  c f g h {a b d e i j}
+
+    // Form a mask with all the operators to contract
+    //       _____________
+    //      |       |   | |
+    // {a b c d} {e f} {g h i j}
+    // {0 0 1 0} {0 1}  {1 1 0 0}
+    std::vector<std::vector<bool>> op_mask;
+    for (std::vector<int>& group : op_groups){
+        op_mask.push_back(std::vector<bool>(group.size(),false));
+    }
+
+    for (std::pair<int,int> leg : pattern){
+        int group = leg.first;
+        int op = leg.second;
+        contr_indices.push_back(std::make_pair(op_groups[group][op],group % 2 == 0));
+        op_mask[group][op] = true;
+    }
+
+    // 2. determine the sign and remove operators
+//    for (int g = 0; g < 4; g++){
+//        for (int i : op_groups[g]){
+//            if (op_mask[g][i]){
+
+//            }else{
+
+//            }
+//        }
+//    }
 
     // Remove the contracted operators and compute sign
     double sign_contraction = 1.0;
@@ -221,6 +284,7 @@ std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs,
 
     SqOperator op(lc,la);
     sign *= op.sort();
+    sign *= sign_contraction;
 
     return std::make_pair(sign,op);
 }
@@ -248,11 +312,23 @@ SqTest::SqTest()
 
 
     Operator op;
-    op.add(3.0,sqop1);
-    op.add(5.0,sqop2);
-    op.add(7.0,sqop3);
-    op.add(11.0,sqop4);
-    outfile->Printf("\n%s",op.str().c_str());
+    int no = 4;
+    int nv = 10;
+    for (int i = 0; i < no; ++i){
+        for (int j = 0; j < no; ++j){
+            for (int a = 0; a < nv; ++a){
+                for (int b = 0; b < nv; ++b){
+                    SqOperator ijab_op({i,j},{no + a,no + b});
+                    op.add(1.0,ijab_op);
+                }
+            }
+        }
+    }
+//    op.add(3.0,sqop1);
+//    op.add(5.0,sqop2);
+//    op.add(7.0,sqop3);
+//    op.add(11.0,sqop4);
+//    outfile->Printf("\n%s",op.str().c_str());
 
     WickTheorem wt;
     Operator op_op = wt.evaluate(op,op);
