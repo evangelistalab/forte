@@ -3,6 +3,7 @@
 *.so
 *.pyc
 Makefile.*
+Makefile
 
 # Qt Creator project files
 *.config
@@ -10,3 +11,7 @@ Makefile.*
 *.creator.user
 *.files
 *.includes
+
+# All outputs and clean files in test cases
+/tests/*/*.dat
+/tests/*/*.clean

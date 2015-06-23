@@ -203,6 +203,10 @@ The threshold for smoothing the Hamiltonian
 * Type: double
 * Default: 0.01
 
+Computing Excited States with ACI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 .. index::
    single: APIFCI
    pair: APIFCI; theory
