@@ -307,6 +307,8 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
 
     // Build the full determinants
     size_t nact = active_mo_.size();
+    size_t nmo = ints_->ncmo();
+
     for (auto det : dets){
         double e;
         size_t h, add_Ia, add_Ib;
@@ -314,8 +316,9 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
         boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h,add_Ia);
         boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_,add_Ib);
 
-        std::vector<bool> Ia(lists_->ncmo(),false);
-        std::vector<bool> Ib(lists_->ncmo(),false);
+        std::vector<bool> Ia(nmo,false);
+        std::vector<bool> Ib(nmo,false);
+
         for (size_t i : core_mo_){
             Ia[i] = true;
             Ib[i] = true;
