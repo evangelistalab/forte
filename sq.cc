@@ -235,7 +235,7 @@ std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs,
     std::vector<int> ra = rhs.ann();
 
     // Stores the pairs (mo,creation) of operators that have been contracted
-    std::vector<std::pain<int,bool>> contr_indices;
+    std::vector<std::pair<int,bool>> contr_indices;
 
     // 1. determine the indices of the one-density/cumulant
     //   _____
@@ -260,15 +260,15 @@ std::pair<double,SqOperator> WickTheorem::simple_contract(const SqOperator& lhs,
     }
 
     // 2. determine the sign and remove operators
-    for (int g = 0; g < 4; g++)
-        for (int i : op_groups[g]){
-            if (op_mask[g][i]){
+//    for (int g = 0; g < 4; g++){
+//        for (int i : op_groups[g]){
+//            if (op_mask[g][i]){
 
-            }else{
+//            }else{
 
-            }
-        }
-    }
+//            }
+//        }
+//    }
 
     // Remove the contracted operators and compute sign
     double sign_contraction = 1.0;
