@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace psi{ namespace libadaptive{
 

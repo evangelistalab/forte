@@ -351,6 +351,7 @@ def run_three_dsrg_mrpt2(name, **kwargs):
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
+
 # Integration with driver routines
 procedures['energy']['libadaptive'] = run_libadaptive
 procedures['energy']['forte-fci'] = run_forte_fci
