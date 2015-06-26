@@ -57,6 +57,8 @@ void BlockedTensorFactory::add_composite_mo_space(const std::string& name,const 
 {
     ambit::BlockedTensor::add_composite_mo_space(name, mo_indices, subspaces);
 }
+
+// This is a utility function for generating all the necessary strings for the orbital spaces
 std::vector<std::string> BlockedTensorFactory::generate_indices(const std::string in_str, const std::string type)
 {
     std::vector<std::string> return_string;
@@ -154,7 +156,9 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
         outfile->Printf("\n For tensor %s, this will take up %6.6f GB", BT.name().c_str(), memory_of_tensor);
         outfile->Printf("\n %6.6f GB of memory left over", memory_);
     }
-} void BlockedTensorFactory::memory_summary() {
+} 
+
+void BlockedTensorFactory::memory_summary() {
     outfile->Printf("\n Memory Summary of the %u tensors \n", number_of_tensors_);
     outfile->Printf("\n TensorName \t Number_of_blocks \t memory gb");
     for(int i = 0; i < tensors_information_.size(); i++)
