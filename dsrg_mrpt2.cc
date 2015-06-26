@@ -394,7 +394,7 @@ double DSRG_MRPT2::compute_energy()
     // Compute effective integrals
     renormalize_V();
     renormalize_F();       
-    if(print_ > 1)  F.print(stdout); // The actv-actv block is different but OK.
+    if(print_ > 1)  F.print(stdout);
     if(print_ > 2){        
         T1.print(stdout);
         T2.print(stdout);
@@ -593,6 +593,9 @@ void DSRG_MRPT2::renormalize_V()
     Hbar2["uvij"] = temp1["ijuv"];
     Hbar2["uViJ"] = temp1["iJuV"];
     Hbar2["UVIJ"] = temp1["IJUV"];
+    // acv-acv-acv-acv block should be zero
+    Hbar2.block("aaaa").zero();
+    Hbar2.block("AAAA").zero();
 //    Hbar2.print(stdout);
 
     // Back to renormalized V
@@ -602,11 +605,6 @@ void DSRG_MRPT2::renormalize_V()
     temp2["ijab"] += V["ijab"];
     temp2["iJaB"] += V["iJaB"];
     temp2["IJAB"] += V["IJAB"];
-//    temp2.print(stdout);
-
-//    temp2["ijab"] = temp1["ijab"] + V["ijab"];
-//    temp2["IJAB"] = temp1["IJAB"] + V["IJAB"];
-//    temp2["iJaB"] = temp1["iJaB"] + V["iJaB"];
 //    temp2.print(stdout);
 
     V["ijab"] = 0.5 * temp2["ijab"];
@@ -643,11 +641,11 @@ void DSRG_MRPT2::renormalize_F()
     temp2["IA"] += F["IA"] * RExp1["IA"];
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
-    // Non-diagonal Hbar1
-    Hbar1["iv"] = temp2["iv"];
-    Hbar1["IV"] = temp2["IV"];
-    Hbar1["vi"] = temp2["iv"];
-    Hbar1["VI"] = temp2["IV"];
+    // Non-diagonal Hbar1 (acv-acv block should be diagonal)
+    Hbar1["mv"] = temp2["mv"];
+    Hbar1["MV"] = temp2["MV"];
+    Hbar1["vm"] = temp2["mv"];
+    Hbar1["VM"] = temp2["MV"];
 //    Hbar1.print(stdout);
 
     // Back to renormalized F
@@ -927,18 +925,18 @@ void DSRG_MRPT2::transform_integrals(){
 
     // Compute second-order one- and two-body Hbar
     // Cautious: V and F are renormalized !
-    Hbar1_FT1();
-    Hbar1_FT2();
-    Hbar2_FT2();
-    Hbar1_VT1();
-    Hbar2_VT1();
-    Hbar2_VT2_HH();
-    Hbar2_VT2_PP();
-    Hbar2_VT2_PH();
-    Hbar1_VT2_2();
+//    Hbar1_FT1();
+//    Hbar1_FT2();
+//    Hbar2_FT2();
+//    Hbar1_VT1();
+//    Hbar2_VT1();
+//    Hbar2_VT2_HH();
+//    Hbar2_VT2_PP();
+//    Hbar2_VT2_PH();
+//    Hbar1_VT2_2();
 //    Hbar1_VT2_4_22();
 //    Hbar1_VT2_4_13();
-//    Hbar1.print(stdout);
+    Hbar1.print(stdout);
 //    Hbar2.print(stdout);
 
     // Scalar term

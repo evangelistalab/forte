@@ -30,6 +30,7 @@
 #include "fci_solver.h"
 #include "blockedtensorfactory.h"
 #include "sq.h"
+#include "dsrg_wick.h"
 
 INIT_PLUGIN
 
@@ -493,9 +494,14 @@ libadaptive(Options &options)
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
             if(options.get_str("RELAX_REF") == "ONCE"){
-                dsrg_mrpt2->transform_integrals();
+                boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
+                                                                     dsrg_mrpt2->RF(),
+                                                                     dsrg_mrpt2->Rtei(),
+                                                                     dsrg_mrpt2->Singles(),
+                                                                     dsrg_mrpt2->Doubles()));
+//                dsrg_mrpt2->transform_integrals();
 
-                FCI_MO fci(options,ints_);
+//                FCI_MO fci(options,ints_);
             }
         }
         if(options.get_str("CASTYPE")=="FCI")

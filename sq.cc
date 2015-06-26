@@ -328,7 +328,10 @@ SqTest::SqTest()
 //    op.add(5.0,sqop2);
 //    op.add(7.0,sqop3);
 //    op.add(11.0,sqop4);
-//    outfile->Printf("\n%s",op.str().c_str());
+    outfile->Printf("\n%s",op.str().c_str());
+
+    // This will generate a seg fault
+//    outfile->Printf("\n  %s", op.str().c_str());
 
     WickTheorem wt;
     Operator op_op = wt.evaluate(op,op);
