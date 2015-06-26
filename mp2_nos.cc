@@ -250,7 +250,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
                 if(D1vv_evals.get(h,a) > 0.015)
                 {
                     active_number++;
-                    active[h] = active_number++;
+                    active[h] =active_number; 
                     outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
                 }
             }
