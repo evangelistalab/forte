@@ -562,12 +562,12 @@ This keyword will tell how big every tensor is, how many blocks are used, and wi
 
 **CCVV_ALGORITHM**
 
-The type of algorithm used for the ccvv term.  The fastest algorutm is the ccvv_ambit.  Both fly methods have the same memory requirements and are well
+The type of algorithm used for the ccvv term.  The fastest algorithm is the ccvv_ambit.  Both fly methods have the same memory requirements and are well
 paralleized through openmp.  
 
 * Type: string
 * Possible values: CORE FLY_AMBIT FLY_LOOP
-* Default: FLY_LOOP
+* Default: FLY_AMBIT
 
 
 
