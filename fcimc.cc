@@ -117,6 +117,7 @@ void FCIQMC::startup()
     death_parent_only_ = options_.get_bool("DEATH_PARENT_ONLY");
     energy_estimate_freq_ = options_.get_int("VAR_ENERGY_ESTIMATE_FREQ");
     print_freq_ = options_.get_int("PRINT_FREQ");
+//    outfile->Printf("\nPrint Freq is %d", print_freq_);
     use_initiator_ = options_.get_bool("USE_INITIATOR");
     initiator_na_ = options_.get_double("INITIATOR_NA");
     if (options_.get_str("SPAWN_TYPE") == "RANDOM"){
@@ -343,23 +344,42 @@ double FCIQMC::compute_energy()
         Eprojs.push_back(compute_proj_energy(reference_, walkers));
 
         if (iter_ % print_freq_ == 0){
-            compute_var_energy(walkers);
+//            compute_var_energy(walkers);
+            compute_avg_Eproj(Eprojs);
+            compute_avg_shift(shifts);
             print_iter_info(iter_);
-        } else
-            print_iter_info(iter_);
+        }
     }
 
     outfile->Printf("\n -------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    compute_avg_Eproj(Eprojs);
+    compute_avg_shift(shifts);
+    compute_err_Eproj(Eprojs);
+    compute_err_shift(shifts);
 
-    outfile->Printf("\n\nFCIQMC calculation ended with:");
-    outfile->Printf("\nFinal iter:");
-//    print_iter_info(--iter_);
-    outfile->Printf("\nProjectional Energy info:");
-//    print_Eproj_info(Eprojs);
-    if (do_shift_) {
-        outfile->Printf("\nShift info:");
-        print_shift_info(shifts);
-    }
+    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+    outfile->Printf("\n  * FCIQMC Avg projective Energy     = %.12f Eh    Error Estimation = %.12f Eh",AvgEproj_, ErrEproj_);
+    outfile->Printf("\n  * FCIQMC Avg shifted Energy        = %.12f Eh    Error Estimation = %.12f Eh",AvgShift_+Ehf_+nuclear_repulsion_energy_, ErrShift_);
+    outfile->Printf("\n\n  * Numbef of walkers                = %zu",(size_t)nWalkers_);
+    outfile->Printf("\n\n  * Size of CI space                 = %zu",(size_t)nDets_);
+//    outfile->Printf("\n  * Spawning events/iteration          = %zu",nspawned_);
+//    outfile->Printf("\n  * Determinants that do not spawn     = %zu",nzerospawn_);
+
+//    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
+    outfile->Flush();
+
+    compute_var_energy(walkers);
+    outfile->Printf("\n\n  * FCIQMC Variational Energy        = %.12f Eh",Evar_);
+
+//    outfile->Printf("\n\nFCIQMC calculation ended with:");
+//    outfile->Printf("\nFinal iter:");
+////    print_iter_info(--iter_);
+//    outfile->Printf("\nProjectional Energy info:");
+////    print_Eproj_info(Eprojs);
+//    if (do_shift_) {
+//        outfile->Printf("\nShift info:");
+////        print_shift_info(shifts);
+//    }
     timer_off("FCIQMC:Energy");
     return 0.0;
 }
@@ -1835,7 +1855,7 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
 }
 
 void FCIQMC::print_iter_info(size_t iter){
-    outfile->Printf("\n%8zu %8.4lf %10zu %10zu %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf",iter, iter*time_step_, (size_t)nDets_, (size_t)nWalkers_, Eproj_, Eproj_, shift_, shift_, shift_+Ehf_+nuclear_repulsion_energy_, shift_+Ehf_+nuclear_repulsion_energy_);
+    outfile->Printf("\n%8zu %8.4lf %10zu %10zu %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf %20.12lf",iter, iter*time_step_, (size_t)nWalkers_, (size_t)nDets_, Eproj_, AvgEproj_, shift_, AvgShift_, shift_+Ehf_+nuclear_repulsion_energy_, AvgShift_+Ehf_+nuclear_repulsion_energy_);
 //    outfile->Printf("\niter:%zu ended with %zu dets",iter, (size_t)nDets_);
 //    if (countWalkers)
 //        outfile->Printf(", %lf walkers", nWalkers_);
@@ -1847,24 +1867,46 @@ void FCIQMC::print_iter_info(size_t iter){
 //        outfile->Printf(", shift+Ehf=%.12lf", shift_+Ehf_+nuclear_repulsion_energy_);
 }
 
-void FCIQMC::print_Eproj_info(std::vector<double> Eprojs){
+void FCIQMC::compute_avg_Eproj(std::vector<double> Eprojs){
     double sum = 0.0;
     for (size_t iter = iter_*3/4; iter<iter_; iter++) {
         sum += Eprojs[iter];
 //        outfile->Printf("\n%d\t: %.12lf",iter, Eprojs[iter]);
     }
 
-    sum /= iter_-iter_*3/4;
-    outfile->Printf("\nAverage Eproj=%.12lf", sum);
+    AvgEproj_ = sum / (iter_-iter_*3/4);
+//    outfile->Printf("\nAverage Eproj=%.12lf", sum);
 }
 
-void FCIQMC::print_shift_info(std::vector<double> shifts){
+void FCIQMC::compute_err_Eproj(std::vector<double> Eprojs){
+    double sum = 0.0;
+    for (size_t iter = iter_*3/4; iter<iter_; iter++) {
+        double diff = Eprojs[iter]-AvgEproj_;
+        sum += diff*diff;
+//        outfile->Printf("\n%d\t: %.12lf",iter, Eprojs[iter]);
+    }
+
+    ErrEproj_ = std::sqrt(sum / (iter_-iter_*3/4-1));
+//    outfile->Printf("\nAverage Eproj=%.12lf", sum);
+}
+
+void FCIQMC::compute_avg_shift(std::vector<double> shifts){
     double sum = 0.0;
     for (double shift:shifts) {
         sum += shift;
     }
-    sum /= shifts.size();
-    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
+    AvgShift_ = sum / shifts.size();
+//    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
+}
+
+void FCIQMC::compute_err_shift(std::vector<double> shifts){
+    double sum = 0.0;
+    for (double shift:shifts) {
+        double diff = shift-AvgShift_;
+        sum += diff*diff;
+    }
+    ErrShift_ = sqrt(sum / (shifts.size()-1));
+//    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
 }
 
 }} // EndNamespaces
