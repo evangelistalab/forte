@@ -236,6 +236,18 @@ public:
 
     /// Transfer integrals
     void transform_integrals();
+
+    /// return renormalized Fock matrix
+    ambit::BlockedTensor RF() {return F;}
+
+    /// return renormalized two-electron integral
+    ambit::BlockedTensor Rtei() {return V;}
+
+    /// return single excitation amplitude
+    ambit::BlockedTensor Singles() {return T1;}
+
+    /// return double excitation amplitude
+    ambit::BlockedTensor Doubles() {return T2;}
 };
 
 }} // End Namespaces
