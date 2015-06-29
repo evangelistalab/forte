@@ -1,5 +1,6 @@
 #include <numeric>
 #include <math.h>
+#include <boost/format.hpp>
 
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
@@ -62,6 +63,9 @@ void DSRG_MRPT2::startup()
 
     source_ = options_.get_str("SOURCE");
 
+    ntamp_ = options_.get_int("NTAMP");
+    intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+
     rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
     actvpi_  = Dimension (nirrep_, "Active MOs");
     ruoccpi_ = Dimension (nirrep_, "Restricted Unoccupied MOs");
@@ -115,6 +119,13 @@ void DSRG_MRPT2::startup()
 
     BTF->add_mo_space("v","ef",avirt_mos,AlphaSpin);
     BTF->add_mo_space("V","EF",bvirt_mos,BetaSpin);
+
+    label_to_spacemo['c'] = acore_mos;
+    label_to_spacemo['C'] = bcore_mos;
+    label_to_spacemo['a'] = aactv_mos;
+    label_to_spacemo['A'] = bactv_mos;
+    label_to_spacemo['v'] = avirt_mos;
+    label_to_spacemo['V'] = bvirt_mos;
 
     BTF->add_composite_mo_space("h","ijkl",{"c","a"});
     BTF->add_composite_mo_space("H","IJKL",{"C","A"});
@@ -216,8 +227,8 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
     size_t ncmo_ = ints_->ncmo();
-    std::vector<double> Fa(ncmo_);
-    std::vector<double> Fb(ncmo_);
+    Fa = std::vector<double>(ncmo_);
+    Fb = std::vector<double>(ncmo_);
 
     F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin and (i[0] == i[1])){
@@ -301,11 +312,13 @@ void DSRG_MRPT2::startup()
 void DSRG_MRPT2::print_summary()
 {
     // Print a summary
-    std::vector<std::pair<std::string,int>> calculation_info;
+    std::vector<std::pair<std::string,int>> calculation_info{
+        {"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"flow parameter",s_},
-        {"taylor expansion threshold",pow(10.0,-double(taylor_threshold_))}};
+        {"taylor expansion threshold",pow(10.0,-double(taylor_threshold_))},
+        {"intruder_tamp", intruder_tamp_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
@@ -449,12 +462,27 @@ double DSRG_MRPT2::compute_energy()
     Hbar0 = Etotal;
 
     // Analyze T1 and T2
+    outfile->Printf("\n\n  ==> Excitation Amplitudes Summary <==\n");
+    outfile->Printf("\n    Active Indices: ");
+    int c = 0;
+    for(const auto& idx: aactv_mos){
+        outfile->Printf("%4zu ", idx);
+        if(++c % 10 == 0)
+            outfile->Printf("\n    %16c", ' ');
+    }
     check_t1();
     check_t2();
     energy.push_back({"max(T1)", T1max});
     energy.push_back({"max(T2)", T2max});
     energy.push_back({"||T1||", T1norm});
     energy.push_back({"||T2||", T2norm});
+
+    outfile->Printf("\n\n  ==> Possible Intruders <==\n");
+    print_intruder("A", lt1a);
+    print_intruder("B", lt1b);
+    print_intruder("AA", lt2aa);
+    print_intruder("AB", lt2ab);
+    print_intruder("BB", lt2bb);
 
     // Print energy summary
     outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
@@ -545,32 +573,289 @@ void DSRG_MRPT2::compute_t1()
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
 
+// Binary function to achieve sorting a vector of pair<vector, double>
+// according to the double value in decending order
+template <class T1, class T2, class G3 = std::greater<T2> >
+struct rsort_pair_second {
+    bool operator()(const std::pair<T1,T2>& left, const std::pair<T1,T2>& right) {
+        G3 p;
+        return p(fabs(left.second), fabs(right.second));
+    }
+};
+
 void DSRG_MRPT2::check_t2()
 {
-    // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
-    std::vector<std::string> T2blocks = T2.block_labels();
-    for(const std::string& block: T2blocks){
-        Tensor temp = T2.block(block);
-        if(islower(block[0]) && isupper(block[1])){
-            T2norm += 4 * pow(temp.norm(), 2.0);
-        }else{
-            T2norm += pow(temp.norm(), 2.0);
-        }
-        temp.iterate([&](const std::vector<size_t>& i,double& value){
+    double T2aanorm = 0.0, T2abnorm = 0.0, T2bbnorm = 0.0;
+    size_t nonzero_aa = 0, nonzero_ab = 0, nonzero_bb = 0;
+    std::vector<std::pair<std::vector<size_t>, double>> t2aa, t2ab, t2bb;
+
+    // create all knids of spin maps; 0: aa, 1: ab, 2:bb
+    std::map<int, double> spin_to_norm;
+    std::map<int, double> spin_to_nonzero;
+    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t2;
+    std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
+
+    for(const std::string& block: T2.block_labels()){
+        int spin = isupper(block[0]) + isupper(block[1]);
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 = spin_to_t2[spin];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
+
+        T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(fabs(value) != 0.0){
+                size_t idx0 = label_to_spacemo[block[0]][i[0]];
+                size_t idx1 = label_to_spacemo[block[1]][i[1]];
+                size_t idx2 = label_to_spacemo[block[2]][i[2]];
+                size_t idx3 = label_to_spacemo[block[3]][i[3]];
+
+                ++spin_to_nonzero[spin];
+                spin_to_norm[spin] += pow(value, 2.0);
+
+                if((idx0 <= idx1) && (idx2 <= idx3)){
+                    std::vector<size_t> indices = {idx0, idx1, idx2, idx3};
+                    std::pair<std::vector<size_t>, double> idx_value = std::make_pair(indices, value);
+
+                    temp_t2.push_back(idx_value);
+                    std::sort(temp_t2.begin(), temp_t2.end(), rsort_pair_second<std::vector<size_t>, double>());
+                    if(temp_t2.size() == ntamp_ + 1){
+                        temp_t2.pop_back();
+                    }
+
+                    if(fabs(value) > fabs(intruder_tamp_)){
+                        temp_lt2.push_back(idx_value);
+                    }
+                    std::sort(temp_lt2.begin(), temp_lt2.end(), rsort_pair_second<std::vector<size_t>, double>());
+                }
                 T2max = T2max > fabs(value) ? T2max : fabs(value);
+            }
         });
     }
-    T2norm = sqrt(T2norm);
+
+    // update values
+    T2aanorm = spin_to_norm[0];
+    T2abnorm = spin_to_norm[1];
+    T2bbnorm = spin_to_norm[2];
+    T2norm = sqrt(T2aanorm + T2bbnorm + 4 * T2abnorm);
+
+    nonzero_aa = spin_to_nonzero[0];
+    nonzero_ab = spin_to_nonzero[1];
+    nonzero_bb = spin_to_nonzero[2];
+
+    t2aa = spin_to_t2[0];
+    t2ab = spin_to_t2[1];
+    t2bb = spin_to_t2[2];
+
+    lt2aa = spin_to_lt2[0];
+    lt2ab = spin_to_lt2[1];
+    lt2bb = spin_to_lt2[2];
+
+    // print summary
+    print_amp_summary("AA", t2aa, sqrt(T2aanorm), nonzero_aa);
+    print_amp_summary("AB", t2ab, sqrt(T2abnorm), nonzero_ab);
+    print_amp_summary("BB", t2bb, sqrt(T2bbnorm), nonzero_bb);
 }
 
 void DSRG_MRPT2::check_t1()
 {
-    // norm and maximum of T1 amplitudes
-    T1norm = T1.norm(); T1max = 0.0;
-    T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            T1max = T1max > fabs(value) ? T1max : fabs(value);
-    });
+    T1max = 0.0; T1norm = 0.0;
+    double T1anorm = 0.0, T1bnorm = 0.0;
+    size_t nonzero_a = 0, nonzero_b = 0;
+    std::vector<std::pair<std::vector<size_t>, double>> t1a, t1b;
+
+    // create all kinds of spin maps; true: a, false: b
+    std::map<bool, double> spin_to_norm;
+    std::map<bool, double> spin_to_nonzero;
+    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t1;
+    std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt1;
+
+    for(const std::string& block: T1.block_labels()){
+        bool spin_alpha = islower(block[0]) ? true : false;
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_t1 = spin_to_t1[spin_alpha];
+        std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 = spin_to_lt1[spin_alpha];
+
+        T1.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(fabs(value) != 0.0){
+                size_t idx0 = label_to_spacemo[block[0]][i[0]];
+                size_t idx1 = label_to_spacemo[block[1]][i[1]];
+
+                std::vector<size_t> indices = {idx0, idx1};
+                std::pair<std::vector<size_t>, double> idx_value = std::make_pair(indices, value);
+
+                ++spin_to_nonzero[spin_alpha];
+                spin_to_norm[spin_alpha] += pow(value, 2.0);
+
+                temp_t1.push_back(idx_value);
+                std::sort(temp_t1.begin(), temp_t1.end(), rsort_pair_second<std::vector<size_t>, double>());
+                if(temp_t1.size() == ntamp_ + 1){
+                    temp_t1.pop_back();
+                }
+
+                if(fabs(value) > fabs(intruder_tamp_)){
+                    temp_lt1.push_back(idx_value);
+                }
+                std::sort(temp_lt1.begin(), temp_lt1.end(), rsort_pair_second<std::vector<size_t>, double>());
+
+                T1max = T1max > fabs(value) ? T1max : fabs(value);
+            }
+        });
+    }
+
+    // update value
+    T1anorm = spin_to_norm[true];
+    T1bnorm = spin_to_norm[false];
+    T1norm = sqrt(T1anorm + T1bnorm);
+
+    nonzero_a = spin_to_nonzero[true];
+    nonzero_b = spin_to_nonzero[false];
+
+    t1a = spin_to_t1[true];
+    t1b = spin_to_t1[false];
+
+    lt1a = spin_to_lt1[true];
+    lt1b = spin_to_lt1[false];
+
+    // print summary
+    print_amp_summary("A", t1a, sqrt(T1anorm), nonzero_a);
+    print_amp_summary("B", t1b, sqrt(T1bnorm), nonzero_b);
+}
+
+void DSRG_MRPT2::print_amp_summary(const std::string &name,
+                                   const std::vector<std::pair<std::vector<size_t>, double> > &list,
+                                   const double &norm, const size_t &number_nonzero)
+{
+    int rank = name.size();
+    std::map<char, std::string> spin_case;
+    spin_case['A'] = " ";
+    spin_case['B'] = "_";
+
+    std::string indent(4, ' ');
+    std::string title = indent + "Largest T" + std::to_string(rank)
+            + " amplitudes for spin case " + name + ":";
+    std::string spin_title;
+    std::string mo_title;
+    std::string line;
+    std::string output;
+    std::string summary;
+
+    auto extendstr = [&](std::string s, int n){
+        std::string o(s);
+        while((--n) > 0) o += s;
+        return o;
+    };
+
+    if(rank == 1){
+        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] % ' ' % spin_case[name[0]] % ' ' % ' ');
+        if(spin_title.find_first_not_of(' ') != std::string::npos){
+            spin_title = "\n" + indent + extendstr(spin_title, 3);
+        }else{
+            spin_title = "";
+        }
+        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % ' ' % 'a' % ' ' % ' ');
+        mo_title = "\n" + indent + extendstr(mo_title, 3);
+        for(size_t n = 0; n != list.size(); ++n){
+            if(n % 3 == 0) output += "\n" + indent;
+            const auto& datapair = list[n];
+            std::vector<size_t> idx = datapair.first;
+            output += str(boost::format("[%3d %3c %3d %3c]%9.6f ") % idx[0] % ' ' % idx[1] % ' ' % datapair.second);
+        }
+    }
+    else if(rank == 2){
+        spin_title += str(boost::format(" %3c %3c %3c %3c %9c ") % spin_case[name[0]] % spin_case[name[1]] % spin_case[name[0]] % spin_case[name[1]] % ' ');
+        if(spin_title.find_first_not_of(' ') != std::string::npos){
+            spin_title = "\n" + indent + extendstr(spin_title, 3);
+        }else{
+            spin_title = "";
+        }
+        mo_title += str(boost::format(" %3c %3c %3c %3c %9c ") % 'i' % 'j' % 'a' % 'b' % ' ');
+        mo_title = "\n" + indent + extendstr(mo_title, 3);
+        for(size_t n = 0; n != list.size(); ++n){
+            if(n % 3 == 0) output += "\n" + indent;
+            const auto& datapair = list[n];
+            std::vector<size_t> idx = datapair.first;
+            output += str(boost::format("[%3d %3d %3d %3d]%9.6f ") % idx[0] % idx[1] % idx[2] % idx[3] % datapair.second);
+        }
+    }else{
+        outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
+        return;
+    }
+
+    if(output.size() != 0){
+        int linesize = mo_title.size() - 2;
+        line = "\n" + indent + std::string(linesize - indent.size(), '-');
+        summary = "\n" + indent + "Norm of T" + std::to_string(rank) + name
+                + " vector: (nonzero elements: " + std::to_string(number_nonzero) + ")";
+        std::string strnorm = str(boost::format("%.15f.") % norm);
+        std::string blank(linesize - summary.size() - strnorm.size() + 1, ' ');
+        summary += blank + strnorm;
+
+        output = title + spin_title + mo_title + line + output + line + summary + line;
+    }
+    outfile->Printf("\n%s", output.c_str());
+}
+
+void DSRG_MRPT2::print_intruder(const std::string &name,
+                                const std::vector<std::pair<std::vector<size_t>, double> > &list)
+{
+    int rank = name.size();
+    std::map<char, std::vector<double>> spin_to_F;
+    spin_to_F['A'] = Fa;
+    spin_to_F['B'] = Fb;
+
+    std::string indent(4, ' ');
+    std::string title = indent + "T" + std::to_string(rank) + " amplitudes larger than "
+            + str(boost::format("%.4f") % intruder_tamp_) + " for spin case "  + name + ":";
+    std::string col_title;
+    std::string line;
+    std::string output;
+
+    if(rank == 1){
+        int x = 30 + 2 * 3 + 2 - 11;
+        std::string blank(x / 2, ' ');
+        col_title += "\n" + indent + "    Amplitude         Value     "
+                + blank + "Denominator" + std::string(x - blank.size(), ' ');
+        line = "\n" + indent + std::string(col_title.size() - indent.size() - 1, '-');
+
+        for(size_t n = 0; n != list.size(); ++n){
+            const auto& datapair = list[n];
+            std::vector<size_t> idx = datapair.first;
+            size_t i = idx[0], a = idx[1];
+            double fi = spin_to_F[name[0]][i], fa = spin_to_F[name[0]][a];
+            double down = fi - fa;
+            double v = datapair.second;
+
+            output += "\n" + indent
+                    + str(boost::format("[%3d %3c %3d %3c] %13.8f (%10.6f - %10.6f = %10.6f)")
+                          % i % ' ' % a % ' ' % v % fi % fa % down);
+        }
+    }
+    else if(rank == 2){
+        int x = 50 + 4 * 3 + 2 - 11;
+        std::string blank(x / 2, ' ');
+        col_title += "\n" + indent + "    Amplitude         Value     "
+                + blank + "Denominator" + std::string(x - blank.size(), ' ');
+        line = "\n" + indent + std::string(col_title.size() - indent.size() - 1, '-');
+        for(size_t n = 0; n != list.size(); ++n){
+            const auto& datapair = list[n];
+            std::vector<size_t> idx = datapair.first;
+            size_t i = idx[0], j = idx[1], a = idx[2], b = idx[3];
+            double fi = spin_to_F[name[0]][i], fj = spin_to_F[name[1]][j];
+            double fa = spin_to_F[name[0]][a], fb = spin_to_F[name[1]][b];
+            double down = fi + fj - fa - fb;
+            double v = datapair.second;
+
+            output += "\n" + indent
+                    + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + %10.6f - %10.6f - %10.6f = %10.6f)")
+                          % i % j % a % b % v % fi % fj % fa % fb % down);
+        }
+    }else{
+        outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
+        return;
+    }
+
+    if(output.size() != 0){
+        output = title + col_title + line + output + line;
+    }
+    outfile->Printf("\n%s", output.c_str());
 }
 
 void DSRG_MRPT2::renormalize_V()
@@ -975,18 +1260,11 @@ void DSRG_MRPT2::transform_integrals(){
     O1["IJ"] -= Hbar2["IKJL"] * Gamma1["LK"];
     outfile->Printf("  Done. Timing %15.6f s", o1.get());
 
-    // Create a map between space label and space mos
-    std::map<char, std::vector<size_t>> label_to_spacemo;
-    label_to_spacemo['c'] = acore_mos;
-    label_to_spacemo['C'] = bcore_mos;
-    label_to_spacemo['a'] = aactv_mos;
-    label_to_spacemo['A'] = bactv_mos;
-
     // Fill out ints->oei
     Timer fill1;
     str = "Updating one-electron integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
-    for(std::string block: O1.block_labels()){
+    for(const std::string& block: O1.block_labels()){
         bool spin = islower(block[0]) ? true : false;
         O1.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
             size_t idx0 = label_to_spacemo[block[0]][i[0]];
@@ -1000,7 +1278,7 @@ void DSRG_MRPT2::transform_integrals(){
     Timer fill2;
     str = "Updating two-electron integrals";
     outfile->Printf("\n    %-40s ...", str.c_str());
-    for(std::string block: Hbar2.block_labels()){
+    for(const std::string& block: Hbar2.block_labels()){
         bool spin0 = islower(block[0]) ? true : false;
         bool spin1 = islower(block[1]) ? true : false;
         Hbar2.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
