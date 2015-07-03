@@ -84,6 +84,7 @@ EX_ACI::EX_ACI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIn
 
 void EX_ACI::startup()
 {
+
     // Connect the integrals to the determinant class
     StringDeterminant::set_ints(ints_);
     BitsetDeterminant::set_ints(ints_);
@@ -463,6 +464,7 @@ double EX_ACI::compute_energy()
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
 
+
     int root;
     int maxcycle = 20;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
@@ -507,7 +509,6 @@ double EX_ACI::compute_energy()
         }else{
             sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuSparse);
         }
-
 
 
         // Print the energy
@@ -610,7 +611,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
     std::map<BitsetDeterminant,std::vector<double> > V_hash;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-        BitsetDeterminant& det = P_space_[I];
+        auto& det = P_space_[I];
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
@@ -639,14 +640,13 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
     print_warning_ = false;
 
     // Check the coupling between the reference and the SD space
-    for (bsmap_it it = V_hash.begin(), endit = V_hash.end(); it != endit; ++it){
-        double EI = it->first.energy();
-
+    for(const auto& it : V_hash){
+        double EI = it.first.energy();
         //Loop over roots
         //The tau_q parameter type is chosen here ( keyword bool "perturb_select" )
         for (int n = 0; n < nroot; ++n){
-            det = it->first;
-            V[n] = it->second[n];
+            det = it.first;
+            V[n] = it.second[n];
 
             double C1_I = perturb_select_ ? -V[n] / (EI - evals->get(n)) :
                                             ( ((EI - evals->get(n))/2.0) - sqrt( std::pow(((EI - evals->get(n))/2.0),2.0) + std::pow(V[n],2.0)) ) / V[n];
@@ -669,10 +669,10 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
         }
 
         if(aimed_selection_){
-            sorted_dets.push_back(std::make_pair(criteria,it->first));
+            sorted_dets.push_back(std::make_pair(criteria,it.first));
         }else{
             if(std::fabs(criteria) > tau_q_){
-                PQ_space_.push_back(it->first);
+                PQ_space_.push_back(it.first);
             }else{
                 for (int n = 0; n < nroot; ++n){
                     ept2[n] += E2[n].second;
@@ -716,7 +716,6 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
     outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
     outfile->Flush();
 }
-
 
 double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<double,double> E2)
 {
@@ -777,13 +776,15 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
         double C1_average = 0.0;
         double E2_average = 0.0;
         double dE2_average = 0.0;
+        double dim_inv = 1.0 / dim;
         for(int n = 0; n < dim; ++n){
-            C1_average += C_s[n].first / dim;
-            E2_average += E_s[n].first / dim;
+            C1_average += C_s[n].first * dim_inv;
+            E2_average += E_s[n].first * dim_inv;
         }
         if(q_rel_){
+            double inv_d = 1.0 / (dim - 1.0);
             for(int n = 1; n < dim; ++n){
-                dE2_average += dE2[n].first / (dim-1.0);
+                dE2_average += dE2[n].first * inv_d;
             }
         }
         f_C1 = make_pair(C1_average, 0);
@@ -1719,6 +1720,11 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
 
 
     return labeled_orb;
+}
+
+void print_timing_info()
+{
+
 }
 
 }} // EndNamespaces

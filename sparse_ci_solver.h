@@ -183,6 +183,7 @@ public:
     /// Enable or disable printing of details
     void set_print_details(bool print_details) {print_details_ = print_details;}
 
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<BitsetDeterminant>& space,
@@ -250,7 +251,6 @@ private:
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
-
 
     /// Use a OMP parallel algorithm?
     bool parallel_;
