@@ -11,6 +11,7 @@
 #include "sparse_ci_solver.h"
 
 
+
 namespace psi{ namespace libadaptive{
 
 void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int nroot){
@@ -811,6 +812,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     outfile->Flush();
 
     // Form the Hamiltonian matrix
+
 #pragma omp parallel for schedule(dynamic)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
@@ -829,6 +831,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
                 }
             }
         }
+
 #pragma omp critical(save_h_row)
         {
             H_sparse[I] = make_pair(index_row,H_row);

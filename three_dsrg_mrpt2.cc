@@ -186,7 +186,6 @@ void THREE_DSRG_MRPT2::startup()
     BTF->add_mo_space("d","g",nauxpi,NoSpin);
 
     ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
-    //ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ints_->get_three_integral(i[0],i[1],i[2]);
@@ -194,8 +193,7 @@ void THREE_DSRG_MRPT2::startup()
 
 
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
-    //Returns a vector of all combinations for gggg
-    std::vector<std::string> list_of_entire_space = BTF->generate_indices("cav", "all");
+
     //Function below will return a list of pphh
     std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
 
@@ -449,6 +447,7 @@ double THREE_DSRG_MRPT2::renormalized_denominator(double D)
 
 double THREE_DSRG_MRPT2::compute_energy()
 {
+    Timer ComputeEnergy;
     // Compute reference
     //    Eref = compute_ref();
 
@@ -532,6 +531,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
 
+        outfile->Printf("\n\n\n    CD/DF-DSRG-MRPT2 took   %8.8f s.", ComputeEnergy.get());
         return Etotal;
     }
 

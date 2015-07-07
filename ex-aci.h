@@ -61,6 +61,7 @@ public:
     /// Compute the energy
     double compute_energy();
 
+
 private:
 
     // ==> Class data <==
