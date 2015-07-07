@@ -867,8 +867,6 @@ void DFIntegrals::gather_integrals()
         }
 
     }
-    Ca_sym_ = Ca_ao;
-    SharedMatrix Ca_nosym = wfn->Ca_subset("AO", "ALL");
 
 
     //B_{pq}^Q -> MO without frozen core
