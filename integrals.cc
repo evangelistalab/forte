@@ -1306,6 +1306,8 @@ void DFIntegrals::compute_frozen_one_body_operator()
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %lu",r);
+            #pragma omp parallel for num_threads(num_threads_) \
+            schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
@@ -1890,6 +1892,8 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %lu",r);
+            #pragma omp parallel for num_threads(num_threads_) \
+            schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
