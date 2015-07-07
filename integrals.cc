@@ -12,7 +12,10 @@
 #include <lib3index/cholesky.h>
 #include <libmints/mints.h>
 #include <libqt/qt.h>
+#include <libfock/jk.h>
 #include <algorithm>
+#include <numeric>
+#include "blockedtensorfactory.h"
 
 #include "integrals.h"
 #include "memory.h"
@@ -1038,6 +1041,7 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
     fock_b.iterate([&](const std::vector<size_t>& i,double& value){
         fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     });
+
 }
 
 void DFIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
@@ -1206,6 +1210,7 @@ void DFIntegrals::freeze_core_orbitals()
 
 void DFIntegrals::compute_frozen_core_energy()
 {
+    Timer FrozenEnergy;
     frozen_core_energy_ = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
@@ -1222,30 +1227,107 @@ void DFIntegrals::compute_frozen_core_energy()
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
     outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
+    outfile->Printf("\n\n Frozen_Core_Energy takes   %8.8f s", FrozenEnergy.get());
 }
 
 void DFIntegrals::compute_frozen_one_body_operator()
 {
-    size_t f = 0;
+    Timer FrozenOneBody;
+    boost::shared_ptr<BlockedTensorFactory>BTF(new BlockedTensorFactory(options_));
+
+    size_t f = 0; // The Offset for irrep
+    size_t r = 0; // The MO number for frozen core
+    size_t g = 0; //the Offset for irrep
+    std::vector<size_t> frozen_vec;
+    std::vector<size_t> corrleated_vec;
+
+    for (size_t hi = 0; hi < nirrep_; ++hi){
+        for (size_t i = 0; i < frzcpi_[hi]; ++i){
+            r = f + i;
+            frozen_vec.push_back(r);
+        }
+        f += nmopi_[hi];
+        for (size_t p = frzcpi_[hi]; p < nmopi_[hi]; p++)
+        {
+            size_t mo = p + g;
+            corrleated_vec.push_back(mo);
+        }
+        g += nmopi_[hi];
+    }
+    //Get the size of frozen MO
+    size_t frozen_size = frozen_vec.size();
+
+    //Form a map that says mo_to_rel[ABS_MO] =relative in frozen array
+    std::map<size_t, size_t>  mo_to_rel;
+    std::vector<size_t> motofrozen(frozen_size);
+    std::iota(motofrozen.begin(), motofrozen.end(), 0);
+
+    int i = 0;
+    for (auto frozen : frozen_vec)
+    {
+        mo_to_rel[frozen] = motofrozen[i];
+        i++;
+    }
+
+    BTF->add_mo_space("f","rs", frozen_vec, NoSpin);
+    BTF->add_mo_space("k", "mn", corrleated_vec, NoSpin);
+    BTF->add_composite_mo_space("a", "pq", {"f", "k"});
+
+    std::vector<size_t> nauxpi(nthree_);
+    std::iota(nauxpi.begin(), nauxpi.end(),0);
+
+    BTF->add_mo_space("d","g",nauxpi,NoSpin);
+
+    //Kevin is lazy.  Going to use ambit to perform this contraction
+    ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
+    ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+    ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+
+    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = ThreeIntegral_->get(i[0], i[1] * nmo_ + i[2]);
+    });
+    boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
+    boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
+
+    FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
+    FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+
+
+    FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        FrozenVMatrix->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
+    });
+    FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
+    });
+    f = 0;
+
     for (size_t hi = 0; hi < nirrep_; ++hi){
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %zu",r);
-            #pragma omp parallel for num_threads(num_threads_)\
-            schedule(dynamic) 
+            outfile->Printf("\n  Freezing MO %lu",r);
+            #pragma omp parallel for num_threads(num_threads_) \
+            schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
-                    one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+                    one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
+                    one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
                 }
             }
         }
         f += nmopi_[hi];
     }
+
+    ambit::BlockedTensor::reset_mo_spaces();
+    outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
+
 }
 
 void DFIntegrals::resort_integrals_after_freezing()
 {
+    Timer resort_integrals;
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
@@ -1268,6 +1350,7 @@ void DFIntegrals::resort_integrals_after_freezing()
 
     resort_three(ThreeIntegral_,cmo2mo);
 
+    outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
 }
 
 
@@ -1356,7 +1439,10 @@ void CholeskyIntegrals::gather_integrals()
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
+
+
     size_t nbf = primary->nbf();
+
 
     boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
@@ -1399,6 +1485,7 @@ void CholeskyIntegrals::gather_integrals()
         }
 
     }
+
     ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
     ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
     ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
@@ -1726,26 +1813,105 @@ void CholeskyIntegrals::compute_frozen_core_energy()
 
 void CholeskyIntegrals::compute_frozen_one_body_operator()
 {
-    size_t f = 0;
+    Timer FrozenOneBody;
+    boost::shared_ptr<BlockedTensorFactory>BTF(new BlockedTensorFactory(options_));
+
+    size_t f = 0; // The Offset for irrep
+    size_t r = 0; // The MO number for frozen core
+    size_t g = 0; //the Offset for irrep
+    std::vector<size_t> frozen_vec;
+    std::vector<size_t> corrleated_vec;
+
+    for (size_t hi = 0; hi < nirrep_; ++hi){
+        for (size_t i = 0; i < frzcpi_[hi]; ++i){
+            r = f + i;
+            frozen_vec.push_back(r);
+        }
+        f += nmopi_[hi];
+        for (size_t p = frzcpi_[hi]; p < nmopi_[hi]; p++)
+        {
+            size_t mo = p + g;
+            corrleated_vec.push_back(mo);
+        }
+        g += nmopi_[hi];
+    }
+    //Get the size of frozen MO
+    size_t frozen_size = frozen_vec.size();
+
+    //Form a map that says mo_to_rel[ABS_MO] =relative in frozen array
+    std::map<size_t, size_t>  mo_to_rel;
+    std::vector<size_t> motofrozen(frozen_size);
+    std::iota(motofrozen.begin(), motofrozen.end(), 0);
+
+    int i = 0;
+    for (auto frozen : frozen_vec)
+    {
+        mo_to_rel[frozen] = motofrozen[i];
+        i++;
+    }
+
+    BTF->add_mo_space("f","rs", frozen_vec, NoSpin);
+    BTF->add_mo_space("k", "mn", corrleated_vec, NoSpin);
+    BTF->add_composite_mo_space("a", "pq", {"f", "k"});
+
+    std::vector<size_t> nauxpi(nthree_);
+    std::iota(nauxpi.begin(), nauxpi.end(),0);
+
+    BTF->add_mo_space("d","g",nauxpi,NoSpin);
+
+    //Kevin is lazy.  Going to use ambit to perform this contraction
+    ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
+    ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+    ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+
+    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = ThreeIntegral_->get(i[0], i[1] * nmo_ + i[2]);
+    });
+    boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
+    boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
+
+    FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
+    FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+
+
+    //Fill the SharedMatrix as frozen^2 by nmo^2
+    //mo_to_rel[i[0]] gives the relative index in the first row ie orbital 28th which is frozen is the 3rd frozen orbital
+    FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        FrozenVMatrix->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
+    });
+    FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
+    });
+    f = 0;
+
+    //Tried to do this with ambit, but it seems that this is not really a contraction
+    //Ambit complains and so I revert back to origin way, but I contract out the auxiliary index
+    //This could become a problem for large systems
     for (size_t hi = 0; hi < nirrep_; ++hi){
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
             outfile->Printf("\n  Freezing MO %lu",r);
-            #pragma omp parallel for num_threads(num_threads_)\
-            schedule(dynamic) 
+            #pragma omp parallel for num_threads(num_threads_) \
+            schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += aptei_aa(r,p,r,q) + aptei_ab(r,p,r,q);
-                    one_electron_integrals_b[p * nmo_ + q] += aptei_bb(r,p,r,q) + aptei_ab(r,p,r,q);
+                    one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
+                    one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
                 }
             }
         }
         f += nmopi_[hi];
     }
+
+    ambit::BlockedTensor::reset_mo_spaces();
+    outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
 }
 ///**
 // * Make the one electron intermediates
-// * h'_pq = h_pq - 1/2 \sum_r (pr|qr)
+// * h'_pq = h_pq - 1/2 \sum_(pr|qr)
 // */
 //void Integrals::make_h()
 //{
@@ -1753,7 +1919,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //    for(size_t q = 0; q < nmo; ++q){
 //      h_aa[p][q] = oei_aa[p][q];
 //      h_bb[p][q] = oei_bb[p][q];
-//      for(size_t r = 0; r < nmo; ++r){
+//      for(size_t = 0; < nmo; ++r){
 //        h_aa[p][q] -= 0.5 * aaaa(p,r,q,r);
 //        h_bb[p][q] -= 0.5 * bbbb(p,r,q,r);
 //      }
@@ -1775,7 +1941,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //        // Builf Fock
 //        f_aa[mu][p][q] = oei_aa[p][q]
 //        // Add the non-frozen alfa part, the forzen core part is already included in oei
-//        for (int k = 0; k < moinfo->get_nall(); ++k) {
+//        fo(int k = 0; k < moinfo->get_nall(); ++k) {
 //          size_t k_f = moinfo->get_all_to_mo()[k];
 //          if (occupation[k]) {
 //            f_aa[mu][p][q] += aaaa(p,q,k_f,k_f) - aaaa(p,k_f,q,k_f);
@@ -1788,7 +1954,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //        // Builf Fock Diagonal beta-beta
 //        f_bb[mu][p][q] = oei_bb[p][q];
 //        // Add the non-frozen beta part, the forzen core part is already included in oei
-//        for (int k = 0; k < moinfo->get_nall(); ++k) {
+//        fo(int k = 0; k < moinfo->get_nall(); ++k) {
 //         size_t k_f = moinfo->get_all_to_mo()[k];
 //          if (occupation[k]) {
 //            f_bb[mu][p][q] += bbaa(p,q,k_f,k_f);
@@ -1800,9 +1966,9 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //      }
 //    }
 //    if(options_.get_int("PRINT") > 6){
-//      outfile->Printf("\n  alfa-alfa fock matrix for reference %d",mu);
+//      outfile->Printf("\n  alfa-alfa fock matrix foreference %d",mu);
 //      mat_print(f_aa[mu],nmo,nmo,"outfile");
-//      outfile->Printf("\n  beta-beta fock matrix for reference %d",mu);
+//      outfile->Printf("\n  beta-beta fock matrix foreference %d",mu);
 //      mat_print(f_bb[mu],nmo,nmo,"outfile");
 //    }
 //  }
@@ -1819,8 +1985,8 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //      // Builf Fock Diagonal alpha-alpha
 //      f_avg_aa[p][q] = oei_aa[p][q];
 //      // Add the non-frozen alfa part, the forzen core part is already included in oei
-//      for (int r = 0; r < nall; ++r) {
-//        for (int s = 0; s < nall; ++s) {
+//      fo(int = 0; < nall; ++r) {
+//        fo(int s = 0; s < nall; ++s) {
 //          size_t r_f = moinfo->get_all_to_mo()[r];
 //          size_t s_f = moinfo->get_all_to_mo()[s];
 //          f_avg_aa[p][q] += opdm_aa[r][s] * (aaaa(p,q,r_f,s_f) - aaaa(p,r_f,q,s_f));
@@ -1832,8 +1998,8 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //      f_avg_bb[p][q] = oei_bb[p][q];
 //      // Add the non-frozen beta part, the forzen core part is already included in oei
 //      // Add the non-frozen alfa part, the forzen core part is already included in oei
-//      for (int r = 0; r < nall; ++r) {
-//        for (int s = 0; s < nall; ++s) {
+//      fo(int = 0; < nall; ++r) {
+//        fo(int s = 0; s < nall; ++s) {
 //          size_t r_f = moinfo->get_all_to_mo()[r];
 //          size_t s_f = moinfo->get_all_to_mo()[s];
 //          f_avg_bb[p][q] += opdm_aa[r][s] *  bbaa(p,q,r_f,s_f);
@@ -1853,17 +2019,17 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 
 
 ///**
-// * Compute the denominator corresponding to the alfa excitation
+// * Compute the denominatocorresponding to the alfa excitation
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // * @param mu the reference determinant
 // */
 //double Integrals::get_alfa_denominator(const int* occvir,int n,int mu)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occvir[i]];
 //    int a_f = all_to_mo[occvir[i + n]];
 //    value += f_aa[mu][i_f][i_f];
@@ -1873,17 +2039,17 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //}
 
 ///**
-// * Compute the denominator corresponding to the beta excitation
+// * Compute the denominatocorresponding to the beta excitation
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // * @param mu the reference determinant
 // */
 //double Integrals::get_beta_denominator(const int* occvir,int n,int mu)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occvir[i]];
 //    int a_f = all_to_mo[occvir[i + n]];
 //    value += f_bb[mu][i_f][i_f];
@@ -1893,17 +2059,17 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //}
 
 ///**
-// * Compute the denominator corresponding to the alfa excitation
+// * Compute the denominatocorresponding to the alfa excitation
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // * @param mu the reference determinant
 // */
 //double Integrals::get_alfa_denominator(int* occ,int* vir,int n,int mu)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occ[i]];
 //    int a_f = all_to_mo[vir[i]];
 //    value += f_aa[mu][i_f][i_f];
@@ -1913,17 +2079,17 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //}
 
 ///**
-// * Compute the denominator corresponding to the beta excitation
+// * Compute the denominatocorresponding to the beta excitation
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // * @param mu the reference determinant
 // */
 //double Integrals::get_beta_denominator(int* occ,int* vir,int n,int mu)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occ[i]];
 //    int a_f = all_to_mo[vir[i]];
 //    value += f_bb[mu][i_f][i_f];
@@ -1933,16 +2099,16 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //}
 
 ///**
-// * Compute the denominator corresponding to the alfa excitation using the average fock matrix
+// * Compute the denominatocorresponding to the alfa excitation using the average fock matrix
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // */
 //double Integrals::get_alfa_avg_denominator(const int* occvir,int n)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occvir[i]];
 //    int a_f = all_to_mo[occvir[i + n]];
 //    value += f_avg_aa[i_f][i_f];
@@ -1952,17 +2118,17 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //}
 
 ///**
-// * Compute the denominator corresponding to the beta excitation using the average fock matrix
+// * Compute the denominatocorresponding to the beta excitation using the average fock matrix
 // * (i_1,...,i_k,a_1,...,a_k) =  a+(a_k) ... a+(a_2) a+(a_1) a-(i_k) ... a-(i_2) a-(i_1)
 // * @param occ the list of occupied labels numbered according to the all space
-// * @param vir the list of virtual labels numbered according to the all space
-// * @param n the number of labels
+// * @param vithe list of virtual labels numbered according to the all space
+// * @param n the numbeof labels
 // * @param mu the reference determinant
 // */
 //double Integrals::get_beta_avg_denominator(const int* occvir,int n)
 //{
 //  double value = 0.0;
-//  for (int i = 0; i < n; ++i) {
+//  fo(int i = 0; i < n; ++i) {
 //    int i_f = all_to_mo[occvir[i]];
 //    int a_f = all_to_mo[occvir[i + n]];
 //    value += f_avg_bb[i_f][i_f];
@@ -1983,9 +2149,9 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 //    vector<int> mooff;
 //    vector<int> irrep_off(nirrep_,0);
 //    mooff.push_back(0);
-//    for (int h = 1; h < nirrep_; ++h) mooff.push_back(mooff[h-1] + nmopi[h]);
-//    for (int hp = 0; hp < nirrep_; ++hp){
-//        for (int hq = 0; hq < nirrep_; ++hq){
+//    fo(int h = 1; h < nirrep_; ++h) mooff.push_back(mooff[h-1] + nmopi[h]);
+//    fo(int hp = 0; hp < nirrep_; ++hp){
+//        fo(int hq = 0; hq < nirrep_; ++hq){
 //            for (int p = 0; p < nmopi[hp]; ++p){
 //                for (int q = 0; q < nmopi[hq]; ++q){
 //                    int absp = p + mooff[hp];
