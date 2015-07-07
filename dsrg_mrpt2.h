@@ -95,6 +95,9 @@ protected:
     /// Map from all the MOs to the beta virtual
     std::map<size_t,size_t> mos_to_bvirt;
 
+    /// Map from space label to list of MOs
+    std::map<char, std::vector<size_t>> label_to_spacemo;
+
     /// The flow parameter
     double s_;
 
@@ -145,6 +148,28 @@ protected:
     double renormalized_denominator_emp2(double V,double D);
     double renormalized_denominator_lamp(double V,double D);
     double renormalized_denominator_lemp2(double V,double D);
+
+    /// Number of amplitudes will be printed in amplitude summary
+    int ntamp_;
+    /// Print amplitudes summary
+    void print_amp_summary(const std::string& name,
+                           const std::vector<std::pair<std::vector<size_t>, double>>& list, const double &norm,
+                           const size_t& number_nonzero);
+
+    /// Threshold for amplitudes considered as intruders
+    double intruder_tamp_;
+    /// Diagonal elements of Fock matrices
+    std::vector<double> Fa;
+    std::vector<double> Fb;
+    /// List of large amplitudes
+    std::vector<std::pair<std::vector<size_t>, double>> lt1a;
+    std::vector<std::pair<std::vector<size_t>, double>> lt1b;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2aa;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2ab;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2bb;
+    /// Print intruder analysis
+    void print_intruder(const std::string& name,
+                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
     /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t2();
