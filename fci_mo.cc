@@ -39,7 +39,7 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
         else
             outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
         outfile->Printf("\n  Check root_sym, multi, etc.");
-        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%).");
+        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5\%).");
         throw PSIEXCEPTION("Too many roots of interest.");
     }
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
@@ -545,6 +545,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     if(ref_type_ == "UHF" || ref_type_ == "UKS"){
         threshold = 0.05 * multi_;    // 5% off from the multiplicity of the spin eigen state
     }
+    outfile->Printf("\n  Threshold for spin check: %.4f", threshold);
 
     for (int i = 0; i != nroot; ++i){
         double S2 = 0.0;
