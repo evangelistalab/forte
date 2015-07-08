@@ -53,6 +53,13 @@ read_options(std::string name, Options &options)
         /// Use Natural Orbitals to suggest active space
         options.add_bool("NAT_ACT", false);
 
+        // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
+
+        /// Typically, a occupied orbital with a NO occupation of <0.98 is considered active
+        options.add_double("OCC_NATURAL", 0.98);
+        /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
+        options.add_double("VIRT_NATURAL", 0.02);
+
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
