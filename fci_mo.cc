@@ -39,7 +39,7 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
         else
             outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
         outfile->Printf("\n  Check root_sym, multi, etc.");
-        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5\%).");
+        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
         throw PSIEXCEPTION("Too many roots of interest.");
     }
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
