@@ -19,6 +19,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
                          "written by Francesco A. Evangelista"});
 
     BlockedTensor::set_expert_mode(true);
+    BlockedTensor::reset_mo_spaces();
 
     /// List of alpha occupied MOs
     std::vector<size_t> a_occ_mos;

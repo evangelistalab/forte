@@ -44,6 +44,7 @@ DSRG_MRPT2::~DSRG_MRPT2()
 void DSRG_MRPT2::startup()
 {
     Eref = reference_.get_Eref();
+    BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();
 
