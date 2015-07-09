@@ -548,6 +548,12 @@ libadaptive(Options &options)
            FCI_MO fci_mo(options,ints_);
            Reference reference = fci_mo.reference();
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
+           {
+                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
+                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
+           }
+            
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
            three_dsrg_mrpt2->compute_energy();
        }
@@ -565,6 +571,11 @@ libadaptive(Options &options)
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
            fci->compute_energy();
            Reference reference = fci->reference();
+           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
+           {
+                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
+                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
+           }
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
            three_dsrg_mrpt2->compute_energy();
        }
