@@ -1234,6 +1234,7 @@ void DFIntegrals::compute_frozen_one_body_operator()
 {
     Timer FrozenOneBody;
     boost::shared_ptr<BlockedTensorFactory>BTF(new BlockedTensorFactory(options_));
+    ambit::BlockedTensor::reset_mo_spaces();
 
     size_t f = 0; // The Offset for irrep
     size_t r = 0; // The MO number for frozen core
