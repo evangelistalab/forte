@@ -27,8 +27,8 @@ UNO::UNO(Options &options){
     overlap->diagonalize(Lvector, Lvalues);
 
     // AO overlap one half and minus one half
-    SharedMatrix Lvalue_onehalf (new Matrix("Overlap One Half", nsopi, nsopi));
-    SharedMatrix Lvalue_minus_onehalf (new Matrix("Overlap Minus One Half", nsopi, nsopi));
+    SharedMatrix Lvalue_onehalf (new Matrix("Overlap Eigen Values One Half", nsopi, nsopi));
+    SharedMatrix Lvalue_minus_onehalf (new Matrix("Overlap Eigen Values Minus One Half", nsopi, nsopi));
     for(int h = 0; h != nirrep; ++h){
         size_t m = nsopi[h];
         for (size_t i = 0; i != m; ++i){
@@ -67,7 +67,7 @@ UNO::UNO(Options &options){
         closed.push_back(closedpi);
         active.push_back(activepi);
     }
-    outfile->Printf("\n  %-25s ", "RESTRICTED_DOCC:");
+    outfile->Printf("\n  %-25s ", "CLOSED:");
     for(auto &rocc: closed){
         outfile->Printf("%5zu", rocc);
     }
@@ -77,7 +77,6 @@ UNO::UNO(Options &options){
     }
     outfile->Printf("\n");
 
-
     // UNO coefficients
     SharedMatrix Ca = wfn->Ca();
     SharedMatrix Cb = wfn->Cb();
@@ -86,7 +85,7 @@ UNO::UNO(Options &options){
     Ca->copy(Cnew);
     Cb->copy(Cnew);
 
-    // print options
+    // print UNO details
     if(options.get_bool("UNO_PRINT")){
         outfile->Printf("\n  UNO Occupation Number:\n");
         occ->print();
