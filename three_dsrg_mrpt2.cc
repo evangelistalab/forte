@@ -185,7 +185,8 @@ void THREE_DSRG_MRPT2::startup()
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     BTF->add_mo_space("d","g",nauxpi,NoSpin);
 
-    ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    //ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ints_->get_three_integral(i[0],i[1],i[2]);
@@ -264,22 +265,50 @@ void THREE_DSRG_MRPT2::startup()
     Eta1_aa("pq") -= reference_.L1a()("pq");
     Eta1_AA("pq") -= reference_.L1b()("pq");
 
-    // Fill in the two-electron operator (V)
-    //V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-    //    if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-    //    if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
-    //});
+    //This code below assumes that the ThreeIntegral is as gpq, gPQ 
+
+    //V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+    //V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+
+    ////V["aBiJ"] =  ThreeIntegral["gai"]*ThreeIntegral["gBJ"];
+
+    //V["ABIJ"] =  ThreeIntegral["gAI"]*ThreeIntegral["gBJ"];
+    //V["ABIJ"] -= ThreeIntegral["gAJ"]*ThreeIntegral["gBI"];
+
+    //Avoid building the beta spin of ThreeIntegral (restricted orbitals both are same)
+
+
 
     V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+    std::vector<std::string> Vblock_label = V.block_labels();
+    std::string transformed_string;
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = V.block(block);
+            ambit::Tensor Vabij = V.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
     V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = V.block(block);
+            ambit::Tensor Vabij = V.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+    V.block("aaaa").print(stdout);
+    V.block("AAAA").print(stdout);
 
-    V["aBiJ"] =  ThreeIntegral["gai"]*ThreeIntegral["gBJ"];
-
-    V["ABIJ"] =  ThreeIntegral["gAI"]*ThreeIntegral["gBJ"];
-    V["ABIJ"] -= ThreeIntegral["gAJ"]*ThreeIntegral["gBI"];
-
-
+    //Copy the alpha to beta
 
  //   V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
  //       if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
@@ -287,14 +316,27 @@ void THREE_DSRG_MRPT2::startup()
  //       if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
  //   });
     F["pq"]  = H["pq"];
-    F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
+    F["pq"] += 2.0 * ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
     F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
-    F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+    //F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+    //F["pq"]  += ThreeIntegral["gpq"] * ThreeIntegral["gji"]*Gamma1["ij"];
 
-    F["PQ"]  = H["PQ"];
-    F["PQ"] += ThreeIntegral["gji"]*ThreeIntegral["gPQ"]*Gamma1["ij"];
-    F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-    F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
+    //F["PQ"]  = H["PQ"];
+    //F["PQ"] += ThreeIntegral["gji"]*ThreeIntegral["gPQ"]*Gamma1["ij"];
+    //F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+    //F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
+    for (auto block : F.block_labels())
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::isupper(block[0]) && std::isupper(block[1]))
+        {
+            ambit::Tensor FABIJ = F.block(block);
+            ambit::Tensor Fabij = F.block(transformed_string);
+            FABIJ.copy(Fabij);
+        }
+    }
+    F.print(stdout);
 
     size_t ncmo_ = ints_->ncmo();
 
@@ -1210,7 +1252,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
     ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
     Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
-    Bb("MgE") = (ThreeIntegral.block("dCV"))("gME");
+    Bb("MgE") = (ThreeIntegral.block("dcv"))("gME");
 
     size_t dim = nthree * virtual_;
     double Emp2 = 0.0;
@@ -1261,7 +1303,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
         #pragma omp critical
         {
         std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmaVec[thread].data().begin());
-        std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
+        //std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
+        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmbVec[thread].data().begin());
         }
         for(size_t n = 0; n < core_; ++n){
             size_t na = acore_mos[n];
@@ -1269,7 +1312,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             #pragma omp critical
             {
             std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
-            std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
+            //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
+            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnbVec[thread].data().begin());
             }
 
             // alpha-aplha
