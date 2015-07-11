@@ -24,7 +24,7 @@ molecule mbenzyne{
 set globals{
    basis                   sto-3g
    df_basis_mp2            cc-pvdz-ri
-   reference               twocon
+   reference               TWOCON
    scf_type                pk
    d_convergence           10
    e_convergence           12
@@ -51,6 +51,6 @@ set libadaptive{
 energy('mcscf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refmcscf, get_variable("SCF total energy"),10,"DSRG-MRPT2 energy")
+compare_values(refmcscf, get_variable("SCF total energy"),10,"SCF Energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
