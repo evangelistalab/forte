@@ -31,6 +31,7 @@
 #include "blockedtensorfactory.h"
 #include "sq.h"
 #include "dsrg_wick.h"
+#include "uno.h"
 
 INIT_PLUGIN
 
@@ -52,6 +53,20 @@ read_options(std::string name, Options &options)
         options.add_bool("NAT_ORBS_PRINT", false);
         /// Use Natural Orbitals to suggest active space
         options.add_bool("NAT_ACT", false);
+
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR UNO
+        //////////////////////////////////////////////////////////////
+
+        /*- Use unrestricted natural orbitals? -*/
+        options.add_bool("UNO", false);
+        /*- Minimum occupation number -*/
+        options.add_double("UNOMIN", 0.02);
+        /*- Maximum occupation number -*/
+        options.add_double("UNOMAX", 1.98);
+        /*- Print unrestricted natural orbitals -*/
+        options.add_bool("UNO_PRINT", false);
+
 
         /*- The amount of information printed
             to the output file -*/
@@ -410,6 +425,12 @@ libadaptive(Options &options)
     Timer overall_time;
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
+    if(options.get_bool("UNO")){
+        std::string ref = options.get_str("REFERENCE");
+        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
+            UNO uno(options);
+        }
+    }
 
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
