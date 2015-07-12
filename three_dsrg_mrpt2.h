@@ -33,6 +33,8 @@ protected:
 
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
+    /// The type of SCF reference
+    std::string ref_type_;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
