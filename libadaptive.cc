@@ -31,6 +31,7 @@
 #include "blockedtensorfactory.h"
 #include "sq.h"
 #include "dsrg_wick.h"
+#include "uno.h"
 
 INIT_PLUGIN
 
@@ -59,6 +60,20 @@ read_options(std::string name, Options &options)
         options.add_double("OCC_NATURAL", 0.98);
         /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
         options.add_double("VIRT_NATURAL", 0.02);
+
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR UNO
+        //////////////////////////////////////////////////////////////
+
+        /*- Use unrestricted natural orbitals? -*/
+        options.add_bool("UNO", false);
+        /*- Minimum occupation number -*/
+        options.add_double("UNOMIN", 0.02);
+        /*- Maximum occupation number -*/
+        options.add_double("UNOMAX", 1.98);
+        /*- Print unrestricted natural orbitals -*/
+        options.add_bool("UNO_PRINT", false);
+
 
         /*- The amount of information printed
             to the output file -*/
@@ -417,6 +432,12 @@ libadaptive(Options &options)
     Timer overall_time;
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
+    if(options.get_bool("UNO")){
+        std::string ref = options.get_str("REFERENCE");
+        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
+            UNO uno(options);
+        }
+    }
 
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
@@ -548,12 +569,6 @@ libadaptive(Options &options)
            FCI_MO fci_mo(options,ints_);
            Reference reference = fci_mo.reference();
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
-           {
-                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
-                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
-           }
-            
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
            three_dsrg_mrpt2->compute_energy();
        }

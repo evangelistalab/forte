@@ -158,6 +158,17 @@ void FCI_MO::read_info(Options &options){
 
     // Reference type
     ref_type_ = options.get_str("REFERENCE");
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
+        outfile->Printf("\n  Unrestricted reference is detected.");
+        if(!options.get_bool("UNO")){
+            outfile->Printf("\n  Warning! Warning! Warning! Warning!");
+            outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
+            outfile->Printf("\n  Otherwise, semi-canonicalization will fail for beta spin.");
+            outfile->Printf("\n  Unrestricted natural orbitals can be computed by setting \"UNO\" option to \"true\".");
+        }else{
+            outfile->Printf("\n  Unrestricted natural orbitals are employed. Good Choice!");
+        }
+    }
 
     // Print Level
     print_ = options.get_int("PRINT");
@@ -542,8 +553,8 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     int count = 0;
     outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
     double threshold = 1.0e-4;
-    if(ref_type_ == "UHF" || ref_type_ == "UKS"){
-        threshold = 0.05 * multi_;    // 5% off from the multiplicity of the spin eigen state
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
+        threshold = 0.10 * multi_;    // 10% off from the multiplicity of the spin eigen state
     }
     outfile->Printf("\n  Threshold for spin check: %.4f", threshold);
 
