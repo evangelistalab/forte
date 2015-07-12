@@ -950,6 +950,7 @@ void DFIntegrals::make_diagonal_integrals()
 
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
+
     outfile->Printf("\n DFIntegrals overall time");
     Timer DFInt;
     allocate();

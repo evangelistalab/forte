@@ -50,6 +50,8 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefu
     {
         BTF->print_memory_info();
     }
+    ref_type_ = options_.get_str("REFERENCE");
+    outfile->Printf("\n Reference = %s", ref_type_.c_str());
 
     startup();
     //if(false){
@@ -185,8 +187,14 @@ void THREE_DSRG_MRPT2::startup()
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     BTF->add_mo_space("d","g",nauxpi,NoSpin);
 
-    //ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
-    ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF")
+    {
+        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+    }
+    else
+    {
+        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
+    }
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ints_->get_three_integral(i[0],i[1],i[2]);
@@ -267,47 +275,49 @@ void THREE_DSRG_MRPT2::startup()
 
     //This code below assumes that the ThreeIntegral is as gpq, gPQ 
 
-    //V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
-    //V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF")
+    {
+        V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+        V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
 
-    ////V["aBiJ"] =  ThreeIntegral["gai"]*ThreeIntegral["gBJ"];
+        V["aBiJ"] =  ThreeIntegral["gai"]*ThreeIntegral["gBJ"];
 
-    //V["ABIJ"] =  ThreeIntegral["gAI"]*ThreeIntegral["gBJ"];
-    //V["ABIJ"] -= ThreeIntegral["gAJ"]*ThreeIntegral["gBI"];
+        V["ABIJ"] =  ThreeIntegral["gAI"]*ThreeIntegral["gBJ"];
+        V["ABIJ"] -= ThreeIntegral["gAJ"]*ThreeIntegral["gBI"];
+    }
 
     //Avoid building the beta spin of ThreeIntegral (restricted orbitals both are same)
-
-
-
-    V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
-    std::vector<std::string> Vblock_label = V.block_labels();
-    std::string transformed_string;
-    for(const std::string& block : Vblock_label)
+    else
     {
-        transformed_string = block;
-        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
-        if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+        V["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+        std::vector<std::string> Vblock_label = V.block_labels();
+        std::string transformed_string;
+
+        for(const std::string& block : Vblock_label)
         {
-            ambit::Tensor VABIJ = V.block(block);
-            ambit::Tensor Vabij = V.block(transformed_string);
-            VABIJ.copy(Vabij);
+            transformed_string = block;
+            std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+            if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+            {
+                ambit::Tensor VABIJ = V.block(block);
+                ambit::Tensor Vabij = V.block(transformed_string);
+                VABIJ.copy(Vabij);
+            }
+        }
+
+        V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+        for(const std::string& block : Vblock_label)
+        {
+            transformed_string = block;
+            std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+            if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
+            {
+                ambit::Tensor VABIJ = V.block(block);
+                ambit::Tensor Vabij = V.block(transformed_string);
+                VABIJ.copy(Vabij);
+            }
         }
     }
-    V["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
-    for(const std::string& block : Vblock_label)
-    {
-        transformed_string = block;
-        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
-        if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
-        {
-            ambit::Tensor VABIJ = V.block(block);
-            ambit::Tensor Vabij = V.block(transformed_string);
-            VABIJ.copy(Vabij);
-        }
-    }
-    V.block("aaaa").print(stdout);
-    V.block("AAAA").print(stdout);
-
     //Copy the alpha to beta
 
  //   V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -315,28 +325,37 @@ void THREE_DSRG_MRPT2::startup()
  //       if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
  //       if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
  //   });
-    F["pq"]  = H["pq"];
-    F["pq"] += 2.0 * ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
-    F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
-    //F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-    //F["pq"]  += ThreeIntegral["gpq"] * ThreeIntegral["gji"]*Gamma1["ij"];
-
-    //F["PQ"]  = H["PQ"];
-    //F["PQ"] += ThreeIntegral["gji"]*ThreeIntegral["gPQ"]*Gamma1["ij"];
-    //F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-    //F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
-    for (auto block : F.block_labels())
+    if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
     {
-        transformed_string = block;
-        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
-        if(std::isupper(block[0]) && std::isupper(block[1]))
+        F["pq"]  = H["pq"];
+        F["pq"] += 2.0 * ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
+        F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
+
+        std::string transformed_string;
+        for (auto block : F.block_labels())
         {
-            ambit::Tensor FABIJ = F.block(block);
-            ambit::Tensor Fabij = F.block(transformed_string);
-            FABIJ.copy(Fabij);
+            transformed_string = block;
+            std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+            if(std::isupper(block[0]) && std::isupper(block[1]))
+            {
+                ambit::Tensor FABIJ = F.block(block);
+                ambit::Tensor Fabij = F.block(transformed_string);
+                FABIJ.copy(Fabij);
+            }
         }
     }
-    F.print(stdout);
+    else
+    {
+        F["pq"]  = H["pq"];
+        F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+        F["pq"] += ThreeIntegral["gpq"] * ThreeIntegral["gji"]*Gamma1["ij"];
+        F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
+
+        F["PQ"]  = H["PQ"];
+        F["PQ"] += ThreeIntegral["gji"]*ThreeIntegral["gPQ"]*Gamma1["ij"];
+        F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
+        F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
+    }
 
     size_t ncmo_ = ints_->ncmo();
 
