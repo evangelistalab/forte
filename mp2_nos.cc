@@ -239,13 +239,13 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
                 if(D1oo_evals.get(h,i) < occupied)
                 {
                     active_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,i, D1oo_evals.get(h,i));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f Active occupied", h,i, D1oo_evals.get(h,i));
                     active[h] = active_number;
                 }
                 else if(D1oo_evals.get(h,i) >= occupied)
                 {
                     restricted_docc_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h, i, D1oo_evals.get(h,i));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f  RDOCC", h, i, D1oo_evals.get(h,i));
                     restricted_docc[h] = restricted_docc_number;
                 }
             }
@@ -254,7 +254,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
                 {
                     active_number++;
                     active[h] =active_number; 
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f Active virtual", h,a, D1vv_evals.get(h,a));
                 }
             }
 

@@ -146,7 +146,7 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
         ambit::Tensor temp = BT.block(block);
         size_of_tensor += temp.numel();
     }
-    double memory_of_tensor = size_of_tensor / 1073741824;
+    double memory_of_tensor = (size_of_tensor * sizeof(double)) / 1073741824.0;
     tensors_information_.push_back(std::make_pair(BT.name(),
     memory_of_tensor));
     number_of_blocks_.push_back(BT.numblocks());
