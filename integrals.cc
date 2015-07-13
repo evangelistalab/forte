@@ -846,7 +846,7 @@ void DFIntegrals::gather_integrals()
     size_t naux  = auxiliary->nbf();
     nthree_ = naux;
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-    outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * 8/1073741824.0));
+    outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
 
     Dimension nsopi_ = wfn->nsopi();
     SharedMatrix aotoso = wfn->aotoso();
