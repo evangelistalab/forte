@@ -33,6 +33,8 @@ protected:
 
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
+    /// The type of SCF reference
+    std::string ref_type_;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
@@ -92,21 +94,16 @@ protected:
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
-    ambit::BlockedTensor DFL;
     ambit::BlockedTensor Gamma1;
     ambit::BlockedTensor Eta1;
     ambit::BlockedTensor Lambda2;
     ambit::BlockedTensor Lambda3;
     ambit::BlockedTensor Delta1;
-    ambit::BlockedTensor Delta2;
     ambit::BlockedTensor RDelta1;
-    ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
     ambit::BlockedTensor T2pr; // <- Reduced T2 amplitude
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
-    boost::shared_ptr<Matrix> RExp2M_;
     ambit::BlockedTensor ThreeIntegral;
 
     /// A vector of strings that avoids creating ccvv indices
