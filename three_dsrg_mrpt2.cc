@@ -225,14 +225,13 @@ void THREE_DSRG_MRPT2::startup()
 
     //Need to avoid building ccvv part of this
     //ccvv only used for creating T2
-    RDelta2 = BTF->build(tensor_type_,"RDelta2",BTF->spin_cases_avoid(hhpp_no_cv));
+    //RDelta2 = BTF->build(tensor_type_,"RDelta2",BTF->spin_cases_avoid(hhpp_no_cv));
 
 
     T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
 
     RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BTF->build(tensor_type_,"RExp2",BTF->spin_cases_avoid(hhpp_no_cv));
-    //all_spin = RExp2.get.();
+
     T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
              BTF->spin_cases_avoid(no_hhpp_));
 
@@ -336,13 +335,7 @@ void THREE_DSRG_MRPT2::startup()
             }
         }
     }
-    //Copy the alpha to beta
 
- //   V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
- //       if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
- //       if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
- //       if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
- //   });
     if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
     {
     F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value)
@@ -401,15 +394,15 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
         }
     });
-    RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
+    //RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+    //        value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+    //    }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+    //        value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+    //    }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+    //        value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+    //    }
+    //});
 
     // Fill out Lambda2 and Lambda3
     Tensor Lambda2_aa = Lambda2.block("aaaa");
@@ -439,21 +432,6 @@ void THREE_DSRG_MRPT2::startup()
     });
 
 
-    RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-//    for (size_t i = 0; i < naocc*navir; i++)
-//    {
-//        if(RExpEigs->get(i) < -1.0e-8) count++;
-//    }
-
-    // Print levels
     print_ = options_.get_int("PRINT");
 
     if(print_ > 1){
@@ -630,9 +608,26 @@ void THREE_DSRG_MRPT2::compute_t2()
     outfile->Printf("\n    %-36s ...", str.c_str());
     Timer timer;
 
-    T2pr["ijab"] = V["abij"] * RDelta2["ijab"];
-    T2pr["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
-    T2pr["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
+    //T2pr["ijab"] = V["abij"] * RDelta2["ijab"];
+    //T2pr["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
+    //T2pr["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
+    T2pr["ijab"] = V["abij"];
+    T2pr["iJaB"] = V["aBiJ"];
+    T2pr["IJAB"] = V["ABIJ"];
+    T2pr.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
+        {
+            value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }
+        else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
+        {
+            value *= renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+        else
+        {  
+            value *= renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }
+    });
 
     // zero internal amplitudes
     T2pr.block("aaaa").zero();
