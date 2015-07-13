@@ -216,9 +216,9 @@ void THREE_DSRG_MRPT2::startup()
     Lambda2 = BTF->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
     Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
     F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
-    Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"hp"}));
+    Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"aa"}));
 
-    Delta2 = BTF->build(tensor_type_,"Delta2",BTF->spin_cases_avoid(hhpp_no_cv));
+    //Delta2 = BTF->build(tensor_type_,"Delta2",BTF->spin_cases_avoid(hhpp_no_cv));
 
     RDelta1 = BTF->build(tensor_type_,"RDelta1",spin_cases({"hp"}));
 
@@ -378,13 +378,14 @@ void THREE_DSRG_MRPT2::startup()
             value = Fb[i[0]] - Fb[i[1]];
         }
     });
-    Delta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin){
-            value = Fa[i[0]]  + Fa[i[1]] - Fa[i[2]]- Fa[i[3]];
-        }else if (spin[0]  == BetaSpin){
-            value = Fb[i[0]]  + Fb[i[1]] - Fb[i[2]]- Fb[i[3]];
-        }
-    });
+    //Do not need this term.  
+    //Delta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    if (spin[0] == AlphaSpin){
+    //        value = Fa[i[0]]  + Fa[i[1]] - Fa[i[2]]- Fa[i[3]];
+    //    }else if (spin[0]  == BetaSpin){
+    //        value = Fb[i[0]]  + Fb[i[1]] - Fb[i[2]]- Fb[i[3]];
+    //    }
+    //});
 
     RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0]  == AlphaSpin){
@@ -704,18 +705,30 @@ void THREE_DSRG_MRPT2::renormalize_V()
     std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
 
     // Put RExp2 into a shared matrix.
-    BlockedTensor v = BTF->build(tensor_type_,"v",BTF->spin_cases_avoid(list_of_pphh_V));
-    v["abij"] = V["abij"];
-    v["aBiJ"] = V["aBiJ"];
-    v["ABIJ"] = V["ABIJ"];
+    //BlockedTensor v = BTF->build(tensor_type_,"v",BTF->spin_cases_avoid(list_of_pphh_V));
+    //v["abij"] = V["abij"];
+    //v["aBiJ"] = V["aBiJ"];
+    //v["ABIJ"] = V["ABIJ"];
 
     //V["ijab"] += v["ijab"] * RExp2["ijab"];
     //V["iJaB"] += v["iJaB"] * RExp2["iJaB"];
     //V["IJAB"] += v["IJAB"] * RExp2["IJAB"];
 
-    V["abij"] += v["abij"] * RExp2["ijab"];
-    V["aBiJ"] += v["aBiJ"] * RExp2["iJaB"];
-    V["ABIJ"] += v["ABIJ"] * RExp2["IJAB"];
+    //V["abij"] += v["abij"] * RExp2["ijab"];
+    //V["aBiJ"] += v["aBiJ"] * RExp2["iJaB"];
+    //V["ABIJ"] += v["ABIJ"] * RExp2["IJAB"];
+    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]));
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]));
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]));
+        }
+    });
+
+
+
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -1164,19 +1177,19 @@ std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::strin
     return return_string;
 
 }
-void THREE_DSRG_MRPT2::frozen_natural_orbitals()
-{
-     //outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
-    BlockedTensor Dfv = BTF->build(tensor_type_,"MP2Density", spin_cases({"pp"}));
-    BlockedTensor Vhap = BTF->build(tensor_type_,"V", spin_cases({"ppvv"}));
-    Vhap = V;
-    
-
-    Dfv["ef"] += 0.5 * Vhap["εfij"]*Vhap["ijεe"] * Delta2["εfij"] * Delta2["εeij"];
-     
-
-
-}
+//void THREE_DSRG_MRPT2::frozen_natural_orbitals()
+//{
+//     //outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
+//    BlockedTensor Dfv = BTF->build(tensor_type_,"MP2Density", spin_cases({"pp"}));
+//    BlockedTensor Vhap = BTF->build(tensor_type_,"V", spin_cases({"ppvv"}));
+//    Vhap = V;
+//    
+//
+//    Dfv["ef"] += 0.5 * Vhap["εfij"]*Vhap["ijεe"] * Delta2["εfij"] * Delta2["εeij"];
+//     
+//
+//
+//}
 double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
 {
     double Eflyalpha = 0.0;
