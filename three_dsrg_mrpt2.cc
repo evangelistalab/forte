@@ -72,6 +72,7 @@ void THREE_DSRG_MRPT2::startup()
     frozen_core_energy = ints_->frozen_core_energy();
 
     ncmopi_ = ints_->ncmopi();
+    size_t ncmo = ints_->ncmo();
 
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
@@ -189,11 +190,11 @@ void THREE_DSRG_MRPT2::startup()
 
     if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF")
     {
-        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg","dGG"});
+        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph","dPH"});
     }
     else
     {
-        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
+        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph"});
     }
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -267,11 +268,28 @@ void THREE_DSRG_MRPT2::startup()
     Eta1_VV.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
 
+
     Gamma1_aa("pq") = reference_.L1a()("pq");
     Gamma1_AA("pq") = reference_.L1b()("pq");
 
     Eta1_aa("pq") -= reference_.L1a()("pq");
     Eta1_AA("pq") -= reference_.L1b()("pq");
+
+
+    //Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.  
+    boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo, ncmo));
+    boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo, ncmo));
+    for(size_t m = 0; m < core_; m++){
+            Gamma1_matrixA->set(acore_mos[m],acore_mos[m],1.0);
+            Gamma1_matrixB->set(bcore_mos[m],bcore_mos[m],1.0);
+    }
+    Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
+     Gamma1_matrixA->set(aactv_mos[i[0]], aactv_mos[i[1]], value);   });
+
+    Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
+     Gamma1_matrixB->set(bactv_mos[i[0]], bactv_mos[i[1]], value);   
+     });
+    ints_->make_fock_matrix(Gamma1_matrixA, Gamma1_matrixB);
 
     //This code below assumes that the ThreeIntegral is as gpq, gPQ 
 
@@ -327,34 +345,26 @@ void THREE_DSRG_MRPT2::startup()
  //   });
     if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
     {
-        F["pq"]  = H["pq"];
-        F["pq"] += 2.0 * ThreeIntegral["gpq"]*ThreeIntegral["gji"]*Gamma1["ij"];
-        F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
-
-        std::string transformed_string;
-        for (auto block : F.block_labels())
-        {
-            transformed_string = block;
-            std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
-            if(std::isupper(block[0]) && std::isupper(block[1]))
-            {
-                ambit::Tensor FABIJ = F.block(block);
-                ambit::Tensor Fabij = F.block(transformed_string);
-                FABIJ.copy(Fabij);
-            }
+    F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value)
+    {
+        if (spin[0] == AlphaSpin){
+            value = ints_->get_fock_a(i[0],i[1]);
+        }else if (spin[0]  == BetaSpin){
+            value = ints_->get_fock_b(i[0],i[1]);
         }
+    });
+
     }
     else
     {
-        F["pq"]  = H["pq"];
-        F["pq"] += ThreeIntegral["gpq"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-        F["pq"] += ThreeIntegral["gpq"] * ThreeIntegral["gji"]*Gamma1["ij"];
-        F["pq"] -= ThreeIntegral["gpi"]*ThreeIntegral["gjq"]*Gamma1["ij"];
-
-        F["PQ"]  = H["PQ"];
-        F["PQ"] += ThreeIntegral["gji"]*ThreeIntegral["gPQ"]*Gamma1["ij"];
-        F["PQ"] += ThreeIntegral["gPQ"]*ThreeIntegral["gJI"]*Gamma1["IJ"];
-        F["PQ"] -= ThreeIntegral["gPI"]*ThreeIntegral["gJQ"]*Gamma1["IJ"];
+    F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value)
+    {
+        if (spin[0] == AlphaSpin){
+            value = ints_->get_fock_a(i[0],i[1]);
+        }else if (spin[0]  == BetaSpin){
+            value = ints_->get_fock_b(i[0],i[1]);
+        }
+    });
     }
 
     size_t ncmo_ = ints_->ncmo();
@@ -362,14 +372,19 @@ void THREE_DSRG_MRPT2::startup()
     Fa.reserve(ncmo_);
     Fb.reserve(ncmo_);
 
-    F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin and (i[0] == i[1])){
-            Fa[i[0]] = value;
-        }
-        if (spin[0] == BetaSpin and (i[0] == i[1])){
-            Fb[i[0]] = value;
-        }
-    });
+    //F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    if (spin[0] == AlphaSpin and (i[0] == i[1])){
+    //        Fa[i[0]] = value;
+    //    }
+    //    if (spin[0] == BetaSpin and (i[0] == i[1])){
+    //        Fb[i[0]] = value;
+    //    }
+    //});
+    for(size_t p = 0; p < ncmo_; p++)
+    {
+        Fa[p] = ints_->get_fock_a(p,p);
+        Fb[p] = ints_->get_fock_b(p,p);
+    }
 
     Delta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin){
@@ -378,14 +393,6 @@ void THREE_DSRG_MRPT2::startup()
             value = Fb[i[0]] - Fb[i[1]];
         }
     });
-    //Do not need this term.  
-    //Delta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    if (spin[0] == AlphaSpin){
-    //        value = Fa[i[0]]  + Fa[i[1]] - Fa[i[2]]- Fa[i[3]];
-    //    }else if (spin[0]  == BetaSpin){
-    //        value = Fb[i[0]]  + Fb[i[1]] - Fb[i[2]]- Fb[i[3]];
-    //    }
-    //});
 
     RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0]  == AlphaSpin){
@@ -834,16 +841,16 @@ double THREE_DSRG_MRPT2::E_FT2()
     temp = BTF->build(tensor_type_,"temp",spin_cases({"aaaa"}));
 
 
-    temp["uvxy"] += F["ex"] * T2pr["uvey"];
-    temp["uvxy"] -= F["vm"] * T2pr["umxy"];
+    temp["uvxy"] += F["xe"] * T2pr["uvey"];
+    temp["uvxy"] -= F["mv"] * T2pr["umxy"];
 
-    temp["UVXY"] += F["EX"] * T2pr["UVEY"];
-    temp["UVXY"] -= F["VM"] * T2pr["UMXY"];
+    temp["UVXY"] += F["XE"] * T2pr["UVEY"];
+    temp["UVXY"] -= F["MV"] * T2pr["UMXY"];
 
-    temp["uVxY"] += F["ex"] * T2pr["uVeY"];
-    temp["uVxY"] += F["EY"] * T2pr["uVxE"];
-    temp["uVxY"] -= F["VM"] * T2pr["uMxY"];
-    temp["uVxY"] -= F["um"] * T2pr["mVxY"];
+    temp["uVxY"] += F["xe"] * T2pr["uVeY"];
+    temp["uVxY"] += F["YE"] * T2pr["uVxE"];
+    temp["uVxY"] -= F["MV"] * T2pr["uMxY"];
+    temp["uVxY"] -= F["mu"] * T2pr["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
@@ -1283,8 +1290,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     // Bef(ef) = Bm(L|e) * Bn(L|f)
     ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
     ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
-    Ba("mge") = (ThreeIntegral.block("dcv"))("gme");
-    Bb("MgE") = (ThreeIntegral.block("dcv"))("gME");
+    Ba("mge") = (ThreeIntegral.block("dvc"))("gem");
+    Bb("MgE") = (ThreeIntegral.block("dvc"))("gEM");
 
     size_t dim = nthree * virtual_;
     double Emp2 = 0.0;
@@ -1384,11 +1391,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
     BlockedTensor T2ccvv = BTF->build(tensor_type_,"T2ccvv", spin_cases({"ccvv"}));
     BlockedTensor v    = BTF->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
 
-    v("mnef") = ThreeIntegral("gme") * ThreeIntegral("gnf");
-    v("mnef") -= ThreeIntegral("gmf") * ThreeIntegral("gne");
-    v("MNEF") = ThreeIntegral("gME") * ThreeIntegral("gNF");
-    v("MNEF") -= ThreeIntegral("gMF") * ThreeIntegral("gNE");
-    v("mNeF") = ThreeIntegral("gme") * ThreeIntegral("gNF");
+    v("mnef") = ThreeIntegral("gem") * ThreeIntegral("gfn");
+    v("mnef") -= ThreeIntegral("gfm") * ThreeIntegral("gee");
+    v("MNEF") = ThreeIntegral("gEM") * ThreeIntegral("gFN");
+    v("MNEF") -= ThreeIntegral("gFM") * ThreeIntegral("gEN");
+    v("mNeF") = ThreeIntegral("gem") * ThreeIntegral("gFN");
 
     if(options_.get_str("CCVV_SOURCE")=="NORMAL")
     {
