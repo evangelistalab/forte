@@ -583,6 +583,14 @@ double EX_ACI::compute_energy()
         }
     }
 
+    if(form_1_RDM_){
+    //Print 1D RDM
+        SharedMatrix Dalpha(new Matrix("Dalpha",nmo_,nmo_));
+        SharedMatrix Dbeta(new Matrix("Dbeta",nmo_,nmo_));
+
+        compute_1rdm(Dalpha,Dbeta,PQ_space_,PQ_evecs,nroot_);
+        D1_->print();
+    }
 
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
@@ -1656,7 +1664,7 @@ void EX_ACI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix
         int order = 0;
         size_t det = 0;
         for(auto i: excitation_counter){
-            outfile->Printf("\n      %2d          %4zu           %.11f", order, i.first, i.second);
+            outfile->Printf("\n      %2d          %8zu           %.11f", order, i.first, i.second);
             det += i.first;
             if(det == det_space.size()) break;
             ++order;
@@ -1722,9 +1730,121 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
     return labeled_orb;
 }
 
-void print_timing_info()
+void EX_ACI::compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
 
+    //Make a vector of indices for core and active orbitals
+    int ncmopi = 0;
+    std::vector<size_t> idx_a;
+    std::vector<size_t> idx_c;
+    for(int h = 0; h < nirrep_ ; ++h){
+        size_t c = frzcpi_[h];
+        size_t ca = frzcpi_[h] + ncmopi_[h];
+        for(size_t i=0; i<ncmopi_[h]; ++i){
+            size_t idx = i + ncmopi;
+            if(i < c){
+                idx_c.push_back(idx);
+            }
+            if(i >= c && i < ca){
+                idx_a.push_back(idx);
+            }
+        }
+        ncmopi += ncmopi_[h];
+      }
+
+    //Occupy frozen core with 1.0
+    for(size_t p = 0; p < nfrzc_; ++p){
+        size_t np = idx_c[p];
+        A->set(np,np,1.0);
+        B->set(np,np,1.0);
+    }
+
+
+    //Populate active indices
+    for(size_t p = 0; p < ncmo_ - nfrzc_; ++p){
+        size_t np = idx_a[p];
+        for(size_t q = p; q < ncmo_ - nfrzc_; ++q){
+            size_t nq = idx_a[q];
+
+            if( (mo_symmetry_[p] ^ mo_symmetry_[q]) != 0) continue;
+
+            //Loop over determinants
+            for(size_t I = 0; I < det_space.size(); ++I){
+                BitsetDeterminant Ja, Jb;
+                double C_I = evecs->get(I,0);
+                double a = 1.0, b = 1.0;
+
+                a *= OneOP(det_space[I],Ja,0,np,nq) * C_I;
+                b *= OneOP(det_space[I],Jb,1,np,nq) * C_I;
+
+                for(size_t J = 0; J < det_space.size(); ++J){
+                    double C_J = evecs->get(J,0);
+                    A->add(np,nq, a * (det_space[J] == Ja) * C_J);
+                    B->add(np,nq, b * (det_space[J] == Jb) * C_J);
+                }
+            }
+            A->set(nq,np, A->get(np,nq));
+            B->set(nq,np, A->get(np,nq));
+
+        }
+    }
+
+    double trace = 0.0;
+    D1_ = A->clone();
+    for(int p = 0; p < nmo_; ++p){
+        for(int q = 0; q < nmo_; ++q){
+            D1_->add(p,q,B->get(p,q));
+            if(p == q) trace += D1_->get(p,q);
+        }
+    }
+    outfile->Printf("\n\n  Trace of 1-RDM is %6.3f\n", trace);
+
+}
+double EX_ACI::OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q){
+    timer_on("1PO");
+    BitsetDeterminant tmp = J;
+
+    double sign = 1.0;
+
+    if(sp){
+        if( tmp.get_alfa_bit(q) ){
+            sign *= CheckSign(tmp.get_alfa_occ(),q);
+            tmp.set_alfa_bit(q,0);
+        }else{timer_off("1PO"); return 0.0;}
+
+        if( !tmp.get_alfa_bit(p) ){
+            sign *= CheckSign(tmp.get_alfa_occ(),p);
+            tmp.set_alfa_bit(p,1);
+            Jnew.copy(tmp);
+            timer_off("1PO");
+            return sign;
+        }else{timer_off("1PO"); return 0.0;}
+        Jnew.print();
+    }else{
+        if( tmp.get_beta_bit(q) ){
+            sign *= CheckSign(tmp.get_beta_occ(),q);
+            tmp.set_beta_bit(q,0);
+        }else{timer_off("1PO"); return 0.0;}
+
+        if( !tmp.get_beta_bit(p) ){
+            sign *= CheckSign(tmp.get_beta_occ(),p);
+            tmp.set_beta_bit(p,1);
+            Jnew.copy(tmp);
+            timer_off("1PO");
+            return sign;
+        }else{timer_off("1PO"); return 0.0;}
+        Jnew.print();
+    }
+}
+
+double EX_ACI::CheckSign(std::vector<int> I, const int &n){
+    timer_on("Check Sign");
+    size_t count = 0;
+    for(size_t i=0; i<n; ++i){
+        if(I[i])  ++count;
+    }
+    timer_off("Check Sign");
+    return pow(-1.0,count%2);
 }
 
 }} // EndNamespaces
