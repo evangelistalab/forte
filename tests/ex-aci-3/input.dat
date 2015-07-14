@@ -4,8 +4,8 @@
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.889470140101 #TEST
-refacipt2 = -14.890219672162#TEST
+refaci = -14.8895833891 #TEST
+refacipt2 = -14.890231170388 #TEST
 
 molecule li2{
 0 1
@@ -19,7 +19,7 @@ set {
   d_convergence 10
   r_convergence 10
   docc = [2,0,0,0,0,1,0,0]
-  reference rohf
+  reference rhf
 }
 
 
