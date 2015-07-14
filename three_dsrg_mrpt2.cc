@@ -923,7 +923,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
     E += 0.25 * V["cdkl"] * temp2["klcd"];
     E += V["cDkL"] * temp2["kLcD"];
-    outfile->Printf("\n E = %8.8f", E);
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
 
@@ -949,7 +948,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
         Eccvv = E_VT2_2_ambit();
-        outfile->Printf("\n Eccvv = %8.8f", Eccvv);
     }
     else
     {
