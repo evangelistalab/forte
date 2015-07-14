@@ -45,6 +45,9 @@ protected:
     libadaptive::ExplorerIntegrals *integral_;
     std::string int_type_;
 
+    // Reference Type
+    std::string ref_type_;
+
     // Print Levels
     int print_;
 

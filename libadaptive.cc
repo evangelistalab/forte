@@ -31,6 +31,7 @@
 #include "blockedtensorfactory.h"
 #include "sq.h"
 #include "dsrg_wick.h"
+#include "uno.h"
 
 INIT_PLUGIN
 
@@ -52,6 +53,27 @@ read_options(std::string name, Options &options)
         options.add_bool("NAT_ORBS_PRINT", false);
         /// Use Natural Orbitals to suggest active space
         options.add_bool("NAT_ACT", false);
+
+        // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
+
+        /// Typically, a occupied orbital with a NO occupation of <0.98 is considered active
+        options.add_double("OCC_NATURAL", 0.98);
+        /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
+        options.add_double("VIRT_NATURAL", 0.02);
+
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR UNO
+        //////////////////////////////////////////////////////////////
+
+        /*- Use unrestricted natural orbitals? -*/
+        options.add_bool("UNO", false);
+        /*- Minimum occupation number -*/
+        options.add_double("UNOMIN", 0.02);
+        /*- Maximum occupation number -*/
+        options.add_double("UNOMAX", 1.98);
+        /*- Print unrestricted natural orbitals -*/
+        options.add_bool("UNO_PRINT", false);
+
 
         /*- The amount of information printed
             to the output file -*/
@@ -410,6 +432,12 @@ libadaptive(Options &options)
     Timer overall_time;
     ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
 
+    if(options.get_bool("UNO")){
+        std::string ref = options.get_str("REFERENCE");
+        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
+            UNO uno(options);
+        }
+    }
 
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
@@ -527,12 +555,15 @@ libadaptive(Options &options)
         }
 
     }
-    if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
+    if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2")
+    {
+
        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
        {
            outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
        }
+
        if(options.get_str("CASTYPE")=="CAS")
        {
            FCI_MO fci_mo(options,ints_);
@@ -541,6 +572,7 @@ libadaptive(Options &options)
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
            three_dsrg_mrpt2->compute_energy();
        }
+
        else if(options.get_str("CASTYPE")=="FCI")
        {
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -554,15 +586,21 @@ libadaptive(Options &options)
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
            fci->compute_energy();
            Reference reference = fci->reference();
-           boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
-           dsrg_mrpt2->compute_energy();
+           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
+           {
+                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
+                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
+           }
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+           three_dsrg_mrpt2->compute_energy();
        }
+
        else if(options.get_str("CASTYPE")=="DMRG")
+
        {
            outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
            throw PSIEXCEPTION("NO DMRG Reference available yet");
        }
-
 
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){

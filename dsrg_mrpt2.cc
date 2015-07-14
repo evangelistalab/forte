@@ -44,6 +44,7 @@ DSRG_MRPT2::~DSRG_MRPT2()
 void DSRG_MRPT2::startup()
 {
     Eref = reference_.get_Eref();
+    BlockedTensor::reset_mo_spaces();
 
     frozen_core_energy = ints_->frozen_core_energy();
 
@@ -854,6 +855,8 @@ void DSRG_MRPT2::print_intruder(const std::string &name,
 
     if(output.size() != 0){
         output = title + col_title + line + output + line;
+    }else{
+        output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
 }
