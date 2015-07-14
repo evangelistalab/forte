@@ -241,7 +241,7 @@ read_options(std::string name, Options &options)
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
         /*Function of q-space criteria, per root*/
-        options.add_str("PQ_FUNCTION", "MAX", "AVERAGE");
+        options.add_str("PQ_FUNCTION", "AVERAGE","MAX");
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
@@ -257,7 +257,7 @@ read_options(std::string name, Options &options)
         /*Maximum number of determinants*/
         options.add_int("MAX_DET", 1e6);
         /*Threshold value for defining multiplicity from S^2*/
-        options.add_double("SPIN_TOL", 1.0e-4);
+        options.add_double("SPIN_TOL", 10.0);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
