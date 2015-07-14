@@ -335,7 +335,6 @@ void THREE_DSRG_MRPT2::startup()
             }
         }
     }
-    BTF->memory_summary_per_block(V);
 
     if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
     {
