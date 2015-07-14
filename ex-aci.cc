@@ -156,6 +156,7 @@ void EX_ACI::startup()
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
+    form_1_RDM_ = options_.get_bool("1_RDM");
 
 
 
