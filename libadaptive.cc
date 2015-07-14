@@ -280,6 +280,8 @@ read_options(std::string name, Options &options)
         options.add_int("MAX_DET", 1e6);
         /*Threshold value for defining multiplicity from S^2*/
         options.add_double("SPIN_TOL", 10.0);
+        /*- Compute 1-RDM? -*/
+        options.add_bool("1_RDM", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
