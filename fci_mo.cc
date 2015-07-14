@@ -38,6 +38,8 @@ FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
             outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
         else
             outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
+        outfile->Printf("\n  Check root_sym, multi, etc.");
+        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
         throw PSIEXCEPTION("Too many roots of interest.");
     }
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
@@ -153,6 +155,20 @@ void FCI_MO::read_info(Options &options){
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+
+    // Reference type
+    ref_type_ = options.get_str("REFERENCE");
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
+        outfile->Printf("\n  Unrestricted reference is detected.");
+        if(!options.get_bool("UNO")){
+            outfile->Printf("\n  Warning! Warning! Warning! Warning!");
+            outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
+            outfile->Printf("\n  Otherwise, semi-canonicalization will fail for beta spin.");
+            outfile->Printf("\n  Unrestricted natural orbitals can be computed by setting \"UNO\" option to \"true\".");
+        }else{
+            outfile->Printf("\n  Unrestricted natural orbitals are employed. Good Choice!");
+        }
+    }
 
     // Print Level
     print_ = options.get_int("PRINT");
@@ -535,6 +551,13 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
 
     // Check spin
     int count = 0;
+    outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
+    double threshold = 1.0e-4;
+    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
+        threshold = 0.10 * multi_;    // 10% off from the multiplicity of the spin eigen state
+    }
+    outfile->Printf("\n  Threshold for spin check: %.4f", threshold);
+
     for (int i = 0; i != nroot; ++i){
         double S2 = 0.0;
         for (int I = 0; I < det_size; ++I){
@@ -543,17 +566,19 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
                 S2 += S2IJ * vec_tmp->get(I,i) * vec_tmp->get(J,i);
             }
         }
-        if(std::fabs(S2 - multi_ + 1) > 1.0e-4){
-            outfile->Printf("\n\n  Ask for S^2 = %5.2f, this S^2 = %5.2f, continue...", multi_, S2);
+        double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+        double multi_real = 2.0 * S + 1;
+
+        if(std::fabs(multi_ - multi_real) > threshold){
+            outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, continue searching...", 0.25 * (multi_ * multi_ - 1.0), S2);
             continue;
         }
         else{
-            ++count;
-            eigen.push_back(make_pair(vec_tmp->get_column(0,i), val_tmp->get(i) + e_nuc_));
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
             std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
             std::string state_label = s2_labels[std::round(S * 2.0)];
             outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),det_size);
+            ++count;
+            eigen.push_back(make_pair(vec_tmp->get_column(0,i), val_tmp->get(i) + e_nuc_));
         }
         if(count == nroot_) break;
     }
@@ -574,8 +599,8 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     outfile->Printf("\n");
     outfile->Flush();
 
-    vector<tuple<double, int>> ci_selec;
     for(int i = 0; i != nroot; ++i){
+        vector<tuple<double, int>> ci_selec;
 
         for(size_t j = 0; j < det.size(); ++j){
             double value = (eigen[i].first)->get(j);
