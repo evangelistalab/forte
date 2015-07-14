@@ -69,7 +69,7 @@ public:
     //controls printing information
     void print_memory_info(){print_memory_=true;}
     void memory_summary_per_block(ambit::BlockedTensor&);
-    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& vecstring);
+    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& vecstring, int how_many_active);
 };
 }}
 

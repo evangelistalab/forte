@@ -166,16 +166,34 @@ void BlockedTensorFactory::memory_summary() {
     }
     outfile->Printf("\n Memory left over: %8.6f GB\n", memory_);
 }
-std::vector<std::string> BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
+std::vector<std::string> BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_vec, int how_many_active)
 {
-
+    
     std::vector<std::string> out_str_vec;
-    for(const std::string spin : in_str_vec){
-        size_t spin_ind  = spin.find('a');
-        size_t spin_ind2 = spin.find('A');
-        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
-            out_str_vec.push_back(spin);
+    if(how_many_active == 1)
+    {
+        for(const std::string spin : in_str_vec){
+            size_t spin_ind  = spin.find('a');
+            size_t spin_ind2 = spin.find('A');
+            if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
+                out_str_vec.push_back(spin);
+            }
         }
+    }
+    else if (how_many_active > 1)
+    {
+        for(const std::string spin : in_str_vec)
+        {
+            std::string spin_transform = spin;
+            std::transform(spin_transform.begin(), spin_transform.end(), spin_transform.begin(), ::tolower);
+            int anum = std::count(spin_transform.begin(), spin_transform.end(), 'a');
+            if(anum >= how_many_active)
+            {
+                out_str_vec.push_back(spin);
+
+            }
+        }
+
     }
     return out_str_vec;
 }

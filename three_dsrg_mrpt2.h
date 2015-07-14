@@ -102,7 +102,6 @@ protected:
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
-    ambit::BlockedTensor T2pr; // <- Reduced T2 amplitude
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor ThreeIntegral;
 
