@@ -335,6 +335,7 @@ void THREE_DSRG_MRPT2::startup()
             }
         }
     }
+    BTF->memory_summary_per_block(V);
 
     if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
     {
@@ -1179,19 +1180,7 @@ std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::strin
     return return_string;
 
 }
-//void THREE_DSRG_MRPT2::frozen_natural_orbitals()
-//{
-//     //outfile->Printf("\n About to compute MP2-like frozen natural orbitals");
-//    BlockedTensor Dfv = BTF->build(tensor_type_,"MP2Density", spin_cases({"pp"}));
-//    BlockedTensor Vhap = BTF->build(tensor_type_,"V", spin_cases({"ppvv"}));
-//    Vhap = V;
-//    
-//
-//    Dfv["ef"] += 0.5 * Vhap["εfij"]*Vhap["ijεe"] * Delta2["εfij"] * Delta2["εeij"];
-//     
-//
-//
-//}
+
 double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
 {
     double Eflyalpha = 0.0;
