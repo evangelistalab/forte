@@ -209,7 +209,7 @@ void THREE_DSRG_MRPT2::startup()
 
     //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
     //See Vpphh
-    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V));
+    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 1));
 
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -232,8 +232,8 @@ void THREE_DSRG_MRPT2::startup()
 
     RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
 
-    T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
-             BTF->spin_cases_avoid(no_hhpp_));
+    T2   = BTF->build(tensor_type_,"T2 Amplitudes not all",
+             BTF->spin_cases_avoid(no_hhpp_,2));
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -365,14 +365,6 @@ void THREE_DSRG_MRPT2::startup()
     Fa.reserve(ncmo_);
     Fb.reserve(ncmo_);
 
-    //F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    if (spin[0] == AlphaSpin and (i[0] == i[1])){
-    //        Fa[i[0]] = value;
-    //    }
-    //    if (spin[0] == BetaSpin and (i[0] == i[1])){
-    //        Fb[i[0]] = value;
-    //    }
-    //});
     for(size_t p = 0; p < ncmo_; p++)
     {
         Fa[p] = ints_->get_fock_a(p,p);
@@ -510,7 +502,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         if(print_ > 1)  F.print(stdout); // The actv-actv block is different but OK.
         if(print_ > 2){
             T1.print(stdout);
-            T2pr.print(stdout);
+            T2.print(stdout);
             V.print(stdout);
         }
 
@@ -608,13 +600,13 @@ void THREE_DSRG_MRPT2::compute_t2()
     outfile->Printf("\n    %-36s ...", str.c_str());
     Timer timer;
 
-    //T2pr["ijab"] = V["abij"] * RDelta2["ijab"];
-    //T2pr["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
-    //T2pr["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
-    T2pr["ijab"] = V["abij"];
-    T2pr["iJaB"] = V["aBiJ"];
-    T2pr["IJAB"] = V["ABIJ"];
-    T2pr.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //T2["ijab"] = V["abij"] * RDelta2["ijab"];
+    //T2["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
+    //T2["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
+    T2["ijab"] = V["abij"];
+    T2["iJaB"] = V["aBiJ"];
+    T2["IJAB"] = V["ABIJ"];
+    T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
         {
             value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -630,9 +622,9 @@ void THREE_DSRG_MRPT2::compute_t2()
     });
 
     // zero internal amplitudes
-    T2pr.block("aaaa").zero();
-    T2pr.block("aAaA").zero();
-    T2pr.block("AAAA").zero();
+    T2.block("aaaa").zero();
+    T2.block("aAaA").zero();
+    T2.block("AAAA").zero();
 
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -642,9 +634,9 @@ void THREE_DSRG_MRPT2::check_t2()
 {
     // norm and maximum of T2 amplitudes
     T2norm = 0.0; T2max = 0.0;
-    std::vector<std::string> T2blocks = T2pr.block_labels();
+    std::vector<std::string> T2blocks = T2.block_labels();
     for(const std::string& block: T2blocks){
-        Tensor temp = T2pr.block(block);
+        Tensor temp = T2.block(block);
         if(islower(block[0]) && isupper(block[1])){
             T2norm += 4 * pow(temp.norm(), 2.0);
         }else{
@@ -675,14 +667,14 @@ void THREE_DSRG_MRPT2::compute_t1()
     BlockedTensor N = BTF->build(tensor_type_,"N",spin_cases({"hp"}));
 
     N["ia"]  = F["ia"];
-    N["ia"] += temp["xu"] * T2pr["iuax"];
-    N["ia"] += temp["XU"] * T2pr["iUaX"];
+    N["ia"] += temp["xu"] * T2["iuax"];
+    N["ia"] += temp["XU"] * T2["iUaX"];
 
     T1["ia"] = N["ia"] * RDelta1["ia"];
 
     N["IA"]  = F["IA"];
-    N["IA"] += temp["xu"] * T2pr["uIxA"];
-    N["IA"] += temp["XU"] * T2pr["IUAX"];
+    N["IA"] += temp["xu"] * T2["uIxA"];
+    N["IA"] += temp["XU"] * T2["IUAX"];
     T1["IA"] = N["IA"] * RDelta1["IA"];
 
     T1.block("AA").zero();
@@ -749,13 +741,13 @@ void THREE_DSRG_MRPT2::renormalize_F()
     BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"hp"}));
     BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"hp"}));
 
-    temp1["ia"] += temp_aa["xu"] * T2pr["iuax"];
-    temp1["ia"] += temp_aa["XU"] * T2pr["iUaX"];
+    temp1["ia"] += temp_aa["xu"] * T2["iuax"];
+    temp1["ia"] += temp_aa["XU"] * T2["iUaX"];
     temp2["ia"] += F["ia"] * RExp1["ia"];
     temp2["ia"] += temp1["ia"] * RExp1["ia"];
 
-    temp1["IA"] += temp_aa["xu"] * T2pr["uIxA"];
-    temp1["IA"] += temp_aa["XU"] * T2pr["IUAX"];
+    temp1["IA"] += temp_aa["xu"] * T2["uIxA"];
+    temp1["IA"] += temp_aa["XU"] * T2["IUAX"];
     temp2["IA"] += F["IA"] * RExp1["IA"];
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
@@ -836,16 +828,16 @@ double THREE_DSRG_MRPT2::E_FT2()
     temp = BTF->build(tensor_type_,"temp",spin_cases({"aaaa"}));
 
 
-    temp["uvxy"] += F["xe"] * T2pr["uvey"];
-    temp["uvxy"] -= F["mv"] * T2pr["umxy"];
+    temp["uvxy"] += F["xe"] * T2["uvey"];
+    temp["uvxy"] -= F["mv"] * T2["umxy"];
 
-    temp["UVXY"] += F["XE"] * T2pr["UVEY"];
-    temp["UVXY"] -= F["MV"] * T2pr["UMXY"];
+    temp["UVXY"] += F["XE"] * T2["UVEY"];
+    temp["UVXY"] -= F["MV"] * T2["UMXY"];
 
-    temp["uVxY"] += F["xe"] * T2pr["uVeY"];
-    temp["uVxY"] += F["YE"] * T2pr["uVxE"];
-    temp["uVxY"] -= F["MV"] * T2pr["uMxY"];
-    temp["uVxY"] -= F["mu"] * T2pr["mVxY"];
+    temp["uVxY"] += F["xe"] * T2["uVeY"];
+    temp["uVxY"] += F["YE"] * T2["uVxE"];
+    temp["uVxY"] -= F["MV"] * T2["uMxY"];
+    temp["uVxY"] -= F["mu"] * T2["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
@@ -864,9 +856,58 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BTF->build(tensor_type_,"temp1",BTF->spin_cases_avoid(no_hhpp_));
-    temp2 = BTF->build(tensor_type_,"temp2",BTF->spin_cases_avoid(no_hhpp_));
+    BlockedTensor T2pr;
 
+    temp1 = BTF->build(tensor_type_,"temp1",BTF->spin_cases_avoid(no_hhpp_,1));
+    temp2 = BTF->build(tensor_type_,"temp2",BTF->spin_cases_avoid(no_hhpp_,1));
+    T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
+             BTF->spin_cases_avoid(no_hhpp_, 1));
+
+    T2pr["ijab"] = (ThreeIntegral["gai"] * ThreeIntegral["gbj"]);
+    std::vector<std::string> T2prblock_label = T2pr.block_labels();
+    std::string transformed_string;
+
+    for(const std::string& block : T2prblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = T2pr.block(block);
+            ambit::Tensor Vabij = T2pr.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+
+    T2pr["ijab"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+    for(const std::string& block : T2prblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = T2pr.block(block);
+            ambit::Tensor Vabij = T2pr.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+    T2pr.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
+        {
+            value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }
+        else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
+        {
+            value *= renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+        else
+        {  
+            value *= renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }
+    });
+    T2pr.block("aaaa").zero();
+    T2pr.block("aAaA").zero();
+    T2pr.block("AAAA").zero();
 
     //Calculates all but ccvv, cCvV, and CCVV energies
 
@@ -882,6 +923,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * V["CDKL"] * temp2["KLCD"];
     E += 0.25 * V["cdkl"] * temp2["klcd"];
     E += V["cDkL"] * temp2["kLcD"];
+    outfile->Printf("\n E = %8.8f", E);
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
 
@@ -907,6 +949,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
         Eccvv = E_VT2_2_ambit();
+        outfile->Printf("\n Eccvv = %8.8f", Eccvv);
     }
     else
     {
@@ -934,9 +977,9 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     temp1["UVIJ"] += V["UVKL"] * Gamma1["KI"] * Gamma1["LJ"];
     temp1["uViJ"] += V["uVkL"] * Gamma1["ki"] * Gamma1["LJ"];
 
-    temp2["uvxy"] += temp1["uvij"] * T2pr["ijxy"];
-    temp2["UVXY"] += temp1["UVIJ"] * T2pr["IJXY"];
-    temp2["uVxY"] += temp1["uViJ"] * T2pr["iJxY"];
+    temp2["uvxy"] += temp1["uvij"] * T2["ijxy"];
+    temp2["UVXY"] += temp1["UVIJ"] * T2["IJXY"];
+    temp2["uVxY"] += temp1["uViJ"] * T2["iJxY"];
 
     E += 0.125 * Lambda2["xyuv"] * temp2["uvxy"];
     E += 0.125 * Lambda2["XYUV"] * temp2["UVXY"];
@@ -960,9 +1003,9 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     temp1 = BTF->build(tensor_type_,"temp1", spin_cases({"aapp"}));
     temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    temp1["uvcd"] += T2pr["uvab"] * Eta1["ac"] * Eta1["bd"];
-    temp1["UVCD"] += T2pr["UVAB"] * Eta1["AC"] * Eta1["BD"];
-    temp1["uVcD"] += T2pr["uVaB"] * Eta1["ac"] * Eta1["BD"];
+    temp1["uvcd"] += T2["uvab"] * Eta1["ac"] * Eta1["bd"];
+    temp1["UVCD"] += T2["UVAB"] * Eta1["AC"] * Eta1["BD"];
+    temp1["uVcD"] += T2["uVaB"] * Eta1["ac"] * Eta1["BD"];
 
     temp2["uvxy"] += temp1["uvcd"] * V["cdxy"];
     temp2["UVXY"] += temp1["UVCD"] * V["CDXY"];
@@ -1003,39 +1046,39 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
 
     BlockedTensor temp1;
     BlockedTensor temp2;
-    temp1 = BTF->build(tensor_type_,"temp1", BTF->spin_cases_avoid(no_hhpp_));
+    temp1 = BTF->build(tensor_type_,"temp1",{"hapa", "HAPA", "hApA", "ahap", "AHAP", "aHaP", "aHpA", "hAaP"});
     temp2 = BTF->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    temp1["juby"]  = T2pr["iuay"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["juby"]  = T2["iuay"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uvxy"] += V["vbjx"] * temp1["juby"];
 
-    temp1["uJyB"]  = T2pr["uIyA"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["uJyB"]  = T2["uIyA"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uvxy"] -= V["vBxJ"] * temp1["uJyB"];
     E += temp2["uvxy"] * Lambda2["xyuv"];
 
-    temp1["JUBY"]  = T2pr["IUAY"] * Gamma1["IJ"] * Eta1["AB"];
+    temp1["JUBY"]  = T2["IUAY"] * Gamma1["IJ"] * Eta1["AB"];
     temp2["UVXY"] += V["VBJX"] * temp1["JUBY"];
 
-    temp1["jUbY"]  = T2pr["iUaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jUbY"]  = T2["iUaY"] * Gamma1["ji"] * Eta1["ab"];
     temp2["UVXY"] -= V["bVjX"] * temp1["jUbY"];
     E += temp2["UVXY"] * Lambda2["XYUV"];
 
-    temp1["jVbY"]  = T2pr["iVaY"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jVbY"]  = T2["iVaY"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uVxY"] -= V["ubjx"] * temp1["jVbY"];
 
-    temp1["JVBY"]  = T2pr["IVAY"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["JVBY"]  = T2["IVAY"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uVxY"] += V["uBxJ"] * temp1["JVBY"];
 
-    temp1["jubx"]  = T2pr["iuax"] * Gamma1["ji"] * Eta1["ab"];
+    temp1["jubx"]  = T2["iuax"] * Gamma1["ji"] * Eta1["ab"];
     temp2["uVxY"] += V["bVjY"] * temp1["jubx"];
 
-    temp1["uJxB"]  = T2pr["uIxA"] * Gamma1["JI"] * Eta1["AB"];
+    temp1["uJxB"]  = T2["uIxA"] * Gamma1["JI"] * Eta1["AB"];
     temp2["uVxY"] -= V["VBJY"] * temp1["uJxB"];
 
-    temp1["uJbY"]  = T2pr["uIaY"] * Gamma1["JI"] * Eta1["ab"];
+    temp1["uJbY"]  = T2["uIaY"] * Gamma1["JI"] * Eta1["ab"];
     temp2["uVxY"] -= V["bVxJ"] * temp1["uJbY"];
 
-    temp1["jVxB"]  = T2pr["iVxA"] * Gamma1["ji"] * Eta1["AB"];
+    temp1["jVxB"]  = T2["iVxA"] * Gamma1["ji"] * Eta1["AB"];
     temp2["uVxY"] -= V["uBjY"] * temp1["jVxB"];
     E += temp2["uVxY"] * Lambda2["xYuV"];
 
@@ -1052,52 +1095,39 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     BlockedTensor temp;
     temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
-    temp["uvwxyz"] += V["uviz"] * T2pr["iwxy"];      //  aaaaaa from hole
-    temp["uvwxyz"] += V["waxy"] * T2pr["uvaz"];      //  aaaaaa from particle
-    temp["UVWXYZ"] += V["UVIZ"] * T2pr["IWXY"];      //  AAAAAA from hole
-    temp["UVWXYZ"] += V["WAXY"] * T2pr["UVAZ"];      //  AAAAAA from particle
+    temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
+    temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
+    temp["UVWXYZ"] += V["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
+    temp["UVWXYZ"] += V["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
     E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
     E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
-    temp["uvWxyZ"] -= V["uviy"] * T2pr["iWxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] -= V["uWiZ"] * T2pr["ivxy"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2pr["vIxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2pr["vIxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] -= V["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] -= V["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
+    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
 
-    temp["uvWxyZ"] += V["aWxZ"] * T2pr["uvay"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vaxy"] * T2pr["uWaZ"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2pr["uWyA"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2pr["uWyA"];      //  aaAaaA from particle
+    temp["uvWxyZ"] += V["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
 
     E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
-    temp["uVWxYZ"] -= V["VWIZ"] * T2pr["uIxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] -= V["uVxI"] * T2pr["IWYZ"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2pr["iWxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2pr["iWxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] -= V["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] -= V["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
+    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
 
-    temp["uVWxYZ"] += V["uAxY"] * T2pr["VWAZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["WAYZ"] * T2pr["uVxA"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2pr["uVaZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2pr["uVaZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] += V["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
 
     E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return E;
-}
-std::vector<std::string> THREE_DSRG_MRPT2::spin_cases_avoid(const std::vector<std::string>& in_str_vec)
-{
-
-    std::vector<std::string> out_str_vec;
-    for(const std::string spin : in_str_vec){
-        size_t spin_ind  = spin.find('a');
-        size_t spin_ind2 = spin.find('A');
-        if(spin_ind != std::string::npos|| spin_ind2 != std::string::npos){
-            out_str_vec.push_back(spin);
-        }
-    }
-    return out_str_vec;
 }
 std::vector<std::string> THREE_DSRG_MRPT2::generate_all_indices(const std::string in_str, const std::string type)
 {
