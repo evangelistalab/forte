@@ -1,10 +1,12 @@
 #ifndef UNO_H
 #define UNO_H
 
+#include <liboptions/liboptions.h>
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
 #include <libmints/wavefunction.h>
-#include <liboptions/liboptions.h>
+#include <libmints/writer.h>
+#include <libmints/writer_file_prefix.h>
 #include "integrals.h"
 
 namespace psi{
