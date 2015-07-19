@@ -157,6 +157,7 @@ void EX_ACI::startup()
     post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     form_1_RDM_ = options_.get_bool("1_RDM");
+    do_spin_guess_ = options_.get_bool("SPIN_GUESS");
 
 
 
@@ -447,13 +448,17 @@ double EX_ACI::compute_energy()
         BitsetDeterminant ref2 = bs_det;
         ref2.spin_flip();
         P_space_.push_back(ref2);
-        outfile->Printf("\n  The initial reference space is: ");
-        ref2.print();
-        bs_det.print();
     }
 
     P_space_map_[bs_det] = 1;
 
+    if(do_spin_guess_){
+        form_initial_space(P_space_, nroot_);
+    }
+    outfile->Printf("\n  The initial reference space is: ");
+    for( auto& i : P_space_){
+        i.print();
+    }
 
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
     outfile->Flush();
@@ -498,7 +503,7 @@ double EX_ACI::compute_energy()
         outfile->Flush();
 
         for(int n = 0; n < num_ref_roots; ++n){
-            outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].second);
+            outfile->Printf("\n\n  root_spin[%d] : %6.6f", n, root_spin_vec_[n].first);
         }
 
         // Step 2. Find determinants in the Q space
@@ -590,8 +595,30 @@ double EX_ACI::compute_energy()
         SharedMatrix Dbeta(new Matrix("Dbeta",nmo_,nmo_));
 
         compute_1rdm(Dalpha,Dbeta,PQ_space_,PQ_evecs,nroot_);
+        diagonalize_order nMatz = evals_only_descending;
         D1_->print();
+
+        boost::shared_ptr<Vector> no_occnum(new Vector("Natural Orbital occupation Numbers", nmo_));
+        boost::shared_ptr<Matrix> NOevecs(new Matrix("NO Evecs", nmo_, nmo_));
+        D1_->diagonalize(NOevecs, no_occnum, nMatz );
+        no_occnum->print();
+
+        std::vector<int> active_space(nirrep_);
+        for(int p = 0; p < D1_->nrow(); ++p){
+            if( (D1_->get(p,p) >= 0.02) and (D1_->get(p,p) <= 1.98 ) ){
+            //if( (no_occnum->get(p)  >= 0.02) and (no_occnum->get(p) <= 1.98 ) ){
+                active_space[ mo_symmetry_[p] ] += 1;
+            }else{
+                continue;
+            }
+        }
+
+        outfile->Printf("\n  Suggested active space from ACI:  \n  [");
+        for(int i = 0; i < nirrep_; ++i) outfile->Printf(" %d", active_space[i]);
+        outfile->Printf(" ]");
+
     }
+
 
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
@@ -1723,9 +1750,9 @@ oVector<double,int,int> EX_ACI::sym_labeled_orbitals(std::string type)
 
     }
 
-//    for(int i = 0; i < ncmo_; ++i){
-//        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-//    }
+    for(int i = 0; i < ncmo_; ++i){
+        outfile->Printf("\n %f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
+    }
 
 
     return labeled_orb;
@@ -1739,18 +1766,16 @@ void EX_ACI::compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDete
     std::vector<size_t> idx_a;
     std::vector<size_t> idx_c;
     for(int h = 0; h < nirrep_ ; ++h){
-        size_t c = frzcpi_[h];
-        size_t ca = frzcpi_[h] + ncmopi_[h];
-        for(size_t i=0; i<ncmopi_[h]; ++i){
+        for(size_t i=0; i < nmopi_[h]; ++i){
             size_t idx = i + ncmopi;
-            if(i < c){
+            if(i < frzcpi_[h]){
                 idx_c.push_back(idx);
             }
-            if(i >= c && i < ca){
+            if(i >= frzcpi_[h] and i < (frzcpi_[h] + ncmopi_[h])){
                 idx_a.push_back(idx);
             }
         }
-        ncmopi += ncmopi_[h];
+        ncmopi += nmopi_[h];
       }
 
     //Occupy frozen core with 1.0
@@ -1760,11 +1785,10 @@ void EX_ACI::compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDete
         B->set(np,np,1.0);
     }
 
-
     //Populate active indices
-    for(size_t p = 0; p < ncmo_ - nfrzc_; ++p){
+    for(size_t p = 0; p < ncmo_; ++p){
         size_t np = idx_a[p];
-        for(size_t q = p; q < ncmo_ - nfrzc_; ++q){
+        for(size_t q = p; q < ncmo_; ++q){
             size_t nq = idx_a[q];
 
             if( (mo_symmetry_[p] ^ mo_symmetry_[q]) != 0) continue;
@@ -1775,8 +1799,8 @@ void EX_ACI::compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDete
                 double C_I = evecs->get(I,0);
                 double a = 1.0, b = 1.0;
 
-                a *= OneOP(det_space[I],Ja,0,np,nq) * C_I;
-                b *= OneOP(det_space[I],Jb,1,np,nq) * C_I;
+                a *= OneOP(det_space[I],Ja,0,p,q) * C_I;
+                b *= OneOP(det_space[I],Jb,1,p,q) * C_I;
 
                 for(size_t J = 0; J < det_space.size(); ++J){
                     double C_J = evecs->get(J,0);
@@ -1785,7 +1809,7 @@ void EX_ACI::compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDete
                 }
             }
             A->set(nq,np, A->get(np,nq));
-            B->set(nq,np, A->get(np,nq));
+            B->set(nq,np, B->get(np,nq));
 
         }
     }
@@ -1805,9 +1829,10 @@ double EX_ACI::OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const 
     timer_on("1PO");
     BitsetDeterminant tmp = J;
 
+
     double sign = 1.0;
 
-    if(sp){
+    if(sp == false){
         if( tmp.get_alfa_bit(q) ){
             sign *= CheckSign(tmp.get_alfa_occ(),q);
             tmp.set_alfa_bit(q,0);
@@ -1845,7 +1870,74 @@ double EX_ACI::CheckSign(std::vector<int> I, const int &n){
         if(I[i])  ++count;
     }
     timer_off("Check Sign");
-    return pow(-1.0,count%2);
+    return pow(-1.0, count%2);
+}
+
+void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nroot)
+{
+    outfile->Printf("\n  Forming spin-corrected initial guess.");
+    SharedMatrix evecs;
+    SharedVector evals;
+
+    /*Create a 3-idx vector that stores:
+     * orbital energy(first)
+     * symmetry (second.first)
+     * Pitzer-ordered index(second.second)
+     */
+
+    SparseCISolver sparse_solver;
+    auto orbs = sym_labeled_orbitals("RHF");
+    bool correct_spin = false;
+    int el_idx = std::ceil(ncel_/2.0) - 1;
+    double spin;
+    int count = 0;
+    pVector<double,size_t> det_weight;
+
+
+    while(!correct_spin){
+        //Make a determinant for each root
+        for(int n = 1; n < nroot; ++n){
+            //make orbital occ a function of n
+            BitsetDeterminant det = det_space[0];
+            det.set_alfa_bit(orbs[el_idx].second.second, false);
+            det.set_alfa_bit(orbs[el_idx + n].second.second, true);
+            det.set_beta_bit(orbs[el_idx].second.second, false);
+            det.set_beta_bit(orbs[el_idx + n].second.second, true);
+            det_space.push_back(det);
+        }
+
+        sparse_solver.diagonalize_hamiltonian(det_space,evals,evecs,nroot, Full);
+
+        for(int n = 0; n < nroot; ++n){
+            for (size_t I = 0; I < det_space.size(); ++I){
+                det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+            }
+        }
+
+        //check the spin
+        auto spin = compute_spin(det_space,evecs,nroot,det_weight);
+        double spin_sum = 0.0;
+        for(int n = 0; n < nroot; ++n){
+            spin_sum += spin[n].first.second;
+        }
+        outfile->Printf("\n  spin sum = %f", spin_sum);
+        //Correct spin, add dets to det_space
+        if( std::fabs(spin_sum - wavefunction_multiplicity_ + 1.0) < 0.1 ){
+            correct_spin = true;
+        }
+
+        P_space_.clear();
+        P_space_ = det_space;
+
+        //If not, try again
+        //count++;
+       // correct_spin = true;
+
+
+    }
+
+
+
 }
 
 }} // EndNamespaces

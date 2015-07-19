@@ -140,6 +140,8 @@ private:
     std::vector<std::pair<double,double> > root_spin_vec_;
     ///1 particle density matrix
     SharedMatrix D1_;
+    ///Form initial guess space with correct spin?
+    bool do_spin_guess_;
 
 
     // ==> Class functions <==
@@ -219,6 +221,9 @@ private:
 
     ///Check the sign
     double CheckSign(std::vector<int> I, const int &n);
+
+    ///Form initial space of determinants with correct S^2 for each root
+    void form_initial_space(std::vector<BitsetDeterminant> det_space, int nroot);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

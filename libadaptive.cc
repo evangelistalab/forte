@@ -282,6 +282,8 @@ read_options(std::string name, Options &options)
         options.add_double("SPIN_TOL", 10.0);
         /*- Compute 1-RDM? -*/
         options.add_bool("1_RDM", false);
+        /*- Form initial space with correct S^2? */
+        options.add_bool("spin_guess", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
