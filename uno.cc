@@ -92,6 +92,23 @@ UNO::UNO(Options &options){
         outfile->Printf("\n  UNO Coefficients:\n");
         Ca->print();
     }
+
+    // write molden
+    if(options.get_bool("MOLDEN_WRITE")){
+        boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
+        std::string filename = get_writer_file_prefix() + ".molden";
+
+        SharedVector dummy(new Vector("Dummy Vector of Orbital Energy", nirrep, nsopi));
+
+        SharedVector occ_a (new Vector("Occ. Alpha", nsopi));
+        SharedVector occ_b (new Vector("Occ. Beta", nsopi));
+        occ_a->copy(*occ);
+        occ_b->copy(*occ);
+        occ_a->scale(0.5);
+        occ_b->scale(0.5);
+
+        molden->write(filename, Ca, Ca, dummy, dummy, occ_a, occ_b);
+    }
 }
 
 UNO::~UNO(){}

@@ -73,7 +73,8 @@ read_options(std::string name, Options &options)
         options.add_double("UNOMAX", 1.98);
         /*- Print unrestricted natural orbitals -*/
         options.add_bool("UNO_PRINT", false);
-
+        /*- Write Molden -*/
+        options.add_bool("MOLDEN_WRITE", false);
 
         /*- The amount of information printed
             to the output file -*/
