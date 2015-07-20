@@ -1888,7 +1888,7 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
     SparseCISolver sparse_solver;
     auto orbs = sym_labeled_orbitals("RHF");
     bool correct_spin = false;
-    int el_idx = std::ceil(ncel_/2.0) - 1;
+    int el_idx = std::ceil(ncel_/2.0) - 1 - nfrzc_;
     double spin;
     int count = 0;
     pVector<double,size_t> det_weight;
@@ -1905,6 +1905,8 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
             det.set_beta_bit(orbs[el_idx + n].second.second, true);
             det_space.push_back(det);
         }
+
+        outfile->Printf("el_idx = %zu", el_idx);
 
         sparse_solver.diagonalize_hamiltonian(det_space,evals,evecs,nroot, Full);
 
@@ -1935,9 +1937,6 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
 
 
     }
-
-
-
 }
 
 }} // EndNamespaces
