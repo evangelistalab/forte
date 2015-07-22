@@ -98,7 +98,7 @@ protected:
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
 
-    TensorType tensor_type_;
+    ambit::TensorType tensor_type_;
 
     // => Tensors <= //
 

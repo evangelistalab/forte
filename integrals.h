@@ -12,8 +12,8 @@
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
 #include <libtrans/integraltransform.h>
-#include <ambit/tensor.h>
 #include <libmints/matrix.h>
+#include <libthce/thce.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -159,10 +159,8 @@ public:
     /// Get the fock matrix elements
     double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
     double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
+    std::vector<size_t> get_cmotomo(){return cmotomo_;}
 
-    /// Compute df integrals
-    /// Compute cholesky integrals
-    /// Return value of df/cd integral
 
 protected:
 
@@ -267,6 +265,11 @@ protected:
     /// Look at CD/DF/Conventional to see implementation
     /// computes/reads integrals
     virtual void gather_integrals() = 0;
+    /// The B tensor
+    boost::shared_ptr<psi::Tensor> B_;
+    /// The mapping from correlated to actual MO
+    /// Basically gives the original ordering back
+    std::vector<size_t> cmotomo_;
 };
 
 /**
@@ -433,6 +436,58 @@ public:
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
     DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
     virtual ~DFIntegrals();
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(bool* Ia, bool* Ib);
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
+
+    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
+    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
+    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    virtual size_t nthree() const {return nthree_;}
+private:
+    virtual void gather_integrals();
+    virtual void allocate();
+    virtual void deallocate();
+    //Grabs DF integrals with new Ca coefficients
+    virtual void make_diagonal_integrals();
+    virtual void freeze_core_orbitals();
+    virtual void compute_frozen_core_energy();
+    virtual void compute_frozen_one_body_operator();
+    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
+    virtual void resort_integrals_after_freezing();
+    virtual void resort_four(double *&tei, std::vector<size_t> &map){}
+
+    boost::shared_ptr<Matrix> ThreeIntegral_;
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
+    size_t nthree_;
+    };
+class DISKDFIntegrals : public ExplorerIntegrals{
+public:
+    DISKDFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+    virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
+    virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
+    virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual double get_three_integral(size_t A, size_t p, size_t q);
+    virtual double** get_three_integral_pointer()
+    {
+        return (ThreeIntegral_->pointer());
+    }
+    virtual void retransform_integrals();
+    virtual void update_integrals(bool freeze_core = true);
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+    virtual ~DISKDFIntegrals();
 
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
 
