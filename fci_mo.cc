@@ -116,8 +116,8 @@ void FCI_MO::startup(Options &options){
     // Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = Tensor::build(kCore,"L1a", {na_, na_});
-    L1b = Tensor::build(kCore,"L1b", {na_, na_});
+    L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
+    L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
 
     // Fock
     Fa_ = d2(ncmo_, d1(ncmo_));
@@ -127,18 +127,18 @@ void FCI_MO::startup(Options &options){
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa = Tensor::build(kCore,"L2aa",{na_, na_, na_, na_});
-    L2ab = Tensor::build(kCore,"L2ab",{na_, na_, na_, na_});
-    L2bb = Tensor::build(kCore,"L2bb",{na_, na_, na_, na_});
+    L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{na_, na_, na_, na_});
+    L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{na_, na_, na_, na_});
+    L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{na_, na_, na_, na_});
 
     L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aaa = Tensor::build(kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
-    L3aab = Tensor::build(kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
-    L3abb = Tensor::build(kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
-    L3bbb = Tensor::build(kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
+    L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
+    L3aab = ambit::Tensor::build(ambit::kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
+    L3abb = ambit::Tensor::build(ambit::kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
+    L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
 }
 
 void FCI_MO::print_title(){
@@ -507,8 +507,8 @@ void FCI_MO::semi_canonicalize(){
     // Form Density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = Tensor::build(kCore,"L1a", {na_, na_});
-    L1b = Tensor::build(kCore,"L1b", {na_, na_});
+    L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
+    L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
     FormDensity(determinant_, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
