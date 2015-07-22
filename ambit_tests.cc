@@ -134,12 +134,12 @@ void AmbitTests::startup()
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
-    Tensor Fa_cc = F.block("cc");
-    Tensor Fa_aa = F.block("aa");
-    Tensor Fa_vv = F.block("vv");
-    Tensor Fb_CC = F.block("CC");
-    Tensor Fb_AA = F.block("AA");
-    Tensor Fb_VV = F.block("VV");
+    ambit::Tensor Fa_cc = F.block("cc");
+    ambit::Tensor Fa_aa = F.block("aa");
+    ambit::Tensor Fa_vv = F.block("vv");
+    ambit::Tensor Fb_CC = F.block("CC");
+    ambit::Tensor Fb_AA = F.block("AA");
+    ambit::Tensor Fb_VV = F.block("VV");
 
     size_t ncmo_ = ints_->ncmo();
     std::vector<double> Fa(ncmo_);
