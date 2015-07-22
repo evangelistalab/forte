@@ -320,13 +320,45 @@ double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_aa[aptei_index(p,q,r,s)];
 }
+
 double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_ab[aptei_index(p,q,r,s)];
 }
+
 double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_bb[aptei_index(p,q,r,s)];
+}
+
+ambit::Tensor ConventionalIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor ConventionalIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
 }
 
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
@@ -363,6 +395,7 @@ void ConventionalIntegrals::gather_integrals()
 {
     outfile->Printf("\n  Reading the two-electron integrals from disk");
     outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
+    int_mem_ = sizeof(double) * 3 * 8 * num_aptei / 1073741824.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
@@ -820,6 +853,44 @@ double DFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 
 }
 
+ambit::Tensor DFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor DFIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+ambit::Tensor DFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
+    });
+    return ReturnTensor;
+}
+
 void DFIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
 {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
@@ -925,22 +996,6 @@ void DFIntegrals::gather_integrals()
          }
     }
     outfile->Printf("...Done.  Timing %15.6f s", timer.get());
-    //SharedVector TestVec(new Vector("TV", naux));
-    //size_t offset = 5 * naux  + 10 * (naux * nmo_);
-    //size_t offset2 = 2 * naux  + 8 * (naux * nmo_);
-    ////pqrs = (10,5,8,2)
-
-    //fseek(Bf, offset * sizeof(double), SEEK_SET);
-    //fread(&(TestVec->pointer()[0]), sizeof(double), naux, Bf);
-    //SharedVector TestVec2(new Vector("TV", naux));
-    //fseek(Bf, offset2 * sizeof(double), SEEK_SET);
-    //fread(&(TestVec2->pointer()[0]), sizeof(double), naux, Bf);
-    //double sum = 0.0;
-    //for(int q = 0; q < naux; q++)
-    //{
-    //    sum+=TestVec->get(q) * TestVec2->get(q);
-    //}
-    //outfile->Printf("\n %8.8f sum", sum);
 
     ThreeIntegral_ = tBpq;
     //outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
@@ -1017,9 +1072,16 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
     ambit::Tensor oneint_a = ambit::Tensor::build(tensor_type, "oneint_a",{ncmo_, ncmo_});
     ambit::Tensor oneint_b = ambit::Tensor::build(tensor_type, "oneint_b",{ncmo_, ncmo_});
 
-    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
-    });
+    //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
+    //});
+    std::vector<size_t> vQ(nthree_);
+    std::iota(vQ.begin(), vQ.end(), 0);
+    std::vector<size_t> vP(ncmo_);
+    std::iota(vP.begin(), vP.end(), 0);
+
+
+    ThreeIntegralTensor = get_three_integral_block(vQ, vP, vP);
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);
     });
@@ -1434,6 +1496,43 @@ double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
+ambit::Tensor CholeskyIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor CholeskyIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor CholeskyIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+ambit::Tensor CholeskyIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
+    });
+    return ReturnTensor;
+}
 
 void CholeskyIntegrals::gather_integrals()
 {
@@ -1463,6 +1562,7 @@ void CholeskyIntegrals::gather_integrals()
     size_t nL = Ch->Q();
     nthree_ = nL;
     outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * 8.0 / 1073741824.0 );
+    int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
 
     TensorType tensor_type = kCore;
 
@@ -2079,6 +2179,35 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
     return (vpqrsalphaC - vpqrsalphaE);
 
 }
+ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor DISKDFIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
+
+ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+    const std::vector<size_t> & s)
+{
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
+    });
+    return ReturnTensor;
+}
 double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
 {
     size_t pn, qn, rn, sn;
@@ -2099,6 +2228,16 @@ double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
     fread(&value, sizeof(double), 1, B_->file_pointer());
     return value;
 
+}
+ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+{
+    //Since file is formatted as p by A * q
+    //Read a chunk of Aq
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
+    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
+    });
+    return ReturnTensor;
 }
 
 void DISKDFIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
@@ -2121,6 +2260,7 @@ void DISKDFIntegrals::gather_integrals()
     nthree_ = naux;
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
+    int_mem_ = (nprim * nprim * naux * sizeof(double) / 1073741824.0);
 
     Dimension nsopi_ = wfn->nsopi();
     SharedMatrix aotoso = wfn->aotoso();
@@ -2166,6 +2306,7 @@ void DISKDFIntegrals::gather_integrals()
     Timer timer;
     std::string str= "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
+    df->print_header();
     df->compute();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
@@ -2239,7 +2380,6 @@ void DISKDFIntegrals::deallocate()
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 {
     TensorType tensor_type = kCore;
-    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
     ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
@@ -2247,9 +2387,6 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     ambit::Tensor oneint_a = ambit::Tensor::build(tensor_type, "oneint_a",{ncmo_, ncmo_});
     ambit::Tensor oneint_b = ambit::Tensor::build(tensor_type, "oneint_b",{ncmo_, ncmo_});
 
-    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = get_three_integral(i[0],i[1],i[2]);
-    });
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);
     });
@@ -2266,14 +2403,22 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     });
 
     fock_a("p,q") = oneint_a("p,q");
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-
     fock_b("p,q") = oneint_b("p,q");
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+
+    for(size_t Q = 0; Q < nthree_; Q++)
+    {
+        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{ncmo_, ncmo_});
+        ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+            value = get_three_integral(Q,i[0],i[1]);
+        });
+        fock_a("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_a("r,s");
+        fock_a("p,q") -=  ThreeIntegralTensor("p,r") * ThreeIntegralTensor("q,s") * gamma_a("r,s");
+        fock_a("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_b("r,s");
+
+        fock_b("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_b("r,s");
+        fock_b("p,q") -=  ThreeIntegralTensor("p,r") * ThreeIntegralTensor("q,s") * gamma_b("r,s");
+        fock_b("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_a("r,s");
+    }
 
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
@@ -2414,28 +2559,6 @@ void DISKDFIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<do
 
 void DISKDFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
 {
-//    //Create a temperature threeint matrix
-//    SharedMatrix temp_threeint(threeint->clone());
-//    temp_threeint->zero();
-//    size_t nthree = threeint->nrow();
-//
-//    // Borrwed from resort_four.
-//    // Since L is not sorted, only need to sort the columns
-//    // Surprisingly, this was pretty easy.
-//    for (size_t L = 0; L < nthree; ++L){
-//        for (size_t q = 0; q < ncmo_; ++q){
-//            for (size_t r = 0; r < ncmo_; ++r){
-//                size_t Lpq_cmo  = q * ncmo_ + r;
-//                size_t Lpq_mo  = map[q] * nmo_ + map[r];
-//                temp_threeint->set(L, Lpq_cmo, threeint->get(L, Lpq_mo));
-//
-//            }
-//        }
-//    }
-//
-//    //This copies the resorted integrals and the data is changed to the sorted
-//    //matrix
-//    threeint->copy(temp_threeint);
     outfile->Printf("No need to resort a file.  dummy!");
 }
 
