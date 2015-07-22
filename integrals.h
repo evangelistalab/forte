@@ -14,6 +14,7 @@
 #include <libtrans/integraltransform.h>
 #include <libmints/matrix.h>
 #include <libthce/thce.h>
+#include <ambit/blocked_tensor.h>
 
 namespace psi{ namespace libadaptive{
 
@@ -93,7 +94,17 @@ public:
     virtual double aptei_ab(size_t p,size_t q,size_t r, size_t s) = 0;
     /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
     virtual double aptei_bb(size_t p,size_t q,size_t r, size_t s) = 0;
+    
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s) = 0;
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s) = 0;
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s) = 0;
+
     virtual double get_three_integral(size_t A, size_t p, size_t q) = 0;
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q) = 0;
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
 
@@ -270,6 +281,10 @@ protected:
     /// The mapping from correlated to actual MO
     /// Basically gives the original ordering back
     std::vector<size_t> cmotomo_;
+    /// The type of tensor that ambit uses -> kCore
+    ambit::TensorType tensor_type_ = ambit::kCore;
+    /// How much memory each integral takes up
+    double int_mem_;
 };
 
 /**
@@ -286,12 +301,26 @@ public:
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+
+    /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual double get_three_integral(size_t A, size_t p, size_t q)
+    {
+        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    }
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q)
     {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
@@ -315,9 +344,11 @@ public:
     virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual size_t nthree() const
+
     {
         throw PSIEXCEPTION("Wrong Int_Type");
     }
+
 private:
     /// Transform the integrals
     void transform_integrals();
@@ -366,11 +397,21 @@ public:
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+
+    /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
     virtual double** get_three_integral_pointer(){return ThreeIntegral_->pointer();}
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q);
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     ///Do not use this if you are using CD/DF integrals
@@ -426,10 +467,21 @@ public:
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
+    /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r, 
+        const std::vector<size_t>& s);
+
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
     virtual double** get_three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
@@ -476,6 +528,15 @@ public:
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r, 
+        const std::vector<size_t>& s);
+
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
@@ -484,6 +545,7 @@ public:
     {
         return (ThreeIntegral_->pointer());
     }
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
