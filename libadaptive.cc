@@ -87,7 +87,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY ALL"); 
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -452,16 +452,25 @@ libadaptive(Options &options)
     // create CholeskyIntegrals class
     ExplorerIntegrals* ints_;
     if(options.get_str("INT_TYPE") == "CHOLESKY")
+
     {
         ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
     else if(options.get_str("INT_TYPE") == "DF")
+
     {
         ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
-    else
+    else if (options.get_str("INT_TYPE")== "DISKDF")
+
+    {
+        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+    }
+
+    else 
     {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        
     }
 
     // Link the integrals to the BitsetDeterminant class
