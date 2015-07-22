@@ -30,7 +30,6 @@
 namespace psi{
 namespace libadaptive{
 
-using namespace ambit;
 class Reference // : public Wavefunction
 {
 protected:

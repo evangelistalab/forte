@@ -397,17 +397,17 @@ void THREE_DSRG_MRPT2::startup()
     //});
 
     // Fill out Lambda2 and Lambda3
-    Tensor Lambda2_aa = Lambda2.block("aaaa");
-    Tensor Lambda2_aA = Lambda2.block("aAaA");
-    Tensor Lambda2_AA = Lambda2.block("AAAA");
+    ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
+    ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
+    ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
     Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+    ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+    ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+    ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+    ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
     Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
@@ -636,7 +636,7 @@ void THREE_DSRG_MRPT2::check_t2()
     T2norm = 0.0; T2max = 0.0;
     std::vector<std::string> T2blocks = T2.block_labels();
     for(const std::string& block: T2blocks){
-        Tensor temp = T2.block(block);
+        ambit::Tensor temp = T2.block(block);
         if(islower(block[0]) && isupper(block[1])){
             T2norm += 4 * pow(temp.norm(), 2.0);
         }else{
