@@ -979,7 +979,6 @@ void DFIntegrals::gather_integrals()
     //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
     //This is because francesco reads only the nonzero integrals
     //I store all of them into this array.
-
     SharedMatrix tBpq(new Matrix("Bpqtensor",naux, nmo_ * nmo_));
 
     // Store the integrals in the form of nmo*nmo by B
@@ -2031,15 +2030,14 @@ void DISKDFIntegrals::allocate()
 
 double DISKDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 {
-    outfile->Printf("\n %d", cmotomo_.size());
     size_t pn, qn, rn, sn;
+
     if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
     {
-         pn = cmotomo_[p];
-         qn = cmotomo_[q];
-         rn = cmotomo_[r];
-         sn = cmotomo_[s];
-
+        pn = cmotomo_[p];
+        qn = cmotomo_[q];
+        rn = cmotomo_[r];
+        sn = cmotomo_[s];
     }
     else
     {
@@ -2091,51 +2089,51 @@ double DISKDFIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
  
    size_t pn, qn, rn, sn;
-    if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
-    {
-         pn = cmotomo_[p];
-         qn = cmotomo_[q];
-         rn = cmotomo_[r];
-         sn = cmotomo_[s];
+   if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
+   {
+       pn = cmotomo_[p];
+       qn = cmotomo_[q];
+       rn = cmotomo_[r];
+       sn = cmotomo_[s];
+   }
+   else
+   {
+       pn = p;
+       qn = q;
+       rn = r;
+       sn = s;
+   }
 
-    }
-    else
-    {
-        pn = p;
-        qn = q;
-        rn = r;
-        sn = s;
-    }
-    size_t offset1 = rn * nthree_ + pn * (nthree_ * nmo_);
-    size_t offset2 = sn * nthree_ + qn * (nthree_ * nmo_);
-    double vpqrsalphaC = 0.0;
+   size_t offset1 = rn * nthree_ + pn * (nthree_ * nmo_);
+   size_t offset2 = sn * nthree_ + qn * (nthree_ * nmo_);
+   double vpqrsalphaC = 0.0;
 
-    SharedVector B1(new Vector("B1", nthree_));
-    SharedVector B2(new Vector("B2", nthree_));
+   SharedVector B1(new Vector("B1", nthree_));
+   SharedVector B2(new Vector("B2", nthree_));
 
-    // Read a block of Vectors for the Columb term
-    fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
-    fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
-    fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
-    fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
+   // Read a block of Vectors for the Columb term
+   fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
+   fread(&(B1->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
+   fseek(B_->file_pointer(), offset2 * sizeof(double), SEEK_SET);
+   fread(&(B2->pointer()[0]), sizeof(double), nthree_, B_->file_pointer());
 
-    vpqrsalphaC = C_DDOT(nthree_,
-            &(B1->pointer()[0]),1, &(B2->pointer()[0]),1);
+   vpqrsalphaC = C_DDOT(nthree_,
+                        &(B1->pointer()[0]),1, &(B2->pointer()[0]),1);
 
-    return (vpqrsalphaC);
+   return (vpqrsalphaC);
 
 }
 
 double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     size_t pn, qn, rn, sn;
+
     if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
     {
-         pn = cmotomo_[p];
-         qn = cmotomo_[q];
-         rn = cmotomo_[r];
-         sn = cmotomo_[s];
-
+        pn = cmotomo_[p];
+        qn = cmotomo_[q];
+        rn = cmotomo_[r];
+        sn = cmotomo_[s];
     }
     else
     {
@@ -2210,11 +2208,11 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p, cons
 }
 double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
 {
-    size_t pn, qn, rn, sn;
-    if(ncmo_ == aptei_idx_ & frzcpi_.sum() > 0)
+    size_t pn, qn;
+    if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
     {
-         pn = cmotomo_[p];
-         qn = cmotomo_[q];
+        pn = cmotomo_[p];
+        qn = cmotomo_[q];
     }
     else
     {
@@ -2222,7 +2220,8 @@ double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
         qn = q;
     }
 
-    size_t offset1 = qn * nthree_ + pn * (nthree_ * nmo_) + A;
+
+    size_t offset1 = pn * (nthree_ * nmo_) + qn * nthree_ + A;
     double value = 0.0;
     fseek(B_->file_pointer(), offset1 * sizeof(double), SEEK_SET);
     fread(&value, sizeof(double), 1, B_->file_pointer());
@@ -2232,11 +2231,48 @@ double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
 ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
 {
     //Since file is formatted as p by A * q
-    //Read a chunk of Aq
+    size_t pn = 0;
+    bool frozen_core = false;
+
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
-    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
-    });
+    std::vector<boost::shared_ptr<Matrix> > p_by_Aq;
+    if(frzcpi_.sum() && aptei_idx_==ncmo_)
+    {
+        frozen_core = true;
+    }
+
+    for (auto p_block : p)
+    {
+        if(frozen_core)
+        {
+            pn = cmotomo_[p_block];
+        }
+        else
+        {
+            pn = p_block;
+        }
+
+        boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+
+        fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
+        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+        p_by_Aq.push_back(Aq);
+
+
+    }
+    if(frozen_core)
+    {
+        ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+            value = p_by_Aq[i[1]]->get(cmotomo_[i[2]], i[0]);
+        });
+    }
+    else
+    {
+        ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+            value = p_by_Aq[i[1]]->get(i[2], i[0]);
+        });
+
+    }
     return ReturnTensor;
 }
 
@@ -2335,6 +2371,19 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction 
     outfile->Printf("\n DISKDFIntegrals overall time");
     Timer DFInt;
     allocate();
+
+    //Form a correlated mo to mo before I create integrals
+    std::vector<size_t> cmo2mo;
+    for (int h = 0, q = 0; h < nirrep_; ++h){
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r){
+            cmo2mo.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+    cmotomo_ = cmo2mo;
+
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -2404,21 +2453,20 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
 
     fock_a("p,q") = oneint_a("p,q");
     fock_b("p,q") = oneint_b("p,q");
+    std::vector<size_t> A(nthree_);
+    std::vector<size_t> P(ncmo_);
+    std::iota(A.begin(), A.end(), 0);
+    std::iota(P.begin(), P.end(), 0);
 
-    for(size_t Q = 0; Q < nthree_; Q++)
-    {
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{ncmo_, ncmo_});
-        ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-            value = get_three_integral(Q,i[0],i[1]);
-        });
-        fock_a("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_a("r,s");
-        fock_a("p,q") -=  ThreeIntegralTensor("p,r") * ThreeIntegralTensor("q,s") * gamma_a("r,s");
-        fock_a("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_b("r,s");
+    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_});
+    ThreeIntegralTensor = get_three_integral_block(A,P,P );
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
+    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
 
-        fock_b("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_b("r,s");
-        fock_b("p,q") -=  ThreeIntegralTensor("p,r") * ThreeIntegralTensor("q,s") * gamma_b("r,s");
-        fock_b("p,q") +=  ThreeIntegralTensor("p,q") * ThreeIntegralTensor("r,s") * gamma_a("r,s");
-    }
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
+    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
 
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
@@ -2698,24 +2746,13 @@ void DISKDFIntegrals::resort_integrals_after_freezing()
     outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h){
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r){
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-
-    cmotomo_ = cmo2mo;
 
     // Resort the integrals
-    resort_two(one_electron_integrals_a,cmo2mo);
-    resort_two(one_electron_integrals_b,cmo2mo);
-    resort_two(diagonal_aphys_tei_aa,cmo2mo);
-    resort_two(diagonal_aphys_tei_ab,cmo2mo);
-    resort_two(diagonal_aphys_tei_bb,cmo2mo);
+    resort_two(one_electron_integrals_a,cmotomo_);
+    resort_two(one_electron_integrals_b,cmotomo_);
+    resort_two(diagonal_aphys_tei_aa,cmotomo_);
+    resort_two(diagonal_aphys_tei_ab,cmotomo_);
+    resort_two(diagonal_aphys_tei_bb,cmotomo_);
 
     //resort_three(ThreeIntegral_,cmo2mo);
 
