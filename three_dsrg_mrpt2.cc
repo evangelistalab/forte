@@ -209,7 +209,7 @@ void THREE_DSRG_MRPT2::startup()
 
     //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
     //See Vpphh
-    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 1));
+    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 2));
 
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -857,11 +857,16 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     BlockedTensor temp1;
     BlockedTensor temp2;
     BlockedTensor T2pr;
+    BlockedTensor VH;
 
+
+    std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
     temp1 = BTF->build(tensor_type_,"temp1",BTF->spin_cases_avoid(no_hhpp_,1));
     temp2 = BTF->build(tensor_type_,"temp2",BTF->spin_cases_avoid(no_hhpp_,1));
     T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
              BTF->spin_cases_avoid(no_hhpp_, 1));
+    VH   = BTF->build(tensor_type_,"VH",
+             BTF->spin_cases_avoid(list_of_pphh_V, 1));
 
     T2pr["ijab"] = (ThreeIntegral["gai"] * ThreeIntegral["gbj"]);
     std::vector<std::string> T2prblock_label = T2pr.block_labels();
@@ -919,10 +924,46 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     temp1["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
     temp2["kLcD"] += temp1["kLaB"] * Eta1["ac"] * Eta1["BD"];
+    VH["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+    std::vector<std::string> Vblock_label = VH.block_labels();
 
-    E += 0.25 * V["CDKL"] * temp2["KLCD"];
-    E += 0.25 * V["cdkl"] * temp2["klcd"];
-    E += V["cDkL"] * temp2["kLcD"];
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = VH.block(block);
+            ambit::Tensor Vabij = VH.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+
+    VH["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = VH.block(block);
+            ambit::Tensor Vabij = VH.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+    VH.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]));
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]));
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]));
+        }
+    });
+
+    E += 0.25 * VH["CDKL"] * temp2["KLCD"];
+    E += 0.25 * VH["cdkl"] * temp2["klcd"];
+    E += VH["cDkL"] * temp2["kLcD"];
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
 

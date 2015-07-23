@@ -545,7 +545,9 @@ public:
     {
         return (ThreeIntegral_->pointer());
     }
+    ///Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
+
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
