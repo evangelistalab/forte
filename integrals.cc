@@ -1460,11 +1460,11 @@ double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
     double vpqrsalphaC = 0.0;
     double vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_,
-            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+            &(ThreeIntegral_->pointer()[p*aptei_idx_ + r][0]),1,
+            &(ThreeIntegral_->pointer()[q*aptei_idx_ + s][0]),1);
      vpqrsalphaE = C_DDOT(nthree_,
-            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
+            &(ThreeIntegral_->pointer()[p*aptei_idx_ + s][0]),1,
+            &(ThreeIntegral_->pointer()[q*aptei_idx_ + r][0]),1);
 
     return (vpqrsalphaC - vpqrsalphaE);
 
@@ -1474,8 +1474,8 @@ double CholeskyIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0;
     vpqrsalphaC = C_DDOT(nthree_,
-            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_ ,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_ );
+            &(ThreeIntegral_->pointer()[p*aptei_idx_ + r][0]),1 ,
+            &(ThreeIntegral_->pointer()[q*aptei_idx_ + s][0]),1 );
     return (vpqrsalphaC);
 }
 
@@ -1483,11 +1483,11 @@ double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     double vpqrsalphaC = 0.0, vpqrsalphaE = 0.0;
     vpqrsalphaC = C_DDOT(nthree_,
-            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + r]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + s]),nmo_ * nmo_);
+            &(ThreeIntegral_->pointer()[p*aptei_idx_ + r][0]),1,
+            &(ThreeIntegral_->pointer()[q*aptei_idx_ + s][0]),1);
      vpqrsalphaE = C_DDOT(nthree_,
-            &(ThreeIntegral_->pointer()[0][p*aptei_idx_ + s]),nmo_ * nmo_,
-            &(ThreeIntegral_->pointer()[0][q*aptei_idx_ + r]),nmo_ * nmo_);
+            &(ThreeIntegral_->pointer()[p*aptei_idx_ + s][0]),1,
+            &(ThreeIntegral_->pointer()[q*aptei_idx_ + r][0]),1);
     //}
 
     return (vpqrsalphaC - vpqrsalphaE);
@@ -1595,14 +1595,14 @@ void CholeskyIntegrals::gather_integrals()
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i,double& value){
         value = Lao->get(i[0],i[1]*nbf + i[2]);
     });
-    ThreeIntegral_ = L;
+    SharedMatrix ThreeInt(new Matrix("Lmo", (nmo_)*(nmo_), nL));
+    ThreeIntegral_ =ThreeInt;
 
-    ThreeIntegral_->zero();
 
     ThreeIntegral("L,p,q") = ThreeIntegral_ao("L,m,n")*Cpq_tensor("m,p")*Cpq_tensor("n,q");
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,double& value){
-        ThreeIntegral_->set(i[0],i[1]*nmo_ + i[2],value);
+        ThreeIntegral_->set(i[1]*nmo_ + i[2],i[0],value);
     });
 }
 
@@ -1656,11 +1656,9 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamm
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
     ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
     ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
-    ambit::Tensor oneint_a = ambit::Tensor::build(tensor_type, "oneint_a",{ncmo_, ncmo_});
-    ambit::Tensor oneint_b = ambit::Tensor::build(tensor_type, "oneint_b",{ncmo_, ncmo_});
 
     ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = ThreeIntegral_->get(i[0],i[1]*ncmo_ + i[2]);
+        value = ThreeIntegral_->get(i[1]*aptei_idx_ + i[2], i[0]);
     });
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);
@@ -1669,21 +1667,19 @@ void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamm
         value = gamma_bM->get(i[0],i[1]);
     });
 
-    oneint_a.iterate([&](const std::vector<size_t>& i,double& value){
+    fock_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
     });
 
-    oneint_b.iterate([&](const std::vector<size_t>& i,double& value){
+    fock_b.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
     });
 
 
-    fock_a("p,q") = oneint_a("p,q");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
     fock_a("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
 
-    fock_b("p,q") = oneint_b("p,q");
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
     fock_b("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
@@ -1854,17 +1850,16 @@ void CholeskyIntegrals::resort_three(boost::shared_ptr<Matrix>& threeint,std::ve
     //Create a temperature threeint matrix
     SharedMatrix temp_threeint(threeint->clone());
     temp_threeint->zero();
-    size_t nthree = threeint->nrow();
 
     // Borrwed from resort_four.
     // Since L is not sorted, only need to sort the columns
     // Surprisingly, this was pretty easy.
-    for (size_t L = 0; L < nthree; ++L){
+    for (size_t L = 0; L < nthree_; ++L){
         for (size_t q = 0; q < ncmo_; ++q){
             for (size_t r = 0; r < ncmo_; ++r){
                 size_t Lpq_cmo  = q * ncmo_ + r;
                 size_t Lpq_mo  = map[q] * nmo_ + map[r];
-                temp_threeint->set(L, Lpq_cmo, threeint->get(L, Lpq_mo));
+                temp_threeint->set(Lpq_cmo, L, threeint->get(Lpq_mo, L));
 
             }
         }
@@ -1965,7 +1960,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
     ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = ThreeIntegral_->get(i[0], i[1] * nmo_ + i[2]);
+        value = get_three_integral(i[0], i[1], i[2]);
     });
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
