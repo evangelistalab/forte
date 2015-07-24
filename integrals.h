@@ -480,7 +480,7 @@ public:
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
-    virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(A,p * aptei_idx_ + q);}
+    virtual double get_three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(p * aptei_idx_ + q, A);}
     virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
     virtual double** get_three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual void retransform_integrals();
