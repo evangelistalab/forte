@@ -196,11 +196,26 @@ void THREE_DSRG_MRPT2::startup()
     {
         ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph"});
     }
+    std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
 
-    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = ints_->get_three_integral(i[0],i[1],i[2]);
-    });
+    //ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    value = ints_->get_three_integral(i[0],i[1],i[2]);
+    //});
+    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
 
+    for(std::string& string_block : ThreeInt_block)
+    {
+        std::string pos1(1, string_block[0]);
+        std::string pos2(1, string_block[1]);
+        std::string pos3(1, string_block[2]);
+
+        std::vector<size_t> first_index = mo_to_index[pos1];
+        std::vector<size_t> second_index = mo_to_index[pos2];
+        std::vector<size_t> third_index = mo_to_index[pos3];
+
+        ambit::Tensor ThreeIntegral_block = ints_->get_three_integral_block(first_index, second_index, third_index);
+        ThreeIntegral.block(string_block).copy(ThreeIntegral_block);
+    }
 
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
 
