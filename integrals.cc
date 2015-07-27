@@ -2685,9 +2685,21 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
     ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
 
-    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = get_three_integral(i[0], i[1], i[2]);
-    });
+     std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
+    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
+    for(std::string& string_block : ThreeInt_block)
+    {
+        std::string pos1(1, string_block[0]);
+        std::string pos2(1, string_block[1]);
+        std::string pos3(1, string_block[2]);
+
+        std::vector<size_t> first_index = mo_to_index[pos1];
+        std::vector<size_t> second_index = mo_to_index[pos2];
+        std::vector<size_t> third_index = mo_to_index[pos3];
+
+        ambit::Tensor ThreeIntegral_block = get_three_integral_block(first_index, second_index, third_index);
+        ThreeIntegral.block(string_block).copy(ThreeIntegral_block);
+    }
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
 
