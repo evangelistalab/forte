@@ -227,6 +227,7 @@ void ExplorerIntegrals::transform_one_electron_integrals()
      */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core), ints_(nullptr){
+    integral_type_ = ConventionalInts;
 
     outfile->Printf("\n Overall Conventional Integrals timings");
     Timer ConvTime;
@@ -1015,6 +1016,7 @@ void DFIntegrals::make_diagonal_integrals()
 
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    integral_type_ = DF;
 
     outfile->Printf("\n DFIntegrals overall time");
     Timer DFInt;
@@ -1427,6 +1429,7 @@ void DFIntegrals::resort_integrals_after_freezing()
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    integral_type_ = Cholesky;
     outfile->Printf("\n Cholesky integrals time");
     Timer CholInt;
     allocate();
@@ -2360,6 +2363,7 @@ void DISKDFIntegrals::make_diagonal_integrals()
 DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : ExplorerIntegrals(options, restricted, resort_frozen_core){
 
+    integral_type_ = DiskDF;
     outfile->Printf("\n DISKDFIntegrals overall time");
     Timer DFInt;
     allocate();
