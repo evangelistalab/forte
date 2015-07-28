@@ -21,7 +21,7 @@ namespace psi{ namespace libadaptive{
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
-enum IntegralType {ConventionalInts,DFInts,CholeskyInts};
+enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF};
 
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering
@@ -173,6 +173,7 @@ public:
     double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
     double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
     std::vector<size_t> get_cmotomo(){return cmotomo_;}
+    IntegralType get_integral_type(){return integral_type_;}
 
 
 protected:
@@ -182,7 +183,7 @@ protected:
     /// The options object
     psi::Options& options_;
     /// The integral_type
-    std::string integral_type_;
+    IntegralType integral_type_;
 
     /// Are we doing a spin-restricted computation?
     IntegralSpinRestriction restricted_;
@@ -466,6 +467,7 @@ private:
  */
 class DFIntegrals : public ExplorerIntegrals{
 public:
+    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -488,7 +490,6 @@ public:
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
-    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
     virtual ~DFIntegrals();
 
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
