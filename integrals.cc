@@ -1067,8 +1067,8 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
     ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
-    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
-    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
 
     //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
     //    value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
@@ -1080,6 +1080,10 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 
 
     ThreeIntegralTensor = get_three_integral_block(vQ, vP, vP);
+
+    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        outfile->Printf("\n i[0] = %d i[1]= %d i[2] = %d %8.8f", i[0],i[1], i[2],value);
+    });
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);
     });
@@ -1089,19 +1093,26 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+            outfile->Printf("\n i[0] = %d and i[1] = %d and %d and %8.8f", i[0], i[1], i[0] * aptei_idx_ + i[1], value);
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
     });
 
+    ///Changing the Q_pr * Q_qs  to Q_rp * Q_sq for convience for reading
+
+    //ambit::Tensor test = ambit::Tensor::build(tensor_type, "Fock_b",{nthree_});
+    //test("Q") = ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    //fock_a("p,q") += ThreeIntegralTensor("Q,p,q")*test("Q");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
+    fock_a("p,q") -=  ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_a("r,s");
     fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
 
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
+    fock_b("p,q") -=  ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_b("r,s");
     fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+
 
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
@@ -2223,47 +2234,80 @@ double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
 ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
 {
     //Since file is formatted as p by A * q
-    size_t pn = 0;
     bool frozen_core = false;
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
-    std::vector<boost::shared_ptr<Matrix> > p_by_Aq;
     if(frzcpi_.sum() && aptei_idx_==ncmo_)
     {
         frozen_core = true;
     }
 
-    for (auto p_block : p)
+    size_t pn, qn;
+    if(nthree_ == A.size())
     {
+        std::vector<boost::shared_ptr<Matrix> > p_by_Aq;
+        for (auto p_block : p)
+        {
+            if(frozen_core)
+            {
+                pn = cmotomo_[p_block];
+            }
+            else
+            {
+                pn = p_block;
+            }
+
+            boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+
+            fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
+            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+            p_by_Aq.push_back(Aq);
+
+
+        }
         if(frozen_core)
         {
-            pn = cmotomo_[p_block];
+            ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+                value = p_by_Aq[i[1]]->get(cmotomo_[q[i[2]]], A[i[0]]);
+            });
         }
         else
         {
-            pn = p_block;
+            ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+                value = p_by_Aq[i[1]]->get(q[i[2]], A[i[0]]);
+            });
+
         }
-
-        boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
-
-        fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
-        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
-        p_by_Aq.push_back(Aq);
-
-
-    }
-    if(frozen_core)
-    {
-        ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-            value = p_by_Aq[i[1]]->get(cmotomo_[q[i[2]]], A[i[0]]);
-        });
     }
     else
     {
-        ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-            value = p_by_Aq[i[1]]->get(q[i[2]], A[i[0]]);
-        });
+        std::vector<double>& ReturnTensorV = ReturnTensor.data();
+        //If user wants blocking in A
+        pn = 0;
+        qn = 0;
+        for(size_t p_block : p)
+        {
+            pn = frozen_core ? cmotomo_[p_block] : p_block;
+            for(size_t q_block : q)
+            {
+                qn = frozen_core ? cmotomo_[q_block] : q_block;
 
+                double* A_chunk = new double[A.size()];
+                size_t offset = pn * nthree_ * nmo_ + qn * nthree_ + A[0];
+                fseek(B_->file_pointer(), offset * sizeof(double), SEEK_SET);
+                fread(&(A_chunk[0]), sizeof(double), A.size(), B_->file_pointer());
+
+                for(size_t a = 0; a < A.size(); a++)
+                {
+                    //Weird way the tensor is formatted
+                    //Fill the tensor for every chunk of A
+                    ReturnTensorV[a * ncmo_ * ncmo_ + p_block * ncmo_ + q_block] = A_chunk[a];
+
+                }
+                delete[] A_chunk;
+
+            }
+        }
     }
     return ReturnTensor;
 }
@@ -2288,7 +2332,7 @@ void DISKDFIntegrals::gather_integrals()
     nthree_ = naux;
     outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
     outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
-    int_mem_ = (nprim * nprim * naux * sizeof(double) / 1073741824.0);
+    int_mem_ = (nprim * nprim * naux * sizeof(double));
 
     Dimension nsopi_ = wfn->nsopi();
     SharedMatrix aotoso = wfn->aotoso();
@@ -2420,18 +2464,27 @@ void DISKDFIntegrals::deallocate()
 }
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 {
-    TensorType tensor_type = kCore;
-    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
-    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
-    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
-    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    //Efficient calculation of fock matrix from disk
+    //Since gamma_aM is very sparse (diagonal elements of core and active block)
+    //Only nonzero contributions are on diagonal elements
+    //Grab the nonzero elements and put to a vector
 
-    gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
-        value = gamma_aM->get(i[0],i[1]);
-    });
-    gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
-        value = gamma_bM->get(i[0],i[1]);
-    });
+    TensorType tensor_type = kCore;
+
+    //Create the fock_a and fock_b globally
+    //Choose to block over naux rather than ncmo_
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
+
+    std::vector<size_t> nonzero;
+    //Figure out exactly what I need to contract the Coloumb term
+    for(int i = 0; i < ncmo_; i++)
+    {
+        if(gamma_aM->get(i,i) > 1e-10)
+        {
+            nonzero.push_back(i);
+        }
+    }
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
@@ -2441,28 +2494,121 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
         value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
     });
 
+
     std::vector<size_t> A(nthree_);
-    std::vector<size_t> P(ncmo_);
     std::iota(A.begin(), A.end(), 0);
+
+    std::vector<size_t> P(ncmo_);
     std::iota(P.begin(), P.end(), 0);
 
-    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_});
-    ThreeIntegralTensor = get_three_integral_block(A,P,P );
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    //Create a gamma that contains only nonzero terms
+    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{nonzero.size(), nonzero.size()});
+    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{nonzero.size(), nonzero.size()});
+    //Create the full gamma (K is not nearly as sparse as J)
+    ambit::Tensor gamma_a_full = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
+    ambit::Tensor gamma_b_full = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
 
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_aM->get(nonzero[i[0]],nonzero[i[1]]);
+    });
+    gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_bM->get(nonzero[i[0]],nonzero[i[1]]);
+    });
+    ambit::Tensor ThreeIntC2 = ambit::Tensor::build(tensor_type, "ThreeInkC", {nthree_,nonzero.size(), nonzero.size()});
+    ThreeIntC2 = get_three_integral_block(A, nonzero, nonzero);
+
+    ambit::Tensor BQA = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
+    ambit::Tensor BQB = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
+    //Do a contraction over Naux * n_h^2 * n_h^2 -> naux * n_h^2
+    BQA("B") = ThreeIntC2("B,r,s") * gamma_a("r,s");
+    BQB("B") = ThreeIntC2("B,r,s") * gamma_b("r,s");
+    //Grab the data from this for the block iteration
+    std::vector<double>& BQAv = BQA.data();
+    std::vector<double>& BQBv = BQB.data();
+
+    gamma_a_full.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_aM->get(i[0],i[1]);
+    });
+    gamma_b_full.iterate([&](const std::vector<size_t>& i,double& value){
+        value = gamma_bM->get(i[0],i[1]);
+    });
+
+    //====Blocking information==========
+    int int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
+    int memory_input = Process::environment.get_memory();
+    int num_block = std::ceil(double(int_mem_int_) / memory_input);
+    //Hard wires num_block for testing
+
+    int block_size = nthree_ / num_block;
+
+    if(num_block != 1)
+    {
+        outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
+    outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
+    outfile->Printf("\n  Block_size = %d\n num_block = %d", block_size, num_block);
+    }
+
+    Timer block_read;
+    for(int i = 0; i < num_block; i++)
+    {
+        std::vector<size_t> A_block;
+        if(nthree_ % num_block == 0)
+        {
+            A_block.resize(block_size);
+            std::iota(A_block.begin(), A_block.end(), i * block_size);
+        }
+        else
+        {
+            block_size = i==(num_block - 1) ? block_size + nthree_ % num_block : block_size;
+            A_block.resize(block_size);
+            std::iota(A_block.begin(), A_block.end(), i * (nthree_ / num_block));
+        }
+
+        //Create a tensor of TI("Q,r,p")
+        ambit::Tensor BQA_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
+        ambit::Tensor BQB_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
+
+       //Calculate the smaller block of A from the global block of prior Brs * gamma_rs
+       BQA_small.iterate([&](const std::vector<size_t>& i,double& value){
+            value = BQAv[A_block[i[0]]];
+        });
+       BQB_small.iterate([&](const std::vector<size_t>& i,double& value){
+            value = BQBv[A_block[i[0]]];
+        });
+        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{A_block.size(),ncmo_, ncmo_});
+
+        //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+        //    value = get_three_integral(A_block[i[0]], i[1], i[2]);
+        //});
+
+        //Return a tensor of ThreeInt given the smaller block of A
+        ThreeIntegralTensor = get_three_integral_block(A_block, P, P);
 
 
+        //Need to rewrite this to at least read in chunks of nthree_
+        //ThreeIntegralTensor = get_three_integral_block(A_block, P,P );
+
+        fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * BQA_small("Q");
+        fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a_full("r,s");
+        fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * BQB_small("Q");
+
+        fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * BQB_small("Q");
+        fock_b("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b_full("r,s");
+        fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * BQA_small("Q");
+
+        A_block.clear();
+    }
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
         fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
     });
     fock_b.iterate([&](const std::vector<size_t>& i,double& value){
         fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     });
+
+    if(num_block!=1)
+    {
+        outfile->Printf("\n Created Fock matrix %8.8f s", block_read.get());
+    }
 
 }
 

@@ -4,6 +4,7 @@
 *.pyc
 Makefile.*
 Makefile
+*~
 
 # Qt Creator project files
 *.config
@@ -13,5 +14,9 @@ Makefile
 *.includes
 
 # All outputs and clean files in test cases
-/tests/*/*.dat
+/tests/*/output.dat
 /tests/*/*.clean
+/tests/*/*.txt
+/tests/*/*.plt
+
+
