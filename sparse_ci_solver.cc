@@ -8,7 +8,14 @@
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
+/// This needs to be in here to avoid problems with compiling without openmp
 #include "sparse_ci_solver.h"
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num()  0
+#endif
 
 
 
@@ -692,7 +699,7 @@ void SparseCISolver::diagonalize_full(const std::vector<BitsetDeterminant>& spac
     // Diagonalize H
     boost::timer t_diag;
     H->diagonalize(evecs,evals);
-    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_diag.elapsed());
+    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H using Full",t_diag.elapsed());
 }
 
 
@@ -750,8 +757,17 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
-
-#pragma omp parallel for schedule(dynamic)
+    //If you are using DiskDF, Kevin found that openmp does not like this! 
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         const BitsetDeterminant& detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
@@ -915,7 +931,16 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
 
-#pragma omp parallel for schedule(dynamic)
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         SharedBitsetDeterminant detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
@@ -936,6 +961,16 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
