@@ -483,7 +483,7 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P space",P_space_.size());
         outfile->Flush();
 
-        //save the dimention of the previous iteration
+        //save the dimension of the previous iteration
         int PQ_space_init = PQ_space_.size();
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
@@ -509,6 +509,8 @@ double EX_ACI::compute_energy()
         // Step 2. Find determinants in the Q space
         find_q_space(num_ref_roots,P_evals,P_evecs);
 
+
+        //add_spin_pair(PQ_space_);
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,nroot_,DavidsonLiuList);
@@ -529,9 +531,9 @@ double EX_ACI::compute_energy()
         outfile->Printf("\n");
         outfile->Flush();
 
-        //get final dimention of P space
+        //get final dimension of P space
         int PQ_space_final = PQ_space_.size();
-        outfile->Printf("\n PQ space dimention difference (current - previous) : %d \n", PQ_space_final - PQ_space_init);
+        outfile->Printf("\n PQ space dimension difference (current - previous) : %d \n", PQ_space_final - PQ_space_init);
 
         // Step 4. Check convergence and break if needed 
         if(check_convergence(energy_history,PQ_evals)){
@@ -545,19 +547,37 @@ double EX_ACI::compute_energy()
             break;
         }
 
+
         // Step 6. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,nroot_);
 
         // Print information about the wave function
         print_wfn(PQ_space_,PQ_evecs,nroot_);
-
+		
     }//end cycle
 
     // Do Hamiltonian smoothing
     if (do_smooth_){
         smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
     }
+	
+	// Compute average spin contamination
+	double spin_contamination = 0.0;
+	for( int i = 0; i < nroot_; ++i ){
+		spin_contamination += root_spin_vec_[i].first;
+	}
+	spin_contamination /= static_cast<double>(nroot_);
 
+	//If contamination is a problem, correct it
+	if( spin_contamination >= 0.2 ){
+		outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination); 
+		spin_transform(PQ_space_, PQ_evecs, nroot_);
+		PQ_evecs->zero();
+		PQ_evecs = PQ_spin_evecs_->clone();
+		sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_, DavidsonLiuList);
+	}else{
+		outfile->Printf("\n  Average spin contamination per root is %1.5f, no need for projection", spin_contamination);
+	}
 
     //Re-diagonalize H, solving for more roots
     if(post_diagonalize_){
@@ -598,8 +618,8 @@ double EX_ACI::compute_energy()
         diagonalize_order nMatz = evals_only_descending;
         D1_->print();
 
-        boost::shared_ptr<Vector> no_occnum(new Vector("Natural Orbital occupation Numbers", nmo_));
-        boost::shared_ptr<Matrix> NOevecs(new Matrix("NO Evecs", nmo_, nmo_));
+        SharedVector no_occnum(new Vector("Natural Orbital occupation Numbers", nmo_));
+        SharedMatrix NOevecs(new Matrix("NO Evecs", nmo_, nmo_));
         D1_->diagonalize(NOevecs, no_occnum, nMatz );
         no_occnum->print();
 
@@ -618,6 +638,7 @@ double EX_ACI::compute_energy()
         outfile->Printf(" ]");
 
     }
+
 
 
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
@@ -1517,7 +1538,7 @@ pVector<std::pair<double,double>,std::pair<size_t,double> > EX_ACI::compute_spin
         std::sort(det_weight.begin(),det_weight.end());
         std::reverse(det_weight.begin(),det_weight.end());
 
-        const double wfn_threshold = 0.95;
+        const double wfn_threshold = (space.size() < 10)? 1.00 : 0.95;
         for (size_t I = 0; I < space.size(); ++I){
             if ((sum_weight < wfn_threshold) and (I < max_sample)) {
                 sum_weight += std::pow(det_weight[I].first,2.0);
@@ -1899,16 +1920,14 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
         for(int n = 1; n < nroot; ++n){
             //make orbital occ a function of n
             BitsetDeterminant det = det_space[0];
-            det.set_alfa_bit(orbs[el_idx].second.second, false);
-            det.set_alfa_bit(orbs[el_idx + n].second.second, true);
-            det.set_beta_bit(orbs[el_idx].second.second, false);
-            det.set_beta_bit(orbs[el_idx + n].second.second, true);
-            det_space.push_back(det);
+            det.set_alfa_bit(orbs[el_idx + n-2].second.second, false);
+            det.set_alfa_bit(orbs[el_idx + 3].second.second, true);
+            det.set_beta_bit(orbs[el_idx + n-2].second.second, false);
+            det.set_beta_bit(orbs[el_idx + 3].second.second, true);
+            P_space_.push_back(det);
         }
 
-        outfile->Printf("el_idx = %zu", el_idx);
-
-        sparse_solver.diagonalize_hamiltonian(det_space,evals,evecs,nroot, Full);
+        sparse_solver.diagonalize_hamiltonian(P_space_,evals,evecs,nroot, Full);
 
         for(int n = 0; n < nroot; ++n){
             for (size_t I = 0; I < det_space.size(); ++I){
@@ -1928,8 +1947,8 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
             correct_spin = true;
         }
 
-        P_space_.clear();
-        P_space_ = det_space;
+       // P_space_.clear();
+       // P_space_ = det_space;
 
         //If not, try again
         //count++;
@@ -1937,6 +1956,111 @@ void EX_ACI::form_initial_space(std::vector<BitsetDeterminant> det_space, int nr
 
 
     }
+}
+
+void EX_ACI::add_spin_pair(std::vector<BitsetDeterminant> det_space)
+{
+    std::vector<size_t> single_idx;
+    //Get indices of lonely determinants
+    for(size_t I = 0; I < det_space.size(); ++I){
+        for(size_t J = 0; J != det_space.size(); ++J){
+            if( det_space[I].get_alfa_occ() == det_space[J].get_beta_occ() and det_space[I].get_beta_occ() == det_space[J].get_alfa_occ()){
+                break;
+            }else if(J == det_space.size() - 1){
+             //   outfile->Printf("\n  Det at index %zu has no spin-partner", I);
+                single_idx.push_back(I);
+            }else{
+                continue;
+            }
+        }
+    }
+
+    //Give them a partner
+    for( auto& I : single_idx){
+        BitsetDeterminant new_det = det_space[I];
+        new_det.spin_flip();
+        PQ_space_.push_back(new_det);
+    }
+}
+
+/* Spin_transform builds the S2 matrix in
+ * the determinant basis, diagonalizes it,
+ * and transforms the cI coefficients with
+ * the eigenvectors. 
+ */
+
+void EX_ACI::spin_transform( std::vector<BitsetDeterminant> det_space, SharedMatrix cI, int nroot )
+{
+
+    outfile->Printf("\n  Performing Spin Projection...");
+    Timer timer;
+
+    size_t det_size = det_space.size();
+	SharedMatrix S2(new Matrix("S^2", det_size, det_size));
+
+	// Build S^2
+	for( size_t I = 0; I < det_size; ++I ){
+        for( size_t J = 0; J <= I; ++J){
+            S2->set(I,J, det_space[I].spin2(det_space[J]) );
+            S2->set(J,I, S2->get(I,J) );
+        }
+    }
+
+    SharedMatrix T(new Matrix("T", det_size,det_size));
+    SharedVector Evals(new Vector("Evals", det_size));
+
+    //Diagonalize S^2, evals will be in ascending order
+    //Evecs will be in the same order as evals
+    S2->diagonalize(T,Evals);
+
+	// Count the number of CSFs with correct spin
+	// and get their indices wrt columns in T
+    size_t csf_num = 0;
+	size_t csf_idx = 0;
+    for(size_t l = 0; l < det_size; ++l){
+        if( std::fabs(Evals->get(l) - (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0)))  <= 0.01){
+            csf_num++;
+        }else if( csf_num == 0 ){
+			csf_idx++;
+		}else{
+			continue;
+		}
+    }
+
+    SharedMatrix C_trans(new Matrix("C_trans", det_size, nroot_));
+    outfile->Printf("\n  csf_num: %zu \n", csf_num);
+
+	//First implementation is inefficient loop structure
+	//loop over all roots
+	C_trans->zero();
+	for(size_t n = 0; n < nroot; ++n){
+		//loop over determinants
+		for(size_t K = 0; K < det_size; ++K){
+			//loop over csfs
+			for(size_t s = csf_idx; s < csf_num + csf_idx; ++s){
+				//loop over determinants
+				for(size_t I = 0; I < det_size; ++I){
+					C_trans->add(K,n, T->get(K,s) * T->get(I,s) * cI->get(I,n) ); 
+				}
+			}
+		}
+	}
+	outfile->Printf("\n  Printing Unnormalized C_mat \n");
+
+	// Normalize transformed vectors
+	for( size_t n = 0; n < nroot; ++n){
+		double denom = 0.0;
+		for( size_t I = 0; I < det_size; ++I){
+			denom += std::pow(C_trans->get(I,n), 2.0);
+		}
+		denom = std::sqrt( 1.0/denom ); 
+		C_trans->scale_column(0,n,denom );
+	}
+
+    PQ_spin_evecs_ = C_trans->clone();
+	
+    outfile->Printf("\n  Time spent performing spin transformation: %6.6f s", timer.get());
+    outfile->Flush();
 }
 
 }} // EndNamespaces
