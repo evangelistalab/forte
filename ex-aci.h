@@ -136,12 +136,15 @@ private:
     std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
+
     ///Vector to store spin of each root
     std::vector<std::pair<double,double> > root_spin_vec_;
     ///1 particle density matrix
     SharedMatrix D1_;
     ///Form initial guess space with correct spin?
     bool do_spin_guess_;
+	///Spin-symmetrized evecs
+	SharedMatrix PQ_spin_evecs_;
 
 
     // ==> Class functions <==
@@ -224,6 +227,11 @@ private:
 
     ///Form initial space of determinants with correct S^2 for each root
     void form_initial_space(std::vector<BitsetDeterminant> det_space, int nroot);
+
+    void add_spin_pair(std::vector<BitsetDeterminant> det_space);
+
+    ///Compute S^2 matrix and diagonalize it
+    void spin_transform(std::vector<BitsetDeterminant> det_space, SharedMatrix cI, int nroot);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
