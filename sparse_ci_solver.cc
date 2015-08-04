@@ -1270,4 +1270,52 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     return true;
 }
 
+void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs,int nroot, DiagonalizationMethod diag_method)
+{
+	// Build the Hamiltonian
+	bool Hmat = true;
+	SharedMatrix Hm;
+	std::vector<std::pair<std::vector<int>,std::vector<double>>> Hs;
+
+	if( space.size() <= 100 ){
+		Hm = build_full_hamiltonian(space);
+	}else{
+		if( diag_method == Full ){
+			Hm = build_full_hamiltonian(space);
+		}else if( diag_method == DavidsonLiuDense ){
+			Hm = build_full_hamiltonian(space);
+		}else if( diag_method == DavidsonLiuSparse ){
+			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
+			Hmat = false;
+		}else if( diag_method == DavidsonLiuList ){
+			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
+			Hmat = false;
+		}
+	}
+
+	// Compute expectation value
+	evals.reset(new Vector("evals", nroot));
+	if(Hmat){
+		outfile->Printf("\n  Using full algorithm");
+		for( size_t n = 0; n < nroot; ++n){
+			for( size_t I = 0; I < space.size(); ++I ){
+				for( size_t J = 0; J < space.size(); ++J){
+					evals->add(n, evecs->get(I,n) *  Hm->get(I,J) * evecs->get(J,n) );
+				}
+			}
+		}
+	}else{
+		for( size_t n = 0; n < nroot; ++n){
+			for(size_t I = 0; I < space.size(); ++I){
+				std::vector<double> H_val = Hs[I].second;
+				std::vector<int> H_idx = Hs[I].first;
+				for(size_t J = 0; J < H_val.size(); ++J){
+					evals->add(n, evecs->get(I,n) * H_val[J] * evecs->get(H_idx[J],n) );
+				}
+			}
+		}
+	}
+	
+}
+
 }}

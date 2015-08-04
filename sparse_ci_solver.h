@@ -177,6 +177,19 @@ public:
                                    int nroot,
                                    DiagonalizationMethod diag_method = DavidsonLiuSparse);
 
+	/**
+	 * Compute the energy when CI vector is already known
+	 * @param space The basis for the CI given as a vector of BitsetDeterminant objects
+	 * @param evecs The known eigenvectors
+	 * @param nroot The number of solutions to compute
+	 */
+
+	void compute_H_expectation_val(const std::vector<BitsetDeterminant> space,
+									SharedVector& evals,
+									const SharedMatrix evecs,
+									int nroot,
+									DiagonalizationMethod diag_method);
+
     /// Enable or disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
