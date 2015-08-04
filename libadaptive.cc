@@ -435,7 +435,7 @@ extern "C" PsiReturnType
 libadaptive(Options &options)
 {
     Timer overall_time;
-    ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
+    ambit::initialize();
 
     if(options.get_bool("UNO")){
         std::string ref = options.get_str("REFERENCE");

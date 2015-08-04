@@ -34,7 +34,7 @@ set libadaptive{
    nroot                 1
    dsrg_s                0.5
    dsrgpt                true
-   int_type              df
+   int_type              DF
 }
 
 basis {
@@ -70,9 +70,9 @@ S   1   1.00
 ****
 }
 
-energy('mcscf')
+ref = energy('mcscf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refmcscf,get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refmcscf,ref,10,"SCF energy")
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 

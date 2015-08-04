@@ -1571,7 +1571,7 @@ void CholeskyIntegrals::gather_integrals()
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nthree_ = nL;
-    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * 8.0 / 1073741824.0 );
+    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );
     int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
 
     TensorType tensor_type = kCore;
