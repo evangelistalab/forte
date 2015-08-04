@@ -47,6 +47,7 @@ ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const
 void BlockedTensorFactory::add_mo_space(const std::string& name,const std::string& mo_indices,std::vector<size_t> mos,ambit::SpinType spin)
 {
     ambit::BlockedTensor::add_mo_space(name, mo_indices, mos, spin);
+    molabel_to_index_[name] = mos;
 
 }
 void BlockedTensorFactory::add_mo_space(const std::string& name,const std::string& mo_indices,std::vector<std::pair<size_t,ambit::SpinType>> mo_spin)

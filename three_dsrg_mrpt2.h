@@ -11,6 +11,7 @@
 #include "reference.h"
 #include <string>
 #include <vector>
+#include <libthce/thce.h>
 #include "blockedtensorfactory.h"
 
 namespace psi{
@@ -90,7 +91,7 @@ protected:
     int taylor_order_;
 
     // => Tensors <= //
-    TensorType tensor_type_;
+    ambit::TensorType tensor_type_;
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;

@@ -196,11 +196,26 @@ void THREE_DSRG_MRPT2::startup()
     {
         ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph"});
     }
+    std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
 
-    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = ints_->get_three_integral(i[0],i[1],i[2]);
-    });
+    //ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    //    value = ints_->get_three_integral(i[0],i[1],i[2]);
+    //});
+    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
 
+    for(std::string& string_block : ThreeInt_block)
+    {
+        std::string pos1(1, string_block[0]);
+        std::string pos2(1, string_block[1]);
+        std::string pos3(1, string_block[2]);
+
+        std::vector<size_t> first_index = mo_to_index[pos1];
+        std::vector<size_t> second_index = mo_to_index[pos2];
+        std::vector<size_t> third_index = mo_to_index[pos3];
+
+        ambit::Tensor ThreeIntegral_block = ints_->get_three_integral_block(first_index, second_index, third_index);
+        ThreeIntegral.block(string_block).copy(ThreeIntegral_block);
+    }
 
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
 
@@ -209,7 +224,7 @@ void THREE_DSRG_MRPT2::startup()
 
     //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
     //See Vpphh
-    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 1));
+    V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 2));
 
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
@@ -397,17 +412,17 @@ void THREE_DSRG_MRPT2::startup()
     //});
 
     // Fill out Lambda2 and Lambda3
-    Tensor Lambda2_aa = Lambda2.block("aaaa");
-    Tensor Lambda2_aA = Lambda2.block("aAaA");
-    Tensor Lambda2_AA = Lambda2.block("AAAA");
+    ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
+    ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
+    ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
     Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+    ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+    ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+    ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+    ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
     Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
@@ -636,7 +651,7 @@ void THREE_DSRG_MRPT2::check_t2()
     T2norm = 0.0; T2max = 0.0;
     std::vector<std::string> T2blocks = T2.block_labels();
     for(const std::string& block: T2blocks){
-        Tensor temp = T2.block(block);
+        ambit::Tensor temp = T2.block(block);
         if(islower(block[0]) && isupper(block[1])){
             T2norm += 4 * pow(temp.norm(), 2.0);
         }else{
@@ -857,11 +872,16 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     BlockedTensor temp1;
     BlockedTensor temp2;
     BlockedTensor T2pr;
+    BlockedTensor VH;
 
+
+    std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
     temp1 = BTF->build(tensor_type_,"temp1",BTF->spin_cases_avoid(no_hhpp_,1));
     temp2 = BTF->build(tensor_type_,"temp2",BTF->spin_cases_avoid(no_hhpp_,1));
     T2pr   = BTF->build(tensor_type_,"T2 Amplitudes not all",
              BTF->spin_cases_avoid(no_hhpp_, 1));
+    VH   = BTF->build(tensor_type_,"VH",
+             BTF->spin_cases_avoid(list_of_pphh_V, 1));
 
     T2pr["ijab"] = (ThreeIntegral["gai"] * ThreeIntegral["gbj"]);
     std::vector<std::string> T2prblock_label = T2pr.block_labels();
@@ -919,10 +939,46 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     temp1["kLaB"] += T2pr["iJaB"] * Gamma1["ki"] * Gamma1["LJ"];
     temp2["kLcD"] += temp1["kLaB"] * Eta1["ac"] * Eta1["BD"];
+    VH["abij"] =  ThreeIntegral["gai"]*ThreeIntegral["gbj"];
+    std::vector<std::string> Vblock_label = VH.block_labels();
 
-    E += 0.25 * V["CDKL"] * temp2["KLCD"];
-    E += 0.25 * V["cdkl"] * temp2["klcd"];
-    E += V["cDkL"] * temp2["kLcD"];
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::islower(block[0]) && std::isupper(block[1]) && std::islower(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = VH.block(block);
+            ambit::Tensor Vabij = VH.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+
+    VH["abij"] -= ThreeIntegral["gaj"]*ThreeIntegral["gbi"];
+    for(const std::string& block : Vblock_label)
+    {
+        transformed_string = block;
+        std::transform(transformed_string.begin(), transformed_string.end(), transformed_string.begin(), ::tolower);
+        if(std::isupper(block[0]) && std::isupper(block[1]) && std::isupper(block[2]) && std::isupper(block[3]))
+        {
+            ambit::Tensor VABIJ = VH.block(block);
+            ambit::Tensor Vabij = VH.block(transformed_string);
+            VABIJ.copy(Vabij);
+        }
+    }
+    VH.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]));
+        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]));
+        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+            value = (value + value * renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]));
+        }
+    });
+
+    E += 0.25 * VH["CDKL"] * temp2["KLCD"];
+    E += 0.25 * VH["cdkl"] * temp2["klcd"];
+    E += VH["cDkL"] * temp2["kLcD"];
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
 

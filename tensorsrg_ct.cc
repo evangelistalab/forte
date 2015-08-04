@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace psi;
+using namespace ambit;
 
 namespace psi{ namespace libadaptive{
 
