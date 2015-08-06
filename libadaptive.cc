@@ -280,11 +280,19 @@ read_options(std::string name, Options &options)
         /*Maximum number of determinants*/
         options.add_int("MAX_DET", 1e6);
         /*Threshold value for defining multiplicity from S^2*/
-        options.add_double("SPIN_TOL", 10.0);
+        options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
         options.add_bool("1_RDM", false);
-        /*- Form initial space with correct S^2? */
-        options.add_bool("spin_guess", false);
+        /*- Form initial space with based on energy */
+        options.add_bool("LAMBDA_GUESS", false);
+		/*- Type of spin projection
+		 * 0 - None
+		 * 1 - Project initial P spaces at each iteration
+		 * 2 - Project only after converged PQ space
+		 * 3 - Do 1 and 3 -*/
+		options.add_int("SPIN_PROJECTION", 0);
+		/*- Threshold for Lambda guess -*/
+		options.add_double("LAMBDA_THRESH", 1.0);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
