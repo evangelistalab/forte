@@ -18,5 +18,5 @@ Makefile
 /tests/*/*.clean
 /tests/*/*.txt
 /tests/*/*.plt
-
+/tests/*/timer.dat
 
