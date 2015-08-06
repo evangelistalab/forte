@@ -4,8 +4,8 @@
 import libadaptive
 
 refscf = -14.839846512738 #TEST
-refaci = -14.8829301289 #TEST
-refacipt2 = -14.889436645 #TEST
+refaci = -14.8829305594 #TEST
+refacipt2 = -14.889437076 #TEST
 
 molecule li2{
 0 1
@@ -35,6 +35,7 @@ set libadaptive {
   TAUQ 0.01000
   nroot 3
   charge 0
+  spin_projection 2
 }
 
 energy('ex-aci')
