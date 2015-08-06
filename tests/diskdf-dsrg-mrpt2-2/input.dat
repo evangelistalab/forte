@@ -35,7 +35,7 @@ set libadaptive{
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
-   int_type                diskdf
+   int_type                df
 }
 
 ref = energy('mcscf')

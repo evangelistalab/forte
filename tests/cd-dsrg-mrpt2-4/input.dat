@@ -36,8 +36,8 @@ set libadaptive{
    cholesky_tolerance      1e-16
 }
 
-energy('rhf')
+rhf = energy('rhf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refrhf, get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refrhf, rhf,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
