@@ -1083,9 +1083,6 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 
     ThreeIntegralTensor = get_three_integral_block(vQ, vP, vP);
 
-    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        outfile->Printf("\n i[0] = %d i[1]= %d i[2] = %d %8.8f", i[0],i[1], i[2],value);
-    });
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);
     });
@@ -1095,7 +1092,6 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 
     fock_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
-            outfile->Printf("\n i[0] = %d and i[1] = %d and %d and %8.8f", i[0], i[1], i[0] * aptei_idx_ + i[1], value);
     });
 
     fock_b.iterate([&](const std::vector<size_t>& i,double& value){
@@ -1571,7 +1567,7 @@ void CholeskyIntegrals::gather_integrals()
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nthree_ = nL;
-    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * 8.0 / 1073741824.0 );
+    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );
     int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
 
     TensorType tensor_type = kCore;
