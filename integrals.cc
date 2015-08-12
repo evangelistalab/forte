@@ -2848,10 +2848,16 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     }
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
+    if(frozen_size * frozen_size * nmo_ * nmo_ * 8 /(1024 * 1024 * 1024) > 100)
+    {
+        outfile->Printf("\n\n\n Wayyyy too big for my poor algorithm");
+        throw PSIEXCEPTION("Kevin, you should implement FrozenV in blocks");
+        
+    }
 
-    FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
-    FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    FullFrozenV["rspq"] =   ThreeIntegral["grs"] * ThreeIntegral["gpq"];
+    FullFrozenVAB["rspq"] = FullFrozenV["rspq"];
+    FullFrozenV["rspq"] -=  ThreeIntegral["grq"] * ThreeIntegral["gps"];
 
 
     FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
