@@ -142,7 +142,7 @@ private:
     ///1 particle density matrix
     SharedMatrix D1_;
     ///Form initial guess space with correct spin?
-    bool do_spin_guess_;
+    bool do_guess_;
 	///Spin-symmetrized evecs
 	SharedMatrix PQ_spin_evecs_;
 

@@ -1,8 +1,8 @@
 import libadaptive
 
 refscf = -37.97186042031555  
-refaci = -38.5680193960 
-refacipt2 = -38.6371791504
+refaci = -38.65846508 
+refacipt2 =-38.72816632 
 
 molecule CH2{
 0 1
@@ -36,6 +36,7 @@ set libadaptive {
   root_sym 2
   nroot 1
   charge 0
+  spin_projection 1
 }
 
 energy('ex-aci')
