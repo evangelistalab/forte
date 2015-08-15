@@ -2181,31 +2181,54 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 }
 ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
+
 {
+    ambit::Tensor ThreeIntpr = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    std::vector<size_t> Avec(nthree_);
+    std::iota(Avec.begin(), Avec.end(), 0);
+
+    ThreeIntpr = get_three_integral_block(Avec, p, r);
+    ThreeIntqs = get_three_integral_block(Avec, q, s);
+
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
-    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = aptei_aa(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
-    });
+    ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+    ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
+    
     return ReturnTensor;
 }
 
 ambit::Tensor DISKDFIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
 {
+    ambit::Tensor ThreeIntpr = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    std::vector<size_t> Avec(nthree_);
+    std::iota(Avec.begin(), Avec.end(), 0);
+
+    ThreeIntpr = get_three_integral_block(Avec, p, r);
+    ThreeIntqs = get_three_integral_block(Avec, q, s);
+
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
-    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = aptei_ab(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
-    });
+    ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+
     return ReturnTensor;
 }
 
 ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
 {
+    ambit::Tensor ThreeIntpr = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
+    ambit::Tensor ThreeIntqs = ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    std::vector<size_t> Avec(nthree_);
+    std::iota(Avec.begin(), Avec.end(), 0);
+
+    ThreeIntpr = get_three_integral_block(Avec, p, r);
+    ThreeIntqs = get_three_integral_block(Avec, q, s);
+
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
-    ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = aptei_bb(p[i[0]], q[i[1]], r[i[2]], s[i[3]]);
-    });
+    ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+    ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
     return ReturnTensor;
 }
 double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
@@ -2427,6 +2450,7 @@ DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction 
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
+
     outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
 }
 
@@ -2848,10 +2872,16 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     }
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
+    if(frozen_size * frozen_size * nmo_ * nmo_ * 8 /(1024 * 1024 * 1024) > 100)
+    {
+        outfile->Printf("\n\n\n Wayyyy too big for my poor algorithm");
+        throw PSIEXCEPTION("Kevin, you should implement FrozenV in blocks");
+        
+    }
 
-    FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
-    FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    FullFrozenV["rspq"] =   ThreeIntegral["grs"] * ThreeIntegral["gpq"];
+    FullFrozenVAB["rspq"] = FullFrozenV["rspq"];
+    FullFrozenV["rspq"] -=  ThreeIntegral["grq"] * ThreeIntegral["gps"];
 
 
     FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
