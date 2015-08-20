@@ -1361,16 +1361,20 @@ void DFIntegrals::compute_frozen_one_body_operator()
     ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
     ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
     ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+    ambit::BlockedTensor Test   = BTF->build(kCore, "FullFrozenV", {"faa"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ThreeIntegral_->get(i[1] * nmo_ + i[2], i[0]);
     });
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
+    boost::shared_ptr<Matrix> TestM(new Matrix("FrozenVAB", frozen_size * nmo_ , nmo_));
 
     FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
+    //FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
     FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    Test["rpq"] =ThreeIntegral["grq"]*ThreeIntegral["gpr"];
+    Test.print(stdout);
 
 
     FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
@@ -1379,26 +1383,32 @@ void DFIntegrals::compute_frozen_one_body_operator()
     FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
     });
+    Test.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        TestM->set(mo_to_rel[i[0]] * nmo_ + i[1], i[2], value);
+    });
     f = 0;
 
     for (size_t hi = 0; hi < nirrep_; ++hi){
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %lu",r);
+            outfile->Printf("\n  Freezing MO %lu and %lu",r, mo_to_rel[r]);
             #pragma omp parallel for num_threads(num_threads_) \
             schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q) - TestM->get(mo_to_rel[r] * nmo_ + p,q);
                     one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q) - TestM->get(mo_to_rel[r] * nmo_ + p,q);
                 }
             }
         }
         f += nmopi_[hi];
     }
 
+    for(size_t p = 0; p < nmo_; p++)
+        for(size_t q = 0; q < nmo_; q++)
+            outfile->Printf("\n\n %d %d one_int = %8.8f", p, q, one_electron_integrals_a[p * nmo_ + q]);
     ambit::BlockedTensor::reset_mo_spaces();
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
 
@@ -2841,75 +2851,104 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
         i++;
     }
 
-    BTF->add_mo_space("f","rs", frozen_vec, NoSpin);
-    BTF->add_mo_space("k", "mn", corrleated_vec, NoSpin);
-    BTF->add_composite_mo_space("a", "pq", {"f", "k"});
-
     std::vector<size_t> nauxpi(nthree_);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-    BTF->add_mo_space("d","g",nauxpi,NoSpin);
+    std::vector<size_t> P(nmo_);
+    std::iota(P.begin(), P.end(), 0);
 
+    // <rp || rq> + <rp | rq>
+    // = B_{rr}^{Q} * B_{pq}^{Q} - B_{rp}^{Q} B_{qr}^{Q} + B_{rr}^{Q} * B_{pq}^{Q}
+    // => Assume that I can store all but B_{pq}^{Q} in core (maybe a big assumption . . . . . )
     //Kevin is lazy.  Going to use ambit to perform this contraction
-    ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
-    ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
-    ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
+    //Create three tensors.  Forgive my terrible naming
+    //B_{rr}^{Q}
+    ambit::Tensor BQr = ambit::Tensor::build(tensor_type_, "BQr", {nthree_, frozen_vec.size(), frozen_vec.size()});
+    // B_{rp}^{Q}
+    ambit::Tensor BQrp = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, frozen_vec.size(), nmo_});
+    // B_{pr}^{Q}
+    ambit::Tensor BQpr = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, nmo_,frozen_vec.size()});
 
-     std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
-    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
-    for(std::string& string_block : ThreeInt_block)
+    //Read these into a tensor
+    BQrp = get_three_integral_block(nauxpi, frozen_vec, P);
+    BQpr = get_three_integral_block(nauxpi, P, frozen_vec);
+
+    ambit::Tensor rpq = ambit::Tensor::build(tensor_type_, "rpq", {frozen_vec.size(), nmo_, nmo_});
+    ambit::Tensor rpqK = ambit::Tensor::build(tensor_type_, "rpqK", {frozen_vec.size(), nmo_, nmo_});
+
+    //Form the exchange part of this out of loop for blocks
+    //Need to see if this ever gets too large
+    rpqK("r,p,q") = BQrp("Q,r,p") * BQpr("Q,q,r");
+
+    //====Blocking information==========
+    //Hope this is smart enough to figure out not to store B_{pq}^{Q}
+    //Major problem with this is that other tensors are not that small.
+    //Maybe won't work
+    int int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
+    int memory_input = Process::environment.get_memory();
+    int num_block = std::ceil(double(int_mem_int_) / memory_input);
+    //Hard wires num_block for testing
+
+    int block_size = nthree_ / num_block;
+
+    if(num_block != 1)
     {
-        std::string pos1(1, string_block[0]);
-        std::string pos2(1, string_block[1]);
-        std::string pos3(1, string_block[2]);
-
-        std::vector<size_t> first_index = mo_to_index[pos1];
-        std::vector<size_t> second_index = mo_to_index[pos2];
-        std::vector<size_t> third_index = mo_to_index[pos3];
-
-        ambit::Tensor ThreeIntegral_block = get_three_integral_block(first_index, second_index, third_index);
-        ThreeIntegral.block(string_block).copy(ThreeIntegral_block);
+        outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
+        outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
+        outfile->Printf("\n  Block_size = %d\n num_block = %d", block_size, num_block);
     }
-    boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
-    boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
-    if(frozen_size * frozen_size * nmo_ * nmo_ * 8 /(1024 * 1024 * 1024) > 100)
+
+    for(int i = 0; i < num_block; i++)
     {
-        outfile->Printf("\n\n\n Wayyyy too big for my poor algorithm");
-        throw PSIEXCEPTION("Kevin, you should implement FrozenV in blocks");
-        
+        std::vector<size_t> A_block;
+        if(nthree_ % num_block == 0)
+        {
+            A_block.resize(block_size);
+            std::iota(A_block.begin(), A_block.end(), i * block_size);
+        }
+        else
+        {
+            block_size = i==(num_block - 1) ? block_size + nthree_ % num_block : block_size;
+            A_block.resize(block_size);
+            std::iota(A_block.begin(), A_block.end(), i * (nthree_ / num_block));
+        }
+        //This tensor is extremely large for big systems
+        //Needs to be blocked over A
+        ambit::Tensor BQpq = ambit::Tensor::build(tensor_type_, "BQpq", {A_block.size(), nmo_, nmo_});
+        BQpq = get_three_integral_block(A_block, P, P);
+        //A_block is the split of the naux -> (0, . . . ,block_size)
+
+        ambit::Tensor Qr = ambit::Tensor::build(tensor_type_, "Qr", {A_block.size(),frozen_vec.size()});
+        BQr = get_three_integral_block(A_block, frozen_vec, frozen_vec);
+        //Go from B_{rr}^{Q} -> B_{r}^{Q}.  Tensor library can not do this.
+        std::vector<double>& BQrP = BQr.data(); // get the data from BQr
+        Qr.iterate([&](const std::vector<size_t>& i,double& value){
+            value = BQrP[i[0] * frozen_size * frozen_size + i[1] * frozen_size + i[1]] ;
+        });
+        //^^^^^ -> B_{rr}^{Q} -> B_{r}^{Q}
+        rpq("r,p,q") += 2.0 * Qr("Q,r") * BQpq("Q,p,q");
     }
-
-    FullFrozenV["rspq"] =   ThreeIntegral["grs"] * ThreeIntegral["gpq"];
-    FullFrozenVAB["rspq"] = FullFrozenV["rspq"];
-    FullFrozenV["rspq"] -=  ThreeIntegral["grq"] * ThreeIntegral["gps"];
-
-
-    FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        FrozenVMatrix->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
-    });
-    FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
-    });
+    std::vector<double>& rpqP = rpq.data();
+    std::vector<double>& rpqKP = rpqK.data();
     f = 0;
-
     for (size_t hi = 0; hi < nirrep_; ++hi){
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %lu",r);
+            outfile->Printf("\n  Freezing MO %lu", r);
             #pragma omp parallel for num_threads(num_threads_) \
             schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
-                    one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
+                    one_electron_integrals_a[p * nmo_ + q] += rpqP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ +  q]
+                            - rpqKP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ + q];
+                    one_electron_integrals_b[p * nmo_ + q] += rpqP[mo_to_rel[r] * nmo_ * nmo_ +p * nmo_ + q]
+                            - rpqKP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ + q];
+
                 }
             }
         }
         f += nmopi_[hi];
     }
-
     ambit::BlockedTensor::reset_mo_spaces();
 
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
