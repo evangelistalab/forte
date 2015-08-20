@@ -1374,7 +1374,6 @@ void DFIntegrals::compute_frozen_one_body_operator()
     //FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
     FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
     Test["rpq"] =ThreeIntegral["grq"]*ThreeIntegral["gpr"];
-    Test.print(stdout);
 
 
     FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
