@@ -2896,6 +2896,8 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
         outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
         outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
         outfile->Printf("\n  Block_size = %d\n num_block = %d", block_size, num_block);
+        outfile->Printf("\n\n rpq is %4.4f GB", nthree_ * frozen_size * nmo_ * 8.0 / (1024 * 1024 * 1024));
+        outfile->Printf("\n\n BpqQ is %4.4f GB", nthree_ * nmo_ * nmo_ * 8.0 / (1024 * 1024 * 1024));
     }
 
     for(int i = 0; i < num_block; i++)
