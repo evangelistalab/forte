@@ -1361,53 +1361,45 @@ void DFIntegrals::compute_frozen_one_body_operator()
     ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
     ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
     ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
-    ambit::BlockedTensor Test   = BTF->build(kCore, "FullFrozenV", {"faa"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = ThreeIntegral_->get(i[1] * nmo_ + i[2], i[0]);
     });
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
-    boost::shared_ptr<Matrix> TestM(new Matrix("FrozenVAB", frozen_size * nmo_ , nmo_));
 
     FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    //FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
+    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
     FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    Test["rpq"] =ThreeIntegral["grq"]*ThreeIntegral["gpr"];
 
 
     FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         FrozenVMatrix->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
     });
     FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
+    FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
     });
-    Test.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        TestM->set(mo_to_rel[i[0]] * nmo_ + i[1], i[2], value);
-    });
+
     f = 0;
 
     for (size_t hi = 0; hi < nirrep_; ++hi){
         for (size_t i = 0; i < frzcpi_[hi]; ++i){
             size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %lu and %lu",r, mo_to_rel[r]);
+            outfile->Printf("\n  Freezing MO %lu ", r);
             #pragma omp parallel for num_threads(num_threads_) \
             schedule(dynamic)
             for(size_t p = 0; p < nmo_; ++p){
                 for(size_t q = 0; q < nmo_; ++q){
                     one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q) - TestM->get(mo_to_rel[r] * nmo_ + p,q);
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q); 
                     one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q) - TestM->get(mo_to_rel[r] * nmo_ + p,q);
+                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q); 
                 }
             }
         }
         f += nmopi_[hi];
     }
 
-    for(size_t p = 0; p < nmo_; p++)
-        for(size_t q = 0; q < nmo_; q++)
-            outfile->Printf("\n\n %d %d one_int = %8.8f", p, q, one_electron_integrals_a[p * nmo_ + q]);
     ambit::BlockedTensor::reset_mo_spaces();
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
 
