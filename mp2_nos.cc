@@ -19,6 +19,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
                          "written by Francesco A. Evangelista"});
 
     BlockedTensor::set_expert_mode(true);
+    BlockedTensor::reset_mo_spaces();
 
     /// List of alpha occupied MOs
     std::vector<size_t> a_occ_mos;
@@ -225,33 +226,35 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, Explorer
     {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
+        double occupied = options.get_double("OCC_NATURAL");
+        double virtual_orb = options.get_double("VIRT_NATURAL");
         outfile->Printf("\n Suggested Active Space \n");
-        outfile->Printf("\n Occupied orbitals with an occupation less than 0.985 are active");
-        outfile->Printf("\n Virtual orbitals with an occupation greater than 0.015 are active");
+        outfile->Printf("\n Occupied orbitals with an occupation less than %6.4f are active", occupied);
+        outfile->Printf("\n Virtual orbitals with an occupation greater than %6.4f are active", virtual_orb);
         outfile->Printf("\n Remember, these are suggestions  :-)!\n");
         for(size_t h = 0; h < nirrep; ++h){
             size_t restricted_docc_number = 0;
             size_t active_number          = 0;
             for(size_t i = 0; i < aoccpi[h]; ++i) {
-                if(D1oo_evals.get(h,i) < 0.985)
+                if(D1oo_evals.get(h,i) < occupied)
                 {
                     active_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,i, D1oo_evals.get(h,i));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f Active occupied", h,i, D1oo_evals.get(h,i));
                     active[h] = active_number;
                 }
-                else if(D1oo_evals.get(h,i) >= 0.985)
+                else if(D1oo_evals.get(h,i) >= occupied)
                 {
                     restricted_docc_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h, i, D1oo_evals.get(h,i));
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f  RDOCC", h, i, D1oo_evals.get(h,i));
                     restricted_docc[h] = restricted_docc_number;
                 }
             }
             for(size_t a = 0; a < avirpi[h]; ++a){
-                if(D1vv_evals.get(h,a) > 0.015)
+                if(D1vv_evals.get(h,a) > virtual_orb)
                 {
                     active_number++;
-                    active[h] = active_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f", h,a, D1vv_evals.get(h,a));
+                    active[h] =active_number; 
+                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f Active virtual", h,a, D1vv_evals.get(h,a));
                 }
             }
 

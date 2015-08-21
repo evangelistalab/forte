@@ -31,6 +31,8 @@ protected:
     //Used to control printing for memory summary
     bool print_memory_ = false;
 
+    std::map<std::string, std::vector<size_t> > molabel_to_index_;
+
 public:
     BlockedTensorFactory(Options &options);
     ~BlockedTensorFactory();
@@ -68,7 +70,9 @@ public:
     void memory_summary();
     //controls printing information
     void print_memory_info(){print_memory_=true;}
-    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& vecstring);
+    void memory_summary_per_block(ambit::BlockedTensor&);
+    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& vecstring, int how_many_active);
+    std::map<std::string, std::vector<size_t> > get_mo_to_index(){return molabel_to_index_;}
 };
 }}
 

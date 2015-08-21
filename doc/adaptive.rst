@@ -203,6 +203,162 @@ The threshold for smoothing the Hamiltonian
 * Type: double
 * Default: 0.01
 
+Computing Excited States with ACI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Additional functionality has been added to the adaptive-ci class, and these changes are implemented
+in the EX_ACI class. Upon optimization, these changes will be moved to the adaptive-ci class, and
+here all functionality of the current EX_ACI code will be summarized. All options from the adaptive-ci
+class are still useable in EX-ACI.
+
+A First Example
+~~~~~~~~~~~~~~~
+
+Here is an example input file that computes the lowest two states of :math:`Li_{2}` by comparing 
+parameters :math:`\tau_{p}` and :math:`\tau_q` to the respective averages of the MP2 energy 
+estimate and CI expansion coefficient, where these averages run over all roots of interest. :: 
+
+        import libadaptive
+
+        molecule li2{
+           Li
+           Li 1 2.0000
+        }
+
+        set {
+          basis sto-3g
+          e_convergence 10
+        }
+                 
+        set libadaptive{
+          multiplicity 1
+          select_type energy
+          excited_algorithm state_average
+          pq_function average
+          taup 0.01
+          tauq 0.01
+          nroot 2
+        }
+
+        energy('ex-aci')
+
+A Second Example
+~~~~~~~~~~~~~~~~
+Below is a similar example, but with two key differences. First, the :math:`\tau_{q}` parameter
+is defined as the lowest eigenvalue obtained from diagonalizing a 2-dimensional matrix containing
+the CI-wavefunction and a determinant outside of that space (see above). The second difference is
+that the maximum values for each criteria among the excited states are chosen as the importance criteria
+for a given determinant.:: 
+
+        import libadaptive
+
+        molecule li2{
+           Li
+           Li 1 2.0000
+        }
+
+        set {
+          basis sto-3g
+          e_convergence 10
+        }
+                 
+        set libadaptive{
+          multiplicity 1
+          perturb_select false
+          select_type energy
+          excited_algorithm state_average
+          pq_function max
+          taup 0.01
+          tauq 0.01
+          nroot 2
+        }
+
+        energy('ex-aci')
+
+EX-ACI Options
+~~~~~~~~~~~~~~
+
+**EXCITED_ALGORITHM**
+
+This option determines the algorithm to compute excited states. Currently the only options 
+implemented are "STATE_AVERAGE" which means that a function of the criteria among the excited
+states of interest are used to build the configuraiton space, and "ROOT_SELECT" where the 
+determinant space is constructed with respect to a single root.
+
+* Type: string
+* Options: "STATE_AVERAGE", "ROOT_SELECT"
+* Default: "STATE_AVERAGE"
+
+**PERTURB_SELECT**
+
+Option defines :math:`\tau_{q}` as either MP2 estimate or estimate derived from 2D diagonalization.
+True uses the MP2 estimation.
+
+* Type: bool
+* Default: false
+
+**POST_DIAGONALIZE**
+
+Option to re-diagonalize Hamiltonian in final CI space. This can be is useful to compute more roots.
+
+* Type: bool
+* Default: False
+
+**POST_ROOT**
+
+Number of roots to compute on post-diagonalization. For this option to be used, post-diagonalize
+must be true.
+
+* Type: int
+* Default: 1
+
+**PQ_FUNCTION**
+
+Option that selects the function of energy estimates per root and the expansion coefficients per root.
+This option is only meaningful if more than one root is desired.
+
+* Type: string
+* Options: "MAX", "AVERAGE"
+* Default: "MAX"
+
+**Q_REFERENCE**
+
+Reference state type to be used when computing estimates of the energy difference between two states. The
+estimation of the change in energy gap a determinant introduces can be done for all excited states with
+respect to the ground state (GS), or with respect to the nearest, lower state.
+
+* Type: string
+* Options: "GS", "ADJACENT"
+* Default: "GS"
+
+**Q_REL**
+
+Rather than using the absolute energy to define the importance of a determinant, an energy gap between
+ two states can be used. This allows the determinant space to be constructed such that the energy difference
+ between to states is optimized.
+
+* Type: bool
+* Default: False
+
+**REF_ROOT**
+
+Option that selects the desired root that is used to build the determinant space. This option should
+only be used when the EXCITED_ALGORITHM is set to "ROOT_SELECT".
+
+* Type: int
+* Default: 0
+
+**SPIN_TOL**
+
+For all of the algorithms in EX_ACI, roots are only used to build determinant spaces if their spin
+multiplicity is within a given tolerance of the input spin multiplicity. This option defines that
+spin tolerance. NOTE: the multiplicity must be defined within the EX_ACI scope. For poorly behaved
+systems, it may be useful to increase this to an arbitrarily large value such that the lowest-energy 
+multiplicities can be confirmed
+
+* Type: double
+* Default: 1.0e-4
+
 .. index::
    single: APIFCI
    pair: APIFCI; theory
@@ -558,12 +714,12 @@ This keyword will tell how big every tensor is, how many blocks are used, and wi
 
 **CCVV_ALGORITHM**
 
-The type of algorithm used for the ccvv term.  The fastest algorutm is the ccvv_ambit.  Both fly methods have the same memory requirements and are well
+The type of algorithm used for the ccvv term.  The fastest algorithm is the ccvv_ambit.  Both fly methods have the same memory requirements and are well
 paralleized through openmp.  
 
 * Type: string
 * Possible values: CORE FLY_AMBIT FLY_LOOP
-* Default: FLY_LOOP
+* Default: FLY_AMBIT
 
 
 

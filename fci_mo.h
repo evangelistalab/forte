@@ -14,8 +14,8 @@
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
 #include "reference.h"
-
 using namespace std;
+
 
 typedef vector<double> d1;
 typedef vector<d1> d2;
@@ -44,6 +44,9 @@ protected:
     // Integrals
     libadaptive::ExplorerIntegrals *integral_;
     std::string int_type_;
+
+    // Reference Type
+    std::string ref_type_;
 
     // Print Levels
     int print_;

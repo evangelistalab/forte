@@ -177,11 +177,25 @@ public:
                                    int nroot,
                                    DiagonalizationMethod diag_method = DavidsonLiuSparse);
 
+	/**
+	 * Compute the energy when CI vector is already known
+	 * @param space The basis for the CI given as a vector of BitsetDeterminant objects
+	 * @param evecs The known eigenvectors
+	 * @param nroot The number of solutions to compute
+	 */
+
+	void compute_H_expectation_val(const std::vector<BitsetDeterminant> space,
+									SharedVector& evals,
+									const SharedMatrix evecs,
+									int nroot,
+									DiagonalizationMethod diag_method);
+
     /// Enable or disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
     /// Enable or disable printing of details
     void set_print_details(bool print_details) {print_details_ = print_details;}
+
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -250,7 +264,6 @@ private:
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
-
 
     /// Use a OMP parallel algorithm?
     bool parallel_;
