@@ -31,6 +31,8 @@
 #include "blockedtensorfactory.h"
 #include "sq.h"
 #include "so-mrdsrg.h"
+#include "dsrg_wick.h"
+#include "uno.h"
 
 INIT_PLUGIN
 
@@ -53,6 +55,28 @@ read_options(std::string name, Options &options)
         /// Use Natural Orbitals to suggest active space
         options.add_bool("NAT_ACT", false);
 
+        // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
+
+        /// Typically, a occupied orbital with a NO occupation of <0.98 is considered active
+        options.add_double("OCC_NATURAL", 0.98);
+        /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
+        options.add_double("VIRT_NATURAL", 0.02);
+
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR UNO
+        //////////////////////////////////////////////////////////////
+
+        /*- Use unrestricted natural orbitals? -*/
+        options.add_bool("UNO", false);
+        /*- Minimum occupation number -*/
+        options.add_double("UNOMIN", 0.02);
+        /*- Maximum occupation number -*/
+        options.add_double("UNOMAX", 1.98);
+        /*- Print unrestricted natural orbitals -*/
+        options.add_bool("UNO_PRINT", false);
+        /*- Write Molden -*/
+        options.add_bool("MOLDEN_WRITE", false);
+
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -64,7 +88,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY ALL"); 
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -242,7 +266,7 @@ read_options(std::string name, Options &options)
         /*- The type of selection parameters to use*/
         options.add_bool("PERTURB_SELECT", false);
         /*Function of q-space criteria, per root*/
-        options.add_str("PQ_FUNCTION", "MAX", "AVERAGE");
+        options.add_str("PQ_FUNCTION", "AVERAGE","MAX");
         /*Type of  q-space criteria to use (only change for excited states)*/
         options.add_bool("Q_REL", false);
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
@@ -258,7 +282,19 @@ read_options(std::string name, Options &options)
         /*Maximum number of determinants*/
         options.add_int("MAX_DET", 1e6);
         /*Threshold value for defining multiplicity from S^2*/
-        options.add_double("SPIN_TOL", 1.0e-4);
+        options.add_double("SPIN_TOL", 0.01);
+        /*- Compute 1-RDM? -*/
+        options.add_bool("1_RDM", false);
+        /*- Form initial space with based on energy */
+        options.add_bool("LAMBDA_GUESS", false);
+		/*- Type of spin projection
+		 * 0 - None
+		 * 1 - Project initial P spaces at each iteration
+		 * 2 - Project only after converged PQ space
+		 * 3 - Do 1 and 3 -*/
+		options.add_int("SPIN_PROJECTION", 0);
+		/*- Threshold for Lambda guess -*/
+		options.add_double("LAMBDA_THRESH", 1.0);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -411,6 +447,13 @@ libadaptive(Options &options)
     Timer overall_time;
     ambit::initialize();
 
+    if(options.get_bool("UNO")){
+        std::string ref = options.get_str("REFERENCE");
+        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
+            UNO uno(options);
+        }
+    }
+
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
@@ -419,16 +462,25 @@ libadaptive(Options &options)
     // create CholeskyIntegrals class
     ExplorerIntegrals* ints_;
     if(options.get_str("INT_TYPE") == "CHOLESKY")
+
     {
         ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
     else if(options.get_str("INT_TYPE") == "DF")
+
     {
         ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
-    else
+    else if (options.get_str("INT_TYPE")== "DISKDF")
+
+    {
+        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+    }
+
+    else 
     {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        
     }
 
     // Link the integrals to the BitsetDeterminant class
@@ -494,9 +546,14 @@ libadaptive(Options &options)
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
             dsrg_mrpt2->compute_energy();
             if(options.get_str("RELAX_REF") == "ONCE"){
-                dsrg_mrpt2->transform_integrals();
+                boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
+                                                                     dsrg_mrpt2->RF(),
+                                                                     dsrg_mrpt2->Rtei(),
+                                                                     dsrg_mrpt2->Singles(),
+                                                                     dsrg_mrpt2->Doubles()));
+//                dsrg_mrpt2->transform_integrals();
 
-                FCI_MO fci(options,ints_);
+//                FCI_MO fci(options,ints_);
             }
         }
         if(options.get_str("CASTYPE")=="FCI")
@@ -522,12 +579,15 @@ libadaptive(Options &options)
         }
 
     }
-    if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2"){
+    if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2")
+    {
+
        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
        {
            outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
        }
+
        if(options.get_str("CASTYPE")=="CAS")
        {
            FCI_MO fci_mo(options,ints_);
@@ -536,6 +596,7 @@ libadaptive(Options &options)
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
            three_dsrg_mrpt2->compute_energy();
        }
+
        else if(options.get_str("CASTYPE")=="FCI")
        {
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -549,15 +610,21 @@ libadaptive(Options &options)
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
            fci->compute_energy();
            Reference reference = fci->reference();
-           boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
-           dsrg_mrpt2->compute_energy();
+           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
+           {
+                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
+                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
+           }
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+           three_dsrg_mrpt2->compute_energy();
        }
+
        else if(options.get_str("CASTYPE")=="DMRG")
+
        {
            outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
            throw PSIEXCEPTION("NO DMRG Reference available yet");
        }
-
 
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){

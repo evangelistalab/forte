@@ -8,7 +8,15 @@
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
+/// This needs to be in here to avoid problems with compiling without openmp
 #include "sparse_ci_solver.h"
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num()  0
+#endif
+
 
 
 namespace psi{ namespace libadaptive{
@@ -691,7 +699,7 @@ void SparseCISolver::diagonalize_full(const std::vector<BitsetDeterminant>& spac
     // Diagonalize H
     boost::timer t_diag;
     H->diagonalize(evecs,evals);
-    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_diag.elapsed());
+    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H using Full",t_diag.elapsed());
 }
 
 
@@ -749,8 +757,17 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
-
-#pragma omp parallel for schedule(dynamic)
+    //If you are using DiskDF, Kevin found that openmp does not like this! 
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         const BitsetDeterminant& detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
@@ -811,6 +828,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     outfile->Flush();
 
     // Form the Hamiltonian matrix
+
 #pragma omp parallel for schedule(dynamic)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
@@ -829,6 +847,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
                 }
             }
         }
+
 #pragma omp critical(save_h_row)
         {
             H_sparse[I] = make_pair(index_row,H_row);
@@ -912,7 +931,16 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
 
-#pragma omp parallel for schedule(dynamic)
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         SharedBitsetDeterminant detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
@@ -933,6 +961,16 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
+    int threads = 0;
+    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
+    #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
@@ -1265,6 +1303,54 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
     outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
     return true;
+}
+
+void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs,int nroot, DiagonalizationMethod diag_method)
+{
+	// Build the Hamiltonian
+	bool Hmat = true;
+	SharedMatrix Hm;
+	std::vector<std::pair<std::vector<int>,std::vector<double>>> Hs;
+
+	if( space.size() <= 100 ){
+		Hm = build_full_hamiltonian(space);
+	}else{
+		if( diag_method == Full ){
+			Hm = build_full_hamiltonian(space);
+		}else if( diag_method == DavidsonLiuDense ){
+			Hm = build_full_hamiltonian(space);
+		}else if( diag_method == DavidsonLiuSparse ){
+			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
+			Hmat = false;
+		}else if( diag_method == DavidsonLiuList ){
+			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
+			Hmat = false;
+		}
+	}
+
+	// Compute expectation value
+	evals.reset(new Vector("evals", nroot));
+	if(Hmat){
+		outfile->Printf("\n  Using full algorithm");
+		for( size_t n = 0; n < nroot; ++n){
+			for( size_t I = 0; I < space.size(); ++I ){
+				for( size_t J = 0; J < space.size(); ++J){
+					evals->add(n, evecs->get(I,n) *  Hm->get(I,J) * evecs->get(J,n) );
+				}
+			}
+		}
+	}else{
+		for( size_t n = 0; n < nroot; ++n){
+			for(size_t I = 0; I < space.size(); ++I){
+				std::vector<double> H_val = Hs[I].second;
+				std::vector<int> H_idx = Hs[I].first;
+				for(size_t J = 0; J < H_val.size(); ++J){
+					evals->add(n, evecs->get(I,n) * H_val[J] * evecs->get(H_idx[J],n) );
+				}
+			}
+		}
+	}
+	
 }
 
 }}

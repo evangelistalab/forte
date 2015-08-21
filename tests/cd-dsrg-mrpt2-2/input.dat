@@ -38,8 +38,8 @@ set libadaptive{
    cholesky_tolerance      1e-14
 }
 
-energy('mcscf')
+scf = energy('mcscf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refmcscf, get_variable("SCF total energy"),10,"SCF energy")
+compare_values(refmcscf, scf,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
