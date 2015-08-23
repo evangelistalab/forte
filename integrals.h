@@ -137,19 +137,17 @@ public:
 
     /// Set the value of the one-electron integrals
     /// @param ints pointer to the integrals
-    /// @param the spin type of the integrals
+    /// @param alpha the spin type of the integrals
     void set_oei(double** ints,bool alpha);
 
     /// Set the value of the one-electron integrals
-    /// @param the spin type of the integrals
+    /// @param p the integral index
+    /// @param q the integral index
+    /// @param value the value of the integral
+    /// @param alpha the spin type of the integrals
     void set_oei(size_t p, size_t q,double value,bool alpha);
 
     /// Set the value of the two-electron integrals
-    /// @param ints pointer to the integrals
-    /// @param the spin type of the integrals
-
-    /// Set the value of the two-electron integrals
-    /// @param the spin type of the integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2) = 0;
 
 

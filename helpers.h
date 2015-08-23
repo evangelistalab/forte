@@ -112,7 +112,8 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
 /**
  * @brief print_h2 Print a header
  * @param text The string to print in the header.
- * @param separator
+ * @param left_separator The left separator (default = "==>")
+ * @param right_separator The right separator (default = "<==")
  */
 void print_h2(const std::string& text, const std::string& left_separator = "==>", const std::string& right_separator  = "<==");
 

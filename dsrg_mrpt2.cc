@@ -397,6 +397,7 @@ double DSRG_MRPT2::renormalized_denominator_lamp(double V, double D)
 
 double DSRG_MRPT2::compute_energy()
 {
+    Timer DSRG_energy;
     outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");
     // Compute reference
 //    Eref = compute_ref();
@@ -492,6 +493,7 @@ double DSRG_MRPT2::compute_energy()
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
+    outfile->Printf("\n\n\n Energy took %8.8f s", DSRG_energy.get());
 
     return Etotal;
 }

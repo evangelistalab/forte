@@ -32,7 +32,8 @@ set libadaptive{
    int_type               df
 }
 
-energy('rhf')
+scf = energy('scf')
 energy('three-dsrg-mrpt2')
 
+compare_values(refrhf, scf,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
