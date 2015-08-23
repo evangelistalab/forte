@@ -289,10 +289,12 @@ read_options(std::string name, Options &options)
 		 * 0 - None
 		 * 1 - Project initial P spaces at each iteration
 		 * 2 - Project only after converged PQ space
-		 * 3 - Do 1 and 3 -*/
+		 * 3 - Do 1 and 2 -*/
 		options.add_int("SPIN_PROJECTION", 0);
 		/*- Threshold for Lambda guess -*/
 		options.add_double("LAMBDA_THRESH", 1.0);
+		/*- Add determinants to enforce spin-complete set? -*/
+		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
