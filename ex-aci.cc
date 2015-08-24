@@ -2101,7 +2101,6 @@ void EX_ACI::spin_transform( std::vector<BitsetDeterminant> det_space, SharedMat
 	SharedMatrix C(new Matrix("c", det_size, nroot));
 	C->gemm('t', 'n', csf_num, nroot, det_size, 1.0, T, det_size, cI, nroot, 0.0, nroot);
 	C_trans->gemm('n','n', det_size, nroot, csf_num, 1.0, T, det_size, C, nroot, 0.0, nroot);
-	C_trans->print();	
 
 	// Normalize transformed vectors
 	for( size_t n = 0; n < nroot; ++n){
