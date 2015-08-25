@@ -15,13 +15,13 @@ double MRDSRG::compute_energy_pt2(){
     outfile->Printf("\n      J. Chem. Theory Comput. 2015, 11, 2097-2108.\n");
 
     // create a copy of original F and V in case we want them later
-    BlockedTensor H1 = BTF->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
-    BlockedTensor H2 = BTF->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
-    H1["pq"] = F["pq"];
-    H1["PQ"] = F["PQ"];
-    H2["pqrs"] = V["pqrs"];
-    H2["pQrS"] = V["pQrS"];
-    H2["PQRS"] = V["PQRS"];
+    Hbar1 = BTF->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
+    Hbar2 = BTF->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
+    Hbar1["pq"] = F["pq"];
+    Hbar1["PQ"] = F["PQ"];
+    Hbar2["pqrs"] = V["pqrs"];
+    Hbar2["pQrS"] = V["pQrS"];
+    Hbar2["PQRS"] = V["PQRS"];
 
     // create zeroth-order Hamiltonian
     H0th = BTF->build(tensor_type_,"Zeroth-order H",spin_cases({"gg"}));
@@ -46,35 +46,35 @@ double MRDSRG::compute_energy_pt2(){
     H1_T2_C2(H0th,T2,0.5,temp2);
 
     // [H, A] = [H, T] + [H, T]^dagger
-    H1["pq"] += temp1["pq"];
-    H1["pq"] += temp1["qp"];
-    H1["PQ"] += temp1["PQ"];
-    H1["PQ"] += temp1["QP"];
-    H2["pqrs"] += temp2["pqrs"];
-    H2["pqrs"] += temp2["rspq"];
-    H2["pQrS"] += temp2["pQrS"];
-    H2["pQrS"] += temp2["rSpQ"];
-    H2["PQRS"] += temp2["PQRS"];
-    H2["PQRS"] += temp2["RSPQ"];
+    Hbar1["pq"] += temp1["pq"];
+    Hbar1["pq"] += temp1["qp"];
+    Hbar1["PQ"] += temp1["PQ"];
+    Hbar1["PQ"] += temp1["QP"];
+    Hbar2["pqrs"] += temp2["pqrs"];
+    Hbar2["pqrs"] += temp2["rspq"];
+    Hbar2["pQrS"] += temp2["pQrS"];
+    Hbar2["pQrS"] += temp2["rSpQ"];
+    Hbar2["PQRS"] += temp2["PQRS"];
+    Hbar2["PQRS"] += temp2["RSPQ"];
 
     // compute PT2 energy
     std::vector<std::pair<std::string,double>> energy;
     energy.push_back({"E0 (reference)", Eref});
     double Ecorr = 0.0, Etemp = 0.0;
 
-    H1_T1_C0(H1,T1,1.0,Ecorr);
+    H1_T1_C0(Hbar1,T1,1.0,Ecorr);
     energy.push_back({"<[F, T1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H1_T2_C0(H1,T2,1.0,Ecorr);
+    H1_T2_C0(Hbar1,T2,1.0,Ecorr);
     energy.push_back({"<[F, T2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H2_T1_C0(H2,T1,1.0,Ecorr);
+    H2_T1_C0(Hbar2,T1,1.0,Ecorr);
     energy.push_back({"<[V, T1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H2_T2_C0(H2,T2,1.0,Ecorr);
+    H2_T2_C0(Hbar2,T2,1.0,Ecorr);
     energy.push_back({"<[V, T2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
@@ -93,25 +93,45 @@ double MRDSRG::compute_energy_pt2(){
 }
 
 double MRDSRG::compute_energy_pt3(){
+    // compute DSRG-MRPT2 energy and initialize Hbar and H0th
+    // Hbar is the modified first-order Hamiltonian, T is the first-order amplitude
+    double pt2 = compute_energy_pt2();
+
     // print title
     outfile->Printf("\n\n  ==> Third-Order Perturbation DSRG-MRPT3 <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
 
-    // build zeroth-order Hamiltonian
-    H0th = BTF->build(tensor_type_,"Zeroth-order H",spin_cases({"gg"}));
-    H0th.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if(i[0] == i[1]){
-            if(spin[0] == AlphaSpin){
-                value = Fa[i[0]];
-            }else{
-                value = Fb[i[0]];
-            }
-        }
-    });
+    // compute one- and two-body [H~1st, A1st] for second-order amplitudes
+    BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"gg"}));
+    BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"gggg"}));
+    H1_T1_C1(Hbar1,T1,1.0,temp1);
+    H1_T2_C1(Hbar1,T2,1.0,temp1);
+    H2_T1_C1(Hbar2,T1,1.0,temp1);
+    H2_T2_C1(Hbar2,T2,1.0,temp1);
+    H1_T2_C2(Hbar1,T2,1.0,temp2);
+    H2_T1_C2(Hbar2,T1,1.0,temp2);
+    H2_T2_C2(Hbar2,T2,1.0,temp2);
 
-    // test orbitals are semi-canonicalized
-    check_semicanonical();
+    BlockedTensor H1_2nd = BTF->build(tensor_type_,"H2nd one-body",spin_cases({"gg"}));
+    BlockedTensor H2_2nd = BTF->build(tensor_type_,"H2nd two-body",spin_cases({"gggg"}));
+    H1_2nd["pq"] += temp1["pq"];
+    H1_2nd["pq"] += temp1["qp"];
+    H1_2nd["PQ"] += temp1["PQ"];
+    H1_2nd["PQ"] += temp1["QP"];
+    H2_2nd["pqrs"] += temp2["pqrs"];
+    H2_2nd["pqrs"] += temp2["rspq"];
+    H2_2nd["pQrS"] += temp2["pQrS"];
+    H2_2nd["pQrS"] += temp2["rSpQ"];
+    H2_2nd["PQRS"] += temp2["PQRS"];
+    H2_2nd["PQRS"] += temp2["RSPQ"];
+
+    // compute the second-order amplitude
+    BlockedTensor T1_2nd = BTF->build(tensor_type_,"temp1",spin_cases({"hp"}));
+    BlockedTensor T2_2nd = BTF->build(tensor_type_,"temp2",spin_cases({"hhpp"}));
+    guess_t2(H2_2nd,T2_2nd);
+    guess_t1(H1_2nd,T2_2nd,T1_2nd);
+    analyze_amplitudes("Second-Order ",T1_2nd,T2_2nd);
 
 //    // compute modified first-order Hamiltonian H_1st = Hbare_1st + 0.5 * [H0th, A_1st]
 //    BlockedTensor H1_1st = BTF->build(tensor_type_,"H1st one-body",spin_cases({"gg"}));
@@ -311,7 +331,7 @@ void MRDSRG::check_semicanonical(){
         outfile->Printf("\n    %s\n", sep.c_str());
         throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
     }else{
-        outfile->Printf("     OK.\n");
+        outfile->Printf("     OK.");
     }
 }
 

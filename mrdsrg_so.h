@@ -14,9 +14,8 @@
 #include "reference.h"
 #include "blockedtensorfactory.h"
 
-namespace psi{
-
-namespace libadaptive{
+using namespace ambit;
+namespace psi{ namespace libadaptive{
 
 class MRDSRG_SO : public Wavefunction
 {

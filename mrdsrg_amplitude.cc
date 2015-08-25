@@ -11,7 +11,7 @@ namespace psi{ namespace libadaptive{
 void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
 {
     Timer timer;
-    std::string str = "Guessing initial T2 amplitudes ...";
+    std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max = 0.0, t2aa_norm = 0.0, t2ab_norm = 0.0, t2bb_norm = 0.0;
 
@@ -61,7 +61,7 @@ void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
 void MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
 {
     Timer timer;
-    std::string str = "Guessing initial T1 amplitudes ...";
+    std::string str = "Computing initial T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T1max = 0.0, t1a_norm = 0.0, t1b_norm = 0.0;
 
@@ -235,7 +235,7 @@ void MRDSRG::update_t1(){
     t1b_norm = std::sqrt(t1b_norm);
 }
 
-void MRDSRG::analyze_amplitudes(const std::string& name){
+void MRDSRG::analyze_amplitudes(const std::string& name, BlockedTensor& T1, BlockedTensor& T2){
     outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
@@ -244,8 +244,8 @@ void MRDSRG::analyze_amplitudes(const std::string& name){
         if(++c % 10 == 0)
             outfile->Printf("\n    %16c", ' ');
     }
-    check_t1();
-    check_t2();
+    check_t1(T1);
+    check_t2(T2);
 
     outfile->Printf("\n\n  ==> Possible Intruders <==\n");
     print_intruder("A", lt1a);
@@ -265,7 +265,7 @@ struct rsort_pair_second {
     }
 };
 
-void MRDSRG::check_t2()
+void MRDSRG::check_t2(BlockedTensor& T2)
 {
     size_t nonzero_aa = 0, nonzero_ab = 0, nonzero_bb = 0;
     std::vector<std::pair<std::vector<size_t>, double>> t2aa, t2ab, t2bb;
@@ -329,7 +329,7 @@ void MRDSRG::check_t2()
     print_amp_summary("BB", t2bb, t2bb_norm, nonzero_bb);
 }
 
-void MRDSRG::check_t1()
+void MRDSRG::check_t1(BlockedTensor &T1)
 {
     size_t nonzero_a = 0, nonzero_b = 0;
     std::vector<std::pair<std::vector<size_t>, double>> t1a, t1b;
