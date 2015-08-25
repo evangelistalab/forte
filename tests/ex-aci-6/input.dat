@@ -1,41 +1,39 @@
-#! This tests the Adaptive-CI procedure using energy selection
-
-
 import libadaptive
 
-refscf = -14.839846512738 #TEST
-refaci = -14.8829305594 #TEST
-refacipt2 = -14.889437076 #TEST
+refscf = -75.0225778486 
+refaci = -75.3385504827 
+refacipt2 = -75.488210126022 
 
-molecule li2{
-0 1
-   Li
-   Li 1 2.0000
+molecule N2{
+C 
+C 1 2.6
+units angstrom
 }
 
 set {
-  basis DZ
+  basis 6-31g* 
+  scf_type pk
+  freeze_core true
+  reference rhf 
   e_convergence 10
   d_convergence 10
   r_convergence 10
-  docc = [2,0,0,0,0,1,0,0]
-  reference rhf
+  docc [2,0,0,0,0,2,1,1]
 }
+
 
 
 set libadaptive {
   multiplicity 1
-  SELECT_TYPE aimed_energy
   perturb_select false
-  excited_algorithm state_average
-  q_rel true
-  q_reference adjacent
-  pq_function average
-  TAUP 0.01000
-  TAUQ 0.01000
+  SELECT_TYPE aimed-energy
+  frozen_docc [1,0,0,0,0,1,0,0]
+  TAUP 0.05
+  TAUQ 0.05
   nroot 3
+  mp2_nos true
   charge 0
-  spin_projection 2
+  spin_projection 1
 }
 
 energy('ex-aci')

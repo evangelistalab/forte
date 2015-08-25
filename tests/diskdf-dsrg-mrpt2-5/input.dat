@@ -1,8 +1,9 @@
 import libadaptive
 
 memory 500 mb
-refmcscf =   -226.575081996603
-refdsrgpt2 = -226.883026728662060 
+
+refmcscf   =  -226.575081996603
+refdsrgpt2 =  -226.884456822714441
 
 molecule mbenzyne{
   0 1
@@ -22,7 +23,8 @@ molecule mbenzyne{
 
 set globals{
    basis                   sto-3g
-   reference               twocon
+   df_basis_mp2            cc-pvdz-ri
+   reference               TWOCON
    scf_type                pk
    d_convergence           10
    e_convergence           12
@@ -43,14 +45,12 @@ set libadaptive{
    nroot                   1
 #   dsrgpt                  false
    dsrg_s                  0.5
-   int_type                cholesky
-   cholesky_tolerance      1e-11
+   int_type                DISKDF
 }
 
 scf = energy('mcscf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refmcscf, scf,10,"SCF energy")
+compare_values(refmcscf, scf,10,"SCF Energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
-
 

@@ -38,6 +38,7 @@ ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const
     memory_information(BT);
     if(memory_ < 0.0)
     {
+        outfile->Printf("\n\n Created %s and out of memory", name.c_str());
         outfile->Printf("\n DANGER DANGER Will Robinson\n");
         outfile->Printf("\n Your memory requirements were underestimated.  Please be more careful! \n");
     }
@@ -47,6 +48,7 @@ ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const
 void BlockedTensorFactory::add_mo_space(const std::string& name,const std::string& mo_indices,std::vector<size_t> mos,ambit::SpinType spin)
 {
     ambit::BlockedTensor::add_mo_space(name, mo_indices, mos, spin);
+    molabel_to_index_[name] = mos;
 
 }
 void BlockedTensorFactory::add_mo_space(const std::string& name,const std::string& mo_indices,std::vector<std::pair<size_t,ambit::SpinType>> mo_spin)
