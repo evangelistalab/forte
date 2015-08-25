@@ -32,6 +32,7 @@
 #include "fci_solver.h"
 #include "blockedtensorfactory.h"
 #include "sq.h"
+#include "so-mrdsrg.h"
 #include "dsrg_wick.h"
 #include "uno.h"
 
@@ -89,7 +90,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY ALL"); 
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -101,9 +102,10 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE EX-ACI FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE");
+                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
+                                              " SOMRDSRG");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -282,9 +284,21 @@ read_options(std::string name, Options &options)
         /*Maximum number of determinants*/
         options.add_int("MAX_DET", 1e6);
         /*Threshold value for defining multiplicity from S^2*/
-        options.add_double("SPIN_TOL", 10.0);
+        options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
         options.add_bool("1_RDM", false);
+        /*- Form initial space with based on energy */
+        options.add_bool("LAMBDA_GUESS", false);
+		/*- Type of spin projection
+		 * 0 - None
+		 * 1 - Project initial P spaces at each iteration
+		 * 2 - Project only after converged PQ space
+		 * 3 - Do 1 and 2 -*/
+		options.add_int("SPIN_PROJECTION", 0);
+		/*- Threshold for Lambda guess -*/
+		options.add_double("LAMBDA_THRESH", 1.0);
+		/*- Add determinants to enforce spin-complete set? -*/
+		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -372,7 +386,7 @@ read_options(std::string name, Options &options)
         /*- The absolute error tollerance for the ode solver -*/
         options.add_double("SRG_ODEINT_RELERR",1.0e-12);
         /*- Select a modified commutator -*/
-        options.add_str("SRG_COMM","STANDARD","STANDARD FO FO2 SRG2");
+        options.add_str("SRG_COMM","STANDARD","STANDARD FO FO2");
         /*- The maximum number of commutators in the recursive single commutator approximation -*/
         options.add_int("SRG_RSC_NCOMM",20);
         /*- The treshold for terminating the RSC approximation -*/
@@ -440,7 +454,7 @@ extern "C" PsiReturnType
 libadaptive(Options &options)
 {
     Timer overall_time;
-    ambit::initialize(Process::arguments.argc(), Process::arguments.argv());
+    ambit::initialize();
 
     if(options.get_bool("UNO")){
         std::string ref = options.get_str("REFERENCE");
@@ -457,16 +471,25 @@ libadaptive(Options &options)
     // create CholeskyIntegrals class
     ExplorerIntegrals* ints_;
     if(options.get_str("INT_TYPE") == "CHOLESKY")
+
     {
         ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
     else if(options.get_str("INT_TYPE") == "DF")
+
     {
         ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
     }
-    else
+    else if (options.get_str("INT_TYPE")== "DISKDF")
+
+    {
+        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+    }
+
+    else 
     {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        
     }
 
     // Link the integrals to the BitsetDeterminant class
@@ -657,6 +680,33 @@ libadaptive(Options &options)
         }
     }
 
+    if (options.get_str("JOB_TYPE") == "SOMRDSRG"){
+        if(options.get_str("CASTYPE")=="CAS")
+        {
+            FCI_MO fci_mo(options,ints_);
+            Reference reference = fci_mo.reference();
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
+            somrdsrg->compute_energy();
+        }
+        if(options.get_str("CASTYPE")=="FCI")
+        {
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+            if (options.get_bool("SEMI_CANONICAL")){
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->compute_energy();
+                Reference reference = fci->reference();
+                boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
+                somrdsrg->compute_energy();
+        }
+
+    }
     if (options.get_str("JOB_TYPE") == "SQ"){
         SqTest sqtest;
     }

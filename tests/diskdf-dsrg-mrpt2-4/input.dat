@@ -29,11 +29,11 @@ set libadaptive{
    nroot                   1
    dsrg_s                  1.0
    semi_canonical          true
-   int_type               df
+   int_type               diskdf
 }
 
-scf = energy('scf')
+rhf = energy('scf')
 energy('three-dsrg-mrpt2')
 
-compare_values(refrhf, scf,10,"SCF energy")
+compare_values(refrhf, rhf,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

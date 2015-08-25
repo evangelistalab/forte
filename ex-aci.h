@@ -129,6 +129,8 @@ private:
     double spin_tol_;
     ///Compute 1-RDM?
     bool form_1_RDM_;
+	///Enorce spin complete spaces?
+	bool spin_complete_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -136,10 +138,15 @@ private:
     std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
+
     ///Vector to store spin of each root
     std::vector<std::pair<double,double> > root_spin_vec_;
     ///1 particle density matrix
     SharedMatrix D1_;
+    ///Form initial guess space with correct spin?
+    bool do_guess_;
+	///Spin-symmetrized evecs
+	SharedMatrix PQ_spin_evecs_;
 
 
     // ==> Class functions <==
@@ -209,7 +216,7 @@ private:
     std::vector<std::pair<double, std::pair<int, int> > > sym_labeled_orbitals(std::string type);
 
     ///Computes S^2 and S
-    std::vector< std::pair<std::pair<double,double>, std::pair<size_t,double> > >compute_spin(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot,std::vector<std::pair<double,size_t> >det_weight);
+    std::vector< std::pair<std::pair<double,double>, std::pair<size_t,double> > >compute_spin(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot);
 
     ///Compute 1 particle RDM
     void compute_1rdm(SharedMatrix A, SharedMatrix B,std::vector<BitsetDeterminant> det_space, SharedMatrix evecs,int nroot);
@@ -219,6 +226,17 @@ private:
 
     ///Check the sign
     double CheckSign(std::vector<int> I, const int &n);
+
+    ///Form initial space of determinants with correct S^2 for each root
+    void form_initial_space(std::vector<BitsetDeterminant> det_space, int nroot);
+
+    void add_spin_pair(std::vector<BitsetDeterminant> det_space);
+
+    ///Compute S^2 matrix and diagonalize it
+    void spin_transform(std::vector<BitsetDeterminant> det_space, SharedMatrix cI, int nroot);
+
+	///Check for spin complete determinants
+	void check_spin_completeness(std::vector<BitsetDeterminant>& det_space);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

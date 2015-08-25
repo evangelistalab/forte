@@ -20,28 +20,30 @@
  *@END LICENSE
  */
 
-#ifndef _ambit_tests_h_
-#define _ambit_tests_h_
+#ifndef _so_mrdsrg_h_
+#define _so_mrdsrg_h_
 
 #include <fstream>
+#include <boost/assign.hpp>
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
 
+#include "helpers.h"
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
+#include "blockedtensorfactory.h"
 
 namespace psi{
 
 namespace libadaptive{
 
 /**
- * @brief The MethodBase class
- * This class provides basic functions to write electronic structure
- * pilot codes using the Tensor classes
+ * @brief The SOMRDSRG class
+ * This class implements the MR-DSRG(2) using a spin orbital formalism
  */
-class AmbitTests : public Wavefunction
+class SOMRDSRG : public Wavefunction
 {
 protected:
 
@@ -53,6 +55,9 @@ protected:
     /// The molecular integrals required by MethodBase
     ExplorerIntegrals* ints_;
 
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
@@ -62,19 +67,12 @@ protected:
     /// The number of restricted unoccupied orbitals per irrep (virtual)
     Dimension ruoccpi_;
 
-    /// List of alpha core MOs
-    std::vector<size_t> acore_mos;
+    /// List of spin orbital core MOs
+    std::vector<size_t> core_mos;
     /// List of alpha active MOs
-    std::vector<size_t> aactv_mos;
+    std::vector<size_t> actv_mos;
     /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos;
-
-    /// List of beta core MOs
-    std::vector<size_t> bcore_mos;
-    /// List of beta active MOs
-    std::vector<size_t> bactv_mos;
-    /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos;
+    std::vector<size_t> virt_mos;
 
     /// Map from all the MOs to the alpha core
     std::map<size_t,size_t> mos_to_acore;
@@ -93,24 +91,37 @@ protected:
     /// The flow parameter
     double s_;
 
+    /// Source operator
+    std::string source_;
+
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
 
     ambit::TensorType tensor_type_;
+    std::shared_ptr<BlockedTensorFactory> BTF;
 
     // => Tensors <= //
 
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
     ambit::BlockedTensor V;
+    ambit::BlockedTensor DFL;
+    ambit::BlockedTensor Gamma1;
+    ambit::BlockedTensor Eta1;
+    ambit::BlockedTensor Lambda2;
+    ambit::BlockedTensor Lambda3;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
-    ambit::BlockedTensor R1;
-    ambit::BlockedTensor R2;
+    ambit::BlockedTensor RDelta1;
+    ambit::BlockedTensor RDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
+    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
+    ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
+    ambit::BlockedTensor Hbar2;  // < two-body term of effective Hamiltonian
 
     // => Class initialization and termination <= //
 
@@ -121,22 +132,37 @@ protected:
     /// Print a summary of the options
     void print_summary();
 
-    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t2();
+//    /// Renormalized denominator
+//    double renormalized_denominator(double D);
+//    double renormalized_denominator_amp(double V,double D);
+//    double renormalized_denominator_emp2(double V,double D);
+//    double renormalized_denominator_lamp(double V,double D);
+//    double renormalized_denominator_lemp2(double V,double D);
 
-    /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t1();
+//    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+//    void compute_t2();
+//    void check_t2();
+//    double T2norm;
+//    double T2max;
 
-    // Print levels
-    int print_;
+//    /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+//    void compute_t1();
+//    void check_t1();
+//    double T1norm;
+//    double T1max;
+
 
 public:
 
     // => Constructors <= //
 
-    AmbitTests(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    SOMRDSRG(Reference reference,
+           boost::shared_ptr<Wavefunction> wfn,
+           Options &options,
+           ExplorerIntegrals* ints,
+           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    ~AmbitTests();
+    ~SOMRDSRG();
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
@@ -150,4 +176,4 @@ public:
 
 }} // End Namespaces
 
-#endif // _ambit_tests_h_
+#endif // _so_mrdsrg_h_
