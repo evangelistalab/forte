@@ -319,6 +319,38 @@ def run_mrdsrgpt2(name, **kwargs):
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
+def run_mrdsrg(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('mrdsrg')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','MRDSRG')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
+def run_mrdsrg_so(name, **kwargs):
+    r"""Function encoding sequence of PSI module and plugin calls so that
+    libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
+
+    >>> energy('mrdsrg_so')
+
+    """
+    lowername = name.lower()
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    # Your plugin's psi4 run sequence goes here
+    psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','MRDSRG_SO')
+    psi4.plugin('libadaptive.so')
+    returnvalue = psi4.get_variable('CURRENT ENERGY')
+    return returnvalue
+
 def run_dsrg_mrpt2(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     libadaptive can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -369,5 +401,7 @@ procedures['energy']['sr-srgsd'] = run_sr_srgsd
 procedures['energy']['sr-dsrgsd'] = run_sr_dsrgsd
 procedures['energy']['sr-dsrg-aci'] = run_sr_dsrg_aci
 procedures['energy']['mr-dsrg-pt2'] = run_mrdsrgpt2
+procedures['energy']['mrdsrg'] = run_mrdsrg
+procedures['energy']['mrdsrg_so'] = run_mrdsrg_so
 procedures['energy']['dsrg-mrpt2'] = run_dsrg_mrpt2
 procedures['energy']['three-dsrg-mrpt2'] = run_three_dsrg_mrpt2
