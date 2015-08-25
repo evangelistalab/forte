@@ -276,7 +276,7 @@ void MRDSRG::check_t2(BlockedTensor& T2)
     std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
 
     for(const std::string& block: T2.block_labels()){
-        int spin = isupper(block[0]) + isupper(block[1]);
+        int spin = bool(isupper(block[0])) + bool(isupper(block[1]));
 
         // create a reference to simplify the syntax
         std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 = spin_to_t2[spin];

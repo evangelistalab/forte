@@ -95,7 +95,7 @@ double MRDSRG::compute_energy_pt2(){
 double MRDSRG::compute_energy_pt3(){
     // compute DSRG-MRPT2 energy and initialize Hbar and H0th
     // Hbar is the modified first-order Hamiltonian, T is the first-order amplitude
-    double pt2 = compute_energy_pt2();
+    double Ept2 = compute_energy_pt2();
 
     // print title
     outfile->Printf("\n\n  ==> Third-Order Perturbation DSRG-MRPT3 <==\n");
@@ -133,178 +133,96 @@ double MRDSRG::compute_energy_pt3(){
     guess_t1(H1_2nd,T2_2nd,T1_2nd);
     analyze_amplitudes("Second-Order ",T1_2nd,T2_2nd);
 
-//    // compute modified first-order Hamiltonian H_1st = Hbare_1st + 0.5 * [H0th, A_1st]
-//    BlockedTensor H1_1st = BTF->build(tensor_type_,"H1st one-body",spin_cases({"gg"}));
-//    BlockedTensor H2_1st = BTF->build(tensor_type_,"H1st two-body",spin_cases({"gggg"}));
-//    H1_1st["pq"] = F["pq"];
-//    H1_1st["PQ"] = F["PQ"];
-//    H2_1st["pqrs"] = V["pqrs"];
-//    H2_1st["pQrS"] = V["pQrS"];
-//    H2_1st["PQRS"] = V["PQRS"];
+    // compute <[H~1st, T_2nd]> contribution to PT3 energy
+    std::vector<std::pair<std::string,double>> energy;
+    energy.push_back({"E0 (reference)", Eref});
+    double Ecorr1 = 0.0, Etemp1 = 0.0;
 
-//    // compute H0th contribution to H1st
-//    BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"gg"}));
-//    BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"gggg"}));
-//    H1_T1_C1(H0th,T1,0.5,temp1);
-//    H1_T2_C1(H0th,T2,0.5,temp1);
-//    H1_T2_C2(H0th,T2,0.5,temp2);
+    H1_T1_C0(Hbar1,T1_2nd,1.0,Ecorr1);
+    energy.push_back({"<[F_1st, T1_2nd]>", 2 * (Ecorr1 - Etemp1)});
+    Etemp1 = Ecorr1;
 
-//    H1_1st["pq"] += temp1["pq"];
-//    H1_1st["pq"] += temp1["qp"];
-//    H1_1st["PQ"] += temp1["PQ"];
-//    H1_1st["PQ"] += temp1["QP"];
-//    H2_1st["pqrs"] += temp2["pqrs"];
-//    H2_1st["pqrs"] += temp2["rspq"];
-//    H2_1st["pQrS"] += temp2["pQrS"];
-//    H2_1st["pQrS"] += temp2["rSpQ"];
-//    H2_1st["PQRS"] += temp2["PQRS"];
-//    H2_1st["PQRS"] += temp2["RSPQ"];
+    H1_T2_C0(Hbar1,T2_2nd,1.0,Ecorr1);
+    energy.push_back({"<[F_1st, T2_2nd]>", 2 * (Ecorr1 - Etemp1)});
+    Etemp1 = Ecorr1;
 
-//    // compute one- and two-body [H_1st, T_1st]
-//    temp1.zero();
-//    temp2.zero();
-//    H1_T1_C1(H1_1st,T1,1.0,temp1);
-//    H1_T2_C1(H1_1st,T2,1.0,temp1);
-//    H2_T1_C1(H2_1st,T1,1.0,temp1);
-//    H2_T2_C1(H2_1st,T2,1.0,temp1);
-//    H1_T2_C2(H1_1st,T2,1.0,temp2);
-//    H2_T1_C2(H2_1st,T1,1.0,temp2);
-//    H2_T2_C2(H2_1st,T2,1.0,temp2);
+    H2_T1_C0(Hbar2,T1_2nd,1.0,Ecorr1);
+    energy.push_back({"<[V_1st, T1_2nd]>", 2 * (Ecorr1 - Etemp1)});
+    Etemp1 = Ecorr1;
 
-//    // [H_1st, A_1st] = [H_1st, T_1st] + [H_1st, T_1st]^dagger
-//    BlockedTensor H1_2nd = BTF->build(tensor_type_,"H2nd one-body",spin_cases({"gg"}));
-//    BlockedTensor H2_2nd = BTF->build(tensor_type_,"H2nd two-body",spin_cases({"gggg"}));
-//    H1_2nd["pq"] += temp1["pq"];
-//    H1_2nd["pq"] += temp1["qp"];
-//    H1_2nd["PQ"] += temp1["PQ"];
-//    H1_2nd["PQ"] += temp1["QP"];
-//    H2_2nd["pqrs"] += temp2["pqrs"];
-//    H2_2nd["pqrs"] += temp2["rspq"];
-//    H2_2nd["pQrS"] += temp2["pQrS"];
-//    H2_2nd["pQrS"] += temp2["rSpQ"];
-//    H2_2nd["PQRS"] += temp2["PQRS"];
-//    H2_2nd["PQRS"] += temp2["RSPQ"];
+    H2_T2_C0(Hbar2,T2_2nd,1.0,Ecorr1);
+    energy.push_back({"<[V_1st, T2_2nd]>", 2 * (Ecorr1 - Etemp1)});
+    Etemp1 = Ecorr1;
 
-//    // compute second-order amplitudes
-//    BlockedTensor T1_2nd = BTF->build(tensor_type_,"temp1",spin_cases({"hp"}));
-//    BlockedTensor T2_2nd = BTF->build(tensor_type_,"temp2",spin_cases({"hhpp"}));
-//    guess_t2(H2_2nd,T2_2nd);
-//    guess_t1(H1_2nd,T2_2nd,T1_2nd);
-//    analyze_amplitudes("Second-Order ");
+    // <[H_1st, A_2nd]> = 2 * <[H_1st, T2_nd]>
+    Ecorr1 *= 2.0;
 
-//    // compute <[H_1st, T_2nd]> contribution to PT3 energy
-//    std::vector<std::pair<std::string,double>> energy;
-//    energy.push_back({"E0 (reference)", Eref});
-//    double Ecorr1 = 0.0, Etemp1 = 0.0;
+    // compute H~2nd = 0.5 * [H0th, A2nd] + 1/6 * [Hbare_1st, A1st] + 1/3 * [H~1st, A1st]
+    H1_2nd.scale(1.0 / 3);
+    H2_2nd.scale(1.0 / 3);
 
-//    H1_T1_C0(H1_1st,T1_2nd,1.0,Ecorr1);
-//    energy.push_back({"<[F_1st, T1_2nd]>", 2 * (Ecorr1 - Etemp1)});
-//    Etemp1 = Ecorr1;
+    // 0.5 * [H0th, A2nd] contribution
+    temp1.zero();
+    temp2.zero();
+    H1_T1_C1(H0th,T1_2nd,0.5,temp1);
+    H1_T2_C1(H0th,T2_2nd,0.5,temp1);
+    H1_T2_C2(H0th,T2_2nd,0.5,temp2);
 
-//    H1_T2_C0(H1_1st,T2_2nd,1.0,Ecorr1);
-//    energy.push_back({"<[F_1st, T2_2nd]>", 2 * (Ecorr1 - Etemp1)});
-//    Etemp1 = Ecorr1;
+    // 1/6 * [Hbare_1st, A1st] contribution
+    double alpha = 1.0 / 6;
+    H1_T1_C1(F,T1,alpha,temp1);
+    H1_T2_C1(F,T2,alpha,temp1);
+    H2_T1_C1(V,T1,alpha,temp1);
+    H2_T2_C1(V,T2,alpha,temp1);
+    H1_T2_C2(F,T2,alpha,temp2);
+    H2_T1_C2(V,T1,alpha,temp2);
+    H2_T2_C2(V,T2,alpha,temp2);
 
-//    H2_T1_C0(H2_1st,T1_2nd,1.0,Ecorr1);
-//    energy.push_back({"<[V_1st, T1_2nd]>", 2 * (Ecorr1 - Etemp1)});
-//    Etemp1 = Ecorr1;
+    // copy the Hermitian conjugate
+    H1_2nd["pq"] += temp1["pq"];
+    H1_2nd["pq"] += temp1["qp"];
+    H1_2nd["PQ"] += temp1["PQ"];
+    H1_2nd["PQ"] += temp1["QP"];
+    H2_2nd["pqrs"] += temp2["pqrs"];
+    H2_2nd["pqrs"] += temp2["rspq"];
+    H2_2nd["pQrS"] += temp2["pQrS"];
+    H2_2nd["pQrS"] += temp2["rSpQ"];
+    H2_2nd["PQRS"] += temp2["PQRS"];
+    H2_2nd["PQRS"] += temp2["RSPQ"];
 
-//    H2_T2_C0(H2_1st,T2_2nd,1.0,Ecorr1);
-//    energy.push_back({"<[V_1st, T2_2nd]>", 2 * (Ecorr1 - Etemp1)});
-//    Etemp1 = Ecorr1;
+    // compute <[H~2nd, A_1st]> contribution to PT3 energy
+    double Ecorr2 = 0.0, Etemp2 = 0.0;
 
-//    // <[H_1st, A_2nd]> = 2 * <[H_1st, T2_nd]>
-//    Ecorr1 *= 2.0;
-//    energy.push_back({"<[H_1st, A_2nd]>", Ecorr1});
+    H1_T1_C0(H1_2nd,T1,1.0,Ecorr2);
+    energy.push_back({"<[F_2nd, T1_1st]>", 2 * (Ecorr2 - Etemp2)});
+    Etemp2 = Ecorr2;
 
-//    // compute modified first-order Hamiltonian H_1st' = Hbare_1st + 1/3 * [H0th, A_1st]
-//    H1_1st["pq"] = F["pq"];
-//    H1_1st["PQ"] = F["PQ"];
-//    H2_1st["pqrs"] = V["pqrs"];
-//    H2_1st["pQrS"] = V["pQrS"];
-//    H2_1st["PQRS"] = V["PQRS"];
+    H1_T2_C0(H1_2nd,T2,1.0,Ecorr2);
+    energy.push_back({"<[F_2nd, T2_1st]>", 2 * (Ecorr2 - Etemp2)});
+    Etemp2 = Ecorr2;
 
-//    // compute H0th contribution to H1st'
-//    temp1.zero();
-//    temp2.zero();
-//    double alpha = 1.0 / 3;
-//    H1_T1_C1(H0th,T1,alpha,temp1);
-//    H1_T2_C1(H0th,T2,alpha,temp1);
-//    H1_T2_C2(H0th,T2,alpha,temp2);
+    H2_T1_C0(H2_2nd,T1,1.0,Ecorr2);
+    energy.push_back({"<[V_2nd, T1_1st]>", 2 * (Ecorr2 - Etemp2)});
+    Etemp2 = Ecorr2;
 
-//    H1_1st["pq"] += temp1["pq"];
-//    H1_1st["pq"] += temp1["qp"];
-//    H1_1st["PQ"] += temp1["PQ"];
-//    H1_1st["PQ"] += temp1["QP"];
-//    H2_1st["pqrs"] += temp2["pqrs"];
-//    H2_1st["pqrs"] += temp2["rspq"];
-//    H2_1st["pQrS"] += temp2["pQrS"];
-//    H2_1st["pQrS"] += temp2["rSpQ"];
-//    H2_1st["PQRS"] += temp2["PQRS"];
-//    H2_1st["PQRS"] += temp2["RSPQ"];
+    H2_T2_C0(H2_2nd,T2,1.0,Ecorr2);
+    energy.push_back({"<[V_2nd, T2_1st]>", 2 * (Ecorr2 - Etemp2)});
+    Etemp2 = Ecorr2;
 
-//    // compute modified second-order Hamiltonian H_2nd = 0.5 * [H_1st', A_1st] + 0.5 * [H0th, A_2nd]
-//    temp1.zero();
-//    temp2.zero();
-//    H1_T1_C1(H1_1st,T1,0.5,temp1);
-//    H1_T2_C1(H1_1st,T2,0.5,temp1);
-//    H2_T1_C1(H2_1st,T1,0.5,temp1);
-//    H2_T2_C1(H2_1st,T2,0.5,temp1);
-//    H1_T2_C2(H1_1st,T2,0.5,temp2);
-//    H2_T1_C2(H2_1st,T1,0.5,temp2);
-//    H2_T2_C2(H2_1st,T2,0.5,temp2);
+    // <[H~2nd, A_1st]> = 2 * <[H~2nd, T_1st]>
+    Ecorr2 *= 2.0;
 
-//    H1_T1_C1(H0th,T1_2nd,0.5,temp1);
-//    H1_T2_C1(H0th,T2_2nd,0.5,temp1);
-//    H1_T2_C2(H0th,T2_2nd,0.5,temp2);
+    double Ecorr = Ecorr1 + Ecorr2;
+    energy.push_back({"3rd-order correlation energy", Ecorr});
+    energy.push_back({"2nd-order correlation energy", Ept2});
+    energy.push_back({"DSRG-MRPT3 total energy", Eref + Ecorr + Ept2});
 
-//    H1_2nd.zero();
-//    H2_2nd.zero();
-//    H1_2nd["pq"] += temp1["pq"];
-//    H1_2nd["pq"] += temp1["qp"];
-//    H1_2nd["PQ"] += temp1["PQ"];
-//    H1_2nd["PQ"] += temp1["QP"];
-//    H2_2nd["pqrs"] += temp2["pqrs"];
-//    H2_2nd["pqrs"] += temp2["rspq"];
-//    H2_2nd["pQrS"] += temp2["pQrS"];
-//    H2_2nd["pQrS"] += temp2["rSpQ"];
-//    H2_2nd["PQRS"] += temp2["PQRS"];
-//    H2_2nd["PQRS"] += temp2["RSPQ"];
+    outfile->Printf("\n\n  ==> DSRG-MRPT3 Energy Summary <==\n");
+    for (auto& str_dim : energy){
+        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
+    }
 
-//    // compute <[H_2nd, A_1st]> contribution to PT3 energy
-//    double Ecorr2 = 0.0, Etemp2 = 0.0;
-
-//    H1_T1_C0(H1_2nd,T1,1.0,Ecorr2);
-//    energy.push_back({"<[F_2nd, T1_1st]>", 2 * (Ecorr2 - Etemp2)});
-//    Etemp2 = Ecorr2;
-
-//    H1_T2_C0(H1_2nd,T2,1.0,Ecorr2);
-//    energy.push_back({"<[F_2nd, T2_1st]>", 2 * (Ecorr2 - Etemp2)});
-//    Etemp2 = Ecorr2;
-
-//    H2_T1_C0(H2_2nd,T1,1.0,Ecorr2);
-//    energy.push_back({"<[V_2nd, T1_1st]>", 2 * (Ecorr2 - Etemp2)});
-//    Etemp2 = Ecorr2;
-
-//    H2_T2_C0(H2_2nd,T2,1.0,Ecorr2);
-//    energy.push_back({"<[V_2nd, T2_1st]>", 2 * (Ecorr2 - Etemp2)});
-//    Etemp2 = Ecorr2;
-
-//    // <[H_2nd, A_1st]> = 2 * <[H_2nd, T_1st]>
-//    Ecorr2 *= 2.0;
-//    energy.push_back({"<[H_2nd, A_1st]>", Ecorr2});
-
-//    double Ecorr = Ecorr1 + Ecorr2;
-//    energy.push_back({"DSRG-MRPT3 correlation energy", Ecorr});
-//    energy.push_back({"DSRG-MRPT3 total energy", Eref + Ecorr});
-
-//    outfile->Printf("\n\n  ==> DSRG-MRPT3 Energy Summary <==\n");
-//    for (auto& str_dim : energy){
-//        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
-//    }
-
-    double Ecorr = 0.0;
-    return Ecorr;
+    return Ecorr + Ept2;
 }
 
 void MRDSRG::check_semicanonical(){

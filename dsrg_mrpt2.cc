@@ -613,7 +613,7 @@ void DSRG_MRPT2::check_t2()
     std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
 
     for(const std::string& block: T2.block_labels()){
-        int spin = isupper(block[0]) + isupper(block[1]);
+        int spin = bool(isupper(block[0])) + bool(isupper(block[1]));
         std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 = spin_to_t2[spin];
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
 
