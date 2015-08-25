@@ -1311,6 +1311,7 @@ void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDetermina
 	bool Hmat = true;
 	SharedMatrix Hm;
 	std::vector<std::pair<std::vector<int>,std::vector<double>>> Hs;
+	size_t space_size = space.size();
 
 	if( space.size() <= 100 ){
 		Hm = build_full_hamiltonian(space);
@@ -1319,10 +1320,7 @@ void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDetermina
 			Hm = build_full_hamiltonian(space);
 		}else if( diag_method == DavidsonLiuDense ){
 			Hm = build_full_hamiltonian(space);
-		}else if( diag_method == DavidsonLiuSparse ){
-			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
-			Hmat = false;
-		}else if( diag_method == DavidsonLiuList ){
+		}else{
 			Hs = parallel_ ? build_sparse_hamiltonian_parallel(space) : build_sparse_hamiltonian(space);
 			Hmat = false;
 		}
@@ -1333,18 +1331,18 @@ void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDetermina
 	if(Hmat){
 		outfile->Printf("\n  Using full algorithm");
 		for( size_t n = 0; n < nroot; ++n){
-			for( size_t I = 0; I < space.size(); ++I ){
-				for( size_t J = 0; J < space.size(); ++J){
+			for( size_t I = 0; I < space_size; ++I ){
+				for( size_t J = 0; J < space_size; ++J){
 					evals->add(n, evecs->get(I,n) *  Hm->get(I,J) * evecs->get(J,n) );
 				}
 			}
 		}
 	}else{
 		for( size_t n = 0; n < nroot; ++n){
-			for(size_t I = 0; I < space.size(); ++I){
+			for(size_t I = 0; I < space_size; ++I){
 				std::vector<double> H_val = Hs[I].second;
 				std::vector<int> H_idx = Hs[I].first;
-				for(size_t J = 0; J < H_val.size(); ++J){
+				for(size_t J = 0, maxJ = H_val.size(); J < maxJ; ++J){
 					evals->add(n, evecs->get(I,n) * H_val[J] * evecs->get(H_idx[J],n) );
 				}
 			}
