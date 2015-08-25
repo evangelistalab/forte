@@ -457,11 +457,6 @@ double EX_ACI::compute_energy()
         form_initial_space(P_space_, nroot_);
     }
 
-    //outfile->Printf("\n  The initial reference space is: ");
-   // for( auto& i : P_space_){
-    //    i.print();
-   // }
-
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
     outfile->Flush();
 
@@ -474,19 +469,17 @@ double EX_ACI::compute_energy()
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
-
     int root;
     int maxcycle = 20;
     for (cycle_ = 0; cycle_ < maxcycle; ++cycle_){
         // Step 1. Diagonalize the Hamiltonian in the P space
-
 		
         outfile->Printf("\n\n  Cycle %3d",cycle_);
 		outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
 		
 		if(spin_complete_){
-		check_spin_completeness(P_space_);
-		outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
+			check_spin_completeness(P_space_);
+			outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
 		}
 
         outfile->Flush();
@@ -494,7 +487,7 @@ double EX_ACI::compute_energy()
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
         
 		//save the dimension of the previous iteration
-        int PQ_space_init = PQ_space_.size();
+        size_t PQ_space_init = PQ_space_.size();
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
@@ -502,10 +495,11 @@ double EX_ACI::compute_energy()
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuSparse);
         }
 
-
 		// Use projection to ensure P space is spin pure
 		// Compute spin contamination
 		// spins is a vector of (S, S^2, #I used to compute spin, %det space) 
+		//
+
 		auto spins = compute_spin(P_space_,P_evecs, num_ref_roots);
 		if(spin_projection == 1 or spin_projection == 3){
 			double spin_contam = 0.0;
@@ -545,8 +539,8 @@ double EX_ACI::compute_energy()
         find_q_space(num_ref_roots,P_evals,P_evecs);
 
 		if(spin_complete_){
-		check_spin_completeness(PQ_space_);
-		outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
+			check_spin_completeness(PQ_space_);
+			outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 		
 		// Step 3. Diagonalize the Hamiltonian in the P + Q space
@@ -578,7 +572,6 @@ double EX_ACI::compute_energy()
 		}else{
 			outfile->Printf("\n  Not performing spin projection");
 		}
-
 		spins.clear();
 		spins = compute_spin(PQ_space_,PQ_evecs,num_ref_roots);
 
@@ -751,12 +744,12 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
     boost::timer t_ms_screen;
 
     using bsmap_it = std::map<BitsetDeterminant,std::vector<double> >::const_iterator;
-    pVector<double,double> C1(nroot_,make_pair(0.0,0.0));
-    pVector<double,double> E2(nroot_,make_pair(0.0,0.0));
-    std::vector<double> V(nroot_, 0.0);
+    pVector<double,double> C1(nroot,make_pair(0.0,0.0));
+    pVector<double,double> E2(nroot,make_pair(0.0,0.0));
+    std::vector<double> V(nroot, 0.0);
     BitsetDeterminant det;
     pVector<double,BitsetDeterminant> sorted_dets;
-    std::vector<double> ept2(nroot_,0.0);
+    std::vector<double> ept2(nroot,0.0);
     double criteria;
     print_warning_ = false;
 
@@ -2081,6 +2074,7 @@ void EX_ACI::spin_transform( std::vector<BitsetDeterminant> det_space, SharedMat
     //Evecs will be in the same order as evals
     S2->diagonalize(T,Evals);
 
+
 	// Count the number of CSFs with correct spin
 	// and get their indices wrt columns in T
     size_t csf_num = 0;
@@ -2111,7 +2105,8 @@ void EX_ACI::spin_transform( std::vector<BitsetDeterminant> det_space, SharedMat
 		denom = std::sqrt( 1.0/denom ); 
 		C_trans->scale_column(0,n,denom );
 	}
-    PQ_spin_evecs_ = C_trans->clone();
+    PQ_spin_evecs_.reset(new Matrix("PQ_spin_evecs_", det_size, nroot)); 
+	PQ_spin_evecs_ = C_trans->clone();
 	
 
     outfile->Printf("\n  Time spent performing spin transformation: %6.6f s", timer.get());
@@ -2130,7 +2125,7 @@ void EX_ACI::check_spin_completeness(std::vector<BitsetDeterminant>& det_space)
 	size_t ndet = 0;
 	
 	//Loop over determinants
-	const size_t max = det_space.size();
+	size_t max = det_space.size();
 	for(size_t I = 0; I < max; ++I){
 		//Loop over mos
 		for( size_t i = 0; i < ncmo_; ++i){
