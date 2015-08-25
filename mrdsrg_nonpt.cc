@@ -509,7 +509,7 @@ double MRDSRG::compute_energy_ldsrg2(){
     }
 
     // analyze converged amplitudes
-    analyze_amplitudes("Final ");
+    analyze_amplitudes("Final ",T1,T2);
 
     return Ecorr;
 }

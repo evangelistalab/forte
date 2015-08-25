@@ -15,9 +15,8 @@
 #include "reference.h"
 #include "blockedtensorfactory.h"
 
-namespace psi{
-
-namespace libadaptive{
+using namespace ambit;
+namespace psi{ namespace libadaptive{
 
 class MRDSRG : public Wavefunction
 {
@@ -135,7 +134,7 @@ protected:
     /// Algorithm for computing amplitudes
     std::string T_algor_;
     /// Analyze T1 and T2 amplitudes
-    void analyze_amplitudes(const std::string& name);
+    void analyze_amplitudes(const std::string& name, BlockedTensor &T1, BlockedTensor &T2);
 
     /// RMS of T2
     double T2rms;
@@ -151,7 +150,7 @@ protected:
     /// Update T2 in every iteration
     void update_t2();
     /// Check T2 and store the largest amplitudes
-    void check_t2();
+    void check_t2(BlockedTensor &T2);
 
     /// RMS of T1
     double T1rms;
@@ -166,7 +165,7 @@ protected:
     /// Update T1 in every iteration
     void update_t1();
     /// Check T1 and store the largest amplitudes
-    void check_t1();
+    void check_t1(BlockedTensor& T1);
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;

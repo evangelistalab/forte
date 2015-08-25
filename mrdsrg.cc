@@ -5,7 +5,6 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-
 namespace psi{ namespace libadaptive{
 
 MRDSRG::MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,ExplorerIntegrals* ints,std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -230,7 +229,7 @@ double MRDSRG::compute_energy(){
     guess_t1(F,T2,T1);
 
     // check initial amplitudes
-    analyze_amplitudes("First-Order ");
+    analyze_amplitudes("First-Order ",T1,T2);
 
     // get reference energy
     double Etotal = Eref;
