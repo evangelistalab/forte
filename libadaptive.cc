@@ -23,6 +23,8 @@
 #include "lambda-ci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
+#include "mrdsrg.h"
+#include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
@@ -379,11 +381,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SAVE_HBAR",false);
 
 
-
         //////////////////////////////////////////////////////////////
-        ///
-        ///              OPTIONS FOR THE MR-DSRG-PT2 MODULE
-        ///
+        ///         OPTIONS FOR THE PILOT FULL CI CODE
         //////////////////////////////////////////////////////////////
         /*- Multiplicity -*/
         boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
@@ -394,24 +393,34 @@ read_options(std::string name, Options &options)
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
-        /*- DSRG Taylor Expansion Threshold -*/
-        options.add_int("TAYLOR_THRESHOLD", 3);
-        /*- DSRG Perturbation -*/
-        options.add_bool("DSRGPT", true);
-        /*- Print N Largest T Amplitudes -*/
-        options.add_int("NTAMP", 15);
-        /*- T Threshold for Intruder States -*/
-        options.add_double("INTRUDER_TAMP", 0.10);
-        /*- Zero T1 Amplitudes -*/
-        options.add_bool("T1_ZERO", false);
-        /*- The Algorithm to Form T Amplitudes -*/
-        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Two-Particle Density Cumulant -*/
         options.add_str("TWOPDC", "MK", "MK ZERO");
         /*- Three-Particle Density Cumulant -*/
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
+
+        //////////////////////////////////////////////////////////////
+        ///
+        ///              OPTIONS FOR THE MR-DSRG MODULE
+        ///
+        //////////////////////////////////////////////////////////////
+        /*- Correlation level -*/
+        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD AMP EMP2 LAMP LEMP2");
+        options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
+        /*- The Algorithm to Form T Amplitudes -*/
+        options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- Reference Relaxation -*/
+        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
+        /*- DSRG Taylor Expansion Threshold -*/
+        options.add_int("TAYLOR_THRESHOLD", 3);
+        /*- Print N Largest T Amplitudes -*/
+        options.add_int("NTAMP", 15);
+        /*- T Threshold for Intruder States -*/
+        options.add_double("INTRUDER_TAMP", 0.10);
+        /*- DSRG Perturbation -*/
+        options.add_bool("DSRGPT", true);
+        /*- Zero T1 Amplitudes -*/
+        options.add_bool("T1_ZERO", false);
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
@@ -422,8 +431,6 @@ read_options(std::string name, Options &options)
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
-        /*- Reference Relaxation -*/
-        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
     }
 
     return true;
@@ -515,6 +522,20 @@ libadaptive(Options &options)
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         FCI_MO fci_mo(options,ints_);
+    }
+    if(options.get_str("JOB_TYPE") == "MRDSRG"){
+        FCI_MO fci_mo(options,ints_);
+        Reference reference = fci_mo.reference();
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+        mrdsrg->compute_energy();
+    }
+    if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
+        FCI_MO fci_mo(options,ints_);
+        Reference reference = fci_mo.reference();
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,wfn,options,ints_,mo_space_info));
+        mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CASTYPE")=="CAS")
