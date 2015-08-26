@@ -13,10 +13,14 @@
 #include <liboptions/liboptions.h>
 #include <libtrans/integraltransform.h>
 #include <libmints/matrix.h>
-#include <libthce/thce.h>
 #include <ambit/blocked_tensor.h>
 
-namespace psi{ namespace libadaptive{
+
+namespace psi{
+
+class Tensor;
+
+namespace libadaptive{
 
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
