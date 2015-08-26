@@ -2260,6 +2260,8 @@ ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t
     bool frozen_core = false;
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
+    std::vector<double>& ReturnTensorV = ReturnTensor.data();
+
     if(frzcpi_.sum() && aptei_idx_==ncmo_)
     {
         frozen_core = true;
@@ -2304,13 +2306,32 @@ ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t
     }
     else
     {
-        std::vector<double>& ReturnTensorV = ReturnTensor.data();
         //If user wants blocking in A
         pn = 0;
         qn = 0;
+        //If p and q are not just nmo_, this map corrects that.  
+        //If orbital 0, 5, 10, 15 is frozen, this corresponds to 0, 1, 2, 3.  
+        //This map says p_map[5] = 1.  
+        //Used in correct ordering for the tensor.  
+        std::map<size_t, size_t> p_map;
+        std::map<size_t, size_t> q_map;
+
+        int p_idx = 0;
+        int q_idx = 0;
+    for(size_t p_block : p)
+    {
+        p_map[p_block] = p_idx;
+        p_idx++;
+    }
+    for(size_t q_block : q)
+    {
+        q_map[q_block] = q_idx;
+        q_idx++;
+    }
         for(size_t p_block : p)
         {
             pn = frozen_core ? cmotomo_[p_block] : p_block;
+
             for(size_t q_block : q)
             {
                 qn = frozen_core ? cmotomo_[q_block] : q_block;
@@ -2319,13 +2340,11 @@ ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t
                 size_t offset = pn * nthree_ * nmo_ + qn * nthree_ + A[0];
                 fseek(B_->file_pointer(), offset * sizeof(double), SEEK_SET);
                 fread(&(A_chunk[0]), sizeof(double), A.size(), B_->file_pointer());
-
                 for(size_t a = 0; a < A.size(); a++)
                 {
                     //Weird way the tensor is formatted
                     //Fill the tensor for every chunk of A
-                    ReturnTensorV[a * ncmo_ * ncmo_ + p_block * ncmo_ + q_block] = A_chunk[a];
-
+                    ReturnTensorV[a * p.size() * q.size() + p_map[p_block] * q.size() + q_map[q_block]] = A_chunk[a];
                 }
                 delete[] A_chunk;
 
@@ -2498,8 +2517,8 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
 
     //Create the fock_a and fock_b globally
     //Choose to block over naux rather than ncmo_
-    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
-    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
+    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{aptei_idx_, aptei_idx_});
+    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{aptei_idx_, aptei_idx_});
 
     std::vector<size_t> nonzero;
     //Figure out exactly what I need to contract the Coloumb term
@@ -2523,15 +2542,15 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     std::vector<size_t> A(nthree_);
     std::iota(A.begin(), A.end(), 0);
 
-    std::vector<size_t> P(ncmo_);
+    std::vector<size_t> P(aptei_idx_);
     std::iota(P.begin(), P.end(), 0);
 
     //Create a gamma that contains only nonzero terms
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{nonzero.size(), nonzero.size()});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{nonzero.size(), nonzero.size()});
     //Create the full gamma (K is not nearly as sparse as J)
-    ambit::Tensor gamma_a_full = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
-    ambit::Tensor gamma_b_full = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
+    ambit::Tensor gamma_a_full = ambit::Tensor::build(tensor_type, "Gamma_a",{aptei_idx_, aptei_idx_});
+    ambit::Tensor gamma_b_full = ambit::Tensor::build(tensor_type, "Gamma_b",{aptei_idx_, aptei_idx_});
 
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(nonzero[i[0]],nonzero[i[1]]);
@@ -2559,7 +2578,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     });
 
     //====Blocking information==========
-    int int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
+    size_t int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
     int memory_input = Process::environment.get_memory();
     int num_block = std::ceil(double(int_mem_int_) / memory_input);
     //Hard wires num_block for testing
@@ -2600,7 +2619,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
        BQB_small.iterate([&](const std::vector<size_t>& i,double& value){
             value = BQBv[A_block[i[0]]];
         });
-        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{A_block.size(),ncmo_, ncmo_});
+        ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{A_block.size(),aptei_idx_, aptei_idx_});
 
         //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
         //    value = get_three_integral(A_block[i[0]], i[1], i[2]);
@@ -2854,7 +2873,6 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     //Kevin is lazy.  Going to use ambit to perform this contraction
     //Create three tensors.  Forgive my terrible naming
     //B_{rr}^{Q}
-    ambit::Tensor BQr = ambit::Tensor::build(tensor_type_, "BQr", {nthree_, frozen_vec.size(), frozen_vec.size()});
     // B_{rp}^{Q}
     ambit::Tensor BQrp = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, frozen_vec.size(), nmo_});
     // B_{pr}^{Q}
@@ -2875,7 +2893,7 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     //Hope this is smart enough to figure out not to store B_{pq}^{Q}
     //Major problem with this is that other tensors are not that small.
     //Maybe won't work
-    int int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
+    size_t int_mem_int_ = (nthree_ * nmo_ * nmo_) * sizeof(double);
     int memory_input = Process::environment.get_memory();
     int num_block = std::ceil(double(int_mem_int_) / memory_input);
     //Hard wires num_block for testing
@@ -2886,7 +2904,7 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     {
         outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
         outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
-        outfile->Printf("\n  Block_size = %d\n num_block = %d", block_size, num_block);
+        outfile->Printf("\nTotal size = %d  Block_size = %d\n num_block = %d",nthree_ ,block_size, num_block);
         outfile->Printf("\n\n rpq is %4.4f GB", nthree_ * frozen_size * nmo_ * 8.0 / (1024 * 1024 * 1024));
         outfile->Printf("\n\n BpqQ is %4.4f GB", nthree_ * nmo_ * nmo_ * 8.0 / (1024 * 1024 * 1024));
     }
@@ -2907,19 +2925,26 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
         }
         //This tensor is extremely large for big systems
         //Needs to be blocked over A
+
         ambit::Tensor BQpq = ambit::Tensor::build(tensor_type_, "BQpq", {A_block.size(), nmo_, nmo_});
         BQpq = get_three_integral_block(A_block, P, P);
+
         //A_block is the split of the naux -> (0, . . . ,block_size)
 
         ambit::Tensor Qr = ambit::Tensor::build(tensor_type_, "Qr", {A_block.size(),frozen_vec.size()});
-        BQr = get_three_integral_block(A_block, frozen_vec, frozen_vec);
+        ambit::Tensor BQr = get_three_integral_block(A_block, frozen_vec, frozen_vec);
+        
+
+
         //Go from B_{rr}^{Q} -> B_{r}^{Q}.  Tensor library can not do this.
+
         std::vector<double>& BQrP = BQr.data(); // get the data from BQr
         Qr.iterate([&](const std::vector<size_t>& i,double& value){
             value = BQrP[i[0] * frozen_size * frozen_size + i[1] * frozen_size + i[1]] ;
         });
         //^^^^^ -> B_{rr}^{Q} -> B_{r}^{Q}
         rpq("r,p,q") += 2.0 * Qr("Q,r") * BQpq("Q,p,q");
+
     }
     std::vector<double>& rpqP = rpq.data();
     std::vector<double>& rpqKP = rpqK.data();

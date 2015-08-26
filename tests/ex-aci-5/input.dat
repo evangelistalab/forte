@@ -1,8 +1,8 @@
 import libadaptive
 
 refscf = -37.97186042031555  
-refaci = -38.65846508 
-refacipt2 =-38.72816632 
+refaci = -38.893283747776 
+refacipt2 = -38.962172189030
 
 molecule CH2{
 0 1
@@ -17,7 +17,6 @@ set {
   basis DZ
   scf_type pk
   reference rohf
-  wfn_sym 2
   e_convergence 11
   d_convergence 11
   r_convergence 11
@@ -31,12 +30,10 @@ set libadaptive {
   SELECT_TYPE aimed_energy
   TAUP 0.07
   TAUQ 0.07
-  excited_algorithm state_average
-  pq_function average 
-  root_sym 2
   nroot 1
   charge 0
   spin_projection 1
+  enforce_spin_complete false
 }
 
 energy('ex-aci')
