@@ -222,6 +222,7 @@ double TensorSRG::compute_ct_energy()
 
 double TensorSRG::compute_hbar()
 {
+    print_ = 2;
     if (print_ > 1){
         outfile->Printf("\n\n  Computing the similarity-transformed Hamiltonian");
         outfile->Printf("\n  -----------------------------------------------------------------");
@@ -259,6 +260,11 @@ double TensorSRG::compute_hbar()
         // Compute the commutator C = 1/n [O,S]
         commutator_A_B_C(factor,O1,O2,S1,S2,C0,C1,C2,n);
 
+        double H1_ov = C1.block("ov").norm(1) + C1.block("OV").norm(1);
+        double H2_oovv = C2.block("oovv").norm(1) + 4.0 * C2.block("oOvV").norm(1) + C2.block("OOVV").norm(1);
+        outfile->Printf("\n  |H1_ov|\t= %20.12f",H1_ov);
+        outfile->Printf("\n  |H2_oovv|\t= %20.12f",H2_oovv);
+
         // Hbar += C
         Hbar0 += C0;
         Hbar1["pq"] += C1["pq"];
@@ -290,6 +296,7 @@ double TensorSRG::compute_hbar()
         outfile->Printf("\n  -----------------------------------------------------------------");
         outfile->Flush();
     }
+    print_ = 0;
     return Hbar0;
 }
 
