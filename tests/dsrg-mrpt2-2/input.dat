@@ -39,8 +39,8 @@ set libadaptive{
    dsrg_s                  1.0
 }
 
-energy('mcscf')
+ref_current = energy('mcscf')
 energy('dsrg-mrpt2')
 
-compare_values(refmcscf, get_variable("SCF total energy"),10,"SCF energy")
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refmcscf,ref_current,10,"SCF energy")
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

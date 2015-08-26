@@ -89,13 +89,6 @@ void MethodBase::startup()
         if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
 
-    H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin)
-            value = ints_->oei_a(i[0],i[1]);
-        else
-            value = ints_->oei_b(i[0],i[1]);
-    });
-
     G1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
 

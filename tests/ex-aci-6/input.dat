@@ -1,8 +1,8 @@
 import libadaptive
 
 refscf = -75.0225778486 
-refaci = -75.332635157935 
-refacipt2 = -75.488957756449 
+refaci = -75.3385504827 
+refacipt2 = -75.488210126022 
 
 molecule N2{
 C 
@@ -30,10 +30,10 @@ set libadaptive {
   frozen_docc [1,0,0,0,0,1,0,0]
   TAUP 0.05
   TAUQ 0.05
-  spin_tol 10.0
   nroot 3
   mp2_nos true
   charge 0
+  spin_projection 1
 }
 
 energy('ex-aci')
