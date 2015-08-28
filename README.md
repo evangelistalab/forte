@@ -21,6 +21,7 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 
 1. Use Psi4 to generate a Makefile for Forte that is tailored to you current environment
 ```
+cd src
 psi4 --new-plugin forte
 ```
 
