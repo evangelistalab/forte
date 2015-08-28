@@ -1,4 +1,7 @@
 #! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+#
+
 
 import libadaptive
 
@@ -23,7 +26,8 @@ set mcscf {
   docc = [2,0,0,0,0,1,0,0]
 }
 
-set libadaptive {
+set forte {
+  job_type = aci
   frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE aimed_energy
   TAUP 0.001000
@@ -33,7 +37,7 @@ set libadaptive {
 }
 
 energy('mcscf')
-energy('aci')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
