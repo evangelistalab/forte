@@ -1,6 +1,7 @@
 #! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
+#! Generated using commit a65ae7a89c66a04f62cab1fadf05bfd7d88f0c69
 
-import libadaptive
+import forte
 
 refscf = -14.6097447388741113 #TEST
 refapifci = -14.646162307429 #TEST
@@ -15,7 +16,8 @@ set {
   e_convergence 8
 }
 
-set libadaptive {
+set forte {
+  job_type apici
   nroot 1
   charge 0
   tau 1.0
@@ -30,7 +32,7 @@ set libadaptive {
   maxbeta 100000.00
 }
 
-energy('apici')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
 compare_values(refapifci, get_variable("APIFCI ENERGY"),7, "APIFCI energy") #TEST
