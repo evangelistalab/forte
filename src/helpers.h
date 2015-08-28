@@ -31,7 +31,7 @@
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /// MOInfo stores information about an orbital: (absolute index,irrep,relative index in irrep)
 using MOInfo = std::tuple<size_t,size_t,size_t>;

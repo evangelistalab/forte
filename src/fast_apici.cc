@@ -24,7 +24,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 #ifdef _OPENMP
    #include <omp.h>
@@ -45,7 +45,7 @@ void scale(std::map<FastDeterminant,double>& A,double alpha);
 double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>& B);
 void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B);
 
-FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),

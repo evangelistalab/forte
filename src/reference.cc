@@ -1,6 +1,6 @@
 #include "reference.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 Reference::Reference()
 {

@@ -13,9 +13,9 @@ using namespace std;
 using namespace psi;
 using namespace ambit;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : MethodBase(wfn,options,ints)
 {
     startup();

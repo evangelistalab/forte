@@ -29,7 +29,7 @@
 
 #define MAXEX 8
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * A class to store a Slater determinant in the excitation representation.

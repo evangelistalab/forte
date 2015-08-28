@@ -26,7 +26,7 @@ using namespace psi;
 int david2(double **A, int N, int M, double *eps, double **v,
            double cutoff, int print);
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 inline double clamp(double x, double a, double b)
 

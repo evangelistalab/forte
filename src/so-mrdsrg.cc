@@ -15,10 +15,10 @@
 
 using namespace ambit;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 SOMRDSRG::SOMRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn,
-                   Options &options, ExplorerIntegrals* ints,
+                   Options &options, ForteIntegrals* ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),

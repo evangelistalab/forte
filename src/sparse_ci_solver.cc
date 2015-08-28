@@ -19,7 +19,7 @@
 
 
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int nroot){
     sigma.gemm(false,true,1.0,H_,b,0.0);

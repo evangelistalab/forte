@@ -9,7 +9,7 @@
 #include <string>
 
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 BlockedTensorFactory::BlockedTensorFactory(Options& options)
 

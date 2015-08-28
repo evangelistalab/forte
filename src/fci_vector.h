@@ -33,7 +33,7 @@
 #define CAPRICCIO_USE_DAXPY 1
 #define CAPRICCIO_USE_UNROLL 0
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 
 /**
@@ -42,7 +42,7 @@ namespace psi{ namespace libadaptive{
 class FCIIntegrals
 {
 public:
-    FCIIntegrals(std::shared_ptr<StringLists> lists, ExplorerIntegrals* ints);
+    FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints);
 
     double frozen_core_energy() const {return frozen_core_energy_;}
     double scalar_energy() const {return scalar_energy_;}

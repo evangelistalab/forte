@@ -26,7 +26,7 @@
 #include "integrals.h"
 #include "excitation_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * A class to store a Slater determinant.
@@ -150,7 +150,7 @@ public:
     int excitation_level(const bool* Ia,const bool* Ib);
 
     /// Sets the pointer to the integral object
-    static void set_ints(ExplorerIntegrals* ints) {ints_ = ints;}
+    static void set_ints(ForteIntegrals* ints) {ints_ = ints;}
     /// Compute the matrix element of the Hamiltonian between two Slater determinants
     static double SlaterRules(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb);
     /// Compute the matrix element of the S^2 operator between two Slater determinants
@@ -208,7 +208,7 @@ private:
 
     // Static data
     /// A pointer to the integral object
-    static ExplorerIntegrals* ints_;
+    static ForteIntegrals* ints_;
     static double ahole_[20];
     static double bhole_[20];
     static double apart_[20];
