@@ -82,7 +82,6 @@ protected:
 
     /// The flow parameter
     double s_;
-
     /// Source operator
     std::string source_;
 
@@ -126,10 +125,10 @@ protected:
     /// Renormalize denominator
     double renormalized_denominator(double D);
     double renormalized_denominator_labs(double D);
-    double renormalized_denominator_amp(double V,double D);
-    double renormalized_denominator_emp2(double V,double D);
-    double renormalized_denominator_lamp(double V,double D);
-    double renormalized_denominator_lemp2(double V,double D);
+//    double renormalized_denominator_amp(double V,double D);
+//    double renormalized_denominator_emp2(double V,double D);
+//    double renormalized_denominator_lamp(double V,double D);
+//    double renormalized_denominator_lemp2(double V,double D);
 
     /// Algorithm for computing amplitudes
     std::string T_algor_;
@@ -307,8 +306,11 @@ public:
     /// The frozen-core energy
     double frozen_core_energy;
 
-    /// Compute the DSRG-MRPT2 energy
+    /// Compute the corr_level energy
     double compute_energy();
+
+    /// Copy integrals for reference relaxation
+    void transfer_integrals();
 };
 
 }}

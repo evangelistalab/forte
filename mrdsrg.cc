@@ -2,6 +2,8 @@
 #include <vector>
 #include <map>
 
+#include <libmints/molecule.h>
+
 #include "helpers.h"
 #include "mrdsrg.h"
 
@@ -94,18 +96,19 @@ void MRDSRG::startup()
     // prepare one-electron integrals
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin)
-            value = ints_->oei_a(i[0],i[1]);
-        else
-            value = ints_->oei_b(i[0],i[1]);
+        if (spin[0] == AlphaSpin) value = ints_->oei_a(i[0],i[1]);
+        else value = ints_->oei_b(i[0],i[1]);
     });
 
     // prepare two-electron integrals
     V = BTF->build(tensor_type_,"V",spin_cases({"gggg"}));
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+//            outfile->Printf("\n  [%zu][%zu][%zu][%zu] = %22.15f",i[0],i[1],i[2],i[3],value);
+        }
+        if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))  value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin))  value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
 
     // prepare density matrices
@@ -257,7 +260,117 @@ double MRDSRG::compute_energy(){
         Etotal += compute_energy_pt2();
     }}
 
+    // transfer integrals if relaxes ref.
+    if(options_.get_str("RELAX_REF") == "ONCE"){
+        transfer_integrals();
+    }
+
     return Etotal;
+}
+
+void MRDSRG::transfer_integrals(){
+    // printing
+    outfile->Printf("\n\n  ==> De-Normal-Order the DSRG Transformed Hamiltonian <==\n");
+
+    // compute scalar term
+    Timer t_scalar;
+    std::string str = "Computing the scalar term   ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    double scalar0 = Eref + Hbar0 - molecule_->nuclear_repulsion_energy();
+
+    // scalar from Hbar1
+    double scalar1 = 0.0;
+    Hbar1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar1 -= value;
+    });
+    Hbar1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar1 -= value;
+    });
+    scalar1 -= Hbar1["vu"] * Gamma1["uv"];
+    scalar1 -= Hbar1["VU"] * Gamma1["UV"];
+
+    // scalar from Hbar2
+    double scalar2 = 0.0;
+    scalar2 -= 0.25 * Hbar2["xyuv"] * Lambda2["uvxy"];
+    scalar2 -= 0.25 * Hbar2["XYUV"] * Lambda2["UVXY"];
+    scalar2 -= Hbar2["xYuV"] * Lambda2["uVxY"];
+    Hbar2.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
+    });
+    Hbar2.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += value;
+    });
+    Hbar2.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
+    });
+
+    O1 = BTF->build(tensor_type_,"O1",spin_cases({"gg"}));
+    O1["pq"] += Hbar2["puqv"] * Gamma1["vu"];
+    O1["pq"] += Hbar2["pUqV"] * Gamma1["VU"];
+    O1["PQ"] += Hbar2["uPvQ"] * Gamma1["vu"];
+    O1["PQ"] += Hbar2["PUQV"] * Gamma1["VU"];
+    O1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar2 += value;
+    });
+    O1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar2 += value;
+    });
+    scalar2 += 0.5 * Gamma1["uv"] * Hbar2["vyux"] * Gamma1["xy"];
+    scalar2 += 0.5 * Gamma1["UV"] * Hbar2["VYUX"] * Gamma1["XY"];
+    scalar2 += Gamma1["uv"] * Hbar2["vYuX"] * Gamma1["XY"];
+
+    double scalar = scalar0 + scalar1 + scalar2;
+    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
+
+    // compute one-body term
+    Timer t_one;
+    str = "Computing the one-body term ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    O1.scale(-1.0);
+    O1["pq"] += Hbar1["pq"];
+    O1["PQ"] += Hbar1["PQ"];
+    BlockedTensor temp = BTF->build(tensor_type_,"temp",spin_cases({"cc"}));
+    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (i[0] == i[1]) value = 1.0;
+    });
+    O1["pq"] -= Hbar2["pmqn"] * temp["nm"];
+    O1["pq"] -= Hbar2["pMqN"] * temp["NM"];
+    O1["PQ"] -= Hbar2["mPnQ"] * temp["nm"];
+    O1["PQ"] -= Hbar2["PMQN"] * temp["NM"];
+    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+
+    // update integrals
+    Timer t_int;
+    str = "Updating integrals          ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    ints_->set_scalar(scalar);
+    O1.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if (spin[0] == AlphaSpin){
+            ints_->set_oei(i[0],i[1],value,true);
+        }else{
+            ints_->set_oei(i[0],i[1],value,false);
+        }
+    });
+    Hbar2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
+//            outfile->Printf("\n  [%zu][%zu][%zu][%zu] = %22.15f",i[0],i[1],i[2],i[3],value);
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,false);
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,false,false);
+        }
+    });
+    outfile->Printf("  Done. Timing %10.3f s", t_int.get());
+
+    // print scalar
+    outfile->Printf("\n\n  ==> Scalar of the Electronic Hamiltonian (wrt True Vacuum) <==\n");
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
+    outfile->Printf("\n    %-30s = %22.15f", "Total", scalar);
+
+    ints_->update_integrals(false);
 }
 
 }}
