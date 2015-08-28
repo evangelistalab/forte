@@ -1,7 +1,7 @@
-#
 #This tests the EX-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
 
-import libadaptive
+import forte
 
 refscf = -14.839846512738 #TEST
 refaci = -14.888681366664 #TEST
@@ -20,26 +20,24 @@ set {
   r_convergence 10
 }
 
-set mcscf {
+set scf {
   reference rhf
   docc = [2,0,0,0,0,1,0,0]
 }
 
-set libadaptive {
+set forte {
+  job_type = ex-aci
   multiplicity 1
-  frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE energy
   perturb_select false
-  pq_function average
-  excited_algorithm state_average
   TAUP 0.000100
   TAUQ 0.00001000
   nroot 1
   charge 0
 }
 
-energy('mcscf')
-energy('ex-aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("EX-ACI ENERGY"),9, "EX-ACI energy") #TEST
