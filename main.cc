@@ -45,7 +45,7 @@ namespace psi{ namespace libadaptive{
 extern "C" int
 read_options(std::string name, Options &options)
 {
-    if (name == "LIBADAPTIVE" || options.read_globals()) {
+    if (name == "FORTE" || options.read_globals()) {
         /*- MODULEDESCRIPTION Libadaptive */
 
         /*- SUBSECTION Job Type */
