@@ -1,4 +1,8 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+# Tests mp2_nos with spin projected system for multiple roots
+
+
+import forte
 
 refscf = -75.0225778486 
 refaci = -75.3385504827 
@@ -23,7 +27,7 @@ set {
 
 
 
-set libadaptive {
+set forte {
   multiplicity 1
   perturb_select false
   SELECT_TYPE aimed-energy
@@ -36,7 +40,8 @@ set libadaptive {
   spin_projection 1
 }
 
-energy('ex-aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("EX-ACI ENERGY"),9, "EX-ACI energy") #TEST

@@ -1,4 +1,7 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+#Tests spin projection for a spin-contaminated system
+
+import forte 
 
 refscf = -37.97186042031555  
 refaci = -38.893283747776 
@@ -25,7 +28,8 @@ set {
 }
 
 
-set libadaptive {
+set forte {
+  JOB_TYPE ex-aci
   multiplicity 1
   SELECT_TYPE aimed_energy
   TAUP 0.07
@@ -36,7 +40,8 @@ set libadaptive {
   enforce_spin_complete false
 }
 
-energy('ex-aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy")
 compare_values(refaci, get_variable("EX-ACI ENERGY"),7, "EX-ACI energy")

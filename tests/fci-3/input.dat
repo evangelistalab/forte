@@ -1,4 +1,6 @@
-import libadaptive
+#! Generated using commit a65ae7a89c66a04f62cab1fadf05bfd7d88f0c69
+
+import forte
 
 refscf = -7.862246310410
 reffci = -7.696581880925145
@@ -26,7 +28,11 @@ set libadaptive {
   ms 0
 }
 
-energy('forte-fci')
+set forte {
+  job_type fci
+}
+
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),11, "SCF energy") #TEST
 compare_values(reffci, get_variable("CURRENT ENERGY"),11, "FCI energy") #TEST
