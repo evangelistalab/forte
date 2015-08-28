@@ -170,7 +170,6 @@ read_options(std::string name, Options &options)
         /*- The form of the Hamiltonian matrix.
          *  - FIXED diagonalizes a matrix of fixed dimension
          *  - SMOOTH forms a matrix with smoothed matrix elements -*/
-        options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
 
         options.add_int("IMRCISD_TEST_SIZE",0);
         options.add_int("IMRCISD_SIZE",0);
@@ -190,10 +189,6 @@ read_options(std::string name, Options &options)
         /*- The energy threshold for the intermdiate space -*/
         options.add_double("T2_THRESHOLD",0.000001);
 
-        /*- The threshold for the selection of the P space -*/
-        options.add_double("TAUP",0.01);
-        /*- The threshold for the selection of the Q space -*/
-        options.add_double("TAUQ",0.000001);
 
         /*- The number of steps used in the renormalized Lambda CI -*/
         options.add_int("RENORMALIZATION_STEPS",10);
@@ -262,7 +257,13 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
         //////////////////////////////////////////////////////////////
-
+		
+		/*- The selection type for the Q-space-*/
+        options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
+		/*-Threshold for the selection of the P space -*/
+        options.add_double("TAUP",0.01);
+        /*- The threshold for the selection of the Q space -*/
+        options.add_double("TAUQ",0.000001);
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
         /*- The type of selection parameters to use*/
@@ -275,8 +276,6 @@ read_options(std::string name, Options &options)
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
         options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE","ROOT_SELECT SINGLE_STATE");
-        /*- Root to determine Q criteria*/
-        options.add_int("REF_ROOT",0);
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/
@@ -451,7 +450,7 @@ read_options(std::string name, Options &options)
 }
 
 extern "C" PsiReturnType
-forte(Options &options)
+src(Options &options)
 {
     Timer overall_time;
     ambit::initialize();
