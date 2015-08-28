@@ -10,7 +10,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 typedef std::vector<std::pair<double,std::pair<size_t,size_t>>> pair_t;
 typedef std::map<std::pair<size_t,size_t>,size_t> pair_map_t;

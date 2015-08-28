@@ -12,7 +12,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double compute_mp_energy(bool *begin, bool *end, const std::vector<double>& epsilon)
 {

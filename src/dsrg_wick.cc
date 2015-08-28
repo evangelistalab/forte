@@ -1,7 +1,7 @@
 #include "ambit/tensor.h"
 #include "dsrg_wick.h"
 
-namespace psi{ namespace libadaptive {
+namespace psi{ namespace forte {
 
 DSRG_WICK::DSRG_WICK(std::shared_ptr<MOSpaceInfo> mo_space_info,
                      ambit::BlockedTensor Fock, ambit::BlockedTensor RTEI,

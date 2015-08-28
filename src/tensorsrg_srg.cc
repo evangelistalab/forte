@@ -8,7 +8,7 @@ using namespace std;
 using namespace psi;
 using namespace boost::numeric::odeint;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /* The rhs of x' = f(x) */
 void TensorSRG_ODEInterface::operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t)

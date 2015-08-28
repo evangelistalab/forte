@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 enum DODType {HistogramDOD,GaussianDOD};
 

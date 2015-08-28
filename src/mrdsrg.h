@@ -15,7 +15,7 @@
 #include "blockedtensorfactory.h"
 
 using namespace ambit;
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 class MRDSRG : public Wavefunction
 {
@@ -35,7 +35,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -294,7 +294,7 @@ protected:
 public:
 
     // => Constructor <= //
-    MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,ExplorerIntegrals* ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,ForteIntegrals* ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // => Destructor <= //
     ~MRDSRG();

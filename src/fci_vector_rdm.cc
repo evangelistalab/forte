@@ -11,7 +11,7 @@
 
 extern int fci_debug_level;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Compute the one-particle density matrix for a given wave function

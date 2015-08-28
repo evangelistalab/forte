@@ -9,9 +9,9 @@
 
 using namespace ambit;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-AmbitTests::AmbitTests(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+AmbitTests::AmbitTests(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), reference_(reference), ints_(ints), tensor_type_(kCore)
 {
     // Copy the wavefunction information
