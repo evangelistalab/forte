@@ -36,7 +36,7 @@ set forte{
 #   semi_canonical         false
 }
 
-energy('rhf')
+energy('scf')
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte')
