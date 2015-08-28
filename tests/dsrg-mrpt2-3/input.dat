@@ -1,4 +1,6 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+
+import forte
 
 #refrhf       = -2.18862199153970 # cc-pVTZ
 #refdsrgpt2   = -2.25959715906599 # cc-pVTZ
@@ -25,7 +27,8 @@ set globals{
    maxiter                 300
 }
 
-set libadaptive{
+set forte{
+   job_type                dsrg-mrpt2
    restricted_docc         [0,0,0,0,0,0,0,0]
    active                  [1,0,0,1,0,1,1,0]
    root_sym                0
@@ -35,7 +38,7 @@ set libadaptive{
 }
 
 ref_current = energy('rhf')
-energy('dsrg-mrpt2')
+energy('forte')
 
 compare_values(refrhf,ref_current,10,"SCF energy")
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

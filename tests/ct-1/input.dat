@@ -1,5 +1,6 @@
+#! Generated using commit 1c01e17d08918b7779d6a9fe14ce7864e839e255
 
-import libadaptive
+import forte
 
 refscf = -14.351880476202
 refct  = -14.413735630340293 # From a spin-orbit pilot code

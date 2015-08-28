@@ -1,6 +1,8 @@
 #! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+#
 
-import libadaptive
+import forte 
 
 refscf = -2.03108138291133 #TEST
 refaci = -2.114564415546 #TEST
@@ -22,15 +24,17 @@ set {
   scf_type pk
 }
 
-set libadaptive {
-  SELECT_TYPE amps
+set forte{
+  job_type = aci
+  SELECT_TYPE amp
   TAUP 0.005000
   TAUQ 0.001000
   nroot 1
   charge 0
 }
 
-energy('aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
