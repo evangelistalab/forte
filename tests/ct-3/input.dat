@@ -1,9 +1,9 @@
 #! L-CTSD cc-pVDZ energy for the LiH molecule.  This tests the commutator
 #! correct up to fourth-order.  The reference value was double checke
 #! using a spin-orbital and spin-integrated code.
+#! Generated using commit GITCOMMIT
 
-
-import libadaptive
+import forte
 
 refscf = -7.983684364189 #TEST
 refct  = -8.014737034246124 #TEST
@@ -22,12 +22,14 @@ set {
   df_scf_guess false
 }
 
-set libadaptive {
+set forte{
   srg_comm fo
+  job_type tensorsrg
+  srg_mode ct
 }
 
 set basis cc-pVDZ
-energy('ct')
-
+energy('scf')
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
 compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST
