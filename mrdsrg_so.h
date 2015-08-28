@@ -5,7 +5,6 @@
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
-#include <libpsi4util/libpsi4util.h>
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
 #include "ambit/blocked_tensor.h"
