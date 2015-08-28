@@ -11,7 +11,7 @@ import p4util
 from p4xcpt import *
 
 plugdir = os.path.split(os.path.abspath(__file__))[0]
-sofile = os.path.split(plugdir)[1] + '.so'
+sofile = "src/" + os.path.split(plugdir)[1] + '.so'
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -23,9 +23,9 @@ def run_forte(name, **kwargs):
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
 
-    # Your plugin's psi4 run sequence goes here
+    # Run FORTE
     returnvalue = psi4.plugin(sofile)
-#    psi4.set_variable('CURRENT ENERGY', returnvalue)
+
     return returnvalue
 
 # Integration with driver routines
