@@ -10,6 +10,8 @@ from molutil import *
 import p4util
 from p4xcpt import *
 
+plugdir = os.path.split(os.path.abspath(__file__))[0]
+sofile = os.path.split(plugdir)[1] + '.so'
 
 def run_libadaptive(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -24,7 +26,7 @@ def run_libadaptive(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     #psi4.set_local_option('LIBADAPTIVE', 'PRINT', 1)
     #scf_helper(name, **kwargs)
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -45,7 +47,7 @@ def run_forte_fci(name, **kwargs):
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','FCI')
 
     # Call the plugin
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -62,7 +64,7 @@ def run_adaptive_ci(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'ACI_SPARSE')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -79,7 +81,7 @@ def run_ex_aci(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'EX-ACI')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -97,7 +99,7 @@ def run_adaptive_pici(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'APICI')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -115,7 +117,7 @@ def run_fast_adaptive_pici(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'FAPICI')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -133,7 +135,7 @@ def run_fciqmc(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'FCIQMC')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -155,7 +157,7 @@ def run_fno_apifci(name, **kwargs):
     mints = psi4.MintsHelper()
     mints.integrals() 
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'APICI')
-    returnvalue = psi4.plugin('libadaptive.so')
+    returnvalue = psi4.plugin(sofile)
     psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
@@ -173,7 +175,7 @@ def run_ct(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'TENSORSRG')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -191,7 +193,7 @@ def run_ct_ci(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'TENSORSRG-CI')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -209,7 +211,7 @@ def run_sr_dsrg_aci(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE','JOB_TYPE','SR-DSRG-ACI')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -227,7 +229,7 @@ def run_sr_dsrg_apici(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE','JOB_TYPE','SR-DSRG-APICI')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -245,7 +247,7 @@ def run_srg(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','TENSORSRG')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','SRG')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -263,7 +265,7 @@ def run_sr_lctsd(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE', 'SRG')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','CT')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -281,7 +283,7 @@ def run_sr_srgsd(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','SRG')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','SRG')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -299,7 +301,7 @@ def run_sr_dsrgsd(name, **kwargs):
     scf_helper(name, **kwargs)
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','SRG')
     psi4.set_local_option('LIBADAPTIVE','SRG_MODE','DSRG')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -315,7 +317,7 @@ def run_mrdsrgpt2(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','MR-DSRG-PT2')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -331,7 +333,7 @@ def run_mrdsrg(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','MRDSRG')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -347,7 +349,7 @@ def run_mrdsrg_so(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','MRDSRG_SO')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -363,7 +365,7 @@ def run_dsrg_mrpt2(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','DSRG-MRPT2')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
@@ -379,7 +381,7 @@ def run_three_dsrg_mrpt2(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     psi4.set_local_option('LIBADAPTIVE', 'JOB_TYPE','THREE_DSRG-MRPT2')
-    psi4.plugin('libadaptive.so')
+    psi4.plugin(sofile)
     returnvalue = psi4.get_variable('CURRENT ENERGY')
     return returnvalue
 
