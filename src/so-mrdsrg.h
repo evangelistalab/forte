@@ -37,7 +37,7 @@
 
 namespace psi{
 
-namespace libadaptive{
+namespace forte{
 
 /**
  * @brief The SOMRDSRG class
@@ -53,7 +53,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -206,7 +206,7 @@ public:
     SOMRDSRG(Reference reference,
            boost::shared_ptr<Wavefunction> wfn,
            Options &options,
-           ExplorerIntegrals* ints,
+           ForteIntegrals* ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~SOMRDSRG();

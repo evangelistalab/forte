@@ -30,7 +30,7 @@
 
 #include "helpers.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 
 MOSpaceInfo::MOSpaceInfo()

@@ -16,7 +16,7 @@
 
 namespace psi{
 
-namespace libadaptive{
+namespace forte{
 
 /**
  * @brief The MethodBase class
@@ -33,7 +33,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The type of SCF reference
     std::string ref_type_;
 
@@ -185,7 +185,7 @@ public:
 
     // => Constructors <= //
 
-    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
 
     ~THREE_DSRG_MRPT2();
 

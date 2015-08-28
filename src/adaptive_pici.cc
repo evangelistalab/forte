@@ -30,7 +30,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 typedef std::map<Determinant,double> bsmap;
 typedef std::map<Determinant,double>::iterator bsmap_it;
@@ -45,7 +45,7 @@ double normalize(std::map<Determinant,double>& dets_C);
 double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B);
 void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B);
 
-AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),

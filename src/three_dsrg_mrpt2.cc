@@ -14,7 +14,7 @@
 #include <algorithm>
 using namespace ambit;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 #ifdef _OPENMP
 	#include <omp.h>
@@ -26,7 +26,7 @@ namespace psi{ namespace libadaptive{
 #endif
 
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),

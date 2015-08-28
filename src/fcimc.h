@@ -35,7 +35,7 @@
 #include "integrals.h"
 #include "bitset_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 enum SpawnType {random, all, ground_and_random};
 
@@ -56,7 +56,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
 
     /// Destructor
     ~FCIQMC();
@@ -90,7 +90,7 @@ private:
     /// Do we have OpenMP?
     static bool have_omp_;
     /// The molecular integrals required by fcimc
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// The wave function symmetry
     int wavefunction_symmetry_;

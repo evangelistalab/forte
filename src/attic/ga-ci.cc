@@ -23,9 +23,9 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-GeneticAlgorithmCI::GeneticAlgorithmCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+GeneticAlgorithmCI::GeneticAlgorithmCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints)
 {
     // Copy the wavefunction information

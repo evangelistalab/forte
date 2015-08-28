@@ -8,7 +8,7 @@
 #include "helpers.h"
 
 namespace psi{
-namespace libadaptive{
+namespace forte{
 
 UNO::UNO(Options &options){
 

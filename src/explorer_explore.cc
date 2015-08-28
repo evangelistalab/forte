@@ -12,7 +12,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * An ancillary function to compare the det_info data structures.  Used to sort determinants.

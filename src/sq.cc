@@ -8,7 +8,7 @@
 
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 // Partitions of the number n
 std::vector<std::vector<std::vector<int>>> partitions {
