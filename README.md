@@ -20,7 +20,7 @@ psi4 --new-plugin forte
 
 2. After you have added this Makefile to the Forte directory you must add the following lines to your Makefile:
 ```
-IPLUGIN = -L$(OBJDIR)/lib -lplugin -L/(AMBIT_DIRECTORY)/obj/src -lambit
-INCLUDES += -I/(AMBIT_DIRECTORY)/include/ambit
+PSIPLUGIN = -L$(OBJDIR)/lib -lplugin -L$(AMBIT_DIRECTORY)/obj/src -lambit
+INCLUDES += -I$(AMBIT_DIRECTORY)/include/ambit
 ```
 where (AMBIT_DIRECTORY) is the location of your compiled version of Ambit.
