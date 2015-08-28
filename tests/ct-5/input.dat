@@ -1,7 +1,7 @@
 #! L-CTSD cc-pVDZ energy for Be.
+#! Generated using commit GITCOMMIT
 
-
-import libadaptive
+import forte
 
 refscf = -14.57233763095337 #TEST
 refct  = -14.625133722062042 # TEST
@@ -19,8 +19,14 @@ set {
   freeze_core false
 }
 
-set basis cc-pVDZ
-energy('ct')
+set forte{
+  job_type tensorsrg
+  srg_mode ct
+}
 
+set basis cc-pVDZ
+
+energy('scf')
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
 compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST

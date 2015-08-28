@@ -38,8 +38,8 @@ set forte{
    cholesky_tolerance     1e-16
 }
 
-rhf = energy('rhf')
-energy('forte')
+energy('scf')
+compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-compare_values(refrhf, rhf,10,"SCF energy")
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+energy('forte')
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
