@@ -16,7 +16,8 @@ set {
   e_convergence 8
 }
 
-set libadaptive {
+set forte {
+  job_type fciqmc
   tau 0.005                       # time step length
   maxiter 10000                   # maximum number of iteration
   print_freq 100                  # steps between two calculation status printing
@@ -31,9 +32,6 @@ set libadaptive {
   spawn_type random               # type of spawn, can be random, all, ground and random
 }
 
-set forte {
-  job_type fciqmc
-}
 
 energy('forte')
 
