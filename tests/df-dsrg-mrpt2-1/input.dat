@@ -74,8 +74,8 @@ S   1   1.00
 }
 
 ref = energy('mcscf')
-energy('forte')
-
 compare_values(refmcscf,ref,10,"SCF energy")
+forte_energy = energy('forte')
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+
 
