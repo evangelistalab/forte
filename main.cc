@@ -451,7 +451,7 @@ read_options(std::string name, Options &options)
 }
 
 extern "C" PsiReturnType
-libadaptive(Options &options)
+forte(Options &options)
 {
     Timer overall_time;
     ambit::initialize();
