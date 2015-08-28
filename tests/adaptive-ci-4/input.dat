@@ -29,7 +29,7 @@ set mcscf {
 set forte {
   job_type = aci
   frozen_docc = [0,0,0,0,0,0,0,0]
-  SELECT_TYPE aimed_amp
+  SELECT_TYPE amp
   TAUP 0.0040000
   TAUQ 0.000500
   nroot 1
@@ -37,8 +37,9 @@ set forte {
 }
 
 energy('mcscf')
-energy('forte')
 
-compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
+compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
 compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
