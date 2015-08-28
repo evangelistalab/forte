@@ -22,6 +22,7 @@ set forte {
   spawning_threshold 0.0001
 }
 
+energy('scf')
 energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
