@@ -33,7 +33,7 @@
 #include "string_determinant.h"
 #include "bitset_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * @brief The Ex_ACI class
@@ -51,7 +51,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    EX_ACI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    EX_ACI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
 
     /// Destructor
     ~EX_ACI();
@@ -69,7 +69,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering

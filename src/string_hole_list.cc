@@ -13,7 +13,7 @@
 
 #include "string_lists.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 std::vector<H1StringSubstitution>& StringLists::get_alfa_1h_list(int h_I,size_t add_I,int h_J)
 {

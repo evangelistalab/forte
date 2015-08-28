@@ -6,7 +6,7 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
 {

@@ -26,19 +26,19 @@ using namespace ambit;
 
 #include <psi4-dec.h>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 #ifdef _OPENMP
     #include <omp.h>
-    bool ExplorerIntegrals::have_omp_ = true;
+    bool ForteIntegrals::have_omp_ = true;
 #else
     #define omp_get_max_threads() 1
     #define omp_get_thread_num()  0
-    bool ExplorerIntegrals::have_omp_ = false;
+    bool ForteIntegrals::have_omp_ = false;
 #endif
 
 
-ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
+ForteIntegrals::ForteIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0)
 {
     startup();
@@ -46,12 +46,12 @@ ExplorerIntegrals::ExplorerIntegrals(psi::Options &options, IntegralSpinRestrict
     transform_one_electron_integrals();
 }
 
-ExplorerIntegrals::~ExplorerIntegrals()
+ForteIntegrals::~ForteIntegrals()
 {
     deallocate();
 }
 
-void ExplorerIntegrals::startup()
+void ForteIntegrals::startup()
 {
     // Grab the global (default) PSIO object, for file I/O
     boost::shared_ptr<PSIO> psio(_default_psio_lib_);
@@ -129,7 +129,7 @@ void ExplorerIntegrals::startup()
     num_threads_ = omp_get_max_threads();
 }
 
-void ExplorerIntegrals::allocate()
+void ForteIntegrals::allocate()
 {
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals_a = new double[nmo_ * nmo_];
@@ -139,7 +139,7 @@ void ExplorerIntegrals::allocate()
     fock_matrix_b = new double[nmo_ * nmo_];
 }
 
-void ExplorerIntegrals::deallocate()
+void ForteIntegrals::deallocate()
 {
     // Deallocate the memory required to store the one-electron integrals
     delete[] one_electron_integrals_a;
@@ -149,7 +149,7 @@ void ExplorerIntegrals::deallocate()
     delete[] fock_matrix_b;
 }
 
-void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
+void ForteIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 {
     // Store the integrals in a temporary array of dimension nmo x nmo
     double* temp_ints = new double[nmo_ * nmo_];
@@ -167,7 +167,7 @@ void ExplorerIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 }
 
 
-void ExplorerIntegrals::set_oei(double** ints,bool alpha)
+void ForteIntegrals::set_oei(double** ints,bool alpha)
 {
     double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
     for (int p = 0; p < nmo_; ++p){
@@ -177,13 +177,13 @@ void ExplorerIntegrals::set_oei(double** ints,bool alpha)
     }
 }
 
-void ExplorerIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
+void ForteIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
 {
     double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
     p_oei[p * nmo_ + q] = value;
 }
 
-void ExplorerIntegrals::transform_one_electron_integrals()
+void ForteIntegrals::transform_one_electron_integrals()
 {
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
@@ -226,7 +226,7 @@ void ExplorerIntegrals::transform_one_electron_integrals()
      * @param resort_frozen_core -
      */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ExplorerIntegrals(options, restricted, resort_frozen_core), ints_(nullptr){
+    : ForteIntegrals(options, restricted, resort_frozen_core), ints_(nullptr){
     integral_type_ = ConventionalInts;
 
     outfile->Printf("\n Overall Conventional Integrals timings");
@@ -1017,7 +1017,7 @@ void DFIntegrals::make_diagonal_integrals()
 }
 
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    : ForteIntegrals(options, restricted, resort_frozen_core){
     integral_type_ = DF;
 
     outfile->Printf("\n DFIntegrals overall time");
@@ -1438,7 +1438,7 @@ void DFIntegrals::resort_integrals_after_freezing()
 
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    : ForteIntegrals(options, restricted, resort_frozen_core){
     integral_type_ = Cholesky;
     outfile->Printf("\n Cholesky integrals time");
     Timer CholInt;
@@ -2446,7 +2446,7 @@ void DISKDFIntegrals::make_diagonal_integrals()
 }
 
 DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ExplorerIntegrals(options, restricted, resort_frozen_core){
+    : ForteIntegrals(options, restricted, resort_frozen_core){
 
     integral_type_ = DiskDF;
     outfile->Printf("\n DISKDFIntegrals overall time");

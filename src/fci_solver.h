@@ -35,7 +35,7 @@
 #include "reference.h"
 
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * @brief The FCISolver class
@@ -59,7 +59,7 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, ExplorerIntegrals* ints);
+              size_t multiplicity, size_t symmetry, ForteIntegrals* ints);
 
     ~FCISolver() {}
 
@@ -91,7 +91,7 @@ private:
     std::shared_ptr<StringLists> lists_;
 
     /// The molecular integrals
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// The FCI energy
     double energy_;
@@ -145,7 +145,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI();
 
@@ -164,7 +164,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The information about the molecular orbital spaces

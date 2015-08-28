@@ -11,7 +11,7 @@
 
 using namespace boost;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Returns the list of alfa strings connected by a^{+}_p a^{+}_q a_q a_p

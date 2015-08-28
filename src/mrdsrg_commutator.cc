@@ -6,7 +6,7 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double time_H1_T1_C0 = 0.0;
 double time_H1_T2_C0 = 0.0;
