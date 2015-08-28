@@ -28,7 +28,7 @@
 #define BIGNUM 1E100
 #define MAXIT 100
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList};
 

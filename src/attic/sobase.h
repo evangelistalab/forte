@@ -29,7 +29,7 @@
 
 #include "integrals.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 typedef double* OneIndex;
 typedef double** TwoIndex;
@@ -44,7 +44,7 @@ class SOBase
 {
 public:
     // Constructor and destructor
-    SOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1);
+    SOBase(Options &options, ForteIntegrals* ints, TwoIndex G1);
     ~SOBase();
 protected:
     Options& options_;
@@ -74,7 +74,7 @@ protected:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The molecular integrals required by SOBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The reference occupation numbers
     OneIndex No_;
     /// The reference complementary occupation numbers (1 - No_)

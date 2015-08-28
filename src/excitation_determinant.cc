@@ -7,7 +7,7 @@ using namespace psi;
 
 #include <psi4-dec.h>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 ExcitationDeterminant::ExcitationDeterminant()
     : naex_(0), nbex_(0)

@@ -10,9 +10,9 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-SOBase::SOBase(Options &options, ExplorerIntegrals* ints, TwoIndex G1):
+SOBase::SOBase(Options &options, ForteIntegrals* ints, TwoIndex G1):
     ints_(ints), options_(options)
 {
     startup(G1);

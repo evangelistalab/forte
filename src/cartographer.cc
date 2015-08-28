@@ -10,7 +10,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 Cartographer::Cartographer(Options &options,double min_energy,double max_energy)
     :

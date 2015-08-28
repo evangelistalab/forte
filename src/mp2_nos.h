@@ -32,7 +32,7 @@
 
 namespace psi{
 
-namespace libadaptive{
+namespace forte{
 
 /**
  * @brief The MP2_NOS class
@@ -42,7 +42,7 @@ class MP2_NOS
 {
 public:
     // => Constructor <= //
-    MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
     //  => Destructor <= //
 };
 
@@ -55,7 +55,7 @@ class SemiCanonical
 {
 public:
     // => Constructor <= //
-    SemiCanonical(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
+    SemiCanonical(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Reference& reference);
 };
 
 }} // End Namespaces

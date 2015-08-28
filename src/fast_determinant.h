@@ -27,7 +27,7 @@
 
 #include "integrals.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 using bit_t = uint64_t;
 
@@ -139,7 +139,7 @@ public:
     double spin2(const FastDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
-    static void set_ints(ExplorerIntegrals* ints) {
+    static void set_ints(ForteIntegrals* ints) {
         ints_ = ints;
     }
 private:
@@ -154,7 +154,7 @@ public:
 
     // Static data
     /// A pointer to the integral object
-    static ExplorerIntegrals* ints_;
+    static ForteIntegrals* ints_;
     static double SlaterSign(const bit_t I,int n);
 };
 
@@ -165,9 +165,9 @@ public:
 
 namespace std {
 template <>
-class hash<psi::libadaptive::FastDeterminant> {
+class hash<psi::forte::FastDeterminant> {
 public:
-    size_t operator()(const psi::libadaptive::FastDeterminant &det) const
+    size_t operator()(const psi::forte::FastDeterminant &det) const
     {
         return det.alfa_bits_ ^ det.beta_bits_;
     }

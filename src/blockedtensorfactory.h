@@ -11,7 +11,7 @@
 #include <tuple>
 
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 class BlockedTensorFactory
 {

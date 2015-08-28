@@ -12,7 +12,7 @@
 #include "boost/dynamic_bitset.hpp"
 #include "binary_graph.hpp"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 struct DetAddress {
     int alfa_sym;

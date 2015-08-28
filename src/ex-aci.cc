@@ -25,7 +25,7 @@ using namespace std;
 using namespace psi;
 
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Template to store 3-index quantity of any type
@@ -71,7 +71,7 @@ inline double smootherstep(double edge0, double edge1, double x)
     return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
-EX_ACI::EX_ACI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+EX_ACI::EX_ACI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints)
 {
     // Copy the wavefunction information
