@@ -14,14 +14,15 @@ N 1 3.0
 set {
   basis          cc-pvdz
   reference      rhf
+  scf_type       pk
   e_convergence  12
 }
 
 set forte {
-  job_type ct
-  srg_comm fo
-  dsrg_s   0.1
-  maxiter  100
+  job_type       tensorsrg
+  srg_comm       fo
+  dsrg_s         0.1
+  maxiter        100
 }
 
 energy('scf')

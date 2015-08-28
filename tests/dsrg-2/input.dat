@@ -24,7 +24,7 @@ set {
 }
 
 set forte {
-  job_type  ct
+  job_type  sr-dsrg
   dsrg_s    1.0  
 }
 
