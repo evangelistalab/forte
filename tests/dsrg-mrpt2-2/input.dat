@@ -1,4 +1,6 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+
+import forte
 
 #refmcscf     =  -99.972055826365903 # cc-pVTZ
 #refdsrgpt2   = -100.200752137944022 # cc-pVTZ
@@ -24,23 +26,24 @@ set globals{
 }
 
 set mcscf{
-   docc                   [2,0,1,1]
-   socc                   [2,0,0,0]
+   docc                    [2,0,1,1]
+   socc                    [2,0,0,0]
    maxiter                 1000
    level_shift             2.0
 }
 
-set libadaptive{
-   frozen_docc            [1,0,0,0]
-   restricted_docc        [1,0,1,1]
-   active                 [2,0,0,0]
+set forte{
+   job_type                dsrg-mrpt2
+   frozen_docc             [1,0,0,0]
+   restricted_docc         [1,0,1,1]
+   active                  [2,0,0,0]
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
 }
 
 ref_current = energy('mcscf')
-energy('dsrg-mrpt2')
+energy('forte')
 
 compare_values(refmcscf,ref_current,10,"SCF energy")
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
