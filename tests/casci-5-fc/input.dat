@@ -1,7 +1,8 @@
 # HF, RHF canonical orbitals, CAS-CI(2,2)
 
+#! Generated using commit GITCOMMIT
 
-import libadaptive
+import forte
 
 refscf = -99.983408932712
 reflci = -99.9858586140777
@@ -19,16 +20,16 @@ set {
   r_convergence 10
 }
 
-set libadaptive {
+set forte {
   det_threshold   2.00
   den_threshold   2.00
+  job_type aci
   energy_type     full
   frozen_docc     [2,0,1,1]
   active          [2,0,0,0]
 }
 
 energy('mcscf')
-energy('libadaptive')
-
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
 compare_values(reflci, get_variable("LAMBDA-CI ENERGY"),10, "Lambda-CI energy") #TEST
