@@ -612,7 +612,7 @@ forte(Options &options)
         }
 
     }
-    if (options.get_str("JOB_TYPE") == "THREE_DSRG-MRPT2")
+    if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
     {
 
        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
