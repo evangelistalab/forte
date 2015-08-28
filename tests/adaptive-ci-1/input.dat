@@ -1,6 +1,7 @@
-#! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT 
+# Basic ACI calculation with energy threshold selection
 
-import libadaptive
+import forte
 
 refscf = -14.839846512738 #TEST
 refaci = -14.888681221669 #TEST
@@ -18,13 +19,13 @@ set {
   r_convergence 10
 }
 
-set mcscf {
+set scf {
   reference rhf
   docc = [2,0,0,0,0,1,0,0]
 }
 
-set libadaptive {
-  frozen_docc = [0,0,0,0,0,0,0,0]
+set forte {
+  job_type = aci
   SELECT_TYPE energy
   TAUP 0.001000
   TAUQ 0.00001000
@@ -32,8 +33,8 @@ set libadaptive {
   charge 0
 }
 
-energy('mcscf')
-energy('aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST

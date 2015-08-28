@@ -1,7 +1,8 @@
 #! This tests the Adaptive-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+# Tests aimed energy and relative energy criteria, with post-spin projection
 
-
-import libadaptive
+import forte
 
 refscf = -14.839846512738 #TEST
 refaci = -14.8829305594 #TEST
@@ -23,7 +24,8 @@ set {
 }
 
 
-set libadaptive {
+set forte {
+  job_type = ex-aci
   multiplicity 1
   SELECT_TYPE aimed_energy
   perturb_select false
@@ -38,7 +40,8 @@ set libadaptive {
   spin_projection 2
 }
 
-energy('ex-aci')
+energy('scf')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy") #TEST
 compare_values(refaci, get_variable("EX-ACI ENERGY"),9, "EX-ACI energy") #TEST
