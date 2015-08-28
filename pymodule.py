@@ -11,7 +11,7 @@ import p4util
 from p4xcpt import *
 
 plugdir = os.path.split(os.path.abspath(__file__))[0]
-sofile = "src/" + os.path.split(plugdir)[1] + '.so'
+sofile = plugdir + "/src/src.so"
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
