@@ -12,9 +12,9 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-LambdaCI::LambdaCI(Options &options,ExplorerIntegrals* ints)
+LambdaCI::LambdaCI(Options &options,ForteIntegrals* ints)
     : options_(options),ints_(ints),min_energy_(0.0),pt2_energy_correction_(0.0)
 {
     boost::timer t;

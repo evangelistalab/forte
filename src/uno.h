@@ -10,7 +10,7 @@
 #include "integrals.h"
 
 namespace psi{
-namespace libadaptive{
+namespace forte{
 
 class UNO
 {

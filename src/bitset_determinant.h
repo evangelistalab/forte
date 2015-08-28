@@ -32,7 +32,7 @@
 #include "integrals.h"
 #include "excitation_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * A class to store a Slater determinant using Boost's dynamic_bitset.
@@ -158,7 +158,7 @@ public:
     double spin2(const BitsetDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
-    static void set_ints(ExplorerIntegrals* ints) {
+    static void set_ints(ForteIntegrals* ints) {
         ints_ = ints;
     }
 private:
@@ -173,7 +173,7 @@ public:
 
     // Static data
     /// A pointer to the integral object
-    static ExplorerIntegrals* ints_;
+    static ForteIntegrals* ints_;
     static double SlaterSign(const bit_t& I,int n);
 };
 

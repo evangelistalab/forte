@@ -10,7 +10,7 @@ using namespace std;
 using namespace psi;
 using namespace ambit;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double TensorSRG::compute_ct_energy()
 {

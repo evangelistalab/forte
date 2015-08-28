@@ -35,7 +35,7 @@
 #include "string_determinant.h"
 #include "fast_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 
 /**
@@ -61,7 +61,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
 
     /// Destructor
     ~FastAdaptivePathIntegralCI();
@@ -81,7 +81,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of propagator used

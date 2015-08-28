@@ -34,7 +34,7 @@ typedef ambit::BlockedTensor BlockedTensor;
 //                   contribution to the non-normal ordered Hamiltonian
 // 5/26/2014 0.2.2 - Implements the SRG(2) approximation like in Tsukiyama
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 
 /**
@@ -252,7 +252,7 @@ public:
     // => Constructors <= //
 
     /// Class constructor
-    TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options& options, ExplorerIntegrals* ints);
+    TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options& options, ForteIntegrals* ints);
 
     /// Class destructor
     ~TensorSRG();

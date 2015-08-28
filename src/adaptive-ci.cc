@@ -23,7 +23,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 
 inline double clamp(double x, double a, double b)
@@ -54,7 +54,7 @@ inline double smootherstep(double edge0, double edge1, double x)
     return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
-AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints)
 {
     // Copy the wavefunction information

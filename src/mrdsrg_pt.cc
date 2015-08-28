@@ -6,7 +6,7 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double MRDSRG::compute_energy_pt2(){
     // print title

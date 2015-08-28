@@ -3,11 +3,11 @@
 #include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 using namespace ambit;
 
-MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(kCore)
 {
     // Copy the wavefunction information

@@ -8,12 +8,12 @@ using namespace psi;
 #include <psi4-dec.h>
 #include <libmints/matrix.h>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double SlaterSign(bool* I, int n);
 double SlaterSign(const std::vector<bool>& I, int n);
 
-ExplorerIntegrals* StringDeterminant::ints_ = 0;
+ForteIntegrals* StringDeterminant::ints_ = 0;
 double StringDeterminant::ahole_[20];
 double StringDeterminant::bhole_[20];
 double StringDeterminant::apart_[20];

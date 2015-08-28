@@ -30,7 +30,7 @@ set forte {
   perturb_select false
   pq_function average
   excited_algorithm root_select
-  ref_root 0
+  root 0
   TAUP 0.000100
   TAUQ 0.001000
   nroot 2

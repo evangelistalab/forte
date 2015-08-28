@@ -15,7 +15,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Find all the Slater determinants with an energy lower than determinant_threshold_

@@ -10,7 +10,7 @@
 
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 std::default_random_engine generator_;
 std::uniform_real_distribution<double> distribution_real_(0.0,1.0);
@@ -35,7 +35,7 @@ std::pair<size_t,size_t> generate_ind_random_pair(size_t range)
    bool FCIQMC::have_omp_ = false;
 #endif
 
-FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints)
+FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
     : Wavefunction(options,_default_psio_lib_), ints_(ints)
 {
     copy(wfn);
