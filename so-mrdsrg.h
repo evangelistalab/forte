@@ -98,9 +98,27 @@ protected:
     double taylor_threshold_;
     /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
     int taylor_order_;
+    /// Robust routine to compute (1 - exp(-s D * D) / D
+    double renormalized_denominator(double D);
+    /// Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
+    double Taylor_Exp(const double& Z, const int& n){
+        if(n > 0){
+            double value = Z, tmp = Z;
+            for(int i = 0; i < n - 1; ++i){
+                tmp *= -1.0 * pow(Z, 2.0) / (static_cast<double>(i) + 2.0);
+                value += tmp;
+            }
+            return value;
+        }
+        return 0.0;
+    }
 
     ambit::TensorType tensor_type_;
     std::shared_ptr<BlockedTensorFactory> BTF;
+
+    /// The energy of the reference wave function
+    double E0_;
+    double Hbar0;
 
     // => Tensors <= //
 
@@ -114,10 +132,18 @@ protected:
     ambit::BlockedTensor Lambda3;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
-    ambit::BlockedTensor RDelta1;
-    ambit::BlockedTensor RDelta2;
+    ambit::BlockedTensor RInvDelta1;
+    ambit::BlockedTensor RInvDelta2;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor T2;
+    ambit::BlockedTensor DT1;
+    ambit::BlockedTensor DT2;
+    ambit::BlockedTensor R1;
+    ambit::BlockedTensor R2;
+    ambit::BlockedTensor C1;
+    ambit::BlockedTensor C2;
+    ambit::BlockedTensor O1;
+    ambit::BlockedTensor O2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
     ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
@@ -131,6 +157,27 @@ protected:
     void cleanup();
     /// Print a summary of the options
     void print_summary();
+
+    // ==> Class functions <== //
+    /// Compute MP2 amplitudes
+    void mp2_guess();
+    /// Compute Hbar
+    double compute_hbar();
+    /// Compute the commutator H <- [C,T]
+    void H_eq_commutator_C_T(double factor,
+                             ambit::BlockedTensor& F,
+                             ambit::BlockedTensor& V,
+                             ambit::BlockedTensor& T1,
+                             ambit::BlockedTensor& T2,
+                             double& H0,
+                             ambit::BlockedTensor& H1,
+                             ambit::BlockedTensor& H2,
+                             int order);
+
+    /// T1 amplitude update
+    void update_T1();
+    /// T2 amplitude update
+    void update_T2();
 
 //    /// Renormalized denominator
 //    double renormalized_denominator(double D);
