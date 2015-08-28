@@ -1,5 +1,6 @@
-
-import libadaptive
+#! Generated using commit GITCOMMIT
+#! Running a DF-DSRG-MRPT2 without storing the DF integrals
+import forte
 
 refrhf       = -2.17907771115918
 refdsrgpt2   = -2.238711801896253
@@ -24,7 +25,7 @@ set globals{
    maxiter                 300
 }
 
-set libadaptive{
+set forte {
    restricted_docc         [0,0,0,0,0,0,0,0]
    active                  [1,0,0,1,0,1,1,0]
    root_sym                0
@@ -32,10 +33,11 @@ set libadaptive{
    dsrg_s                  0.5
    threepdc                mk
    int_type                diskdf
+   job_type                three-dsrg-mrpt2
 }
 
 scf = energy('scf')
-energy('three-dsrg-mrpt2')
+energy('forte')
 
 compare_values(refrhf,scf,10,"SCF energy")
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
