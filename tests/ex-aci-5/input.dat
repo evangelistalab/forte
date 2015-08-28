@@ -41,9 +41,10 @@ set forte {
 }
 
 energy('scf')
-energy('forte')
 
-compare_values(refscf, get_variable("SCF total energy"),9, "SCF energy")
+compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy")
+
+energy('forte')
 compare_values(refaci, get_variable("EX-ACI ENERGY"),7, "EX-ACI energy")
 compare_values(refacipt2, get_variable("EX-ACI+PT2 ENERGY"),7, "EX_ACI+PT2 energy")
 
