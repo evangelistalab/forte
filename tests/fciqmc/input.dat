@@ -32,7 +32,7 @@ set forte {
   spawn_type random               # type of spawn, can be random, all, ground and random
 }
 
-
+energy('scf')
 energy('forte')
 
 #compare_values(refscf, get_variable("SCF total energy"),7, "SCF energy") #TEST
