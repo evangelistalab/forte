@@ -36,8 +36,8 @@ set forte{
 #   semi_canonical         false
 }
 
-ref_current = energy('rhf')
-energy('forte')
+energy('rhf')
+compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
-compare_values(refrhf,ref_current,10,"SCF energy")
+energy('forte')
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

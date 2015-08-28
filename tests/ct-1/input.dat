@@ -1,4 +1,4 @@
-#! Generated using commit 1c01e17d08918b7779d6a9fe14ce7864e839e255
+#! Generated using commit GITCOMMIT
 
 import forte
 
@@ -13,15 +13,18 @@ Be
 set {
   basis sto-3g
   reference rhf
+  scf_type pk
   e_convergence 12
 }
 
-set libadaptive {
-  det_threshold 0.01
-  maxiter 100
+set forte{
+	det_threshold 0.01
+        maxiter 100
+	job_type tensorsrg
+	srg_mode ct
 }
 
-energy('ct')
-
+energy('scf')
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
 compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST

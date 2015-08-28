@@ -1,9 +1,9 @@
 #! L-CTSD/STO-3G energy for a LiF molecule.
 #! This tests CT frozen core energy.
 #! The reference value is from a spin-integrated code.
+#! Generated using commit GITCOMMIT
 
-
-import libadaptive
+import forte
 
 refscf = -105.359494997675554 #TEST
 refct  = -105.418209109638468 #TEST
@@ -23,7 +23,12 @@ set {
   df_scf_guess false
 }
 
-energy('ct')
+set forte{
+  job_type tensorsrg
+  srg_mode ct
+}
 
+energy('scf')
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
 compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST
