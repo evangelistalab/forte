@@ -1,5 +1,10 @@
 ![forte](lib/forte_logo.png)
+#Forte
 =============
+
+#####Code Authors: Evangelistalab
+#####Web: evangelistalab.org
+
 Adaptive quantum chemistry methods
 
 Installation directions for Forte:
