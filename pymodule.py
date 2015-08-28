@@ -25,7 +25,7 @@ def run_forte(name, **kwargs):
 
     # Your plugin's psi4 run sequence goes here
     returnvalue = psi4.plugin(sofile)
-    psi4.set_variable('CURRENT ENERGY', returnvalue)
+#    psi4.set_variable('CURRENT ENERGY', returnvalue)
     return returnvalue
 
 # Integration with driver routines
