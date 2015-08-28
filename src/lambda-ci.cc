@@ -217,7 +217,7 @@ void LambdaCI::read_info(Options& options)
     outfile->Printf("\n  %s",string(31 + (nirrep_ + 1)* 6,'-').c_str());
     for (auto& str_dim : mo_space_info){
         outfile->Printf("\n  %-30s",str_dim.first.c_str());
-        for (int h = 0, p = 0; h < nirrep_; ++h){
+        for (int h = 0; h < nirrep_; ++h){
             outfile->Printf(" %5d",str_dim.second[h]);
         }
         outfile->Printf(" %6d",str_dim.second.sum());
@@ -385,7 +385,6 @@ void LambdaCI::screen_mos()
         int ha = sorted_ea[p].get<1>();
         int hb = sorted_eb[p].get<1>();
         int pa = sorted_ea[p].get<2>();
-        int pb = sorted_eb[p].get<2>();
         mo_symmetry_qt_.push_back(ha);
 
 //        double ea = std::get<0>(sorted_ea[p]);
