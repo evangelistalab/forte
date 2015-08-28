@@ -381,7 +381,8 @@ double FCIQMC::compute_energy()
 ////        print_shift_info(shifts);
 //    }
     timer_off("FCIQMC:Energy");
-    return 0.0;
+    Process::environment.globals["CURRENT ENERGY"] = Evar_;
+    return Evar_;
 }
 
 void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
@@ -1909,4 +1910,4 @@ void FCIQMC::compute_err_shift(std::vector<double> shifts){
 //    outfile->Printf("\nAverage shift=%.12lf, shift+Ehf=%.12lf", sum, sum+Ehf_+nuclear_repulsion_energy_);
 }
 
-}} // EndNamespaces
+}} // EndNamepaces

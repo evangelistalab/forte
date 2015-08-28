@@ -21,7 +21,8 @@ set {
   e_convergence 12
 }
 
-set libadaptive {
+set forte {
+  job_type fci
   print 1
   job_type fci
   active [4,0,1,1]
@@ -30,9 +31,6 @@ set libadaptive {
   ms 0
 }
 
-set forte {
-  job_type fci
-}
 
 energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),11, "SCF energy") #TEST
