@@ -10,7 +10,7 @@ typedef std::vector<d1> d2;
 typedef std::vector<d2> d3;
 typedef std::vector<d3> d4;
 
-namespace psi { namespace libadaptive {
+namespace psi { namespace forte {
 
 class DSRG_WICK
 {

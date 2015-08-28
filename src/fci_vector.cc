@@ -6,7 +6,7 @@
 #include "helpers.h"
 #include "fci_vector.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 SharedMatrix FCIWfn::C1;
 SharedMatrix FCIWfn::Y1;
@@ -21,7 +21,7 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ExplorerIntegrals* ints)
+FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints)
 {
     ncmo = lists->ncmo();
     std::vector<size_t> cmo_to_mo = lists->cmo_to_mo();

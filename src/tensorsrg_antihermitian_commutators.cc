@@ -7,7 +7,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 double time_comm_A1_B1_C0 = 0;
 double time_comm_A1_B1_C1 = 0;

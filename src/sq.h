@@ -27,7 +27,7 @@
 #include <string>
 #include <map>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * @brief The SqOperator class

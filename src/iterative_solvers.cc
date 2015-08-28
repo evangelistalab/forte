@@ -4,7 +4,7 @@
 
 #include "iterative_solvers.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size,size_t nroot)
     : size_(size), nroot_(nroot)

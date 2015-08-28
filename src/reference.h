@@ -28,7 +28,7 @@
 #include <ambit/tensor.h>
 
 namespace psi{
-namespace libadaptive{
+namespace forte{
 
 class Reference // : public Wavefunction
 {

@@ -15,7 +15,7 @@
 
 using namespace boost;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Returns a vector of tuples containing the sign, I, and J connected by a^{+}_p a_q

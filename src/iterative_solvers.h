@@ -27,7 +27,7 @@
 #include <libmints/vector.h>
 #include <libmints/matrix.h>
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * @brief The DavidsonLiuSolver class

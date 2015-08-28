@@ -11,9 +11,9 @@
 
 using namespace std;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
-FCI_MO::FCI_MO(Options &options, ExplorerIntegrals *ints) : integral_(ints)
+FCI_MO::FCI_MO(Options &options, ForteIntegrals *ints) : integral_(ints)
 {
 
     // Basic Preparation: Form Determinants

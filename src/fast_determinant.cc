@@ -5,7 +5,7 @@
 using namespace std;
 using namespace psi;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 inline bool test_bit01(bit_t a, bit_t i)
 // Return whether bit[i] is set.
@@ -83,7 +83,7 @@ inline std::vector<int> get_set(bit_t x,bit_t range)
     return r;
 }
 
-ExplorerIntegrals* FastDeterminant::ints_ = 0;
+ForteIntegrals* FastDeterminant::ints_ = 0;
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]

@@ -33,7 +33,7 @@
 
 namespace psi{
 
-namespace libadaptive{
+namespace forte{
 
 /**
  * @brief The MethodBase class
@@ -47,7 +47,7 @@ protected:
     // => Class data <= //
 
     /// The molecular integrals required by MethodBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// List of alpha occupied MOs
     std::vector<size_t> a_occ_mos;
@@ -100,7 +100,7 @@ public:
 
     // => Constructors <= //
 
-    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
     ~MethodBase();
 
     /// The energy of the reference

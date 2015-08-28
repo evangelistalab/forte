@@ -13,7 +13,7 @@
 
 using namespace boost;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  */

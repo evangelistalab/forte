@@ -4,7 +4,7 @@
 
 #include "fci_vector.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 /**
  * Apply the Hamiltonian to the wave function

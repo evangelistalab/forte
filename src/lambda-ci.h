@@ -33,7 +33,7 @@
 #include "string_determinant.h"
 #include "bitset_determinant.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 typedef std::vector<std::pair<double,std::vector<bool> > > half_string_list;
 // Store the information for a list of strings in the format:
@@ -49,7 +49,7 @@ typedef boost::tuple<double,int,int,int,int> det_info;
 class LambdaCI
 {
 public:
-    LambdaCI(Options &options, ExplorerIntegrals* ints);
+    LambdaCI(Options &options, ForteIntegrals* ints);
     ~LambdaCI();
 
     int ncmo() {return ncmo_;}
@@ -59,7 +59,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
     /// The number of irriducible representations
     int nirrep_;
     /// The wave function symmetry
