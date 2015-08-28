@@ -34,7 +34,7 @@
 
 namespace psi{
 
-namespace libadaptive{
+namespace forte{
 
 /**
  * @brief The MethodBase class
@@ -51,7 +51,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ExplorerIntegrals* ints_;
+    ForteIntegrals* ints_;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
@@ -134,7 +134,7 @@ public:
 
     // => Constructors <= //
 
-    AmbitTests(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ExplorerIntegrals* ints);
+    AmbitTests(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
 
     ~AmbitTests();
 

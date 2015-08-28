@@ -23,13 +23,13 @@ typedef vector<d2> d3;
 typedef vector<d3> d4;
 typedef vector<d4> d5;
 typedef vector<d5> d6;
-typedef vector<psi::libadaptive::StringDeterminant> vecdet;
+typedef vector<psi::forte::StringDeterminant> vecdet;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
+    FCI_MO(Options &options, ForteIntegrals *ints);
     ~FCI_MO();
 
     Reference reference();
@@ -42,7 +42,7 @@ protected:
     void cleanup();
 
     // Integrals
-    libadaptive::ExplorerIntegrals *integral_;
+    ForteIntegrals *integral_;
     std::string int_type_;
 
     // Reference Type
@@ -159,9 +159,9 @@ protected:
     void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     // N-Particle Operator
-    double OneOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
-    double TwoOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
-    double ThreeOP(const libadaptive::StringDeterminant &J, libadaptive::StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
+    double OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
+    double TwoOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
+    double ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
     // Fock Matrix
     d2 Fa_;
@@ -220,7 +220,7 @@ protected:
     // Print Determinants
     void print_det(const vecdet &dets){
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for(libadaptive::StringDeterminant x: dets){
+        for(StringDeterminant x: dets){
             outfile->Printf("  ");
             x.print();
         }

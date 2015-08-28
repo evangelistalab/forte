@@ -19,12 +19,12 @@ typedef vector<d3> d4;
 typedef vector<d4> d5;
 typedef vector<d5> d6;
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 class MCSRGPT2_MO : public FCI_MO
 {
 public:
-    MCSRGPT2_MO(Options &options, libadaptive::ExplorerIntegrals *ints);
+    MCSRGPT2_MO(Options &options, ForteIntegrals *ints);
     ~MCSRGPT2_MO();
 
 protected:

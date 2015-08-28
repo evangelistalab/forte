@@ -10,7 +10,7 @@
 #include "helpers.h"
 #include "mrdsrg.h"
 
-namespace psi{ namespace libadaptive{
+namespace psi{ namespace forte{
 
 void MRDSRG::compute_hbar(){
     if (print_ > 2){
