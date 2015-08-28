@@ -12,7 +12,7 @@ N 1 3.0
 }
 
 set {
-  basis          cc-pVDZ
+  basis          cc-pvdz
   reference      rhf
   e_convergence  12
 }
@@ -24,7 +24,8 @@ set forte {
   maxiter  100
 }
 
-energy('forte')
+energy('scf')
+compare_values(refscf,get_variable("CURRENT ENERGY"),10,"SCF energy") #TEST
 
-compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
-compare_values(refdsrg, get_variable("CURRENT ENERGY"),10, "DSRGSD energy") #TEST
+energy('forte')
+compare_values(refdsrg,get_variable("CURRENT ENERGY"),10,"DSRGSD energy") #TEST

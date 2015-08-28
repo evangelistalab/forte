@@ -36,7 +36,7 @@ set forte{
    cholesky_tolerance      1e-14
 }
 
-energy('rhf')
+energy('scf')
 compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte')
