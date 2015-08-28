@@ -896,10 +896,10 @@ double EX_ACI::average_q_values(int nroot, pVector<double,double> C1, pVector<do
 double EX_ACI::root_select(int nroot,pVector<double,double> C1, pVector<double,double> E2)
 {
     double select_value;
-    ref_root_ = options_.get_int("REF_ROOT");
+    ref_root_ = options_.get_int("ROOT");
 
     if(ref_root_ +1 > nroot_){
-        throw PSIEXCEPTION("Your selection is not a valid reference option. Check REF_ROOT in options.");
+        throw PSIEXCEPTION("Your selection is not a valid reference option. Check ROOT in options.");
     }
 
     if(nroot == 1){
