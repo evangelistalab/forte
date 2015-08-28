@@ -347,14 +347,14 @@ void MRDSRG_SO::guess_t1()
     std::string str = "Computing T1 amplitudes     ...";
     outfile->Printf("\n    %-35s", str.c_str());
 
-    BlockedTensor temp = BTF->build(tensor_type_,"temp",{"aa"});
-    temp["xu"] = Gamma1["xu"];
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value){
-        value *= Fd[i[0]] - Fd[i[1]];
-    });
+//    BlockedTensor temp = BTF->build(tensor_type_,"temp",{"aa"});
+//    temp["xu"] = Gamma1["xu"];
+//    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value){
+//        value *= Fd[i[0]] - Fd[i[1]];
+//    });
 
     T1["ia"]  = F["ia"];
-    T1["ia"] += temp["xu"] * T2["iuax"];
+//    T1["ia"] += temp["xu"] * T2["iuax"];
     T1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value){
         value *= renormalized_denominator(Fd[i[0]] - Fd[i[1]]);
     });
@@ -579,6 +579,11 @@ void MRDSRG_SO::compute_hbar(){
         H1_T2_C2(O1,T2,factor,C2);
         H2_T1_C2(O2,T1,factor,C2);
         H2_T2_C2(O2,T2,factor,C2);
+
+//        outfile->Printf("\n   H0  = %20.12f", C0);
+//        outfile->Printf("\n  |H1| = %20.12f", C1.norm(1));
+//        outfile->Printf("\n  |H2| = %20.12f", C2.norm(1));
+//        outfile->Printf("\n  --------------------------------");
 
         // [H, A] = [H, T] + [H, T]^dagger
         C0 *= 2.0;

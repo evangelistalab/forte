@@ -424,6 +424,7 @@ double MRDSRG::compute_energy_ldsrg2(){
             if (cycle > max_diis_vectors){
                 if (cycle % max_diis_vectors == 2){
                     outfile->Printf(" -> DIIS");
+                    outfile->Flush();
                     diis_manager->extrapolate(51,
                             &(T1.block("cv").data()[0]),
                             &(T1.block("CV").data()[0]),
