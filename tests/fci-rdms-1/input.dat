@@ -1,4 +1,4 @@
-#! Generated using commit a65ae7a89c66a04f62cab1fadf05bfd7d88f0c69
+#! Generated using commit GITCOMMIT
 
 import forte
 
@@ -15,6 +15,8 @@ set {
   basis sto-3g
   reference rhf
   test_rdms true
+  scf_type pk
+  e_convergence 12
 }
 
 set forte {
