@@ -1,8 +1,8 @@
 #! L-CTSD DZ energy for a H4 molecule.  This tests CT without symmetry.
 #! The reference value is from a spin-integrated code.
+#! Generated using commit GITCOMMIT
 
-
-import libadaptive
+import forte
 
 refscf = -2.00742527761572 #TEST
 refct  = -2.069601874659799 #TEST
@@ -16,19 +16,20 @@ H -0.1  0.5 1.0
 }
 
 set {
-  reference rhf
+  reference     rhf
   e_convergence 12
-  freeze_core false
-  scf_type pk
-  df_scf_guess false
+  freeze_core   false
+  scf_type      pk
+  df_scf_guess  false
 }
 
-set libadaptive {
-  dsrg_s 1.0  
+set forte {
+  job_type  ct
+  dsrg_s    1.0  
 }
 
 set basis DZ
-energy('ct')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
 compare_values(refct, get_variable("CURRENT ENERGY"),10, "SR-CTSD energy") #TEST

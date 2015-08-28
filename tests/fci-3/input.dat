@@ -32,6 +32,7 @@ set forte {
   job_type fci
 }
 
+energy('scf')
 energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),11, "SCF energy") #TEST

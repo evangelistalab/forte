@@ -1,4 +1,6 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+
+import forte
 
 refmcscf     =  -99.939316381643451 # cc-pVDZ
 refdsrgpt2   = -100.100858039676922 # cc-pVDZ
@@ -13,33 +15,34 @@ molecule HF{
 }
 
 set globals{
-   basis                   cc-pvdz
-   reference               twocon
-   scf_type                pk
-   d_convergence           12
-   e_convergence           15
+   basis                  cc-pvdz
+   reference              twocon
+   scf_type               pk
+   d_convergence          12
+   e_convergence          15
 }
 
 set mcscf{
    docc                   [2,0,1,1]
    socc                   [2,0,0,0]
-   maxiter                 1000
-   level_shift             2.0
+   maxiter                1000
+   level_shift            2.0
 }
 
-set libadaptive{
+set forte{
+   job_type               three-dsrg-mrpt2
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   int_type                cholesky
-   cholesky_tolerance      1e-14
+   root_sym               0
+   nroot                  1
+   dsrg_s                 1.0
+   int_type               cholesky
+   cholesky_tolerance     1e-14
 }
 
 scf = energy('mcscf')
-energy('three-dsrg-mrpt2')
+energy('forte')
 
 compare_values(refmcscf, scf,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
