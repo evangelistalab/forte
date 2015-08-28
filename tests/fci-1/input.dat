@@ -15,13 +15,16 @@ units bohr
 
 set {
   basis sto-3g
+  scf_type pk
+  e_convergence 12
 }
 
 set forte {
   job_type fci
 }
 
-energy('forte')
+energy('scf')
+compare_values(refscf, get_variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
-compare_values(refscf, get_variable("SCF total energy"),11, "SCF energy") #TEST
+energy('forte')
 compare_values(reffci, get_variable("CURRENT ENERGY"),11, "FCI energy") #TEST
