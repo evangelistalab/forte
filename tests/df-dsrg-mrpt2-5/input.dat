@@ -1,4 +1,8 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+#! Perform a DF-DSRG-MRPT2 on benzyne 
+
+import forte
+
 
 memory 500 mb
 
@@ -37,7 +41,7 @@ set mcscf{
 #   level_shift             1.0
 }
 
-set libadaptive{
+set forte {
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
@@ -46,10 +50,11 @@ set libadaptive{
 #   dsrgpt                  false
    dsrg_s                  0.5
    int_type                DF
+   job_type                three-dsrg-mrpt2
 }
 
 scf = energy('mcscf')
-energy('three-dsrg-mrpt2')
+energy('forte')
 
 compare_values(refmcscf, scf,10,"SCF Energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

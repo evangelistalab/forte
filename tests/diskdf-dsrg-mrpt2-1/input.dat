@@ -1,5 +1,6 @@
-
-import libadaptive
+#! Generated using commit GITCOMMIT
+#! Perform a calculation on BeH2 without storing DF integrals
+import forte
 
 refmcscf    = -15.569761360884
 refdsrgpt2 = -15.618567168945663
@@ -21,13 +22,14 @@ set globals{
    DF_BASIS_MP2         cc-pvdz-ri
 }
 
-set mcscf{
+set mcscf {
    docc         [2,0,0,0]
    socc         [1,0,0,1]
    maxiter       1000
 }
 
-set libadaptive{
+set forte {
+
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    root_sym              0
@@ -35,6 +37,7 @@ set libadaptive{
    dsrg_s                0.5
    dsrgpt                true
    int_type              DISKDF
+   job_type              three-dsrg-mrpt2
 }
 
 basis {
@@ -71,7 +74,7 @@ S   1   1.00
 }
 
 ref = energy('mcscf')
-energy('three-dsrg-mrpt2')
+energy('forte')
 
 compare_values(refmcscf,ref,10,"SCF energy")
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")

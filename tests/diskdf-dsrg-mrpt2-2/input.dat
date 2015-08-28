@@ -1,4 +1,7 @@
-import libadaptive
+#! Generated using commit GITCOMMIT
+#! Perform a computation of HF without storing DISKDF
+
+import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
 refdsrgpt2    = -100.102359671339215
@@ -28,7 +31,7 @@ set mcscf{
    level_shift             2.0
 }
 
-set libadaptive{
+set forte {
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
@@ -36,10 +39,11 @@ set libadaptive{
    nroot                   1
    dsrg_s                  1.0
    int_type                diskdf
+   job_type                three-dsrg-mrpt2
 }
 
 ref = energy('mcscf')
-energy('three-dsrg-mrpt2')
+energy('forte')
 
 compare_values(refmcscf, ref,10,"SCF energy")
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
