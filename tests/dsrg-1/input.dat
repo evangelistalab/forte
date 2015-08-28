@@ -1,5 +1,6 @@
+#! Generated using commit GITCOMMIT
 
-import libadaptive
+import forte
 
 refscf  = -108.231992299023318 #TEST
 refdsrg = -108.433328203370323 # -108.433785371452998 #TEST
@@ -11,18 +12,19 @@ N 1 3.0
 }
 
 set {
-  basis cc-pVDZ
-  reference rhf
-  e_convergence 12
+  basis          cc-pVDZ
+  reference      rhf
+  e_convergence  12
 }
 
-set libadaptive {
+set forte {
+  job_type ct
   srg_comm fo
-  dsrg_s 0.1
-  maxiter 100
+  dsrg_s   0.1
+  maxiter  100
 }
 
-energy('ct')
+energy('forte')
 
 compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
 compare_values(refdsrg, get_variable("CURRENT ENERGY"),10, "DSRGSD energy") #TEST
