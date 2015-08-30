@@ -548,15 +548,12 @@ forte(Options &options)
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         {
-            outfile->Printf("\n  !!!frozen core energy = %22.15f", ints_->frozen_core_energy());
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
             std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
             mrdsrg->compute_energy();
         }
         if(options.get_str("RELAX_REF") == "ONCE"){
-            outfile->Printf("\n  !!!frozen core energy = %22.15f", ints_->frozen_core_energy());
-//            FCI_MO fci_mo(options,ints_);
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
             fci->compute_energy();
         }

@@ -170,9 +170,9 @@ void ForteIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 void ForteIntegrals::set_oei(double** ints,bool alpha)
 {
     double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    for (int p = 0; p < nmo_; ++p){
-        for (int q = 0; q < nmo_; ++q){
-            p_oei[p * nmo_ + q] = ints[p][q];
+    for (int p = 0; p < aptei_idx_; ++p){
+        for (int q = 0; q < aptei_idx_; ++q){
+            p_oei[p * aptei_idx_ + q] = ints[p][q];
         }
     }
 }
@@ -180,7 +180,7 @@ void ForteIntegrals::set_oei(double** ints,bool alpha)
 void ForteIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
 {
     double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
-    p_oei[p * nmo_ + q] = value;
+    p_oei[p * aptei_idx_ + q] = value;
 }
 
 void ForteIntegrals::transform_one_electron_integrals()
