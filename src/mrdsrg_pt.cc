@@ -89,6 +89,7 @@ double MRDSRG::compute_energy_pt2(){
         outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
     }
 
+    Hbar0 = Ecorr;
     return Ecorr;
 }
 
@@ -222,7 +223,9 @@ double MRDSRG::compute_energy_pt3(){
         outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
     }
 
-    return Ecorr + Ept2;
+    Ecorr += Ept2;
+    Hbar0 = Ecorr;
+    return Ecorr;
 }
 
 void MRDSRG::check_semicanonical(){
