@@ -555,7 +555,8 @@ forte(Options &options)
         }
         if(options.get_str("RELAX_REF") == "ONCE"){
             boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-            fci->compute_energy();
+            double final = fci->compute_energy();
+            outfile->Printf("\n\n    %-30s = %22.15f", "MRDSGR Total Energy (relaxed)", final);
         }
 
     }
