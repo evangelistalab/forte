@@ -597,12 +597,12 @@ forte(Options &options)
             title += indent + str(boost::format("%5c  %=31s  %=31s\n")
                                   % ' ' % "Fixed Ref. (a.u.)" % "Relaxed Ref. (a.u.)");
             title += indent + std::string (7, ' ') + std::string (31, '-') + "  " + std::string (31, '-') + "\n";
-            title += indent + str(boost::format("%5c  %=20s %=10s  %=20s %=10s\n")
+            title += indent + str(boost::format("%5s  %=20s %=10s  %=20s %=10s\n")
                                   % "Iter." % "Total Energy" % "Delta" % "Total Energy" % "Delta");
             title += indent + dash;
             outfile->Printf("\n%s", title.c_str());
             for(int n = 0; n != cycle; ++n){
-                outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", cycle,
+                outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", n,
                                 Edsrg_vec[n], Edelta_dsrg_vec[n], Erelax_vec[n], Edelta_relax_vec[n]);
             }
             outfile->Printf("\n    %s", dash.c_str());
