@@ -274,7 +274,7 @@ void MRDSRG::transfer_integrals(){
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref + Hbar0 - molecule_->nuclear_repulsion_energy()
-            - ints_->scalar() - ints_->frozen_core_energy();
+            - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;
@@ -302,7 +302,7 @@ void MRDSRG::transfer_integrals(){
         if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
     });
 
-    O1 = BTF->build(tensor_type_,"O1",spin_cases({"gg"}));
+    O1.zero();
     O1["pq"] += Hbar2["puqv"] * Gamma1["vu"];
     O1["pq"] += Hbar2["pUqV"] * Gamma1["VU"];
     O1["PQ"] += Hbar2["uPvQ"] * Gamma1["vu"];
