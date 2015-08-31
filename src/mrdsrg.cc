@@ -103,10 +103,7 @@ void MRDSRG::startup()
     // prepare two-electron integrals
     V = BTF->build(tensor_type_,"V",spin_cases({"gggg"}));
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-            value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
-//            outfile->Printf("\n  [%zu][%zu][%zu][%zu] = %22.15f",i[0],i[1],i[2],i[3],value);
-        }
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
         if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin))  value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
         if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin))  value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
@@ -261,7 +258,7 @@ double MRDSRG::compute_energy(){
     }}
 
     // transfer integrals if relaxes ref.
-    if(options_.get_str("RELAX_REF") == "ONCE"){
+    if(options_.get_str("RELAX_REF") != "NONE"){
         transfer_integrals();
     }
 
@@ -276,7 +273,8 @@ void MRDSRG::transfer_integrals(){
     Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    double scalar0 = Eref + Hbar0 - molecule_->nuclear_repulsion_energy();
+    double scalar0 = Eref + Hbar0 - molecule_->nuclear_repulsion_energy()
+            - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;
@@ -304,7 +302,7 @@ void MRDSRG::transfer_integrals(){
         if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
     });
 
-    O1 = BTF->build(tensor_type_,"O1",spin_cases({"gg"}));
+    O1.zero();
     O1["pq"] += Hbar2["puqv"] * Gamma1["vu"];
     O1["pq"] += Hbar2["pUqV"] * Gamma1["VU"];
     O1["PQ"] += Hbar2["uPvQ"] * Gamma1["vu"];
@@ -354,7 +352,6 @@ void MRDSRG::transfer_integrals(){
     Hbar2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
             ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
-//            outfile->Printf("\n  [%zu][%zu][%zu][%zu] = %22.15f",i[0],i[1],i[2],i[3],value);
         }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
             ints_->set_tei(i[0],i[1],i[2],i[3],value,true,false);
         }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
@@ -364,11 +361,57 @@ void MRDSRG::transfer_integrals(){
     outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
     // print scalar
-    outfile->Printf("\n\n  ==> Scalar of the Electronic Hamiltonian (wrt True Vacuum) <==\n");
+    double scalar_include_fc = scalar + ints_->frozen_core_energy();
+    outfile->Printf("\n\n  ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==\n");
     outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
     outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
-    outfile->Printf("\n    %-30s = %22.15f", "Total", scalar);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core", scalar);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core", scalar_include_fc);
+
+    // test if de-normal-ordering is correct
+    outfile->Printf("\n\n  ==> Test De-Normal-Ordered Hamiltonian <==\n");
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
+
+    double E1 = 0.0;
+    O1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) E1 += value;
+    });
+    O1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) E1 += value;
+    });
+    E1 += O1["uv"] * Gamma1["vu"];
+    E1 += O1["UV"] * Gamma1["VU"];
+
+    double E2 = 0.0;
+    Hbar2.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) E2 += 0.5 * value;
+    });
+    Hbar2.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) E2 += value;
+    });
+    Hbar2.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) E2 += 0.5 * value;
+    });
+
+    E2 += Hbar2["munv"] * temp["nm"] * Gamma1["vu"];
+    E2 += Hbar2["uMvN"] * temp["NM"] * Gamma1["vu"];
+    E2 += Hbar2["mUnV"] * temp["nm"] * Gamma1["VU"];
+    E2 += Hbar2["MUNV"] * temp["NM"] * Gamma1["VU"];
+
+    E2 += 0.5 * Gamma1["vu"] * Hbar2["uxvy"] * Gamma1["yx"];
+    E2 += 0.5 * Gamma1["VU"] * Hbar2["UXVY"] * Gamma1["YX"];
+    E2 += Gamma1["vu"] * Hbar2["uXvY"] * Gamma1["YX"];
+
+    E2 += 0.25 * Hbar2["uvxy"] * Lambda2["xyuv"];
+    E2 += 0.25 * Hbar2["UVXY"] * Lambda2["XYUV"];
+    E2 += Hbar2["uVxY"] * Lambda2["xYuV"];
+
+    Etest += E1 + E2;
+    outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", E1);
+    outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", E2);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref + Hbar0);
 
     ints_->update_integrals(false);
 }
