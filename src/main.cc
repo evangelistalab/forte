@@ -1,6 +1,8 @@
 #include <cmath>
 #include <memory>
 
+#include <boost/format.hpp>
+
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -11,10 +13,9 @@
 #include <libtrans/integraltransform.h>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
-#include "multidimensional_arrays.h"
 
 #include "helpers.h"
-
+#include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
 #include "ex-aci.h"
@@ -547,18 +548,81 @@ forte(Options &options)
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        {
-            FCI_MO fci_mo(options,ints_);
-            Reference reference = fci_mo.reference();
-            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
-            mrdsrg->compute_energy();
-        }
-        if(options.get_str("RELAX_REF") == "ONCE"){
-            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-            double final = fci->compute_energy();
-            outfile->Printf("\n\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", final);
-        }
+        FCI_MO fci_mo(options,ints_);
+        Reference reference = fci_mo.reference();
 
+        double Edsrg = 0.0, Erelax = 0.0;
+        if(options.get_str("RELAX_REF") == "ITERATE"){
+            int cycle = 0, maxiter = options.get_int("MAXITER");
+            double e_conv = options.get_double("E_CONVERGENCE");
+            std::vector<double> Edsrg_vec, Erelax_vec;
+            std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
+            bool converged = false;
+
+            do{
+                double Edelta_dsrg = 0.0, Edelta_relax = 0.0;
+                {
+                    std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+                    double Etemp = Edsrg;
+                    Edsrg = mrdsrg->compute_energy();
+                    Edsrg_vec.push_back(Edsrg);
+                    Edelta_dsrg = Edsrg - Etemp;
+                    Edelta_dsrg_vec.push_back(Edelta_dsrg);
+                }
+                {
+                    boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                    double Etemp = Erelax;
+                    Erelax = fci->compute_energy();
+                    Erelax_vec.push_back(Erelax);
+                    Edelta_relax = Erelax - Etemp;
+                    Edelta_relax_vec.push_back(Edelta_relax);
+                    reference = fci->reference();
+                }
+
+                if(fabs(Edelta_dsrg) < e_conv && fabs(Edelta_relax) < e_conv){
+                    converged = true;
+                }
+                if(cycle > maxiter){
+                    outfile->Printf("\n\n    The computation does not converge in %d iterations!\tQuitting.\n", maxiter);
+                    converged = true;
+                    outfile->Flush();
+                }
+                ++cycle;
+            } while(!converged);
+
+            outfile->Printf("\n\n  ==> MRDSRG Energy Summary <==\n");
+            std::string indent(4, ' ');
+            std::string dash(71, '-');
+            std::string title;
+            title += indent + str(boost::format("%5c  %=31s  %=31s\n")
+                                  % ' ' % "Fixed Ref. (a.u.)" % "Relaxed Ref. (a.u.)");
+            title += indent + std::string (7, ' ') + std::string (31, '-') + "  " + std::string (31, '-') + "\n";
+            title += indent + str(boost::format("%5c  %=20s %=10s  %=20s %=10s\n")
+                                  % "Iter." % "Total Energy" % "Delta" % "Total Energy" % "Delta");
+            title += indent + dash;
+            outfile->Printf("\n%s", title.c_str());
+            for(int n = 0; n != cycle; ++n){
+                outfile->Printf("\n    %5d  %20.12f %10.3e  %20.12f %10.3e", cycle,
+                                Edsrg_vec[n], Edelta_dsrg_vec[n], Erelax_vec[n], Edelta_relax_vec[n]);
+            }
+            outfile->Printf("\n    %s", dash.c_str());
+            outfile->Printf("\n    %-30s = %23.15f", "MRDSRG Total Energy", Edsrg);
+            outfile->Printf("\n    %-30s = %23.15f", "MRDSRG Total Energy (relaxed)", Erelax);
+            outfile->Printf("\n");
+        }else{
+            {
+                std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+                Edsrg = mrdsrg->compute_energy();
+            }
+            if(options.get_str("RELAX_REF") == "ONCE"){
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                Erelax = fci->compute_energy();
+                outfile->Printf("\n\n  ==> MRDSRG Energy Summary <==\n");
+                outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy", Edsrg);
+                outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
+                outfile->Printf("\n");
+            }
+        }
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(options,ints_);

@@ -39,23 +39,23 @@ double MRDSRG::compute_energy_pt2(){
     check_semicanonical();
 
     // compute H0th contribution to H1 and H2
-    BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"gg"}));
-    BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"gggg"}));
-    H1_T1_C1(H0th,T1,0.5,temp1);
-    H1_T2_C1(H0th,T2,0.5,temp1);
-    H1_T2_C2(H0th,T2,0.5,temp2);
+    O1 = BTF->build(tensor_type_,"temp1",spin_cases({"gg"}));
+    O2 = BTF->build(tensor_type_,"temp2",spin_cases({"gggg"}));
+    H1_T1_C1(H0th,T1,0.5,O1);
+    H1_T2_C1(H0th,T2,0.5,O1);
+    H1_T2_C2(H0th,T2,0.5,O2);
 
     // [H, A] = [H, T] + [H, T]^dagger
-    Hbar1["pq"] += temp1["pq"];
-    Hbar1["pq"] += temp1["qp"];
-    Hbar1["PQ"] += temp1["PQ"];
-    Hbar1["PQ"] += temp1["QP"];
-    Hbar2["pqrs"] += temp2["pqrs"];
-    Hbar2["pqrs"] += temp2["rspq"];
-    Hbar2["pQrS"] += temp2["pQrS"];
-    Hbar2["pQrS"] += temp2["rSpQ"];
-    Hbar2["PQRS"] += temp2["PQRS"];
-    Hbar2["PQRS"] += temp2["RSPQ"];
+    Hbar1["pq"] += O1["pq"];
+    Hbar1["pq"] += O1["qp"];
+    Hbar1["PQ"] += O1["PQ"];
+    Hbar1["PQ"] += O1["QP"];
+    Hbar2["pqrs"] += O2["pqrs"];
+    Hbar2["pqrs"] += O2["rspq"];
+    Hbar2["pQrS"] += O2["pQrS"];
+    Hbar2["pQrS"] += O2["rSpQ"];
+    Hbar2["PQRS"] += O2["PQRS"];
+    Hbar2["PQRS"] += O2["RSPQ"];
 
     // compute PT2 energy
     std::vector<std::pair<std::string,double>> energy;
@@ -87,6 +87,32 @@ double MRDSRG::compute_energy_pt2(){
     outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
     for (auto& str_dim : energy){
         outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
+    }
+
+    // reference relaxation
+    if(options_.get_str("RELAX_REF") != "NONE"){
+        O1.zero();
+        O2.zero();
+
+        H1_T1_C1(Hbar1,T1,1.0,O1);
+        H1_T2_C1(Hbar1,T2,1.0,O1);
+        H2_T1_C1(Hbar2,T1,1.0,O1);
+        H2_T2_C1(Hbar2,T2,1.0,O1);
+
+        H1_T2_C2(Hbar1,T2,1.0,O2);
+        H2_T1_C2(Hbar2,T1,1.0,O2);
+        H2_T2_C2(Hbar2,T2,1.0,O2);
+
+        Hbar1["pq"] += O1["pq"];
+        Hbar1["pq"] += O1["qp"];
+        Hbar1["PQ"] += O1["PQ"];
+        Hbar1["PQ"] += O1["QP"];
+        Hbar2["pqrs"] += O2["pqrs"];
+        Hbar2["pqrs"] += O2["rspq"];
+        Hbar2["pQrS"] += O2["pQrS"];
+        Hbar2["pQrS"] += O2["rSpQ"];
+        Hbar2["PQRS"] += O2["PQRS"];
+        Hbar2["PQRS"] += O2["RSPQ"];
     }
 
     Hbar0 = Ecorr;
