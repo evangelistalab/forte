@@ -581,18 +581,23 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     });
 
     //====Blocking information==========
-    size_t int_mem_int_ = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
-    int memory_input = Process::environment.get_memory();
-    int num_block = std::ceil(double(int_mem_int_) / memory_input);
+    size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
+    size_t memory_input = Process::environment.get_memory();
+    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
     //Hard wires num_block for testing
 
     int block_size = nthree_ / num_block;
-
-    if(num_block != 1)
+    if(block_size < 1)
     {
-        outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
-    outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
-    outfile->Printf("\n  Block_size = %d\n num_block = %d", block_size, num_block);
+        outfile->Printf("\n\n Block size is FUBAR.");
+        outfile->Printf("\n Block size is %d", block_size);
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+    }
+    if(num_block > 1)
+    {
+        outfile->Printf("\n---------Blocking Information-------\n");
+        outfile->Printf("\n  %d / %d = %d", int_mem_int, memory_input, int_mem_int / memory_input);
+        outfile->Printf("\n  Block_size = %d num_block = %d", block_size, num_block);
     }
 
     Timer block_read;
@@ -896,20 +901,24 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     //Hope this is smart enough to figure out not to store B_{pq}^{Q}
     //Major problem with this is that other tensors are not that small.
     //Maybe won't work
-    size_t int_mem_int_ = (nthree_ * nmo_ * nmo_) * sizeof(double);
-    int memory_input = Process::environment.get_memory();
-    int num_block = std::ceil(double(int_mem_int_) / memory_input);
+    size_t int_mem_int = (nthree_ * nmo_ * nmo_) * sizeof(double);
+    size_t memory_input = Process::environment.get_memory();
+    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
     //Hard wires num_block for testing
 
     int block_size = nthree_ / num_block;
-
+    if(block_size < 1)
+    {
+        outfile->Printf("\n\n Block size is FUBAR: %d", block_size);
+        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
+    }
     if(num_block != 1)
     {
-        outfile->Printf("\n\n\n\n\t---------Blocking Information-------\n\n\n\n\t");
-        outfile->Printf("\n  %d / %d = %d", int_mem_int_, memory_input, int_mem_int_ / memory_input);
-        outfile->Printf("\nTotal size = %d  Block_size = %d\n num_block = %d",nthree_ ,block_size, num_block);
-        outfile->Printf("\n\n rpq is %4.4f GB", nthree_ * frozen_size * nmo_ * 8.0 / (1024 * 1024 * 1024));
-        outfile->Printf("\n\n BpqQ is %4.4f GB", nthree_ * nmo_ * nmo_ * 8.0 / (1024 * 1024 * 1024));
+        outfile->Printf("\n---------Blocking Information-------\n");
+        outfile->Printf("\n  %d / %d = %d", int_mem_int, memory_input, int_mem_int / memory_input);
+        outfile->Printf("\nTotal size = %d  Block_size = %d num_block = %d",nthree_ ,block_size, num_block);
+        outfile->Printf("\n rpq is %4.4f GB", nthree_ * frozen_size * nmo_ * 8.0 / (1024 * 1024 * 1024));
+        outfile->Printf("\n BpqQ is %4.4f GB", nthree_ * nmo_ * nmo_ * 8.0 / (1024 * 1024 * 1024));
     }
 
     for(int i = 0; i < num_block; i++)

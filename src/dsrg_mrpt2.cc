@@ -6,6 +6,8 @@
 #include <libpsio/psio.h>
 #include <libmints/molecule.h>
 #include <libqt/qt.h>
+#include <iostream>
+#include <fstream>
 
 #include "dsrg_mrpt2.h"
 #include "blockedtensorfactory.h"
@@ -530,8 +532,14 @@ void DSRG_MRPT2::compute_t2()
     T2["ijab"] = V["ijab"];
     T2["iJaB"] = V["iJaB"];
     T2["IJAB"] = V["IJAB"];
+    std::ofstream myfile;
+    myfile.open ("DeltaIJAB.txt");
+    myfile << acore_mos.size() + aactv_mos.size() << acore_mos.size() + aactv_mos.size() << aactv_mos.size() + avirt_mos.size() <<
+    aactv_mos.size() + avirt_mos.size() << "\n";
 
     T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        double value_print = 0.0;
+        double D = 0.0;
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
         }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
