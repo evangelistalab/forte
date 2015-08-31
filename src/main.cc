@@ -554,7 +554,7 @@ forte(Options &options)
         double Edsrg = 0.0, Erelax = 0.0;
         if(options.get_str("RELAX_REF") == "ITERATE"){
             int cycle = 0, maxiter = options.get_int("MAXITER");
-            double e_conv = options.get_double("E_CONVERGENCE");
+            double e_conv = 100.0 * options.get_double("E_CONVERGENCE");
             std::vector<double> Edsrg_vec, Erelax_vec;
             std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
             bool converged = false;
