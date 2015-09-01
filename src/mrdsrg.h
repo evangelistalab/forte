@@ -8,7 +8,7 @@
 #include <libmints/wavefunction.h>
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
-#include "ambit/blocked_tensor.h"
+#include <ambit/blocked_tensor.h>
 
 #include "integrals.h"
 #include "reference.h"
@@ -30,6 +30,9 @@ protected:
 
     /// Print levels
     int print_;
+
+    /// The wavefunction pointer
+    boost::shared_ptr<Wavefunction> wfn_;
 
     /// The reference object
     Reference reference_;
@@ -68,6 +71,13 @@ protected:
 
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo;
+
+    /// Fill up integrals
+    void build_ints();
+    /// Fill up density matrix and density cumulants
+    void build_density();
+    /// Build Fock matrix and diagonal Fock matrix elements
+    void build_fock();
 
 
     // => DSRG related <= //
@@ -234,6 +244,20 @@ protected:
     void check_semicanonical();
 
 
+    // => Reference relaxation <= //
+
+    /// Local One-electron integral for Resetting Integrals
+    ambit::BlockedTensor H_local;
+    /// Local Two-electron integral for Resetting Integrals
+    ambit::BlockedTensor V_local;
+    /// Transfer Integrals for FCI
+    void transfer_integrals();
+    /// Reset Integrals to Bare Hamiltonian
+    void reset_ints(BlockedTensor& H, BlockedTensor& V);
+    /// Semicanonicalize orbitals
+    void semi_canonicalizer();
+
+
     // => Useful printings <= //
 
     /// Print a summary of the options
@@ -305,11 +329,11 @@ public:
     /// The frozen-core energy
     double frozen_core_energy;
 
-    /// Compute the corr_level energy
+    /// Compute the corr_level energy with fixed reference
     double compute_energy();
 
-    /// Copy integrals for reference relaxation
-    void transfer_integrals();
+    /// Compute the corr_level energy with relaxed reference
+    double compute_energy_relaxed();
 };
 
 }}
