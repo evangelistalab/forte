@@ -144,6 +144,7 @@ protected:
 
     /// Renormalized denominator
     double renormalized_denominator(double D);
+    double renormalized_denominator_ts(double D);
     double renormalized_denominator_amp(double V,double D);
     double renormalized_denominator_emp2(double V,double D);
     double renormalized_denominator_lamp(double V,double D);
