@@ -445,6 +445,9 @@ read_options(std::string name, Options &options)
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
+        /*- Print (1 - exp(-2*s*D)) / D -*/
+        options.add_bool("PRINT_DENOM2", false);
+        
     }
 
     return true;
