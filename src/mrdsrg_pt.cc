@@ -2,6 +2,7 @@
 #include <vector>
 #include <map>
 #include <boost/format.hpp>
+#include <ambit/tensor.h>
 
 #include "helpers.h"
 #include "mrdsrg.h"
@@ -256,7 +257,7 @@ double MRDSRG::compute_energy_pt3(){
 
 void MRDSRG::check_semicanonical(){
     outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
-    std::vector<std::string> blocks = {"cc","aa","vv","CC","AA","VV"};
+    std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
     std::vector<double> Foff;
     double Foff_sum = 0.0;
     for(auto& block: blocks){
@@ -280,6 +281,21 @@ void MRDSRG::check_semicanonical(){
     }else{
         outfile->Printf("     OK.");
     }
+}
+
+void MRDSRG::semi_canonicalizer(){
+    // diagonal blocks identifiers
+    std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
+
+    // vector of eigenvectors
+    std::vector<ambit::Tensor> evecs;
+
+    // diagonalize diagonal blocks
+    for(auto& block: blocks){
+        auto Feigen = F.block(block).syev(kAscending);
+        evecs.push_back(Feigen["eigenvectors"]);
+    }
+
 }
 
 }}
