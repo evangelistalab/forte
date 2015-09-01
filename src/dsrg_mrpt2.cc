@@ -354,6 +354,15 @@ double DSRG_MRPT2::renormalized_denominator(double D)
         return (1.0 - std::exp(-s_ * pow(D, 2.0))) / D;
     }
 }
+double DSRG_MRPT2::renormalized_denominator_ts(double D)
+{
+    double Z = sqrt(s_) * D;
+    if(fabs(Z) < pow(0.1, taylor_threshold_)){
+        return Taylor_Exp(Z, taylor_order_) * sqrt(2.0 * s_);
+    }else{
+        return (1.0 - std::exp(-2.0 * s_ * pow(D, 2.0))) / D;
+    }
+}
 
 // Computes (1 - exp(-s D^2/V^2)) * V / D
 double DSRG_MRPT2::renormalized_denominator_amp(double V, double D)
@@ -532,14 +541,27 @@ void DSRG_MRPT2::compute_t2()
     T2["ijab"] = V["ijab"];
     T2["iJaB"] = V["iJaB"];
     T2["IJAB"] = V["IJAB"];
-    std::ofstream myfile;
-    myfile.open ("DeltaIJAB.txt");
-    myfile << acore_mos.size() + aactv_mos.size() << acore_mos.size() + aactv_mos.size() << aactv_mos.size() + avirt_mos.size() <<
-    aactv_mos.size() + avirt_mos.size() << "\n";
-
+    bool print_denom;
+    print_denom = options_.get_bool("PRINT_DENOM2");
+    //This is used to print the tensor out for further analysis.  Only used as a test for some future projects such as tensor factorizations and other
+    //such things.  
+    
+    if(print_denom)
+    {
+        std::ofstream myfile;
+        myfile.open ("DeltaIJAB.txt");
+        myfile << acore_mos.size() + aactv_mos.size() <<" " <<  acore_mos.size() + aactv_mos.size() << " " <<  aactv_mos.size() + avirt_mos.size() <<
+        " " <<
+        aactv_mos.size() + avirt_mos.size() << " \n";
+        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            double D = 0.0;
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                D=renormalized_denominator_ts(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+                myfile << i[0] <<" " <<  i[1] << " " << i[2] << " " <<  i[3] << " "  << D << " \n";
+                }
+            });
+    }
     T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        double value_print = 0.0;
-        double D = 0.0;
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
         }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
