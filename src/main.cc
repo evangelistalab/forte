@@ -18,7 +18,6 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
-#include "ex-aci.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
 #include "lambda-ci.h"
@@ -103,7 +102,7 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE EX-ACI FCIQMC APICI FAPICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG");
@@ -506,11 +505,6 @@ forte(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
         aci->compute_energy();
-    }
-    if ((options.get_str("JOB_TYPE") == "EX-ACI")){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<EX_ACI> ex_aci(new EX_ACI(wfn,options,ints_));
-        ex_aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
