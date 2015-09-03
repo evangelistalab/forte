@@ -1,36 +1,44 @@
-#! This tests the Adaptive-CI procedure using energy selection
 #! Generated using commit GITCOMMIT
-#
+# Tests mp2_nos with spin projected system for multiple roots
+
 
 import forte
 
-refscf = -2.03108138291133 #TEST
-refaci = -2.115356497830 #TEST
-refacipt2 = -2.116356354872 #TEST
+refscf = -75.37487863589541 
+refaci = -75.479410527618
+refacipt2 = -75.723333873985 
 
-molecule li2{
-0 1
-H -0.4  0.0 0.0
-H  0.4  0.0 0.0
-H  0.1 -0.3 1.0
-H -0.1  0.5 1.0
+molecule N2{
+C 
+C 1 1.3
+units angstrom
 }
 
 set {
-  basis cc-pVDZ
+  basis 6-31g* 
+  scf_type pk
+  freeze_core true
+  reference rhf 
   e_convergence 10
   d_convergence 10
   r_convergence 10
-  scf_type pk
+  docc [2,0,0,0,0,2,1,1]
 }
 
+
+
 set forte {
-  job_type aci
-  SELECT_TYPE aimed_energy
-  TAUP 0.001000
-  TAUQ 0.0010000
-  nroot 1
+  job_type = aci
+  multiplicity 1
+  perturb_select false
+  SELECT_TYPE aimed-energy
+  frozen_docc [1,0,0,0,0,1,0,0]
+  TAUP 0.05
+  TAUQ 0.05
+  nroot 3
+  mp2_nos true
   charge 0
+  spin_projection 1
 }
 
 energy('scf')
@@ -38,5 +46,5 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("ACI ENERGY"),9, "EX-ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST

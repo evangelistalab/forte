@@ -2,41 +2,38 @@
 #! Generated using commit GITCOMMIT
 #
 
-
 import forte
 
-refscf = -14.839846512738 #TEST
-refaci = -14.890277038791 #TEST
-refacipt2 = -14.890376940805 #TEST
+refscf = -2.03108138291133 #TEST
+refaci = -2.115356497830 #TEST
+refacipt2 = -2.116356354872 #TEST
 
 molecule li2{
-   Li
-   Li 1 2.0000
+0 1
+H -0.4  0.0 0.0
+H  0.4  0.0 0.0
+H  0.1 -0.3 1.0
+H -0.1  0.5 1.0
 }
 
 set {
-  basis DZ
+  basis cc-pVDZ
   e_convergence 10
   d_convergence 10
   r_convergence 10
-}
-
-set mcscf {
-  reference rhf
-  docc = [2,0,0,0,0,1,0,0]
+  scf_type pk
 }
 
 set forte {
-  job_type = aci
-  frozen_docc = [0,0,0,0,0,0,0,0]
+  job_type aci
   SELECT_TYPE aimed_energy
   TAUP 0.001000
-  TAUQ 0.0001000
+  TAUQ 0.0010000
   nroot 1
   charge 0
 }
 
-energy('mcscf')
+energy('scf')
 
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
