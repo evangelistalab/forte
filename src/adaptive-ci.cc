@@ -476,7 +476,7 @@ double AdaptiveCI::compute_energy()
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
-
+		cycle_ = cycle;
 		outfile->Printf("\n\n  Cycle %3d",cycle);
         outfile->Printf("\n Initial P space dimension: %zu", P_space_.size());
 
@@ -607,6 +607,12 @@ double AdaptiveCI::compute_energy()
     if (do_smooth_){
         smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
     }
+
+	outfile->Printf("\n  Printing Wavefunction Information");
+	print_wfn(PQ_space_, PQ_evecs, nroot_);
+	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+	outfile->Printf(  "\n  __________ 	____________   ________________ ");
+    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
 
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
@@ -1597,7 +1603,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMa
 		int order = 0;
 		size_t det = 0;
 		for(auto& i : excitation_counter){
-			outfile->Printf("\n     %2d			%8.zu		%.11f", order, i.first, i.second);
+			outfile->Printf("\n     %2d			%8zu		%.11f", order, i.first, i.second);
 			det += i.first;
 			if(det == det_space.size()) break;
 			++order;
