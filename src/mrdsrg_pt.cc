@@ -283,19 +283,4 @@ void MRDSRG::check_semicanonical(){
     }
 }
 
-void MRDSRG::semi_canonicalizer(){
-    // diagonal blocks identifiers
-    std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
-
-    // vector of eigenvectors
-    std::vector<ambit::Tensor> evecs;
-
-    // diagonalize diagonal blocks
-    for(auto& block: blocks){
-        auto Feigen = F.block(block).syev(kAscending);
-        evecs.push_back(Feigen["eigenvectors"]);
-    }
-
-}
-
 }}

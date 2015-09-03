@@ -195,7 +195,9 @@ void MRDSRG::print_options()
 {
     // fill in information
     std::vector<std::pair<std::string,int>> calculation_info{
-        {"ntamp", ntamp_}};
+        {"ntamp", ntamp_},
+        {"diis_min_vecs", options_.get_int("DIIS_MIN_VECS")},
+        {"diis_max_vecs", options_.get_int("DIIS_MAX_VECS")}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
         {"flow parameter",s_},
@@ -365,7 +367,7 @@ double MRDSRG::compute_energy_relaxed(){
 
             // semi-canonicalize orbitals
             if (options_.get_bool("SEMI_CANONICAL")){
-                SemiCanonical semi(wfn_,options_,ints_,mo_space_info_,reference_);
+
 
                 // refill new integrals to H and V
                 build_ints();
@@ -561,6 +563,17 @@ void MRDSRG::transfer_integrals(){
     outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref + Hbar0);
 
     ints_->update_integrals(false);
+
+    // save integrals for semi-canonicalization
+    if (options_.get_bool("SEMI_CANONICAL") && options_.get_str("RELAX_REF") == "ITERATE"){
+        H_local = BTF->build(tensor_type_,"Hlocal",spin_cases({"gg"}));
+        V_local = BTF->build(tensor_type_,"Hlocal",spin_cases({"gggg"}));
+        H_local["pq"] = O1["pq"];
+        H_local["PQ"] = O1["PQ"];
+        V_local["pqrs"] = Hbar2["pqrs"];
+        V_local["pQrS"] = Hbar2["pQrS"];
+        V_local["PQRS"] = Hbar2["PQRS"];
+    }
 }
 
 void MRDSRG::reset_ints(BlockedTensor &H, BlockedTensor &V){
@@ -582,6 +595,25 @@ void MRDSRG::reset_ints(BlockedTensor &H, BlockedTensor &V){
         }
     });
     ints_->update_integrals(false);
+}
+
+
+void MRDSRG::semi_canonicalizer(){
+    // call Francesco's code
+    SemiCanonical semi(wfn_,options_,ints_,mo_space_info_,reference_);
+
+    // diagonal blocks identifiers
+    std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
+
+    // vector of eigenvectors
+    std::vector<ambit::Tensor> evecs;
+
+    // diagonalize diagonal blocks
+    for(auto& block: blocks){
+        auto Feigen = F.block(block).syev(kAscending);
+        evecs.push_back(Feigen["eigenvectors"]);
+    }
+
 }
 
 }}
