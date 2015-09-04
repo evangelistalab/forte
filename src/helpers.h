@@ -86,8 +86,9 @@ private:
     std::vector<std::string> elementary_spaces_{"FROZEN_DOCC","RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC","FROZEN_UOCC"};
     std::vector<std::string> elementary_spaces_priority_{"ACTIVE","RESTRICTED_UOCC","RESTRICTED_DOCC","FROZEN_DOCC","FROZEN_UOCC"};
 
-    std::vector<std::pair<std::string,std::vector<std::string>>> composite_spaces_{{"INACTIVE_DOCC",{"FROZEN_DOCC","RESTRICTED_DOCC"}},
-                                                                                   {"INACTIVE_UOCC",{"RESTRICTED_UOCC","FROZEN_UOCC"}}};
+    std::map<std::string,std::vector<std::string>> composite_spaces_{{"INACTIVE_DOCC",{"FROZEN_DOCC","RESTRICTED_DOCC"}},
+                                                                                   {"INACTIVE_UOCC",{"RESTRICTED_UOCC","FROZEN_UOCC"}},
+                                                                                   {"CORRELATED",{"RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC"}}};
     /// The names of the orbital spaces
     std::vector<std::string> space_names_;
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
