@@ -35,6 +35,65 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
     tei_ab_.resize(ncmo * ncmo * ncmo * ncmo);
     tei_bb_.resize(ncmo * ncmo * ncmo * ncmo);
 
+    frozen_core_energy_ = ints->frozen_core_energy();
+
+    // Compute the scalar contribution to the energy that comes from
+    // the restricted occupied orbitals
+    scalar_energy_ = ints->scalar();
+    for (size_t i = 0; i < nfomo; ++i){
+        size_t ii = fomo_to_mo[i];
+        scalar_energy_ += ints->oei_a(ii,ii);
+        scalar_energy_ += ints->oei_b(ii,ii);
+        for (size_t j = 0; j < nfomo; ++j){
+            size_t jj = fomo_to_mo[j];
+            scalar_energy_ += 0.5 * ints->aptei_aa(ii,jj,ii,jj);
+            scalar_energy_ += 1.0 * ints->aptei_ab(ii,jj,ii,jj);
+            scalar_energy_ += 0.5 * ints->aptei_bb(ii,jj,ii,jj);
+        }
+    }
+
+    for (size_t p = 0; p < ncmo; ++p){
+        size_t pp = cmo_to_mo[p];
+        for (size_t q = 0; q < ncmo; ++q){
+            size_t qq = cmo_to_mo[q];
+            oei_a_[ncmo * p + q] = ints->oei_a(pp,qq);
+            oei_b_[ncmo * p + q] = ints->oei_b(pp,qq);
+
+            // Compute the one-body contribution to the energy that comes from
+            // the restricted occupied orbitals
+            for (size_t f = 0; f < nfomo; ++f){
+                size_t ff = fomo_to_mo[f];
+                oei_a_[ncmo * p + q] += ints->aptei_aa(pp,ff,qq,ff);
+                oei_a_[ncmo * p + q] += ints->aptei_ab(pp,ff,qq,ff);
+                oei_b_[ncmo * p + q] += ints->aptei_bb(pp,ff,qq,ff);
+                oei_b_[ncmo * p + q] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
+            }
+            for (size_t r = 0; r < ncmo; ++r){
+                size_t rr = cmo_to_mo[r];
+                for (size_t s = 0; s < ncmo; ++s){
+                    size_t ss = cmo_to_mo[s];
+                    size_t tei_index = ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;
+                    tei_aa_[tei_index] = ints->aptei_aa(pp,qq,rr,ss);
+                    tei_ab_[tei_index] = ints->aptei_ab(pp,qq,rr,ss);
+                    tei_bb_[tei_index] = ints->aptei_bb(pp,qq,rr,ss);
+                }
+            }
+        }
+    }
+}
+
+FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info)
+{
+    ncmo = mospace_info->size("CORRELATED");
+    std::vector<size_t> cmo_to_mo  = mospace_info->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
+    size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
+
+    oei_a_.resize(ncmo * ncmo);
+    oei_b_.resize(ncmo * ncmo);
+    tei_aa_.resize(ncmo * ncmo * ncmo * ncmo);
+    tei_ab_.resize(ncmo * ncmo * ncmo * ncmo);
+    tei_bb_.resize(ncmo * ncmo * ncmo * ncmo);
 
     frozen_core_energy_ = ints->frozen_core_energy();
 

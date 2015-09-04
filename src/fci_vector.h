@@ -42,15 +42,18 @@ namespace psi{ namespace forte{
 class FCIIntegrals
 {
 public:
+    /// Constructor based on StringLists
     FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints);
+    /// Constructor based on MOInfoSpace
+    FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     double frozen_core_energy() const {return frozen_core_energy_;}
     double scalar_energy() const {return scalar_energy_;}
-    double oei_a(size_t n) const {return oei_a_[n];}
-    double oei_b(size_t n) const {return oei_b_[n];}
-    double tei_aa(size_t n) const {return tei_aa_[n];}
-    double tei_ab(size_t n) const {return tei_ab_[n];}
-    double tei_bb(size_t n) const {return tei_bb_[n];}
+//    double oei_a(size_t n) const {return oei_a_[n];}
+//    double oei_b(size_t n) const {return oei_b_[n];}
+//    double tei_aa(size_t n) const {return tei_aa_[n];}
+//    double tei_ab(size_t n) const {return tei_ab_[n];}
+//    double tei_bb(size_t n) const {return tei_bb_[n];}
 
     double oei_a(size_t p,size_t q) const {return oei_a_[p * ncmo + q];}
     double oei_b(size_t p,size_t q) const {return oei_b_[p * ncmo + q];}
