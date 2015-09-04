@@ -223,6 +223,7 @@ void DFIntegrals::gather_integrals()
     outfile->Printf("...Done.  Timing %15.6f s", timer.get());
 
     ThreeIntegral_ = Bpq;
+    ThreeIntegral_->print();
     //outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
 
 }
@@ -238,8 +239,9 @@ void DFIntegrals::make_diagonal_integrals()
     }
 }
 
-DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info_){
+DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
     integral_type_ = DF;
 
     outfile->Printf("\n DFIntegrals overall time");
