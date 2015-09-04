@@ -92,6 +92,8 @@ public:
     size_t size(const std::string& space);
     /// @return The Dimension object for space
     Dimension get_dimension(const std::string& space);
+    /// @return The symmetry of each orbital
+    std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a space
     std::vector<size_t> get_absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a space
