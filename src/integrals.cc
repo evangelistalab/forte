@@ -73,46 +73,10 @@ void ForteIntegrals::startup()
     nmopi_ = wfn->nmopi();
     frzcpi_ = wfn->frzcpi();
     frzvpi_ = wfn->frzvpi();
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
 
-    if (options_["FROZEN_DOCC"].has_changed()){
-        outfile->Printf("\n  Using the input to select the number of frozen core MOs.\n");
-        if (options_["FROZEN_DOCC"].size() == nirrep_){
-            for (int h = 0; h < nirrep_; ++h){
-                frzcpi_[h] = options_["FROZEN_DOCC"][h].to_integer();
-            }
-        }else{
-            outfile->Printf("\n\n  The input array FROZEN_DOCC has information for %zu irreps, this does not match the total number of irreps %zu",
-                            options_["FROZEN_DOCC"].size(),nirrep_);
-            outfile->Printf("\n  Exiting the program.\n");
-            printf("  The input array FROZEN_DOCC has information for %d irreps, this does not match the total number of irreps %zu",
-                   options_["FROZEN_DOCC"].size(),nirrep_);
-            printf("\n  Exiting the program.\n");
-
-            exit(Failure);
-        }
-    }
-    if (options_["FROZEN_UOCC"].has_changed()){
-        outfile->Printf("\n  Using the input to select the number of frozen virtual MOs.\n");
-        if (options_["FROZEN_UOCC"].size() == nirrep_){
-            for (int h = 0; h < nirrep_; ++h){
-                frzvpi_[h] = options_["FROZEN_UOCC"][h].to_integer();
-            }
-        }else{
-            outfile->Printf("\n\n  The input array FROZEN_UOCC has information for %zu irreps, this does not match the total number of irreps %d",
-                            options_["FROZEN_UOCC"].size(),nirrep_);
-            outfile->Printf("\n  Exiting the program.\n");
-            printf("  The input array FROZEN_UOCC has information for %d irreps, this does not match the total number of irreps %zu",
-                   options_["FROZEN_UOCC"].size(),nirrep_);
-            printf("\n  Exiting the program.\n");
-
-            exit(Failure);
-        }
-    }
-
-    ncmopi_ = nmopi_;
-    for (int h = 0; h < nirrep_; ++h){
-        ncmopi_[h] -= frzcpi_[h] + frzvpi_[h];
-    }
     ncmo_ = ncmopi_.sum();
 
     outfile->Printf("\n\n  ==> Integral Transformation <==\n");

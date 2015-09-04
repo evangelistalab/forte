@@ -393,15 +393,6 @@ void THREE_DSRG_MRPT2::startup()
             value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
         }
     });
-    //RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-    //        value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-    //    }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-    //        value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-    //    }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-    //        value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-    //    }
-    //});
 
     // Fill out Lambda2 and Lambda3
     ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");

@@ -73,7 +73,7 @@ UNO::UNO(Options &options){
     // form new density
     SharedMatrix Ca_scale (Ca->clone());
     for(int h = 0; h != nirrep; ++h){
-        for(size_t i = 0; i != nsopi[h]; ++i){
+        for(int i = 0; i != nsopi[h]; ++i){
             Ca_scale->scale_column(h, i, occ->get(h, i));
         }
     }
@@ -124,7 +124,7 @@ UNO::UNO(Options &options){
     F->transform(Ca);
     SharedVector F_diag (new Vector("Fock Diagonal Elements", nsopi));
     for(int h = 0; h != nirrep; ++h){
-        for(size_t i = 0; i != nsopi[h]; ++i){
+        for(int i = 0; i != nsopi[h]; ++i){
             F_diag->set(h, i,F->get(h, i, i));
         }
     }
@@ -139,7 +139,7 @@ UNO::UNO(Options &options){
     outfile->Printf("\n");
     for(int h = 0; h != nirrep; ++h){
         size_t closedpi = 0, activepi = 0;
-        for(size_t i = 0; i != nsopi[h]; ++i){
+        for(int i = 0; i != nsopi[h]; ++i){
             double occ_num = occ->get(h, i);
             if(occ_num < unomin){
                 continue;

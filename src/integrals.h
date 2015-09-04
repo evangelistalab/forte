@@ -323,12 +323,12 @@ public:
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
-    virtual double get_three_integral(size_t A, size_t p, size_t q)
+    virtual double get_three_integral(size_t, size_t, size_t)
     {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
     }
-    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q)
+    virtual ambit::Tensor get_three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&, const std::vector<size_t>&)
     {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
@@ -372,7 +372,7 @@ private:
     virtual void compute_frozen_one_body_operator();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
-    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map){}
+    virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
     /// An addressing function to retrieve the two-electron integrals
@@ -453,11 +453,10 @@ private:
     virtual void resort_integrals_after_freezing();
     ///This is not used in Cholesky, but I have to have implementations for
     /// derived classes.
-    virtual void resort_four(double *&tei, std::vector<size_t> &map)
+    virtual void resort_four(double *&, std::vector<size_t> &)
     {
         outfile->Printf("If this is called, sig fault!");
         throw PSIEXCEPTION("No four integrals to sort");
-
     }
     boost::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
@@ -523,7 +522,7 @@ private:
     virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double *&tei, std::vector<size_t> &map){}
+    virtual void resort_four(double *&, std::vector<size_t> &){}
 
     boost::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;
@@ -593,7 +592,7 @@ private:
     virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
-    virtual void resort_four(double *&tei, std::vector<size_t> &map){}
+    virtual void resort_four(double *&, std::vector<size_t> &){}
 
     boost::shared_ptr<Matrix> ThreeIntegral_;
     double* diagonal_aphys_tei_aa;

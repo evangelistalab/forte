@@ -7,6 +7,7 @@
 #include <libqt/qt.h>
 
 #include "fcimc.h"
+#include "fci_vector.h"
 
 using namespace psi;
 
@@ -35,8 +36,11 @@ std::pair<size_t,size_t> generate_ind_random_pair(size_t range)
    bool FCIQMC::have_omp_ = false;
 #endif
 
-FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints)
+FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options,
+               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options,_default_psio_lib_), ints_(ints),
+      mo_space_info_(mo_space_info),
+      fciInts_(ints, mo_space_info)
 {
     copy(wfn);
     startup();
@@ -52,13 +56,12 @@ void FCIQMC::startup()
     BitsetDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = ints_->ncmo();
-    ncmopi_ = ints_->ncmopi();
-
+    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
+    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = ints_->frzcpi();
-    frzvpi_ = ints_->frzvpi();
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
 
     // Create the array with mo symmetry
     for (int h = 0; h < nirrep_; ++h){
