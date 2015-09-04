@@ -24,8 +24,7 @@ lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
 
 adaptive_ci_tests = ["adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
                      "adaptive-ci-4","adaptive-ci-5","adaptive-ci-6",
-                     "adaptive-ci-7","adaptive-ci-8", 
-					 "ex-aci-1", "ex-aci-2", "ex-aci-3","ex-aci-4","ex-aci-5", "ex-aci-6"]
+                     "adaptive-ci-7","adaptive-ci-8"] 
 
 apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4"]
 fciqmc_tests = ["fciqmc"]
