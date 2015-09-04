@@ -425,7 +425,7 @@ double MRDSRG::compute_energy_ldsrg2(){
                     &(T2.block("AAVV").data()[0]));
             }
             if (cycle > max_diis_vectors){
-                if (diis_manager->subspace_size() >= min_diis_vectors){
+                if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(51,

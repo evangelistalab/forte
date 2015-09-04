@@ -253,6 +253,8 @@ read_options(std::string name, Options &options)
 
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
+        /*- The number of trial guess vectors to generate per root -*/
+        options.add_int("NTRIAL_PER_ROOT",10);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
@@ -361,7 +363,7 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- The type of operator to use in the SRG transformation -*/
-        options.add_str("SRG_MODE","SRG","SRG DSRG CT");
+        options.add_str("SRG_MODE","DSRG","DSRG CT");
         /*- The type of operator to use in the SRG transformation -*/
         options.add_str("SRG_OP","UNITARY","UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/
@@ -471,13 +473,13 @@ forte(Options &options)
     // Get the one- and two-electron integrals in the MO basis
     ForteIntegrals* ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else {
-        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
+        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
 
     // Link the integrals to the BitsetDeterminant class
@@ -503,7 +505,7 @@ forte(Options &options)
     }
     if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
+        auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
@@ -554,7 +556,7 @@ forte(Options &options)
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
             if(options.get_str("RELAX_REF") == "ONCE"){
                 boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
@@ -580,7 +582,7 @@ forte(Options &options)
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->compute_energy();
                 Reference reference = fci->reference();
-                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->compute_energy();
         }
         else if(options.get_str("CASTYPE")=="DMRG")
@@ -595,7 +597,7 @@ forte(Options &options)
 
        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
        {
-           outfile->Printf("\n THREE_DSRG-MRPT2 is designed for DF/CD integrals");
+           outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
        }
 
@@ -604,7 +606,7 @@ forte(Options &options)
            FCI_MO fci_mo(options,ints_);
            Reference reference = fci_mo.reference();
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
            three_dsrg_mrpt2->compute_energy();
        }
 
@@ -626,7 +628,7 @@ forte(Options &options)
                 outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
                 throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
            }
-           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_));
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
            three_dsrg_mrpt2->compute_energy();
        }
 
@@ -651,7 +653,7 @@ forte(Options &options)
             dsrg->transfer_integrals();
         }
         {
-            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_);
+            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
             aci->compute_energy();
         }
     }

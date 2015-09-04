@@ -14,6 +14,7 @@
 #include <libtrans/integraltransform.h>
 #include <libmints/matrix.h>
 #include <ambit/blocked_tensor.h>
+#include "helpers.h"
 
 
 namespace psi{
@@ -43,7 +44,10 @@ public:
      * @param resort_frozen_core Determines if the the integral with frozen index are removed
      *        (RemoveFrozenMOs = remove and resort, KeepFrozenMOs = keep all the integrals).
      */
-    ForteIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    ForteIntegrals(psi::Options &options,
+    IntegralSpinRestriction restricted, 
+    IntegralFrozenCore resort_frozen_core, 
+    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~ForteIntegrals();
@@ -52,8 +56,10 @@ public:
     // ==> Class Interface <==
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
+    
+    ///CHANGE me to public to get the code to compile
+public:
     size_t nmo() const {return nmo_;}
-    virtual size_t nthree() const = 0;
     
     /// Return the number of irreducible representations
     int nirrep() const {return nirrep_;}
@@ -68,6 +74,9 @@ public:
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension& ncmopi() {return ncmopi_;}
+public:
+    /// Return the number of auxiliary functions
+    virtual size_t nthree() const = 0;
 
     /// Return the frozen core energy
     double frozen_core_energy() {return frozen_core_energy_;}
@@ -156,16 +165,6 @@ public:
     /// Set the value of the two-electron integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2) = 0;
 
-
-    /// Update all integrals after providing one- and two-electron integrals
-    /// via the functions set_oei and set_tei
-    /// Sample use:
-    ///     ForteIntegrals* ints = new ...
-    ///
-    ///     // One-electron integrals are updated
-    ///     ints->set_oei(oei_aa,true);
-    ///     ints->set_oei(oei_bb,false);
-    ///     ints->update_integrals();
     virtual void update_integrals(bool freeze_core = true) = 0;
 
     /// Update the integrals with a new set of MO coefficients
@@ -176,12 +175,13 @@ public:
     /// Get the fock matrix elements
     double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
     double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
-    std::vector<size_t> get_cmotomo(){return cmotomo_;}
     IntegralType get_integral_type(){return integral_type_;}
 
 
 protected:
 
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // ==> Class data <==
 
     /// The options object
@@ -301,7 +301,8 @@ protected:
 class ConventionalIntegrals: public ForteIntegrals{
 public:
     ///Contructor of the class.  Calls ForteIntegrals constructor
-    ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo>
+    mo_space_info);
     virtual ~ConventionalIntegrals();
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -398,7 +399,8 @@ private:
  */
 class CholeskyIntegrals : public ForteIntegrals{
 public:
-    CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo>
+    mo_space_info);
     virtual ~CholeskyIntegrals();
     ///aptei_x will grab antisymmetriced integrals and creates DF/CD integrals on the fly
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
@@ -471,7 +473,8 @@ private:
  */
 class DFIntegrals : public ForteIntegrals{
 public:
-    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo>
+    mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
@@ -534,7 +537,7 @@ private:
 /// Reading individual elements is slow
 class DISKDFIntegrals : public ForteIntegrals{
 public:
-    DISKDFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core);
+    DISKDFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ///aptei_xy functions are slow.  try to use get_three_integral_block
 

@@ -172,13 +172,14 @@ double one_minus_exp_div_x(double s,double x,double power)
 
 double TensorSRG::compute_energy()
 {
-    if(options_.get_str("SRG_MODE") == "SRG"){
-        compute_srg_energy();
-    }else if(options_.get_str("SRG_MODE") == "CT"){
-        return compute_ct_energy();
-    }else if(options_.get_str("SRG_MODE") == "DSRG"){
-//        compute_driven_srg_energy();
-    }
+    compute_ct_energy();
+//    if(options_.get_str("SRG_MODE") == "SRG"){
+//        compute_srg_energy();
+//    }else if(options_.get_str("SRG_MODE") == "CT"){
+//        return compute_ct_energy();
+//    }else if(options_.get_str("SRG_MODE") == "DSRG"){
+////        compute_ct_energy();
+//    }
     return 0.0;
 }
 
