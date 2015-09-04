@@ -180,12 +180,16 @@ protected:
     std::vector<std::string> generate_all_indices(const std::string, std::string);
     boost::shared_ptr<BlockedTensorFactory> BTF;
 
+    //The MOSpace object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
 
 public:
 
     // => Constructors <= //
 
-    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
+    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo>
+    mo_space_info);
 
     ~THREE_DSRG_MRPT2();
 
