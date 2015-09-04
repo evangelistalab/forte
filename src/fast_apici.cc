@@ -52,7 +52,8 @@ FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefun
       ints_(ints),
       fast_variational_estimate_(false),
       prescreening_tollerance_factor_(1.5),
-      mo_space_info_(mo_space_info)
+      mo_space_info_(mo_space_info),
+      fciInts_(ints, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -1078,7 +1079,7 @@ double FastAdaptivePathIntegralCI::time_step_optimized(double spawning_threshold
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                        double HJI = fciInts_.tei_aa(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             FastDeterminant detJ(detI);
                             detJ.set_alfa_bit(ii,false);
@@ -1114,7 +1115,7 @@ double FastAdaptivePathIntegralCI::time_step_optimized(double spawning_threshold
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                        double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                        double HJI = fciInts_.tei_ab(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             FastDeterminant detJ(detI);
                             detJ.set_alfa_bit(ii,false);
@@ -1151,7 +1152,7 @@ double FastAdaptivePathIntegralCI::time_step_optimized(double spawning_threshold
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                        double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                        double HJI = fciInts_.tei_bb(ii,jj,aa,bb);
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             FastDeterminant detJ(detI);
                             detJ.set_beta_bit(ii,false);
@@ -1262,7 +1263,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_t
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_aa(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1300,7 +1301,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_t
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_ab(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1339,7 +1340,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_t
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_bb(ii,jj,aa,bb);
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1537,7 +1538,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double sp
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_aa(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1575,7 +1576,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double sp
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_ab(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1614,7 +1615,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double sp
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_bb(ii,jj,aa,bb);
                             max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
@@ -1993,7 +1994,7 @@ double FastAdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold
                     for (int b = a + 1; b < nvalpha; ++b){
                         int bb = avir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_aa(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_aa(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 FastDeterminant detJ(detI);
@@ -2031,7 +2032,7 @@ double FastAdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold
                     for (int b = 0; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_ab(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_ab(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 FastDeterminant detJ(detI);
@@ -2070,7 +2071,7 @@ double FastAdaptivePathIntegralCI::form_H_C(double tau,double spawning_threshold
                     for (int b = a + 1; b < nvbeta; ++b){
                         int bb = bvir[b];
                         if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                            double HJI = ints_->aptei_bb(ii,jj,aa,bb);
+                            double HJI = fciInts_.tei_bb(ii,jj,aa,bb);
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 FastDeterminant detJ(detI);
