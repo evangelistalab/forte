@@ -38,8 +38,6 @@
 
 INIT_PLUGIN
 
-void test_davidson();
-
 namespace psi{ namespace forte{
 
 extern "C" int
