@@ -192,7 +192,7 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
-    size_t ncmo_ = acore_mos.size() + aactv_mos.size() + avirt_mos.size();
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     Fa = std::vector<double>(ncmo_);
     Fb = std::vector<double>(ncmo_);
 

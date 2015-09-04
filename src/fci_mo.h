@@ -14,6 +14,8 @@
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
 #include "reference.h"
+#include "helpers.h"
+
 using namespace std;
 
 
@@ -29,7 +31,7 @@ namespace psi{ namespace forte{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options, ForteIntegrals *ints);
+    FCI_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~FCI_MO();
 
     Reference reference();
