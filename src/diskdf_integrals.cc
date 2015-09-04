@@ -446,8 +446,9 @@ void DISKDFIntegrals::make_diagonal_integrals()
     }
 }
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ForteIntegrals(options, restricted, resort_frozen_core){
+DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
 
     integral_type_ = DiskDF;
     outfile->Printf("\n DISKDFIntegrals overall time");

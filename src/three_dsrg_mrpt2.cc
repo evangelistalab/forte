@@ -26,12 +26,14 @@ namespace psi{ namespace forte{
 #endif
 
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),
       tensor_type_(kCore),
-      BTF(new BlockedTensorFactory(options))
+      BTF(new BlockedTensorFactory(options)),
+      mo_space_info_(mo_space_info)
 {
     ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
@@ -86,42 +88,32 @@ void THREE_DSRG_MRPT2::startup()
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
 
-    rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
-    actvpi_  = Dimension (nirrep_, "Active MOs");
-    ruoccpi_ = Dimension (nirrep_, "Restricted Unoccupied MOs");
-    if (options_["RESTRICTED_DOCC"].size() == nirrep_){
-        for (int h = 0; h < nirrep_; ++h){
-            rdoccpi_[h] = options_["RESTRICTED_DOCC"][h].to_integer();
-        }
-    }else{
-        outfile->Printf("\n  The size of RESTRICTED_DOCC occupation does not match the number of Irrep.");
-        exit(1);
-    }
-    if ((options_["ACTIVE"].has_changed()) && (options_["ACTIVE"].size() == nirrep_)){
-        for (int h = 0; h < nirrep_; ++h){
-            actvpi_[h] = options_["ACTIVE"][h].to_integer();
-            ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
-        }
-    }else{
-        outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
-        exit(1);
-    }
+    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    actvpi_  = mo_space_info_->get_dimension ("ACTIVE");
+    ruoccpi_ = mo_space_info_->get_dimension ("RESTRICTED_UOCC");
 
+    
+    acore_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    bcore_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    aactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    bactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    avirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    bvirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     // Populate the core, active, and virtuall arrays
-    for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < rdoccpi_[h]; ++i,++p){
-            acore_mos.push_back(p);
-            bcore_mos.push_back(p);
-        }
-        for (int i = 0; i < actvpi_[h]; ++i,++p){
-            aactv_mos.push_back(p);
-            bactv_mos.push_back(p);
-        }
-        for (int a = 0; a < ruoccpi_[h]; ++a,++p){
-            avirt_mos.push_back(p);
-            bvirt_mos.push_back(p);
-        }
-    }
+    //for (int h = 0, p = 0; h < nirrep_; ++h){
+    //    for (int i = 0; i < rdoccpi_[h]; ++i,++p){
+    //        acore_mos.push_back(p);
+    //        bcore_mos.push_back(p);
+    //    }
+    //    for (int i = 0; i < actvpi_[h]; ++i,++p){
+    //        aactv_mos.push_back(p);
+    //        bactv_mos.push_back(p);
+    //    }
+    //    for (int a = 0; a < ruoccpi_[h]; ++a,++p){
+    //        avirt_mos.push_back(p);
+    //        bvirt_mos.push_back(p);
+    //    }
+    //}
 
     // Form the maps from MOs to orbital sets
     for (size_t p = 0; p < acore_mos.size(); ++p) mos_to_acore[acore_mos[p]] = p;
