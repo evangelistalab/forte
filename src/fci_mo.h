@@ -48,6 +48,9 @@ protected:
     // Reference Type
     std::string ref_type_;
 
+    // MO space info
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
     // Print Levels
     int print_;
 

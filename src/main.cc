@@ -253,6 +253,8 @@ read_options(std::string name, Options &options)
 
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
+        /*- The number of trial guess vectors to generate per root -*/
+        options.add_int("NTRIAL_PER_ROOT",10);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
@@ -554,7 +556,7 @@ forte(Options &options)
             FCI_MO fci_mo(options,ints_);
             Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
             if(options.get_str("RELAX_REF") == "ONCE"){
                 boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
@@ -580,7 +582,7 @@ forte(Options &options)
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->compute_energy();
                 Reference reference = fci->reference();
-                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_));
+                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->compute_energy();
         }
         else if(options.get_str("CASTYPE")=="DMRG")
