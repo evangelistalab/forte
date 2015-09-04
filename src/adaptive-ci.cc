@@ -612,7 +612,7 @@ double AdaptiveCI::compute_energy()
 	print_wfn(PQ_space_, PQ_evecs, nroot_);
 	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	outfile->Printf(  "\n  __________ 	____________   ________________ ");
-    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
+    wfn_analyzer(P_space_, P_evecs, nroot_);	
 
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
@@ -621,6 +621,33 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
+
+	if( form_1_RDM_ ){
+	//Compute and print 1-RDM
+		SharedMatrix Dalpha(new Matrix("Dalpha", nmo_, nmo_));
+		SharedMatrix Dbeta(new Matrix("Dbeta", nmo_, nmo_));
+
+		compute_1rdm(Dalpha,Dbeta,PQ_space_,PQ_evecs,nroot_);
+		diagonalize_order nMatz = evals_only_descending;
+
+		SharedVector no_occnum(new Vector("NO occ num", nmo_));
+		SharedMatrix NO_evecs(new Matrix("NO Evecs", nmo_,nmo_));
+		D1_->diagonalize(NO_evecs, no_occnum, nMatz);
+		no_occnum->print();
+
+		std::vector<int> active_space(nirrep_, 0);
+		for(size_t p = 0, maxp = D1_->nrow(); p < maxp; ++p){
+			if( (D1_->get(p,p) >= 0.02) and (D1_->get(p,p) <= 1.98) ){
+				active_space[mo_symmetry_[p]] += 1;
+			}else{
+				continue;
+			}
+		}
+		outfile->Printf("\n Suggested active space from ACI:  \n  [");
+		for(int i = 0; i < nirrep_; ++i) outfile->Printf(" %d", active_space[i]);
+		outfile->Printf(" ]");
+	}
+
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
@@ -1684,6 +1711,11 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	}
 
 	//Occupy frozen core with 1.0
+	for(size_t p = 0; p < nfrzc_; ++p){
+		size_t np = idx_c[p];
+		A->set(np,np,1.0);
+		B->set(np,np,1.0);
+	}
 	
 	for(size_t p = 0; p < ncmo_; ++p){
 		size_t np = idx_a[p];
@@ -1717,7 +1749,7 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	for( size_t p = 0; p < nmo_; ++p){
 		for( size_t q = 0; q < nmo_; ++q){
 			D1_->add(p,q, B->get(p,q));
-			trace += D1_->get(p,p);
+			if(p ==q) trace += D1_->get(p,p);
 		}
 	}
 	outfile->Printf("\n\n Trace of 1-RDM: %6.3f\n", trace); 
