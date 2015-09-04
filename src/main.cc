@@ -508,7 +508,7 @@ forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
+        auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
@@ -663,7 +663,7 @@ forte(Options &options)
             dsrg->transfer_integrals();
         }
         {
-            auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_);
+            auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
             apici->compute_energy();
         }
     }
