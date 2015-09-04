@@ -60,12 +60,20 @@ public:
     double oei_a(size_t p,size_t q) const {return oei_a_[p * ncmo + q];}
     /// Return the beta effective one-electron integral
     double oei_b(size_t p,size_t q) const {return oei_b_[p * ncmo + q];}
+
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||rs>
     double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
     /// Return the alpha-beta two-electron integral <pq|rs>
     double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
     double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
+
+    /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
+    double diag_tei_aa(size_t p,size_t q) const {return diag_tei_aa_[p * ncmo + q];}
+    /// Return the alpha-beta two-electron integral <pq|rs>
+    double diag_tei_ab(size_t p,size_t q) const {return diag_tei_ab_[p * ncmo + q];}
+    /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
+    double diag_tei_bb(size_t p,size_t q) const {return diag_tei_bb_[p * ncmo + q];}
 private:
 
     // ==> Class Private Data <==
@@ -85,6 +93,12 @@ private:
     std::vector<double> tei_ab_;
     /// The beta-beta antisymmetrized two-electron integrals in physicist notation
     std::vector<double> tei_bb_;
+    /// The diagonal alpha-alpha antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> diag_tei_aa_;
+    /// The diagonal alpha-beta antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> diag_tei_ab_;
+    /// The diagonal beta-beta antisymmetrized two-electron integrals in physicist notation
+    std::vector<double> diag_tei_bb_;
 
     // ==> Class Private Functions <==
 
