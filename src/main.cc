@@ -498,7 +498,7 @@ forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "FCIQMC"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<FCIQMC> fciqmc(new FCIQMC(wfn,options,ints_));
+        auto fciqmc = std::make_shared<FCIQMC>(wfn,options,ints_, mo_space_info);
         fciqmc->compute_energy();
     }
     if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
