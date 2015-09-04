@@ -45,12 +45,14 @@ void scale(std::map<FastDeterminant,double>& A,double alpha);
 double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>& B);
 void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B);
 
-FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
+                                                       ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
       fast_variational_estimate_(false),
-      prescreening_tollerance_factor_(1.5)
+      prescreening_tollerance_factor_(1.5),
+      mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -66,12 +68,12 @@ void FastAdaptivePathIntegralCI::startup()
     FastDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = ints_->ncmo();
-    ncmopi_ = ints_->ncmopi();
+    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
+    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = ints_->frzcpi();
-    frzvpi_ = ints_->frzvpi();
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
