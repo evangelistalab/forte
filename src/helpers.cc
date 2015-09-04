@@ -48,7 +48,6 @@ MOSpaceInfo::MOSpaceInfo()
 
 MOSpaceInfo::~MOSpaceInfo()
 {
-
 }
 
 size_t MOSpaceInfo::size(const std::string& space)

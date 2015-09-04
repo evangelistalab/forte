@@ -34,6 +34,9 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
     tei_aa_.resize(ncmo * ncmo * ncmo * ncmo);
     tei_ab_.resize(ncmo * ncmo * ncmo * ncmo);
     tei_bb_.resize(ncmo * ncmo * ncmo * ncmo);
+    diag_tei_aa_.resize(ncmo * ncmo);
+    diag_tei_ab_.resize(ncmo * ncmo);
+    diag_tei_bb_.resize(ncmo * ncmo);
 
     frozen_core_energy_ = ints->frozen_core_energy();
 
@@ -58,6 +61,9 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
             size_t qq = cmo_to_mo[q];
             oei_a_[ncmo * p + q] = ints->oei_a(pp,qq);
             oei_b_[ncmo * p + q] = ints->oei_b(pp,qq);
+            diag_tei_aa_[ncmo * p + q] = ints->aptei_aa(pp,qq,pp,qq);
+            diag_tei_ab_[ncmo * p + q] = ints->aptei_ab(pp,qq,pp,qq);
+            diag_tei_bb_[ncmo * p + q] = ints->aptei_bb(pp,qq,pp,qq);
 
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals

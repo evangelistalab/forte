@@ -117,9 +117,19 @@ private:
     std::vector<std::string> elementary_spaces_{"FROZEN_DOCC","RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC","FROZEN_UOCC"};
     std::vector<std::string> elementary_spaces_priority_{"ACTIVE","RESTRICTED_UOCC","RESTRICTED_DOCC","FROZEN_DOCC","FROZEN_UOCC"};
 
-    std::map<std::string,std::vector<std::string>> composite_spaces_{{"INACTIVE_DOCC",{"FROZEN_DOCC","RESTRICTED_DOCC"}},
-                                                                                   {"INACTIVE_UOCC",{"RESTRICTED_UOCC","FROZEN_UOCC"}},
-                                                                                   {"CORRELATED",{"RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC"}}};
+    /// Defines composite orbital spaces
+    std::map<std::string,std::vector<std::string>> composite_spaces_{
+        {"ALL",{"FROZEN_DOCC","RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC","FROZEN_UOCC"}},
+        {"FROZEN",{"FROZEN_DOCC","FROZEN_UOCC"}},
+        {"CORRELATED",{"RESTRICTED_DOCC","ACTIVE","RESTRICTED_UOCC"}},
+        {"INACTIVE_DOCC",{"FROZEN_DOCC","RESTRICTED_DOCC"}},
+        {"INACTIVE_UOCC",{"RESTRICTED_UOCC","FROZEN_UOCC"}},
+        // Spaces for multireference calculations
+        {"GENERALIZED HOLE",{"RESTRICTED_DOCC","ACTIVE"}},
+        {"GENERALIZED PARTICLE",{"ACTIVE","RESTRICTED_UOCC"}},
+        {"CORE",{"RESTRICTED_DOCC"}},
+        {"VIRTUAL",{"RESTRICTED_UOCC"}}
+    };
     /// The names of the orbital spaces
     std::vector<std::string> space_names_;
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
