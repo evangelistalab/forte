@@ -15,11 +15,9 @@
 #include <libmints/vector.h>
 
 #include "fast_determinant.h"
-#include "cartographer.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
 #include "sparse_ci_solver.h"
-
 
 using namespace std;
 using namespace psi;
