@@ -33,6 +33,7 @@
 #include "helpers.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace forte{
 
@@ -70,6 +71,8 @@ private:
     Options& options_;
     /// The molecular integrals required by Explorer
     ForteIntegrals* ints_;
+	///FCI integrals
+	FCIIntegrals FCIints_;	
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry

@@ -14,7 +14,6 @@
 #include <libmints/molecule.h>
 #include <libmints/vector.h>
 
-#include "cartographer.h"
 #include "adaptive_pici.h"
 #include "sparse_ci_solver.h"
 #include "helpers.h"
@@ -52,9 +51,9 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
+      mo_space_info_(mo_space_info),
       fast_variational_estimate_(false),
       prescreening_tollerance_factor_(1.5),
-      mo_space_info_(mo_space_info),
       fciInts_(ints, mo_space_info)
 {
     // Copy the wavefunction information
@@ -258,7 +257,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
     print_wfn(dets,C);
     std::map<Determinant,double> old_space_map;
-    for (int I = 0; I < dets.size(); ++I){
+    for (size_t I = 0; I < dets.size(); ++I){
         old_space_map[dets[I]] = C[I];
     }
 
@@ -270,8 +269,6 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n  ------------------------------------------------------------------------------------------");
 
     int maxcycle = maxiter_;
-    double shift = do_shift_ ? var_energy : 0.0;
-    double initial_gradient_norm = 0.0;
     double old_var_energy = 0.0;
     double old_proj_energy = 0.0;
     double beta = 0.0;
@@ -416,7 +413,7 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std:
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
 
     // Copy the ground state eigenvector
-    for (int I = 0; I < guess_size; ++I){
+    for (size_t I = 0; I < guess_size; ++I){
         C[I] = evecs->get(I,current_root_);
     }
     return var_energy;
@@ -587,7 +584,7 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<Determina
 
         combine_maps(dets_C_map,dets_sum_map);
         // Reset the maps
-        for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
+        for (size_t t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
         // Copy the wave function to a vector
         copy_map_to_vec(dets_C_map,dets,C);
     }

@@ -20,7 +20,6 @@
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
-#include "lambda-ci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
@@ -491,14 +490,9 @@ forte(Options &options)
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
         MCSRGPT2_MO mcsrgpt2_mo(options, ints_, mo_space_info);
     }
-    // The explorer object will do its job
-    if (options.get_str("JOB_TYPE") == "EXPLORER"){
-        LambdaCI* explorer = new LambdaCI(options,ints_);
-        delete explorer;
-    }
     if (options.get_str("JOB_TYPE") == "FCIQMC"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<FCIQMC> fciqmc(new FCIQMC(wfn,options,ints_));
+        auto fciqmc = std::make_shared<FCIQMC>(wfn,options,ints_, mo_space_info);
         fciqmc->compute_energy();
     }
     if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
@@ -522,7 +516,7 @@ forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+        auto fci = std::make_shared<FCI>(wfn,options,ints_,mo_space_info);
         fci->compute_energy();
     }
     if(options.get_str("JOB_TYPE")=="CAS")
