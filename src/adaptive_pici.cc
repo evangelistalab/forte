@@ -17,6 +17,7 @@
 #include "cartographer.h"
 #include "adaptive_pici.h"
 #include "sparse_ci_solver.h"
+#include "helpers.h"
 
 #ifdef _OPENMP
    #include <omp.h>
@@ -45,12 +46,14 @@ double normalize(std::map<Determinant,double>& dets_C);
 double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B);
 void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B);
 
-AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
+                                               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
       fast_variational_estimate_(false),
-      prescreening_tollerance_factor_(1.5)
+      prescreening_tollerance_factor_(1.5),
+      mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
