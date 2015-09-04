@@ -24,7 +24,7 @@ namespace psi{ namespace forte{
 class MCSRGPT2_MO : public FCI_MO
 {
 public:
-    MCSRGPT2_MO(Options &options, ForteIntegrals *ints);
+    MCSRGPT2_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MCSRGPT2_MO();
 
 protected:

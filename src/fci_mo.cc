@@ -13,7 +13,8 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-FCI_MO::FCI_MO(Options &options, ForteIntegrals *ints) : integral_(ints)
+FCI_MO::FCI_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : integral_(ints), mo_space_info_(mo_space_info)
 {
 
     // Basic Preparation: Form Determinants
@@ -185,14 +186,14 @@ void FCI_MO::read_info(Options &options){
     // MOs
     nmo_ = wfn->nmo();
     nmopi_ = wfn->nmopi();
-    ncmo_ = integral_->ncmo();
-    ncmopi_ = integral_->ncmopi();
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     // Frozen Orbitals
-    frzcpi_ = integral_->frzcpi();
-    frzvpi_ = integral_->frzvpi();
-    nfrzc_ = frzcpi_.sum();
-    nfrzv_ = frzvpi_.sum();
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    nfrzc_ = mo_space_info_->size("FROZEN_DOCC");
+    nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // Core and Active
     if(options["ACTIVE"].size() == 0){
@@ -201,9 +202,9 @@ void FCI_MO::read_info(Options &options){
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
         throw PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
     }
-    core_ = Dimension (nirrep_, "Core MOs");
-    active_ = Dimension (nirrep_, "Active MOs");
-    virtual_ = Dimension (nirrep_, "Virtual MOs");
+    core_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    active_ = mo_space_info_->get_dimension("ACTIVE");
+    virtual_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
     if (options["RESTRICTED_DOCC"].size() == nirrep_ && options["ACTIVE"].size() == nirrep_){
         for (int h=0; h<nirrep_; ++h){
             core_[h] = options["RESTRICTED_DOCC"][h].to_integer();
@@ -295,23 +296,11 @@ void FCI_MO::read_info(Options &options){
     }
 
     // Index of Core, Active and Virtual
-    int ncmopi = 0;
-    for(int h=0; h<nirrep_; ++h){
-        size_t c = core_[h];
-        size_t ca = core_[h] + active_[h];
-        for(size_t i=0; i<ncmopi_[h]; ++i){
-            size_t idx = i + ncmopi;
-            if(i < c)
-                idx_c_.push_back(idx);
-            if(i >= c && i < ca)
-                idx_a_.push_back(idx);
-            if(i >= ca)
-                idx_v_.push_back(idx);
-        }
-        ncmopi += ncmopi_[h];
-    }
+    idx_c_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    idx_a_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    idx_v_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    // Hole and Particle Index
+    // Hole and Particle Index (Active must start first for old mcsrgpt2 code)
     nh_ = nc_ + na_;
     npt_ = na_ + nv_;
     idx_h_ = vector<size_t> (idx_a_);
@@ -1428,8 +1417,8 @@ void FCI_MO::compute_ref(){
             }
         }
     }
+    Eref_ += e_nuc_ + integral_->frozen_core_energy() + integral_->scalar();
 //    outfile->Printf("\n  Energy = %.15f",Eref_);
-    Eref_ += e_nuc_ + integral_->frozen_core_energy();
     timer_off("Compute Ref");
 }
 
