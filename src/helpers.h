@@ -46,10 +46,39 @@ using SpaceInfo = std::pair<Dimension,std::vector<MOInfo>>;
  *
  * Irrep:                 A1         A2        B1      B2
  * ALL:             | 0 1 2 3 4 | 5 6 7 8 9 |10 11 | 12 13 |
+ * CORRELATED:      | - 0 1 2 3 | - 4 5 6 7 | 8  - |  9 10 |
  * FROZEN_DOCC        *           *
- * RESTRICTED_DOCC      *           *         *       *
- * ACTIVE                 * *         * *
- * FROZEN_UOCC                *           *      *       *
+ * RESTRICTED_DOCC      *           * *       *       *
+ * ACTIVE                 * *           *
+ * RESTRICED_UOCC             *           *              *
+ * FROZEN_UOCC                                   *
+ *
+ * This returns:
+ *
+ * size("FROZEN_DOCC")     -> 2
+ * size("RESTRICTED_DOCC") -> 5
+ * size("ACTIVE")          -> 3
+ * size("RESTRICTED_UOCC") -> 3
+ * size("FROZEN_UOCC")     -> 1
+ *
+ * dimension("FROZEN_DOCC")     -> [1,1,0,0]
+ * dimension("RESTRICTED_DOCC") -> [1,2,1,1]
+ * dimension("ACTIVE")          -> [2,1,0,0]
+ * dimension("RESTRICTED_UOCC") -> [1,1,0,1]
+ * dimension("FROZEN_UOCC")     -> [0,0,1,0]
+ *
+ * absolute_mo("FROZEN_DOCC")     -> [0,5]
+ * absolute_mo("RESTRICTED_DOCC") -> [1,6,7,10,12]
+ * absolute_mo("ACTIVE")          -> [2,3,8]
+ * absolute_mo("RESTRICTED_UOCC") -> [4,9]
+ * absolute_mo("FROZEN_UOCC")     -> [11]
+ *
+ * corr_abs_mo("FROZEN_DOCC")     -> []
+ * corr_abs_mo("RESTRICTED_DOCC") -> [0,4,5,8,9]
+ * corr_abs_mo("ACTIVE")          -> [1,2,6]
+ * corr_abs_mo("RESTRICTED_UOCC") -> [3,7,10]
+ * corr_abs_mo("FROZEN_UOCC")     -> []
+ *
  */
 class MOSpaceInfo
 {
@@ -71,7 +100,7 @@ public:
     /// @return The list of the relative index (h,p_rel) of the molecular orbitals in space
     std::vector<std::pair<size_t,size_t>> get_relative_mo(const std::string& space);
 
-    void  read_options(Options& options);
+    void read_options(Options& options);
 private:
 
     std::pair<SpaceInfo,bool> read_mo_space(const std::string& space,Options& options);
