@@ -29,7 +29,7 @@ using namespace ambit;
 namespace psi{ namespace forte{
 
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ForteIntegrals(options, restricted, resort_frozen_core){
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info_){
     integral_type_ = Cholesky;
     outfile->Printf("\n Cholesky integrals time");
     Timer CholInt;

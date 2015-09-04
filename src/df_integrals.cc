@@ -239,7 +239,7 @@ void DFIntegrals::make_diagonal_integrals()
 }
 
 DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core)
-    : ForteIntegrals(options, restricted, resort_frozen_core){
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info_){
     integral_type_ = DF;
 
     outfile->Printf("\n DFIntegrals overall time");

@@ -26,12 +26,14 @@ namespace psi{ namespace forte{
 #endif
 
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),
       tensor_type_(kCore),
-      BTF(new BlockedTensorFactory(options))
+      BTF(new BlockedTensorFactory(options)),
+      mo_space_info_(mo_space_info)
 {
     ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
