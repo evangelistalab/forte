@@ -61,7 +61,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
+    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<psi::forte::MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FastAdaptivePathIntegralCI();
@@ -101,6 +101,8 @@ private:
     /// The reference determinant
     StringDeterminant reference_determinant_;
     std::vector<std::map<FastDeterminant,double>> solutions_;
+    /// The information of mo space
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
 
     // * Calculation info

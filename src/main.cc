@@ -517,7 +517,7 @@ forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "FAPICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<FastAdaptivePathIntegralCI> apici(new FastAdaptivePathIntegralCI(wfn,options,ints_));
+        auto apici = std::make_shared<FastAdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
