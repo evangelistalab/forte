@@ -177,8 +177,6 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double
 void ConventionalIntegrals::update_integrals(bool freeze_core)
 {
     make_diagonal_integrals();
-//    compute_frozen_core_energy();
-//    compute_frozen_one_body_operator();
     if (freeze_core){
         if (ncmo_ < nmo_){
             freeze_core_orbitals();

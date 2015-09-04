@@ -16,12 +16,14 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options,
+                       ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),
       tensor_type_(kCore),
-      BTF(new BlockedTensorFactory(options))
+      BTF(new BlockedTensorFactory(options)),
+      mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -45,119 +47,71 @@ DSRG_MRPT2::~DSRG_MRPT2()
 
 void DSRG_MRPT2::startup()
 {
-    Eref = reference_.get_Eref();
-    BlockedTensor::reset_mo_spaces();
+    print_ = options_.get_int("PRINT");
 
     frozen_core_energy = ints_->frozen_core_energy();
 
-    ncmopi_ = ints_->ncmopi();
+    source_ = options_.get_str("SOURCE");
 
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
         outfile->Printf("\n  S parameter for DSRG must >= 0!");
-        exit(1);
+        throw PSIEXCEPTION("S parameter for DSRG must >= 0!");
     }
     taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
     if(taylor_threshold_ <= 0){
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer greater than 0!");
-        exit(1);
+        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer greater than 0!");
     }
     taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
-
-    source_ = options_.get_str("SOURCE");
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
 
-    rdoccpi_ = Dimension (nirrep_, "Restricted Occupied MOs");
-    actvpi_  = Dimension (nirrep_, "Active MOs");
-    ruoccpi_ = Dimension (nirrep_, "Restricted Unoccupied MOs");
-    if (options_["RESTRICTED_DOCC"].size() == nirrep_){
-        for (int h = 0; h < nirrep_; ++h){
-            rdoccpi_[h] = options_["RESTRICTED_DOCC"][h].to_integer();
-        }
-    }else{
-        outfile->Printf("\n  The size of RESTRICTED_DOCC occupation does not match the number of Irrep.");
-        exit(1);
-    }
-    if ((options_["ACTIVE"].has_changed()) && (options_["ACTIVE"].size() == nirrep_)){
-        for (int h = 0; h < nirrep_; ++h){
-            actvpi_[h] = options_["ACTIVE"][h].to_integer();
-            ruoccpi_[h] = ncmopi_[h] - rdoccpi_[h] - actvpi_[h];
-        }
-    }else{
-        outfile->Printf("\n  The size of ACTIVE occupation does not match the number of Irrep.");
-        exit(1);
-    }
+    // orbital spaces
+    BlockedTensor::reset_mo_spaces();
+    acore_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    bcore_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    aactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    bactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    avirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    bvirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    // Populate the core, active, and virtual arrays
-    for (int h = 0, p = 0; h < nirrep_; ++h){
-        for (int i = 0; i < rdoccpi_[h]; ++i,++p){
-            acore_mos.push_back(p);
-            bcore_mos.push_back(p);
-        }
-        for (int i = 0; i < actvpi_[h]; ++i,++p){
-            aactv_mos.push_back(p);
-            bactv_mos.push_back(p);
-        }
-        for (int a = 0; a < ruoccpi_[h]; ++a,++p){
-            avirt_mos.push_back(p);
-            bvirt_mos.push_back(p);
-        }
-    }
+    // define space labels
+    acore_label = "c";
+    aactv_label = "a";
+    avirt_label = "v";
+    bcore_label = "C";
+    bactv_label = "A";
+    bvirt_label = "V";
+    BTF->add_mo_space(acore_label,"mn",acore_mos,AlphaSpin);
+    BTF->add_mo_space(bcore_label,"MN",bcore_mos,BetaSpin);
+    BTF->add_mo_space(aactv_label,"uvwxyz",aactv_mos,AlphaSpin);
+    BTF->add_mo_space(bactv_label,"UVWXYZ",bactv_mos,BetaSpin);
+    BTF->add_mo_space(avirt_label,"ef",avirt_mos,AlphaSpin);
+    BTF->add_mo_space(bvirt_label,"EF",bvirt_mos,BetaSpin);
 
-    // Form the maps from MOs to orbital sets
-    for (size_t p = 0; p < acore_mos.size(); ++p) mos_to_acore[acore_mos[p]] = p;
-    for (size_t p = 0; p < bcore_mos.size(); ++p) mos_to_bcore[bcore_mos[p]] = p;
-    for (size_t p = 0; p < aactv_mos.size(); ++p) mos_to_aactv[aactv_mos[p]] = p;
-    for (size_t p = 0; p < bactv_mos.size(); ++p) mos_to_bactv[bactv_mos[p]] = p;
-    for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
-    for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
+    // map space labels to mo spaces
+    label_to_spacemo[acore_label[0]] = acore_mos;
+    label_to_spacemo[bcore_label[0]] = bcore_mos;
+    label_to_spacemo[aactv_label[0]] = aactv_mos;
+    label_to_spacemo[bactv_label[0]] = bactv_mos;
+    label_to_spacemo[avirt_label[0]] = avirt_mos;
+    label_to_spacemo[bvirt_label[0]] = bvirt_mos;
 
-    BTF->add_mo_space("c","mn",acore_mos,AlphaSpin);
-    BTF->add_mo_space("C","MN",bcore_mos,BetaSpin);
+    // define composite spaces
+    BTF->add_composite_mo_space("h","ijkl",{acore_label,aactv_label});
+    BTF->add_composite_mo_space("H","IJKL",{bcore_label,bactv_label});
+    BTF->add_composite_mo_space("p","abcd",{aactv_label,avirt_label});
+    BTF->add_composite_mo_space("P","ABCD",{bactv_label,bvirt_label});
+    BTF->add_composite_mo_space("g","pqrs",{acore_label,aactv_label,avirt_label});
+    BTF->add_composite_mo_space("G","PQRS",{bcore_label,bactv_label,bvirt_label});
 
-    BTF->add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
-    BTF->add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
+    // get reference energy
+    Eref = reference_.get_Eref();
 
-    BTF->add_mo_space("v","ef",avirt_mos,AlphaSpin);
-    BTF->add_mo_space("V","EF",bvirt_mos,BetaSpin);
-
-    label_to_spacemo['c'] = acore_mos;
-    label_to_spacemo['C'] = bcore_mos;
-    label_to_spacemo['a'] = aactv_mos;
-    label_to_spacemo['A'] = bactv_mos;
-    label_to_spacemo['v'] = avirt_mos;
-    label_to_spacemo['V'] = bvirt_mos;
-
-    BTF->add_composite_mo_space("h","ijkl",{"c","a"});
-    BTF->add_composite_mo_space("H","IJKL",{"C","A"});
-
-    BTF->add_composite_mo_space("p","abcd",{"a","v"});
-    BTF->add_composite_mo_space("P","ABCD",{"A","V"});
-
-    BTF->add_composite_mo_space("g","pqrs",{"c","a","v"});
-    BTF->add_composite_mo_space("G","PQRS",{"C","A","V"});
-
+    // prepare integrals
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
-    V = BTF->build(tensor_type_,"V",spin_cases({"gggg"}));
-
-    Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
-    Eta1 = BTF->build(tensor_type_,"Eta1",spin_cases({"pp"}));
-    Lambda2 = BTF->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
-    F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
-    Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"hp"}));
-    Delta2 = BTF->build(tensor_type_,"Delta2",spin_cases({"hhpp"}));
-    RDelta1 = BTF->build(tensor_type_,"RDelta1",spin_cases({"hp"}));
-    RDelta2 = BTF->build(tensor_type_,"RDelta2",spin_cases({"hhpp"}));
-    T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-    T2 = BTF->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
-    RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
-    RExp2 = BTF->build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
-    Hbar1 = BTF->build(tensor_type_,"One-body Hbar",spin_cases({"hh"}));
-    Hbar2 = BTF->build(tensor_type_,"Two-body Hbar",spin_cases({"hhhh"}));
-
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
             value = ints_->oei_a(i[0],i[1]);
@@ -165,12 +119,16 @@ void DSRG_MRPT2::startup()
             value = ints_->oei_b(i[0],i[1]);
     });
 
-    // Fill in the two-electron operator (V)
+    V = BTF->build(tensor_type_,"V",spin_cases({"gggg"}));
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
         if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
         if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
     });
+
+    // prepare density matrix
+    Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
+    Eta1 = BTF->build(tensor_type_,"Eta1",spin_cases({"pp"}));
 
     ambit::Tensor Gamma1_cc = Gamma1.block("cc");
     ambit::Tensor Gamma1_aa = Gamma1.block("aa");
@@ -203,7 +161,10 @@ void DSRG_MRPT2::startup()
     Eta1_aa("pq") -= reference_.L1a()("pq");
     Eta1_AA("pq") -= reference_.L1b()("pq");
 
-    // Fill out Lambda2 and Lambda3
+    // prepare density cumulants
+    Lambda2 = BTF->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
+    Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+
     ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
     ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
     ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
@@ -221,6 +182,8 @@ void DSRG_MRPT2::startup()
     Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
 
     // Form the Fock matrix
+    F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
+
     F["pq"]  = H["pq"];
     F["pq"] += V["pjqi"] * Gamma1["ij"];
     F["pq"] += V["pJqI"] * Gamma1["IJ"];
@@ -229,7 +192,7 @@ void DSRG_MRPT2::startup()
     F["PQ"] += V["jPiQ"] * Gamma1["ij"];
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
-    size_t ncmo_ = ints_->ncmo();
+    size_t ncmo_ = acore_mos.size() + aactv_mos.size() + avirt_mos.size();
     Fa = std::vector<double>(ncmo_);
     Fb = std::vector<double>(ncmo_);
 
@@ -242,6 +205,8 @@ void DSRG_MRPT2::startup()
         }
     });
 
+    // keep Delta1 for renormalize_F
+    Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"hp"}));
     Delta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin){
             value = Fa[i[0]] - Fa[i[1]];
@@ -250,25 +215,8 @@ void DSRG_MRPT2::startup()
         }
     });
 
-    RDelta1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0]  == AlphaSpin){
-            value = renormalized_denominator(Fa[i[0]] - Fa[i[1]]);
-        }else if (spin[0]  == BetaSpin){
-            value = renormalized_denominator(Fb[i[0]] - Fb[i[1]]);
-        }
-    });
-
-    RDelta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-    });
-
     // Prepare exponential tensors for effective Fock matrix and integrals
+    RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
     RExp1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0]  == AlphaSpin){
             value = renormalized_exp(Fa[i[0]] - Fa[i[1]]);
@@ -277,6 +225,7 @@ void DSRG_MRPT2::startup()
         }
     });
 
+    RExp2 = BTF->build(tensor_type_,"RExp2",spin_cases({"hhpp"}));
     RExp2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value = renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -288,13 +237,15 @@ void DSRG_MRPT2::startup()
     });
 
     // Prepare Hbar
-    Hbar1["ij"] = F["ij"];
-    Hbar1["IJ"] = F["IJ"];
-    Hbar2["ijkl"] = V["ijkl"];
-    Hbar2["iJkL"] = V["iJkL"];
-    Hbar2["IJKL"] = V["IJKL"];
-//    Hbar1.print(stdout);
-//    Hbar2.print(stdout);
+    if(options_.get_str("RELAX_REF") != "NONE"){
+        Hbar1 = BTF->build(tensor_type_,"One-body Hbar",spin_cases({"hh"}));
+        Hbar2 = BTF->build(tensor_type_,"Two-body Hbar",spin_cases({"hhhh"}));
+        Hbar1["ij"] = F["ij"];
+        Hbar1["IJ"] = F["IJ"];
+        Hbar2["ijkl"] = V["ijkl"];
+        Hbar2["iJkL"] = V["iJkL"];
+        Hbar2["IJKL"] = V["IJKL"];
+    }
 
     // Print levels
     print_ = options_.get_int("PRINT");
@@ -538,29 +489,33 @@ void DSRG_MRPT2::compute_t2()
     std::string str = "Computing T2 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
 
+    T2 = BTF->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
     T2["ijab"] = V["ijab"];
     T2["iJaB"] = V["iJaB"];
     T2["IJAB"] = V["IJAB"];
+
+    // This is used to print the tensor out for further analysis.
+    // Only used as a test for some future tensor factorizations and other
     bool print_denom;
     print_denom = options_.get_bool("PRINT_DENOM2");
-    //This is used to print the tensor out for further analysis.  Only used as a test for some future projects such as tensor factorizations and other
-    //such things.  
     
     if(print_denom)
     {
         std::ofstream myfile;
-        myfile.open ("DeltaIJAB.txt");
-        myfile << acore_mos.size() + aactv_mos.size() <<" " <<  acore_mos.size() + aactv_mos.size() << " " <<  aactv_mos.size() + avirt_mos.size() <<
-        " " <<
-        aactv_mos.size() + avirt_mos.size() << " \n";
+        myfile.open ("Deltaijab.txt");
+        myfile << acore_mos.size() + aactv_mos.size() << " "
+               << acore_mos.size() + aactv_mos.size() << " "
+               << aactv_mos.size() + avirt_mos.size() << " "
+               << aactv_mos.size() + avirt_mos.size() << " \n";
         T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            double D = 0.0;
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-                D=renormalized_denominator_ts(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-                myfile << i[0] <<" " <<  i[1] << " " << i[2] << " " <<  i[3] << " "  << D << " \n";
+                double D = renormalized_denominator_ts(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+                myfile << i[0] << " " << i[1] << " "
+                               << i[2] << " " << i[3] << " " << D << " \n";
                 }
             });
     }
+
     T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
             value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
@@ -584,6 +539,8 @@ void DSRG_MRPT2::compute_t1()
     Timer timer;
     std::string str = "Computing T1 amplitudes";
     outfile->Printf("\n    %-40s ...", str.c_str());
+
+    T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
 
     BlockedTensor temp = BTF->build(tensor_type_,"temp",spin_cases({"aa"}));
     temp["xu"] = Gamma1["xu"];
@@ -920,16 +877,19 @@ void DSRG_MRPT2::renormalize_V()
     temp1["IJAB"] = V["IJAB"] * RExp2["IJAB"];
 
     // Non-diagonal Hbar2
-    Hbar2["ijuv"] = temp1["ijuv"];
-    Hbar2["iJuV"] = temp1["iJuV"];
-    Hbar2["IJUV"] = temp1["IJUV"];
-    Hbar2["uvij"] = temp1["ijuv"];
-    Hbar2["uViJ"] = temp1["iJuV"];
-    Hbar2["UVIJ"] = temp1["IJUV"];
-    // acv-acv-acv-acv block should be zero
-    Hbar2.block("aaaa").zero();
-    Hbar2.block("AAAA").zero();
-//    Hbar2.print(stdout);
+    if(options_.get_str("RELAX_REF") != "NONE"){
+        Hbar2["ijuv"] = temp1["ijuv"];
+        Hbar2["iJuV"] = temp1["iJuV"];
+        Hbar2["IJUV"] = temp1["IJUV"];
+        Hbar2["uvij"] = temp1["ijuv"];
+        Hbar2["uViJ"] = temp1["iJuV"];
+        Hbar2["UVIJ"] = temp1["IJUV"];
+
+        // acv-acv-acv-acv block should be zero
+        Hbar2.block("aaaa").zero();
+        Hbar2.block("AAAA").zero();
+//        Hbar2.print(stdout);
+    }
 
     // Back to renormalized V
     temp2["ijab"] = temp1["ijab"];
@@ -975,11 +935,13 @@ void DSRG_MRPT2::renormalize_F()
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
     // Non-diagonal Hbar1 (acv-acv block should be diagonal)
-    Hbar1["mv"] = temp2["mv"];
-    Hbar1["MV"] = temp2["MV"];
-    Hbar1["vm"] = temp2["mv"];
-    Hbar1["VM"] = temp2["MV"];
-//    Hbar1.print(stdout);
+    if(options_.get_str("RELAX_REF") != "NONE"){
+        Hbar1["mv"] = temp2["mv"];
+        Hbar1["MV"] = temp2["MV"];
+        Hbar1["vm"] = temp2["mv"];
+        Hbar1["VM"] = temp2["MV"];
+//        Hbar1.print(stdout);
+    }
 
     // Back to renormalized F
     temp2["ia"] += F["ia"];
