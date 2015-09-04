@@ -32,6 +32,7 @@ set forte {
   TAUQ 0.00001000
   nroot 1
   charge 0
+  perturb_select true
 }
 
 energy('scf')
