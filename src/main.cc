@@ -361,7 +361,7 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- The type of operator to use in the SRG transformation -*/
-        options.add_str("SRG_MODE","SRG","SRG DSRG CT");
+        options.add_str("SRG_MODE","DSRG","DSRG CT");
         /*- The type of operator to use in the SRG transformation -*/
         options.add_str("SRG_OP","UNITARY","UNITARY CC");
         /*- The flow generator to use in the SRG equations -*/
@@ -503,7 +503,7 @@ forte(Options &options)
     }
     if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
+        auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
@@ -651,7 +651,7 @@ forte(Options &options)
             dsrg->transfer_integrals();
         }
         {
-            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_);
+            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
             aci->compute_energy();
         }
     }
