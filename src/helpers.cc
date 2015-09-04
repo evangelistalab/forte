@@ -81,6 +81,18 @@ Dimension MOSpaceInfo::get_dimension(const std::string& space)
     return result;
 }
 
+std::vector<int> MOSpaceInfo::symmetry(const std::string& space)
+{
+    Dimension dims = get_dimension(space);
+    std::vector<int> result;
+    for (int h = 0; h < dims.n(); ++h){
+        for (int i = 0; i < dims[h]; ++i){
+            result.push_back(h);
+        }
+    }
+    return result;
+}
+
 std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string& space)
 {
     std::vector<size_t> result;
