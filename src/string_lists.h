@@ -94,11 +94,6 @@ enum RequiredLists {
  * @brief The StringLists class
  *
  * This class computes mappings between alpha/beta strings
- *
- * @param cmopi The number of correlated MOs per irrep
- * @param cmo_to_mo Maps the correlated MOs to all the MOs
- * @param na The number of alpha orbitals
- * @param nb The number of beta orbitals
  */
 class StringLists {
 public:

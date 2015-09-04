@@ -1,5 +1,3 @@
-#include "lambda-ci.h"
-
 #include <cmath>
 #include <functional>
 #include <algorithm>
