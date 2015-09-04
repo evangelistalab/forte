@@ -19,6 +19,7 @@
 #include "sparse_ci_solver.h"
 #include "string_determinant.h"
 #include "bitset_determinant.h"
+#include "fci_vector.h"
 
 using namespace std;
 using namespace psi;
@@ -72,7 +73,11 @@ inline double smootherstep(double edge0, double edge1, double x)
 
 AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints), mo_space_info_(mo_space_info)
+    : Wavefunction(options,_default_psio_lib_),
+		options_(options), 
+		ints_(ints), 
+		mo_space_info_(mo_space_info),
+		FCIints_(ints_, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -87,12 +92,14 @@ void AdaptiveCI::startup()
     StringDeterminant::set_ints(ints_);
     BitsetDeterminant::set_ints(ints_);
 
-    // The number of correlated molecular orbitals
-//    ncmo_ = ints_->ncmo();
-//    ncmopi_ = ints_->ncmopi();
+	FCIIntegrals FCIints_(ints_,mo_space_info_);
 
-    ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    // The number of correlated molecular orbitals
+   // ncmo_ = ints_->ncmo();
+   // ncmopi_ = ints_->ncmopi();
+
+    ncmo_ = mo_space_info_->size("ACTIVE");
+    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
 
 	// Number of correlated electrons
 	ncel_ = 0;
@@ -111,19 +118,18 @@ void AdaptiveCI::startup()
 	outfile->Printf("\n nbeta:  %d", nbeta_);
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = ints_->frzcpi();
-    frzvpi_ = ints_->frzvpi();
+   // frzcpi_ = ints_->frzcpi();
+   // frzvpi_ = ints_->frzvpi();
+
+	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_UOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
-    // Create the array with mo symmetryi and compute number of frozen orbitals
-	nfrzc_ = 0;
-    for (int h = 0; h < nirrep_; ++h){
-		nfrzc_ += frzcpi_[h];
-        for (int p = 0; p < ncmopi_[h]; ++p){
-            mo_symmetry_.push_back(h);
-        }
-    }
+    // Create the array with mo symmetry and compute number of frozen orbitals
+	nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
+	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+
 
 	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
 
@@ -493,13 +499,13 @@ double AdaptiveCI::compute_energy()
 		}
 		
 		outfile->Flush();
+		
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
         }else{
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuSparse);
         }
-
 		// Save the dimention of the previous PQ space
 		size_t PQ_space_prev = PQ_space_.size();
 
@@ -1013,7 +1019,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_alfa_bit(bb,true);
 
-                        double HIJ = ints_->aptei_aa(ii,jj,aa,bb);
+                        double HIJ = FCIints_.tei_aa(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1044,7 +1050,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = ints_->aptei_ab(ii,jj,aa,bb);
+                        double HIJ = FCIints_.tei_ab(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1076,7 +1082,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_beta_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = ints_->aptei_bb(ii,jj,aa,bb);
+                        double HIJ = FCIints_.tei_bb(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ib = det.beta_bits();
