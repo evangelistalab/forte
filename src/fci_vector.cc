@@ -40,7 +40,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
 
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
-    scalar_energy_ = 0.0;
+    scalar_energy_ = ints->scalar();
     for (size_t i = 0; i < nfomo; ++i){
         size_t ii = fomo_to_mo[i];
         scalar_energy_ += ints->oei_a(ii,ii);

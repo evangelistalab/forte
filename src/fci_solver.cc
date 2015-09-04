@@ -271,8 +271,8 @@ double FCISolver::compute_energy()
     for (int r = 0; r < nroot_; ++r){ // TODO : fix this loop
         outfile->Printf("\n\n  ==> Root No. %d <==",r);
         double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
-//        double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy + ints_->scalar();
         outfile->Printf("\n    Total Energy: %25.15f",root_energy);
+        dls.eigenvector(r)->print();
     }
 
     // Compute the RDMs

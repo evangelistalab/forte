@@ -5,8 +5,8 @@
 import forte
 
 refscf = -14.839846512738 #TEST
-refaci = -14.888681221669 #TEST
-refacipt2 = -14.890314474716 #TEST
+refaci = -14.889029534777 #TEST
+refacipt2 = -14.890144527518 #TEST
 
 molecule li2{
    Li
@@ -28,9 +28,9 @@ set mcscf {
 set forte {
   job_type = aci
   frozen_docc = [0,0,0,0,0,0,0,0]
-  SELECT_TYPE energy
-  TAUP 0.001000
-  TAUQ 0.00001000
+  SELECT_TYPE amp
+  TAUP 0.01000
+  TAUQ 0.001000
   nroot 1
   charge 0
 }

@@ -26,6 +26,8 @@ namespace forte{
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
 enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF};
+//The integrals implementation is in a cc file for each class.  
+//DFIntegrals->df_integrals.cc
 
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering
