@@ -35,34 +35,40 @@
 
 namespace psi{ namespace forte{
 
-
 /**
  * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
  */
 class FCIIntegrals
 {
 public:
+
+    // ==> Class Constructors <==
+
     /// Constructor based on StringLists
     FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints);
     /// Constructor based on MOInfoSpace
     FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info);
 
-    double frozen_core_energy() const {return frozen_core_energy_;}
-    double scalar_energy() const {return scalar_energy_;}
-//    double oei_a(size_t n) const {return oei_a_[n];}
-//    double oei_b(size_t n) const {return oei_b_[n];}
-//    double tei_aa(size_t n) const {return tei_aa_[n];}
-//    double tei_ab(size_t n) const {return tei_ab_[n];}
-//    double tei_bb(size_t n) const {return tei_bb_[n];}
+    // ==> Class Interface <==
 
+    /// Return the frozen core energy (contribution from FROZEN_DOCC)
+    double frozen_core_energy() const {return frozen_core_energy_;}
+    /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
+    double scalar_energy() const {return scalar_energy_;}
+
+    /// Return the alpha effective one-electron integral
     double oei_a(size_t p,size_t q) const {return oei_a_[p * ncmo + q];}
+    /// Return the beta effective one-electron integral
     double oei_b(size_t p,size_t q) const {return oei_b_[p * ncmo + q];}
+    /// Return the alpha-alpha antisymmetrized two-electron integral <pq||rs>
     double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
+    /// Return the alpha-beta two-electron integral <pq|rs>
     double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
+    /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
     double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
 private:
 
-    // ==> Class Data <==
+    // ==> Class Private Data <==
 
     size_t ncmo;
     /// The frozen core energy
@@ -80,9 +86,11 @@ private:
     /// The beta-beta antisymmetrized two-electron integrals in physicist notation
     std::vector<double> tei_bb_;
 
-    // ==> Class Functions <==
-    size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;}
+    // ==> Class Private Functions <==
+
+    inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;}
 };
+
 
 class FCIWfn{
 public:
