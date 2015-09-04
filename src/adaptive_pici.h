@@ -33,6 +33,7 @@
 #include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "helpers.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace forte{
 
@@ -105,7 +106,8 @@ private:
     std::vector<std::map<Determinant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
+    /// Store all the integrals locally
+    FCIIntegrals fciInts_;
 
     // * Calculation info
     /// The threshold applied to the primary space

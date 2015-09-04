@@ -103,6 +103,8 @@ private:
     std::vector<std::map<FastDeterminant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    /// Store all the integrals locally
+    FCIIntegrals fciInts_;
 
 
     // * Calculation info
