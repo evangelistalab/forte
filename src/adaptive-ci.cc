@@ -70,8 +70,9 @@ inline double smootherstep(double edge0, double edge1, double x)
     return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
-AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints)
+AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+                       std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options,_default_psio_lib_), options_(options), ints_(ints), mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -87,8 +88,11 @@ void AdaptiveCI::startup()
     BitsetDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = ints_->ncmo();
-    ncmopi_ = ints_->ncmopi();
+//    ncmo_ = ints_->ncmo();
+//    ncmopi_ = ints_->ncmopi();
+
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
 	// Number of correlated electrons
 	ncel_ = 0;
