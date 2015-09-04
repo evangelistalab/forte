@@ -73,8 +73,8 @@ void THREE_DSRG_MRPT2::startup()
 
     frozen_core_energy = ints_->frozen_core_energy();
 
-    ncmopi_ = ints_->ncmopi();
-    size_t ncmo = ints_->ncmo();
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
 
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
@@ -116,12 +116,6 @@ void THREE_DSRG_MRPT2::startup()
     //}
 
     // Form the maps from MOs to orbital sets
-    for (size_t p = 0; p < acore_mos.size(); ++p) mos_to_acore[acore_mos[p]] = p;
-    for (size_t p = 0; p < bcore_mos.size(); ++p) mos_to_bcore[bcore_mos[p]] = p;
-    for (size_t p = 0; p < aactv_mos.size(); ++p) mos_to_aactv[aactv_mos[p]] = p;
-    for (size_t p = 0; p < bactv_mos.size(); ++p) mos_to_bactv[bactv_mos[p]] = p;
-    for (size_t p = 0; p < avirt_mos.size(); ++p) mos_to_avirt[avirt_mos[p]] = p;
-    for (size_t p = 0; p < bvirt_mos.size(); ++p) mos_to_bvirt[bvirt_mos[p]] = p;
 
     BlockedTensor::set_expert_mode(true);
 
@@ -172,8 +166,8 @@ void THREE_DSRG_MRPT2::startup()
     // And fill the tensor
     // Just need to fill full spin cases.  Mixed alpha beta is created via alphaalpha beta beta
 
-    size_t nthree = ints_->nthree();
-    std::vector<size_t> nauxpi(nthree);
+    nthree_ = ints_->nthree();
+    std::vector<size_t> nauxpi(nthree_);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
@@ -283,8 +277,8 @@ void THREE_DSRG_MRPT2::startup()
 
 
     //Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.  
-    boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo, ncmo));
-    boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo, ncmo));
+    boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
+    boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
     for(size_t m = 0; m < core_; m++){
             Gamma1_matrixA->set(acore_mos[m],acore_mos[m],1.0);
             Gamma1_matrixB->set(bcore_mos[m],bcore_mos[m],1.0);
@@ -367,7 +361,7 @@ void THREE_DSRG_MRPT2::startup()
     });
     }
 
-    size_t ncmo_ = ints_->ncmo();
+    Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     Fa.reserve(ncmo_);
     Fb.reserve(ncmo_);
@@ -1253,9 +1247,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
     double Eflybeta = 0.0;
     double Eflymixed = 0.0;
     double Efly = 0.0;
-    size_t nthree = ints_->nthree();
-    size_t ncmo   = ints_->ncmo();
-    size_t nmo_   = ints_->nmo();
     #pragma omp parallel for num_threads(num_threads_) \
     schedule(dynamic) \
     reduction(+:Eflyalpha, Eflybeta, Eflymixed)
@@ -1289,21 +1280,21 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
                     double t2alpha = 0.0;
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
-                    vmnefalphaC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + e]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + f]),nmo_ * nmo_);
-                     vmnefalphaE = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + f]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + e]),nmo_ * nmo_);
-                    vmnefbetaC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + fb]),nmo_ * nmo_);
-                     vmnefbetaE = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo + fb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo + eb]),nmo_ * nmo_);
-                    vmnefmixedC = C_DDOT(nthree,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo + fb]),nmo_ * nmo_);
+                    vmnefalphaC = C_DDOT(nthree_,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + e]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + f]),nmo_ * nmo_);
+                     vmnefalphaE = C_DDOT(nthree_,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + f]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + e]),nmo_ * nmo_);
+                    vmnefbetaC = C_DDOT(nthree_,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo_ + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo_ + fb]),nmo_ * nmo_);
+                     vmnefbetaE = C_DDOT(nthree_,
+                            &(ints_->get_three_integral_pointer()[0][mb * ncmo_ + fb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][nb * ncmo_ + eb]),nmo_ * nmo_);
+                    vmnefmixedC = C_DDOT(nthree_,
+                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + eb]),nmo_ * nmo_,
+                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + fb]),nmo_ * nmo_);
 
                     vmnefalpha = vmnefalphaC - vmnefalphaE;
                     vmnefbeta = vmnefbetaC - vmnefbetaE;
@@ -1333,16 +1324,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
 }
 double THREE_DSRG_MRPT2::E_VT2_2_ambit()
 {
-    size_t nthree= ints_->nthree();
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
     // Bef(ef) = Bm(L|e) * Bn(L|f)
-    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree,virtual_});
-    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree,virtual_});
+    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree_,virtual_});
+    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree_,virtual_});
     Ba("mge") = (ThreeIntegral.block("dvc"))("gem");
     Bb("MgE") = (ThreeIntegral.block("dvc"))("gEM");
 
-    size_t dim = nthree * virtual_;
+    size_t dim = nthree_ * virtual_;
 
     double Ealpha = 0.0;
     double Ebeta  = 0.0;
@@ -1367,10 +1357,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     std::vector<ambit::Tensor> RDVec;
     for (int i = 0; i < nthread; i++)
     {
-     BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_}));
-     BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_}));
-     BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_}));
-     BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_}));
+     BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree_,virtual_}));
+     BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree_,virtual_}));
+     BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree_,virtual_}));
+     BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree_,virtual_}));
      BefVec.push_back(ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_}));
      BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
      RDVec.push_back(ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_}));

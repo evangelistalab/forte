@@ -13,7 +13,7 @@ namespace psi{ namespace forte{
 
 using namespace ambit;
 
-MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
+MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
 {
     print_method_banner({"Second-Order Moller-Plesset Natural Orbitals",
                          "written by Francesco A. Evangelista"});
@@ -39,11 +39,11 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
     /// Map from all the MOs to the beta virtual
     std::map<size_t,size_t> mos_to_bvir;
 
-    Dimension ncmopi_ = ints->ncmopi();
-    Dimension frzcpi = ints->frzcpi();
-    Dimension frzvpi = ints->frzvpi();
+    Dimension ncmopi_ = mo_space_info->get_dimension("CORRELATED");
+    Dimension frzcpi =  mo_space_info->get_dimension("FROZEN_DOCC");
+    Dimension frzvpi =  mo_space_info->get_dimension("FROZEN_UOCC");
 
-    Dimension nmopi = wfn->nmopi();
+    Dimension nmopi =  wfn->nmopi();
     Dimension doccpi = wfn->doccpi();
     Dimension soccpi = wfn->soccpi();
 
@@ -56,6 +56,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
     Dimension bvirpi = ncmopi_ - boccpi;
 
     int nirrep = wfn->nirrep();
+
     for (int h = 0, p = 0; h < nirrep; ++h){
         for (int i = 0; i < corr_docc[h]; ++i,++p){
             a_occ_mos.push_back(p);
@@ -70,11 +71,10 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
             b_vir_mos.push_back(p);
         }
     }
-
-    for (size_t p = 0; p < a_occ_mos.size(); ++p) mos_to_aocc[a_occ_mos[p]] = p;
-    for (size_t p = 0; p < b_occ_mos.size(); ++p) mos_to_bocc[b_occ_mos[p]] = p;
-    for (size_t p = 0; p < a_vir_mos.size(); ++p) mos_to_avir[a_vir_mos[p]] = p;
-    for (size_t p = 0; p < b_vir_mos.size(); ++p) mos_to_bvir[b_vir_mos[p]] = p;
+    //f r (size_t p = 0; p < a_occ_mos.size(); ++p) mos_to_aocc[a_occ_mos[p]] = p;
+    //for (size_t p = 0; p < b_occ_mos.size(); ++p) mos_to_bocc[b_occ_mos[p]] = p;
+    //for (size_t p = 0; p < a_vir_mos.size(); ++p) mos_to_avir[a_vir_mos[p]] = p;
+    //for (size_t p = 0; p < b_vir_mos.size(); ++p) mos_to_bvir[b_vir_mos[p]] = p;
 
     size_t naocc = a_occ_mos.size();
     size_t nbocc = b_occ_mos.size();
@@ -104,8 +104,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
             value = ints->oei_b(i[0],i[1]);
     });
 
-    size_t nmo = ints->nmo();
-    if(nmo > 200){outfile->Printf("\n I would be suprised if this works");}
+    size_t nmo = wfn->nmo();
 
     // Fill in the two-electron operator (V)
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -141,7 +140,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
     F["PQ"] += V["rPsQ"] * G1["sr"];
     F["PQ"] += V["PRQS"] * G1["SR"];
 
-    size_t ncmo_ = ints->ncmo();
+    size_t ncmo_ = mo_space_info->size("CORRELATED");
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
@@ -368,10 +367,10 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
     print_method_banner({"Semi-Canonical Orbitals","Francesco A. Evangelista"});
 
     // 1. Build the Fock matrix
-    int nirrep = ints->nirrep();
-    size_t ncmo = ints->ncmo();
+    int nirrep = wfn->nirrep();
+    size_t ncmo = mo_space_info->size("CORRELATED");
     Dimension nmopi = wfn->nmopi();
-    Dimension ncmopi = ints->ncmopi();
+    Dimension ncmopi = mo_space_info->get_dimension("CORRELATED");
     Dimension fdocc = mo_space_info->get_dimension("FROZEN_DOCC");
     Dimension rdocc = mo_space_info->get_dimension("RESTRICTED_DOCC");
     Dimension actv = mo_space_info->get_dimension("ACTIVE");
