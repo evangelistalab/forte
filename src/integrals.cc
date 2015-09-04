@@ -73,9 +73,9 @@ void ForteIntegrals::startup()
     nmopi_ = wfn->nmopi();
     frzcpi_ = wfn->frzcpi();
     frzvpi_ = wfn->frzvpi();
-    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     ncmo_ = ncmopi_.sum();
 
