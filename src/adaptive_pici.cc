@@ -68,12 +68,12 @@ void AdaptivePathIntegralCI::startup()
     Determinant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
-    ncmo_ = ints_->ncmo();
-    ncmopi_ = ints_->ncmopi();
+    ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
+    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
 
     // Overwrite the frozen orbitals arrays
-    frzcpi_ = ints_->frzcpi();
-    frzvpi_ = ints_->frzvpi();
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 
