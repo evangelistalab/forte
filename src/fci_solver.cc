@@ -308,7 +308,7 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
 
     // Build the full determinants
     size_t nact = active_mo_.size();
-    size_t nmo = ints_->ncmo();
+    size_t nmo = Process::environment.wavefunction()->nmo();
 
     for (auto det : dets){
         double e;

@@ -7,8 +7,8 @@ namespace psi{ namespace forte{
 
 using namespace ambit;
 
-MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(kCore)
+MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(kCore), mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -28,7 +28,8 @@ void MethodBase::startup()
 
     BlockedTensor::set_expert_mode(true);
 
-    Dimension ncmopi_ = ints_->ncmopi();
+    Dimension ncmopi_ = Process::environment.wavefunction()->nmopi();
+
 
     Dimension corr_docc(doccpi_);
     corr_docc -= frzcpi_;
@@ -52,11 +53,6 @@ void MethodBase::startup()
     for (size_t p = 0; p < b_occ_mos.size(); ++p) mos_to_bocc[b_occ_mos[p]] = p;
     for (size_t p = 0; p < a_vir_mos.size(); ++p) mos_to_avir[a_vir_mos[p]] = p;
     for (size_t p = 0; p < b_vir_mos.size(); ++p) mos_to_bvir[b_vir_mos[p]] = p;
-
-    size_t naocc = a_occ_mos.size();
-    size_t nbocc = b_occ_mos.size();
-    size_t navir = a_vir_mos.size();
-    size_t nbvir = b_vir_mos.size();
 
     BlockedTensor::add_mo_space("o","ijklmn",a_occ_mos,AlphaSpin);
     BlockedTensor::add_mo_space("O","IJKLMN",b_occ_mos,BetaSpin);
@@ -111,7 +107,7 @@ void MethodBase::startup()
 //        F.print();
 //    }
 
-    size_t ncmo_ = ints_->ncmo();
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 

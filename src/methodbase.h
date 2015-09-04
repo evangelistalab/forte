@@ -96,11 +96,13 @@ protected:
     void startup();
     /// Called in the destructor
     void cleanup();
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 public:
 
     // => Constructors <= //
 
-    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
+    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MethodBase();
 
     /// The energy of the reference
