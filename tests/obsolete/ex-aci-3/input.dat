@@ -26,7 +26,7 @@ set {
 
 
 set forte {
-  job_type = ex-aci
+  job_type = aci
   multiplicity 1
   SELECT_TYPE aimed_energy
   perturb_select false
@@ -46,5 +46,5 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refaci, get_variable("EX-ACI ENERGY"),9, "EX-ACI energy") #TEST
-compare_values(refacipt2, get_variable("EX-ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

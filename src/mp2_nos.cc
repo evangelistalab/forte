@@ -453,6 +453,10 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         evecs.push_back(U);
         evals.push_back(lambda);
     }
+//    Fv_a->print();
+//    SharedMatrix Uv = evecs[4];
+//    Fv_a->transform(Uv);
+//    Fv_a->print();
 
     // 3. Build the unitary matrices
     Matrix Ua("Ua",nmopi,nmopi);

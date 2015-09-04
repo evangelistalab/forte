@@ -1,6 +1,8 @@
 #include <cmath>
 #include <memory>
 
+#include <boost/format.hpp>
+
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -11,13 +13,11 @@
 #include <libtrans/integraltransform.h>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
-#include "multidimensional_arrays.h"
 
 #include "helpers.h"
-
+#include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
-#include "ex-aci.h"
 #include "adaptive_pici.h"
 #include "fast_apici.h"
 #include "lambda-ci.h"
@@ -102,7 +102,7 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE EX-ACI FCIQMC APICI FAPICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG");
@@ -401,7 +401,7 @@ read_options(std::string name, Options &options)
         boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
         int multi = molecule->multiplicity();
         options.add_int("MULTI", multi);            /* multiplicity */
-        options.add_int("MS", 0);                   /* Ms value */
+        options.add_int("MS", 0);                   /* (2 * Sz) */
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/
@@ -444,6 +444,9 @@ read_options(std::string name, Options &options)
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
+        /*- Print (1 - exp(-2*s*D)) / D -*/
+        options.add_bool("PRINT_DENOM2", false);
+        
     }
 
     return true;
@@ -466,29 +469,15 @@ forte(Options &options)
     mo_space_info->read_options(options);
 
     // Get the one- and two-electron integrals in the MO basis
-    // If CHOLESKY
-    // create CholeskyIntegrals class
     ForteIntegrals* ints_;
-    if(options.get_str("INT_TYPE") == "CHOLESKY")
-
-    {
+    if (options.get_str("INT_TYPE") == "CHOLESKY"){
         ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
-    }
-    else if(options.get_str("INT_TYPE") == "DF")
-
-    {
+    }else if (options.get_str("INT_TYPE") == "DF"){
         ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
-    }
-    else if (options.get_str("INT_TYPE")== "DISKDF")
-
-    {
+    }else if (options.get_str("INT_TYPE") == "DISKDF"){
         ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
-    }
-
-    else 
-    {
+    }else {
         ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs);
-        
     }
 
     // Link the integrals to the BitsetDeterminant class
@@ -517,11 +506,6 @@ forte(Options &options)
         boost::shared_ptr<AdaptiveCI> aci(new AdaptiveCI(wfn,options,ints_));
         aci->compute_energy();
     }
-    if ((options.get_str("JOB_TYPE") == "EX-ACI")){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<EX_ACI> ex_aci(new EX_ACI(wfn,options,ints_));
-        ex_aci->compute_energy();
-    }
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         boost::shared_ptr<AdaptivePathIntegralCI> apici(new AdaptivePathIntegralCI(wfn,options,ints_));
@@ -547,20 +531,15 @@ forte(Options &options)
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        {
-            outfile->Printf("\n  !!!frozen core energy = %22.15f", ints_->frozen_core_energy());
-            FCI_MO fci_mo(options,ints_);
-            Reference reference = fci_mo.reference();
-            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
-            mrdsrg->compute_energy();
-        }
-        if(options.get_str("RELAX_REF") == "ONCE"){
-            outfile->Printf("\n  !!!frozen core energy = %22.15f", ints_->frozen_core_energy());
-//            FCI_MO fci_mo(options,ints_);
-            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-            fci->compute_energy();
-        }
+        FCI_MO fci_mo(options,ints_);
+        Reference reference = fci_mo.reference();
 
+        std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+        if(options.get_str("RELAX_REF") == "NONE"){
+            mrdsrg->compute_energy();
+        }else{
+            mrdsrg->compute_energy_relaxed();
+        }
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(options,ints_);

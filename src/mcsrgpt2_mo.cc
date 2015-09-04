@@ -555,9 +555,6 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     double Vab = integral_->aptei_ab(na,nb,ni,nj);
                     double Vbb = integral_->aptei_bb(na,nb,ni,nj);
 
-                    double Zaa = sqrt(s_) * Daa;
-                    double Zab = sqrt(s_) * Dab;
-                    double Zbb = sqrt(s_) * Dbb;
 
                     i += na_;
                     j += na_;
@@ -590,10 +587,6 @@ void MCSRGPT2_MO::Form_T2_SELEC(d4 &AA, d4 &AB, d4 &BB){
                     double Vaa = integral_->aptei_aa(na,nb,ni,nj);
                     double Vab = integral_->aptei_ab(na,nb,ni,nj);
                     double Vbb = integral_->aptei_bb(na,nb,ni,nj);
-
-                    double Zaa = sqrt(s_) * Daa;
-                    double Zab = sqrt(s_) * Dab;
-                    double Zbb = sqrt(s_) * Dbb;
 
                     a += na_;
                     b += na_;

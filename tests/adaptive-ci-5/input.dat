@@ -1,36 +1,39 @@
-#! This tests the Adaptive-CI procedure using energy selection
+#
+#This tests the EX-CI procedure using energy selection
 #! Generated using commit GITCOMMIT
-#
-#
+# Tests root-selection 
 
 import forte 
 
-refscf = -2.03108138291133 #TEST
-refaci = -2.105258455019 #TEST
-refacipt2 = -2.116150053414 #TEST
+refscf = -14.839846512738 #TEST
+refaci = -14.8797641587 #TEST
+refacipt2 = -14.889463445 #TEST
 
 molecule li2{
-0 1
-H -0.4  0.0 0.0
-H  0.4  0.0 0.0
-H  0.1 -0.3 1.0
-H -0.1  0.5 1.0
+   Li
+   Li 1 2.0000
 }
 
 set {
-  basis cc-pVDZ
+  basis DZ
   e_convergence 10
   d_convergence 10
   r_convergence 10
+  reference rhf
   scf_type pk
+  docc = [2,0,0,0,0,1,0,0]
 }
 
 set forte {
-  job_type = aci
+  job_type aci
   SELECT_TYPE energy
-  TAUP 0.00100
-  TAUQ 0.0001000
-  nroot 1
+  perturb_select false
+  pq_function average
+  excited_algorithm root_select
+  root 0
+  TAUP 0.000100
+  TAUQ 0.001000
+  nroot 2
   charge 0
 }
 
@@ -39,5 +42,5 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("ACI ENERGY"),9, "EX-ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST

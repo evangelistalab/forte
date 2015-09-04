@@ -1350,7 +1350,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
 }
 double THREE_DSRG_MRPT2::E_VT2_2_ambit()
 {
-    double Efly = 0.0;
     size_t nthree= ints_->nthree();
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
@@ -1361,7 +1360,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     Bb("MgE") = (ThreeIntegral.block("dvc"))("gEM");
 
     size_t dim = nthree * virtual_;
-    double Emp2 = 0.0;
 
     double Ealpha = 0.0;
     double Ebeta  = 0.0;
