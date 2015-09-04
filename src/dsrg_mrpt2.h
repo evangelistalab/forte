@@ -32,6 +32,7 @@
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
 #include "reference.h"
+#include "helpers.h"
 #include "blockedtensorfactory.h"
 
 namespace psi{
@@ -58,6 +59,9 @@ protected:
     /// The molecular integrals required by MethodBase
     ForteIntegrals* ints_;
 
+    /// MO space info
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
     /// The number of restricted doubly occupied orbitals per irrep (core)
@@ -73,13 +77,25 @@ protected:
     std::vector<size_t> aactv_mos;
     /// List of alpha virtual MOs
     std::vector<size_t> avirt_mos;
-
     /// List of beta core MOs
     std::vector<size_t> bcore_mos;
     /// List of beta active MOs
     std::vector<size_t> bactv_mos;
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos;
+
+    /// Alpha core label
+    std::string acore_label;
+    /// Alpha active label
+    std::string aactv_label;
+    /// Alpha virtual label
+    std::string avirt_label;
+    /// Beta core label
+    std::string bcore_label;
+    /// Beta active label
+    std::string bactv_label;
+    /// Beta virtual label
+    std::string bvirt_label;
 
     /// Map from all the MOs to the alpha core
     std::map<size_t,size_t> mos_to_acore;
@@ -247,7 +263,8 @@ public:
 
     // => Constructors <= //
 
-    DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
+    DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options,
+               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~DSRG_MRPT2();
 
