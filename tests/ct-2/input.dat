@@ -5,7 +5,7 @@
 import forte
 
 refscf = -76.005679425830 #TEST
-refct  = -76.158509610358138 #TEST
+refct  = -76.158509610586947 #TEST
 molecule {
 0 1
 O
