@@ -81,7 +81,7 @@ Dimension MOSpaceInfo::get_dimension(const std::string& space)
     }else{
         for (const auto& el_space : composite_spaces_[space]){
             if (mo_spaces_.count(el_space) != 0)
-                result += mo_spaces_[space].first;
+                result += mo_spaces_[el_space].first;
         }
     }
     return result;
