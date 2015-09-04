@@ -26,7 +26,7 @@ adaptive_ci_tests = ["adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
                      "adaptive-ci-4","adaptive-ci-5","adaptive-ci-6",
                      "adaptive-ci-7","adaptive-ci-8"] 
 
-apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4"]
+apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4","apifci-5", "fapici-1"]
 fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]
