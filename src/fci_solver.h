@@ -59,7 +59,7 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, ForteIntegrals* ints);
+              size_t multiplicity, size_t symmetry, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCISolver() {}
 
@@ -123,6 +123,8 @@ private:
 
     /// All that happens before we compute the energy
     void startup();
+    /// The mo_space_info object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
     std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > > initial_guess(FCIWfn& diag,size_t n,size_t multiplicity);

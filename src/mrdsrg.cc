@@ -319,7 +319,7 @@ double MRDSRG::compute_energy_relaxed(){
         transfer_integrals();
 
         // diagonalize the Hamiltonian
-        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_);
+        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
         Erelax = fcisolver->compute_energy();
 
         // printing
@@ -349,7 +349,7 @@ double MRDSRG::compute_energy_relaxed(){
             transfer_integrals();
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_);
+            FCISolver fcisolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
             Etemp = Erelax;
             Erelax = fcisolver.compute_energy();
             Erelax_vec.push_back(Erelax);
