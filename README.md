@@ -40,4 +40,4 @@ INCLUDES += -I$(AMBIT_DIR)/include
 
 PSITARGET = ../$(NAME).so
 ```
-where (AMBIT_DIRECTORY) is the location of your compiled version of Ambit.
+where (AMBIT_DIR) is the location of your Ambit install directory.
