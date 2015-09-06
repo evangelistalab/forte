@@ -31,7 +31,7 @@ modify the following lines of your Makefile:
 NAME = forte
 
 # Define ambit directory
-AMBIT_DIR = <directory containing ambit source code>
+AMBIT_DIR = <ambit install directory>
 
 # Need to link against Psi4 plugin library
 PSIPLUGIN = -L$(OBJDIR)/lib -lplugin -L$(AMBIT_DIR)/lib -lambit
