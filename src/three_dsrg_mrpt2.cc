@@ -99,23 +99,6 @@ void THREE_DSRG_MRPT2::startup()
     bactv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
     avirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     bvirt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    // Populate the core, active, and virtuall arrays
-    //for (int h = 0, p = 0; h < nirrep_; ++h){
-    //    for (int i = 0; i < rdoccpi_[h]; ++i,++p){
-    //        acore_mos.push_back(p);
-    //        bcore_mos.push_back(p);
-    //    }
-    //    for (int i = 0; i < actvpi_[h]; ++i,++p){
-    //        aactv_mos.push_back(p);
-    //        bactv_mos.push_back(p);
-    //    }
-    //    for (int a = 0; a < ruoccpi_[h]; ++a,++p){
-    //        avirt_mos.push_back(p);
-    //        bvirt_mos.push_back(p);
-    //    }
-    //}
-
-    // Form the maps from MOs to orbital sets
 
     BlockedTensor::set_expert_mode(true);
 
@@ -139,6 +122,7 @@ void THREE_DSRG_MRPT2::startup()
     BTF->add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
     BTF->add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
     virtual_ = avirt_mos.size();
+
 
     //BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
     //BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
@@ -180,7 +164,7 @@ void THREE_DSRG_MRPT2::startup()
     }
     else
     {
-        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph"});
+        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
     }
     std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
 
@@ -585,6 +569,211 @@ double THREE_DSRG_MRPT2::compute_energy()
     outfile->Printf("\n Reference Energy = %12.8f", E + frozen_core_energy + Enuc );
     return E + frozen_core_energy + Enuc;
 }
+ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces)
+{
+    ambit::BlockedTensor T2min;
+    T2min = BTF->build(tensor_type_, "T2min", t2_spaces);
+    ambit::BlockedTensor ThreeInt = compute_B_minimal(t2_spaces);
+    for(auto block : t2_spaces){outfile->Printf("\n %s", block.c_str());}
+    for(auto TI_block : ThreeInt.block_labels()){outfile->Printf("\n %s", TI_block.c_str());}
+    T2min["ijab"] =  (ThreeInt["gia"] * ThreeInt["gjb"]);
+    T2min["ijab"] -= (ThreeInt["gib"] * ThreeInt["gja"]);
+    T2min["IJAB"] =  (ThreeInt["gIA"] * ThreeInt["gJB"]);
+    T2min["IJAB"] -= (ThreeInt["gIB"] * ThreeInt["gJA"]);
+    T2min["iJaB"] =  (ThreeInt["gia"] * ThreeInt["gJB"]);
+
+    T2min.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
+        {
+            value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
+        }
+        else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
+        {
+            value *= renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
+        }
+        else
+        {
+            value *= renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
+        }
+    });
+
+
+    // zero internal amplitudes
+    if(std::find(t2_spaces.begin(), t2_spaces.end(), "aaaa")!=t2_spaces.end())
+        T2min.block("aaaa").zero();
+    if(std::find(t2_spaces.begin(), t2_spaces.end(), "aAaA")!=t2_spaces.end())
+        T2min.block("aAaA").zero();
+    if(std::find(t2_spaces.begin(), t2_spaces.end(), "AAAA")!=t2_spaces.end())
+        T2min.block("AAAA").zero();
+    return T2min;
+
+
+}
+ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::string>& spaces, bool renormalize)
+{
+    ambit::BlockedTensor Vmin = BTF->build(tensor_type_,"Vmin",spaces);
+    ambit::BlockedTensor ThreeInt;
+    ThreeInt = compute_B_minimal(spaces);
+    Vmin["abij"] =   ThreeInt["gai"]*ThreeInt["gbj"];
+    Vmin["abij"] -=  ThreeInt["gaj"]*ThreeInt["gbi"];
+    Vmin["ABIJ"] =   ThreeInt["gAI"]*ThreeInt["gBJ"];
+    Vmin["ABIJ"] -=  ThreeInt["gAJ"]*ThreeInt["gBI"];
+    Vmin["aBiJ"] =   ThreeInt["gai"]*ThreeInt["gBJ"];
+
+    if(renormalize)
+    {
+        Vmin.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value = (value + value * renormalized_exp(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]));
+            }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value = (value + value * renormalized_exp(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]));
+            }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value = (value + value * renormalized_exp(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]));
+            }
+        });
+    }
+    return Vmin;
+}
+
+ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::string>& spaces)
+{
+    std::vector<size_t> nauxpi(nthree_);
+    std::iota(nauxpi.begin(), nauxpi.end(),0);
+
+    //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+    //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+    std::vector<std::string> ThreeIntegral_labels;
+    for(const auto& label : spaces)
+    {   
+        std::string left_threeint;
+        std::string right_threeint;
+        left_threeint+="d";
+        right_threeint+="d";
+       
+        //Since aAaA-> (aa)(AA) -> ThreeInt
+        if(std::islower(label[0]) && std::isupper(label[1]) && std::islower(label[2]) && std::isupper(label[3]))
+        {
+            left_threeint+=label[0];
+            left_threeint+=label[2];
+
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), left_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(left_threeint);
+            }
+
+            right_threeint+=label[1];
+            right_threeint+=label[3];
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), right_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(right_threeint);
+            }
+            
+        }
+        //Since acac -> (aa)(cc) - (ac)(ac)
+        else if(std::islower(label[0]) && std::islower(label[1]) && std::islower(label[2]) && std::islower(label[3]))
+        {
+            //Declare a string for the Kexchange part
+            std::string left_threeintK;
+            std::string right_threeintK;
+
+            //Next section of code is standard J-like term
+            left_threeint+=label[0];
+            left_threeint+=label[2];
+
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), left_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(left_threeint);
+            }
+            right_threeint+=label[1];
+            right_threeint+=label[3];
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), right_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(right_threeint);
+            }
+
+            //Add the exchange part of ThreeInt
+            left_threeintK+="d";
+            left_threeintK+=label[0];
+            left_threeintK+=label[3];;
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), left_threeintK)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(left_threeintK);
+            }
+            right_threeintK+="d";
+            right_threeintK+=label[1];
+            right_threeintK+=label[2];;
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), right_threeintK)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(right_threeintK);
+            }
+            
+            
+        }
+        else if(std::isupper(label[0]) && std::isupper(label[1]) && std::isupper(label[2]) && std::isupper(label[3]))
+        {
+            //Declare a string for the Kexchange part
+            std::string left_threeintK;
+            std::string right_threeintK;
+
+            //Next section of code is standard J-like term
+            left_threeint+=label[0];
+            left_threeint+=label[2];
+
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), left_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(left_threeint);
+            }
+            right_threeint+=label[1];
+            right_threeint+=label[3];
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), right_threeint)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(right_threeint);
+            }
+
+            //Add the exchange part of ThreeInt
+            left_threeintK+="d";
+            left_threeintK+=label[0];
+            left_threeintK+=label[3];;
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), left_threeintK)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(left_threeintK);
+            }
+            right_threeintK+="d";
+            right_threeintK+=label[1];
+            right_threeintK+=label[2];;
+            if(std::find(ThreeIntegral_labels.begin(), ThreeIntegral_labels.end(), right_threeintK)==ThreeIntegral_labels.end())
+            {
+                ThreeIntegral_labels.push_back(right_threeintK);
+            }
+
+        }
+
+    
+    }
+
+    ambit::BlockedTensor ThreeInt = BTF->build(tensor_type_, "ThreeIntMin", ThreeIntegral_labels);
+
+
+    std::vector<std::string> ThreeInt_block = ThreeInt.block_labels();
+
+    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
+
+    for(std::string& string_block : ThreeInt_block)
+    {
+        std::string pos1(1, string_block[0]);
+        std::string pos2(1, string_block[1]);
+        std::string pos3(1, string_block[2]);
+
+        std::vector<size_t> first_index = mo_to_index[pos1];
+        std::vector<size_t> second_index = mo_to_index[pos2];
+        std::vector<size_t> third_index = mo_to_index[pos3];
+
+        ambit::Tensor ThreeIntegral_block = ints_->get_three_integral_block(first_index, second_index, third_index);
+        ThreeInt.block(string_block).copy(ThreeIntegral_block);
+    }
+
+    return ThreeInt;
+}
 
 void THREE_DSRG_MRPT2::compute_t2()
 {
@@ -762,7 +951,7 @@ void THREE_DSRG_MRPT2::renormalize_F()
 double THREE_DSRG_MRPT2::E_FT1()
 {
     Timer timer;
-    std::string str = "Computing <[F,T1]>";
+    std::string str = "Computing <[F, T1]>";
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
@@ -789,17 +978,20 @@ double THREE_DSRG_MRPT2::E_VT1()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaa"}));
+    ambit::BlockedTensor Vtest;
+    Vtest = compute_V_minimal({"vaaa", "aaca", "VAAA", "AACA", "vAaA", "aVaA", "aAcA", "aAaC"}, true);
+    
 
-    temp["uvxy"] += V["evxy"] * T1["ue"];
-    temp["uvxy"] -= V["uvmy"] * T1["mx"];
+    temp["uvxy"] += Vtest["evxy"] * T1["ue"];
+    temp["uvxy"] -= Vtest["uvmy"] * T1["mx"];
 
-    temp["UVXY"] += V["EVXY"] * T1["UE"];
-    temp["UVXY"] -= V["UVMY"] * T1["MX"];
+    temp["UVXY"] += Vtest["EVXY"] * T1["UE"];
+    temp["UVXY"] -= Vtest["UVMY"] * T1["MX"];
 
-    temp["uVxY"] += V["eVxY"] * T1["ue"];
-    temp["uVxY"] += V["uExY"] * T1["VE"];
-    temp["uVxY"] -= V["uVmY"] * T1["mx"];
-    temp["uVxY"] -= V["uVxM"] * T1["MY"];
+    temp["uVxY"] += Vtest["eVxY"] * T1["ue"];
+    temp["uVxY"] += Vtest["uExY"] * T1["VE"];
+    temp["uVxY"] -= Vtest["uVmY"] * T1["mx"];
+    temp["uVxY"] -= Vtest["uVxM"] * T1["MY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
@@ -818,18 +1010,21 @@ double THREE_DSRG_MRPT2::E_FT2()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF->build(tensor_type_,"temp",spin_cases({"aaaa"}));
+    BlockedTensor T2min;
+    T2min = compute_T2_minimal({"aava", "acaa", "AAVA", "ACAA", "aAvA", "aAaV", "aCaA", "cAaA"});
 
 
-    temp["uvxy"] += F["xe"] * T2["uvey"];
-    temp["uvxy"] -= F["mv"] * T2["umxy"];
+    
+    temp["uvxy"] += F["xe"] * T2min["uvey"];
+    temp["uvxy"] -= F["mv"] * T2min["umxy"];
 
-    temp["UVXY"] += F["XE"] * T2["UVEY"];
-    temp["UVXY"] -= F["MV"] * T2["UMXY"];
+    temp["UVXY"] += F["XE"] * T2min["UVEY"];
+    temp["UVXY"] -= F["MV"] * T2min["UMXY"];
 
-    temp["uVxY"] += F["xe"] * T2["uVeY"];
-    temp["uVxY"] += F["YE"] * T2["uVxE"];
-    temp["uVxY"] -= F["MV"] * T2["uMxY"];
-    temp["uVxY"] -= F["mu"] * T2["mVxY"];
+    temp["uVxY"] += F["xe"] * T2min["uVeY"];
+    temp["uVxY"] += F["YE"] * T2min["uVxE"];
+    temp["uVxY"] -= F["MV"] * T2min["uMxY"];
+    temp["uVxY"] -= F["mu"] * T2min["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2["XYUV"];
@@ -1125,6 +1320,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
+    BlockedTensor T2test;
 
     temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
     temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
@@ -1337,13 +1533,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     double Ealpha = 0.0;
     double Ebeta  = 0.0;
     double Emixed = 0.0;
-    //ambit::Tensor Bma = ambit::Tensor::build(tensor_type_,"Bma",{nthree,virtual_});
-    //ambit::Tensor Bna = ambit::Tensor::build(tensor_type_,"Bna",{nthree,virtual_});
-    //ambit::Tensor Bmb = ambit::Tensor::build(tensor_type_,"Bmb",{nthree,virtual_});
-    //ambit::Tensor Bnb = ambit::Tensor::build(tensor_type_,"Bnb",{nthree,virtual_});
-    //ambit::Tensor Bef = ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_});
-    //ambit::Tensor BefJK = ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_});
-    //ambit::Tensor RD = ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_});
     int nthread = 1;
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
