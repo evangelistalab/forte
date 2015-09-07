@@ -74,30 +74,23 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, Fo
     : Wavefunction(options,_default_psio_lib_),
 		options_(options), 
 		ints_(ints), 
-		mo_space_info_(mo_space_info),
-		FCIints_(ints_, mo_space_info)
+		mo_space_info_(mo_space_info)
+	//	&FCIints_(ints, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
 
+    std::shared_ptr<FCIIntegrals> FCIints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    BitsetDeterminant::set_ints(FCIints_);
     startup();
     print_info();
 }
 
 void AdaptiveCI::startup()
 {
-    // Connect the integrals to the determinant class
-    StringDeterminant::set_ints(ints_);
-    BitsetDeterminant::set_ints(ints_);
 
-	FCIIntegrals FCIints_(ints_,mo_space_info_);
-
-    // The number of correlated molecular orbitals
-   // ncmo_ = ints_->ncmo();
-   // ncmopi_ = ints_->ncmopi();
-
-    ncmo_ = mo_space_info_->size("ACTIVE");
-    ncmopi_ = mo_space_info_->get_dimension("ACTIVE");
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
 	// Number of correlated electrons
 	ncel_ = 0;
@@ -112,8 +105,8 @@ void AdaptiveCI::startup()
 
 	outfile->Printf("\n  Number of electrons: %d",ncel_);
 
-	outfile->Printf("\n nalpha: %d", nalpha_);
-	outfile->Printf("\n nbeta:  %d", nbeta_);
+	outfile->Printf("\n  nalpha: %d", nalpha_);
+	outfile->Printf("\n  nbeta:  %d", nbeta_);
 
     // Overwrite the frozen orbitals arrays
    // frzcpi_ = ints_->frzcpi();
@@ -142,10 +135,11 @@ void AdaptiveCI::startup()
 	}
 
     // Build the reference determinant and compute its energy
-    reference_determinant_ = StringDeterminant(get_occupation());
-
+    reference_determinant_ = BitsetDeterminant(get_occupation());
+	reference_determinant_.test_ints();
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
+	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy());
 
     // Read options
     nroot_ = options_.get_int("NROOT");
@@ -445,6 +439,9 @@ double AdaptiveCI::compute_energy()
     boost::timer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive CI");
 
+	std::shared_ptr<FCIIntegrals> FCIints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    BitsetDeterminant::set_ints(FCIints_);
+
     SharedMatrix H;
     SharedMatrix P_evecs;
     SharedMatrix PQ_evecs;
@@ -455,7 +452,7 @@ double AdaptiveCI::compute_energy()
     std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
     BitsetDeterminant bs_det(alfa_bits,beta_bits);
-    P_space_.push_back(bs_det);
+	P_space_.push_back(bs_det);
     P_space_map_[bs_det] = 1;
 
 	if( alfa_bits != beta_bits ){
@@ -469,6 +466,7 @@ double AdaptiveCI::compute_energy()
 //	}
 
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
+	outfile->Printf("\n Energy: %1.8f", bs_det.energy());
     outfile->Flush();
 
    // double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
@@ -1017,7 +1015,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_alfa_bit(bb,true);
 
-                        double HIJ = FCIints_.tei_aa(ii,jj,aa,bb);
+                        double HIJ = FCIints_->tei_aa(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1048,7 +1046,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = FCIints_.tei_ab(ii,jj,aa,bb);
+                        double HIJ = FCIints_->tei_ab(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1080,7 +1078,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_beta_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = FCIints_.tei_bb(ii,jj,aa,bb);
+                        double HIJ = FCIints_->tei_bb(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ib = det.beta_bits();
