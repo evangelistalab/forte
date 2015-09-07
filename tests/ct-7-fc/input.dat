@@ -26,6 +26,7 @@ set {
 set forte{
   job_type tensorsrg
   srg_mode ct
+  frozen_docc [2,0,0,0]
 }
 
 energy('scf')
