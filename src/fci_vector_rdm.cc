@@ -288,7 +288,6 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
 
     // Loop over blocks of matrix C
     for(int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym){
-        size_t maxIa = alfa_graph_->strpi(Ia_sym);
         int Ib_sym = Ia_sym ^ symmetry_;
         double** C = C_[Ia_sym]->pointer();
 
@@ -297,7 +296,6 @@ void FCIWfn::compute_2rdm_ab(std::vector<double>& rdm)
             int Jb_sym = Ib_sym ^ rs_sym; // <- Looks like it should fail for states with symmetry != A1  URGENT
             int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for states with symmetry != A1  URGENT
             //            int Ja_sym = Ia_sym ^ rs_sym;
-            size_t maxJa = alfa_graph_->strpi(Ja_sym);
             double** Y = C_[Ja_sym]->pointer();
             for(int r_sym = 0; r_sym < nirrep_; ++r_sym){
                 int s_sym = rs_sym ^ r_sym;

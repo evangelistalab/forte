@@ -52,9 +52,9 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
       options_(options),
       ints_(ints),
       mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false),
+      fciInts_(ints, mo_space_info),
       prescreening_tollerance_factor_(1.5),
-      fciInts_(ints, mo_space_info)
+      fast_variational_estimate_(false)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -2296,7 +2296,7 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<Determinan
     // A map that contains the pair (determinant,coefficient)
     std::map<Determinant,double> dets_C_map;
 
-    double tau = time_step_;
+    //double tau = time_step_;
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_,0.0);
 
@@ -2490,7 +2490,6 @@ double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B)
 void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B)
 {
     // A += beta B
-    double res = 0.0;
     for (auto& det_C : B){
         A[det_C.first] += beta * det_C.second;
     }

@@ -86,7 +86,8 @@ int david2(double **A, int N, int M, double *eps, double **v,
     int i, j, k, L, I;
     double minimum;
     int min_pos, numf, iter, *conv, converged, maxdim, skip_check;
-    int *small2big, init_dim;
+    int *small2big;
+    int init_dim = 0;
     int smart_guess = 1;
     double *Adiag, **b, **bnew, **sigma, **G;
     double *lambda, **alpha, **f, *lambda_old;
@@ -154,7 +155,7 @@ int david2(double **A, int N, int M, double *eps, double **v,
         free(Adiag);
     }
 
-    L = init_dim;
+    //L = init_dim;
     iter =0;
     converged = 0;
     conv = init_int_array(M); /* boolean array for convergence of each
