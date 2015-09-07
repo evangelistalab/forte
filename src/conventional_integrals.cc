@@ -11,7 +11,6 @@
 #include <libthce/thcew.h>
 #include <libthce/lreri.h>
 #include <lib3index/cholesky.h>
-#include <libmints/mints.h>
 #include <libqt/qt.h>
 #include <libfock/jk.h>
 #include <algorithm>
@@ -561,7 +560,6 @@ void ConventionalIntegrals::freeze_core_orbitals()
 void ConventionalIntegrals::compute_frozen_core_energy()
 {
     frozen_core_energy_ = 0.0;
-    double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
@@ -580,7 +578,6 @@ void ConventionalIntegrals::compute_frozen_core_energy()
 
 void ConventionalIntegrals::compute_frozen_one_body_operator()
 {
-    int nthread = 1;
     size_t f = 0;
     for (int hi = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){
