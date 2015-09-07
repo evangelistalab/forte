@@ -48,12 +48,6 @@ inline double clamp(double x, double a, double b)
 
 
 /**
- * @brief smootherstep
- * @param edge0
- * @param edge1
- * @param x
- * @return
- *
  * This is a smooth step function that is
  * 0.0 for x <= edge0
  * 1.0 for x >= edge1

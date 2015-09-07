@@ -23,13 +23,13 @@ MethodBase::~MethodBase()
 
 void MethodBase::startup()
 {
-    double frozen_core_energy = ints_->frozen_core_energy();
     E0_ = reference_energy();
 
     BlockedTensor::set_expert_mode(true);
 
-    Dimension ncmopi_ = Process::environment.wavefunction()->nmopi();
-
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+    Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
 
     Dimension corr_docc(doccpi_);
     corr_docc -= frzcpi_;
@@ -107,7 +107,7 @@ void MethodBase::startup()
 //        F.print();
 //    }
 
-    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 
