@@ -23,8 +23,7 @@ set {
   df_scf_guess false
 }
 
-set libadaptive {
-#  srg_comm fo
+set forte {
   job_type tensorsrg
   srg_mode ct
 }
