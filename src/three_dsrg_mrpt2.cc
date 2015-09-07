@@ -727,62 +727,6 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
     return ThreeInt;
 }
 
-void THREE_DSRG_MRPT2::compute_t2()
-{
-    std::string str = "Computing T2";
-    outfile->Printf("\n    %-36s ...", str.c_str());
-    Timer timer;
-
-    //T2["ijab"] = V["abij"] * RDelta2["ijab"];
-    //T2["iJaB"] = V["aBiJ"] * RDelta2["iJaB"];
-    //T2["IJAB"] = V["ABIJ"] * RDelta2["IJAB"];
-    T2["ijab"] = V["abij"];
-    T2["iJaB"] = V["aBiJ"];
-    T2["IJAB"] = V["ABIJ"];
-    T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
-        {
-            value *= renormalized_denominator(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
-        }
-        else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
-        {
-            value *= renormalized_denominator(Fb[i[0]] + Fb[i[1]] - Fb[i[2]] - Fb[i[3]]);
-        }
-        else
-        {  
-            value *= renormalized_denominator(Fa[i[0]] + Fb[i[1]] - Fa[i[2]] - Fb[i[3]]);
-        }
-    });
-
-    // zero internal amplitudes
-    T2.block("aaaa").zero();
-    T2.block("aAaA").zero();
-    T2.block("AAAA").zero();
-
-
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
-}
-void THREE_DSRG_MRPT2::check_t2()
-{
-    // norm and maximum of T2 amplitudes
-    T2norm = 0.0; T2max = 0.0;
-    std::vector<std::string> T2blocks = T2.block_labels();
-    for(const std::string& block: T2blocks){
-        ambit::Tensor temp = T2.block(block);
-        if(islower(block[0]) && isupper(block[1])){
-            T2norm += 4 * pow(temp.norm(), 2.0);
-        }else{
-            T2norm += pow(temp.norm(), 2.0);
-        }
-        temp.iterate([&](const std::vector<size_t>&,double& value){
-                T2max = T2max > fabs(value) ? T2max : fabs(value);
-        });
-    }
-    T2norm = sqrt(T2norm);
-}
->>>>>>> c42185b0ad1ee764ce1bb80e6ccec0bd60c9aa95
-
 void THREE_DSRG_MRPT2::compute_t1()
 {
     //A temporary tensor to use for the building of T1
