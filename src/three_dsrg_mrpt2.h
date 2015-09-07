@@ -98,7 +98,6 @@ protected:
     ambit::TensorType tensor_type_;
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
-    ambit::BlockedTensor V;
     ambit::BlockedTensor Gamma1;
     ambit::BlockedTensor Eta1;
     ambit::BlockedTensor Lambda2;
@@ -106,7 +105,6 @@ protected:
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor T1;
-    ambit::BlockedTensor T2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
     ambit::BlockedTensor ThreeIntegral;
 
@@ -144,7 +142,7 @@ protected:
     double T1max;
 
     //Compute V and maybe renormalize
-    ambit::BlockedTensor compute_V_minimal(const std::vector<std::string> &, bool renormalize);
+    ambit::BlockedTensor compute_V_minimal(const std::vector<std::string> &, bool renormalize = true);
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();
