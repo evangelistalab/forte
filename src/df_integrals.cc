@@ -9,9 +9,7 @@
 #include <libthce/thce.h>
 #include <libthce/thcew.h>
 #include <libthce/lreri.h>
-#include <lib3index/cholesky.h>
 #include <libqt/qt.h>
-#include <libfock/jk.h>
 #include <algorithm>
 #include <numeric>
 #include "blockedtensorfactory.h"
