@@ -634,7 +634,7 @@ void THREE_DSRG_MRPT2::check_t2()
         }else{
             T2norm += pow(temp.norm(), 2.0);
         }
-        temp.iterate([&](const std::vector<size_t>& i,double& value){
+        temp.iterate([&](const std::vector<size_t>&,double& value){
                 T2max = T2max > fabs(value) ? T2max : fabs(value);
         });
     }
@@ -678,7 +678,7 @@ void THREE_DSRG_MRPT2::check_t1()
 {
     // norm and maximum of T1 amplitudes
     T1norm = T1.norm(); T1max = 0.0;
-    T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    T1.iterate([&](const std::vector<size_t>&,const std::vector<SpinType>&,double& value){
             T1max = T1max > fabs(value) ? T1max : fabs(value);
     });
 }
