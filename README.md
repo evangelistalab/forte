@@ -1,4 +1,4 @@
-![forte](lib/forte_logo.png)
+![forte](lib/logos/forte_logo_github.png)
 #Forte
 =============
 
@@ -24,7 +24,6 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 cd src
 psi4 --new-plugin-makefile
 ```
-
 2. After you have added this Makefile to the Forte directory you must add or
 modify the following lines of your Makefile:
 ```
