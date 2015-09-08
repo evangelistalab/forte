@@ -76,10 +76,6 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
     //for (size_t p = 0; p < a_vir_mos.size(); ++p) mos_to_avir[a_vir_mos[p]] = p;
     //for (size_t p = 0; p < b_vir_mos.size(); ++p) mos_to_bvir[b_vir_mos[p]] = p;
 
-    size_t naocc = a_occ_mos.size();
-    size_t nbocc = b_occ_mos.size();
-    size_t navir = a_vir_mos.size();
-    size_t nbvir = b_vir_mos.size();
 
     BlockedTensor::add_mo_space("o","ijklmn",a_occ_mos,AlphaSpin);
     BlockedTensor::add_mo_space("O","IJKLMN",b_occ_mos,BetaSpin);
@@ -103,8 +99,6 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
         else
             value = ints->oei_b(i[0],i[1]);
     });
-
-    size_t nmo = wfn->nmo();
 
     // Fill in the two-electron operator (V)
     V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
