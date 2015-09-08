@@ -339,7 +339,7 @@ read_options(std::string name, Options &options)
         /*- The maximum value of beta -*/
         options.add_double("START_NUM_WALKERS",1000.0);
         /*- Spawn excitation type -*/
-        options.add_str("SPAWN_TYPE","RANDOM", "RAMDOM ALL GROUND_AND_RANDOM");
+        options.add_str("SPAWN_TYPE","RANDOM", "RANDOM ALL GROUND_AND_RANDOM");
         /*- The number of walkers for shift -*/
         options.add_double("SHIFT_NUM_WALKERS", 10000.0);
         options.add_int("SHIFT_FREQ", 10);
@@ -484,7 +484,7 @@ forte(Options &options)
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        MP2_NOS mp2_nos(wfn,options,ints_);
+        MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
@@ -634,13 +634,13 @@ forte(Options &options)
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        boost::shared_ptr<TensorSRG> srg(new TensorSRG(wfn,options,ints_));
+        auto srg = std::make_shared<TensorSRG>(wfn, options, ints_, mo_space_info);
         srg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         {
-            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
+            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
@@ -652,7 +652,7 @@ forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         {
-            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_);
+            auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }

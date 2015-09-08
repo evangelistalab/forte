@@ -19,9 +19,9 @@ MRDSRG::MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &
       wfn_(wfn),
       reference_(reference),
       ints_(ints),
-      tensor_type_(kCore),
+      mo_space_info_(mo_space_info),
       BTF(new BlockedTensorFactory(options)),
-      mo_space_info_(mo_space_info)
+      tensor_type_(kCore)
 {
     print_method_banner({"Multireference Driven Similarity Renormalization Group","Chenyang Li"});
     startup();
@@ -178,7 +178,7 @@ void MRDSRG::build_fock(){
     F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
     // obtain diagonal elements of Fock matrix
-    size_t ncmo_ = ints_->ncmo();
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     Fa = std::vector<double>(ncmo_);
     Fb = std::vector<double>(ncmo_);
     F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -319,7 +319,7 @@ double MRDSRG::compute_energy_relaxed(){
         transfer_integrals();
 
         // diagonalize the Hamiltonian
-        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_);
+        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
         Erelax = fcisolver->compute_energy();
 
         // printing
@@ -349,7 +349,7 @@ double MRDSRG::compute_energy_relaxed(){
             transfer_integrals();
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_);
+            FCISolver fcisolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
             Etemp = Erelax;
             Erelax = fcisolver.compute_energy();
             Erelax_vec.push_back(Erelax);

@@ -15,8 +15,8 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints)
-    : MethodBase(wfn,options,ints)
+TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : MethodBase(wfn,options,ints, mo_space_info)
 {
     startup();
 }
@@ -68,7 +68,7 @@ void TensorSRG::startup()
     RInvD2 = BlockedTensor::build(tensor_type_,"InvRD2",spin_cases({"oovv"}));
     I_ioiv = BlockedTensor::build(tensor_type_,"I_ioiv",spin_cases({"ioiv"}));
 
-    size_t ncmo_ = ints_->ncmo();
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 

@@ -36,6 +36,10 @@ protected:
     ForteIntegrals* ints_;
     /// The type of SCF reference
     std::string ref_type_;
+    /// The number of corrleated MO
+    size_t ncmo_;
+    /// The number of auxiliary/cholesky basis functions
+    size_t nthree_;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;
@@ -94,7 +98,6 @@ protected:
     ambit::TensorType tensor_type_;
     ambit::BlockedTensor H;
     ambit::BlockedTensor F;
-    ambit::BlockedTensor V;
     ambit::BlockedTensor Gamma1;
     ambit::BlockedTensor Eta1;
     ambit::BlockedTensor Lambda2;
@@ -102,9 +105,7 @@ protected:
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor T1;
-    ambit::BlockedTensor T2;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor ThreeIntegral;
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -120,19 +121,24 @@ protected:
 
     double renormalized_denominator(double D);
 
-    void compute_t1();
 
-    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t2();
-    void check_t2();
+    /// compute the minimal amount of T2 for each term
+    /// The spaces correspond to all the blocks you want to use
+    ambit::BlockedTensor compute_T2_minimal(const std::vector<std::string> & spaces);
+    /// compute ASTEI from DF/CD integrals
+    /// function will take the spaces for V and use that to create the blocks for B
+    ambit::BlockedTensor compute_B_minimal(const std::vector<std::string>& Vspaces);
     double T2norm;
     double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+    void compute_t1();
     void check_t1();
     double T1norm;
     double T1max;
 
+    //Compute V and maybe renormalize
+    ambit::BlockedTensor compute_V_minimal(const std::vector<std::string> &, bool renormalize = true);
     /// Renormalize Fock matrix and two-electron integral
     void renormalize_F();
     void renormalize_V();

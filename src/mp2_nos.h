@@ -42,7 +42,7 @@ class MP2_NOS
 {
 public:
     // => Constructor <= //
-    MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints);
+    MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     //  => Destructor <= //
 };
 

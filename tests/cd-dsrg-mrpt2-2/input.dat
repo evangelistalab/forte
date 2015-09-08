@@ -17,8 +17,9 @@ molecule HF{
 set globals{
    basis                  cc-pvdz
    reference              twocon
-   scf_type               pk
+   scf_type               cd
    d_convergence          12
+   cholesky_tolerance     14
    e_convergence          15
 }
 
