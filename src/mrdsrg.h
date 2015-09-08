@@ -83,11 +83,11 @@ protected:
     // => DSRG related <= //
 
     /// Correlation level
-    enum corrlevel{LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3};
-    std::map<std::string, corrlevel> corrlevelmap =
-            boost::assign::map_list_of("LDSRG2", LDSRG2)("LDSRG2_P3", LDSRG2_P3)
-            ("PT2", PT2)("PT3", PT3)
-            ("QDSRG2", QDSRG2)("QDSRG2_P3", QDSRG2_P3);
+    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3};
+    std::map<std::string, CORR_LV> corrlevelmap =
+            boost::assign::map_list_of("LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)
+            ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)
+            ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3);
 
     /// The flow parameter
     double s_;
@@ -142,7 +142,7 @@ protected:
     /// Algorithm for computing amplitudes
     std::string T_algor_;
     /// Analyze T1 and T2 amplitudes
-    void analyze_amplitudes(const std::string& name, BlockedTensor &T1, BlockedTensor &T2);
+    void analyze_amplitudes(std::string name, BlockedTensor &T1, BlockedTensor &T2);
 
     /// RMS of T2
     double T2rms;
