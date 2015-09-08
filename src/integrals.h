@@ -79,10 +79,10 @@ public:
     virtual size_t nthree() const = 0;
 
     /// Return the frozen core energy
+    double scalar() const {return scalar_;}
     double frozen_core_energy() {return frozen_core_energy_;}
 
     /// Scalar component of the Hamiltonian
-    double scalar() const {return scalar_;}
 
     /// The alpha one-electron integrals
     double oei_a(size_t p,size_t q) {return one_electron_integrals_a[p * aptei_idx_ + q];}
@@ -181,7 +181,6 @@ public:
 protected:
 
 
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     // ==> Class data <==
 
     /// The options object
@@ -237,6 +236,8 @@ protected:
     std::vector<int> pair_index_map;
 
     double scalar_;
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// One-electron integrals stored as a vector
     double* one_electron_integrals_a;
