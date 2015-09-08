@@ -1146,7 +1146,6 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
 bool FCIQMC::detSingleRandomExcitation(BitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha) {
     int o=0, v=0;
     int randO=0, randV=0;
-    int count = 0;
 //    do {
 //        if (count > 2*nirrep_) return false;
 //        count++;

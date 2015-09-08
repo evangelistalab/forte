@@ -3,17 +3,16 @@
 
 #include <psifiles.h>
 #include <libiwl/iwl.h>
-#include <libtrans/integraltransform.h>
-#include <libpsio/psio.hpp>
 #include <libmints/matrix.h>
 #include <libmints/basisset.h>
+#include <libmints/twobody.h>
 #include <libthce/thce.h>
-#include <libthce/thcew.h>
-#include <libthce/lreri.h>
+#include <libmints/typedefs.h>
+#include <libmints/eri.h>
+#include <libmints/integral.h>
+#include <libmints/wavefunction.h>
 #include <lib3index/cholesky.h>
-#include <libmints/mints.h>
 #include <libqt/qt.h>
-#include <libfock/jk.h>
 #include <algorithm>
 #include <numeric>
 #include "blockedtensorfactory.h"
@@ -493,7 +492,6 @@ void CholeskyIntegrals::freeze_core_orbitals()
 void CholeskyIntegrals::compute_frozen_core_energy()
 {
     frozen_core_energy_ = 0.0;
-    double core_print = 0.0;
 
     for (int hi = 0, p = 0; hi < nirrep_; ++hi){
         for (int i = 0; i < frzcpi_[hi]; ++i){

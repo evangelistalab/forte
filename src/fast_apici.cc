@@ -48,10 +48,10 @@ FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefun
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
-      fast_variational_estimate_(false),
-      prescreening_tollerance_factor_(1.5),
       mo_space_info_(mo_space_info),
-      fciInts_(ints, mo_space_info)
+      fciInts_(ints, mo_space_info),
+      prescreening_tollerance_factor_(1.5),
+      fast_variational_estimate_(false)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -264,8 +264,6 @@ double FastAdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n  ------------------------------------------------------------------------------------------");
 
     int maxcycle = maxiter_;
-    double shift = do_shift_ ? var_energy : 0.0;
-    double initial_gradient_norm = 0.0;
     double old_var_energy = 0.0;
     double old_proj_energy = 0.0;
     double beta = 0.0;
@@ -1718,7 +1716,6 @@ double FastAdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<FastDe
     // A map that contains the pair (determinant,coefficient)
     std::map<FastDeterminant,double> dets_C_map;
 
-    double tau = time_step_;
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_,0.0);
 
@@ -1906,7 +1903,6 @@ double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>&
 void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B)
 {
     // A += beta B
-    double res = 0.0;
     for (auto& det_C : B){
         A[det_C.first] += beta * det_C.second;
     }
