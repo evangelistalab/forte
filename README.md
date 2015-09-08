@@ -25,8 +25,7 @@ psi4 --new-plugin-makefile```
 
 2. After you have added this Makefile to the Forte directory you must add or
 modify the following lines of your Makefile:
-```
-NAME = forte
+```NAME = forte
 
 # Define ambit directory
 AMBIT_DIR = <ambit install directory>
@@ -36,6 +35,6 @@ PSIPLUGIN = -L$(OBJDIR)/lib -lplugin -L$(AMBIT_DIR)/lib -lambit
 
 INCLUDES += -I$(AMBIT_DIR)/include
 
-PSITARGET = ../$(NAME).so
-```
+PSITARGET = ../$(NAME).so```
+
 where (AMBIT_DIR) is the location of your Ambit install directory.
