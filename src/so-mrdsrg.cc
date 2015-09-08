@@ -56,7 +56,7 @@ void SOMRDSRG::startup()
 
     frozen_core_energy = ints_->frozen_core_energy();
 
-    ncmopi_ = ints_->ncmopi();
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
@@ -429,7 +429,7 @@ void SOMRDSRG::startup()
 
     F.print();
 
-    size_t ncmo_ = ints_->ncmo();
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
     std::vector<double> Fa(ncmo_);
     std::vector<double> Fb(ncmo_);
 

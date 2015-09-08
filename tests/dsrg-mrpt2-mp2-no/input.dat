@@ -40,6 +40,7 @@ set forte{
    nroot                   1
    dsrg_s                  1.0
    mp2_nos                 true
+   NAT_ORBS_PRINT          true
 }
 
 energy('mcscf')

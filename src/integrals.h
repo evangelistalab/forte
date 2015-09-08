@@ -58,7 +58,7 @@ public:
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     
     ///CHANGE me to public to get the code to compile
-public:
+private:
     size_t nmo() const {return nmo_;}
     
     /// Return the number of irreducible representations

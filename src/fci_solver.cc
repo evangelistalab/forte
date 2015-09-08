@@ -74,8 +74,6 @@ void FCI::startup()
 
 double FCI::compute_energy()
 {
-    double nuclear_repulsion_energy = molecule_->nuclear_repulsion_energy();
-
     Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -133,7 +131,7 @@ double FCI::compute_energy()
     //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
-    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_);
+    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
@@ -157,10 +155,10 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     ForteIntegrals* ints)
+                     ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
-      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0)
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0), mo_space_info_(mo_space_info)
 {
     startup();
 }
@@ -308,7 +306,8 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
 
     // Build the full determinants
     size_t nact = active_mo_.size();
-    size_t nmo = ints_->ncmo();
+    // The corrleated MO, not the actual number of molecule orbitals
+    size_t nmo =  mo_space_info_->size("CORRELATED");
 
     for (auto det : dets){
         double e;

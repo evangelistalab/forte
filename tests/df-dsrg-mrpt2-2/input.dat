@@ -2,8 +2,8 @@
 #! Generated using commit GITCOMMIT
 import forte
 
-refmcscf      = -99.939316381644 #cc-pvdz
-refdsrgpt2    = -100.102359671339215
+refmcscf      = -99.87285077494816
+refdsrgpt2    = -100.107827239125655
 
 memory 500 mb
 
@@ -17,17 +17,10 @@ molecule HF{
 set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
-   reference               twocon
-   scf_type                pk
+   reference               RHF
+   scf_type                DF
    d_convergence           12
    e_convergence           15
-}
-
-set mcscf{
-   docc                   [2,0,1,1]
-   socc                   [2,0,0,0]
-   maxiter                 1000
-   level_shift             2.0
 }
 
 set forte{
@@ -41,7 +34,7 @@ set forte{
    job_type                three-dsrg-mrpt2
 }
 
-ref = energy('mcscf')
+ref = energy('scf')
 energy('forte')
 
 compare_values(refmcscf, ref,10,"SCF energy")

@@ -21,9 +21,9 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn,
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),
+      mo_space_info_(mo_space_info),
       tensor_type_(kCore),
-      BTF(new BlockedTensorFactory(options)),
-      mo_space_info_(mo_space_info)
+      BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
     copy(wfn);

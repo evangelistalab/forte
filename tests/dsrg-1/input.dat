@@ -16,6 +16,7 @@ set {
   reference      rhf
   scf_type       pk
   e_convergence  12
+  d_convergence  12
 }
 
 set forte {
@@ -26,7 +27,7 @@ set forte {
 }
 
 energy('scf')
-compare_values(refscf,get_variable("CURRENT ENERGY"),10,"SCF energy") #TEST
+compare_values(refscf,get_variable("CURRENT ENERGY"),8,"SCF energy") #TEST
 
 energy('forte')
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),10,"DSRGSD energy") #TEST
+compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"DSRGSD energy") #TEST
