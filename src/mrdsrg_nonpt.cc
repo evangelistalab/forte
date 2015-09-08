@@ -513,7 +513,7 @@ double MRDSRG::compute_energy_ldsrg2(){
     }
 
     // analyze converged amplitudes
-    analyze_amplitudes("Final ",T1,T2);
+    analyze_amplitudes("Final",T1,T2);
 
     Hbar0 = Ecorr;
     return Ecorr;
