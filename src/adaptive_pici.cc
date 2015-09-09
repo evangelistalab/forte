@@ -1488,7 +1488,6 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
     std::vector<int> avir = detI.get_alfa_vir();
     std::vector<int> bvir = detI.get_beta_vir();
 	
-	double a = fci_ints_->tei_aa(0,0,0,0);	
     int noalpha = aocc.size();
     int nobeta  = bocc.size();
     int nvalpha = avir.size();
