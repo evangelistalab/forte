@@ -480,7 +480,8 @@ forte(Options &options)
     }
 
     // Link the integrals to the BitsetDeterminant class
-    BitsetDeterminant::set_ints(ints_);
+//	std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+ //   BitsetDeterminant::set_ints(fci_ints_);
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();

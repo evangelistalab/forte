@@ -69,19 +69,22 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, Fo
 		options_(options), 
 		ints_(ints), 
 		mo_space_info_(mo_space_info)
-	//	&FCIints_(ints, mo_space_info)
+	//	&fci_ints_(ints, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
 
-    std::shared_ptr<FCIIntegrals> FCIints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    BitsetDeterminant::set_ints(FCIints_);
     startup();
     print_info();
 }
 
+//Initialize copy of integrals, define then in startup
+std::shared_ptr<FCIIntegrals> AdaptiveCI::fci_ints_ = 0;
+
 void AdaptiveCI::startup()
 {
+	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    BitsetDeterminant::set_ints(fci_ints_);
 
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
@@ -432,9 +435,6 @@ double AdaptiveCI::compute_energy()
 {
     boost::timer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive CI");
-
-	std::shared_ptr<FCIIntegrals> FCIints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    BitsetDeterminant::set_ints(FCIints_);
 
     SharedMatrix H;
     SharedMatrix P_evecs;
@@ -1009,7 +1009,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_alfa_bit(bb,true);
 
-                        double HIJ = FCIints_->tei_aa(ii,jj,aa,bb);
+                        double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1040,7 +1040,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = FCIints_->tei_ab(ii,jj,aa,bb);
+                        double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ia = det.alfa_bits();
@@ -1072,7 +1072,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         new_det.set_beta_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
 
-                        double HIJ = FCIints_->tei_bb(ii,jj,aa,bb);
+                        double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
                         const boost::dynamic_bitset<>& Ib = det.beta_bits();

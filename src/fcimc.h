@@ -95,7 +95,7 @@ private:
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Store all the integrals locally
-    FCIIntegrals fciInts_;
+    static std::shared_ptr<FCIIntegrals> fci_ints_;
 
     /// The wave function symmetry
     int wavefunction_symmetry_;
