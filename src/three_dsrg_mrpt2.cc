@@ -1315,7 +1315,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
 
     }
     
-    #pragma omp parallel for num_threads(1) \
+    #pragma omp parallel for num_threads(num_threads_) \
     schedule(dynamic) \
     reduction(+:Ealpha, Ebeta, Emixed) 
 
