@@ -1280,10 +1280,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
-    std::vector<ambit::Tensor> BmaVec;
-    std::vector<ambit::Tensor> BnaVec;
-    std::vector<ambit::Tensor> BmbVec;
-    std::vector<ambit::Tensor> BnbVec;
     std::vector<ambit::Tensor> BefVec;
     std::vector<ambit::Tensor> BefJKVec;
     std::vector<ambit::Tensor> RDVec;
@@ -1291,6 +1287,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     std::vector<ambit::Tensor> BnaVec_three;
     std::vector<ambit::Tensor> BmbVec_three;
     std::vector<ambit::Tensor> BnbVec_three;
+    std::vector<ambit::Tensor> BmaVec;
+    std::vector<ambit::Tensor> BnaVec;
+    std::vector<ambit::Tensor> BmbVec;
+    std::vector<ambit::Tensor> BnbVec;
     std::vector<std::vector<size_t>> ma_vec;
     std::vector<std::vector<size_t>> mb_vec;
     std::vector<std::vector<size_t>> na_vec;
@@ -1317,8 +1317,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     
     #pragma omp parallel for num_threads(num_threads_) \
     schedule(dynamic) \
-    reduction(+:Ealpha, Ebeta, Emixed) \
-    shared(Ba,Bb)
+    reduction(+:Ealpha, Ebeta, Emixed) 
 
     for(size_t m = 0; m < core_; ++m){
          
@@ -1344,10 +1343,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             nb_vec[thread][0] = nb;
             #pragma omp critical
             {
-            BnaVec_three[thread] = ints_->get_three_integral_block(naux, na_vec[thread], virt_mos);
-            BnbVec_three[thread] = ints_->get_three_integral_block(naux, nb_vec[thread], virt_mos);
-            std::copy(&BnaVec_three[thread].data()[0], &BnaVec_three[thread].data()[dim], BnaVec[thread].data().begin());
-            std::copy(&BnbVec_three[thread].data()[0], &BnbVec_three[thread].data()[dim], BnbVec[thread].data().begin());
+                BnaVec_three[thread] = ints_->get_three_integral_block(naux, na_vec[thread], virt_mos);
+                BnbVec_three[thread] = ints_->get_three_integral_block(naux, nb_vec[thread], virt_mos);
+                std::copy(&BnaVec_three[thread].data()[0], &BnaVec_three[thread].data()[dim], BnaVec[thread].data().begin());
+                std::copy(&BnbVec_three[thread].data()[0], &BnbVec_three[thread].data()[dim], BnbVec[thread].data().begin());
             }
 
             // alpha-aplha
