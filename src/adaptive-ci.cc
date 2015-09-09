@@ -15,7 +15,6 @@
 
 #include "adaptive-ci.h"
 #include "sparse_ci_solver.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "fci_vector.h"
 
@@ -132,7 +131,6 @@ void AdaptiveCI::startup()
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = BitsetDeterminant(get_occupation());
-	reference_determinant_.test_ints();
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
 	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy());
@@ -1159,7 +1157,15 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_alfa_bit(bb,true);
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = det.slater_rules(new_det);
+							double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+
+							const BitsetDeterminant::bit_t& Ia = det.alfa_bits();
+							const BitsetDeterminant::bit_t& Ib = det.alfa_bits();
+							const BitsetDeterminant::bit_t& Ja = new_det.alfa_bits();
+							const BitsetDeterminant::bit_t& Jb = new_det.alfa_bits();
+
+							HIJ *= BitsetDeterminant::SlaterSign(Ia, ii) * BitsetDeterminant::SlaterSign(Ib, jj) * BitsetDeterminant::SlaterSign(Ja,aa) * BitsetDeterminant::SlaterSign(Jb, bb);
+
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
                             }
@@ -1188,7 +1194,15 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = det.slater_rules(new_det);
+							double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+
+							const BitsetDeterminant::bit_t& Ia = det.alfa_bits();
+							const BitsetDeterminant::bit_t& Ib = det.beta_bits();
+							const BitsetDeterminant::bit_t& Ja = new_det.alfa_bits();
+							const BitsetDeterminant::bit_t& Jb = new_det.beta_bits();
+
+							HIJ *= BitsetDeterminant::SlaterSign(Ia, ii) * BitsetDeterminant::SlaterSign(Ib, jj) * BitsetDeterminant::SlaterSign(Ja,aa) * BitsetDeterminant::SlaterSign(Jb, bb);
+
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
                             }
@@ -1216,7 +1230,14 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         new_det.set_beta_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = det.slater_rules(new_det);
+                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+
+							const BitsetDeterminant::bit_t& Ia = det.beta_bits();
+							const BitsetDeterminant::bit_t& Ib = det.beta_bits();
+							const BitsetDeterminant::bit_t& Ja = new_det.beta_bits();
+							const BitsetDeterminant::bit_t& Jb = new_det.beta_bits();
+
+							HIJ *= BitsetDeterminant::SlaterSign(Ia, ii) * BitsetDeterminant::SlaterSign(Ib, jj) * BitsetDeterminant::SlaterSign(Ja,aa) * BitsetDeterminant::SlaterSign(Jb, bb);
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
                             }
