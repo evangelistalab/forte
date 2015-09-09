@@ -1,0 +1,58 @@
+#! Generated using commit GITCOMMIT
+#! Perform a DF-DSRG-MRPT2 on benzyne 
+
+import forte
+
+
+memory 500 mb
+
+refscf   =  -226.28072291855639
+refaci =  -226.66197479761
+refacipt2 = -226.662972097565 
+
+molecule mbenzyne{
+  0 1
+   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000
+
+  units bohr
+}
+
+set globals{
+   basis                   sto-3g
+   df_basis_mp2            cc-pvdz-ri
+   reference               rhf 
+   scf_type                pk
+   d_convergence           10
+   e_convergence           12
+}
+
+set forte {
+   multiplicity 1
+   frozen_docc            [5, 3, 0, 0, 0, 0, 4, 4]
+  # active                [1, 0, 1, 2, 1, 1, 1, 0]
+   frozen_uocc			  [2, 3, 0, 0, 0, 0, 3, 2]	
+   root_sym                6
+   nroot                   1
+   job_type                aci
+   taup					  0.001
+   tauq					  0.001
+   select_type			  aimed_energy	 
+}
+
+scf = energy('scf')
+compare_values(refscf, scf,10,"SCF Energy")
+
+energy('forte')
+compare_values(refaci, get_variable("ACI ENERGY"),10,"ACI energy")
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10,"ACI+PT2 energy")
+
+

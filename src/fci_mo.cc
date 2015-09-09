@@ -13,10 +13,11 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-FCI_MO::FCI_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : integral_(ints), mo_space_info_(mo_space_info)
-{
 
+
+FCI_MO::FCI_MO(Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : integral_(ints), mo_space_info_(mo_space_info) 
+{
     // Basic Preparation: Form Determinants
     startup(options);
 
@@ -93,6 +94,7 @@ FCI_MO::FCI_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceIn
     // Reference Energy
     compute_ref();
 }
+
 
 FCI_MO::~FCI_MO()
 {
@@ -526,7 +528,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     size_t det_size = det.size();
     eigen.clear();
 
-    BitsetDeterminant::set_ints(integral_);
+    BitsetDeterminant::set_ints(fci_ints_);
     std::vector<BitsetDeterminant> P_space;
     for(size_t x = 0; x != det_size; ++x){
         std::vector<bool> alfa_bits = det[x].get_alfa_bits_vector_bool();
