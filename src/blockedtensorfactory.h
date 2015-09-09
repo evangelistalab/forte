@@ -43,7 +43,7 @@ public:
     //ie for a hhpp, {hhpp, hHpP, HHPP}
     //Returns -> BlockTensor
     */
-    ambit::BlockedTensor build(ambit::TensorType storage, const std::string &name, const std::vector<std::string> &spin_stuff) ;
+    ambit::BlockedTensor build(ambit::TensorType storage, const std::string &name, const std::vector<std::string> &spin_stuff, bool is_local_variable = false) ;
     /* -- add_mo_space
       Adds a mo space -> core, active, virtual
     //@params std::string name -> name of the space
@@ -65,7 +65,8 @@ public:
     //Lets the user know how much memory is left
     double memory_left(){return memory_;}
     //Calculates the amount of memory BlockedTensor takes up
-    void memory_information(ambit::BlockedTensor);
+    // is_local_variable says whether to increment memory
+    void memory_information(ambit::BlockedTensor, bool is_local_variable);
     //Array of all things memory
     void memory_summary();
     //controls printing information
