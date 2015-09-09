@@ -146,7 +146,6 @@ double TensorSRG::compute_mp2_guess()
 
 double TensorSRG::compute_mp2_guess_driven_srg()
 {
-    double srg_s = options_.get_double("DSRG_S");
 
     S2.zero();
     S2["ijab"] = V["ijab"] * RInvD2["ijab"];

@@ -69,7 +69,6 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, Fo
 		options_(options), 
 		ints_(ints), 
 		mo_space_info_(mo_space_info)
-	//	&fci_ints_(ints, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -497,7 +496,7 @@ double AdaptiveCI::compute_energy()
             sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuSparse);
         }
 		// Save the dimention of the previous PQ space
-		size_t PQ_space_prev = PQ_space_.size();
+		//size_t PQ_space_prev = PQ_space_.size();
 
 		// Use spin projection to ensure the P space is spin pure
 		if( spin_projection == 1 or spin_projection == 3){

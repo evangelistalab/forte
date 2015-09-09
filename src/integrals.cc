@@ -4,13 +4,10 @@
 #include <libiwl/iwl.h>
 #include <libtrans/integraltransform.h>
 #include <libpsio/psio.hpp>
+#include <libmints/factory.h>
 #include <libmints/matrix.h>
 #include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libthce/thcew.h>
-#include <libthce/lreri.h>
-#include <lib3index/cholesky.h>
-#include <libmints/mints.h>
+#include <libmints/wavefunction.h>
 #include <libqt/qt.h>
 #include <libfock/jk.h>
 #include <algorithm>
@@ -40,7 +37,7 @@ namespace psi{ namespace forte{
 
 ForteIntegrals::ForteIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), frozen_core_energy_(0.0), scalar_(0.0),
+    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core),frozen_core_energy_(0.0), scalar_(0.0),
     mo_space_info_(mo_space_info)
 {
     startup();

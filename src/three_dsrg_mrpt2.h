@@ -106,7 +106,6 @@ protected:
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor ThreeIntegral;
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -122,21 +121,18 @@ protected:
 
     double renormalized_denominator(double D);
 
-    void compute_t1();
 
-    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t2();
     /// compute the minimal amount of T2 for each term
     /// The spaces correspond to all the blocks you want to use
     ambit::BlockedTensor compute_T2_minimal(const std::vector<std::string> & spaces);
     /// compute ASTEI from DF/CD integrals
     /// function will take the spaces for V and use that to create the blocks for B
     ambit::BlockedTensor compute_B_minimal(const std::vector<std::string>& Vspaces);
-    void check_t2();
     double T2norm;
     double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
+    void compute_t1();
     void check_t1();
     double T1norm;
     double T1max;

@@ -20,19 +20,19 @@
 #include "bitset_determinant.h"
 #include "fci_vector.h"
 
-#ifdef _OPENMP
-   #include <omp.h>
-   bool have_omp = true;
-#else
-   #define omp_get_max_threads() 1
-   #define omp_get_thread_num() 0
-   bool have_omp = false;
-#endif
 
 using namespace std;
 using namespace psi;
 
 namespace psi{ namespace forte{
+#ifdef _OPENMP
+   #include <omp.h>
+   bool AdaptivePathIntegralCI::have_omp_ = true;
+#else
+   #define omp_get_max_threads() 1
+   #define omp_get_thread_num() 0
+   bool AdaptivePathIntegralCI::have_omp_ = false;
+#endif
 
 typedef std::map<Determinant,double> bsmap;
 typedef std::map<Determinant,double>::iterator bsmap_it;
@@ -55,7 +55,6 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
       mo_space_info_(mo_space_info),
       fast_variational_estimate_(false),
       prescreening_tollerance_factor_(1.5)
-      //fci_ints_(ints, mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -201,7 +200,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
         {"Dynamic prescreening",do_dynamic_prescreening_ ? "YES" : "NO"},
         {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
-        {"Using OpenMP", have_omp ? "YES" : "NO"},
+        {"Using OpenMP", have_omp_ ? "YES" : "NO"},
     };
 //    {"Number of electrons",nel},
 //    {"Number of correlated alpha electrons",nalpha_},
@@ -240,7 +239,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t                   by Francesco A. Evangelista");
-    outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp ? "(OMP)" : "");
+    outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
     // Print a summary of the options
@@ -2300,7 +2299,7 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(std::vector<Determinan
     // A map that contains the pair (determinant,coefficient)
     std::map<Determinant,double> dets_C_map;
 
-    double tau = time_step_;
+    //double tau = time_step_;
     double variational_energy_estimator = 0.0;
     std::vector<double> energy(num_threads_,0.0);
 
@@ -2494,7 +2493,6 @@ double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B)
 void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B)
 {
     // A += beta B
-    double res = 0.0;
     for (auto& det_C : B){
         A[det_C.first] += beta * det_C.second;
     }

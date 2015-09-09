@@ -165,7 +165,7 @@ public:
 
 namespace std {
 template <>
-class hash<psi::forte::FastDeterminant> {
+struct hash<psi::forte::FastDeterminant> {
 public:
     size_t operator()(const psi::forte::FastDeterminant &det) const
     {

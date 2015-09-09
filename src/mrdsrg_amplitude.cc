@@ -299,7 +299,8 @@ void MRDSRG::update_t1(){
     t1b_norm = std::sqrt(t1b_norm);
 }
 
-void MRDSRG::analyze_amplitudes(const std::string& name, BlockedTensor& T1, BlockedTensor& T2){
+void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2){
+    if(!name.empty()) name += " ";
     outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
     outfile->Printf("\n    Active Indices: ");
     int c = 0;
@@ -340,7 +341,7 @@ void MRDSRG::check_t2(BlockedTensor& T2)
     std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
 
     for(const std::string& block: T2.block_labels()){
-        int spin = bool(isupper(block[0])) + bool(isupper(block[1]));
+        int spin = static_cast<bool>(isupper(block[0])) + static_cast<bool>(isupper(block[1]));
 
         // create a reference to simplify the syntax
         std::vector<std::pair<std::vector<size_t>, double>>& temp_t2 = spin_to_t2[spin];

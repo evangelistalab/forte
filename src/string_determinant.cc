@@ -811,7 +811,6 @@ double StringDeterminant::Spin2(const std::vector<bool>& Ia,const std::vector<bo
 
 void StringDeterminant::SlaterOPDM(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb,SharedMatrix Da,SharedMatrix Db,double w)
 {
-    double sign = 1.0;
     int nmo = static_cast<int>(Ia.size());
 
     int nadiff = 0;

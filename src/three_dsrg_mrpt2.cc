@@ -158,44 +158,11 @@ void THREE_DSRG_MRPT2::startup()
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     BTF->add_mo_space("d","g",nauxpi,NoSpin);
 
-    if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF")
-    {
-        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph","dPH"});
-    }
-    else
-    {
-        ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dgg"});
-    }
-    std::vector<std::string> ThreeInt_block = ThreeIntegral.block_labels();
-
-    //ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-    //    value = ints_->get_three_integral(i[0],i[1],i[2]);
-    //});
-    std::map<std::string, std::vector<size_t> > mo_to_index = BTF->get_mo_to_index();
-
-    for(std::string& string_block : ThreeInt_block)
-    {
-        std::string pos1(1, string_block[0]);
-        std::string pos2(1, string_block[1]);
-        std::string pos3(1, string_block[2]);
-
-        std::vector<size_t> first_index = mo_to_index[pos1];
-        std::vector<size_t> second_index = mo_to_index[pos2];
-        std::vector<size_t> third_index = mo_to_index[pos3];
-
-        ambit::Tensor ThreeIntegral_block = ints_->get_three_integral_block(first_index, second_index, third_index);
-        ThreeIntegral.block(string_block).copy(ThreeIntegral_block);
-    }
 
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
 
     //Function below will return a list of pphh
     std::vector<std::string> list_of_pphh_V = BTF->generate_indices("vac", "pphh");
-
-    //Avoiding building pqrs integrals just abij -> some tricks needed to get this to work.
-    //See Vpphh
-    //V = BTF->build(tensor_type_,"V",BTF->spin_cases_avoid(list_of_pphh_V, 2));
-
 
     Gamma1 = BTF->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
     Eta1 = BTF->build(tensor_type_,"Eta1",spin_cases({"pp"}));
@@ -204,19 +171,11 @@ void THREE_DSRG_MRPT2::startup()
     F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
     Delta1 = BTF->build(tensor_type_,"Delta1",spin_cases({"aa"}));
 
-    //Delta2 = BTF->build(tensor_type_,"Delta2",BTF->spin_cases_avoid(hhpp_no_cv));
-
     RDelta1 = BTF->build(tensor_type_,"RDelta1",spin_cases({"hp"}));
-
-    //Need to avoid building ccvv part of this
-    //ccvv only used for creating T2
-    //RDelta2 = BTF->build(tensor_type_,"RDelta2",BTF->spin_cases_avoid(hhpp_no_cv));
-
 
     T1 = BTF->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
 
     RExp1 = BTF->build(tensor_type_,"RExp1",spin_cases({"hp"}));
-
 
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin)
@@ -271,6 +230,7 @@ void THREE_DSRG_MRPT2::startup()
     Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
      Gamma1_matrixB->set(bactv_mos[i[0]], bactv_mos[i[1]], value);   
      });
+
     ints_->make_fock_matrix(Gamma1_matrixA, Gamma1_matrixB);
 
     if(ref_type_ == "RHF" || ref_type_ == "ROHF" || ref_type_ == "TWOCON" || ref_type_ == "RKS")
@@ -418,8 +378,6 @@ double THREE_DSRG_MRPT2::compute_energy()
     //    Eref = compute_ref();
 
         // Compute T2 and T1
-        //compute_t2();
-        //check_t2();
         compute_t1();
         check_t1();
 
@@ -480,7 +438,6 @@ double THREE_DSRG_MRPT2::compute_energy()
 
         // Analyze T1 and T2
         check_t1();
-        //check_t2();
         energy.push_back({"max(T1)", T1max});
         energy.push_back({"max(T2)", T2max});
         energy.push_back({"||T1||", T1norm});
@@ -1310,12 +1267,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
     // Bef(ef) = Bm(L|e) * Bn(L|f)
-    ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree_,virtual_});
-    ambit::Tensor Bb = ambit::Tensor::build(tensor_type_,"Bb",{core_,nthree_,virtual_});
-    Ba("mge") = (ThreeIntegral.block("dvc"))("gem");
-    Bb("MgE") = (ThreeIntegral.block("dvc"))("gEM");
-
     size_t dim = nthree_ * virtual_;
+    std::vector<size_t> naux(nthree_);
+    std::iota(naux.begin(), naux.end(), 0);
+
+    std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
     double Ealpha = 0.0;
     double Ebeta  = 0.0;
@@ -1324,29 +1280,47 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
+    std::vector<ambit::Tensor> BefVec;
+    std::vector<ambit::Tensor> BefJKVec;
+    std::vector<ambit::Tensor> RDVec;
+    std::vector<ambit::Tensor> BmaVec_three;
+    std::vector<ambit::Tensor> BnaVec_three;
+    std::vector<ambit::Tensor> BmbVec_three;
+    std::vector<ambit::Tensor> BnbVec_three;
     std::vector<ambit::Tensor> BmaVec;
     std::vector<ambit::Tensor> BnaVec;
     std::vector<ambit::Tensor> BmbVec;
     std::vector<ambit::Tensor> BnbVec;
-    std::vector<ambit::Tensor> BefVec;
-    std::vector<ambit::Tensor> BefJKVec;
-    std::vector<ambit::Tensor> RDVec;
+    std::vector<std::vector<size_t>> ma_vec;
+    std::vector<std::vector<size_t>> mb_vec;
+    std::vector<std::vector<size_t>> na_vec;
+    std::vector<std::vector<size_t>> nb_vec;
     for (int i = 0; i < nthread; i++)
     {
-     BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree_,virtual_}));
-     BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree_,virtual_}));
-     BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree_,virtual_}));
-     BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree_,virtual_}));
-     BefVec.push_back(ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_}));
-     BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
-     RDVec.push_back(ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_}));
+        BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree_,virtual_}));
+        BnaVec.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree_,virtual_}));
+        BmbVec.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree_,virtual_}));
+        BnbVec.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree_,virtual_}));
+        BefVec.push_back(ambit::Tensor::build(tensor_type_,"Bef",{virtual_,virtual_}));
+        BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
+        BmaVec_three.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree_,1,virtual_}));
+        BnaVec_three.push_back(ambit::Tensor::build(tensor_type_,"Bna",{nthree_,1,virtual_}));
+        BmbVec_three.push_back(ambit::Tensor::build(tensor_type_,"Bmb",{nthree_,1,virtual_}));
+        BnbVec_three.push_back(ambit::Tensor::build(tensor_type_,"Bnb",{nthree_,1,virtual_}));
+        RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
+        ma_vec.push_back(std::vector<size_t>(1));
+        mb_vec.push_back(std::vector<size_t>(1));
+        na_vec.push_back(std::vector<size_t>(1));
+        nb_vec.push_back(std::vector<size_t>(1));
+
     }
+    
     #pragma omp parallel for num_threads(num_threads_) \
     schedule(dynamic) \
-    reduction(+:Ealpha, Ebeta, Emixed) \
-    shared(Ba,Bb)
+    reduction(+:Ealpha, Ebeta, Emixed) 
 
     for(size_t m = 0; m < core_; ++m){
+         
         int thread = 0;
         #ifdef _OPENMP
             thread = omp_get_thread_num();
@@ -1355,18 +1329,24 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
         size_t mb = bcore_mos[m];
         #pragma omp critical
         {
-        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmaVec[thread].data().begin());
-        //std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
-        std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmbVec[thread].data().begin());
+            ma_vec[thread][0] = ma;
+            mb_vec[thread][0] = mb;
+            BmaVec_three[thread] = ints_->get_three_integral_block(naux, ma_vec[thread], virt_mos);
+            BmbVec_three[thread] = ints_->get_three_integral_block(naux, mb_vec[thread], virt_mos);
+            std::copy(&BmaVec_three[thread].data()[0], &BmaVec_three[thread].data()[dim], BmaVec[thread].data().begin());
+            std::copy(&BmbVec_three[thread].data()[0], &BmbVec_three[thread].data()[dim], BmbVec[thread].data().begin());
         }
         for(size_t n = 0; n < core_; ++n){
             size_t na = acore_mos[n];
             size_t nb = bcore_mos[n];
+            na_vec[thread][0] = na;
+            nb_vec[thread][0] = nb;
             #pragma omp critical
             {
-            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
-            //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
-            std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnbVec[thread].data().begin());
+                BnaVec_three[thread] = ints_->get_three_integral_block(naux, na_vec[thread], virt_mos);
+                BnbVec_three[thread] = ints_->get_three_integral_block(naux, nb_vec[thread], virt_mos);
+                std::copy(&BnaVec_three[thread].data()[0], &BnaVec_three[thread].data()[dim], BnaVec[thread].data().begin());
+                std::copy(&BnbVec_three[thread].data()[0], &BnbVec_three[thread].data()[dim], BnbVec[thread].data().begin());
             }
 
             // alpha-aplha
@@ -1405,8 +1385,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
     BlockedTensor T2ccvv = BTF->build(tensor_type_,"T2ccvv", spin_cases({"ccvv"}));
     BlockedTensor v    = BTF->build(tensor_type_, "Vccvv", spin_cases({"ccvv"}));
 
+    BlockedTensor ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph","dPH"});
+    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        value = ints_->get_three_integral(i[0],i[1],i[2]);
+    });
+
     v("mnef") = ThreeIntegral("gem") * ThreeIntegral("gfn");
-    v("mnef") -= ThreeIntegral("gfm") * ThreeIntegral("gee");
+    v("mnef") -= ThreeIntegral("gfm") * ThreeIntegral("gen");
     v("MNEF") = ThreeIntegral("gEM") * ThreeIntegral("gFN");
     v("MNEF") -= ThreeIntegral("gFM") * ThreeIntegral("gEN");
     v("mNeF") = ThreeIntegral("gem") * ThreeIntegral("gFN");

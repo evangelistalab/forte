@@ -2,7 +2,15 @@
 #include <cstdio>
 #include <map>
 #include <vector>
-#include <libmints/mints.h>
+#include <libmints/matrix.h>
+#include <libmints/vector.h>
+#include <libmints/petitelist.h>
+#include <libmints/wavefunction.h>
+#include <libmints/typedefs.h>
+#include <libmints/basisset.h>
+#include <libmints/multipolesymmetry.h>
+#include <libmints/integralparameters.h>
+#include <libmints/mintshelper.h>
 #include <libqt/qt.h>
 #include "uno.h"
 #include "helpers.h"

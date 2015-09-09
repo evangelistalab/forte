@@ -250,27 +250,27 @@ double MRDSRG::compute_energy(){
     guess_t1(F,T2,T1);
 
     // check initial amplitudes
-    analyze_amplitudes("First-Order ",T1,T2);
+    analyze_amplitudes("First-Order",T1,T2);
 
     // get reference energy
     double Etotal = Eref;
 
     // compute energy
     switch (corrlevelmap[options_.get_str("CORR_LEVEL")]){
-    case LDSRG2:{
+    case CORR_LV::LDSRG2:{
         Etotal += compute_energy_ldsrg2();
         break;
     }
-    case LDSRG2_P3:{
+    case CORR_LV::LDSRG2_P3:{
         break;
     }
-    case QDSRG2:{
+    case CORR_LV::QDSRG2:{
         break;
     }
-    case QDSRG2_P3:{
+    case CORR_LV::QDSRG2_P3:{
         break;
     }
-    case PT3:{
+    case CORR_LV::PT3:{
         Etotal += compute_energy_pt3();
         break;
     }
