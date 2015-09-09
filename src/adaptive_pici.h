@@ -273,6 +273,10 @@ private:
     /// Form the product H c
     double form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
+    /// Do we have OpenMP?
+    static bool have_omp_;
+    /// Maximum number of threads
+    //int num_threads_;
 };
 
 }} // End Namespaces

@@ -74,8 +74,6 @@ void FCI::startup()
 
 double FCI::compute_energy()
 {
-    double nuclear_repulsion_energy = molecule_->nuclear_repulsion_energy();
-
     Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
     size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");

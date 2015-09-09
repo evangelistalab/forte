@@ -205,7 +205,7 @@ void FCIWfn::release_temp_space()
 //}
 
 FCIWfn::FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry)
-    : lists_(lists), symmetry_(symmetry),
+    : symmetry_(symmetry),  lists_(lists),
       alfa_graph_(lists_->alfa_graph()), beta_graph_(lists_->beta_graph())
 {
     startup();

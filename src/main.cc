@@ -339,7 +339,7 @@ read_options(std::string name, Options &options)
         /*- The maximum value of beta -*/
         options.add_double("START_NUM_WALKERS",1000.0);
         /*- Spawn excitation type -*/
-        options.add_str("SPAWN_TYPE","RANDOM", "RAMDOM ALL GROUND_AND_RANDOM");
+        options.add_str("SPAWN_TYPE","RANDOM", "RANDOM ALL GROUND_AND_RANDOM");
         /*- The number of walkers for shift -*/
         options.add_double("SHIFT_NUM_WALKERS", 10000.0);
         options.add_int("SHIFT_FREQ", 10);
