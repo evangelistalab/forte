@@ -30,6 +30,7 @@
 #include "boost/dynamic_bitset.hpp"
 
 #include "integrals.h"
+#include "fci_vector.h"
 #include "excitation_determinant.h"
 
 namespace psi{ namespace forte{
@@ -51,6 +52,11 @@ namespace psi{ namespace forte{
 class BitsetDeterminant{
 public:
     using bit_t = boost::dynamic_bitset<>;
+
+	//test integrals
+	void test_ints(){
+		outfile->Printf("\n FC energy: %1.8f", fci_ints_->frozen_core_energy());
+	}
 
     // Class Constructor and Destructor
     /// Construct an empty determinant
@@ -98,6 +104,38 @@ public:
 
     /// Get a pointer to the beta bits
     const bit_t& beta_bits() const {return beta_bits_;}
+	/// Get the alpha bits
+	std::vector<bool> get_alfa_bits_vector_bool(){
+		std::vector<bool> result;
+		for(int n = 0; n < nmo_;++n){
+			result.push_back(alfa_bits_[n]);
+		}
+		return result;
+	}
+	// Get the beta bits
+	std::vector<bool> get_beta_bits_vector_bool(){
+		std::vector<bool> result;
+		for( int n = 0; n < nmo_; ++n){
+			result.push_back(beta_bits_[n]);	
+		}
+		return result;
+	}
+	/// Get the alpha bits
+	const std::vector<bool> get_alfa_bits_vector_bool() const {
+		std::vector<bool> result;
+		for(int n = 0; n < nmo_;++n){
+			result.push_back(alfa_bits_[n]);
+		}
+		return result;
+	}
+	// Get the beta bits
+	const std::vector<bool> get_beta_bits_vector_bool() const {
+		std::vector<bool> result;
+		for( int n = 0; n < nmo_; ++n){
+			result.push_back(beta_bits_[n]);	
+		}
+		return result;
+	}
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const {return alfa_bits_[n];}
@@ -158,9 +196,14 @@ public:
     double spin2(const BitsetDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
-    static void set_ints(ForteIntegrals* ints) {
-        ints_ = ints;
-    }
+	static void set_ints(std::shared_ptr<FCIIntegrals> ints) {
+		fci_ints_ = ints;
+	}
+	
+	static void set_ints(std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info ){
+		fci_ints_ = std::make_shared<FCIIntegrals>(ints,mo_space_info);
+	}	
+
 private:
     // Data
     /// Number of non-frozen molecular orbitals
@@ -173,7 +216,7 @@ public:
 
     // Static data
     /// A pointer to the integral object
-    static ForteIntegrals* ints_;
+    static std::shared_ptr<FCIIntegrals> fci_ints_;
     static double SlaterSign(const bit_t& I,int n);
 };
 

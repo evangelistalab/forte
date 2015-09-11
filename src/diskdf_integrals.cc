@@ -17,6 +17,7 @@
 #include "blockedtensorfactory.h"
 using namespace ambit;
 namespace psi{ namespace forte{
+
 DISKDFIntegrals::~DISKDFIntegrals()
 {
     deallocate();
@@ -191,8 +192,8 @@ ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, cons
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = get_three_integral_block(Avec, p, r);
-    ThreeIntqs = get_three_integral_block(Avec, q, s);
+    ThreeIntpr = three_integral_block(Avec, p, r);
+    ThreeIntqs = three_integral_block(Avec, q, s);
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
     ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
@@ -209,8 +210,8 @@ ambit::Tensor DISKDFIntegrals::aptei_ab_block(const std::vector<size_t>& p, cons
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = get_three_integral_block(Avec, p, r);
-    ThreeIntqs = get_three_integral_block(Avec, q, s);
+    ThreeIntpr = three_integral_block(Avec, p, r);
+    ThreeIntqs = three_integral_block(Avec, q, s);
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
     ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
@@ -226,15 +227,15 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p, cons
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = get_three_integral_block(Avec, p, r);
-    ThreeIntqs = get_three_integral_block(Avec, q, s);
+    ThreeIntpr = three_integral_block(Avec, p, r);
+    ThreeIntqs = three_integral_block(Avec, q, s);
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
     ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
     ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
     return ReturnTensor;
 }
-double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
+double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q)
 {
     size_t pn, qn;
     if(frzcpi_.sum() > 0 && ncmo_ == aptei_idx_)
@@ -256,7 +257,7 @@ double DISKDFIntegrals::get_three_integral(size_t A, size_t p, size_t q)
     return value;
 
 }
-ambit::Tensor DISKDFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
 {
     //Since file is formatted as p by A * q
     bool frozen_core = false;
@@ -562,7 +563,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
         value = gamma_bM->get(nonzero[i[0]],nonzero[i[1]]);
     });
     ambit::Tensor ThreeIntC2 = ambit::Tensor::build(tensor_type, "ThreeInkC", {nthree_,nonzero.size(), nonzero.size()});
-    ThreeIntC2 = get_three_integral_block(A, nonzero, nonzero);
+    ThreeIntC2 = three_integral_block(A, nonzero, nonzero);
 
     ambit::Tensor BQA = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
     ambit::Tensor BQB = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
@@ -630,15 +631,15 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
         ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{A_block.size(),aptei_idx_, aptei_idx_});
 
         //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        //    value = get_three_integral(A_block[i[0]], i[1], i[2]);
+        //    value = three_integral(A_block[i[0]], i[1], i[2]);
         //});
 
         //Return a tensor of ThreeInt given the smaller block of A
-        ThreeIntegralTensor = get_three_integral_block(A_block, P, P);
+        ThreeIntegralTensor = three_integral_block(A_block, P, P);
 
 
         //Need to rewrite this to at least read in chunks of nthree_
-        //ThreeIntegralTensor = get_three_integral_block(A_block, P,P );
+        //ThreeIntegralTensor = three_integral_block(A_block, P,P );
 
         fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * BQA_small("Q");
         fock_a("p,q") -=  ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a_full("r,s");
@@ -887,8 +888,8 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     ambit::Tensor BQpr = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, nmo_,frozen_vec.size()});
 
     //Read these into a tensor
-    BQrp = get_three_integral_block(nauxpi, frozen_vec, P);
-    BQpr = get_three_integral_block(nauxpi, P, frozen_vec);
+    BQrp = three_integral_block(nauxpi, frozen_vec, P);
+    BQpr = three_integral_block(nauxpi, P, frozen_vec);
 
     ambit::Tensor rpq = ambit::Tensor::build(tensor_type_, "rpq", {frozen_vec.size(), nmo_, nmo_});
     ambit::Tensor rpqK = ambit::Tensor::build(tensor_type_, "rpqK", {frozen_vec.size(), nmo_, nmo_});
@@ -939,12 +940,12 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
         //Needs to be blocked over A
 
         ambit::Tensor BQpq = ambit::Tensor::build(tensor_type_, "BQpq", {A_block.size(), nmo_, nmo_});
-        BQpq = get_three_integral_block(A_block, P, P);
+        BQpq = three_integral_block(A_block, P, P);
 
         //A_block is the split of the naux -> (0, . . . ,block_size)
 
         ambit::Tensor Qr = ambit::Tensor::build(tensor_type_, "Qr", {A_block.size(),frozen_vec.size()});
-        ambit::Tensor BQr = get_three_integral_block(A_block, frozen_vec, frozen_vec);
+        ambit::Tensor BQr = three_integral_block(A_block, frozen_vec, frozen_vec);
 
 
 

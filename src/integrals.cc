@@ -92,7 +92,7 @@ void ForteIntegrals::startup()
     num_threads_ = omp_get_max_threads();
 }
 
-void ForteIntegrals::allocate()
+void ForteIntegrals::ForteIntegrals::allocate()
 {
     // Allocate the memory required to store the one-electron integrals
     one_electron_integrals_a = new double[nmo_ * nmo_];
@@ -102,7 +102,7 @@ void ForteIntegrals::allocate()
     fock_matrix_b = new double[nmo_ * nmo_];
 }
 
-void ForteIntegrals::deallocate()
+void ForteIntegrals::ForteIntegrals::deallocate()
 {
     // Deallocate the memory required to store the one-electron integrals
     delete[] one_electron_integrals_a;
@@ -112,7 +112,7 @@ void ForteIntegrals::deallocate()
     delete[] fock_matrix_b;
 }
 
-void ForteIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
+void ForteIntegrals::ForteIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 {
     // Store the integrals in a temporary array of dimension nmo x nmo
     double* temp_ints = new double[nmo_ * nmo_];
@@ -130,7 +130,7 @@ void ForteIntegrals::resort_two(double*& ints,std::vector<size_t>& map)
 }
 
 
-void ForteIntegrals::set_oei(double** ints,bool alpha)
+void ForteIntegrals::ForteIntegrals::set_oei(double** ints,bool alpha)
 {
     double* p_oei = alpha ? one_electron_integrals_a : one_electron_integrals_b;
     for (int p = 0; p < aptei_idx_; ++p){

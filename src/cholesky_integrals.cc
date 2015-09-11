@@ -125,11 +125,11 @@ ambit::Tensor CholeskyIntegrals::aptei_bb_block(const std::vector<size_t>& p, co
     });
     return ReturnTensor;
 }
-ambit::Tensor CholeskyIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
+        value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
     });
     return ReturnTensor;
 }
@@ -563,7 +563,7 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
     ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
 
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = get_three_integral(i[0], i[1], i[2]);
+        value = three_integral(i[0], i[1], i[2]);
     });
     boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
     boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));

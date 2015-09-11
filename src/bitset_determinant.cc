@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "bitset_determinant.h"
+#include "fci_vector.h"
 
 using namespace std;
 using namespace psi;
@@ -16,7 +17,7 @@ std::size_t hash_value(const BitsetDeterminant& input)
     return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
 }
 
-ForteIntegrals* BitsetDeterminant::ints_ = 0;
+std::shared_ptr<FCIIntegrals> BitsetDeterminant::fci_ints_ = 0;
 //boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
 //boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
 
@@ -256,7 +257,7 @@ std::string BitsetDeterminant::str() const
 double BitsetDeterminant::energy() const
 {
     double matrix_element = 0.0;
-    matrix_element = ints_->frozen_core_energy();
+    matrix_element = fci_ints_->frozen_core_energy();
     //    for(int p = 0; p < nmo_; ++p){
     //        if(alfa_bits_[p]) matrix_element += ints_->diag_roei(p);
     //        if(beta_bits_[p]) matrix_element += ints_->diag_roei(p);
@@ -271,27 +272,28 @@ double BitsetDeterminant::energy() const
     //                outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_c_rtei(p,q));
     //            }
     //            if(beta_bits_[p] and beta_bits_[q]){
-    //                matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
+    //                matrix_element +=   0.5 * fci_ints_->diag_ce_rtei(p,q);
     //                outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_ce_rtei(p,q));
     //            }
     //        }
     //    }
-    for(int p = 0; p < nmo_; ++p){
-        if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
-        if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
-        //        if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",ints_->diag_roei(p),ints_->diag_roei(p));
-        for(int q = 0; q < nmo_; ++q){
+    for(size_t p = 0; p < nmo_; ++p){
+        if(alfa_bits_[p]) matrix_element += fci_ints_->oei_a(p,p);
+        if(beta_bits_[p]) matrix_element += fci_ints_->oei_b(p,p);
+             //   if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",fci_ints_->oei_a(p,p),fci_ints_->oei_a(p,p));
+
+        for(size_t q = 0; q < nmo_; ++q){
             if(alfa_bits_[p] and alfa_bits_[q]){
-                matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
-                //                outfile->Printf("\n  One-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_aa(p,q));
+                matrix_element += 0.5 *  fci_ints_->diag_tei_aa(p,q);
+               //                 outfile->Printf("\n  Two-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,fci_ints_->diag_tei_aa(p,q));
             }
             if(alfa_bits_[p] and beta_bits_[q]){
-                matrix_element += ints_->diag_aptei_ab(p,q);
-                //                outfile->Printf("\n  One-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,ints_->diag_aptei_ab(p,q));
+                matrix_element +=  fci_ints_->diag_tei_ab(p,q);
+                 //               outfile->Printf("\n  Two-electron terms (%da,%db): 1.0 * %20.12f (string)",p,q,fci_ints_->diag_tei_ab(p,q));
             }
             if(beta_bits_[p] and beta_bits_[q]){
-                matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
-                //                outfile->Printf("\n  One-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,ints_->diag_aptei_bb(p,q));
+                matrix_element += 0.5 *  fci_ints_->diag_tei_bb(p,q);
+                   //             outfile->Printf("\n  Two-electron terms (%db,%db): 0.5 * %20.12f (string)",p,q,fci_ints_->diag_tei_bb(p,q));
             }
         }
     }
@@ -325,20 +327,20 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     double matrix_element = 0.0;
     // Slater rule 1 PhiI = PhiJ
     if ((nadiff == 0) and (nbdiff == 0)) {
-        matrix_element = ints_->frozen_core_energy();
-        for(int p = 0; p < nmo_; ++p){
-            if(alfa_bits_[p]) matrix_element += ints_->oei_a(p,p);
-            if(beta_bits_[p]) matrix_element += ints_->oei_b(p,p);
-            for(int q = 0; q < nmo_; ++q){
+        matrix_element = fci_ints_->frozen_core_energy();
+        for(size_t p = 0; p < nmo_; ++p){
+            if(alfa_bits_[p]) matrix_element += fci_ints_->oei_a(p,p);
+            if(beta_bits_[p]) matrix_element += fci_ints_->oei_b(p,p);
+            for(size_t q = 0; q < nmo_; ++q){
                 if(alfa_bits_[p] and alfa_bits_[q])
-                    matrix_element +=   0.5 * ints_->diag_aptei_aa(p,q);
+                    matrix_element +=   0.5 * fci_ints_->diag_tei_aa(p,q);
                 //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(beta_bits_[p] and beta_bits_[q])
-                    matrix_element +=   0.5 * ints_->diag_aptei_bb(p,q);
+                    matrix_element +=   0.5 * fci_ints_->diag_tei_bb(p,q);
                 //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
                 if(alfa_bits_[p] and beta_bits_[q])
-                    matrix_element +=   ints_->diag_aptei_ab(p,q);
-                //                    matrix_element += ints_->diag_c_rtei(p,q);
+                    matrix_element +=   fci_ints_->diag_tei_ab(p,q);
+                //                    matrix_element += fci_ints_->diag_c_rtei(p,q);
             }
         }
     }
@@ -353,13 +355,13 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             if((Ia[p] != Ja[p]) and Ja[p]) j = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ja,j);
-        matrix_element = sign * ints_->oei_a(i,j);
+        matrix_element = sign * fci_ints_->oei_a(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_aa(i,p,j,p);
+                matrix_element += sign * fci_ints_->tei_aa(i,p,j,p);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_ab(i,p,j,p);
+                matrix_element += sign * fci_ints_->tei_ab(i,p,j,p);
             }
         }
     }
@@ -373,13 +375,13 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) j = p;
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Jb,j);
-        matrix_element = sign * ints_->oei_b(i,j);
+        matrix_element = sign * fci_ints_->oei_b(i,j);
         for(int p = 0; p < nmo_; ++p){
             if(Ia[p] and Ja[p]){
-                matrix_element += sign * ints_->aptei_ab(p,i,p,j);
+                matrix_element += sign * fci_ints_->tei_ab(p,i,p,j);
             }
             if(Ib[p] and Jb[p]){
-                matrix_element += sign * ints_->aptei_bb(i,p,j,p);
+                matrix_element += sign * fci_ints_->tei_bb(i,p,j,p);
             }
         }
     }
@@ -400,7 +402,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ia,j) * SlaterSign(Ja,k) * SlaterSign(Ja,l);
-        matrix_element = sign * ints_->aptei_aa(i,j,k,l);
+        matrix_element = sign * fci_ints_->tei_aa(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = k_a^+ l_a^+ j_a i_a PhiJ
@@ -420,7 +422,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             }
         }
         double sign = SlaterSign(Ib,i) * SlaterSign(Ib,j) * SlaterSign(Jb,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_bb(i,j,k,l);
+        matrix_element = sign * fci_ints_->tei_bb(i,j,k,l);
     }
 
     // Slater rule 3 PhiI = j_a^+ i_a PhiJ
@@ -435,7 +437,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
             if((Ib[p] != Jb[p]) and Jb[p]) l = p;
         }
         double sign = SlaterSign(Ia,i) * SlaterSign(Ib,j) * SlaterSign(Ja,k) * SlaterSign(Jb,l);
-        matrix_element = sign * ints_->aptei_ab(i,j,k,l);
+        matrix_element = sign * fci_ints_->tei_ab(i,j,k,l);
     }
     return(matrix_element);
 }

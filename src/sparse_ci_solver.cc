@@ -10,6 +10,7 @@
 
 /// This needs to be in here to avoid problems with compiling without openmp
 #include "sparse_ci_solver.h"
+#include "fci_vector.h"
 #ifdef _OPENMP
     #include <omp.h>
 #else
@@ -372,7 +373,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_aa(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -393,7 +394,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_ab(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -414,7 +415,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_bb(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -472,7 +473,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_aa(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -491,7 +492,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_ab(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -510,7 +511,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_bb(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -583,7 +584,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_aa(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -606,7 +607,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_ab(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -629,7 +630,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::ints_->aptei_bb(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -759,7 +760,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
     //If you are using DiskDF, Kevin found that openmp does not like this! 
     int threads = 0;
-    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
     {
        threads = 1;
     }
@@ -932,7 +933,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
 
     int threads = 0;
-    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
+    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
     {
        threads = 1;
     }
@@ -962,14 +963,14 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
     int threads = 0;
-    if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
-    {
-       threads = 1;
-    }
-    else
-    {
-       threads = omp_get_max_threads();
-    }
+   if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+   {
+      threads = 1;
+   }
+   else
+   {
+      threads = omp_get_max_threads();
+   }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
