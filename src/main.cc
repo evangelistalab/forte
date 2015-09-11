@@ -437,15 +437,17 @@ read_options(std::string name, Options &options)
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
-        /*- DMRG-CI or CAS-CI reference -*/
-        options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
+        /*- The code used to do CAS-CI.
+         *  - CAS York's code
+         *  - FCI Francesco's string based FCI code
+         *  - DMRG DMRG code (not yet available) -*/
+        options.add_str("CAS_TYPE", "CAS", "CAS FCI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
         options.add_bool("PRINT_DENOM2", false);
-        
     }
 
     return true;
@@ -480,8 +482,8 @@ forte(Options &options)
     }
 
     // Link the integrals to the BitsetDeterminant class
-//	std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
- //   BitsetDeterminant::set_ints(fci_ints_);
+    std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+    BitsetDeterminant::set_ints(fci_ints_);
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -544,7 +546,7 @@ forte(Options &options)
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
-        if(options.get_str("CASTYPE")=="CAS")
+        if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(options,ints_,mo_space_info);
             Reference reference = fci_mo.reference();
@@ -562,7 +564,7 @@ forte(Options &options)
 //                FCI_MO fci(options,ints_);
             }
         }
-        if(options.get_str("CASTYPE")=="FCI")
+        if(options.get_str("CAS_TYPE")=="FCI")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
@@ -578,7 +580,7 @@ forte(Options &options)
                 boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->compute_energy();
         }
-        else if(options.get_str("CASTYPE")=="DMRG")
+        else if(options.get_str("CAS_TYPE")=="DMRG")
         {
             outfile->Printf("\n Buy Kevin a beer and he will maybe implement DMRG into libadaptive\n");
             throw PSIEXCEPTION("DMRG is not available quite yet");
@@ -594,7 +596,7 @@ forte(Options &options)
            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
        }
 
-       if(options.get_str("CASTYPE")=="CAS")
+       if(options.get_str("CAS_TYPE")=="CAS")
        {
            FCI_MO fci_mo(options,ints_,mo_space_info);
            Reference reference = fci_mo.reference();
@@ -603,7 +605,7 @@ forte(Options &options)
            three_dsrg_mrpt2->compute_energy();
        }
 
-       else if(options.get_str("CASTYPE")=="FCI")
+       else if(options.get_str("CAS_TYPE")=="FCI")
        {
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
@@ -625,7 +627,7 @@ forte(Options &options)
            three_dsrg_mrpt2->compute_energy();
        }
 
-       else if(options.get_str("CASTYPE")=="DMRG")
+       else if(options.get_str("CAS_TYPE")=="DMRG")
 
        {
            outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
@@ -664,7 +666,7 @@ forte(Options &options)
     }
 
     if (options.get_str("JOB_TYPE") == "SOMRDSRG"){
-        if(options.get_str("CASTYPE")=="CAS")
+        if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(options,ints_,mo_space_info);
             Reference reference = fci_mo.reference();
@@ -672,7 +674,7 @@ forte(Options &options)
             boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
             somrdsrg->compute_energy();
         }
-        if(options.get_str("CASTYPE")=="FCI")
+        if(options.get_str("CAS_TYPE")=="FCI")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 

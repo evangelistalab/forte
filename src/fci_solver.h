@@ -100,9 +100,9 @@ private:
     std::shared_ptr<FCIWfn> C_;
 
     /// The number of irreps
-    size_t nirrep_;
+    int nirrep_;
     /// The symmetry of the wave function
-    size_t symmetry_;
+    int symmetry_;
     /// The number of alpha electrons
     size_t na_;
     /// The number of beta electrons
@@ -111,7 +111,7 @@ private:
     /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
     size_t multiplicity_;
     /// The number of roots
-    size_t nroot_;
+    int nroot_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 10;
     /// Test the RDMs?
@@ -127,7 +127,9 @@ private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
-    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > > initial_guess(FCIWfn& diag,size_t n,size_t multiplicity);
+    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > >
+    initial_guess(FCIWfn& diag,size_t n,size_t multiplicity,
+                  std::shared_ptr<FCIIntegrals> fci_ints);
 };
 
 

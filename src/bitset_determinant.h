@@ -107,7 +107,7 @@ public:
 	/// Get the alpha bits
 	std::vector<bool> get_alfa_bits_vector_bool(){
 		std::vector<bool> result;
-		for(int n = 0; n < nmo_;++n){
+        for(size_t n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -115,7 +115,7 @@ public:
 	// Get the beta bits
 	std::vector<bool> get_beta_bits_vector_bool(){
 		std::vector<bool> result;
-		for( int n = 0; n < nmo_; ++n){
+        for(size_t n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -123,7 +123,7 @@ public:
 	/// Get the alpha bits
 	const std::vector<bool> get_alfa_bits_vector_bool() const {
 		std::vector<bool> result;
-		for(int n = 0; n < nmo_;++n){
+        for(size_t n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -131,7 +131,7 @@ public:
 	// Get the beta bits
 	const std::vector<bool> get_beta_bits_vector_bool() const {
 		std::vector<bool> result;
-		for( int n = 0; n < nmo_; ++n){
+        for(size_t n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -199,10 +199,6 @@ public:
 	static void set_ints(std::shared_ptr<FCIIntegrals> ints) {
 		fci_ints_ = ints;
 	}
-	
-	static void set_ints(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info ){
-		fci_ints_ = std::make_shared<FCIIntegrals>(ints,mo_space_info);
-	}	
 
 private:
     // Data
