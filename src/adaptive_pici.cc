@@ -387,7 +387,7 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std:
         std::vector<std::pair<double,size_t> > det_weight;
         for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
             det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-            dets[I].print();
+            //dets[I].print();
         }
         std::sort(det_weight.begin(),det_weight.end());
         std::reverse(det_weight.begin(),det_weight.end());
@@ -399,7 +399,9 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std:
         }
         dets = new_dets;
         C.resize(guess_size);
+        guess_size = dets.size();
     }
+
 
     outfile->Printf("\n\n  Initial guess size = %zu",guess_size);
 
