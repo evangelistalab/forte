@@ -63,9 +63,9 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
             size_t qq = cmo_to_mo[q];
             oei_a_[ncmo * p + q] = ints->oei_a(pp,qq);
             oei_b_[ncmo * p + q] = ints->oei_b(pp,qq);
-            diag_tei_aa_[ncmo * p + q] = ints->aptei_aa(pp,qq,pp,qq);
-            diag_tei_ab_[ncmo * p + q] = ints->aptei_ab(pp,qq,pp,qq);
-            diag_tei_bb_[ncmo * p + q] = ints->aptei_bb(pp,qq,pp,qq);
+            diag_tei_aa_[ncmo * p + q] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
+            diag_tei_ab_[ncmo * p + q] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
+            diag_tei_bb_[ncmo * p + q] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
 
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals
@@ -92,7 +92,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
 
 FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info)
 {
-    ncmo = mospace_info->size("CORRELATED");
+    ncmo = mospace_info->size("ACTIVE");
 	size_t ncmo_sq = ncmo * ncmo;
 	size_t ncmo_cu = ncmo * ncmo * ncmo;	
 	size_t ncmo_f  = ncmo * ncmo * ncmo * ncmo;
@@ -136,9 +136,9 @@ FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo
 			size_t idx = ncmo * p + q;
             oei_a_[idx] = ints->oei_a(pp,qq);
             oei_b_[idx] = ints->oei_b(pp,qq);
-			diag_tei_aa_[idx] = ints->aptei_aa(pp,qq,pp,qq);
-            diag_tei_ab_[idx] = ints->aptei_ab(pp,qq,pp,qq);
-            diag_tei_bb_[idx] = ints->aptei_bb(pp,qq,pp,qq);
+			diag_tei_aa_[idx] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
+            diag_tei_ab_[idx] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
+            diag_tei_bb_[idx] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
 
 
             // Compute the one-body contribution to the energy that comes from
