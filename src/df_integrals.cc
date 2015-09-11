@@ -104,11 +104,11 @@ ambit::Tensor DFIntegrals::aptei_bb_block(const std::vector<size_t>& p, const st
     });
     return ReturnTensor;
 }
-ambit::Tensor DFIntegrals::get_three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
+ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q)
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), p.size(), q.size()});
     ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = get_three_integral(A[i[0]], p[i[1]], q[i[2]]);
+        value = three_integral(A[i[0]], p[i[1]], q[i[2]]);
     });
     return ReturnTensor;
 }
@@ -303,7 +303,7 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
     std::iota(vP.begin(), vP.end(), 0);
 
 
-    ThreeIntegralTensor = get_three_integral_block(vQ, vP, vP);
+    ThreeIntegralTensor = three_integral_block(vQ, vP, vP);
 
     gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
         value = gamma_aM->get(i[0],i[1]);

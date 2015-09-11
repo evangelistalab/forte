@@ -24,6 +24,9 @@ double FCIWfn::h2_bbbb_timer = 0.0;
 FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints)
 {
     ncmo = lists->ncmo();
+    // This is a warning, but please do not delete it.  It is used in fci_vector.  
+    IntegralType integral_type_ = ints->integral_type();
+
     std::vector<size_t> cmo_to_mo = lists->cmo_to_mo();
 
     std::vector<size_t> fomo_to_mo = lists->fomo_to_mo();
