@@ -64,7 +64,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~AdaptivePathIntegralCI();
@@ -84,7 +84,9 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
+    /// Store all the integrals locally
+    static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of propagator used
@@ -102,12 +104,10 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    StringDeterminant reference_determinant_;
+    BitsetDeterminant reference_determinant_;
     std::vector<std::map<Determinant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    /// Store all the integrals locally
-    FCIIntegrals fciInts_;
 
     // * Calculation info
     /// The threshold applied to the primary space

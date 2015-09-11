@@ -13,7 +13,7 @@ namespace psi{ namespace forte{
 double SlaterSign(bool* I, int n);
 double SlaterSign(const std::vector<bool>& I, int n);
 
-ForteIntegrals* StringDeterminant::ints_ = 0;
+std::shared_ptr<ForteIntegrals>  StringDeterminant::ints_ = 0;
 double StringDeterminant::ahole_[20];
 double StringDeterminant::bhole_[20];
 double StringDeterminant::apart_[20];

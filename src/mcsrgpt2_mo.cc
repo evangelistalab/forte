@@ -15,7 +15,7 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-MCSRGPT2_MO::MCSRGPT2_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+MCSRGPT2_MO::MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(options, ints, mo_space_info)
 {
     outfile->Printf("\n");

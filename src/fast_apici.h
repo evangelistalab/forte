@@ -61,7 +61,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<psi::forte::MOSpaceInfo> mo_space_info);
+    FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<psi::forte::MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FastAdaptivePathIntegralCI();
@@ -81,7 +81,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of propagator used

@@ -59,7 +59,7 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCISolver() {}
 
@@ -91,7 +91,7 @@ private:
     std::shared_ptr<StringLists> lists_;
 
     /// The molecular integrals
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 
     /// The FCI energy
     double energy_;
@@ -147,7 +147,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI();
 
@@ -166,7 +166,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The information about the molecular orbital spaces

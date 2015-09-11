@@ -31,7 +31,7 @@ namespace psi{ namespace forte{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~FCI_MO();
 
     Reference reference();
@@ -44,9 +44,9 @@ protected:
     void cleanup();
 
     // Integrals
-    ForteIntegrals *integral_;
+    std::shared_ptr<ForteIntegrals>  integral_;
     std::string int_type_;
-
+	std::shared_ptr<FCIIntegrals> fci_ints_;
     // Reference Type
     std::string ref_type_;
 

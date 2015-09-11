@@ -37,10 +37,10 @@ std::pair<size_t,size_t> generate_ind_random_pair(size_t range)
 #endif
 
 FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options,
-               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+               std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_), ints_(ints),
-      mo_space_info_(mo_space_info),
-      fciInts_(ints, mo_space_info)
+      mo_space_info_(mo_space_info)
+     // fciInts_(ints, mo_space_info)
 {
     copy(wfn);
     startup();
@@ -49,11 +49,14 @@ FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options,
 FCIQMC::~FCIQMC()
 {
 }
+// Initialize static pointer to ints
+std::shared_ptr<FCIIntegrals> FCIQMC::fci_ints_ = 0;
 
 void FCIQMC::startup()
 {
     // Connect the integrals to the determinant class
-    BitsetDeterminant::set_ints(ints_);
+	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    BitsetDeterminant::set_ints(fci_ints_);
 
     // The number of correlated molecular orbitals
     ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();

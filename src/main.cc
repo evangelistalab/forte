@@ -467,20 +467,20 @@ forte(Options &options)
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
-    // Get the one- and two-electron integrals in the MO basis
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals> ints_ = nullptr;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<CholeskyIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else {
-        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
 
     // Link the integrals to the BitsetDeterminant class
-    BitsetDeterminant::set_ints(ints_);
+//	std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+ //   BitsetDeterminant::set_ints(fci_ints_);
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -694,7 +694,6 @@ forte(Options &options)
     }
 
     // Delete ints_;
-    delete ints_;
 
     ambit::finalize();
 
