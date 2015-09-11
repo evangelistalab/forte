@@ -17,7 +17,7 @@ std::size_t hash_value(const BitsetDeterminant& input)
     return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
 }
 
-std::shared_ptr<FCIIntegrals> BitsetDeterminant::fci_ints_ = 0;
+std::shared_ptr<FCIIntegrals> BitsetDeterminant::fci_ints_;
 //boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
 //boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
 
