@@ -31,7 +31,6 @@
 
 #include "integrals.h"
 #include "fci_vector.h"
-#include "excitation_determinant.h"
 
 namespace psi{ namespace forte{
 

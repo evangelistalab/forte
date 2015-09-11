@@ -30,7 +30,6 @@
 #include <physconst.h>
 
 #include "integrals.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "helpers.h"
 #include "fci_vector.h"

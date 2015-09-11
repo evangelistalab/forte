@@ -20,3 +20,5 @@ Makefile
 /tests/*/*.plt
 /tests/*/timer.dat
 
+doc/doxygen/html
+doc/doxygen/latex

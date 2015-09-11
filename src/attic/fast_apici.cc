@@ -63,7 +63,6 @@ FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefun
 void FastAdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
-    StringDeterminant::set_ints(ints_);
     FastDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals

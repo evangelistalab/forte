@@ -67,7 +67,7 @@ std::shared_ptr<FCIIntegrals> AdaptivePathIntegralCI::fci_ints_ = 0;
 void AdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
-  //  StringDeterminant::set_ints(ints_);
+  //  BitsetDeterminant::set_ints(ints_);
 	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
     Determinant::set_ints(fci_ints_);
 
