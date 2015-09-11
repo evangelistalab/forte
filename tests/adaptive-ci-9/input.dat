@@ -19,14 +19,15 @@ set {
   e_convergence 10
   d_convergence 10
   r_convergence 10
+  reference rhf
 }
 
 set forte {
   job_type aci
   select_type aimed_energy
-  frozen_docc [2,0,0,0,0,1,1,0]
-# active [1,0,1,1,0,2,0,1]
-  frozen_uocc [3,0,1,1,0,3,1,1]
+  frozen_docc [1,0,0,0,0,1,0,0]
+  restricted_docc [1,0,0,0,0,0,1,0]
+  active [1,0,1,1,0,2,0,1]
   taup 0.0001
   tauq 0.0001
   charge 0
