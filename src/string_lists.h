@@ -108,13 +108,13 @@ public:
     // ==> Class Public Functions <==
 
     size_t na() const {return na_;}
-    size_t nb() const {return nb_;}
     size_t nirrep() const {return nirrep_;}
     size_t ncmo() const {return ncmo_;}
+    std::vector<size_t> cmo_to_mo() const {return cmo_to_mo_;}
+    std::vector<size_t> fomo_to_mo() const {return fomo_to_mo_;}
     Dimension cmopi() const {return cmopi_;}
     std::vector<size_t> cmopi_offset() const {return cmopi_offset_;}
-    std::vector<size_t> fomo_to_mo() const {return fomo_to_mo_;}
-    std::vector<size_t> cmo_to_mo() const {return cmo_to_mo_;}
+    size_t nb() const {return nb_;}
     size_t pairpi(int h) const {return pairpi_[h];}
     //  std::vector<int> get_cmos() const {return cmos;}
     //  std::vector<int> get_cmos_offset() const {return cmos_offset;}
