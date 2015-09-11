@@ -47,7 +47,7 @@ protected:
     // => Class data <= //
 
     /// The molecular integrals required by MethodBase
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 
     /// List of alpha occupied MOs
     std::vector<size_t> a_occ_mos;
@@ -102,7 +102,7 @@ public:
 
     // => Constructors <= //
 
-    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MethodBase();
 
     /// The energy of the reference

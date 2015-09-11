@@ -200,7 +200,7 @@ public:
 		fci_ints_ = ints;
 	}
 	
-	static void set_ints(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info ){
+	static void set_ints(std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info ){
 		fci_ints_ = std::make_shared<FCIIntegrals>(ints,mo_space_info);
 	}	
 

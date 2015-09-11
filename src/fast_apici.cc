@@ -44,7 +44,7 @@ double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>&
 void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B);
 
 FastAdaptivePathIntegralCI::FastAdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
-                                                       ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                                                       std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),

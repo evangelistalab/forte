@@ -21,7 +21,7 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints)
+FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints)
 {
     ncmo = lists->ncmo();
     // This is a warning, but please do not delete it.  It is used in fci_vector.  
@@ -90,7 +90,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
     }
 }
 
-FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info)
+FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mospace_info)
 {
     ncmo = mospace_info->size("ACTIVE");
 	size_t ncmo_sq = ncmo * ncmo;

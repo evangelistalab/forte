@@ -45,9 +45,9 @@ public:
     // ==> Class Constructors <==
 
     /// Constructor based on StringLists
-    FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints);
+    FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints);
     /// Constructor based on MOInfoSpace
-    FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info);
+    FCIIntegrals(std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Interface <==
 

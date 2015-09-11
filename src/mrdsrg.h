@@ -38,7 +38,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -318,7 +318,7 @@ protected:
 public:
 
     // => Constructor <= //
-    MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,ForteIntegrals* ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // => Destructor <= //
     ~MRDSRG();

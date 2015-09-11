@@ -33,7 +33,7 @@ enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF};
 /**
  * Integrals: transforms and stores the integrals in Pitzer ordering
  */
-class ForteIntegrals{
+class  ForteIntegrals{
 public:
     // ==> Class Constructor and Destructor <==
 
@@ -50,7 +50,7 @@ public:
     std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    virtual ~ForteIntegrals();
+    virtual ~ ForteIntegrals();
 
 
     // ==> Class Interface <==
@@ -301,7 +301,7 @@ protected:
  */
 class ConventionalIntegrals: public ForteIntegrals{
 public:
-    ///Contructor of the class.  Calls ForteIntegrals constructor
+    ///Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints constructor
     ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
                           IntegralFrozenCore resort_frozen_core,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);

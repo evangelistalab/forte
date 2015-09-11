@@ -83,7 +83,7 @@ inline std::vector<int> get_set(bit_t x,bit_t range)
     return r;
 }
 
-ForteIntegrals* FastDeterminant::ints_ = 0;
+std::shared_ptr<ForteIntegrals>  FastDeterminant::ints_ = 0;
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
