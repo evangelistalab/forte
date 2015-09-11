@@ -364,14 +364,13 @@ void FCI_MO::form_det(){
     Timer tdet;
     str = "Forming determinants";
     outfile->Printf("\n  %-35s ...", str.c_str());
-    StringDeterminant::set_ints(integral_);
     for(int i = 0; i != nirrep_; ++i){
         int j = i ^ root_sym_;
         size_t sa = a_string[i].size();
         size_t sb = b_string[j].size();
         for(size_t alfa = 0; alfa < sa; ++alfa){
             for(size_t beta = 0; beta < sb; ++beta){
-                determinant_.push_back(StringDeterminant(a_string[i][alfa], b_string[j][beta]));
+                determinant_.push_back(BitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
             }
         }
     }
@@ -652,7 +651,7 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
 
             size_t size = dets.size();
             for(size_t ket = 0; ket != size; ++ket){
-                StringDeterminant Ja(vector<bool> (2*ncmo_)), Jb(vector<bool> (2*ncmo_));
+                BitsetDeterminant Ja(vector<bool> (2*ncmo_)), Jb(vector<bool> (2*ncmo_));
                 double a = 1.0, b = 1.0, vket = (eigen_[root].first)->get(ket);
                 if(std::fabs(vket) < econv_)
                     continue;
@@ -676,7 +675,7 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
     timer_off("FORM Density");
 }
 
-double FCI_MO::OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq){
+double FCI_MO::OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq){
     timer_on("1PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -692,7 +691,7 @@ double FCI_MO::OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const 
     if(!tmp[sp][p]){
         sign *= CheckSign(tmp[sp],p);
         tmp[sp][p] = 1;
-        Jnew = StringDeterminant (tmp[0],tmp[1],0);
+        Jnew = BitsetDeterminant (tmp[0],tmp[1],0);
         timer_off("1PO");
         return sign;
     }else{timer_off("1PO"); return 0.0;}
@@ -736,7 +735,7 @@ void FCI_MO::FormCumulant2AA(const vecdet &dets, const int &root, d4 &AA, d4 &BB
 
                     size_t size = dets.size();
                     for(size_t ket = 0; ket != size; ++ket){
-                        StringDeterminant Jaa(vector<bool> (2*ncmo_)), Jbb(vector<bool> (2*ncmo_));
+                        BitsetDeterminant Jaa(vector<bool> (2*ncmo_)), Jbb(vector<bool> (2*ncmo_));
                         double aa = 1.0, bb = 1.0, vket = (eigen_[root].first)->get(ket);
                         if(std::fabs(vket) < econv_) continue;
                         aa *= TwoOP(dets[ket],Jaa,np,0,nq,0,nr,0,ns,0) * vket;
@@ -781,7 +780,7 @@ void FCI_MO::FormCumulant2AB(const vecdet &dets, const int &root, d4 &AB){
 
                     size_t size = dets.size();
                     for(size_t ket = 0; ket != size; ++ket){
-                        StringDeterminant Jab(vector<bool> (2*ncmo_));
+                        BitsetDeterminant Jab(vector<bool> (2*ncmo_));
                         double ab = 1.0, vket = (eigen_[root].first)->get(ket);
                         if(std::fabs(vket) < econv_) continue;
                         ab *= TwoOP(dets[ket],Jab,np,0,nq,1,nr,0,ns,1) * vket;
@@ -822,7 +821,7 @@ void FCI_MO::print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT){
     timer_off("PRINT 2-Cumulant");
 }
 
-double FCI_MO::TwoOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss){
+double FCI_MO::TwoOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss){
     timer_on("2PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -848,7 +847,7 @@ double FCI_MO::TwoOP(const StringDeterminant &J, StringDeterminant &Jnew, const 
     if(!tmp[sp][p]){
         sign *= CheckSign(tmp[sp],p);
         tmp[sp][p] = 1;
-        Jnew = StringDeterminant (tmp[0],tmp[1],0);
+        Jnew = BitsetDeterminant (tmp[0],tmp[1],0);
         timer_off("2PO");
         return sign;
     }else{timer_off("2PO"); return 0.0;}
@@ -885,7 +884,7 @@ void FCI_MO::FormCumulant3AAA(const vecdet &dets, const int &root, d6 &AAA, d6 &
                             if(DC == "MK"){
                                 size_t size = dets.size();
                                 for(size_t ket = 0; ket != size; ++ket){
-                                    StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
+                                    BitsetDeterminant Jaaa(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                                     double aaa = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);
                                     if(std::fabs(vket) < econv_) continue;
                                     aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * vket;
@@ -947,7 +946,7 @@ void FCI_MO::FormCumulant3AAB(const vecdet &dets, const int &root, d6 &AAB, d6 &
                             if(DC == "MK"){
                                 size_t size = dets.size();
                                 for(size_t ket = 0; ket != size; ++ket){
-                                    StringDeterminant Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_));
+                                    BitsetDeterminant Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_));
                                     double aab = 1.0, abb = 1.0, vket = (eigen_[root].first)->get(ket);
                                     if(std::fabs(vket) < econv_) continue;
                                     aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * vket;
@@ -999,7 +998,7 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet &dets, const int &root, d6 &AAA, d6
 
                 size_t size = dets.size();
                 for(size_t ket = 0; ket != size; ++ket){
-                    StringDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
+                    BitsetDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                     double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);;
                     aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,np,0,nq,0,nr,0) * vket;
                     aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,np,0,nq,0,nr,1) * vket;
@@ -1078,7 +1077,7 @@ void FCI_MO::print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT){
     timer_off("PRINT 3-Cumulant");
 }
 
-double FCI_MO::ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su){
+double FCI_MO::ThreeOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su){
     timer_on("3PO");
     vector<vector<bool>> tmp;
     tmp.push_back(J.get_alfa_bits_vector_bool());
@@ -1114,7 +1113,7 @@ double FCI_MO::ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, cons
     if(!tmp[sp][p]){
         sign *= CheckSign(tmp[sp],p);
         tmp[sp][p] = 1;
-        Jnew = StringDeterminant (tmp[0],tmp[1],0);
+        Jnew = BitsetDeterminant (tmp[0],tmp[1],0);
         timer_off("3PO");
         return sign;
     }else{timer_off("3PO"); return 0.0;}

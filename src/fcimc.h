@@ -81,8 +81,6 @@ private:
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
 
-//    /// The determinant with minimum energy
-//    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
     /// The reference determinant
     BitsetDeterminant reference_;

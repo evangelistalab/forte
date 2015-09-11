@@ -31,7 +31,6 @@
 
 #include "integrals.h"
 #include "helpers.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "fci_vector.h"
 

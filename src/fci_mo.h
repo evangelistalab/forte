@@ -9,7 +9,6 @@
 #include <tuple>
 #include <string>
 #include "integrals.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
@@ -25,7 +24,7 @@ typedef vector<d2> d3;
 typedef vector<d3> d4;
 typedef vector<d4> d5;
 typedef vector<d5> d6;
-typedef vector<psi::forte::StringDeterminant> vecdet;
+typedef vector<psi::forte::BitsetDeterminant> vecdet;
 
 namespace psi{ namespace forte{
 class FCI_MO
@@ -164,9 +163,9 @@ protected:
     void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     // N-Particle Operator
-    double OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
-    double TwoOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
-    double ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
+    double OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
+    double TwoOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
+    double ThreeOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
     // Fock Matrix
     d2 Fa_;
@@ -225,7 +224,7 @@ protected:
     // Print Determinants
     void print_det(const vecdet &dets){
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for(StringDeterminant x: dets){
+        for(BitsetDeterminant x: dets){
             outfile->Printf("  ");
             x.print();
         }

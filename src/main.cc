@@ -19,7 +19,6 @@
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
-#include "fast_apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
@@ -33,7 +32,6 @@
 #include "sq.h"
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
-#include "uno.h"
 
 INIT_PLUGIN
 
@@ -61,21 +59,6 @@ read_options(std::string name, Options &options)
         /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
         options.add_double("VIRT_NATURAL", 0.02);
 
-        //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR UNO
-        //////////////////////////////////////////////////////////////
-
-        /*- Use unrestricted natural orbitals? -*/
-        options.add_bool("UNO", false);
-        /*- Minimum occupation number -*/
-        options.add_double("UNOMIN", 0.02);
-        /*- Maximum occupation number -*/
-        options.add_double("UNOMAX", 1.98);
-        /*- Print unrestricted natural orbitals -*/
-        options.add_bool("UNO_PRINT", false);
-        /*- Write Molden -*/
-        options.add_bool("MOLDEN_WRITE", false);
-
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -99,7 +82,7 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG");
@@ -459,13 +442,6 @@ forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
-    if(options.get_bool("UNO")){
-        std::string ref = options.get_str("REFERENCE");
-        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
-            UNO uno(options);
-        }
-    }
-
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
@@ -505,13 +481,6 @@ forte(Options &options)
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
-        for (int n = 0; n < options.get_int("NROOT"); ++n){
-            apici->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "FAPICI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        auto apici = std::make_shared<FastAdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
