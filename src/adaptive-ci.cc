@@ -688,7 +688,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     // Add the P-space determinants and zero the hash
     for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
-		outfile->Printf("\n  det: %s", P_space_[J].str().c_str());
+	//	outfile->Printf("\n  det: %s", P_space_[J].str().c_str());
         PQ_space_.push_back(P_space_[J]);
         V_hash.erase(P_space_[J]);
     }
