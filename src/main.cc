@@ -441,7 +441,7 @@ read_options(std::string name, Options &options)
          *  - CAS York's code
          *  - FCI Francesco's string based FCI code
          *  - DMRG DMRG code (not yet available) -*/
-        options.add_str("CAS_TYPE", "CAS", "CAS FCI DMRG");
+        options.add_str("CAS_TYPE", "FCI", "CAS FCI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
@@ -469,16 +469,15 @@ forte(Options &options)
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
-    // Get the one- and two-electron integrals in the MO basis
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals> ints_ = nullptr;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<CholeskyIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else {
-        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
 
     // Link the integrals to the BitsetDeterminant class
@@ -697,7 +696,6 @@ forte(Options &options)
     }
 
     // Delete ints_;
-    delete ints_;
 
     ambit::finalize();
 

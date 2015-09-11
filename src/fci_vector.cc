@@ -21,22 +21,29 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
-FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints)
+FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints)
 {
-    nmo = lists->ncmo();
+    nmo_ = lists->ncmo();
+    nmo2_ = nmo_ * nmo_;
+    nmo3_ = nmo_ * nmo_ * nmo_;
+    nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
+
+    // This is a warning, but please do not delete it.  It is used in fci_vector.  
+    IntegralType integral_type_ = ints->integral_type();
+
     std::vector<size_t> cmo_to_mo = lists->cmo_to_mo();
 
     std::vector<size_t> fomo_to_mo = lists->fomo_to_mo();
     size_t nfomo = fomo_to_mo.size();
 
-    oei_a_.resize(nmo * nmo);
-    oei_b_.resize(nmo * nmo);
-    tei_aa_.resize(nmo * nmo * nmo * nmo);
-    tei_ab_.resize(nmo * nmo * nmo * nmo);
-    tei_bb_.resize(nmo * nmo * nmo * nmo);
-    diag_tei_aa_.resize(nmo * nmo);
-    diag_tei_ab_.resize(nmo * nmo);
-    diag_tei_bb_.resize(nmo * nmo);
+    oei_a_.resize(nmo2_);
+    oei_b_.resize(nmo2_);
+    tei_aa_.resize(nmo4_);
+    tei_ab_.resize(nmo4_);
+    tei_bb_.resize(nmo4_);
+    diag_tei_aa_.resize(nmo2_);
+    diag_tei_ab_.resize(nmo2_);
+    diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints->frozen_core_energy();
 
     // Compute the scalar contribution to the energy that comes from
@@ -54,66 +61,69 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* i
         }
     }
 
-    for (size_t p = 0; p < nmo; ++p){
+    for (size_t p = 0; p < nmo_; ++p){
         size_t pp = cmo_to_mo[p];
-        for (size_t q = 0; q < nmo; ++q){
+        for (size_t q = 0; q < nmo_; ++q){
             size_t qq = cmo_to_mo[q];
-            oei_a_[nmo * p + q] = ints->oei_a(pp,qq);
-            oei_b_[nmo * p + q] = ints->oei_b(pp,qq);
-            diag_tei_aa_[nmo * p + q] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
-            diag_tei_ab_[nmo * p + q] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
-            diag_tei_bb_[nmo * p + q] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
+            size_t pq = nmo_ * p + q;
+            oei_a_[pq] = ints->oei_a(pp,qq);
+            oei_b_[pq] = ints->oei_b(pp,qq);
+            diag_tei_aa_[pq] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
+            diag_tei_ab_[pq] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
+            diag_tei_bb_[pq] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
 
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals
             for (size_t f = 0; f < nfomo; ++f){
                 size_t ff = fomo_to_mo[f];
-                oei_a_[nmo * p + q] += ints->aptei_aa(pp,ff,qq,ff);
-                oei_a_[nmo * p + q] += ints->aptei_ab(pp,ff,qq,ff);
-                oei_b_[nmo * p + q] += ints->aptei_bb(pp,ff,qq,ff);
-                oei_b_[nmo * p + q] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
+                oei_a_[pq] += ints->aptei_aa(pp,ff,qq,ff);
+                oei_a_[pq] += ints->aptei_ab(pp,ff,qq,ff);
+                oei_b_[pq] += ints->aptei_bb(pp,ff,qq,ff);
+                oei_b_[pq] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
             }
-            for (size_t r = 0; r < nmo; ++r){
+            for (size_t r = 0; r < nmo_; ++r){
                 size_t rr = cmo_to_mo[r];
-                for (size_t s = 0; s < nmo; ++s){
+                for (size_t s = 0; s < nmo_; ++s){
                     size_t ss = cmo_to_mo[s];
-                    size_t tei_index = nmo * nmo * nmo * p + nmo * nmo * q + nmo * r + s;
-                    tei_aa_[tei_index] = ints->aptei_aa(pp,qq,rr,ss);
-                    tei_ab_[tei_index] = ints->aptei_ab(pp,qq,rr,ss);
-                    tei_bb_[tei_index] = ints->aptei_bb(pp,qq,rr,ss);
+                    size_t pqrs = tei_index(p,q,r,s);
+                    tei_aa_[pqrs] = ints->aptei_aa(pp,qq,rr,ss);
+                    tei_ab_[pqrs] = ints->aptei_ab(pp,qq,rr,ss);
+                    tei_bb_[pqrs] = ints->aptei_bb(pp,qq,rr,ss);
                 }
             }
         }
     }
 }
 
-FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info,FCIIntegralsType type)
+FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,FCIIntegralsType type)
 {
     std::vector<size_t> cmo_to_mo;
     std::vector<size_t> fomo_to_mo;
+
     if (type == Active){
-        nmo = mospace_info->size("ACTIVE");
+        nmo_ = mospace_info->size("ACTIVE");
         cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
         fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
     }else if (type == Correlated){
-        nmo = mospace_info->size("CORRELATED");
+        nmo_ = mospace_info->size("CORRELATED");
         cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
     }
-    size_t nmo_sq = nmo * nmo;
-    size_t nmo_cu = nmo * nmo * nmo;
-    size_t nmo_f  = nmo * nmo * nmo * nmo;
+
+    nmo2_ = nmo_ * nmo_;
+    nmo3_ = nmo_ * nmo_ * nmo_;
+    nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
 
     //size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
 	size_t nfomo = fomo_to_mo.size();
 
-    oei_a_.resize(nmo_sq);
-    oei_b_.resize(nmo_sq);
-    tei_aa_.resize(nmo_f);
-    tei_ab_.resize(nmo_f);
-    tei_bb_.resize(nmo_f);
-    diag_tei_aa_.resize(nmo_sq);
-    diag_tei_ab_.resize(nmo_sq);
-    diag_tei_bb_.resize(nmo_sq);
+    oei_a_.resize(nmo2_);
+    oei_b_.resize(nmo2_);
+    tei_aa_.resize(nmo4_);
+    tei_ab_.resize(nmo4_);
+    tei_bb_.resize(nmo4_);
+    diag_tei_aa_.resize(nmo2_);
+    diag_tei_ab_.resize(nmo2_);
+    diag_tei_bb_.resize(nmo2_);
 
 
     frozen_core_energy_ = ints->frozen_core_energy();
@@ -133,11 +143,11 @@ FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo
         }
     }
 
-    for (size_t p = 0; p < nmo; ++p){
+    for (size_t p = 0; p < nmo_; ++p){
         size_t pp = cmo_to_mo[p];
-        for (size_t q = 0; q < nmo; ++q){
+        for (size_t q = 0; q < nmo_; ++q){
             size_t qq = cmo_to_mo[q];
-            size_t idx = nmo * p + q;
+            size_t idx = nmo_ * p + q;
             oei_a_[idx] = ints->oei_a(pp,qq);
             oei_b_[idx] = ints->oei_b(pp,qq);
 			diag_tei_aa_[idx] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
@@ -154,11 +164,11 @@ FCIIntegrals::FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo
                 oei_b_[idx] += ints->aptei_bb(pp,ff,qq,ff);
                 oei_b_[idx] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
             }
-            for (size_t r = 0; r < nmo; ++r){
+            for (size_t r = 0; r < nmo_; ++r){
                 size_t rr = cmo_to_mo[r];
-                for (size_t s = 0; s < nmo; ++s){
+                for (size_t s = 0; s < nmo_; ++s){
                     size_t ss = cmo_to_mo[s];
-                    size_t tei_index = nmo_cu * p + nmo_sq * q + nmo * r + s;
+                    size_t tei_index = nmo3_ * p + nmo2_ * q + nmo_ * r + s;
                     tei_aa_[tei_index] = ints->aptei_aa(pp,qq,rr,ss);
                     tei_ab_[tei_index] = ints->aptei_ab(pp,qq,rr,ss);
                     tei_bb_[tei_index] = ints->aptei_bb(pp,qq,rr,ss);
