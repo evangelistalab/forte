@@ -53,8 +53,8 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
       options_(options),
       ints_(ints),
       mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false),
-      prescreening_tollerance_factor_(1.5)
+      prescreening_tollerance_factor_(1.5),
+      fast_variational_estimate_(false)
 {
     // Copy the wavefunction information
     copy(wfn);

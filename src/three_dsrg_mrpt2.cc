@@ -677,7 +677,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
         std::vector<size_t> second_index = mo_to_index[pos2];
         std::vector<size_t> third_index = mo_to_index[pos3];
 
-        ambit::Tensor ThreeIntegral_block = ints_->get_three_integral_block(first_index, second_index, third_index);
+        ambit::Tensor ThreeIntegral_block = ints_->three_integral_block(first_index, second_index, third_index);
         ThreeInt.block(string_block).copy(ThreeIntegral_block);
     }
 
@@ -1221,20 +1221,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
                     vmnefalphaC = C_DDOT(nthree_,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + e]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + f]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + e]),nmo_ * nmo_,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + f]),nmo_ * nmo_);
                      vmnefalphaE = C_DDOT(nthree_,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + f]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + e]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + f]),nmo_ * nmo_,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + e]),nmo_ * nmo_);
                     vmnefbetaC = C_DDOT(nthree_,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo_ + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo_ + fb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + eb]),nmo_ * nmo_,
+                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + fb]),nmo_ * nmo_);
                      vmnefbetaE = C_DDOT(nthree_,
-                            &(ints_->get_three_integral_pointer()[0][mb * ncmo_ + fb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][nb * ncmo_ + eb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + fb]),nmo_ * nmo_,
+                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + eb]),nmo_ * nmo_);
                     vmnefmixedC = C_DDOT(nthree_,
-                            &(ints_->get_three_integral_pointer()[0][m * ncmo_ + eb]),nmo_ * nmo_,
-                            &(ints_->get_three_integral_pointer()[0][n * ncmo_ + fb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + eb]),nmo_ * nmo_,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + fb]),nmo_ * nmo_);
 
                     vmnefalpha = vmnefalphaC - vmnefalphaE;
                     vmnefbeta = vmnefbetaC - vmnefbetaE;
@@ -1331,8 +1331,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
         {
             ma_vec[thread][0] = ma;
             mb_vec[thread][0] = mb;
-            BmaVec_three[thread] = ints_->get_three_integral_block(naux, ma_vec[thread], virt_mos);
-            BmbVec_three[thread] = ints_->get_three_integral_block(naux, mb_vec[thread], virt_mos);
+            BmaVec_three[thread] = ints_->three_integral_block(naux, ma_vec[thread], virt_mos);
+            BmbVec_three[thread] = ints_->three_integral_block(naux, mb_vec[thread], virt_mos);
             std::copy(&BmaVec_three[thread].data()[0], &BmaVec_three[thread].data()[dim], BmaVec[thread].data().begin());
             std::copy(&BmbVec_three[thread].data()[0], &BmbVec_three[thread].data()[dim], BmbVec[thread].data().begin());
         }
@@ -1343,8 +1343,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             nb_vec[thread][0] = nb;
             #pragma omp critical
             {
-                BnaVec_three[thread] = ints_->get_three_integral_block(naux, na_vec[thread], virt_mos);
-                BnbVec_three[thread] = ints_->get_three_integral_block(naux, nb_vec[thread], virt_mos);
+                BnaVec_three[thread] = ints_->three_integral_block(naux, na_vec[thread], virt_mos);
+                BnbVec_three[thread] = ints_->three_integral_block(naux, nb_vec[thread], virt_mos);
                 std::copy(&BnaVec_three[thread].data()[0], &BnaVec_three[thread].data()[dim], BnaVec[thread].data().begin());
                 std::copy(&BnbVec_three[thread].data()[0], &BnbVec_three[thread].data()[dim], BnbVec[thread].data().begin());
             }
@@ -1387,7 +1387,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
 
     BlockedTensor ThreeIntegral = BTF->build(tensor_type_,"ThreeInt",{"dph","dPH"});
     ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = ints_->get_three_integral(i[0],i[1],i[2]);
+        value = ints_->three_integral(i[0],i[1],i[2]);
     });
 
     v("mnef") = ThreeIntegral("gem") * ThreeIntegral("gfn");

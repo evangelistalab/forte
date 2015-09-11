@@ -110,11 +110,6 @@ void ConventionalIntegrals::transform_integrals()
     outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
 
-    //qt_pitzer_ = ints_->alpha_corr_to_pitzer();
-
-    //for(size_t p = 0; p < nmo_; p++){
-    //  outfile->Printf("\nqt_pitzer_[%d] = %d", p, qt_pitzer_[p]);
-    //}
 
 }
 

@@ -74,11 +74,15 @@ public:
     double diag_tei_ab(size_t p,size_t q) const {return diag_tei_ab_[p * ncmo + q];}
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
     double diag_tei_bb(size_t p,size_t q) const {return diag_tei_bb_[p * ncmo + q];}
+    IntegralType get_integral_type(){return integral_type_;}
+
 private:
 
     // ==> Class Private Data <==
 
     size_t ncmo;
+    /// The integral type
+    IntegralType integral_type_;
     /// The frozen core energy
     double frozen_core_energy_;
     /// The scalar contribution to the energy
