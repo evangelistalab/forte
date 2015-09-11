@@ -37,8 +37,8 @@ namespace psi{ namespace forte{
 
 ForteIntegrals::ForteIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core), 
-    mo_space_info_(mo_space_info), scalar_(0.0),frozen_core_energy_(0.0)
+    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core),frozen_core_energy_(0.0), scalar_(0.0),
+    mo_space_info_(mo_space_info)
 {
     startup();
     allocate();

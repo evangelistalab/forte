@@ -71,8 +71,8 @@ private:
     Options& options_;
     /// The molecular integrals required by Explorer
     ForteIntegrals* ints_;
-	///FCI integrals
-	FCIIntegrals FCIints_;	
+	///Pointer to FCI integrals
+	static std::shared_ptr<FCIIntegrals> fci_ints_;	
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry
@@ -96,7 +96,7 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    StringDeterminant reference_determinant_;
+    BitsetDeterminant reference_determinant_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
 	/// The current iteration

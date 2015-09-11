@@ -85,6 +85,8 @@ private:
     Options& options_;
     /// The molecular integrals required by Explorer
     ForteIntegrals* ints_;
+    /// Store all the integrals locally
+    static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The maximum number of threads
     int num_threads_;
     /// The type of propagator used
@@ -102,12 +104,10 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    StringDeterminant reference_determinant_;
+    BitsetDeterminant reference_determinant_;
     std::vector<std::map<Determinant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    /// Store all the integrals locally
-    FCIIntegrals fciInts_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -273,6 +273,10 @@ private:
     /// Form the product H c
     double form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
+    /// Do we have OpenMP?
+    static bool have_omp_;
+    /// Maximum number of threads
+    //int num_threads_;
 };
 
 }} // End Namespaces
