@@ -52,7 +52,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+    AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -70,7 +70,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 	///Pointer to FCI integrals
 	static std::shared_ptr<FCIIntegrals> fci_ints_;	
     /// The MOSpaceInfo object

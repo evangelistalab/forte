@@ -62,7 +62,7 @@ inline double smootherstep(double edge0, double edge1, double x)
     return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
-AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
 		options_(options), 

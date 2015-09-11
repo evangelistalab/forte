@@ -33,7 +33,7 @@ protected:
     Reference reference_;
 
     /// The molecular integrals required by MethodBase
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// The type of SCF reference
     std::string ref_type_;
     /// The number of corrleated MO
@@ -194,7 +194,7 @@ public:
 
     // => Constructors <= //
 
-    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo>
+    THREE_DSRG_MRPT2(Reference reference,boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo>
     mo_space_info);
 
     ~THREE_DSRG_MRPT2();
