@@ -52,7 +52,7 @@ namespace psi{ namespace forte{
 class MOSpaceInfo;
 
 FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
-         ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+         std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options), ints_(ints), mo_space_info_(mo_space_info)
 {
@@ -155,7 +155,7 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0), mo_space_info_(mo_space_info)
@@ -267,11 +267,10 @@ double FCISolver::compute_energy()
         dls.get_results();
     }
 
-    for (int r = 0; r < nroot_; ++r){ // TODO : fix this loop
+    for (int r = 0; r < nroot_; ++r){
         outfile->Printf("\n\n  ==> Root No. %d <==",r);
         double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
         outfile->Printf("\n    Total Energy: %25.15f",root_energy);
-        dls.eigenvector(r)->print();
     }
 
     // Compute the RDMs

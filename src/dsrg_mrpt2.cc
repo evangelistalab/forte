@@ -17,7 +17,7 @@ using namespace ambit;
 namespace psi{ namespace forte{
 
 DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options,
-                       ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                       std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),

@@ -15,7 +15,7 @@ namespace psi{ namespace forte{
 
 
 
-FCI_MO::FCI_MO(Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), mo_space_info_(mo_space_info) 
 {
     // Basic Preparation: Form Determinants

@@ -52,7 +52,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+    AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
@@ -70,7 +70,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 	///Pointer to FCI integrals
 	static std::shared_ptr<FCIIntegrals> fci_ints_;	
     /// The MOSpaceInfo object
@@ -83,8 +83,8 @@ private:
     int ncmo_;
 	/// The multiplicity of the reference
 	int wavefunction_multiplicity_;
-	/// The number of correlated electrons
-	int ncel_;
+	/// The number of active electrons
+	int nactel_;
 	/// The number of correlated alpha electrons
 	int nalpha_;
 	/// The number of correlated beta electrons
@@ -93,6 +93,19 @@ private:
 	int nfrzc_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
+	/// The number of restricted docc orbitals per irrep
+	Dimension rdoccpi_;
+	/// The number of active orbitals per irrep
+	Dimension nactpi_;
+	/// The number of active orbitals
+	size_t nact_;
+	/// The number of restricted docc
+	size_t rdocc_;
+	/// The number of restricted virtual
+	size_t rvir_;
+	/// The number of frozen virtual
+	size_t fvir_;	
+
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
