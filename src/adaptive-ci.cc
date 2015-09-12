@@ -664,7 +664,7 @@ double AdaptiveCI::compute_energy()
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
-    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
 
@@ -1924,24 +1924,32 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 	//Loop over determinants
 	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
 		// Loop over MOs
-		BitsetDeterminant det(det_space[I]);
+//		outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
 		for( size_t i = 0; i < nact_; ++i ){
+			BitsetDeterminant det(det_space[I]);
+			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
+					//destroy alfa bit i, create beta bit i
+					det.set_alfa_bit(i, false );
+					det.set_beta_bit(i, true );
+			}else{
+				continue;
+			}
 			for( size_t j = 0; j < nact_; ++j ){
-				// The logic here is complex
-				if( det_space[I].get_alfa_bit(i) == det_space[I].get_beta_bit(j) and
-				    det_space[I].get_alfa_bit(i) == 1 and
-					det_space[I].get_alfa_bit(j) == 0 and
-					det_space[I].get_beta_bit(i) == 0){
+				if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
+					//destroy beta bit j, create alfa bit j
+					det.set_beta_bit(j, false );
+					det.set_alfa_bit(j, true );
 
-					det.set_alfa_bit(i, det_space[I].get_beta_bit(i));
-					det.set_beta_bit(j, det_space[I].get_alfa_bit(j));
-					det.set_alfa_bit(j, det_space[I].get_beta_bit(j));
-					det.set_beta_bit(i, det_space[I].get_alfa_bit(i)); //TODO Check this! 
 					if( det_map.count(det) == 0 ){
 						det_space.push_back(det);
 						det_map[det] = false;
+//						outfile->Printf("\n  added determinant:    %s", det.str().c_str());
 						ndet++;
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
 					}else{
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
 						continue;
 					}
 				}else{
