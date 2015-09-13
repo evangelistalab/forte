@@ -445,7 +445,7 @@ forte(Options &options)
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
-    std::shared_ptr<ForteIntegrals> ints_ = nullptr;
+    std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
         ints_ = std::make_shared<CholeskyIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
