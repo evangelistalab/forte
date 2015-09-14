@@ -18,14 +18,7 @@ namespace psi{ namespace forte{
 MCSRGPT2_MO::MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : FCI_MO(options, ints, mo_space_info)
 {
-    outfile->Printf("\n");
-    outfile->Printf("\n  **************************************************");
-    outfile->Printf("\n  *        Similarity Renormalization Group        *");
-    outfile->Printf("\n  *       Second-Order Perturbative Analysis       *");
-    outfile->Printf("\n  *                                                *");
-    outfile->Printf("\n  *                 by Chenyang Li                 *");
-    outfile->Printf("\n  **************************************************");
-    outfile->Printf("\n");
+    print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});
 
     startup(options);
 

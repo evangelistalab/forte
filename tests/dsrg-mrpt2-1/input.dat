@@ -35,7 +35,8 @@ set forte{
    nroot                1
    dsrg_s               1.0e10
    dsrgpt               true
-   PRINT_DENOM2         true
+   print_denom2         true
+   cas_type             cas
 }
 
 basis {
