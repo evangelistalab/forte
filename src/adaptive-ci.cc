@@ -156,7 +156,7 @@ void AdaptiveCI::startup()
 	spin_tol_ = options_.get_double("SPIN_TOL");
 	//set the initial S^@ guess as input multiplicity
 	int S   = (wavefunction_multiplicity_ - 1.0)/2.0; 
-	int S2 = wavefunction_multiplicity_ = 1.0;
+	int S2 = wavefunction_multiplicity_ - 1.0;
 	for(size_t n = 0; n < nroot_; ++n){
 		root_spin_vec_.push_back(make_pair( S, S2 ));
 	}
@@ -287,7 +287,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 			occupation[labeled_orb_en_alfa[i].second.second] = 1;
 		}
 		for(size_t i = 0; i < nbeta_; ++i){
-			occupation[labeled_orb_en_beta[i].second.second] = 1;
+			occupation[labeled_orb_en_beta[i].second.second + nact_] = 1;
 		}
 
 		if( nalpha_ >= nbeta_ ) {
@@ -455,18 +455,17 @@ double AdaptiveCI::compute_energy()
 	P_space_.push_back(bs_det);
     P_space_map_[bs_det] = 1;
 
-	if( alfa_bits != beta_bits ){
-		BitsetDeterminant ref2 = bs_det;
-		ref2.spin_flip();
-		P_space_.push_back(ref2);
-	}
+//	if( alfa_bits != beta_bits){
+//		BitsetDeterminant ref2 = bs_det;
+//		ref2.spin_flip();
+//		P_space_.push_back(ref2);
+//	}
 
 //	if( do_guess_ ){
 //		form_initial_space(P_space_, nroot_);
 //	}
 
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
-	outfile->Printf("\n Energy: %1.8f", bs_det.energy());
     outfile->Flush();
 
    // double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
@@ -483,8 +482,9 @@ double AdaptiveCI::compute_energy()
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
-		outfile->Printf("\n\n  Cycle %3d",cycle);
-        outfile->Printf("\n Initial P space dimension: %zu", P_space_.size());
+		std::string cycle_h = "Cycle " + std::to_string(cycle_); 
+		print_h2(cycle_h);
+        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
@@ -515,8 +515,8 @@ double AdaptiveCI::compute_energy()
 				P_evecs = PQ_spin_evecs_->clone();
 				sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots, DavidsonLiuList);
 			}else{
-				outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n No need to perform spin projection.");
+				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+				outfile->Printf("\n  No need to perform spin projection.");
 			}
 		}else{
 			outfile->Printf("\n  Not performing spin projection.");
@@ -602,8 +602,8 @@ double AdaptiveCI::compute_energy()
 			P_evecs = PQ_spin_evecs_->clone();
 			sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_, DavidsonLiuList);
 		}else{
-			outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-			outfile->Printf("\n No need to perform spin projection.");
+			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+			outfile->Printf("\n  No need to perform spin projection.");
 		}
 	}else{
 		outfile->Printf("\n  Not performing spin projection.");
@@ -1710,9 +1710,9 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		std::sort(labeled_orb.begin(), labeled_orb.end());
 	}
 
-	for(int i = 0; i < nact_; ++i){
-		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-	}
+//	for(int i = 0; i < nact_; ++i){
+//		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
+//	}
 
 	return labeled_orb;
 	
@@ -1749,7 +1749,7 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	
 	double trace = 0.0;
 	for(size_t p = 0; p < ncmo_; ++p){
-		size_t np = idx_a[p];
+		//size_t np = idx_a[p];
 		for( size_t q = p; q < nmo_; ++q){
 			D1_->add(p,q, B->get(p,q));
 			if(p ==q) trace += D1_->get(p,p);
@@ -1837,7 +1837,7 @@ void AdaptiveCI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix eve
         }
 
 		auto spins = compute_spin(space,evecs,nroot);
-		state_label = s2_labels[std::round(spins[n].first.second * 2.0)];
+		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
 		outfile->Printf("\n\n Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
@@ -1872,11 +1872,14 @@ void AdaptiveCI::spin_transform( std::vector< BitsetDeterminant > det_space, Sha
 	SharedVector evals(new Vector("evals", det_size));
 	S2->diagonalize(T, evals);
 
+	//evals->print();	
+
 	// Count the number of CSFs with correct spin
 	// and get their indices wrt columns in T
 	size_t csf_num = 0;
 	size_t csf_idx = 0;
 	double criteria = (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
+	//double criteria = static_cast<double>(wavefunction_multiplicity_) - 1.0;
 	for(size_t l = 0; l < det_size; ++l){
 		if( std::fabs(evals->get(l) - criteria) <= 0.01 ){
 			csf_num++;
@@ -1924,7 +1927,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 	//Loop over determinants
 	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
 		// Loop over MOs
-//		outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
+	//	outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
 		for( size_t i = 0; i < nact_; ++i ){
 			BitsetDeterminant det(det_space[I]);
 			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
@@ -1943,7 +1946,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 					if( det_map.count(det) == 0 ){
 						det_space.push_back(det);
 						det_map[det] = false;
-//						outfile->Printf("\n  added determinant:    %s", det.str().c_str());
+						//outfile->Printf("\n  added determinant:    %s", det.str().c_str());
 						ndet++;
 						det.set_beta_bit(j, true );
 						det.set_alfa_bit(j, false );
@@ -1959,10 +1962,10 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 		}
 	}
 	if( ndet > 0 ){
-		outfile->Printf("\n  Determinant space is spin incomplete!");
+		outfile->Printf("\n\n  Determinant space is spin incomplete!");
 		outfile->Printf("\n  %zu more determinants are needed.", ndet);
 	}else{
-		outfile->Printf("\n  Determinant space is spin complete.");
+		outfile->Printf("\n\n  Determinant space is spin complete.");
 	}
 }
 
@@ -1974,6 +1977,7 @@ double AdaptiveCI::compute_spin_contamination( std::vector<BitsetDeterminant> sp
 		spin_contam += spins[n].first.second;
 	}
 	spin_contam /= static_cast<double>(nroot);
+	spin_contam -= (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
 
 	return spin_contam;
 }
