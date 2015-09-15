@@ -31,7 +31,6 @@
 
 #include "integrals.h"
 #include "fci_vector.h"
-#include "excitation_determinant.h"
 
 namespace psi{ namespace forte{
 
@@ -107,7 +106,7 @@ public:
 	/// Get the alpha bits
 	std::vector<bool> get_alfa_bits_vector_bool(){
 		std::vector<bool> result;
-		for(int n = 0; n < nmo_;++n){
+        for(size_t n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -115,7 +114,7 @@ public:
 	// Get the beta bits
 	std::vector<bool> get_beta_bits_vector_bool(){
 		std::vector<bool> result;
-		for( int n = 0; n < nmo_; ++n){
+        for(size_t n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -123,7 +122,7 @@ public:
 	/// Get the alpha bits
 	const std::vector<bool> get_alfa_bits_vector_bool() const {
 		std::vector<bool> result;
-		for(int n = 0; n < nmo_;++n){
+        for(size_t n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -131,7 +130,7 @@ public:
 	// Get the beta bits
 	const std::vector<bool> get_beta_bits_vector_bool() const {
 		std::vector<bool> result;
-		for( int n = 0; n < nmo_; ++n){
+        for(size_t n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -195,14 +194,13 @@ public:
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const BitsetDeterminant& rhs) const;
 
+	/// Check if a space of determinants contains duplicates
+	static void check_uniqueness( std::vector<BitsetDeterminant> );
+
     /// Sets the pointer to the integral object
 	static void set_ints(std::shared_ptr<FCIIntegrals> ints) {
 		fci_ints_ = ints;
 	}
-	
-	static void set_ints(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info ){
-		fci_ints_ = std::make_shared<FCIIntegrals>(ints,mo_space_info);
-	}	
 
 private:
     // Data

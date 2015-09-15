@@ -37,7 +37,7 @@ std::pair<size_t,size_t> generate_ind_random_pair(size_t range)
 #endif
 
 FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options,
-               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+               std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_), ints_(ints),
       mo_space_info_(mo_space_info)
      // fciInts_(ints, mo_space_info)

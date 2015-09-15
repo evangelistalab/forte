@@ -1,5 +1,5 @@
-#ifndef FCI_MO_H
-#define FCI_MO_H
+#ifndef _fci_mo_h_
+#define _fci_mo_h_
 
 #include <libqt/qt.h>
 #include <liboptions/liboptions.h>
@@ -9,7 +9,6 @@
 #include <tuple>
 #include <string>
 #include "integrals.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
@@ -19,32 +18,39 @@
 using namespace std;
 
 
-typedef vector<double> d1;
-typedef vector<d1> d2;
-typedef vector<d2> d3;
-typedef vector<d3> d4;
-typedef vector<d4> d5;
-typedef vector<d5> d6;
-typedef vector<psi::forte::StringDeterminant> vecdet;
+using d1 = vector<double>;
+using d2 = vector<d1>;
+using d3 = vector<d2>;
+using d4 = vector<d3>;
+using d5 = vector<d4>;
+using d6 = vector<d5>;
+using vecdet = vector<psi::forte::BitsetDeterminant>;
 
 namespace psi{ namespace forte{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /**
+     * @brief FCI_MO
+     * @param options PSI4 and FORTE options
+     * @param ints ForteInegrals
+     * @param mo_space_info MOSpaceInfo
+     */
+    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~FCI_MO();
 
+    /// Returns the reference object
     Reference reference();
 
 protected:
     // Basic Preparation
-    void print_title();
     void startup(Options &options);
     void read_info(Options &options);
     void cleanup();
 
     // Integrals
-    ForteIntegrals* integral_;
+    std::shared_ptr<ForteIntegrals>  integral_;
     std::string int_type_;
 	std::shared_ptr<FCIIntegrals> fci_ints_;
     // Reference Type
@@ -99,7 +105,7 @@ protected:
     // Determinants
     void form_det();
     vecdet determinant_;
-    vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print);
+    vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
 
     // Choice of Roots
     int nroot_;  // number of roots
@@ -164,9 +170,9 @@ protected:
     void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     // N-Particle Operator
-    double OneOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
-    double TwoOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
-    double ThreeOP(const StringDeterminant &J, StringDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
+    double OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
+    double TwoOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
+    double ThreeOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
     // Fock Matrix
     d2 Fa_;
@@ -225,7 +231,7 @@ protected:
     // Print Determinants
     void print_det(const vecdet &dets){
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for(StringDeterminant x: dets){
+        for(BitsetDeterminant x: dets){
             outfile->Printf("  ");
             x.print();
         }
@@ -280,4 +286,4 @@ protected:
 };
 }}
 
-#endif // FCI_MO_H
+#endif // _fci_mo_h_

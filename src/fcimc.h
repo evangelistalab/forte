@@ -57,7 +57,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FCIQMC();
@@ -81,8 +81,6 @@ private:
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
 
-//    /// The determinant with minimum energy
-//    StringDeterminant min_energy_determinant_;
 //    int compute_pgen(BitsetDeterminant& detI);
     /// The reference determinant
     BitsetDeterminant reference_;
@@ -91,7 +89,7 @@ private:
     /// Do we have OpenMP?
     static bool have_omp_;
     /// The molecular integrals required by fcimc
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// Store all the integrals locally

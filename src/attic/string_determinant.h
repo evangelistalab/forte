@@ -24,7 +24,6 @@
 #define _string_determinant_h_
 
 #include "integrals.h"
-#include "excitation_determinant.h"
 
 namespace psi{ namespace forte{
 
@@ -59,9 +58,7 @@ public:
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit StringDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
-    /// Construct an excited determinant of a given reference
-    explicit StringDeterminant(const StringDeterminant& ref,const ExcitationDeterminant& ex);
-    /// Copy constructor
+     /// Copy constructor
     StringDeterminant(const StringDeterminant& det);
     /// Copy constructor
     StringDeterminant(StringDeterminant& det);
@@ -150,7 +147,7 @@ public:
     int excitation_level(const bool* Ia,const bool* Ib);
 
     /// Sets the pointer to the integral object
-    static void set_ints(ForteIntegrals* ints) {ints_ = ints;}
+    static void set_ints(std::shared_ptr<ForteIntegrals>  ints) {ints_ = ints;}
     /// Compute the matrix element of the Hamiltonian between two Slater determinants
     static double SlaterRules(const std::vector<bool>& Ia,const std::vector<bool>& Ib,const std::vector<bool>& Ja,const std::vector<bool>& Jb);
     /// Compute the matrix element of the S^2 operator between two Slater determinants
@@ -208,7 +205,7 @@ private:
 
     // Static data
     /// A pointer to the integral object
-    static ForteIntegrals* ints_;
+    static std::shared_ptr<ForteIntegrals>  ints_;
     static double ahole_[20];
     static double bhole_[20];
     static double apart_[20];

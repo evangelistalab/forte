@@ -19,7 +19,6 @@
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
 #include "adaptive_pici.h"
-#include "fast_apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
@@ -33,7 +32,6 @@
 #include "sq.h"
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
-#include "uno.h"
 
 INIT_PLUGIN
 
@@ -61,21 +59,6 @@ read_options(std::string name, Options &options)
         /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
         options.add_double("VIRT_NATURAL", 0.02);
 
-        //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR UNO
-        //////////////////////////////////////////////////////////////
-
-        /*- Use unrestricted natural orbitals? -*/
-        options.add_bool("UNO", false);
-        /*- Minimum occupation number -*/
-        options.add_double("UNOMIN", 0.02);
-        /*- Maximum occupation number -*/
-        options.add_double("UNOMAX", 1.98);
-        /*- Print unrestricted natural orbitals -*/
-        options.add_bool("UNO_PRINT", false);
-        /*- Write Molden -*/
-        options.add_bool("MOLDEN_WRITE", false);
-
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
@@ -99,7 +82,7 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FAPICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG");
@@ -437,15 +420,17 @@ read_options(std::string name, Options &options)
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
-        /*- DMRG-CI or CAS-CI reference -*/
-        options.add_str("CASTYPE", "CAS", "CAS FCI DMRG");
+        /*- The code used to do CAS-CI.
+         *  - CAS York's code
+         *  - FCI Francesco's string based FCI code
+         *  - DMRG DMRG code (not yet available) -*/
+        options.add_str("CAS_TYPE", "FCI", "CAS FCI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
         options.add_bool("PRINT_DENOM2", false);
-        
     }
 
     return true;
@@ -457,31 +442,23 @@ forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
-    if(options.get_bool("UNO")){
-        std::string ref = options.get_str("REFERENCE");
-        if(ref == "UHF" || ref == "CUHF" || ref == "UKS"){
-            UNO uno(options);
-        }
-    }
-
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
-    // Get the one- and two-electron integrals in the MO basis
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = new CholeskyIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<CholeskyIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = new DFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ = new DISKDFIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else {
-        ints_ = new ConventionalIntegrals(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
 
     // Link the integrals to the BitsetDeterminant class
-//	std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
- //   BitsetDeterminant::set_ints(fci_ints_);
+    std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+    BitsetDeterminant::set_ints(fci_ints_);
 
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -504,13 +481,6 @@ forte(Options &options)
     if (options.get_str("JOB_TYPE") == "APICI"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
-        for (int n = 0; n < options.get_int("NROOT"); ++n){
-            apici->compute_energy();
-        }
-    }
-    if (options.get_str("JOB_TYPE") == "FAPICI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        auto apici = std::make_shared<FastAdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
@@ -544,7 +514,7 @@ forte(Options &options)
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
-        if(options.get_str("CASTYPE")=="CAS")
+        if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(options,ints_,mo_space_info);
             Reference reference = fci_mo.reference();
@@ -562,7 +532,7 @@ forte(Options &options)
 //                FCI_MO fci(options,ints_);
             }
         }
-        if(options.get_str("CASTYPE")=="FCI")
+        if(options.get_str("CAS_TYPE")=="FCI")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
@@ -578,7 +548,7 @@ forte(Options &options)
                 boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->compute_energy();
         }
-        else if(options.get_str("CASTYPE")=="DMRG")
+        else if(options.get_str("CAS_TYPE")=="DMRG")
         {
             outfile->Printf("\n Buy Kevin a beer and he will maybe implement DMRG into libadaptive\n");
             throw PSIEXCEPTION("DMRG is not available quite yet");
@@ -594,7 +564,7 @@ forte(Options &options)
            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
        }
 
-       if(options.get_str("CASTYPE")=="CAS")
+       if(options.get_str("CAS_TYPE")=="CAS")
        {
            FCI_MO fci_mo(options,ints_,mo_space_info);
            Reference reference = fci_mo.reference();
@@ -603,7 +573,7 @@ forte(Options &options)
            three_dsrg_mrpt2->compute_energy();
        }
 
-       else if(options.get_str("CASTYPE")=="FCI")
+       else if(options.get_str("CAS_TYPE")=="FCI")
        {
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
@@ -625,7 +595,7 @@ forte(Options &options)
            three_dsrg_mrpt2->compute_energy();
        }
 
-       else if(options.get_str("CASTYPE")=="DMRG")
+       else if(options.get_str("CAS_TYPE")=="DMRG")
 
        {
            outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
@@ -664,7 +634,7 @@ forte(Options &options)
     }
 
     if (options.get_str("JOB_TYPE") == "SOMRDSRG"){
-        if(options.get_str("CASTYPE")=="CAS")
+        if(options.get_str("CAS_TYPE")=="CAS")
         {
             FCI_MO fci_mo(options,ints_,mo_space_info);
             Reference reference = fci_mo.reference();
@@ -672,7 +642,7 @@ forte(Options &options)
             boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
             somrdsrg->compute_energy();
         }
-        if(options.get_str("CASTYPE")=="FCI")
+        if(options.get_str("CAS_TYPE")=="FCI")
         {
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
@@ -695,7 +665,6 @@ forte(Options &options)
     }
 
     // Delete ints_;
-    delete ints_;
 
     ambit::finalize();
 

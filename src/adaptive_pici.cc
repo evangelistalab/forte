@@ -48,13 +48,13 @@ double dot(std::map<Determinant,double>& A,std::map<Determinant,double>& B);
 void add(std::map<Determinant,double>& A,double beta,std::map<Determinant,double>& B);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
-                                               ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                                               std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options),
       ints_(ints),
       mo_space_info_(mo_space_info),
-      fast_variational_estimate_(false),
-      prescreening_tollerance_factor_(1.5)
+      prescreening_tollerance_factor_(1.5),
+      fast_variational_estimate_(false)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -67,7 +67,7 @@ std::shared_ptr<FCIIntegrals> AdaptivePathIntegralCI::fci_ints_ = 0;
 void AdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
-  //  StringDeterminant::set_ints(ints_);
+  //  BitsetDeterminant::set_ints(ints_);
 	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
     Determinant::set_ints(fci_ints_);
 
@@ -390,7 +390,7 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std:
         std::vector<std::pair<double,size_t> > det_weight;
         for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
             det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-            dets[I].print();
+            //dets[I].print();
         }
         std::sort(det_weight.begin(),det_weight.end());
         std::reverse(det_weight.begin(),det_weight.end());
@@ -402,7 +402,9 @@ double AdaptivePathIntegralCI::initial_guess(std::vector<Determinant>& dets,std:
         }
         dets = new_dets;
         C.resize(guess_size);
+        guess_size = dets.size();
     }
+
 
     outfile->Printf("\n\n  Initial guess size = %zu",guess_size);
 
