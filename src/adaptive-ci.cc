@@ -157,7 +157,7 @@ void AdaptiveCI::startup()
 	//set the initial S^@ guess as input multiplicity
 	int S   = (wavefunction_multiplicity_ - 1.0)/2.0; 
 	int S2 = wavefunction_multiplicity_ - 1.0;
-	for(size_t n = 0; n < nroot_; ++n){
+	for(int n = 0; n < nroot_; ++n){
 		root_spin_vec_.push_back(make_pair( S, S2 ));
 	}
 	
@@ -223,10 +223,10 @@ std::vector<int> AdaptiveCI::get_occupation()
 		labeled_orb_en = sym_labeled_orbitals("RHF");
 
 		// Build initial reference determinant from restricted reference
-		for(size_t i = 0 ; i < nalpha_; ++i){
+		for(int i = 0 ; i < nalpha_; ++i){
 			occupation[labeled_orb_en[i].second.second] = 1;
 		}
-		for(size_t i = 0; i < nbeta_; ++i){
+		for(int i = 0; i < nbeta_; ++i){
 			occupation[nact_ + labeled_orb_en[i].second.second] = 1;
 		}
 
@@ -283,10 +283,10 @@ std::vector<int> AdaptiveCI::get_occupation()
 		// Make the reference
 		// For singlets, this will be closed-shell
 
-		for(size_t i = 0; i < nalpha_; ++i){
+		for(int i = 0; i < nalpha_; ++i){
 			occupation[labeled_orb_en_alfa[i].second.second] = 1;
 		}
-		for(size_t i = 0; i < nbeta_; ++i){
+		for(int i = 0; i < nbeta_; ++i){
 			occupation[labeled_orb_en_beta[i].second.second + nact_] = 1;
 		}
 
@@ -783,8 +783,8 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double> C1, std::vect
 	// f_E2 and f_C1 will store the selected function of the chosen q criteria
 	// This functions should only be called when nroot_ > 1
 	
-	double f_C1;
-	double f_E2;
+	double f_C1 = 0.0;
+	double f_E2 = 0.0;
 
 	std::vector<double> dE2(nroot, 0.0);
 
@@ -1455,8 +1455,8 @@ void AdaptiveCI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,Shared
     SharedMatrix F(new Matrix("F-smooth",ndets,ndets));
 
     // Build the smoothed Hamiltonian
-    for (int I = 0; I < ndets; ++I){
-        for (int J = 0; J < ndets; ++J){
+    for (size_t I = 0; I < ndets; ++I){
+        for (size_t J = 0; J < ndets; ++J){
             double CI = evecs->get(I,0);
             double CJ = evecs->get(J,0);
             double HIJ = space[I].slater_rules(space[J]);
@@ -1491,7 +1491,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 		std::vector<double> av_energies;
 		for(int i = 0; i < cycle_; ++i){
 			double energy = 0.0;
-			for(size_t n = 0; n < nroot; ++n){
+			for(int n = 0; n < nroot; ++n){
 				energy += energy_history[i][n];
 			}
 			energy /= static_cast<double>(nroot);
@@ -1679,7 +1679,7 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		pVector<double, int> orb_e;
 		int cumidx = 0;
 		for(int h = 0; h < nirrep_; ++h){
-			for( size_t a = 0; a < nactpi_[h]; ++a ){
+			for(int a = 0; a < nactpi_[h]; ++a ){
 				orb_e.push_back(make_pair(epsilon_a_->get(h,a), a + cumidx));
 			}
 			cumidx += nactpi_[h];
@@ -1704,7 +1704,7 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		}
 
 		//Create a vector that stores the orbital energy, sym, and idx
-		for(int a = 0; a < nact_; ++a){
+		for(size_t a = 0; a < nact_; ++a){
 			labeled_orb.push_back(make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ));
 		}
 		std::sort(labeled_orb.begin(), labeled_orb.end());
@@ -1727,8 +1727,8 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	std::vector<size_t> idx_c;
 
 	for(int h = 0; h < nirrep_; ++h){
-		for( size_t i = 0; i < ncmopi_[h]; ++i){
-			size_t idx = i + ncmopi;
+		for( int i = 0; i < ncmopi_[h]; ++i){
+			int idx = i + ncmopi;
 			if( i < frzcpi_[h] ){
 				idx_c.push_back(idx);
 			}else if( i >= frzcpi_[h] and i < (frzcpi_[h] + ncmopi_[h])){
@@ -1741,16 +1741,16 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	}
 
 	//Occupy frozen core with 1.0
-	for(size_t p = 0; p < nfrzc_; ++p){
+	for(int p = 0; p < nfrzc_; ++p){
 		size_t np = idx_c[p];
 		A->set(np,np,1.0);
 		B->set(np,np,1.0);
 	}
 	
 	double trace = 0.0;
-	for(size_t p = 0; p < ncmo_; ++p){
+	for(int p = 0; p < ncmo_; ++p){
 		//size_t np = idx_a[p];
-		for( size_t q = p; q < nmo_; ++q){
+		for(int q = p; q < nmo_; ++q){
 			D1_->add(p,q, B->get(p,q));
 			if(p ==q) trace += D1_->get(p,p);
 		}
@@ -1802,7 +1802,7 @@ double AdaptiveCI::OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, co
 double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
 {
 	size_t count = 0;
-	for( size_t i = 0; i < n; ++i){
+	for( int i = 0; i < n; ++i){
 		
 		if( I[i] ) count++;
 	
@@ -1899,7 +1899,7 @@ void AdaptiveCI::spin_transform( std::vector< BitsetDeterminant > det_space, Sha
 	C_trans->gemm('n','n',det_size,nroot, csf_num, 1.0,T,det_size,C,nroot,0.0,nroot);
 
 	//Normalize transformed vectors
-	for( size_t n = 0; n < nroot; ++n ){
+	for( int n = 0; n < nroot; ++n ){
 		double denom = 0.0;
 		for( size_t I = 0; I < det_size; ++I){
 			denom += C_trans->get(I,n) * C_trans->get(I,n);
