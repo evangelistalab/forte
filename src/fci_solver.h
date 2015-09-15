@@ -59,7 +59,7 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCISolver() {}
 
@@ -91,7 +91,7 @@ private:
     std::shared_ptr<StringLists> lists_;
 
     /// The molecular integrals
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
 
     /// The FCI energy
     double energy_;
@@ -100,9 +100,9 @@ private:
     std::shared_ptr<FCIWfn> C_;
 
     /// The number of irreps
-    size_t nirrep_;
+    int nirrep_;
     /// The symmetry of the wave function
-    size_t symmetry_;
+    int symmetry_;
     /// The number of alpha electrons
     size_t na_;
     /// The number of beta electrons
@@ -111,7 +111,7 @@ private:
     /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
     size_t multiplicity_;
     /// The number of roots
-    size_t nroot_;
+    int nroot_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_ = 10;
     /// Test the RDMs?
@@ -127,7 +127,9 @@ private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
-    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > > initial_guess(FCIWfn& diag,size_t n,size_t multiplicity);
+    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > >
+    initial_guess(FCIWfn& diag,size_t n,size_t multiplicity,
+                  std::shared_ptr<FCIIntegrals> fci_ints);
 };
 
 
@@ -147,7 +149,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI();
 
@@ -166,7 +168,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The information about the molecular orbital spaces

@@ -52,7 +52,7 @@ namespace psi{ namespace forte{
 class MOSpaceInfo;
 
 FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
-         ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+         std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       options_(options), ints_(ints), mo_space_info_(mo_space_info)
 {
@@ -155,7 +155,7 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0), mo_space_info_(mo_space_info)
@@ -214,7 +214,7 @@ double FCISolver::compute_energy()
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    auto guess = initial_guess(Hdiag,guess_size,multiplicity_);
+    auto guess = initial_guess(Hdiag,guess_size,multiplicity_,fci_ints);
 
     guess_size = std::min(guess.size(),guess_size);
     if (guess_size == 0){
@@ -267,11 +267,10 @@ double FCISolver::compute_energy()
         dls.get_results();
     }
 
-    for (int r = 0; r < nroot_; ++r){ // TODO : fix this loop
+    for (int r = 0; r < nroot_; ++r){
         outfile->Printf("\n\n  ==> Root No. %d <==",r);
         double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
         outfile->Printf("\n    Total Energy: %25.15f",root_energy);
-        dls.eigenvector(r)->print();
     }
 
     // Compute the RDMs
@@ -290,11 +289,14 @@ double FCISolver::compute_energy()
     return energy_;
 }
 
-std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::initial_guess(FCIWfn& diag,size_t n,size_t multiplicity)
+std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>>
+FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
+                         std::shared_ptr<FCIIntegrals> fci_ints)
 {
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+    double scalar_energy = fci_ints->scalar_energy();
 
     size_t ntrial = n * ntrial_per_root_;
 
@@ -308,7 +310,7 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
     // Build the full determinants
     size_t nact = active_mo_.size();
     // The corrleated MO, not the actual number of molecule orbitals
-    size_t nmo =  mo_space_info_->size("CORRELATED");
+    size_t nmo =  mo_space_info_->size("ACTIVE");
 
     for (auto det : dets){
         double e;
@@ -320,13 +322,9 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
         std::vector<bool> Ia(nmo,false);
         std::vector<bool> Ib(nmo,false);
 
-        for (size_t i : core_mo_){
-            Ia[i] = true;
-            Ib[i] = true;
-        }
         for (size_t i = 0; i < nact; ++i){
-            if (Ia_v[i]) Ia[active_mo_[i]] = true;
-            if (Ib_v[i]) Ib[active_mo_[i]] = true;
+            if (Ia_v[i]) Ia[i] = true;
+            if (Ib_v[i]) Ib[i] = true;
         }
         BitsetDeterminant bsdet(Ia,Ib);
         bsdets.push_back(bsdet);
@@ -339,6 +337,7 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
     for (size_t I = 0; I < num_dets; ++I){
         for (size_t J = I; J < num_dets; ++J){
             double HIJ = bsdets[I].slater_rules(bsdets[J]);
+            if (I == J) HIJ += scalar_energy;
             H.set(I,J,HIJ);
             H.set(J,I,HIJ);
         }
@@ -358,8 +357,8 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
         double energy = evals.get(r) + nuclear_repulsion_energy;
         double norm = 0.0;
         double S2 = 0.0;
-        for (int I = 0; I < num_dets; ++I){
-            for (int J = 0; J < num_dets; ++J){
+        for (size_t I = 0; I < num_dets; ++I){
+            for (size_t J = 0; J < num_dets; ++J){
                 const double S2IJ = bsdets[I].spin2(bsdets[J]);
                 S2 += evecs.get(I,r) * evecs.get(J,r) * S2IJ;
             }
@@ -374,7 +373,7 @@ std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> FCISolver::ini
         // Save states of the desired multiplicity
         if (state_multp == multiplicity){
             std::vector<std::tuple<size_t,size_t,size_t,double>> solution;
-            for (int I = 0; I < num_dets; ++I){
+            for (size_t I = 0; I < num_dets; ++I){
                 auto det = dets[I];
                 double e;
                 size_t h, add_Ia, add_Ib;

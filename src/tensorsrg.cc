@@ -15,7 +15,7 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+TensorSRG::TensorSRG(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MethodBase(wfn,options,ints, mo_space_info)
 {
     startup();

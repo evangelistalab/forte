@@ -1,5 +1,5 @@
-#ifndef MCSRGPT2_MO_H
-#define MCSRGPT2_MO_H
+#ifndef _mcsrgpt2_mo_h_
+#define _mcsrgpt2_mo_h_
 
 #include <boost/assign.hpp>
 #include <liboptions/liboptions.h>
@@ -24,7 +24,7 @@ namespace psi{ namespace forte{
 class MCSRGPT2_MO : public FCI_MO
 {
 public:
-    MCSRGPT2_MO(Options &options, ForteIntegrals *ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MCSRGPT2_MO();
 
 protected:
@@ -161,4 +161,4 @@ protected:
 };
 }}
 
-#endif // MCSRGPT2_MO_H
+#endif // _mcsrgpt2_mo_h_

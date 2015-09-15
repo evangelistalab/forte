@@ -30,7 +30,6 @@
 #include <physconst.h>
 
 #include "integrals.h"
-#include "string_determinant.h"
 #include "bitset_determinant.h"
 #include "helpers.h"
 #include "fci_vector.h"
@@ -64,7 +63,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~AdaptivePathIntegralCI();
@@ -84,7 +83,7 @@ private:
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
-    ForteIntegrals* ints_;
+    std::shared_ptr<ForteIntegrals>  ints_;
     /// Store all the integrals locally
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The maximum number of threads

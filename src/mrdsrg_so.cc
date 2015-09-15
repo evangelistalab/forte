@@ -10,7 +10,7 @@
 
 namespace psi{ namespace forte{
 
-MRDSRG_SO::MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,ForteIntegrals* ints,std::shared_ptr<MOSpaceInfo> mo_space_info)
+MRDSRG_SO::MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),

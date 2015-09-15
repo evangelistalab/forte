@@ -62,7 +62,7 @@ inline double smootherstep(double edge0, double edge1, double x)
     return x * x * x *( x *( x * 6. - 15.) + 10.);
 }
 
-AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints,
+AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
 		options_(options), 
@@ -84,41 +84,7 @@ void AdaptiveCI::startup()
 	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
     BitsetDeterminant::set_ints(fci_ints_);
 
-    ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-
-	// Number of correlated electrons
-	ncel_ = 0;
-	nalpha_ = 0;
-	nbeta_ = 0;
-	for(int h = 0; h < nirrep_; ++h){
-		ncel_ += 2*doccpi_[h] + soccpi_[h];
-		nalpha_ += doccpi_[h] + soccpi_[h];
-	}
-
-	nbeta_ = ncel_ - nalpha_;
-
-	outfile->Printf("\n  Number of electrons: %d",ncel_);
-
-	outfile->Printf("\n  nalpha: %d", nalpha_);
-	outfile->Printf("\n  nbeta:  %d", nbeta_);
-
-    // Overwrite the frozen orbitals arrays
-   // frzcpi_ = ints_->frzcpi();
-   // frzvpi_ = ints_->frzvpi();
-
-	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_UOCC");
-
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
-
-    // Create the array with mo symmetry and compute number of frozen orbitals
-	nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
-	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-
-
-	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-
 	//Get wfn info
     wavefunction_symmetry_ = 0;
     if(options_["ROOT_SYM"].has_changed()){
@@ -128,12 +94,55 @@ void AdaptiveCI::startup()
 	if(options_["MULTIPLICITY"].has_changed()){
 		wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
 	}
+	nact_ = mo_space_info_->size("ACTIVE");
+	nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+
+	// Include frozen_docc and restricted_docc
+	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+	frzvpi_ = mo_space_info_->get_dimension("INACTIVE_UOCC");
+	nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
+
+	// "Correlated" includes restricted_docc
+    ncmo_ = mo_space_info_->size("CORRELATED");
+    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+
+	rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+
+	// Number of correlated electrons
+	nactel_ = 0;
+	nalpha_ = 0;
+	nbeta_ = 0;
+	int nel = 0;
+	for(int h = 0; h < nirrep_; ++h){
+		nel += 2*doccpi_[h] + soccpi_[h];
+	}
+		
+	int ms = wavefunction_multiplicity_ - 1;
+	nactel_ = nel - 2 * nfrzc_;
+	nalpha_ = (nactel_ + ms) / 2;
+	nbeta_  = nactel_ - nalpha_; 
+
+	outfile->Printf("\n  Total electrons: %zu", nel);
+	outfile->Printf("\n  Number of active electrons: %d",nactel_);
+	outfile->Printf("\n  nalpha: %d", nalpha_);
+	outfile->Printf("\n  nbeta:  %d \n", nbeta_);
+
+
+	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+
+	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
+	rvir_  = mo_space_info_->size("RESTRICTED_UOCC");	
+
+	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+	outfile->Printf("\n  There are %zu active orbitals.", nact_);
+
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = BitsetDeterminant(get_occupation());
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
-	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy());
+	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+
 
     // Read options
     nroot_ = options_.get_int("NROOT");
@@ -147,8 +156,8 @@ void AdaptiveCI::startup()
 	spin_tol_ = options_.get_double("SPIN_TOL");
 	//set the initial S^@ guess as input multiplicity
 	int S   = (wavefunction_multiplicity_ - 1.0)/2.0; 
-	int S2 = wavefunction_multiplicity_ = 1.0;
-	for(size_t n = 0; n < nroot_; ++n){
+	int S2 = wavefunction_multiplicity_ - 1.0;
+	for(int n = 0; n < nroot_; ++n){
 		root_spin_vec_.push_back(make_pair( S, S2 ));
 	}
 	
@@ -189,7 +198,7 @@ AdaptiveCI::~AdaptiveCI()
 std::vector<int> AdaptiveCI::get_occupation()
 {
 	
-	std::vector<int> occupation(2 * ncmo_,0);
+	std::vector<int> occupation(2 * nact_,0);
 
 	//Get reference type
 	std::string ref_type = options_.get_str("REFERENCE");
@@ -214,11 +223,11 @@ std::vector<int> AdaptiveCI::get_occupation()
 		labeled_orb_en = sym_labeled_orbitals("RHF");
 
 		// Build initial reference determinant from restricted reference
-		for(size_t i = 0 ; i < nalpha_ - nfrzc_; ++i){
+		for(int i = 0 ; i < nalpha_; ++i){
 			occupation[labeled_orb_en[i].second.second] = 1;
 		}
-		for(size_t i = 0; i < nbeta_ - nfrzc_; ++i){
-			occupation[ncmo_ + labeled_orb_en[i].second.second] = 1;
+		for(int i = 0; i < nbeta_; ++i){
+			occupation[nact_ + labeled_orb_en[i].second.second] = 1;
 		}
 
 		// Loop over as many outer-shell electrons as needed to get correct sym
@@ -226,26 +235,26 @@ std::vector<int> AdaptiveCI::get_occupation()
 		
 			bool add = false;
 			// Remove electron from highest energy docc
-			occupation[labeled_orb_en[nalpha_ - k - nfrzc_].second.second] = 0;
-			outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en[nalpha_ - k - nfrzc_].second.second, ncel_);
+			occupation[labeled_orb_en[nalpha_ - k].second.second] = 0;
+			outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en[nalpha_ - k].second.second, nactel_);
 		
 			// Determine proper symmetry for new occupation
 			orb_sym = wavefunction_symmetry_; 
 			
 			if(wavefunction_multiplicity_ == 1){
-				orb_sym = direct_sym_product( labeled_orb_en[nalpha_ - 1 - nfrzc_].second.first, orb_sym);
+				orb_sym = direct_sym_product( labeled_orb_en[nalpha_ - 1].second.first, orb_sym);
 			}else{
 				for(int i = 1; i <= nsym; ++i){
-					orb_sym = direct_sym_product(labeled_orb_en[nalpha_ - i - nfrzc_].second.first, orb_sym);
+					orb_sym = direct_sym_product(labeled_orb_en[nalpha_ - i].second.first, orb_sym);
 				}
-				orb_sym  = direct_sym_product(labeled_orb_en[nalpha_ - k - nfrzc_].second.first, orb_sym);
+				orb_sym  = direct_sym_product(labeled_orb_en[nalpha_ - k].second.first, orb_sym);
 			}
 
 			outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 			// Add electron to lowest-energy orbital of proper symmetry
 			// Loop from current occupation to max MO until correct orbital is reached
-			for(int i = nalpha_ - k - nfrzc_, maxi = ncmo_ - nfrzc_; i < maxi; ++i){
+			for(int i = nalpha_ - k, maxi = nactel_; i < maxi; ++i){
 				if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] != 1){
 					occupation[labeled_orb_en[i].second.second] = 1;
 					outfile->Printf("\n  Added electron to %d", labeled_orb_en[i].second.second);
@@ -257,7 +266,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 			}
 			//If a new occupation could not be created, put electron back and remove a different one
 			if(!add){
-				occupation[labeled_orb_en[nalpha_ - k - nfrzc_].second.second] = 1;
+				occupation[labeled_orb_en[nalpha_ - k].second.second] = 1;
 				outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
 				++k;
 			}else{
@@ -274,11 +283,11 @@ std::vector<int> AdaptiveCI::get_occupation()
 		// Make the reference
 		// For singlets, this will be closed-shell
 
-		for(size_t i = 0; i < nalpha_ - nfrzc_; ++i){
+		for(int i = 0; i < nalpha_; ++i){
 			occupation[labeled_orb_en_alfa[i].second.second] = 1;
 		}
-		for(size_t i = 0; i < nbeta_ - nfrzc_; ++i){
-			occupation[labeled_orb_en_beta[i].second.second] = 1;
+		for(int i = 0; i < nbeta_; ++i){
+			occupation[labeled_orb_en_beta[i].second.second + nact_] = 1;
 		}
 
 		if( nalpha_ >= nbeta_ ) {
@@ -288,27 +297,27 @@ std::vector<int> AdaptiveCI::get_occupation()
 				
 				bool add = false;
 				// Remove highest energy alpha electron
-				occupation[labeled_orb_en_alfa[nalpha_ - k - nfrzc_].second.second] = 0;
+				occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 0;
 
-				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_alfa[nalpha_ - k - nfrzc_].second.second, ncel_);
+				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_alfa[nalpha_ - k].second.second, nactel_);
 
 				//Determine proper symmetry for new electron
 				
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - 1 - nfrzc_].second.first, orb_sym);
+					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - 1].second.first, orb_sym);
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = direct_sym_product( labeled_orb_en_alfa[nalpha_ - i - nfrzc_].second.first, orb_sym);
+						orb_sym = direct_sym_product( labeled_orb_en_alfa[nalpha_ - i].second.first, orb_sym);
 					}
-					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - k - nfrzc_].second.first,orb_sym);
+					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - k].second.first,orb_sym);
 				}
 
 				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy orbital of proper symmetry
-				for(int i = nalpha_ - k - nfrzc_; i < ncmo_; ++i){
+				for(int i = nalpha_ - k; i < nactel_; ++i){
 					if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] != 1 ){
 						occupation[labeled_orb_en_alfa[i].second.second] = 1;
 						outfile->Printf("\n  Added electron to %d", labeled_orb_en_alfa[i].second.second);
@@ -323,7 +332,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 				// add electron back and try a different one
 
 				if(!add){
-					occupation[labeled_orb_en_alfa[nalpha_ - k - nfrzc_].second.second] = 1;
+					occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 1;
 					outfile->Printf("\n  No orbital of symmetry %d available! Putting it back...", orb_sym);
 					++k;
 				}else{
@@ -338,26 +347,26 @@ std::vector<int> AdaptiveCI::get_occupation()
 				bool add = false;
 
 				// Remove highest-energy beta electron
-				occupation[labeled_orb_en_beta[nbeta_ - k - nfrzc_].second.second] = 0;
-				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_beta[nbeta_ - k - nfrzc_].second.second, ncel_);
+				occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 0;
+				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_beta[nbeta_ - k].second.second, nactel_);
 
 				//Determine proper symetry for new occupation
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - 1 - nfrzc_].second.first, orb_sym);
+					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - 1].second.first, orb_sym);
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - i - nfrzc_].second.first, orb_sym);
+						orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - i].second.first, orb_sym);
 					}
-					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - k - nfrzc_].second.first, orb_sym);
+					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - k].second.first, orb_sym);
 				}
 
 				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy beta orbital
 				
-				for(int i = nbeta_ - k - nfrzc_; i < ncmo_; ++i){
+				for(int i = nbeta_ - k; i < nactel_; ++i){
 					if( orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] != 1){
 						occupation[labeled_orb_en_beta[i].second.second] = 1;
 						outfile->Printf("\n Added electron to %d", labeled_orb_en_beta[i].second.second);
@@ -370,7 +379,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 				// replace the electron and try again
 
 				if(!add){
-					occupation[labeled_orb_en_beta[nbeta_ - k - nfrzc_].second.second] = 1;
+					occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 1;
 					outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
 					++k;
 				}else{
@@ -446,18 +455,17 @@ double AdaptiveCI::compute_energy()
 	P_space_.push_back(bs_det);
     P_space_map_[bs_det] = 1;
 
-	if( alfa_bits != beta_bits ){
-		BitsetDeterminant ref2 = bs_det;
-		ref2.spin_flip();
-		P_space_.push_back(ref2);
-	}
+//	if( alfa_bits != beta_bits){
+//		BitsetDeterminant ref2 = bs_det;
+//		ref2.spin_flip();
+//		P_space_.push_back(ref2);
+//	}
 
 //	if( do_guess_ ){
 //		form_initial_space(P_space_, nroot_);
 //	}
 
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
-	outfile->Printf("\n Energy: %1.8f", bs_det.energy());
     outfile->Flush();
 
    // double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
@@ -474,8 +482,9 @@ double AdaptiveCI::compute_energy()
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
-		outfile->Printf("\n\n  Cycle %3d",cycle);
-        outfile->Printf("\n Initial P space dimension: %zu", P_space_.size());
+		std::string cycle_h = "Cycle " + std::to_string(cycle_); 
+		print_h2(cycle_h);
+        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
@@ -506,8 +515,8 @@ double AdaptiveCI::compute_energy()
 				P_evecs = PQ_spin_evecs_->clone();
 				sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots, DavidsonLiuList);
 			}else{
-				outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n No need to perform spin projection.");
+				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+				outfile->Printf("\n  No need to perform spin projection.");
 			}
 		}else{
 			outfile->Printf("\n  Not performing spin projection.");
@@ -516,7 +525,7 @@ double AdaptiveCI::compute_energy()
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < num_ref_roots; ++i){
-            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_;
+            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
             outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
         }
@@ -560,7 +569,7 @@ double AdaptiveCI::compute_energy()
         // Print the energy
         outfile->Printf("\n");
         for (int i = 0; i < num_ref_roots; ++ i){
-            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
+            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
             outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
             outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
@@ -583,6 +592,8 @@ double AdaptiveCI::compute_energy()
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
 
+	BitsetDeterminant::check_uniqueness(P_space_);
+
 	// Ensure the solutions are spin-pure
 	if( spin_projection == 2 or spin_projection == 3){
 		double spin_contamination = compute_spin_contamination(P_space_, P_evecs, nroot_);
@@ -593,8 +604,8 @@ double AdaptiveCI::compute_energy()
 			P_evecs = PQ_spin_evecs_->clone();
 			sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_, DavidsonLiuList);
 		}else{
-			outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-			outfile->Printf("\n No need to perform spin projection.");
+			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+			outfile->Printf("\n  No need to perform spin projection.");
 		}
 	}else{
 		outfile->Printf("\n  Not performing spin projection.");
@@ -612,7 +623,7 @@ double AdaptiveCI::compute_energy()
     wfn_analyzer(P_space_, P_evecs, nroot_);	
 
     for (int i = 0; i < nroot_; ++ i){
-        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_;
+        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
@@ -649,13 +660,13 @@ double AdaptiveCI::compute_energy()
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
 
-    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+    double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
 
-    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_;
+    return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
 
@@ -679,6 +690,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     // Add the P-space determinants and zero the hash
     for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
+	//	outfile->Printf("\n  det: %s", P_space_[J].str().c_str());
         PQ_space_.push_back(P_space_[J]);
         V_hash.erase(P_space_[J]);
     }
@@ -773,8 +785,8 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double> C1, std::vect
 	// f_E2 and f_C1 will store the selected function of the chosen q criteria
 	// This functions should only be called when nroot_ > 1
 	
-	double f_C1;
-	double f_E2;
+	double f_C1 = 0.0;
+	double f_E2 = 0.0;
 
 	std::vector<double> dE2(nroot, 0.0);
 
@@ -1445,8 +1457,8 @@ void AdaptiveCI::smooth_hamiltonian(std::vector<BitsetDeterminant>& space,Shared
     SharedMatrix F(new Matrix("F-smooth",ndets,ndets));
 
     // Build the smoothed Hamiltonian
-    for (int I = 0; I < ndets; ++I){
-        for (int J = 0; J < ndets; ++J){
+    for (size_t I = 0; I < ndets; ++I){
+        for (size_t J = 0; J < ndets; ++J){
             double CI = evecs->get(I,0);
             double CJ = evecs->get(J,0);
             double HIJ = space[I].slater_rules(space[J]);
@@ -1481,7 +1493,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 		std::vector<double> av_energies;
 		for(int i = 0; i < cycle_; ++i){
 			double energy = 0.0;
-			for(size_t n = 0; n < nroot; ++n){
+			for(int n = 0; n < nroot; ++n){
 				energy += energy_history[i][n];
 			}
 			energy /= static_cast<double>(nroot);
@@ -1669,14 +1681,14 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		pVector<double, int> orb_e;
 		int cumidx = 0;
 		for(int h = 0; h < nirrep_; ++h){
-			for( size_t a = 0; a < ncmopi_[h]; ++a ){
-				orb_e.push_back(make_pair(epsilon_a_->get(h,a + frzcpi_[h]), a + cumidx));
+			for(int a = 0; a < nactpi_[h]; ++a ){
+				orb_e.push_back(make_pair(epsilon_a_->get(h,a), a + cumidx));
 			}
-			cumidx += ncmopi_[h];
+			cumidx += nactpi_[h];
 		}
 
 		// Create a vector that stores the orbital energy, symmetry, and idx
-		for( size_t a = 0; a < ncmo_; ++a){
+		for( size_t a = 0; a < nact_; ++a){
 			labeled_orb.push_back( make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ) );
 		}
 		//Order by energy, low to high
@@ -1687,22 +1699,22 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		pVector<double, int> orb_e;
 		int cumidx = 0;
 		for(int h  = 0; h < nirrep_; ++h){
-			for(size_t a = 0, max = ncmopi_[h] - frzcpi_[h]; a < max; ++a){
-				orb_e.push_back(make_pair(epsilon_b_->get(h,a + frzcpi_[h]), a+cumidx));
+			for(size_t a = 0, max = nactpi_[h]; a < max; ++a){
+				orb_e.push_back(make_pair(epsilon_b_->get(h,a), a+cumidx));
 			}
-			cumidx += ncmopi_[h];
+			cumidx += nactpi_[h];
 		}
 
 		//Create a vector that stores the orbital energy, sym, and idx
-		for(int a = 0; a < ncmo_; ++a){
+		for(size_t a = 0; a < nact_; ++a){
 			labeled_orb.push_back(make_pair(orb_e[a].first, make_pair(mo_symmetry_[a], orb_e[a].second) ));
 		}
 		std::sort(labeled_orb.begin(), labeled_orb.end());
 	}
 
-	for(int i = 0; i < ncmo_; ++i){
-		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
-	}
+//	for(int i = 0; i < nact_; ++i){
+//		outfile->Printf("\n %1.5f    %d    %d", labeled_orb[i].first, labeled_orb[i].second.first, labeled_orb[i].second.second);
+//	}
 
 	return labeled_orb;
 	
@@ -1717,8 +1729,8 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	std::vector<size_t> idx_c;
 
 	for(int h = 0; h < nirrep_; ++h){
-		for( size_t i = 0; i < ncmopi_[h]; ++i){
-			size_t idx = i + ncmopi;
+		for( int i = 0; i < ncmopi_[h]; ++i){
+			int idx = i + ncmopi;
 			if( i < frzcpi_[h] ){
 				idx_c.push_back(idx);
 			}else if( i >= frzcpi_[h] and i < (frzcpi_[h] + ncmopi_[h])){
@@ -1731,43 +1743,16 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Bitse
 	}
 
 	//Occupy frozen core with 1.0
-	for(size_t p = 0; p < nfrzc_; ++p){
+	for(int p = 0; p < nfrzc_; ++p){
 		size_t np = idx_c[p];
 		A->set(np,np,1.0);
 		B->set(np,np,1.0);
 	}
 	
-	for(size_t p = 0; p < ncmo_; ++p){
-		size_t np = idx_a[p];
-		for( size_t q = p; q < ncmo_; ++q){
-			size_t nq = idx_a[q];
-
-			if( (mo_symmetry_[p] ^ mo_symmetry_[q]) != 0) continue;
-
-			//Loop over determinants
-			for(size_t I = 0, max = det_space.size(); I < max; ++I){
-				BitsetDeterminant Ja, Jb;
-				double C_I = evecs->get(I,0);
-				double a = 1.0, b = 1.0;
-
-				a *= OneOP(det_space[I], Ja, 0, p, q) * C_I;
-				b *= OneOP(det_space[I], Jb, 1, p, q) * C_I;
-
-				for(size_t J = 0, mJ = det_space.size(); J < mJ; ++J){
-					double C_J = evecs->get(J,0);
-					A->add(np, nq, a * (det_space[J] == Ja) * C_J);
-					B->add(np, nq, b * (det_space[J] == Jb) * C_J);
-				}
-			}
-			A->set(nq, np, A->get(np, nq));
-			B->set(nq, np, B->get(np, nq));
-		}
-	}
-
 	double trace = 0.0;
-	D1_ = A->clone();
-	for( size_t p = 0; p < nmo_; ++p){
-		for( size_t q = 0; q < nmo_; ++q){
+	for(int p = 0; p < ncmo_; ++p){
+		//size_t np = idx_a[p];
+		for(int q = p; q < nmo_; ++q){
 			D1_->add(p,q, B->get(p,q));
 			if(p ==q) trace += D1_->get(p,p);
 		}
@@ -1819,7 +1804,7 @@ double AdaptiveCI::OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, co
 double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
 {
 	size_t count = 0;
-	for( size_t i = 0; i < n; ++i){
+	for( int i = 0; i < n; ++i){
 		
 		if( I[i] ) count++;
 	
@@ -1854,7 +1839,7 @@ void AdaptiveCI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix eve
         }
 
 		auto spins = compute_spin(space,evecs,nroot);
-		state_label = s2_labels[std::round(spins[n].first.second * 2.0)];
+		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
 		outfile->Printf("\n\n Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
@@ -1889,11 +1874,14 @@ void AdaptiveCI::spin_transform( std::vector< BitsetDeterminant > det_space, Sha
 	SharedVector evals(new Vector("evals", det_size));
 	S2->diagonalize(T, evals);
 
+	//evals->print();	
+
 	// Count the number of CSFs with correct spin
 	// and get their indices wrt columns in T
 	size_t csf_num = 0;
 	size_t csf_idx = 0;
 	double criteria = (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
+	//double criteria = static_cast<double>(wavefunction_multiplicity_) - 1.0;
 	for(size_t l = 0; l < det_size; ++l){
 		if( std::fabs(evals->get(l) - criteria) <= 0.01 ){
 			csf_num++;
@@ -1913,7 +1901,7 @@ void AdaptiveCI::spin_transform( std::vector< BitsetDeterminant > det_space, Sha
 	C_trans->gemm('n','n',det_size,nroot, csf_num, 1.0,T,det_size,C,nroot,0.0,nroot);
 
 	//Normalize transformed vectors
-	for( size_t n = 0; n < nroot; ++n ){
+	for( int n = 0; n < nroot; ++n ){
 		double denom = 0.0;
 		for( size_t I = 0; I < det_size; ++I){
 			denom += C_trans->get(I,n) * C_trans->get(I,n);
@@ -1941,25 +1929,32 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 	//Loop over determinants
 	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
 		// Loop over MOs
-		BitsetDeterminant det(det_space[I]);
-		for( size_t i = 0; i < ncmo_; ++i ){
-			for( size_t j = 0; j < ncmo_; ++j ){
-				// The logic here is complex
-				if( det_space[I].get_alfa_bit(i) == det_space[I].get_beta_bit(j) and
-				    det_space[I].get_alfa_bit(i) == 1 and
-					det_space[I].get_alfa_bit(j) == 0 and
-					det_space[I].get_beta_bit(i) == 0){
-
-					det.set_alfa_bit(i, det_space[I].get_beta_bit(i));
-					det.set_alfa_bit(j, det_space[I].get_alfa_bit(j));
-					det.set_alfa_bit(j, det_space[I].get_beta_bit(j));
-					det.set_alfa_bit(i, det_space[I].get_alfa_bit(i));
+	//	outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
+		for( size_t i = 0; i < nact_; ++i ){
+			BitsetDeterminant det(det_space[I]);
+			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
+					//destroy alfa bit i, create beta bit i
+					det.set_alfa_bit(i, false );
+					det.set_beta_bit(i, true );
+			}else{
+				continue;
+			}
+			for( size_t j = 0; j < nact_; ++j ){
+				if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
+					//destroy beta bit j, create alfa bit j
+					det.set_beta_bit(j, false );
+					det.set_alfa_bit(j, true );
 
 					if( det_map.count(det) == 0 ){
 						det_space.push_back(det);
 						det_map[det] = false;
+						//outfile->Printf("\n  added determinant:    %s", det.str().c_str());
 						ndet++;
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
 					}else{
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
 						continue;
 					}
 				}else{
@@ -1969,10 +1964,10 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 		}
 	}
 	if( ndet > 0 ){
-		outfile->Printf("\n  Determinant space is spin incomplete!");
+		outfile->Printf("\n\n  Determinant space is spin incomplete!");
 		outfile->Printf("\n  %zu more determinants are needed.", ndet);
 	}else{
-		outfile->Printf("\n  Determinant space is spin complete.");
+		outfile->Printf("\n\n  Determinant space is spin complete.");
 	}
 }
 
@@ -1984,6 +1979,7 @@ double AdaptiveCI::compute_spin_contamination( std::vector<BitsetDeterminant> sp
 		spin_contam += spins[n].first.second;
 	}
 	spin_contam /= static_cast<double>(nroot);
+	spin_contam -= (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
 
 	return spin_contam;
 }

@@ -139,7 +139,7 @@ public:
     double spin2(const FastDeterminant& rhs) const;
 
     /// Sets the pointer to the integral object
-    static void set_ints(ForteIntegrals* ints) {
+    static void set_ints(std::shared_ptr<ForteIntegrals>  ints) {
         ints_ = ints;
     }
 private:
@@ -154,7 +154,7 @@ public:
 
     // Static data
     /// A pointer to the integral object
-    static ForteIntegrals* ints_;
+    static std::shared_ptr<ForteIntegrals>  ints_;
     static double SlaterSign(const bit_t I,int n);
 };
 

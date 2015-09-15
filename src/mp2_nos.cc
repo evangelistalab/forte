@@ -13,7 +13,7 @@ namespace psi{ namespace forte{
 
 using namespace ambit;
 
-MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
 {
     print_method_banner({"Second-Order Moller-Plesset Natural Orbitals",
                          "written by Francesco A. Evangelista"});
@@ -355,7 +355,7 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, ForteInt
 }
 
 SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
-                             Options &options, ForteIntegrals *ints,
+                             Options &options, std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, Reference &reference)
 {
     print_method_banner({"Semi-Canonical Orbitals","Francesco A. Evangelista"});

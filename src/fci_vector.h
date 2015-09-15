@@ -35,6 +35,7 @@
 
 namespace psi{ namespace forte{
 
+enum FCIIntegralsType {Active,Correlated};
 /**
  * @brief The FCIIntegrals class stores integrals necessary for FCI calculations
  */
@@ -45,9 +46,10 @@ public:
     // ==> Class Constructors <==
 
     /// Constructor based on StringLists
-    FCIIntegrals(std::shared_ptr<StringLists> lists, ForteIntegrals* ints);
+    FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints);
     /// Constructor based on MOInfoSpace
-    FCIIntegrals(ForteIntegrals* ints, std::shared_ptr<MOSpaceInfo> mospace_info);
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
+                 FCIIntegralsType type = Active);
 
     // ==> Class Interface <==
 
@@ -57,28 +59,39 @@ public:
     double scalar_energy() const {return scalar_energy_;}
 
     /// Return the alpha effective one-electron integral
-    double oei_a(size_t p,size_t q) const {return oei_a_[p * ncmo + q];}
+    double oei_a(size_t p,size_t q) const {return oei_a_[p * nmo_ + q];}
     /// Return the beta effective one-electron integral
-    double oei_b(size_t p,size_t q) const {return oei_b_[p * ncmo + q];}
+    double oei_b(size_t p,size_t q) const {return oei_b_[p * nmo_ + q];}
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||rs>
-    double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[tei_index(p,q,r,s)];}
+    double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
     /// Return the alpha-beta two-electron integral <pq|rs>
-    double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[tei_index(p,q,r,s)];}
+    double tei_ab(size_t p,size_t q,size_t r,size_t s) const {return tei_ab_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
-    double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[tei_index(p,q,r,s)];}
+    double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
-    double diag_tei_aa(size_t p,size_t q) const {return diag_tei_aa_[p * ncmo + q];}
+    double diag_tei_aa(size_t p,size_t q) const {return diag_tei_aa_[p * nmo_ + q];}
     /// Return the alpha-beta two-electron integral <pq|rs>
-    double diag_tei_ab(size_t p,size_t q) const {return diag_tei_ab_[p * ncmo + q];}
+    double diag_tei_ab(size_t p,size_t q) const {return diag_tei_ab_[p * nmo_ + q];}
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
-    double diag_tei_bb(size_t p,size_t q) const {return diag_tei_bb_[p * ncmo + q];}
+    double diag_tei_bb(size_t p,size_t q) const {return diag_tei_bb_[p * nmo_ + q];}
+    IntegralType get_integral_type(){return integral_type_;}
+
 private:
 
     // ==> Class Private Data <==
 
-    size_t ncmo;
+    /// The number of MOs
+    size_t nmo_;
+    /// The number of MOs squared
+    size_t nmo2_;
+    /// The number of MOs cubed
+    size_t nmo3_;
+    /// The number of MOs to the fourth power
+    size_t nmo4_;
+    /// The integral type
+    IntegralType integral_type_;
     /// The frozen core energy
     double frozen_core_energy_;
     /// The scalar contribution to the energy
@@ -102,7 +115,7 @@ private:
 
     // ==> Class Private Functions <==
 
-    inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return ncmo * ncmo * ncmo * p + ncmo * ncmo * q + ncmo * r + s;}
+    inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
 };
 
 
@@ -179,7 +192,7 @@ public:
 //    void read(std::string filename = "wfn.dat");
         
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t symmetry);
+    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t);
     static void release_temp_space();
 //    void check_temp_space();
 private:

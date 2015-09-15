@@ -760,14 +760,14 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
     //If you are using DiskDF, Kevin found that openmp does not like this! 
     int threads = 0;
-   // if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
-   // {
-   //    threads = 1;
-   // }
-   // else
-   // {
-   //    threads = omp_get_max_threads();
-   // }
+    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         const BitsetDeterminant& detI = space[I];
@@ -933,14 +933,14 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
 
     int threads = 0;
-   // if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
-   // {
-   //    threads = 1;
-   // }
-   // else
-   // {
-   //    threads = omp_get_max_threads();
-   // }
+    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+    {
+       threads = 1;
+    }
+    else
+    {
+       threads = omp_get_max_threads();
+    }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         SharedBitsetDeterminant detI = space[I];
@@ -963,14 +963,14 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
     int threads = 0;
-    //if(BitsetDeterminant::ints_->get_integral_type()==DiskDF)
-    //{
-   //    threads = 1;
-   // }
-   // else
-    //{
-    //   threads = omp_get_max_threads();
-    //}
+   if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+   {
+      threads = 1;
+   }
+   else
+   {
+      threads = omp_get_max_threads();
+   }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
