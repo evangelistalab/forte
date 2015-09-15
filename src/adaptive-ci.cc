@@ -141,7 +141,7 @@ void AdaptiveCI::startup()
     reference_determinant_ = BitsetDeterminant(get_occupation());
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
-	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy() + nuclear_repulsion_energy_);
+	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
 
 
     // Read options
@@ -591,6 +591,8 @@ double AdaptiveCI::compute_energy()
     }// end iterations
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
+
+	BitsetDeterminant::check_uniqueness(P_space_);
 
 	// Ensure the solutions are spin-pure
 	if( spin_projection == 2 or spin_projection == 3){
