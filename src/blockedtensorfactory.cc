@@ -27,7 +27,7 @@ BlockedTensorFactory::~BlockedTensorFactory()
 
 }
 
-ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const std::string& name,const std::vector<std::string>& spin_stuff)
+ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const std::string& name,const std::vector<std::string>& spin_stuff, bool is_local_variable)
 {
     if(print_memory_)
     {
@@ -35,7 +35,7 @@ ambit::BlockedTensor BlockedTensorFactory::build(ambit::TensorType storage,const
     }
     ambit::BlockedTensor BT = ambit::BlockedTensor::build(storage, name, spin_stuff);
     number_of_tensors_+= 1;
-    memory_information(BT);
+    memory_information(BT, is_local_variable);
     if(memory_ < 0.0)
     {
         outfile->Printf("\n\n Created %s and out of memory", name.c_str());
@@ -140,7 +140,7 @@ std::vector<std::string> BlockedTensorFactory::generate_indices(const std::strin
     return return_string;
 
 }
-void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
+void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT, bool is_local_variable)
 {
     double size_of_tensor = 0.0;
     std::vector<std::string> BTblocks = BT.block_labels();
@@ -151,7 +151,8 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
     tensors_information_.push_back(std::make_pair(BT.name(),
     memory_of_tensor));
     number_of_blocks_.push_back(BT.numblocks());
-    memory_ -= memory_of_tensor;
+
+    if(!(is_local_variable) ) {memory_ -= memory_of_tensor;}
     if(print_memory_)
     {
         outfile->Printf("\n For tensor %s, this will take up %6.6f GB", BT.name().c_str(), memory_of_tensor);
@@ -162,7 +163,7 @@ void BlockedTensorFactory::memory_information(ambit::BlockedTensor BT)
 void BlockedTensorFactory::memory_summary() {
     outfile->Printf("\n Memory Summary of the %u tensors \n", number_of_tensors_);
     outfile->Printf("\n TensorName \t Number_of_blocks \t memory gb");
-    for(int i = 0; i < tensors_information_.size(); i++)
+    for(size_t i = 0; i < tensors_information_.size(); i++)
     {
         outfile->Printf("\n %-25s  %u    %8.8f GB", tensors_information_[i].first.c_str(), number_of_blocks_[i],tensors_information_[i].second);
     }

@@ -194,6 +194,9 @@ public:
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const BitsetDeterminant& rhs) const;
 
+	/// Check if a space of determinants contains duplicates
+	static void check_uniqueness( std::vector<BitsetDeterminant> );
+
     /// Sets the pointer to the integral object
 	static void set_ints(std::shared_ptr<FCIIntegrals> ints) {
 		fci_ints_ = ints;

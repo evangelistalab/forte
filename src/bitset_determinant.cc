@@ -509,4 +509,24 @@ double BitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
     return(sign);
 }
 
+void BitsetDeterminant::check_uniqueness(const std::vector<BitsetDeterminant> det_space)
+{
+	size_t duplicates = 0;
+	size_t dim = det_space.size();
+	std::unordered_map<BitsetDeterminant, size_t, function<decltype(hash_value)>> det_map(dim, hash_value);
+	
+	for(const auto &i : det_space){
+		++det_map[i];		
+	}
+	for(const auto &d : det_map){
+		if(d.second > 1){
+			outfile->Printf("\n  Duplicate determinant! ==> %s", d.first.str().c_str() );
+			duplicates += d.second;
+		}else{
+			continue;	
+		}
+	}
+	outfile->Printf("\n  Number of duplicate determinants:  %zu  ", duplicates);
+}
+
 }} // end namespace
