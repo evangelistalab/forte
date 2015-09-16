@@ -65,6 +65,10 @@ protected:
     // Nucear Repulsion Energy
     double e_nuc_;
 
+    // Convergence
+    double econv_;
+    double dconv_;
+
     // Multiplicity
     int multi_;
     int ms_;
@@ -183,7 +187,6 @@ protected:
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
 
     // Reference Energy
-    double econv_;
     double Eref_;
     void compute_ref();
 
