@@ -131,7 +131,8 @@ double FCI::compute_energy()
     //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
-    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
+    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+    options_.get_int("NTRIAL_PER_ROOT"));
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
@@ -155,10 +156,10 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
-      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0), mo_space_info_(mo_space_info)
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),ntrial_per_root_(ntrial_per_root),  mo_space_info_(mo_space_info)
 {
     startup();
 }

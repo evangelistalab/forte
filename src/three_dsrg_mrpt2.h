@@ -106,6 +106,10 @@ protected:
     ambit::BlockedTensor RDelta1;
     ambit::BlockedTensor T1;
     ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
+    //These three are defined as member variables, but if integrals use DiskDF, these are not to be computed for the entire code
+    ambit::BlockedTensor V;
+    ambit::BlockedTensor T2;
+    ambit::BlockedTensor ThreeIntegral;
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -133,6 +137,8 @@ protected:
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
+    /// If DF or Cholesky, this function is not used
+    void compute_t2();
     void check_t1();
     double T1norm;
     double T1max;
@@ -188,6 +194,7 @@ protected:
 
     //The MOSpace object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    IntegralType integral_type_;
 
 
 public:

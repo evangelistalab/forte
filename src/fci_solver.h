@@ -56,10 +56,12 @@ public:
      * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 = doublet, ...
      * @param symmetry The irrep of the FCI wave function
      * @param ints An integral object
+     * @param initial_guess_per_root get from options object
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t
+              initial_guess_per_root = 10);
 
     ~FCISolver() {}
 
@@ -113,7 +115,7 @@ private:
     /// The number of roots
     int nroot_;
     /// The number of trial guess vectors to generate per root
-    size_t ntrial_per_root_ = 10;
+    size_t ntrial_per_root_; 
     /// Test the RDMs?
     bool test_rdms_ = false;
     ///
