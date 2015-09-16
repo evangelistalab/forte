@@ -32,6 +32,7 @@ set forte {
    semi_canonical          true
    int_type               diskdf
    job_type               three-dsrg-mrpt2
+   NTRIAL_PER_ROOT        100
 }
 
 scf = energy('scf')
