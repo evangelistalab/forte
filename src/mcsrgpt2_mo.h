@@ -1,5 +1,5 @@
-#ifndef MCSRGPT2_MO_H
-#define MCSRGPT2_MO_H
+#ifndef _mcsrgpt2_mo_h_
+#define _mcsrgpt2_mo_h_
 
 #include <boost/assign.hpp>
 #include <liboptions/liboptions.h>
@@ -161,4 +161,4 @@ protected:
 };
 }}
 
-#endif // MCSRGPT2_MO_H
+#endif // _mcsrgpt2_mo_h_

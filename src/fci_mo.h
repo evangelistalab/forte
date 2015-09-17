@@ -1,5 +1,5 @@
-#ifndef FCI_MO_H
-#define FCI_MO_H
+#ifndef _fci_mo_h_
+#define _fci_mo_h_
 
 #include <libqt/qt.h>
 #include <liboptions/liboptions.h>
@@ -18,26 +18,33 @@
 using namespace std;
 
 
-typedef vector<double> d1;
-typedef vector<d1> d2;
-typedef vector<d2> d3;
-typedef vector<d3> d4;
-typedef vector<d4> d5;
-typedef vector<d5> d6;
-typedef vector<psi::forte::BitsetDeterminant> vecdet;
+using d1 = vector<double>;
+using d2 = vector<d1>;
+using d3 = vector<d2>;
+using d4 = vector<d3>;
+using d5 = vector<d4>;
+using d6 = vector<d5>;
+using vecdet = vector<psi::forte::BitsetDeterminant>;
 
 namespace psi{ namespace forte{
 class FCI_MO
 {
 public:
-    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /**
+     * @brief FCI_MO
+     * @param options PSI4 and FORTE options
+     * @param ints ForteInegrals
+     * @param mo_space_info MOSpaceInfo
+     */
+    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~FCI_MO();
 
+    /// Returns the reference object
     Reference reference();
 
 protected:
     // Basic Preparation
-    void print_title();
     void startup(Options &options);
     void read_info(Options &options);
     void cleanup();
@@ -57,6 +64,10 @@ protected:
 
     // Nucear Repulsion Energy
     double e_nuc_;
+
+    // Convergence
+    double econv_;
+    double dconv_;
 
     // Multiplicity
     int multi_;
@@ -98,7 +109,7 @@ protected:
     // Determinants
     void form_det();
     vecdet determinant_;
-    vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print);
+    vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
 
     // Choice of Roots
     int nroot_;  // number of roots
@@ -176,7 +187,6 @@ protected:
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
 
     // Reference Energy
-    double econv_;
     double Eref_;
     void compute_ref();
 
@@ -279,4 +289,4 @@ protected:
 };
 }}
 
-#endif // FCI_MO_H
+#endif // _fci_mo_h_

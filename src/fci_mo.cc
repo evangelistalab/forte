@@ -1,12 +1,10 @@
 #include <cmath>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
-#include <libmints/matrix.h>
-#include <vector>
-#include <tuple>
 #include <numeric>
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
+#include "fci_vector.h"
 #include "fci_mo.h"
 
 using namespace std;
@@ -18,10 +16,10 @@ namespace psi{ namespace forte{
 FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), mo_space_info_(mo_space_info) 
 {
-    // Basic Preparation: Form Determinants
+    // basic preparation: form determinants
     startup(options);
 
-    // Form and Diagonalize the CASCI Hamiltonian
+    // diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
     Diagonalize_H(determinant_, eigen_);
     if(print_ > 2){
@@ -32,7 +30,7 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
         }
     }
 
-    // Store CI Vectors in eigen_
+    // store CI vectors in eigen_
     print_CI_threshold = options.get_double("PRINT_CI_VECTOR");
     if(nroot_ > eigen_.size()){
         outfile->Printf("\n  Too many roots of interest!");
@@ -46,7 +44,7 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
     }
     Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
 
-    // Form Density
+    // form density
     FormDensity(determinant_, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
@@ -56,7 +54,7 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
     // Fock Matrix
     size_t count = 0;
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,econv_,count);
+    Check_Fock(Fa_,Fb_,dconv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -102,31 +100,33 @@ FCI_MO::~FCI_MO()
 }
 
 void FCI_MO::cleanup(){
-//    delete integral_;
 }
 
 void FCI_MO::startup(Options &options){
 
-    // Print Title
-    print_title();
+    // print title
+    print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});
 
-    // Read from options
+    // read options
     read_info(options);
 
-    // Form determinants
+    // setup integrals
+    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_);
+
+    // form determinants
     form_det();
 
-    // Density
+    // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
-    L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
+    L1a = ambit::Tensor::build(ambit::kCore,"L1a",{na_, na_});
+    L1b = ambit::Tensor::build(ambit::kCore,"L1b",{na_, na_});
 
-    // Fock
+    // allocate Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
 
-    // Cumulants
+    // allocate cumulants
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
@@ -138,20 +138,10 @@ void FCI_MO::startup(Options &options){
     L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
     L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa", {na_, na_, na_, na_, na_, na_});
-    L3aab = ambit::Tensor::build(ambit::kCore,"L3aab", {na_, na_, na_, na_, na_, na_});
-    L3abb = ambit::Tensor::build(ambit::kCore,"L3abb", {na_, na_, na_, na_, na_, na_});
-    L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb", {na_, na_, na_, na_, na_, na_});
-}
-
-void FCI_MO::print_title(){
-    outfile->Printf("\n");
-    outfile->Printf("\n  ***************************************************");
-    outfile->Printf("\n  * Complete Active Space Configuration Interaction *");
-    outfile->Printf("\n  *                 by Chenyang Li                  *");
-    outfile->Printf("\n  ***************************************************");
-    outfile->Printf("\n");
-    outfile->Flush();
+    L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{na_, na_, na_, na_, na_, na_});
+    L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{na_, na_, na_, na_, na_, na_});
+    L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{na_, na_, na_, na_, na_, na_});
+    L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{na_, na_, na_, na_, na_, na_});
 }
 
 void FCI_MO::read_info(Options &options){
@@ -159,73 +149,55 @@ void FCI_MO::read_info(Options &options){
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
 
-    // Reference type
+    // test reference type
     ref_type_ = options.get_str("REFERENCE");
     if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
         outfile->Printf("\n  Unrestricted reference is detected.");
-        if(!options.get_bool("UNO")){
-            outfile->Printf("\n  Warning! Warning! Warning! Warning!");
-            outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
-            outfile->Printf("\n  Otherwise, semi-canonicalization will fail for beta spin.");
-            outfile->Printf("\n  Unrestricted natural orbitals can be computed by setting \"UNO\" option to \"true\".");
-        }else{
-            outfile->Printf("\n  Unrestricted natural orbitals are employed. Good Choice!");
-        }
+        outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
-    // Print Level
+    // print level
     print_ = options.get_int("PRINT");
 
-    // Energy convergence
+    // energy convergence
     econv_ = options.get_double("E_CONVERGENCE");
+    dconv_ = options.get_double("D_CONVERGENCE");
 
-    // Nuclear Repulsion
+    // nuclear repulsion
     e_nuc_ = molecule->nuclear_repulsion_energy();
 
-    // Number of Irrep
+    // number of Irrep
     nirrep_ = wfn->nirrep();
 
-    // MOs
+    // obtain MOs
     nmo_ = wfn->nmo();
     nmopi_ = wfn->nmopi();
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
-    // Frozen Orbitals
+    // obtain frozen orbitals
     frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
     nfrzc_ = mo_space_info_->size("FROZEN_DOCC");
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
-    // Core and Active
+    // obtain active orbitals
     if(options["ACTIVE"].size() == 0){
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
         outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
         throw PSIEXCEPTION("Please specify the ACTIVE occupations. Check output for details.");
     }
-    core_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     active_ = mo_space_info_->get_dimension("ACTIVE");
-    virtual_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    if (options["RESTRICTED_DOCC"].size() == nirrep_ && options["ACTIVE"].size() == nirrep_){
-        for (int h=0; h<nirrep_; ++h){
-            core_[h] = options["RESTRICTED_DOCC"][h].to_integer();
-            active_[h] = options["ACTIVE"][h].to_integer();
-            virtual_[h] = ncmopi_[h] - core_[h] - active_[h];
-        }
-    }else{
-        outfile->Printf("\n  The size of RESTRICTED_DOCC or ACTIVE occupation does not match the number of Irrep.");
-        outfile->Printf("\n  Number of irreps: %2d", nirrep_);
-        outfile->Printf("\n  Size of RESTRICTED_DOCC: %2d", options["RESTRICTED_DOCC"].size());
-        outfile->Printf("\n  Size of ACTIVE: %2d", options["ACTIVE"].size());
-        outfile->Printf("\n  Check RESTRICTED_DOCC and ACTIVE! \n");
-        throw PSIEXCEPTION("Wrong RESTRICTED_DOCC or ACTIVE. Check output for details.");
-    }
-    nc_ = core_.sum();
     na_ = active_.sum();
+
+    // obitan inactive orbitals
+    core_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    virtual_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    nc_ = core_.sum();
     nv_ = virtual_.sum();
 
-    // Number of Electrons and Orbitals
+    // compute number of electrons
     int natom = molecule->natom();
     size_t nelec = 0;
     for(int i=0; i<natom; ++i){
@@ -255,7 +227,7 @@ void FCI_MO::read_info(Options &options){
     }
     nalfa_ = (nelec + ms_) / 2;
     nbeta_ = (nelec - ms_) / 2;
-    if(nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec ){
+    if(nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec){
         outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
         outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
         outfile->Printf("\n  Charge = %3d, Multi = %3d, Ms = %.1f", charge, multi_, ms_ / 2.0);
@@ -271,10 +243,10 @@ void FCI_MO::read_info(Options &options){
         throw PSIEXCEPTION("Not enough active orbitals to arrange electrons! Check output for details.");
     }
 
-    // Root Symmetry
+    // obtain root symmetry
     root_sym_ = options.get_int("ROOT_SYM");
 
-    // Number of roots and root of interest
+    // obtain number of roots and roots of interest
     nroot_ = options.get_int("NROOT");
     root_ = options.get_int("ROOT");
     if(root_ >= nroot_){
@@ -283,26 +255,26 @@ void FCI_MO::read_info(Options &options){
         throw PSIEXCEPTION("ROOT must be smaller than NROOT.");
     }
 
-    // Symmetry Index of Active Orbitals
-    for(int h=0; h<nirrep_; ++h){
-        for(size_t i=0; i<active_[h]; ++i){
+    // setup symmetry index of active orbitals
+    for(int h = 0; h < nirrep_; ++h){
+        for(size_t i = 0; i < active_[h]; ++i){
             sym_active_.push_back(h);
         }
     }
 
-    // Symmetry Index of Correlated Orbitals
-    for(int h=0; h<nirrep_; ++h){
-        for(size_t i=0; i<ncmopi_[h]; ++i){
+    // setup symmetry index of correlated orbitals
+    for(int h = 0; h < nirrep_; ++h){
+        for(size_t i = 0; i < ncmopi_[h]; ++i){
             sym_ncmo_.push_back(h);
         }
     }
 
-    // Index of Core, Active and Virtual
+    // obtain absolute indices of core, active and virtual
     idx_c_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     idx_a_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
     idx_v_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
 
-    // Hole and Particle Index (Active must start first for old mcsrgpt2 code)
+    // setup hole and particle indices (Active must start first for old mcsrgpt2 code)
     nh_ = nc_ + na_;
     npt_ = na_ + nv_;
     idx_h_ = vector<size_t> (idx_a_);
@@ -310,8 +282,7 @@ void FCI_MO::read_info(Options &options){
     idx_p_ = vector<size_t> (idx_a_);
     idx_p_.insert(idx_p_.end(), idx_v_.begin(), idx_v_.end());
 
-    // Print
-    options.print();
+    // print input summary
     std::vector<std::pair<std::string,size_t>> info;
     info.push_back({"number of atoms", natom});
     info.push_back({"number of electrons", nelec});
@@ -319,14 +290,16 @@ void FCI_MO::read_info(Options &options){
     info.push_back({"number of alpha electrons", nalfa_});
     info.push_back({"number of beta electrons", nbeta_});
     info.push_back({"multiplicity", multi_});
+    info.push_back({"ms (2 * Sz)", ms_});
     info.push_back({"number of molecular orbitals", nmo_});
 
-    outfile->Printf("\n  ==> Input Summary <==\n");
+    print_h2("Input Summary");
     for (auto& str_dim: info){
         outfile->Printf("\n    %-30s = %5zu",str_dim.first.c_str(),str_dim.second);
     }
 
-    outfile->Printf("\n\n  ==> Orbital Spaces <==\n");
+    // print orbital spaces
+    print_h2("Orbital Spaces");
     print_irrep("TOTAL MO", nmopi_);
     print_irrep("FROZEN CORE", frzcpi_);
     print_irrep("FROZEN VIRTUAL", frzvpi_);
@@ -335,7 +308,8 @@ void FCI_MO::read_info(Options &options){
     print_irrep("ACTIVE", active_);
     print_irrep("VIRTUAL", virtual_);
 
-    outfile->Printf("\n\n  ==> Correlated Subspace Indices <==\n");
+    // print orbital indices
+    print_h2("Correlated Subspace Indices");
     print_idx("CORE", idx_c_);
     print_idx("ACTIVE", idx_a_);
     print_idx("HOLE", idx_h_);
@@ -343,7 +317,6 @@ void FCI_MO::read_info(Options &options){
     print_idx("PARTICLE", idx_p_);
     outfile->Printf("\n");
     outfile->Flush();
-
 }
 
 void FCI_MO::form_det(){
@@ -356,8 +329,8 @@ void FCI_MO::form_det(){
     Timer tstrings;
     std::string str = "Forming alpha and beta strings";
     outfile->Printf("\n  %-35s ...", str.c_str());
-    vector<vector<vector<bool>>> a_string = Form_String(na_a,0);
-    vector<vector<vector<bool>>> b_string = Form_String(nb_a,0);
+    vector<vector<vector<bool>>> a_string = Form_String(na_a);
+    vector<vector<vector<bool>>> b_string = Form_String(nb_a);
     outfile->Printf("  Done. Timing %15.6f s", tstrings.get());
 
     // Form Determinant
@@ -376,14 +349,14 @@ void FCI_MO::form_det(){
     }
     outfile->Printf("  Done. Timing %15.6f s", tdet.get());
 
-    // Print
+    // printing
     std::vector<std::pair<std::string,size_t>> info;
     info.push_back({"number of alpha active electrons", na_a});
     info.push_back({"number of beta active electrons", nb_a});
     info.push_back({"root symmetry (zero based)", root_sym_});
     info.push_back({"number of determinants", determinant_.size()});
 
-    outfile->Printf("\n\n  ==> Determinants Summary <==\n");
+    print_h2("Determinants Summary");
     for (auto& str_dim: info){
         outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
     }
@@ -403,21 +376,21 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     timer_on("FORM String");
     vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-    // Symmetry of core
+    // symmetry of core
     int symmetry = 0;
-    for(int h=0; h<nirrep_; ++h){
-        for(int i=0; i<core_[h]; ++i){
+    for(int h = 0; h < nirrep_; ++h){
+        for(int i = 0; i < core_[h]; ++i){
             symmetry ^= h;
         }
     }
 
-    // Initalize the String (only active)
+    // initalize the string (only active)
     bool *I_init = new bool[na_];
-    for(size_t i=0; i<na_; ++i) I_init[i] = 0;
-    for(size_t i=na_-active_elec; i<na_; ++i)  I_init[i] = 1;
+    for(size_t i = 0; i < na_; ++i) I_init[i] = 0;
+    for(size_t i = na_ - active_elec; i < na_; ++i)  I_init[i] = 1;
 
     do{
-        // Permutation the Active
+        // permute the active
         vector<bool> string_a;
         int sym = symmetry;
         for(size_t i=0; i<na_; ++i){
@@ -426,31 +399,14 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
                 sym ^= sym_active_[i];
             }
         }
-
-        // Form the String with dimension nmo_
-        vector<bool> str(ncmo_, 0);
-        size_t shift_a = 0;
-        size_t shift_c = 0;
-        size_t shift_sa = 0;
-        for(int h=0; h<nirrep_; ++h){
-            for(size_t c=0; c<core_[h]; ++c){
-                str[c+shift_c] = 1;
-            }
-            shift_a = shift_c + core_[h];
-            for(size_t a=0; a<active_[h]; ++a){
-                str[a+shift_a] = string_a[a+shift_sa];
-            }
-            shift_c += ncmopi_[h];
-            shift_sa += active_[h];
-        }
-        String[sym].push_back(str);
-    }while(next_permutation(I_init, I_init+na_));
+        String[sym].push_back(string_a);
+    }while(next_permutation(I_init, I_init + na_));
 
     if(print == true){
-        outfile->Printf("\n\n  Possible String \n");
-        for(size_t i=0; i != String.size(); ++i){
+        print_h2("Possible String");
+        for(size_t i = 0; i != String.size(); ++i){
             outfile->Printf("\n  symmetry = %lu \n", i);
-            for(size_t j=0; j != String[i].size(); ++j){
+            for(size_t j = 0; j != String[i].size(); ++j){
                 outfile->Printf("    ");
                 for(bool b: String[i][j]){
                     outfile->Printf("%d ", b);
@@ -482,6 +438,7 @@ void FCI_MO::semi_canonicalize(){
     Cb->copy(Cb_new);
 
     integral_->retransform_integrals();
+    fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
 
     // Form and Diagonalize the CASCI Hamiltonian
     Diagonalize_H(determinant_, eigen_);
@@ -512,7 +469,7 @@ void FCI_MO::semi_canonicalize(){
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,econv_,count);
+    Check_Fock(Fa_,Fb_,dconv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -541,7 +498,14 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     SharedVector val_tmp;
     sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,DavidsonLiuList);
 
-    // Check spin
+    // add doubly occupied energy
+    double vdocc = fci_ints_->scalar_energy();
+    for(int i = 0; i != nroot; ++i){
+        double value = val_tmp->get(i);
+        val_tmp->set(i, value + vdocc);
+    }
+
+    // check spin
     int count = 0;
     outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
     double threshold = 1.0e-4;
@@ -550,7 +514,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     }
     outfile->Printf("\n  Threshold for spin check: %.4f", threshold);
 
-    for (int i = 0; i != nroot; ++i){
+    for(int i = 0; i != nroot; ++i){
         double S2 = 0.0;
         for (int I = 0; I < det_size; ++I){
             for (int J = 0; J < det_size; ++J){
@@ -609,7 +573,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
             size_t ncmopi = 0;
             for(int h = 0; h < nirrep_; ++h){
                 for(size_t k = 0; k < active_[h]; ++k){
-                    size_t x = core_[h] + k + ncmopi;
+                    size_t x = k + ncmopi;
                     bool a = det[index].get_alfa_bit(x);
                     bool b = det[index].get_beta_bit(x);
                     if(a == b)
@@ -619,7 +583,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
                 }
                 if(active_[h] != 0)
                     outfile->Printf(" ");
-                ncmopi += ncmopi_[h];
+                ncmopi += active_[h];
             }
             outfile->Printf(" %20.8f", ci);
         }
@@ -655,8 +619,8 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
                 double a = 1.0, b = 1.0, vket = (eigen_[root].first)->get(ket);
                 if(std::fabs(vket) < econv_)
                     continue;
-                a *= OneOP(dets[ket],Ja,np,0,nq,0) * vket;
-                b *= OneOP(dets[ket],Jb,np,1,nq,1) * vket;
+                a *= OneOP(dets[ket],Ja,p,0,q,0) * vket;
+                b *= OneOP(dets[ket],Jb,p,1,q,1) * vket;
                 for(size_t bra = 0; bra != size; ++bra){
                     double vbra = (eigen_[root].first)->get(bra);
                     if(std::fabs(vbra) < econv_)
@@ -735,11 +699,11 @@ void FCI_MO::FormCumulant2AA(const vecdet &dets, const int &root, d4 &AA, d4 &BB
 
                     size_t size = dets.size();
                     for(size_t ket = 0; ket != size; ++ket){
-                        BitsetDeterminant Jaa(vector<bool> (2*ncmo_)), Jbb(vector<bool> (2*ncmo_));
+                        BitsetDeterminant Jaa(vector<bool> (2*na_)), Jbb(vector<bool> (2*na_));
                         double aa = 1.0, bb = 1.0, vket = (eigen_[root].first)->get(ket);
                         if(std::fabs(vket) < econv_) continue;
-                        aa *= TwoOP(dets[ket],Jaa,np,0,nq,0,nr,0,ns,0) * vket;
-                        bb *= TwoOP(dets[ket],Jbb,np,1,nq,1,nr,1,ns,1) * vket;
+                        aa *= TwoOP(dets[ket],Jaa,p,0,q,0,r,0,s,0) * vket;
+                        bb *= TwoOP(dets[ket],Jbb,p,1,q,1,r,1,s,1) * vket;
 
                         for(size_t bra = 0; bra != size; ++bra){
                             double vbra = (eigen_[root].first)->get(bra);
@@ -783,7 +747,7 @@ void FCI_MO::FormCumulant2AB(const vecdet &dets, const int &root, d4 &AB){
                         BitsetDeterminant Jab(vector<bool> (2*ncmo_));
                         double ab = 1.0, vket = (eigen_[root].first)->get(ket);
                         if(std::fabs(vket) < econv_) continue;
-                        ab *= TwoOP(dets[ket],Jab,np,0,nq,1,nr,0,ns,1) * vket;
+                        ab *= TwoOP(dets[ket],Jab,p,0,q,1,r,0,s,1) * vket;
 
                         for(size_t bra = 0; bra != size; ++bra){
                             double vbra = (eigen_[root].first)->get(bra);
@@ -887,8 +851,8 @@ void FCI_MO::FormCumulant3AAA(const vecdet &dets, const int &root, d6 &AAA, d6 &
                                     BitsetDeterminant Jaaa(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                                     double aaa = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);
                                     if(std::fabs(vket) < econv_) continue;
-                                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,ns,0,nt,0,nu,0) * vket;
-                                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,ns,1,nt,1,nu,1) * vket;
+                                    aaa *= ThreeOP(dets[ket],Jaaa,p,0,q,0,r,0,s,0,t,0,u,0) * vket;
+                                    bbb *= ThreeOP(dets[ket],Jbbb,p,1,q,1,r,1,s,1,t,1,u,1) * vket;
 
                                     for(size_t bra = 0; bra != size; ++bra){
                                         double vbra = (eigen_[root].first)->get(bra);
@@ -949,8 +913,8 @@ void FCI_MO::FormCumulant3AAB(const vecdet &dets, const int &root, d6 &AAB, d6 &
                                     BitsetDeterminant Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_));
                                     double aab = 1.0, abb = 1.0, vket = (eigen_[root].first)->get(ket);
                                     if(std::fabs(vket) < econv_) continue;
-                                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,ns,0,nt,0,nu,1) * vket;
-                                    abb *= ThreeOP(dets[ket],Jabb,nr,0,np,1,nq,1,nu,0,ns,1,nt,1) * vket;
+                                    aab *= ThreeOP(dets[ket],Jaab,p,0,q,0,r,1,s,0,t,0,u,1) * vket;
+                                    abb *= ThreeOP(dets[ket],Jabb,r,0,p,1,q,1,u,0,s,1,t,1) * vket;
 
                                     for(size_t bra = 0; bra != size; ++bra){
                                         double vbra = (eigen_[root].first)->get(bra);
@@ -1000,10 +964,10 @@ void FCI_MO::FormCumulant3_DIAG(const vecdet &dets, const int &root, d6 &AAA, d6
                 for(size_t ket = 0; ket != size; ++ket){
                     BitsetDeterminant Jaaa(vector<bool> (2*ncmo_)), Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
                     double aaa = 1.0, aab = 1.0, abb = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);;
-                    aaa *= ThreeOP(dets[ket],Jaaa,np,0,nq,0,nr,0,np,0,nq,0,nr,0) * vket;
-                    aab *= ThreeOP(dets[ket],Jaab,np,0,nq,0,nr,1,np,0,nq,0,nr,1) * vket;
-                    abb *= ThreeOP(dets[ket],Jabb,np,0,nq,1,nr,1,np,0,nq,1,nr,1) * vket;
-                    bbb *= ThreeOP(dets[ket],Jbbb,np,1,nq,1,nr,1,np,1,nq,1,nr,1) * vket;
+                    aaa *= ThreeOP(dets[ket],Jaaa,p,0,q,0,r,0,p,0,q,0,r,0) * vket;
+                    aab *= ThreeOP(dets[ket],Jaab,p,0,q,0,r,1,p,0,q,0,r,1) * vket;
+                    abb *= ThreeOP(dets[ket],Jabb,p,0,q,1,r,1,p,0,q,1,r,1) * vket;
+                    bbb *= ThreeOP(dets[ket],Jbbb,p,1,q,1,r,1,p,1,q,1,r,1) * vket;
 
                     for(size_t bra = 0; bra != size; ++bra){
                         double vbra = (eigen_[root].first)->get(bra);
@@ -1169,8 +1133,8 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     integral_->make_fock_matrix(DaM, DbM);
     outfile->Printf("  Done. Timing %15.6f s", tfock.get());
 
-    for(size_t p=0; p<ncmo_; ++p){
-        for(size_t q=0; q<ncmo_; ++q){
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = 0; q < ncmo_; ++q){
             A[p][q] = integral_->get_fock_a(p,q);
             B[p][q] = integral_->get_fock_b(p,q);
         }
