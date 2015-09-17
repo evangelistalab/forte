@@ -51,40 +51,40 @@ protected:
     Dimension ruoccpi_;
 
     /// List of alpha core MOs
-    std::vector<size_t> acore_mos;
+    std::vector<size_t> acore_mos_;
     size_t core_;
     /// List of alpha active MOs
-    std::vector<size_t> aactv_mos;
+    std::vector<size_t> aactv_mos_;
     size_t active_;
     /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos;
+    std::vector<size_t> avirt_mos_;
     size_t virtual_;
 
     /// List of beta core MOs
-    std::vector<size_t> bcore_mos;
+    std::vector<size_t> bcore_mos_;
     /// List of beta active MOs
-    std::vector<size_t> bactv_mos;
+    std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos;
+    std::vector<size_t> bvirt_mos_;
 
     /// List of eigenvalues for fock alpha
-    std::vector<double> Fa;
+    std::vector<double> Fa_;
     /// List of eigenvalues for fock beta
-    std::vector<double> Fb;
+    std::vector<double> Fb_;
 
     /// Map from all the MOs to the alpha core
-    std::map<size_t,size_t> mos_to_acore;
+    std::map<size_t,size_t> mos_to_acore_;
     /// Map from all the MOs to the alpha active
-    std::map<size_t,size_t> mos_to_aactv;
+    std::map<size_t,size_t> mos_to_aactv_;
     /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avirt;
+    std::map<size_t,size_t> mos_to_avirt_;
 
     /// Map from all the MOs to the beta core
-    std::map<size_t,size_t> mos_to_bcore;
+    std::map<size_t,size_t> mos_to_bcore_;
     /// Map from all the MOs to the beta active
-    std::map<size_t,size_t> mos_to_bactv;
+    std::map<size_t,size_t> mos_to_bactv_;
     /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvirt;
+    std::map<size_t,size_t> mos_to_bvirt_;
 
     /// The flow parameter
     double s_;
@@ -96,20 +96,21 @@ protected:
 
     // => Tensors <= //
     ambit::TensorType tensor_type_;
-    ambit::BlockedTensor H;
-    ambit::BlockedTensor F;
-    ambit::BlockedTensor Gamma1;
-    ambit::BlockedTensor Eta1;
-    ambit::BlockedTensor Lambda2;
-    ambit::BlockedTensor Lambda3;
-    ambit::BlockedTensor Delta1;
-    ambit::BlockedTensor RDelta1;
-    ambit::BlockedTensor T1;
-    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
+    ambit::BlockedTensor H_;
+    ambit::BlockedTensor F_;
+    ambit::BlockedTensor Gamma1_;
+    ambit::BlockedTensor Eta1_;
+    ambit::BlockedTensor Lambda2_;
+    ambit::BlockedTensor Lambda3_;
+    ambit::BlockedTensor Delta1_;
+    ambit::BlockedTensor RDelta1_;
+    ambit::BlockedTensor T1_;
+    ambit::BlockedTensor RExp1_;  // < one-particle exponential for renormalized Fock matrix
     //These three are defined as member variables, but if integrals use DiskDF, these are not to be computed for the entire code
-    ambit::BlockedTensor V;
-    ambit::BlockedTensor T2;
-    ambit::BlockedTensor ThreeIntegral;
+    ambit::BlockedTensor T2_;
+    ambit::BlockedTensor V_;
+    ambit::BlockedTensor ThreeIntegral_;
+
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -132,16 +133,14 @@ protected:
     /// compute ASTEI from DF/CD integrals
     /// function will take the spaces for V and use that to create the blocks for B
     ambit::BlockedTensor compute_B_minimal(const std::vector<std::string>& Vspaces);
-    double T2norm;
-    double T2max;
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
     /// If DF or Cholesky, this function is not used
     void compute_t2();
     void check_t1();
-    double T1norm;
-    double T1max;
+    double T1norm_;
+    double T1max_;
 
     //Compute V and maybe renormalize
     ambit::BlockedTensor compute_V_minimal(const std::vector<std::string> &, bool renormalize = true);
@@ -184,13 +183,11 @@ protected:
     }
 
     ///This function will remove the indices that do not have at least one active index
-    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& in_str_vec);
     ///This function generates all possible MO spaces and spin components
     /// Param:  std::string is the lables - "cav"
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
-    std::vector<std::string> generate_all_indices(const std::string, std::string);
-    boost::shared_ptr<BlockedTensorFactory> BTF;
+    boost::shared_ptr<BlockedTensorFactory> BTF_;
 
     //The MOSpace object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -210,10 +207,10 @@ public:
     double compute_energy();
 
     /// The energy of the reference
-    double Eref;
+    double Eref_;
 
     /// The frozen-core energy
-    double frozen_core_energy;
+    double frozen_core_energy_;
 private:
 	//maximum number of threads
 	int num_threads_;

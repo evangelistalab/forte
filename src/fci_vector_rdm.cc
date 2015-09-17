@@ -395,12 +395,8 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa)
                         short sign = Kel.sign * Lel.sign;
                         size_t J = Lel.J;
 
-                        double* y = &(Ch[J][0]);
-                        double* c = &(Ch[I][0]);
                         double rdm_value = 0.0;
-                        for(size_t L = 0; L < maxL; ++L){
-                            rdm_value += c[L] * y[L];
-                        }
+                        rdm_value = C_DDOT(maxL, &(Ch[J][0]),1, &(Ch[I][0]), 1);
 
                         rdm_value *= sign;
 
@@ -480,24 +476,30 @@ void FCIWfn::compute_3rdm_abb(std::vector<double>& rdm){
                         for (size_t L = 0; L < maxL; ++L){
                             std::vector<H2StringSubstitution>& Mlist = lists_->get_beta_2h_list(h_L,L,h_Mb);
                             std::vector<H2StringSubstitution>& Nlist = lists_->get_beta_2h_list(h_L,L,h_Nb);
-                            for (const auto& Iel : Ilist){
-                                size_t p = Iel.p;
-                                size_t I = Iel.J;
-                                for (const auto& Jel : Jlist){
-                                    size_t s = Jel.p;
-                                    size_t J = Jel.J;
+                            for (size_t Iel = 0; Iel < Ilist.size(); Iel++){
+                                size_t p = Ilist[Iel].p;
+                                size_t I = Ilist[Iel].J;
                                     for (const auto& Mel : Mlist){
                                         size_t q = Mel.p;
                                         size_t r = Mel.q;
                                         size_t M = Mel.J;
-                                        for (const auto& Nel : Nlist){
-                                            size_t t = Nel.p;
-                                            size_t a = Nel.q;
-                                            size_t N = Nel.J;
-                                            short sign = Iel.sign * Jel.sign * Mel.sign * Nel.sign;
-                                            rdm[six_index(p,q,r,s,t,a)] += sign * C_I_p[I][M] * C_J_p[J][N];
-                                        }
-                                    }
+                                        //outfile->Printf("\n C_I_p[%d][%d] = %8.8f", I, M, C_I_p[I][M]);
+                                        //if(C_I_p[I][M] > 1e-18)
+                                        //{
+
+                                            for (const auto& Jel : Jlist){
+                                                size_t s = Jel.p;
+                                                size_t J = Jel.J;
+                                                for (const auto& Nel : Nlist){
+                                                    size_t t = Nel.p;
+                                                    size_t a = Nel.q;
+                                                    size_t N = Nel.J;
+                                                    short sign = Ilist[Iel].sign * Jel.sign * Mel.sign * Nel.sign;
+                                                    rdm[six_index(p,q,r,s,t,a)] += sign * C_I_p[I][M] * C_J_p[J][N];
+                                        //}//End of if statement
+
+                                                }
+                                            }
                                 }
                             }
                         }
