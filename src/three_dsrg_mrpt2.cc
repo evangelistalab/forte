@@ -121,30 +121,6 @@ void THREE_DSRG_MRPT2::startup()
 
     BTF_->add_composite_mo_space("h","ijkl",{"c","a"});
     BTF_->add_composite_mo_space("H","IJKL",{"C","A"});
-    //BlockedTensor::add_mo_space("a","uvwxyz",aactv_mos,AlphaSpin);
-    //BlockedTensor::add_mo_space("A","UVWXYZ",bactv_mos,BetaSpin);
-    BTF_->add_mo_space("a","uvwxyz",aactv_mos_,AlphaSpin);
-    BTF_->add_mo_space("A","UVWXYZ",bactv_mos_,BetaSpin);
-    active_ = aactv_mos_.size();
-
-    //BlockedTensor::add_mo_space("v","e,f,ε,φ",avirt_mos,AlphaSpin);
-    //BlockedTensor::add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos,BetaSpin);
-    BTF_->add_mo_space("v","e,f,ε,φ",avirt_mos_,AlphaSpin);
-    BTF_->add_mo_space("V","E,F,Ƒ,Ǝ",bvirt_mos_,BetaSpin);
-    virtual_ = avirt_mos_.size();
-
-
-    //BlockedTensor::add_composite_mo_space("h","ijkl",{"c","a"});
-    //BlockedTensor::add_composite_mo_space("H","IJKL",{"C","A"});
-
-    //BlockedTensor::add_composite_mo_space("p","abcd",{"a","v"});
-    //BlockedTensor::add_composite_mo_space("P","ABCD",{"A","V"});
-
-    //BlockedTensor::add_composite_mo_space("g","pqrs",{"c","a","v"});
-    //BlockedTensor::add_composite_mo_space("G","PQRS",{"C","A","V"});
-
-    BTF_->add_composite_mo_space("h","ijkl",{"c","a"});
-    BTF_->add_composite_mo_space("H","IJKL",{"C","A"});
 
     BTF_->add_composite_mo_space("p","abcd",{"a","v"});
     BTF_->add_composite_mo_space("P","ABCD",{"A","V"});
@@ -152,8 +128,6 @@ void THREE_DSRG_MRPT2::startup()
     BTF_->add_composite_mo_space("g","pqrs",{"c","a","v"});
     BTF_->add_composite_mo_space("G","PQRS",{"C","A","V"});
 
-    BTF_->add_composite_mo_space("g","pqrs",{"c","a","v"});
-    BTF_->add_composite_mo_space("G","PQRS",{"C","A","V"});
     // These two blocks of functions create a Blocked tensor
     std::vector<std::string> hhpp_no_cv = BTF_->generate_indices("cav", "hhpp");
     no_hhpp_ = hhpp_no_cv;
@@ -341,6 +315,7 @@ void THREE_DSRG_MRPT2::startup()
         ThreeIntegral_ = BTF_->build(tensor_type_,"ThreeInt",{"dph", "dPH"});
 
         std::vector<std::string> ThreeInt_block = ThreeIntegral_.block_labels();
+        for(auto block : ThreeInt_block){outfile->Printf("\n %s", block.c_str());}
 
         std::map<std::string, std::vector<size_t> > mo_to_index = BTF_->get_mo_to_index();
 
@@ -417,7 +392,9 @@ double THREE_DSRG_MRPT2::compute_energy()
 {
     Timer ComputeEnergy;
     // Compute reference
-    //    Eref = compute_ref();
+        double Eref;
+        Eref = compute_ref();
+        outfile->Printf("\n Eref = %8.8f", Eref);
 
         // Compute T2 and T1
         if(integral_type_!=DiskDF){compute_t2();}
@@ -441,6 +418,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         std::vector<std::pair<std::string,double>> energy;
         energy.push_back({"E0 (reference)", Eref_});
 
+        outfile->Printf("\n ||T1|| = %8.8f ||F}} = %8.8f", T1_.norm(2), F_.norm(2));
         Etemp  = E_FT1();
         Ecorr += Etemp;
         energy.push_back({"<[F, T1]>", Etemp});
@@ -510,11 +488,6 @@ double THREE_DSRG_MRPT2::compute_ref()
     {
         V_ = compute_V_minimal({"aaaa", "AAAA", "aAaA"}, false);
     }
-    E += 0.25 * V_["uvxy"] * Lambda2_["uvxy"];
-    E += 0.25 * V_["UVXY"] * Lambda2_["UVXY"];
-    E += V_["uVxY"] * Lambda2_["uVxY"];
-    BlockedTensor V;
-    V = compute_V_minimal({"aaaa", "AAAA", "aAaA"}, false);
     E += 0.25 * V_["uvxy"] * Lambda2_["uvxy"];
     E += 0.25 * V_["UVXY"] * Lambda2_["UVXY"];
     E += V_["uVxY"] * Lambda2_["uVxY"];
@@ -787,12 +760,14 @@ void THREE_DSRG_MRPT2::compute_t1()
         T2_  = compute_T2_minimal({"cava", "caaa", "aaaa","aava", "cAvA", "aAvA", "cAaA", "aCaV", "aAaA", "aCaA", "aAaV", "CAVA", "CAAA",
         "AAVA", "AAAA"});
     }
+    outfile->Printf("\n ||T2|| T1_compute = %8.8f", T2_.norm(2));
 
     N["ia"]  = F_["ia"];
     N["ia"] += temp["xu"] * T2_["iuax"];
     N["ia"] += temp["XU"] * T2_["iUaX"];
+    T1_["ia"] = N["ia"] * RDelta1_["ia"];
 
-    T1_["IA"] = N["IA"] * RDelta1_["IA"];
+
     N["IA"]  = F_["IA"];
     N["IA"] += temp["xu"] * T2_["uIxA"];
     N["IA"] += temp["XU"] * T2_["IUAX"];
@@ -800,6 +775,8 @@ void THREE_DSRG_MRPT2::compute_t1()
 
     T1_.block("AA").zero();
     T1_.block("aa").zero();
+    outfile->Printf("\n ||T1|| = %8.8f", T1_.norm(2));
+    outfile->Printf("\n ||T2|| = %8.8f", T2_.norm(2));
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -862,12 +839,13 @@ void THREE_DSRG_MRPT2::renormalize_F()
     temp1["IA"] += temp_aa["XU"] * T2_["IUAX"];
     temp2["IA"] += F_["IA"] * RExp1_["IA"];
     temp2["IA"] += temp1["IA"] * RExp1_["IA"];
-//    F["ai"] += temp["ai"] % RExp1["ia"];
+
     F_["ia"] += temp2["ia"];
     F_["ai"] += temp2["ia"];
 
     F_["IA"] += temp2["IA"];
     F_["AI"] += temp2["IA"];
+    outfile->Printf("\n ||T2|| = %8.8f", T2_.norm(2));
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
@@ -883,9 +861,7 @@ double THREE_DSRG_MRPT2::E_FT1()
     temp["jb"] += T1_["ia"] * Eta1_["ab"] * Gamma1_["ji"];
     temp["JB"] += T1_["IA"] * Eta1_["AB"] * Gamma1_["JI"];
 
-    //E += T1["ia"]*Eta1_["ab"]* Gamma1_["ji"] * F["bj"];
     E += temp["jb"] * F_["bj"];
-    //E += T1["IA"]*Eta1_["AB"]* Gamma1_["JI"] * F["BJ"];
     E += temp["JB"] * F_["BJ"];
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -1058,7 +1034,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
         Eccvv = E_VT2_2_ambit();
-        outfile->Printf("\n %8.8f", Eccvv);
     }
     else
     {
@@ -1088,9 +1063,6 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
         T2_ = compute_T2_minimal({"ccaa", "caaa", "acaa", "aaaa", "CCAA", "CAAA", "ACAA", "AAAA", "cCaA", "cAaA", "aAaA", "aCaA"});
     }
 
-    temp1["uvij"] += V_["uvkl"] * Gamma1_["ki"] * Gamma1_["lj"];
-    temp1["UVIJ"] += V_["UVKL"] * Gamma1_["KI"] * Gamma1_["LJ"];
-    temp1["uViJ"] += V_["uVkL"] * Gamma1_["ki"] * Gamma1_["LJ"];
     temp1["uvij"] += V_["uvkl"] * Gamma1_["ki"] * Gamma1_["lj"];
     temp1["UVIJ"] += V_["UVKL"] * Gamma1_["KI"] * Gamma1_["LJ"];
     temp1["uViJ"] += V_["uVkL"] * Gamma1_["ki"] * Gamma1_["LJ"];
@@ -1215,6 +1187,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
         V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 3));
     }
 
+    temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
     temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
     temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
     temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
@@ -1244,8 +1217,6 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
 
     E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
-    E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
-    outfile->Printf("\n FourthE: %8.8f", E);
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return E;
