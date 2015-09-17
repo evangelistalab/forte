@@ -301,7 +301,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
     size_t ntrial = n * ntrial_per_root_;
 
     // Get the list of most important determinants
-    std::vector<std::tuple<double,size_t,size_t,size_t>> dets = diag.get_largest_contributions(ntrial);
+    std::vector<std::tuple<double,size_t,size_t,size_t>> dets = diag.min_elements(ntrial);
 
     size_t num_dets = dets.size();
 
