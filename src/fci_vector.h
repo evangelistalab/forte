@@ -182,25 +182,22 @@ public:
     void compute_rdms(int max_order = 2);
     void rdm_test();
 
-    std::vector<std::tuple<double,size_t,size_t,size_t>> get_largest_contributions(size_t num_dets);
-//    // FCIWfn update routines
-//    void bendazzoli_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
-//    void davidson_update(double E,FCIWfn& H,FCIWfn& R);
-//    void two_update(double alpha,double E,FCIWfn& H,FCIWfn& R);
-    
-//    void save(std::string filename = "wfn.dat");
-//    void read(std::string filename = "wfn.dat");
-        
+    /// Return the elements with the smallest value
+    /// This function returns the tuple (C_I,irrep,Ia,Ib)
+    std::vector<std::tuple<double,size_t,size_t,size_t>> min_elements(size_t num_dets);
+    /// Return the elements with the largest absolute value
+    /// This function returns the tuple (|C_I|,C_I,irrep,Ia,Ib)
+    std::vector<std::tuple<double, double, size_t, size_t, size_t> > max_abs_elements(size_t num_dets);
+
     // Temporary memory allocation
     static void allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t);
     static void release_temp_space();
-//    void check_temp_space();
 private:
 
     // ==> Class Data <==
 
     /// The number of irreps
-    size_t nirrep_;
+    int nirrep_;
     /// The symmetry of this vector
     size_t symmetry_;
     /// The total number of correlated molecular orbitals

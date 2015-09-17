@@ -36,6 +36,7 @@ set forte{
    semi_canonical         true
    int_type               cholesky
    cholesky_tolerance     1e-16
+   NTRIAL_PER_ROOT        100
 }
 
 energy('scf')
