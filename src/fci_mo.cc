@@ -54,7 +54,7 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
     // Fock Matrix
     size_t count = 0;
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,100.0 * econv_,count);
+    Check_Fock(Fa_,Fb_,dconv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -161,6 +161,7 @@ void FCI_MO::read_info(Options &options){
 
     // energy convergence
     econv_ = options.get_double("E_CONVERGENCE");
+    dconv_ = options.get_double("D_CONVERGENCE");
 
     // nuclear repulsion
     e_nuc_ = molecule->nuclear_repulsion_energy();
@@ -468,7 +469,7 @@ void FCI_MO::semi_canonicalize(){
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
     Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,econv_,count);
+    Check_Fock(Fa_,Fb_,dconv_,count);
     if(print_ > 1){
         print_d2("Fa", Fa_);
         print_d2("Fb", Fb_);
@@ -572,7 +573,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
             size_t ncmopi = 0;
             for(int h = 0; h < nirrep_; ++h){
                 for(size_t k = 0; k < active_[h]; ++k){
-                    size_t x = core_[h] + k + ncmopi;
+                    size_t x = k + ncmopi;
                     bool a = det[index].get_alfa_bit(x);
                     bool b = det[index].get_beta_bit(x);
                     if(a == b)
@@ -582,7 +583,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
                 }
                 if(active_[h] != 0)
                     outfile->Printf(" ");
-                ncmopi += ncmopi_[h];
+                ncmopi += active_[h];
             }
             outfile->Printf(" %20.8f", ci);
         }
