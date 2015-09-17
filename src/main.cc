@@ -45,24 +45,24 @@ read_options(std::string name, Options &options)
 
         /*- SUBSECTION Job Type */
 
-        /// Compute natural orbitals using MP2
+        /*- Compute natural orbitals using MP2 -*/
         options.add_bool("MP2_NOS",false);
-        /// View the natural orbitals with their symmetry information
+        /*- View the natural orbitals with their symmetry information -*/
         options.add_bool("NAT_ORBS_PRINT", false);
-        /// Use Natural Orbitals to suggest active space
+        /*- Use Natural Orbitals to suggest active space -*/
         options.add_bool("NAT_ACT", false);
 
         // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
 
-        /// Typically, a occupied orbital with a NO occupation of <0.98 is considered active
+        /*- Typically, a occupied orbital with a NO occupation of <0.98 is considered active -*/
         options.add_double("OCC_NATURAL", 0.98);
-        /// Typically, a virtual orbital with a NO occupation of > 0.02 is considered active
+        /*- Typically, a virtual orbital with a NO occupation of > 0.02 is considered active -*/
         options.add_double("VIRT_NATURAL", 0.02);
 
         /*- The amount of information printed
             to the output file -*/
         options.add_int("PRINT", 0);
-        /// Print summary of memory
+        /*- Print summary of memory -*/
         options.add_bool("MEMORY_SUMMARY", false);
          
 
@@ -95,6 +95,9 @@ read_options(std::string name, Options &options)
          *  If a value is provided it overrides the multiplicity
          *  of the SCF solution. -*/
         options.add_int("MULTIPLICITY",0);
+        /*- The number of trials for root for FCI -*/
+        options.add_int("NTRIAL_PER_ROOT",10);
+
 
         /*- The charge of the molecule.  If a value is provided
             it overrides the charge of the SCF solution. -*/
@@ -438,8 +441,7 @@ read_options(std::string name, Options &options)
     return true;
 }
 
-extern "C" PsiReturnType
-forte(Options &options)
+extern "C" PsiReturnType forte(Options &options)
 {
     Timer overall_time;
     ambit::initialize();

@@ -106,6 +106,11 @@ protected:
     ambit::BlockedTensor RDelta1_;
     ambit::BlockedTensor T1_;
     ambit::BlockedTensor RExp1_;  // < one-particle exponential for renormalized Fock matrix
+    //These three are defined as member variables, but if integrals use DiskDF, these are not to be computed for the entire code
+    ambit::BlockedTensor T2_;
+    ambit::BlockedTensor V_;
+    ambit::BlockedTensor ThreeIntegral_;
+
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -131,6 +136,8 @@ protected:
 
     /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
     void compute_t1();
+    /// If DF or Cholesky, this function is not used
+    void compute_t2();
     void check_t1();
     double T1norm_;
     double T1max_;
@@ -176,16 +183,15 @@ protected:
     }
 
     ///This function will remove the indices that do not have at least one active index
-    std::vector<std::string> spin_cases_avoid(const std::vector<std::string>& in_str_vec);
     ///This function generates all possible MO spaces and spin components
     /// Param:  std::string is the lables - "cav"
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
-    std::vector<std::string> generate_all_indices(const std::string, std::string);
     boost::shared_ptr<BlockedTensorFactory> BTF_;
 
     //The MOSpace object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    IntegralType integral_type_;
 
 
 public:
