@@ -395,12 +395,7 @@ void FCIWfn::compute_3rdm_aaa(std::vector<double>& rdm, bool alfa)
                         short sign = Kel.sign * Lel.sign;
                         size_t J = Lel.J;
 
-                        double* y = &(Ch[J][0]);
-                        double* c = &(Ch[I][0]);
                         double rdm_value = 0.0;
-                        //for(size_t L = 0; L < maxL; ++L){
-                        //    rdm_value += c[L] * y[L];
-                        //}
                         rdm_value = C_DDOT(maxL, &(Ch[J][0]),1, &(Ch[I][0]), 1);
 
                         rdm_value *= sign;
