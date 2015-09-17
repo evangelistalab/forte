@@ -436,8 +436,7 @@ read_options(std::string name, Options &options)
     return true;
 }
 
-extern "C" PsiReturnType
-forte(Options &options)
+extern "C" PsiReturnType forte(Options &options)
 {
     Timer overall_time;
     ambit::initialize();
