@@ -239,7 +239,7 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
+        ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
 		
 		/*- The selection type for the Q-space-*/
@@ -282,6 +282,8 @@ read_options(std::string name, Options &options)
 		options.add_double("LAMBDA_THRESH", 1.0);
 		/*- Add determinants to enforce spin-complete set? -*/
 		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
+		/*- Print an analysis of determinant history? -*/
+		options.add_bool("DETERMINANT_HISTORY", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -315,6 +317,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
+        /*- Use schwartz prescreening -*/
+        options.add_bool("SCHWARTZ_PRESCREENING",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
