@@ -131,7 +131,8 @@ double FCI::compute_energy()
     //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
-    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
+    fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+    options_.get_int("NTRIAL_PER_ROOT"));
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
@@ -155,10 +156,10 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
-      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0), mo_space_info_(mo_space_info)
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),ntrial_per_root_(ntrial_per_root),  mo_space_info_(mo_space_info)
 {
     startup();
 }
@@ -268,9 +269,43 @@ double FCISolver::compute_energy()
     }
 
     for (int r = 0; r < nroot_; ++r){
-        outfile->Printf("\n\n  ==> Root No. %d <==",r);
+        outfile->Printf("\n\n  ==> Root No. %d <==\n",r);
+
+        std::vector<std::tuple<double,double,size_t,size_t,size_t>>
+            dets_config = C_->max_abs_elements(guess_size * ntrial_per_root_);
+        Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+
+        for(auto& det_config: dets_config){
+            double ci_abs, ci;
+            size_t h, add_Ia, add_Ib;
+            std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
+
+            if(ci_abs < 0.1) continue;
+
+            boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h,add_Ia);
+            boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_,add_Ib);
+
+            outfile->Printf("\n    ");
+            for(size_t h = 0, offset = 0; h < nirrep_; ++h){
+                for(size_t k = 0; k < nactvpi[h]; ++k){
+                    size_t i = k + offset;
+                    bool a = Ia_v[i];
+                    bool b = Ib_v[i];
+                    if(a == b){
+                        outfile->Printf("%d", a ? 2 : 0);
+                    }else{
+                        outfile->Printf("%c", a ? 'a' : 'b');
+                    }
+                }
+                if(nactvpi[h] != 0)
+                    outfile->Printf(" ");
+                offset += nactvpi[h];
+            }
+            outfile->Printf("%15.8f", ci);
+        }
+
         double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
-        outfile->Printf("\n    Total Energy: %25.15f",root_energy);
+        outfile->Printf("\n\n    Total Energy: %25.15f",root_energy);
     }
 
     // Compute the RDMs
@@ -301,7 +336,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
     size_t ntrial = n * ntrial_per_root_;
 
     // Get the list of most important determinants
-    std::vector<std::tuple<double,size_t,size_t,size_t>> dets = diag.get_largest_contributions(ntrial);
+    std::vector<std::tuple<double,size_t,size_t,size_t>> dets = diag.min_elements(ntrial);
 
     size_t num_dets = dets.size();
 
