@@ -2,7 +2,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -670,7 +669,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %8.8f seconds", overall_time.get());
+    outfile->Printf("\n Your calculation took %.8f seconds", overall_time.get());
     return Success;
 }
 
