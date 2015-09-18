@@ -206,7 +206,7 @@ void THREE_DSRG_MRPT2::startup()
     Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
      Gamma1_matrixA->set(aactv_mos_[i[0]], aactv_mos_[i[1]], value);   });
 
-    Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
+    Gamma1_AA.iterate([&](const std::vector<size_t>& i,double& value){
      Gamma1_matrixB->set(bactv_mos_[i[0]], bactv_mos_[i[1]], value);   
      });
 
