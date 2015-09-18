@@ -1,8 +1,4 @@
 #include <psi4-dec.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/matrix.h>
-
-#include <boost/lexical_cast.hpp>
 
 #include "bitset_csf.h"
 #include "fci_vector.h"
