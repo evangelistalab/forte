@@ -1,0 +1,54 @@
+#! We decide to let PSI4 generate the UHF NOS.
+#! SAVE_UHF_NOS is used to save the UHF NO into the MO coefficients.  
+#! guess_mix true breaks the symmetry of the singlet.  
+#! Generated using commit GITCOMMIT
+old_scf  = -226.2752829728
+old_dsrgmrpt2 = -226.60067363948
+
+import forte
+
+memory 500 mb
+
+molecule HF{
+  0 3
+   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000
+symmetry c1
+units bohr
+}
+
+set globals{
+   basis                   sto-3g
+   reference               UHF
+   scf_type                pk
+   d_convergence           10
+   e_convergence           10
+   SAVE_UHF_NOS            true
+   PRINT_NOONS             ALL
+   maxiter                 1000
+   #molden_write            true
+}
+
+set forte{
+   job_type                dsrg-mrpt2
+   restricted_docc         [19]
+   active                  [2]
+   dsrg_s                  1.0
+   cas_type                CAS
+   multiplicity            1
+   multi                   1
+}
+
+energy('scf')
+compare_values(old_scf,get_variable("CURRENT ENERGY"),9,"MCSCF energy")
+
+energy('forte')
+compare_values(old_dsrgmrpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
