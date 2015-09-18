@@ -161,6 +161,7 @@ void AdaptiveCI::startup()
 		root_spin_vec_.push_back(make_pair( S, S2 ));
 	}
 	
+
 	//get options for algorithm
 	perturb_select_ = options_.get_bool("PERTURB_SELECT");
     pq_function_ = options_.get_str("PQ_FUNCTION");
@@ -454,7 +455,9 @@ double AdaptiveCI::compute_energy()
     BitsetDeterminant bs_det(alfa_bits,beta_bits);
 	P_space_.push_back(bs_det);
     P_space_map_[bs_det] = 1;
-
+	
+	det_history_[bs_det].push_back(std::make_pair(0, "I"));
+	
 //	if( alfa_bits != beta_bits){
 //		BitsetDeterminant ref2 = bs_det;
 //		ref2.spin_flip();
@@ -630,6 +633,18 @@ double AdaptiveCI::compute_energy()
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
     }
 
+
+	if(options_.get_bool("DETERMINANT_HISTORY")){
+		outfile->Printf("\n Det history (number,cycle,origin)");
+		size_t counter = 0;
+		for( auto &I : PQ_space_ ){
+			outfile->Printf("\n Det number : %zu", counter);
+			for( auto &n : det_history_[I]){
+				outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+			}
+			++counter;
+		}
+	}
 	if( form_1_RDM_ ){
 	//Compute and print 1-RDM
 		SharedMatrix Dalpha(new Matrix("Dalpha", nmo_, nmo_));
@@ -769,6 +784,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 }
             }else{
                 PQ_space_.push_back(sorted_dets[I].second);
+				det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
             }
         }
     }
@@ -1949,6 +1965,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<BitsetDeterminant>& det_spa
 						det_space.push_back(det);
 						det_map[det] = false;
 						//outfile->Printf("\n  added determinant:    %s", det.str().c_str());
+						det_history_[det].push_back(std::make_pair( cycle_, "S"));
 						ndet++;
 						det.set_beta_bit(j, true );
 						det.set_alfa_bit(j, false );

@@ -152,6 +152,8 @@ private:
 	bool form_1_RDM_;
 	/// Enforce spin completeness?
 	bool spin_complete_;
+	/// Print a determinant analysis?
+	bool det_hist_;
 
     /// A vector of determinants in the P space
     std::vector<BitsetDeterminant> P_space_;
@@ -159,6 +161,8 @@ private:
     std::vector<BitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
     std::map<BitsetDeterminant,int> P_space_map_;
+	/// A History of Determinants
+	std::map<BitsetDeterminant, std::vector< std::pair<size_t, std::string>> > det_history_;
 
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
@@ -168,6 +172,14 @@ private:
 	bool do_guess_;
 	///Spin-symmetrized evecs
     SharedMatrix PQ_spin_evecs_;
+	
+	///Timing variables
+	double build_H_;
+	double diag_H_;
+	double build_space_;
+	double screen_space_;	
+	double spin_trans_;
+
 
     // ==> Class functions <==
 
