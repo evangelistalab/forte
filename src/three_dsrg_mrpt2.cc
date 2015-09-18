@@ -315,7 +315,6 @@ void THREE_DSRG_MRPT2::startup()
         ThreeIntegral_ = BTF_->build(tensor_type_,"ThreeInt",{"dph", "dPH"});
 
         std::vector<std::string> ThreeInt_block = ThreeIntegral_.block_labels();
-        for(auto block : ThreeInt_block){outfile->Printf("\n %s", block.c_str());}
 
         std::map<std::string, std::vector<size_t> > mo_to_index = BTF_->get_mo_to_index();
 
@@ -392,9 +391,8 @@ double THREE_DSRG_MRPT2::compute_energy()
 {
     Timer ComputeEnergy;
     // Compute reference
-        double Eref;
-        Eref = compute_ref();
-        outfile->Printf("\n Eref = %8.8f", Eref);
+        //double Eref;
+        //Eref = compute_ref();
 
         // Compute T2 and T1
         if(integral_type_!=DiskDF){compute_t2();}
@@ -418,7 +416,6 @@ double THREE_DSRG_MRPT2::compute_energy()
         std::vector<std::pair<std::string,double>> energy;
         energy.push_back({"E0 (reference)", Eref_});
 
-        outfile->Printf("\n ||T1|| = %8.8f ||F}} = %8.8f", T1_.norm(2), F_.norm(2));
         Etemp  = E_FT1();
         Ecorr += Etemp;
         energy.push_back({"<[F, T1]>", Etemp});
@@ -495,7 +492,6 @@ double THREE_DSRG_MRPT2::compute_ref()
     boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
-    outfile->Printf("\n Reference Energy = %12.8f", E + frozen_core_energy_+ Enuc );
     return E + frozen_core_energy_+ Enuc;
 }
 void THREE_DSRG_MRPT2::compute_t2()
@@ -760,7 +756,6 @@ void THREE_DSRG_MRPT2::compute_t1()
         T2_  = compute_T2_minimal({"cava", "caaa", "aaaa","aava", "cAvA", "aAvA", "cAaA", "aCaV", "aAaA", "aCaA", "aAaV", "CAVA", "CAAA",
         "AAVA", "AAAA"});
     }
-    outfile->Printf("\n ||T2|| T1_compute = %8.8f", T2_.norm(2));
 
     N["ia"]  = F_["ia"];
     N["ia"] += temp["xu"] * T2_["iuax"];
@@ -775,8 +770,6 @@ void THREE_DSRG_MRPT2::compute_t1()
 
     T1_.block("AA").zero();
     T1_.block("aa").zero();
-    outfile->Printf("\n ||T1|| = %8.8f", T1_.norm(2));
-    outfile->Printf("\n ||T2|| = %8.8f", T2_.norm(2));
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -845,7 +838,6 @@ void THREE_DSRG_MRPT2::renormalize_F()
 
     F_["IA"] += temp2["IA"];
     F_["AI"] += temp2["IA"];
-    outfile->Printf("\n ||T2|| = %8.8f", T2_.norm(2));
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
@@ -1016,6 +1008,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double Eccvv = 0.0;
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
+    outfile->Printf("\n    %-36s ...", strccvv.c_str());
 
     Timer ccvv_timer;
     //TODO:  Make this smarter and automatically switch to right algorithm for size
