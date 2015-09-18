@@ -76,7 +76,7 @@ double FCIWfn::determinant_energy(bool*& Ia,bool*& Ib,int n, std::shared_ptr<FCI
 }
 
 std::vector<std::tuple<double,size_t,size_t,size_t>>
-FCIWfn::get_largest_contributions(size_t num_dets)
+FCIWfn::min_elements(size_t num_dets)
 {
     num_dets = std::min(num_dets,ndet_);
 
@@ -102,11 +102,38 @@ FCIWfn::get_largest_contributions(size_t num_dets)
             }
         }
     }
-
     return dets;
 }
 
+std::vector<std::tuple<double,double,size_t,size_t,size_t>>
+FCIWfn::max_abs_elements(size_t num_dets)
+{
+    num_dets = std::min(num_dets,ndet_);
 
+    std::vector<std::tuple<double,double,size_t,size_t,size_t>> dets(num_dets);
+
+    double emin = 0.0;
+
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
+        size_t maxIa = alfa_graph_->strpi(alfa_sym);
+        size_t maxIb = beta_graph_->strpi(beta_sym);
+        double** C_ha = C_[alfa_sym]->pointer();
+        for(size_t Ia = 0; Ia < maxIa; ++Ia){
+            for(size_t Ib = 0; Ib < maxIb; ++Ib){
+                double e = std::fabs(C_ha[Ia][Ib]);
+                if (e > emin){
+                    // Find where to inser this determinant
+                    dets.pop_back();
+                    auto it = std::find_if(dets.begin(),dets.end(),[&e](const std::tuple<double,double,size_t,size_t,size_t>& t){return e > std::get<0>(t);});
+                    dets.insert(it,std::make_tuple(e,C_ha[Ia][Ib],alfa_sym,Ia,Ib));
+                    emin = std::get<0>(dets.back());
+                }
+            }
+        }
+    }
+    return dets;
+}
 
 
 

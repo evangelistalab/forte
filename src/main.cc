@@ -316,6 +316,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
+        /*- Use schwartz prescreening -*/
+        options.add_bool("SCHWARTZ_PRESCREENING",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
@@ -439,8 +441,7 @@ read_options(std::string name, Options &options)
     return true;
 }
 
-extern "C" PsiReturnType
-forte(Options &options)
+extern "C" PsiReturnType forte(Options &options)
 {
     Timer overall_time;
     ambit::initialize();
