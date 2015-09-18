@@ -1311,6 +1311,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     double Ebeta  = 0.0;
     double Emixed = 0.0;
     int nthread = 1;
+    /// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
+    ///general for all, but makes it slow for DiskDF.
+
     if(integral_type_==DiskDF)
     {
         #ifdef _OPENMP
@@ -1413,6 +1416,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             }
         }
     }
+    /// This block of code runs with DF and assumes that ThreeIntegral_ is created in startup.  Will fail for systems around 800 or 900 BF
     else
     {
         ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree_,virtual_});
