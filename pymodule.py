@@ -30,3 +30,20 @@ def run_forte(name, **kwargs):
 
 # Integration with driver routines
 procedures['energy']['forte'] = run_forte
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+def save_timing(name,timing):
+    r"""Function to save execution timing
+    """
+    with open("timing.txt", "w+") as myfile:
+        filler = " " * (64 - len(name))
+        str = "        %-s%s%.6f" % (name,filler,timing)
+        myfile.write(str + "\n")
+        print str

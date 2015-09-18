@@ -108,7 +108,7 @@ public:
     // ==> Class Public Functions <==
 
     size_t na() const {return na_;}
-    size_t nirrep() const {return nirrep_;}
+    int nirrep() const {return nirrep_;}
     size_t ncmo() const {return ncmo_;}
     std::vector<size_t> cmo_to_mo() const {return cmo_to_mo_;}
     std::vector<size_t> fomo_to_mo() const {return fomo_to_mo_;}
@@ -170,7 +170,7 @@ private:
     /// Flag for the type of list required
     RequiredLists  required_lists_;
     /// The number of irreps
-    size_t nirrep_;
+    int nirrep_;
     /// The total number of correlated molecular orbitals
     size_t ncmo_;
     /// The number of correlated molecular orbitals per irrep
