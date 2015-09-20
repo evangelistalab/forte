@@ -2,7 +2,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -327,8 +326,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
-        /*- Use schwartz prescreening -*/
-        options.add_bool("SCHWARTZ_PRESCREENING",false);
+        /*- Use schwarz prescreening -*/
+        options.add_bool("SCHWARZ_PRESCREENING",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
@@ -688,7 +687,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %8.8f seconds", overall_time.get());
+    outfile->Printf("\n Your calculation took %.8f seconds", overall_time.get());
     return Success;
 }
 
