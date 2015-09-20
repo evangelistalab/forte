@@ -114,9 +114,9 @@ private:
     /// maximum element in (pq|pq) matrix
     std::vector<double> pqpq_row_max_;
     /// 2loop total count
-    size_t schwartz_total_;
-    /// 2loop schwartz succeed count
-    size_t schwartz_succ_;
+    size_t schwarz_total_;
+    /// 2loop schwarz succeed count
+    size_t schwarz_succ_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -149,8 +149,8 @@ private:
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
     bool do_simple_prescreening_;
-    /// Prescreen spawning using schwartz inequality
-    bool do_schwartz_prescreening_;
+    /// Prescreen spawning using schwarz inequality
+    bool do_schwarz_prescreening_;
     /// Maximum value of the one-electron coupling
     double new_max_one_HJI_;
     double old_max_one_HJI_;
@@ -273,7 +273,7 @@ private:
 //    size_t apply_tau_H(double tau,double spawning_threshold,std::map<Determinant,double>& det_C_old, std::map<Determinant,double>& dets_C_map, double S);
 
     /// Apply tau H to a determinant
-    size_t apply_tau_H_det_schwartz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
 
