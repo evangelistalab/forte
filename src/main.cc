@@ -32,6 +32,7 @@
 #include "sq.h"
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
+#include "casscf.h"
 
 INIT_PLUGIN
 
@@ -71,6 +72,9 @@ read_options(std::string name, Options &options)
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
+
+        /*- The screening for JK builds and DF libraries -*/
+        options.add_double("INTEGRAL_SCREENING", 1e-12);
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -239,6 +243,11 @@ read_options(std::string name, Options &options)
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
 
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE CASSCF CODE
+        //////////////////////////////////////////////////////////////
+        /* - Run a FCI followed by CASSCF computation -*/
+        options.add_bool("CASSCF_REFERENCE", false);
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
@@ -466,6 +475,11 @@ extern "C" PsiReturnType forte(Options &options)
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
     BitsetDeterminant::set_ints(fci_ints_);
 
+    if(options.get_bool("CASSCF_REFERENCE") == true)
+    {
+        boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        casscf->compute_casscf();
+    }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
