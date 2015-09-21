@@ -18,6 +18,38 @@
 using namespace ambit;
 namespace psi{ namespace forte{
 
+DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
+
+    integral_type_ = DiskDF;
+    outfile->Printf("\n DISKDFIntegrals overall time");
+    Timer DFInt;
+    allocate();
+
+    //Form a correlated mo to mo before I create integrals
+    std::vector<size_t> cmo2mo;
+    for (int h = 0, q = 0; h < nirrep_; ++h){
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r){
+            cmo2mo.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+    cmotomo_ = cmo2mo;
+
+    gather_integrals();
+    make_diagonal_integrals();
+    if (ncmo_ < nmo_){
+        freeze_core_orbitals();
+        // Set the new value of the number of orbitals to be used in indexing routines
+        aptei_idx_ = ncmo_;
+    }
+
+    outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
+}
+
 DISKDFIntegrals::~DISKDFIntegrals()
 {
     deallocate();
@@ -446,37 +478,6 @@ void DISKDFIntegrals::make_diagonal_integrals()
     }
 }
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
-std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
-
-    integral_type_ = DiskDF;
-    outfile->Printf("\n DISKDFIntegrals overall time");
-    Timer DFInt;
-    allocate();
-
-    //Form a correlated mo to mo before I create integrals
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h){
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r){
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = cmo2mo;
-
-    gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
-    }
-
-    outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
-}
 
 void DISKDFIntegrals::update_integrals(bool freeze_core)
 {
