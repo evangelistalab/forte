@@ -209,19 +209,19 @@ void FCI_MO::read_info(Options &options){
     }
     nelec -= charge;
     multi_ = molecule->multiplicity();
-    if(options["MULTI"].has_changed()){
-        multi_ = options.get_int("MULTI");
+    if(options["MULTIPLICITY"].has_changed()){
+        multi_ = options.get_int("MULTIPLICITY");
     }
     if(multi_ < 1){
-        outfile->Printf("\n  MULTI must be no less than 1.");
-        outfile->Printf("\n  MULTI = %2d", multi_);
+        outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
+        outfile->Printf("\n  MULTIPLICITY = %2d", multi_);
         outfile->Printf("\n  Check (specify) Multiplicity! \n");
-        throw PSIEXCEPTION("MULTI must be no less than 1. Check output for details.");
+        throw PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
     }
     ms_ = options.get_int("MS");
     if(ms_ < 0){
         outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTI = %2d", ms_, multi_);
+        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms_, multi_);
         outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
         throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
@@ -230,7 +230,7 @@ void FCI_MO::read_info(Options &options){
     if(nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec){
         outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
         outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
-        outfile->Printf("\n  Charge = %3d, Multi = %3d, Ms = %.1f", charge, multi_, ms_ / 2.0);
+        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f", charge, multi_, ms_ / 2.0);
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
         throw PSIEXCEPTION("Negative number of alpha electrons or beta electrons. Check output for details.");

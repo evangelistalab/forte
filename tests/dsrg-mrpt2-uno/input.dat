@@ -21,18 +21,19 @@ molecule HF{
    H   4.0782187459  -2.3208602146   0.0000000000
    H   4.0782187459   2.3208602146   0.0000000000
    H  -4.0782187459   2.3208602146   0.0000000000
-symmetry c1
-units bohr
+
+  symmetry c1
+  units bohr
 }
 
 set globals{
    basis                   sto-3g
-   reference               UHF
+   reference               uhf
    scf_type                pk
    d_convergence           10
    e_convergence           10
-   SAVE_UHF_NOS            true
-   PRINT_NOONS             ALL
+   save_uhf_nos            true
+   print_noons             all
    maxiter                 1000
    #molden_write            true
 }
@@ -42,9 +43,8 @@ set forte{
    restricted_docc         [19]
    active                  [2]
    dsrg_s                  1.0
-   cas_type                CAS
+   cas_type                cas
    multiplicity            1
-   multi                   1
 }
 
 energy('scf')

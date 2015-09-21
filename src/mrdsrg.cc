@@ -293,8 +293,8 @@ double MRDSRG::compute_energy_relaxed(){
     }
     nelec -= charge;
     int multi = Process::environment.molecule()->multiplicity();
-    if(options_["MULTI"].has_changed()){
-        multi = options_.get_int("MULTI");
+    if(options_["MULTIPLICITY"].has_changed()){
+        multi = options_.get_int("MULTIPLICITY");
     }
     int ms = multi - 1;
     if(options_["MS"].has_changed()){
