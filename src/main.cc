@@ -394,11 +394,8 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PILOT FULL CI CODE
         //////////////////////////////////////////////////////////////
-        /*- Multiplicity -*/
-        boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-        int multi = molecule->multiplicity();
-        options.add_int("MULTI", multi);            /* multiplicity */
-        options.add_int("MS", 0);                   /* (2 * Sz) */
+        /*- 2 * <Sz> -*/
+        options.add_int("MS", 0);
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/

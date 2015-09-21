@@ -105,7 +105,7 @@ double FCI::compute_energy()
 
     if(ms < 0){
         outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTI = %2d", ms, multiplicity);
+        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms, multiplicity);
         outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
         throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
