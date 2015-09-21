@@ -2,7 +2,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -32,6 +31,7 @@
 #include "sq.h"
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
+#include "casscf.h"
 
 INIT_PLUGIN
 
@@ -71,6 +71,9 @@ read_options(std::string name, Options &options)
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
+
+        /*- The screening for JK builds and DF libraries -*/
+        options.add_double("INTEGRAL_SCREENING", 1e-12);
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -240,7 +243,12 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE ADAPTIVE CI and EX_ACI
+        ///         OPTIONS FOR THE CASSCF CODE
+        //////////////////////////////////////////////////////////////
+        /* - Run a FCI followed by CASSCF computation -*/
+        options.add_bool("CASSCF_REFERENCE", false);
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
 		
 		/*- The selection type for the Q-space-*/
@@ -283,6 +291,8 @@ read_options(std::string name, Options &options)
 		options.add_double("LAMBDA_THRESH", 1.0);
 		/*- Add determinants to enforce spin-complete set? -*/
 		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
+		/*- Print an analysis of determinant history? -*/
+		options.add_bool("DETERMINANT_HISTORY", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -316,6 +326,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
+        /*- Use schwarz prescreening -*/
+        options.add_bool("SCHWARZ_PRESCREENING",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
@@ -462,6 +474,11 @@ extern "C" PsiReturnType forte(Options &options)
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
     BitsetDeterminant::set_ints(fci_ints_);
 
+    if(options.get_bool("CASSCF_REFERENCE") == true)
+    {
+        boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        casscf->compute_casscf();
+    }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
@@ -670,7 +687,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %8.8f seconds", overall_time.get());
+    outfile->Printf("\n Your calculation took %.8f seconds", overall_time.get());
     return Success;
 }
 
