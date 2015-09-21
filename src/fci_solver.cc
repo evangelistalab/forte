@@ -156,10 +156,12 @@ Reference FCI::reference()
 FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t ntrial_per_root)
+                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     size_t ntrial_per_root)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
-      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),ntrial_per_root_(ntrial_per_root),  mo_space_info_(mo_space_info)
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
+      ntrial_per_root_(ntrial_per_root), mo_space_info_(mo_space_info)
 {
     startup();
 }
@@ -177,7 +179,6 @@ void FCISolver::startup()
     }
     outfile->Printf("\n\n  ==> FCI Solver <==\n");
     outfile->Printf("\n  Number of determinants    = %zu",ndfci);
-
 }
 
 /*

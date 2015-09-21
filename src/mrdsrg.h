@@ -19,6 +19,26 @@ namespace psi{ namespace forte{
 
 class MRDSRG : public Wavefunction
 {
+public:
+    /**
+     * MRDSRG Constructor
+     * @param wfn The main wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    MRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options& options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /// Destructor
+    ~MRDSRG();
+
+    /// Compute the corr_level energy with fixed reference
+    double compute_energy();
+
+    /// Compute the corr_level energy with relaxed reference
+    double compute_energy_relaxed();
+
 protected:
 
     // => Class initialization and termination <= //
@@ -37,6 +57,12 @@ protected:
     /// The reference object
     Reference reference_;
 
+    /// The energy of the reference
+    double Eref_;
+
+    /// The frozen-core energy
+    double frozen_core_energy_;
+
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals>  ints_;
 
@@ -44,40 +70,40 @@ protected:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// List of alpha core MOs
-    std::vector<size_t> acore_mos;
+    std::vector<size_t> acore_mos_;
     /// List of alpha active MOs
-    std::vector<size_t> aactv_mos;
+    std::vector<size_t> aactv_mos_;
     /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos;
+    std::vector<size_t> avirt_mos_;
     /// List of beta core MOs
-    std::vector<size_t> bcore_mos;
+    std::vector<size_t> bcore_mos_;
     /// List of beta active MOs
-    std::vector<size_t> bactv_mos;
+    std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos;
+    std::vector<size_t> bvirt_mos_;
 
     /// Alpha core label
-    std::string acore_label;
+    std::string acore_label_;
     /// Alpha active label
-    std::string aactv_label;
+    std::string aactv_label_;
     /// Alpha virtual label
-    std::string avirt_label;
+    std::string avirt_label_;
     /// Beta core label
-    std::string bcore_label;
+    std::string bcore_label_;
     /// Beta active label
-    std::string bactv_label;
+    std::string bactv_label_;
     /// Beta virtual label
-    std::string bvirt_label;
+    std::string bvirt_label_;
 
     /// Map from space label to list of MOs
-    std::map<char, std::vector<size_t>> label_to_spacemo;
+    std::map<char, std::vector<size_t>> label_to_spacemo_;
 
     /// Fill up integrals
     void build_ints();
     /// Fill up density matrix and density cumulants
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
-    void build_fock();
+    void build_fock(BlockedTensor& H, BlockedTensor& V);
 
 
     // => DSRG related <= //
@@ -100,40 +126,40 @@ protected:
     int taylor_order_;
 
     /// Kevin's Tensor Wrapper
-    std::shared_ptr<BlockedTensorFactory> BTF;
+    std::shared_ptr<BlockedTensorFactory> BTF_;
     /// Tensor type for AMBIT
     TensorType tensor_type_;
 
     /// One-electron integral
-    ambit::BlockedTensor H;
+    ambit::BlockedTensor H_;
     /// Two-electron integral
-    ambit::BlockedTensor V;
+    ambit::BlockedTensor V_;
     /// Generalized Fock matrix
-    ambit::BlockedTensor F;
+    ambit::BlockedTensor F_;
     /// One-particle density matrix
-    ambit::BlockedTensor Gamma1;
+    ambit::BlockedTensor Gamma1_;
     /// One-hole density matrix
-    ambit::BlockedTensor Eta1;
+    ambit::BlockedTensor Eta1_;
     /// Two-body denisty cumulant
-    ambit::BlockedTensor Lambda2;
+    ambit::BlockedTensor Lambda2_;
     /// Three-body density cumulant
-    ambit::BlockedTensor Lambda3;
+    ambit::BlockedTensor Lambda3_;
     /// Single excitation amplitude
-    ambit::BlockedTensor T1;
+    ambit::BlockedTensor T1_;
     /// Double excitation amplitude
-    ambit::BlockedTensor T2;
+    ambit::BlockedTensor T2_;
     /// Difference of consecutive singles
-    ambit::BlockedTensor DT1;
+    ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
-    ambit::BlockedTensor DT2;
+    ambit::BlockedTensor DT2_;
 
     /// Diagonal elements of Fock matrices
-    std::vector<double> Fa;
-    std::vector<double> Fb;
+    std::vector<double> Fa_;
+    std::vector<double> Fb_;
 
     /// Renormalize denominator
-    double renormalized_denominator(double D);
-    double renormalized_denominator_labs(double D);
+    double renormalized_denominator(const double& D);
+    double renormalized_denominator_labs(const double& D);
 //    double renormalized_denominator_amp(double V,double D);
 //    double renormalized_denominator_emp2(double V,double D);
 //    double renormalized_denominator_lamp(double V,double D);
@@ -142,32 +168,32 @@ protected:
     /// Algorithm for computing amplitudes
     std::string T_algor_;
     /// Analyze T1 and T2 amplitudes
-    void analyze_amplitudes(std::string name, BlockedTensor &T1, BlockedTensor &T2);
+    void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
 
     /// RMS of T2
-    double T2rms;
+    double T2rms_;
     /// Norm of T2
-    double T2norm;
-    double t2aa_norm;
-    double t2ab_norm;
-    double t2bb_norm;
+    double T2norm_;
+    double t2aa_norm_;
+    double t2ab_norm_;
+    double t2bb_norm_;
     /// Signed max of T2
-    double T2max;
+    double T2max_;
     /// Initial guess of T2
     void guess_t2(BlockedTensor& V, BlockedTensor& T2);
     /// Update T2 in every iteration
     void update_t2();
     /// Check T2 and store the largest amplitudes
-    void check_t2(BlockedTensor &T2);
+    void check_t2(BlockedTensor& T2);
 
     /// RMS of T1
-    double T1rms;
+    double T1rms_;
     /// Norm of T1
-    double T1norm;
-    double t1a_norm;
-    double t1b_norm;
+    double T1norm_;
+    double t1a_norm_;
+    double t1b_norm_;
     /// Signed max of T1
-    double T1max;
+    double T1max_;
     /// Initial guess of T1
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
@@ -180,26 +206,26 @@ protected:
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
     /// List of large amplitudes
-    std::vector<std::pair<std::vector<size_t>, double>> lt1a;
-    std::vector<std::pair<std::vector<size_t>, double>> lt1b;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2aa;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2ab;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2bb;
+    std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt1b_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2aa_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2ab_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar();
     /// Zero-body Hbar
-    double Hbar0;
+    double Hbar0_;
     /// One-body Hbar
-    ambit::BlockedTensor Hbar1;
+    ambit::BlockedTensor Hbar1_;
     /// Two-body Hbar
-    ambit::BlockedTensor Hbar2;
+    ambit::BlockedTensor Hbar2_;
     /// Temporary one-body Hamiltonian
-    ambit::BlockedTensor O1;
-    ambit::BlockedTensor C1;
+    ambit::BlockedTensor O1_;
+    ambit::BlockedTensor C1_;
     /// Temporary two-body Hamiltonian
-    ambit::BlockedTensor O2;
-    ambit::BlockedTensor C2;
+    ambit::BlockedTensor O2_;
+    ambit::BlockedTensor C2_;
 
     /// Norm of off-diagonal Hbar2
     double Hbar2od_norm(const std::vector<std::string>& blocks);
@@ -235,7 +261,7 @@ protected:
     double compute_energy_ldsrg2();
 
     /// Zeroth-order Hamiltonian
-    ambit::BlockedTensor H0th;
+    ambit::BlockedTensor H0th_;
     /// Compute DSRG-MRPT2 energy
     double compute_energy_pt2();
     /// Compute DSRG-MRPT3 energy
@@ -246,16 +272,16 @@ protected:
 
     // => Reference relaxation <= //
 
-    /// Local One-electron integral for Resetting Integrals
-    ambit::BlockedTensor H_local;
-    /// Local Two-electron integral for Resetting Integrals
-    ambit::BlockedTensor V_local;
-    /// Transfer Integrals for FCI
+    /// Transfer integrals for FCI
     void transfer_integrals();
-    /// Reset Integrals to Bare Hamiltonian
+    /// Reset integrals to bare Hamiltonian
     void reset_ints(BlockedTensor& H, BlockedTensor& V);
-    /// Semicanonicalize orbitals
-    void semi_canonicalizer();
+    /// Diagonalize the diagonal blocks of the Fock matrix
+    void diagonalize_Fock_diagblocks(BlockedTensor& U);
+    /// Separate an 2D ambit::Tensor according to its irrep
+    ambit::Tensor separate_tensor(ambit::Tensor tens, const Dimension& irrep, const int& h);
+    /// Combine a separated 2D ambit::Tensor
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
 
 
     // => Useful printings <= //
@@ -307,33 +333,6 @@ protected:
             }
         }else{return 0.0;}
     }
-
-    /// Non-Negative Integer Exponential
-    size_t natPow(size_t x, size_t p){
-      size_t i = 1;
-      for (size_t j = 1; j <= p; j++)  i *= x;
-      return i;
-    }
-
-public:
-
-    // => Constructor <= //
-    MRDSRG(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-    // => Destructor <= //
-    ~MRDSRG();
-
-    /// The energy of the reference
-    double Eref;
-
-    /// The frozen-core energy
-    double frozen_core_energy;
-
-    /// Compute the corr_level energy with fixed reference
-    double compute_energy();
-
-    /// Compute the corr_level energy with relaxed reference
-    double compute_energy_relaxed();
 };
 
 }}
