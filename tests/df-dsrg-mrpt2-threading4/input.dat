@@ -1,16 +1,16 @@
 #! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne with 4 threads
+#! Perform a DF-DSRG-MRPT2 on benzyne 
 
 import forte
 
 
 memory 500 mb
 
-refmcscf   =  -226.575081996603
-refdsrgpt2 =  -226.884456822714441
+refmcscf   =  -225.76764656871
+refdsrgpt2 =  -226.85401295109
 
 molecule mbenzyne{
-  0 1
+  0 3
    C   0.0000000000  -2.5451795941   0.0000000000
    C   0.0000000000   2.5451795941   0.0000000000
    C  -2.2828001669  -1.3508352528   0.0000000000
@@ -28,17 +28,13 @@ molecule mbenzyne{
 set globals{
    basis                   sto-3g
    df_basis_mp2            cc-pvdz-ri
-   reference               TWOCON
-   scf_type                pk
+   df_basis_scf            cc-pvdz-jkfit
+   scf_type                DF
    d_convergence           10
    e_convergence           12
-}
-
-set mcscf{
    docc                   [5, 3, 1, 1, 0, 1, 4, 4]
    socc                   [1, 0, 0, 0, 0, 0, 1, 0]
    maxiter                 500
-#   level_shift             1.0
 }
 
 set forte {
@@ -47,15 +43,17 @@ set forte {
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
    root_sym                0
    nroot                   1
+   multiplicity            1
 #   dsrgpt                  false
    dsrg_s                  0.5
    int_type                DF
    job_type                three-dsrg-mrpt2
+   cas_type                FCI
 }
-set_num_threads(4)
 
 scf = energy('mcscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
+set_num_threads(4)
 
 energy('forte')
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
