@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <numeric>
 #include "blockedtensorfactory.h"
+#include <libfock/jk.h>
+
 using namespace ambit;
 namespace psi{ namespace forte{
 //Class for the DF Integrals
@@ -113,7 +115,7 @@ ambit::Tensor DFIntegrals::three_integral_block(const std::vector<size_t> &A, co
     return ReturnTensor;
 }
 
-void DFIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
+void DFIntegrals::set_tei(size_t, size_t, size_t ,size_t,double,bool, bool)
 {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
@@ -137,6 +139,7 @@ void DFIntegrals::gather_integrals()
     Dimension nsopi_ = wfn->nsopi();
     SharedMatrix aotoso = wfn->aotoso();
     SharedMatrix Ca = wfn->Ca();
+    //SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
 
     // Transform from the SO to the AO basis
@@ -165,6 +168,7 @@ void DFIntegrals::gather_integrals()
     //into the C_matrix object
 //    df->set_C(C_ord);
     df->set_C(Ca_ao);
+    Ca_ = Ca_ao;
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
@@ -533,94 +537,50 @@ void DFIntegrals::compute_frozen_core_energy()
 void DFIntegrals::compute_frozen_one_body_operator()
 {
     Timer FrozenOneBody;
-    boost::shared_ptr<BlockedTensorFactory>BTF(new BlockedTensorFactory(options_));
-    ambit::BlockedTensor::reset_mo_spaces();
 
-    size_t f = 0; // The Offset for irrep
-    size_t r = 0; // The MO number for frozen core
-    size_t g = 0; //the Offset for irrep
-    std::vector<size_t> frozen_vec;
-    std::vector<size_t> corrleated_vec;
-
-    for (size_t hi = 0; hi < nirrep_; ++hi){
-        for (size_t i = 0; i < frzcpi_[hi]; ++i){
-            r = f + i;
-            frozen_vec.push_back(r);
+    std::vector<size_t> frozen_dim_abs = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
+    SharedMatrix C_core(new Matrix("C_core",nmo_, frozen_dim_abs.size()));
+    // Need to get the frozen block of the C matrix
+    for(size_t mu = 0; mu < nmo_; mu++){
+        for(size_t i = 0; i < frozen_dim_abs.size(); i++){
+            C_core->set(mu, i, Ca_->get(mu, frozen_dim_abs[i]));
         }
-        f += nmopi_[hi];
-        for (size_t p = frzcpi_[hi]; p < nmopi_[hi]; p++)
-        {
-            size_t mo = p + g;
-            corrleated_vec.push_back(mo);
-        }
-        g += nmopi_[hi];
-    }
-    //Get the size of frozen MO
-    size_t frozen_size = frozen_vec.size();
-
-    //Form a map that says mo_to_rel[ABS_MO] =relative in frozen array
-    std::map<size_t, size_t>  mo_to_rel;
-    std::vector<size_t> motofrozen(frozen_size);
-    std::iota(motofrozen.begin(), motofrozen.end(), 0);
-
-    int i = 0;
-    for (auto frozen : frozen_vec)
-    {
-        mo_to_rel[frozen] = motofrozen[i];
-        i++;
     }
 
-    BTF->add_mo_space("f","rs", frozen_vec, NoSpin);
-    BTF->add_mo_space("k", "mn", corrleated_vec, NoSpin);
-    BTF->add_composite_mo_space("a", "pq", {"f", "k"});
+    boost::shared_ptr<JK> JK_core = JK::build_JK();
 
-    std::vector<size_t> nauxpi(nthree_);
-    std::iota(nauxpi.begin(), nauxpi.end(),0);
+    JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    /// Already transform everything to C1 so make sure JK does not do this.
+    JK_core->set_allow_desymmetrization(false);
 
-    BTF->add_mo_space("d","g",nauxpi,NoSpin);
+    /////TODO: Make this an option in my code
+    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->initialize();
 
-    //Kevin is lazy.  Going to use ambit to perform this contraction
-    ambit::BlockedTensor ThreeIntegral = BTF->build(kCore,"ThreeInt",{"daa"});
-    ambit::BlockedTensor FullFrozenV   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
-    ambit::BlockedTensor FullFrozenVAB   = BTF->build(kCore, "FullFrozenV", {"ffaa"});
-
-    ThreeIntegral.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        value = ThreeIntegral_->get(i[1] * nmo_ + i[2], i[0]);
-    });
-    boost::shared_ptr<Matrix> FrozenVMatrix(new Matrix("FrozenV", frozen_size * frozen_size, nmo_ *  nmo_));
-    boost::shared_ptr<Matrix> FrozenVMatrixAB(new Matrix("FrozenVAB", frozen_size * frozen_size, nmo_ * nmo_));
-
-    FullFrozenV["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
-    FullFrozenV["rspq"] -=ThreeIntegral["grq"]*ThreeIntegral["gps"];
-    FullFrozenVAB["rspq"] = ThreeIntegral["grs"]*ThreeIntegral["gpq"];
+    JK_core->print_header();
 
 
-    FullFrozenV.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        FrozenVMatrix->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
-    });
-    FullFrozenVAB.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-    FrozenVMatrixAB->set(mo_to_rel[i[0]] * frozen_size + mo_to_rel[i[1]], i[2] * nmo_ + i[3], value);
-    });
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
 
-    f = 0;
+    Cl.clear();
+    Cl.push_back(C_core);
 
-    for (size_t hi = 0; hi < nirrep_; ++hi){
-        for (size_t i = 0; i < frzcpi_[hi]; ++i){
-            size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %lu ", r);
-            #pragma omp parallel for num_threads(num_threads_) \
-            schedule(dynamic)
-            for(size_t p = 0; p < nmo_; ++p){
-                for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
-                    one_electron_integrals_b[p * nmo_ + q] += FrozenVMatrix->get(mo_to_rel[r] * frozen_size +mo_to_rel[r], p * nmo_ + q)
-                            + FrozenVMatrixAB->get(mo_to_rel[r] * frozen_size + mo_to_rel[r], p * nmo_ + q);
-                }
-            }
+    JK_core->compute();
+
+    SharedMatrix F_core = JK_core->J()[0];
+    SharedMatrix K_core = JK_core->K()[0];
+
+    F_core->scale(2.0);
+    F_core->subtract(K_core);
+    F_core->transform(Ca_);
+    for(size_t p = 0; p < nmo_; ++p){
+        for(size_t q = 0; q < nmo_; ++q){
+            one_electron_integrals_a[p * nmo_ + q] += F_core->get(p, q);
+            one_electron_integrals_b[p * nmo_ + q] += F_core->get(p ,q);
         }
-        f += nmopi_[hi];
     }
+
 
     ambit::BlockedTensor::reset_mo_spaces();
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
