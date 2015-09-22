@@ -2,7 +2,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                               Psi4 (no tag) Driver
 
-                          Git: Rev {master} 1b91513 
+                          Git: Rev {master} 7a8bad0 dirty
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -16,28 +16,28 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tue Sep 15 23:47:54 2015
+    Psi4 started on: Mon Sep 21 20:33:52 2015
 
-    Process ID:  24643
-    PSI4DATADIR: /home/kannon/src/psi4/psi4public/lib
+    Process ID:  59404
+    PSI4DATADIR: /Users/kevinhannon/Programs/psi4private_clang/psi4/lib
     Memory level set to 256.000 MB
 
   ==> Input File <==
 
 --------------------------------------------------------------------------
 #! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne with 4 threads
+#! Perform a DF-DSRG-MRPT2 on benzyne 
 
 import forte
 
 
 memory 500 mb
 
-refmcscf   =  -226.575081996603
-refdsrgpt2 =  -226.884456822714441
+refmcscf   =  -225.76764656871
+refdsrgpt2 =  -226.85401295109
 
 molecule mbenzyne{
-  0 1
+  0 3
    C   0.0000000000  -2.5451795941   0.0000000000
    C   0.0000000000   2.5451795941   0.0000000000
    C  -2.2828001669  -1.3508352528   0.0000000000
@@ -55,17 +55,13 @@ molecule mbenzyne{
 set globals{
    basis                   sto-3g
    df_basis_mp2            cc-pvdz-ri
-   reference               TWOCON
-   scf_type                pk
+   df_basis_scf            cc-pvdz-jkfit
+   scf_type                DF
    d_convergence           10
    e_convergence           12
-}
-
-set mcscf{
    docc                   [5, 3, 1, 1, 0, 1, 4, 4]
    socc                   [1, 0, 0, 0, 0, 0, 1, 0]
    maxiter                 500
-#   level_shift             1.0
 }
 
 set forte {
@@ -74,22 +70,24 @@ set forte {
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
    root_sym                0
    nroot                   1
+   multiplicity            1
 #   dsrgpt                  false
    dsrg_s                  0.5
    int_type                DF
    job_type                three-dsrg-mrpt2
+   cas_type                FCI
 }
-set_num_threads(4)
 
 scf = energy('mcscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
+set_num_threads(4)
 
 energy('forte')
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 
 --------------------------------------------------------------------------
-/home/kannon/src/forte/forte.so loaded.
+/Users/kevinhannon/Programs/forte/forte.so loaded.
 
   Memory set to 500.000 MiB by Python script.
 
@@ -128,15 +126,13 @@ compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy"
   ----------------------------------------------------------------------------
 
   Running an SCF calculation
-  TWOCON MOs = [5 (Ag),24 (B2u)]
 
   Generated 595 pairs
   Distributed as [122 Ag][100 B1g][40 B2g][44 B3g][40 Au][44 B1u][105 B2u][100 B3u]
   batch   0 pq = [       0,     122] index = [               0,            7503]
 
   Allocated the PK matrix (7503 elements) 
-  Allocated the  K matrix (7503 elements) 
-  Reading the two-electron integrals to form PK and K ... 
+  Reading the two-electron integrals to form PK ... 
   batch   0 ... done.
 
 
@@ -144,195 +140,43 @@ compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy"
          Cycle          Energy               D(Energy)            D(Density)            DIIS
   ===========================================================================================
   Setting level shift to 0.000 S
-  @SCF    0     -212.603608947831    -212.603608947831       0.212818981043
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    0     -212.591783893326    -212.591783893326       0.283940323457
   Setting level shift to 0.000 S
-  @SCF    1     -225.053669770607     -12.450060822776       0.210813347428
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    1     -223.551422907842     -10.959639014516       0.275117881171
   Setting level shift to 0.000 S
-  @SCF    2     -226.071009337475      -1.017339566868       0.056641135253
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    2     -225.634306679483      -2.082883771640       0.061051248309
   Setting level shift to 0.000 S
-  @SCF    3     -226.474885852571      -0.403876515095       0.028998284532
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    3     -225.741973038515      -0.107666359032       0.012962175269
   Setting level shift to 0.000 S
-  @SCF    4     -226.322780627168       0.152105225402       0.012997058062
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    4     -225.762320410908      -0.020347372394       0.006354750064
   Setting level shift to 0.000 S
-  @SCF    5     -226.454906791839      -0.132126164671       0.010853125465
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    5     -225.766510671298      -0.004190260389       0.002840537282
   Setting level shift to 0.000 S
-  @SCF    6     -226.349585971471       0.105320820369       0.009470330996
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    6     -225.767407075829      -0.000896404532       0.001383874861
   Setting level shift to 0.000 S/E
-  @SCF    7     -226.451060015785      -0.101474044315       0.008596141425
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    7     -225.767595763104      -0.000188687275       0.000620625385
   Setting level shift to 0.000 S/E
-  @SCF    8     -226.416907694590       0.034152321196       0.004102613904
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    8     -225.767646508517      -0.000050745412       0.000258338706
   Setting level shift to 0.000 S/E
-  @SCF    9     -226.416958294089      -0.000050599499       0.000125724627
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF    9     -225.767646565167      -0.000000056651       0.000009056861
   Setting level shift to 0.000 S/E
-  @SCF   10     -226.417249778531      -0.000291484442       0.000041145215
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF   10     -225.767646568655      -0.000000003488       0.000002750341
   Setting level shift to 0.000 S/E
-  @SCF   11     -226.417183194337       0.000066584193       0.000012644740
-    ci      = [ 0.00000000, 0.00000000]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF   11     -225.767646568710      -0.000000000055       0.000000376130
   Setting level shift to 0.000 S/E
-  @SCF   12     -226.417192505496      -0.000009311158       0.000002788668
-    ci      = [-0.61289446, 0.79016478]
-    ci_grad = [ 0.00000000, 0.00000000]
+  @SCF   12     -225.767646568711      -0.000000000001       0.000000056393
   Setting level shift to 0.000 S/E
-  @SCF   13     -226.417190578569       0.000001926927       0.000001751323
-    ci      = [-0.61289100, 0.79016747]
-    ci_grad = [-0.00000258, 0.00000044]
+  @SCF   13     -225.767646568711       0.000000000000       0.000000006429
   Setting level shift to 0.000 S/E
-  @SCF   14     -226.417191354795      -0.000000776226       0.000000062112
-    ci      = [-0.61289107, 0.79016741]
-    ci_grad = [ 0.00000051,-0.00000059]
+  @SCF   14     -225.767646568711       0.000000000000       0.000000000707
   Setting level shift to 0.000 S/E
-  @SCF   15     -226.417197000998      -0.000005646203       0.000000656866
-    ci      = [-0.61289143, 0.79016713]
-    ci_grad = [ 0.00000360,-0.00000435]
+  @SCF   15     -225.767646568711      -0.000000000000       0.000000000212
   Setting level shift to 0.000 S/E
-  @SCF   16     -226.417207881245      -0.000010880247       0.000001205441
-    ci      = [-0.61289143, 0.79016713]
-    ci_grad = [ 0.00000920,-0.00000663]
-  Setting level shift to 0.000 S/E
-  @SCF   17     -226.417200208183       0.000007673062       0.000001265215
-    ci      = [-0.61289208, 0.79016663]
-    ci_grad = [-0.00000444, 0.00000627]
-  Setting level shift to 0.000 S/E
-  @SCF   18     -226.417208888088      -0.000008679905       0.000002733024
-    ci      = [-0.61290864, 0.79015378]
-    ci_grad = [ 0.00001201,-0.00000167]
-  Setting level shift to 0.000 S/E
-  @SCF   19     -226.417209143096      -0.000000255008       0.000001420914
-    ci      = [-0.61289889, 0.79016134]
-    ci_grad = [-0.00000378,-0.00000326]
-  Setting level shift to 0.000 S/E
-  @SCF   20     -226.571244831872      -0.154035688776       0.021509367715
-    ci      = [-0.61289889, 0.79016134]
-    ci_grad = [ 0.11068096,-0.10793230]
-  Setting level shift to 0.000 S/E
-  @SCF   21     -226.574790125450      -0.003545293578       0.004311795629
-    ci      = [-0.61289889, 0.79016134]
-    ci_grad = [ 0.00906669, 0.00275044]
-  Setting level shift to 0.000 S/E
-  @SCF   22     -226.575042005089      -0.000251879639       0.000630911457
-    ci      = [-0.61289889, 0.79016134]
-    ci_grad = [ 0.00840264, 0.00648996]
-  Setting level shift to 0.000 S/E
-  @SCF   23     -226.575045024079      -0.000003018990       0.000158305769
-    ci      = [-0.62958955, 0.77692793]
-    ci_grad = [ 0.00812299, 0.00657864]
-  Setting level shift to 0.000 S/E
-  @SCF   24     -226.575045805135      -0.000000781057       0.000036766688
-    ci      = [-0.62959485, 0.77692363]
-    ci_grad = [ 0.00000309, 0.00000150]
-  Setting level shift to 0.000 S/E
-  @SCF   25     -226.575046225474      -0.000000420338       0.000001877488
-    ci      = [-0.62961034, 0.77691107]
-    ci_grad = [ 0.00000787, 0.00000584]
-  Setting level shift to 0.000 S/E
-  @SCF   26     -226.575055949929      -0.000009724456       0.000047536637
-    ci      = [-0.62999811, 0.77659667]
-    ci_grad = [ 0.00019652, 0.00014690]
-  Setting level shift to 0.000 S/E
-  @SCF   27     -226.575072770232      -0.000016820303       0.000112205625
-    ci      = [-0.62999811, 0.77659667]
-    ci_grad = [ 0.00045914, 0.00035169]
-  Setting level shift to 0.000 S/E
-  @SCF   28     -226.575081711371      -0.000008941139       0.000135832184
-    ci      = [-0.63201842, 0.77495336]
-    ci_grad = [ 0.00099878, 0.00080302]
-  Setting level shift to 0.000 S/E
-  @SCF   29     -226.575081416358       0.000000295013       0.000012366430
-    ci      = [-0.63191595, 0.77503692]
-    ci_grad = [-0.00005061,-0.00004088]
-  Setting level shift to 0.000 S/E
-  @SCF   30     -226.575081977945      -0.000000561587       0.000033715051
-    ci      = [-0.63219258, 0.77481130]
-    ci_grad = [ 0.00013649, 0.00011064]
-  Setting level shift to 0.000 S/E
-  @SCF   31     -226.575081986433      -0.000000008488       0.000001907963
-    ci      = [-0.63220834, 0.77479843]
-    ci_grad = [ 0.00000777, 0.00000633]
-  Setting level shift to 0.000 S/E
-  @SCF   32     -226.575081996086      -0.000000009654       0.000004201690
-    ci      = [-0.63224291, 0.77477022]
-    ci_grad = [ 0.00001702, 0.00001388]
-  Setting level shift to 0.000 S/E
-  @SCF   33     -226.575081996443      -0.000000000357       0.000000544544
-    ci      = [-0.63224738, 0.77476658]
-    ci_grad = [ 0.00000220, 0.00000179]
-  Setting level shift to 0.000 S/E
-  @SCF   34     -226.575081996589      -0.000000000146       0.000000483532
-    ci      = [-0.63225135, 0.77476334]
-    ci_grad = [ 0.00000195, 0.00000160]
-  Setting level shift to 0.000 S/E
-  @SCF   35     -226.575081996599      -0.000000000010       0.000000100498
-    ci      = [-0.63225217, 0.77476267]
-    ci_grad = [ 0.00000041, 0.00000033]
-  Setting level shift to 0.000 S/E
-  @SCF   36     -226.575081996602      -0.000000000003       0.000000090064
-    ci      = [-0.63225291, 0.77476206]
-    ci_grad = [ 0.00000036, 0.00000030]
-  Setting level shift to 0.000 S/E
-  @SCF   37     -226.575081996602      -0.000000000000       0.000000008700
-    ci      = [-0.63225284, 0.77476212]
-    ci_grad = [-0.00000004,-0.00000003]
-  Setting level shift to 0.000 S/E
-  @SCF   38     -226.575081996603      -0.000000000000       0.000000009636
-    ci      = [-0.63225292, 0.77476206]
-    ci_grad = [ 0.00000004, 0.00000003]
-  Setting level shift to 0.000 S/E
-  @SCF   39     -226.575081996603       0.000000000000       0.000000004089
-    ci      = [-0.63225296, 0.77476203]
-    ci_grad = [ 0.00000002, 0.00000001]
-  Setting level shift to 0.000 S/E
-  @SCF   40     -226.575081996602       0.000000000000       0.000000000219
-    ci      = [-0.63225296, 0.77476203]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   41     -226.575081996602       0.000000000000       0.000000000675
-    ci      = [-0.63225296, 0.77476202]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   42     -226.575081996602      -0.000000000000       0.000000000183
-    ci      = [-0.63225296, 0.77476202]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   43     -226.575081996603      -0.000000000000       0.000000000089
-    ci      = [-0.63225296, 0.77476202]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   44     -226.575081996602       0.000000000000       0.000000000058
-    ci      = [-0.63225297, 0.77476202]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.000 S/E
-  @SCF   45     -226.575081996602      -0.000000000000       0.000000000004
-    ci      = [-0.63225297, 0.77476202]
-    ci_grad = [-0.00000000,-0.00000000]
+  @SCF   16     -225.767646568711       0.000000000000       0.000000000026
   =========================================================================================
 
-      * SCF total energy   =    -226.575081996602
+      * SCF total energy   =    -225.767646568711
 
-
-      CI coefficients  = [-0.632252965, 0.774762020]
 
   End of SCF
   MOs orthonormality check passed.
@@ -345,38 +189,38 @@ compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy"
   Eigenvalues (Eh)
   -------------------------------------------------------------------------
   Doubly occupied orbitals
-      1    -11.035269 B3u      2    -11.035166  Ag      3    -11.035129 B2u
-      4    -11.035092 B1g      5    -11.006182 B2u      6    -11.006037  Ag
-      7     -1.093266  Ag      8     -0.957444 B3u      9     -0.932131 B2u
-     10     -0.775410 B1g     11     -0.730813  Ag     12     -0.584243 B2u
-     13     -0.579475  Ag     14     -0.563265 B3u     15     -0.529046 B3u
-     16     -0.462169 B1u     17     -0.456729 B1g     18     -0.285586 B3g
-     19     -0.280039 B2g
+      1    -11.734921 B2u      2    -11.734814  Ag      3    -11.617672 B3u
+      4    -11.617560 B2u      5    -11.617549  Ag      6    -11.617546 B1g
+      7     -1.660065  Ag      8     -1.504736 B2u      9     -1.492338 B3u
+     10     -1.316418 B1g     11     -1.247260  Ag     12     -1.119183 B3u
+     13     -1.106923  Ag     14     -1.072355 B2u     15     -1.041836 B3u
+     16     -1.013115 B1u     17     -0.978385 B1g     18     -0.877276 B3g
+     19     -0.784949 B2g
   Active orbitals
-     20     -0.097833 B2u     21     -0.013616  Ag
+     20     -0.466838 B2u     21     -0.404049  Ag
   Unoccupied orbitals
-     22      0.245021  Au     23      0.302774 B1u     24      0.515123 B3g
-     25      0.640745  Ag     26      0.667088 B3u     27      0.684886 B2u
-     28      0.733596 B1g     29      0.832576 B2u     30      0.858416  Ag
-     31      0.858871 B1g     32      0.962029 B3u     33      1.129600 B1g
-     34      1.138352 B2u
+     22     -0.289647 B1u     23     -0.265999  Au     24     -0.043321 B3g
+     25      0.145757  Ag     26      0.176088 B3u     27      0.176684 B2u
+     28      0.193079 B1g     29      0.295933  Ag     30      0.307110 B2u
+     31      0.344744 B1g     32      0.369222 B3u     33      0.538856 B1g
+     34      0.561388 B2u
   =========================================================================
 
 
   MCSCF Execution Completed.
 
 
-*** tstop() called on master at Tue Sep 15 23:47:54 2015
+*** tstop() called on Kevins-MacBook-Pro-2.local at Mon Sep 21 20:33:53 2015
 Module time:
-	user time   =       0.46 seconds =       0.01 minutes
-	system time =       0.04 seconds =       0.00 minutes
-	total time  = 1442375274 seconds = 24039587.90 minutes
+	user time   =       0.61 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  = 1442882033 seconds = 24048033.88 minutes
 Total time:
-	user time   =       0.46 seconds =       0.01 minutes
-	system time =       0.04 seconds =       0.00 minutes
-	total time  = 1442375274 seconds = 24039587.90 minutes
+	user time   =       0.61 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  = 1442882033 seconds = 24048033.88 minutes
 Reading options from the FORTE block
-Calling plugin /home/kannon/src/forte/forte.so.
+Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
 
 
   ==> MO Space Information <==
@@ -415,25 +259,41 @@ Calling plugin /home/kannon/src/forte/forte.so.
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-    Computing DF Integrals               ......Done. Timing        0.200521 s
-    Seeking DF Integrals                 ......Done. Timing        0.201113 s
-   Reading DF Integrals                 . . ....Done. Timing        0.201484 s...Done.  Timing        0.201490 s
-  Frozen-core energy           -287.157140842172 a.u.
+    Computing DF Integrals               ......Done. Timing        0.381105 s
+    Seeking DF Integrals                 ......Done. Timing        0.381814 s
+   Reading DF Integrals                 . . ....Done. Timing        0.382292 s...Done.  Timing        0.382299 s
+  Frozen-core energy           -287.157994529072 a.u.
 
- Frozen_Core_Energy takes   0.00001400 s
-  Freezing MO 0 
-  Freezing MO 1 
-  Freezing MO 8 
-  Freezing MO 20 
-  Freezing MO 21 
-  Freezing MO 28 
+ Frozen_Core_Energy takes   0.00002600 s  ==> DFJK: Density-Fitted J/K Matrices <==
 
- FrozenOneBody Operator takes  0.03882700 s
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):              3051
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Number of shells: 180
+    Number of basis function: 512
+    Number of Cartesian functions: 586
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+ FrozenOneBody Operator takes  0.70449300 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.00306400s
- Frozen Orbitals takes 0.04194400 s
- DFIntegrals take      0.33338500 s
+ Resorting integrals takes   0.01118000s
+ Frozen Orbitals takes 0.71624000 s
+ DFIntegrals take      1.21640600 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -475,8 +335,8 @@ Calling plugin /home/kannon/src/forte/forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0     -226.576520188016  0.000  singlet
-      1     -226.084303941215  0.000  singlet
+      0     -226.450641470489  0.000  singlet
+      1     -226.040864779783  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -486,42 +346,46 @@ Calling plugin /home/kannon/src/forte/forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      0     -226.576520188016  -2.266e+02
-      1     -226.576520188016  -5.684e-14
-      2     -226.576520188016  +1.137e-13
-      3     -226.576520188016  -1.137e-13
-      4     -226.576520188016  +0.000e+00
-      5     -226.576520188016  +0.000e+00
-      6     -226.576520188016  +0.000e+00
-      7     -226.576520188016  +0.000e+00
-      8     -226.576520188016  +0.000e+00
-      9     -226.576520188016  +0.000e+00
-     10     -226.576520188016  +0.000e+00
-     11     -226.576520188016  +0.000e+00
-     12     -226.576520188016  +0.000e+00
-     13     -226.576520188016  +0.000e+00
-     14     -226.576520188016  +0.000e+00
-     15     -226.576520188016  +0.000e+00
-     16     -226.576520188016  +0.000e+00
-     17     -226.576520188016  +0.000e+00
-     18     -226.576520188016  +0.000e+00
-     19     -226.576520188016  +0.000e+00
-     20     -226.576520188016  +0.000e+00
-     21     -226.576520188016  +0.000e+00
-     22     -226.576520188016  +0.000e+00
-     23     -226.576520188016  +0.000e+00
-     24     -226.576520188016  +0.000e+00
-     25     -226.576520188016  +0.000e+00
-     26     -226.576520188016  +0.000e+00
-     27     -226.576520188016  +0.000e+00
-     28     -226.576520188016  +0.000e+00
-     29     -226.576520188016  +0.000e+00
+      0     -226.450641470489  -2.265e+02
+      1     -226.450641470488  +2.274e-13
+      2     -226.450641470489  -1.137e-13
+      3     -226.450641470489  +0.000e+00
+      4     -226.450641470489  +0.000e+00
+      5     -226.450641470489  +0.000e+00
+      6     -226.450641470489  +0.000e+00
+      7     -226.450641470489  +0.000e+00
+      8     -226.450641470489  +0.000e+00
+      9     -226.450641470489  +0.000e+00
+     10     -226.450641470489  +0.000e+00
+     11     -226.450641470489  +0.000e+00
+     12     -226.450641470489  +0.000e+00
+     13     -226.450641470489  +0.000e+00
+     14     -226.450641470489  +0.000e+00
+     15     -226.450641470489  +0.000e+00
+     16     -226.450641470489  +0.000e+00
+     17     -226.450641470489  +0.000e+00
+     18     -226.450641470489  +0.000e+00
+     19     -226.450641470489  +0.000e+00
+     20     -226.450641470489  +0.000e+00
+     21     -226.450641470489  +0.000e+00
+     22     -226.450641470489  +0.000e+00
+     23     -226.450641470489  +0.000e+00
+     24     -226.450641470489  +0.000e+00
+     25     -226.450641470489  +0.000e+00
+     26     -226.450641470489  +0.000e+00
+     27     -226.450641470489  +0.000e+00
+     28     -226.450641470489  +0.000e+00
+     29     -226.450641470489  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 0 iterations.
   Time spent diagonalizing H: 0.000000 s
 
   ==> Root No. 0 <==
-    Total Energy:      -226.576520188016474
+
+    2 0     -0.77098992
+    0 2     -0.63684734
+
+    Total Energy:      -226.450641470488534
 
   ==> RDMs for Root No. 0 <==
     Timing for 1-RDM: 0.000 s
@@ -541,24 +405,40 @@ Calling plugin /home/kannon/src/forte/forte.so.
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-    Computing DF Integrals               ......Done. Timing        0.198612 s
-    Seeking DF Integrals                 ......Done. Timing        0.199198 s
-   Reading DF Integrals                 . . ....Done. Timing        0.199561 s...Done.  Timing        0.199566 s
-  Frozen-core energy           -287.157140842172 a.u.
+    Computing DF Integrals               ......Done. Timing        0.325154 s
+    Seeking DF Integrals                 ......Done. Timing        0.325880 s
+   Reading DF Integrals                 . . ....Done. Timing        0.326709 s...Done.  Timing        0.326723 s
+  Frozen-core energy           -287.157994529072 a.u.
 
- Frozen_Core_Energy takes   0.00001700 s
-  Freezing MO 0 
-  Freezing MO 1 
-  Freezing MO 8 
-  Freezing MO 20 
-  Freezing MO 21 
-  Freezing MO 28 
+ Frozen_Core_Energy takes   0.00003800 s  ==> DFJK: Density-Fitted J/K Matrices <==
 
- FrozenOneBody Operator takes  0.03607400 s
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              1
+    Integrals threads:           1
+    Memory (MB):              3051
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-12
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVDZ-JKFIT
+    Number of shells: 180
+    Number of basis function: 512
+    Number of Cartesian functions: 586
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+ FrozenOneBody Operator takes  0.68590500 s
   Resorting integrals after freezing core.
  Done with resorting
- Resorting integrals takes   0.00351700s
- Frozen Orbitals takes 0.03963900 s
+ Resorting integrals takes   0.01103900s
+ Frozen Orbitals takes 0.69734200 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -600,8 +480,8 @@ Calling plugin /home/kannon/src/forte/forte.so.
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0     -226.576520188021  0.000  singlet
-      1     -226.084303941220  0.000  singlet
+      0     -226.450641470492  0.000  singlet
+      1     -226.040864779786  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -611,42 +491,46 @@ Calling plugin /home/kannon/src/forte/forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      0     -226.576520188021  -2.266e+02
-      1     -226.576520188021  +1.137e-13
-      2     -226.576520188021  -1.137e-13
-      3     -226.576520188021  +1.137e-13
-      4     -226.576520188021  -1.137e-13
-      5     -226.576520188021  +1.137e-13
-      6     -226.576520188021  -1.137e-13
-      7     -226.576520188021  +1.137e-13
-      8     -226.576520188021  -1.137e-13
-      9     -226.576520188021  +1.137e-13
-     10     -226.576520188021  -1.137e-13
-     11     -226.576520188021  +1.137e-13
-     12     -226.576520188021  -1.137e-13
-     13     -226.576520188021  +1.137e-13
-     14     -226.576520188021  -1.137e-13
-     15     -226.576520188021  +1.137e-13
-     16     -226.576520188021  -1.137e-13
-     17     -226.576520188021  +1.137e-13
-     18     -226.576520188021  -1.137e-13
-     19     -226.576520188021  +1.137e-13
-     20     -226.576520188021  -1.137e-13
-     21     -226.576520188021  +1.137e-13
-     22     -226.576520188021  -1.137e-13
-     23     -226.576520188021  +1.137e-13
-     24     -226.576520188021  -1.137e-13
-     25     -226.576520188021  +1.137e-13
-     26     -226.576520188021  -1.137e-13
-     27     -226.576520188021  +1.137e-13
-     28     -226.576520188021  -1.137e-13
-     29     -226.576520188021  +1.137e-13
+      0     -226.450641470492  -2.265e+02
+      1     -226.450641470492  +0.000e+00
+      2     -226.450641470492  +0.000e+00
+      3     -226.450641470492  +0.000e+00
+      4     -226.450641470492  +0.000e+00
+      5     -226.450641470492  +0.000e+00
+      6     -226.450641470492  +0.000e+00
+      7     -226.450641470492  +0.000e+00
+      8     -226.450641470492  +0.000e+00
+      9     -226.450641470492  +0.000e+00
+     10     -226.450641470492  +0.000e+00
+     11     -226.450641470492  +0.000e+00
+     12     -226.450641470492  +0.000e+00
+     13     -226.450641470492  +0.000e+00
+     14     -226.450641470492  +0.000e+00
+     15     -226.450641470492  +0.000e+00
+     16     -226.450641470492  +0.000e+00
+     17     -226.450641470492  +0.000e+00
+     18     -226.450641470492  +0.000e+00
+     19     -226.450641470492  +0.000e+00
+     20     -226.450641470492  +0.000e+00
+     21     -226.450641470492  +0.000e+00
+     22     -226.450641470492  +0.000e+00
+     23     -226.450641470492  +0.000e+00
+     24     -226.450641470492  +0.000e+00
+     25     -226.450641470492  +0.000e+00
+     26     -226.450641470492  +0.000e+00
+     27     -226.450641470492  +0.000e+00
+     28     -226.450641470492  +0.000e+00
+     29     -226.450641470492  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 0 iterations.
   Time spent diagonalizing H: 0.000000 s
 
   ==> Root No. 0 <==
-    Total Energy:      -226.576520188021249
+
+    2 0     -0.77098992
+    0 2     -0.63684734
+
+    Total Energy:      -226.450641470491945
 
   ==> RDMs for Root No. 0 <==
     Timing for 1-RDM: 0.000 s
@@ -656,10 +540,10 @@ Calling plugin /home/kannon/src/forte/forte.so.
 	  ---------------------------------------------------------
 	      DF/CD - Driven Similarity Renormalization Group MBPT2
 	                   Kevin Hannon and Chenyang (York) Li
-	                       4 thread(s) (OMP)
+	                       1 thread(s) 
 	  ---------------------------------------------------------
- Reference = TWOCON
-  Reference Energy = -226.576520188021249
+ Reference = RHF
+  Reference Energy = -226.450641470491945
 
   ==> Calculation Information <==
 
@@ -669,37 +553,38 @@ Calling plugin /home/kannon/src/forte/forte.so.
     int_type                                        DF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T1                         ......Done. Timing        0.013010 s
-    Renormalizing F                      ......Done. Timing        0.013044 s
-    Computing <[F, T1]>                  ......Done. Timing        0.002079 s
-    Computing <[F, T2]>                  ......Done. Timing        0.004310 s
-    Computing <[V, T1]>                  ......Done. Timing        0.004163 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ...
-Computing <[V, T2]> (C_2)^4 ccvv     with FLY_AMBIT...Done. Timing        0.108320 s
-    Computing <[V, T2]> 4HH              ......Done. Timing        0.014935 s
-    Computing <V, T2]> 4PP               ...  Done. Timing        0.011830 s
-    Computing [V, T2] 4PH                ...  Done. Timing        0.050663 s
-    Computing [V, T2] λ3                ...
- FourthE: -0.00084392...Done. Timing        0.012457 s
+    Computing T2                         ......Done. Timing        0.013234 s
+    Computing T1                         ......Done. Timing        0.001617 s
+    Renormalizing V                      ......Done. Timing        0.009555 s
+    Renormalizing F                      ......Done. Timing        0.001830 s
+    Computing <[F, T1]>                  ......Done. Timing        0.002658 s
+    Computing <[F, T2]>                  ......Done. Timing        0.001538 s
+    Computing <[V, T1]>                  ......Done. Timing        0.001466 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.010126 s
+    Computing <[V, T2]> (C_2)^4 ccvv     ......Done. Timing        0.074094 s
+    Computing <[V, T2]> 4HH              ......Done. Timing        0.007085 s
+    Computing <V, T2]> 4PP               ...  Done. Timing        0.007045 s
+    Computing [V, T2] 4PH                ...  Done. Timing        0.025420 s
+    Computing [V, T2] λ3                ......Done. Timing        0.006067 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -226.576520188021249
-    <[F, T1]>                      =     -0.004854169707284
-    <[F, T2]>                      =      0.004356017789935
-    <[V, T1]>                      =      0.004925494628217
-    <[V, T2]> (C_2)^4              =     -0.367922016379360
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.004345846641149
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.003405462433511
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.048650651007685
-    <[V, T2]> C_6 C_2              =     -0.000843921109750
-    <[V, T2]>                      =     -0.312363977406764
-    DSRG-MRPT2 correlation energy  =     -0.307936634695896
-    DSRG-MRPT2 total energy        =   -226.884456822717141
-    max(T1)                        =      0.014693877015699
-    ||T1||                         =      0.042818779293956
+    E0 (reference)                 =   -226.450641470491945
+    <[F, T1]>                      =     -0.078778253552018
+    <[F, T2]>                      =      0.000641637167314
+    <[V, T1]>                      =      0.000121382279314
+    <[V, T2]> (C_2)^4              =     -0.371428854270823
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.005673674199491
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004114080239993
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.037342611947068
+    <[V, T2]> C_6 C_2              =     -0.001057758607653
+    <[V, T2]>                      =     -0.325356246491924
+    DSRG-MRPT2 correlation energy  =     -0.403371480597313
+    DSRG-MRPT2 total energy        =   -226.854012951089260
+    max(T1)                        =      0.041979024740670
+    ||T1||                         =      0.151274293380470
 
 
-    CD/DF-DSRG-MRPT2 took   0.29440100 s.
- Your calculation took 1.29289600 seconds
+    CD/DF-DSRG-MRPT2 took   0.16213800 s.
+ Your calculation took 2.97251600 seconds
 *** PSI4 exiting successfully. Buy a developer a beer!

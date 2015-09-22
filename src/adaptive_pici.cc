@@ -135,7 +135,7 @@ void AdaptivePathIntegralCI::startup()
     use_inter_norm_ = options_.get_bool("USE_INTER_NORM");
     do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
-    do_schwartz_prescreening_ = options_.get_bool("SCHWARTZ_PRESCREENING");
+    do_schwarz_prescreening_ = options_.get_bool("SCHWARZ_PRESCREENING");
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
@@ -313,8 +313,8 @@ double AdaptivePathIntegralCI::compute_energy()
     double beta = 0.0;
     bool converged = false;
 
-    schwartz_succ_=0;
-    schwartz_total_=0;
+    schwarz_succ_=0;
+    schwarz_total_=0;
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
@@ -387,9 +387,9 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n  * Size of CI space                   = %zu",C.size());
     outfile->Printf("\n  * Spawning events/iteration          = %zu",nspawned_);
     outfile->Printf("\n  * Determinants that do not spawn     = %zu",nzerospawn_);
-    if (do_schwartz_prescreening_) {
-        outfile->Printf("\n  * Schwartz prescreening total attempt= %zu",schwartz_total_);
-        outfile->Printf("\n  * Schwartz prescreening succeed      = %zu",schwartz_succ_);
+    if (do_schwarz_prescreening_) {
+        outfile->Printf("\n  * Schwarz prescreening total attempt= %zu",schwarz_total_);
+        outfile->Printf("\n  * Schwarz prescreening succeed      = %zu",schwarz_succ_);
     }
 
     outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
@@ -1747,12 +1747,12 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
 //                spawned[thread_id] += apply_tau_H_det_dynamic_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S,max_coupling);
             }
         }
-    }else if (do_schwartz_prescreening_){
+    }else if (do_schwarz_prescreening_){
         size_t max_I = dets.size();
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
-            spawned[thread_id] += apply_tau_H_det_schwartz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
 //            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
 //            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
         }
@@ -2104,7 +2104,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_dynamic_sym(double tau, double sp
     return spawned;
 }
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det_schwartz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
+size_t AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -2172,9 +2172,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_schwartz(double tau, double spawn
         int ii = aocc[i];
         for (int j = i + 1; j < noalpha; ++j){
             int jj = aocc[j];
-            ++schwartz_total_;
+            ++schwarz_total_;
             if (fabs(pqpq_aa_[ii * ncmo_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
-                ++schwartz_succ_;
+                ++schwarz_succ_;
                 continue;
             }
             for (int a = 0; a < nvalpha; ++a){
@@ -2222,9 +2222,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_schwartz(double tau, double spawn
         int ii = aocc[i];
         for (int j = 0; j < nobeta; ++j){
             int jj = bocc[j];
-            ++schwartz_total_;
+            ++schwarz_total_;
             if (fabs(pqpq_ab_[ii * ncmo_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
-                ++schwartz_succ_;
+                ++schwarz_succ_;
                 continue;
             }
             for (int a = 0; a < nvalpha; ++a){
@@ -2273,9 +2273,9 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_schwartz(double tau, double spawn
         int ii = bocc[i];
         for (int j = i + 1; j < nobeta; ++j){
             int jj = bocc[j];
-            ++schwartz_total_;
+            ++schwarz_total_;
             if (fabs(pqpq_bb_[ii * ncmo_ + jj] * pqpq_max_ab * CI) < spawning_threshold) {
-                ++schwartz_succ_;
+                ++schwarz_succ_;
                 continue;
             }
             for (int a = 0; a < nvbeta; ++a){

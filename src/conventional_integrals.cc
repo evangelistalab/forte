@@ -17,14 +17,14 @@
 #include <numeric>
 #include "blockedtensorfactory.h"
 
+namespace psi{ namespace forte{
+
 /**
      * @brief ConventionalIntegrals::ConventionalIntegrals
      * @param options - psi options class
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-namespace psi{ namespace forte{
-
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
@@ -200,7 +200,7 @@ void ConventionalIntegrals::gather_integrals()
     int ioffmax = 30000;
     int* myioff = new int[ioffmax];
     myioff[0] = 0;
-    for(size_t i = 1; i < ioffmax; ++i)
+    for(int i = 1; i < ioffmax; ++i)
         myioff[i] = myioff[i-1] + i;
 
     if (restricted_){
@@ -589,5 +589,70 @@ void ConventionalIntegrals::compute_frozen_one_body_operator()
         }
         f += nmopi_[hi];
     }
+
+    ///Can't figure out how PK builder works.  For time being, just use dumb code.  
+
+    //boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    //Dimension nmopi = wfn->nmopi();
+    //SharedMatrix Ca = wfn->Ca();
+    //Ca->print();
+
+    //Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
+    //SharedMatrix C_core(new Matrix(nirrep_, nmopi, frozen_dim));
+    //for(size_t h = 0; h < nirrep_; h++){
+    //    for(size_t mu = 0; mu < nmopi[h]; mu++){
+    //        for(size_t i = 0; i <  frozen_dim[h]; i++){
+    //            C_core->set(h,mu, i, Ca->get(h,mu, i));
+    //        }
+    //    }
+    //}
+
+    //C_core->print();
+
+    //boost::shared_ptr<JK> JK_core = JK::build_JK();
+
+    //JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    ///// Already transform everything to C1 so make sure JK does not do this.
+
+    ///////TODO: Make this an option in my code
+    ////JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    //JK_core->initialize();
+
+    //JK_core->print_header();
+
+
+    //std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+
+    //Cl.clear();
+    //Cl.push_back(C_core);
+
+    //JK_core->compute();
+
+    //SharedMatrix F_sym = JK_core->J()[0];
+    //SharedMatrix K_sym = JK_core->K()[0];
+
+    //F_sym->scale(2.0);
+    //F_sym->subtract(K_sym);
+    //F_sym->transform(Ca);
+    //SharedMatrix F_core(new Matrix("F_core", nmo_, nmo_));
+
+    //SharedMatrix so_to_ao = wfn->aotoso()->transpose();
+    //F_core->remove_symmetry(F_sym, so_to_ao);
+    //F_core->print();
+
+    //for(size_t p = 0; p < nmo_; ++p){
+    //    for(size_t q = 0; q < nmo_; ++q){
+    //        one_electron_integrals_a[p * nmo_ + q] += F_core->get(p, q);
+    //        one_electron_integrals_b[p * nmo_ + q] += F_core->get(p ,q);
+    //    }
+    //}
+    //for(size_t p = 0; p < nmo_; ++p){
+    //    for(size_t q = 0; q < nmo_; ++q){
+    //        outfile->Printf("\n p: %lu q: %lu  %8.8f", p, q,one_electron_integrals_a[p * nmo_ + q] );
+    //        outfile->Printf("\n p: %lu q: %lu  %8.8f", p, q,one_electron_integrals_b[p * nmo_ + q] );
+    //    }
+    //}
+
 }
 }} //End namespaces for psi and forte
