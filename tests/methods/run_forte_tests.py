@@ -3,6 +3,17 @@
 import sys
 import os
 import subprocess
+import re
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+
+timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
 
 psi4command = ""
 
@@ -10,6 +21,9 @@ if len(sys.argv) == 1:
     cmd = ["which","psi4"]
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     res = p.stdout.readlines()
+    if len(res) == 0:
+        print "Could not detect your PSI4 executable.  Please specify its location."
+        exit(1)
     psi4command = res[0][:-1]
 elif len(sys.argv) == 2:
     psi4command = sys.argv[1]
@@ -39,8 +53,31 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3"
 
 tests =  fci_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + fciqmc_tests + ct_tests + dsrg_tests
 maindir = os.getcwd()
+
+test_results = {}
 for d in tests:
-    print "\nRunning test %s" % d
+    print "\nRunning test %s" % d,
     os.chdir(d)
-    subprocess.call([psi4command])
+    
+    successful = True
+    # Run psi
+    try:
+        out = subprocess.check_output([psi4command])
+#        print out
+    except:
+        successful = False
+        test_results[d] = False
+
+    if successful:
+        # Check if FORTE ended successfully
+        timing = open("output.dat").read()
+        m = timing_re.search(timing)
+        message = ""
+        if m:
+            message =  bcolors.OKGREEN + "OK" + bcolors.ENDC
+        else:
+            message = bcolors.FAIL + "FAILED" + bcolors.ENDC
+        filler = " " * (66)
+        print "        %s" % (message)
+        print out
     os.chdir(maindir)
