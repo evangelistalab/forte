@@ -18,19 +18,19 @@ void MRDSRG::compute_hbar(){
     }
 
     // copy bare Hamiltonian to Hbar
-    Hbar0 = 0.0;
-    Hbar1["pq"] = F["pq"];
-    Hbar1["PQ"] = F["PQ"];
-    Hbar2["pqrs"] = V["pqrs"];
-    Hbar2["pQrS"] = V["pQrS"];
-    Hbar2["PQRS"] = V["PQRS"];
+    Hbar0_ = 0.0;
+    Hbar1_["pq"] = F_["pq"];
+    Hbar1_["PQ"] = F_["PQ"];
+    Hbar2_["pqrs"] = V_["pqrs"];
+    Hbar2_["pQrS"] = V_["pQrS"];
+    Hbar2_["PQRS"] = V_["PQRS"];
 
     // temporary Hamiltonian used in every iteration
-    O1["pq"] = F["pq"];
-    O1["PQ"] = F["PQ"];
-    O2["pqrs"] = V["pqrs"];
-    O2["pQrS"] = V["pQrS"];
-    O2["PQRS"] = V["PQRS"];
+    O1_["pq"] = F_["pq"];
+    O1_["PQ"] = F_["PQ"];
+    O2_["pqrs"] = V_["pqrs"];
+    O2_["pQrS"] = V_["pQrS"];
+    O2_["PQRS"] = V_["PQRS"];
 
     // iterator variables
     bool converged = false;
@@ -44,8 +44,8 @@ void MRDSRG::compute_hbar(){
 
         // Compute the commutator C = 1/n [O, T]
         double C0 = 0.0;
-        C1.zero();
-        C2.zero();
+        C1_.zero();
+        C2_.zero();
 
         // printing level
         if(print_ > 2){
@@ -54,19 +54,19 @@ void MRDSRG::compute_hbar(){
         }
 
         // zero-body
-        H1_T1_C0(O1,T1,factor,C0);
-        H1_T2_C0(O1,T2,factor,C0);
-        H2_T1_C0(O2,T1,factor,C0);
-        H2_T2_C0(O2,T2,factor,C0);
+        H1_T1_C0(O1_,T1_,factor,C0);
+        H1_T2_C0(O1_,T2_,factor,C0);
+        H2_T1_C0(O2_,T1_,factor,C0);
+        H2_T2_C0(O2_,T2_,factor,C0);
         // one-body
-        H1_T1_C1(O1,T1,factor,C1);
-        H1_T2_C1(O1,T2,factor,C1);
-        H2_T1_C1(O2,T1,factor,C1);
-        H2_T2_C1(O2,T2,factor,C1);
+        H1_T1_C1(O1_,T1_,factor,C1_);
+        H1_T2_C1(O1_,T2_,factor,C1_);
+        H2_T1_C1(O2_,T1_,factor,C1_);
+        H2_T2_C1(O2_,T2_,factor,C1_);
         // two-body
-        H1_T2_C2(O1,T2,factor,C2);
-        H2_T1_C2(O2,T1,factor,C2);
-        H2_T2_C2(O2,T2,factor,C2);
+        H1_T2_C2(O1_,T2_,factor,C2_);
+        H2_T1_C2(O2_,T1_,factor,C2_);
+        H2_T2_C2(O2_,T2_,factor,C2_);
 
         // printing level
         if(print_ > 2){
@@ -76,35 +76,35 @@ void MRDSRG::compute_hbar(){
 
         // [H, A] = [H, T] + [H, T]^dagger
         C0 *= 2.0;
-        O1["pq"]  = C1["pq"];
-        O1["PQ"]  = C1["PQ"];
-        C1["pq"] += O1["qp"];
-        C1["PQ"] += O1["QP"];
-        O2["pqrs"]  = C2["pqrs"];
-        O2["pQrS"]  = C2["pQrS"];
-        O2["PQRS"]  = C2["PQRS"];
-        C2["pqrs"] += O2["rspq"];
-        C2["pQrS"] += O2["rSpQ"];
-        C2["PQRS"] += O2["RSPQ"];
+        O1_["pq"]  = C1_["pq"];
+        O1_["PQ"]  = C1_["PQ"];
+        C1_["pq"] += O1_["qp"];
+        C1_["PQ"] += O1_["QP"];
+        O2_["pqrs"]  = C2_["pqrs"];
+        O2_["pQrS"]  = C2_["pQrS"];
+        O2_["PQRS"]  = C2_["PQRS"];
+        C2_["pqrs"] += O2_["rspq"];
+        C2_["pQrS"] += O2_["rSpQ"];
+        C2_["PQRS"] += O2_["RSPQ"];
 
         // Hbar += C
-        Hbar0 += C0;
-        Hbar1["pq"] += C1["pq"];
-        Hbar1["PQ"] += C1["PQ"];
-        Hbar2["pqrs"] += C2["pqrs"];
-        Hbar2["pQrS"] += C2["pQrS"];
-        Hbar2["PQRS"] += C2["PQRS"];
+        Hbar0_ += C0;
+        Hbar1_["pq"] += C1_["pq"];
+        Hbar1_["PQ"] += C1_["PQ"];
+        Hbar2_["pqrs"] += C2_["pqrs"];
+        Hbar2_["pQrS"] += C2_["pQrS"];
+        Hbar2_["PQRS"] += C2_["PQRS"];
 
         // copy C to O for next level commutator
-        O1["pq"] = C1["pq"];
-        O1["PQ"] = C1["PQ"];
-        O2["pqrs"] = C2["pqrs"];
-        O2["pQrS"] = C2["pQrS"];
-        O2["PQRS"] = C2["PQRS"];
+        O1_["pq"] = C1_["pq"];
+        O1_["PQ"] = C1_["PQ"];
+        O2_["pqrs"] = C2_["pqrs"];
+        O2_["pQrS"] = C2_["pQrS"];
+        O2_["PQRS"] = C2_["PQRS"];
 
         // test convergence of C
-        double norm_C1 = C1.norm();
-        double norm_C2 = C2.norm();
+        double norm_C1 = C1_.norm();
+        double norm_C2 = C2_.norm();
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             converged = true;
             break;
@@ -137,24 +137,24 @@ double MRDSRG::compute_energy_ldsrg2(){
 
     // figure out off-diagonal block labels for Hbar1
     std::vector<std::string> blocks1;
-    blocks1.push_back(acore_label + aactv_label);
-    blocks1.push_back(acore_label + avirt_label);
-    blocks1.push_back(aactv_label + avirt_label);
-    blocks1.push_back(bcore_label + bactv_label);
-    blocks1.push_back(bcore_label + bvirt_label);
-    blocks1.push_back(bactv_label + bvirt_label);
+    blocks1.push_back(acore_label_ + aactv_label_);
+    blocks1.push_back(acore_label_ + avirt_label_);
+    blocks1.push_back(aactv_label_ + avirt_label_);
+    blocks1.push_back(bcore_label_ + bactv_label_);
+    blocks1.push_back(bcore_label_ + bvirt_label_);
+    blocks1.push_back(bactv_label_ + bvirt_label_);
 
     // figure out off-diagonal block labels for Hbar2
     std::vector<std::string> blocks2;
     std::vector<std::string> hole, particle;
-    hole.push_back(acore_label); hole.push_back(aactv_label);
-    particle.push_back(aactv_label); particle.push_back(avirt_label);
+    hole.push_back(acore_label_); hole.push_back(aactv_label_);
+    particle.push_back(aactv_label_); particle.push_back(avirt_label_);
     for(auto& idx0: hole){
         for(auto& idx1: hole){
             for(auto& idx2: particle){
                 for(auto& idx3: particle){
-                    if(idx0 == aactv_label && idx1 == aactv_label &&
-                            idx2 == aactv_label && idx3 == aactv_label){
+                    if(idx0 == aactv_label_ && idx1 == aactv_label_ &&
+                            idx2 == aactv_label_ && idx3 == aactv_label_){
                         continue;
                     }
                     std::string index;
@@ -177,14 +177,14 @@ double MRDSRG::compute_energy_ldsrg2(){
     double r_conv = options_.get_double("R_CONVERGENCE");
     bool converged = false;
     double Ecorr = 0.0;
-    Hbar1 = BTF->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
-    Hbar2 = BTF->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
-    O1 = BTF->build(tensor_type_,"O1",spin_cases({"gg"}));
-    O2 = BTF->build(tensor_type_,"O2",spin_cases({"gggg"}));
-    C1 = BTF->build(tensor_type_,"C1",spin_cases({"gg"}));
-    C2 = BTF->build(tensor_type_,"C2",spin_cases({"gggg"}));
-    DT1 = BTF->build(tensor_type_,"DT1",spin_cases({"hp"}));
-    DT2 = BTF->build(tensor_type_,"DT2",spin_cases({"hhpp"}));
+    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
+    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
+    O1_ = BTF_->build(tensor_type_,"O1",spin_cases({"gg"}));
+    O2_ = BTF_->build(tensor_type_,"O2",spin_cases({"gggg"}));
+    C1_ = BTF_->build(tensor_type_,"C1",spin_cases({"gg"}));
+    C2_ = BTF_->build(tensor_type_,"C2",spin_cases({"gggg"}));
+    DT1_ = BTF_->build(tensor_type_,"DT1",spin_cases({"hp"}));
+    DT2_ = BTF_->build(tensor_type_,"DT2",spin_cases({"hhpp"}));
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
@@ -193,109 +193,109 @@ double MRDSRG::compute_energy_ldsrg2(){
     if (max_diis_vectors > 0){
         diis_manager = std::shared_ptr<DIISManager>(new DIISManager(max_diis_vectors, "LDSRG2 DIIS vector", DIISManager::OldestAdded, DIISManager::InCore));
         diis_manager->set_error_vector_size(51,
-                                           DIISEntry::Pointer,DT1.block("cv").numel(),
-                                           DIISEntry::Pointer,DT1.block("CV").numel(),
-                                           DIISEntry::Pointer,DT1.block("ca").numel(),
-                                           DIISEntry::Pointer,DT1.block("CA").numel(),
-                                           DIISEntry::Pointer,DT1.block("av").numel(),
-                                           DIISEntry::Pointer,DT1.block("AV").numel(),
-                                           DIISEntry::Pointer,DT2.block("ccaa").numel(),
-                                           DIISEntry::Pointer,DT2.block("ccav").numel(),
-                                           DIISEntry::Pointer,DT2.block("ccva").numel(),
-                                           DIISEntry::Pointer,DT2.block("ccvv").numel(),
-                                           DIISEntry::Pointer,DT2.block("caaa").numel(),
-                                           DIISEntry::Pointer,DT2.block("caav").numel(),
-                                           DIISEntry::Pointer,DT2.block("cava").numel(),
-                                           DIISEntry::Pointer,DT2.block("cavv").numel(),
-                                           DIISEntry::Pointer,DT2.block("acaa").numel(),
-                                           DIISEntry::Pointer,DT2.block("acav").numel(),
-                                           DIISEntry::Pointer,DT2.block("acva").numel(),
-                                           DIISEntry::Pointer,DT2.block("acvv").numel(),
-                                           DIISEntry::Pointer,DT2.block("aaav").numel(),
-                                           DIISEntry::Pointer,DT2.block("aava").numel(),
-                                           DIISEntry::Pointer,DT2.block("aavv").numel(),
-                                           DIISEntry::Pointer,DT2.block("cCaA").numel(),
-                                           DIISEntry::Pointer,DT2.block("cCaV").numel(),
-                                           DIISEntry::Pointer,DT2.block("cCvA").numel(),
-                                           DIISEntry::Pointer,DT2.block("cCvV").numel(),
-                                           DIISEntry::Pointer,DT2.block("cAaA").numel(),
-                                           DIISEntry::Pointer,DT2.block("cAaV").numel(),
-                                           DIISEntry::Pointer,DT2.block("cAvA").numel(),
-                                           DIISEntry::Pointer,DT2.block("cAvV").numel(),
-                                           DIISEntry::Pointer,DT2.block("aCaA").numel(),
-                                           DIISEntry::Pointer,DT2.block("aCaV").numel(),
-                                           DIISEntry::Pointer,DT2.block("aCvA").numel(),
-                                           DIISEntry::Pointer,DT2.block("aCvV").numel(),
-                                           DIISEntry::Pointer,DT2.block("aAaV").numel(),
-                                           DIISEntry::Pointer,DT2.block("aAvA").numel(),
-                                           DIISEntry::Pointer,DT2.block("aAvV").numel(),
-                                           DIISEntry::Pointer,DT2.block("CCAA").numel(),
-                                           DIISEntry::Pointer,DT2.block("CCAV").numel(),
-                                           DIISEntry::Pointer,DT2.block("CCVA").numel(),
-                                           DIISEntry::Pointer,DT2.block("CCVV").numel(),
-                                           DIISEntry::Pointer,DT2.block("CAAA").numel(),
-                                           DIISEntry::Pointer,DT2.block("CAAV").numel(),
-                                           DIISEntry::Pointer,DT2.block("CAVA").numel(),
-                                           DIISEntry::Pointer,DT2.block("CAVV").numel(),
-                                           DIISEntry::Pointer,DT2.block("ACAA").numel(),
-                                           DIISEntry::Pointer,DT2.block("ACAV").numel(),
-                                           DIISEntry::Pointer,DT2.block("ACVA").numel(),
-                                           DIISEntry::Pointer,DT2.block("ACVV").numel(),
-                                           DIISEntry::Pointer,DT2.block("AAAV").numel(),
-                                           DIISEntry::Pointer,DT2.block("AAVA").numel(),
-                                           DIISEntry::Pointer,DT2.block("AAVV").numel());
+                                           DIISEntry::Pointer,DT1_.block("cv").numel(),
+                                           DIISEntry::Pointer,DT1_.block("CV").numel(),
+                                           DIISEntry::Pointer,DT1_.block("ca").numel(),
+                                           DIISEntry::Pointer,DT1_.block("CA").numel(),
+                                           DIISEntry::Pointer,DT1_.block("av").numel(),
+                                           DIISEntry::Pointer,DT1_.block("AV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ccaa").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ccav").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ccva").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ccvv").numel(),
+                                           DIISEntry::Pointer,DT2_.block("caaa").numel(),
+                                           DIISEntry::Pointer,DT2_.block("caav").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cava").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cavv").numel(),
+                                           DIISEntry::Pointer,DT2_.block("acaa").numel(),
+                                           DIISEntry::Pointer,DT2_.block("acav").numel(),
+                                           DIISEntry::Pointer,DT2_.block("acva").numel(),
+                                           DIISEntry::Pointer,DT2_.block("acvv").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aaav").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aava").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aavv").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cCaA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cCaV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cCvA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cCvV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cAaA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cAaV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cAvA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("cAvV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aCaA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aCaV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aCvA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aCvV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aAaV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aAvA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("aAvV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CCAA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CCAV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CCVA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CCVV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CAAA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CAAV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CAVA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("CAVV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ACAA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ACAV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ACVA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("ACVV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("AAAV").numel(),
+                                           DIISEntry::Pointer,DT2_.block("AAVA").numel(),
+                                           DIISEntry::Pointer,DT2_.block("AAVV").numel());
         diis_manager->set_vector_size(51,
-                                     DIISEntry::Pointer,T1.block("cv").numel(),
-                                     DIISEntry::Pointer,T1.block("CV").numel(),
-                                     DIISEntry::Pointer,T1.block("ca").numel(),
-                                     DIISEntry::Pointer,T1.block("CA").numel(),
-                                     DIISEntry::Pointer,T1.block("av").numel(),
-                                     DIISEntry::Pointer,T1.block("AV").numel(),
-                                     DIISEntry::Pointer,T2.block("ccaa").numel(),
-                                     DIISEntry::Pointer,T2.block("ccav").numel(),
-                                     DIISEntry::Pointer,T2.block("ccva").numel(),
-                                     DIISEntry::Pointer,T2.block("ccvv").numel(),
-                                     DIISEntry::Pointer,T2.block("caaa").numel(),
-                                     DIISEntry::Pointer,T2.block("caav").numel(),
-                                     DIISEntry::Pointer,T2.block("cava").numel(),
-                                     DIISEntry::Pointer,T2.block("cavv").numel(),
-                                     DIISEntry::Pointer,T2.block("acaa").numel(),
-                                     DIISEntry::Pointer,T2.block("acav").numel(),
-                                     DIISEntry::Pointer,T2.block("acva").numel(),
-                                     DIISEntry::Pointer,T2.block("acvv").numel(),
-                                     DIISEntry::Pointer,T2.block("aaav").numel(),
-                                     DIISEntry::Pointer,T2.block("aava").numel(),
-                                     DIISEntry::Pointer,T2.block("aavv").numel(),
-                                     DIISEntry::Pointer,T2.block("cCaA").numel(),
-                                     DIISEntry::Pointer,T2.block("cCaV").numel(),
-                                     DIISEntry::Pointer,T2.block("cCvA").numel(),
-                                     DIISEntry::Pointer,T2.block("cCvV").numel(),
-                                     DIISEntry::Pointer,T2.block("cAaA").numel(),
-                                     DIISEntry::Pointer,T2.block("cAaV").numel(),
-                                     DIISEntry::Pointer,T2.block("cAvA").numel(),
-                                     DIISEntry::Pointer,T2.block("cAvV").numel(),
-                                     DIISEntry::Pointer,T2.block("aCaA").numel(),
-                                     DIISEntry::Pointer,T2.block("aCaV").numel(),
-                                     DIISEntry::Pointer,T2.block("aCvA").numel(),
-                                     DIISEntry::Pointer,T2.block("aCvV").numel(),
-                                     DIISEntry::Pointer,T2.block("aAaV").numel(),
-                                     DIISEntry::Pointer,T2.block("aAvA").numel(),
-                                     DIISEntry::Pointer,T2.block("aAvV").numel(),
-                                     DIISEntry::Pointer,T2.block("CCAA").numel(),
-                                     DIISEntry::Pointer,T2.block("CCAV").numel(),
-                                     DIISEntry::Pointer,T2.block("CCVA").numel(),
-                                     DIISEntry::Pointer,T2.block("CCVV").numel(),
-                                     DIISEntry::Pointer,T2.block("CAAA").numel(),
-                                     DIISEntry::Pointer,T2.block("CAAV").numel(),
-                                     DIISEntry::Pointer,T2.block("CAVA").numel(),
-                                     DIISEntry::Pointer,T2.block("CAVV").numel(),
-                                     DIISEntry::Pointer,T2.block("ACAA").numel(),
-                                     DIISEntry::Pointer,T2.block("ACAV").numel(),
-                                     DIISEntry::Pointer,T2.block("ACVA").numel(),
-                                     DIISEntry::Pointer,T2.block("ACVV").numel(),
-                                     DIISEntry::Pointer,T2.block("AAAV").numel(),
-                                     DIISEntry::Pointer,T2.block("AAVA").numel(),
-                                     DIISEntry::Pointer,T2.block("AAVV").numel());
+                                     DIISEntry::Pointer,T1_.block("cv").numel(),
+                                     DIISEntry::Pointer,T1_.block("CV").numel(),
+                                     DIISEntry::Pointer,T1_.block("ca").numel(),
+                                     DIISEntry::Pointer,T1_.block("CA").numel(),
+                                     DIISEntry::Pointer,T1_.block("av").numel(),
+                                     DIISEntry::Pointer,T1_.block("AV").numel(),
+                                     DIISEntry::Pointer,T2_.block("ccaa").numel(),
+                                     DIISEntry::Pointer,T2_.block("ccav").numel(),
+                                     DIISEntry::Pointer,T2_.block("ccva").numel(),
+                                     DIISEntry::Pointer,T2_.block("ccvv").numel(),
+                                     DIISEntry::Pointer,T2_.block("caaa").numel(),
+                                     DIISEntry::Pointer,T2_.block("caav").numel(),
+                                     DIISEntry::Pointer,T2_.block("cava").numel(),
+                                     DIISEntry::Pointer,T2_.block("cavv").numel(),
+                                     DIISEntry::Pointer,T2_.block("acaa").numel(),
+                                     DIISEntry::Pointer,T2_.block("acav").numel(),
+                                     DIISEntry::Pointer,T2_.block("acva").numel(),
+                                     DIISEntry::Pointer,T2_.block("acvv").numel(),
+                                     DIISEntry::Pointer,T2_.block("aaav").numel(),
+                                     DIISEntry::Pointer,T2_.block("aava").numel(),
+                                     DIISEntry::Pointer,T2_.block("aavv").numel(),
+                                     DIISEntry::Pointer,T2_.block("cCaA").numel(),
+                                     DIISEntry::Pointer,T2_.block("cCaV").numel(),
+                                     DIISEntry::Pointer,T2_.block("cCvA").numel(),
+                                     DIISEntry::Pointer,T2_.block("cCvV").numel(),
+                                     DIISEntry::Pointer,T2_.block("cAaA").numel(),
+                                     DIISEntry::Pointer,T2_.block("cAaV").numel(),
+                                     DIISEntry::Pointer,T2_.block("cAvA").numel(),
+                                     DIISEntry::Pointer,T2_.block("cAvV").numel(),
+                                     DIISEntry::Pointer,T2_.block("aCaA").numel(),
+                                     DIISEntry::Pointer,T2_.block("aCaV").numel(),
+                                     DIISEntry::Pointer,T2_.block("aCvA").numel(),
+                                     DIISEntry::Pointer,T2_.block("aCvV").numel(),
+                                     DIISEntry::Pointer,T2_.block("aAaV").numel(),
+                                     DIISEntry::Pointer,T2_.block("aAvA").numel(),
+                                     DIISEntry::Pointer,T2_.block("aAvV").numel(),
+                                     DIISEntry::Pointer,T2_.block("CCAA").numel(),
+                                     DIISEntry::Pointer,T2_.block("CCAV").numel(),
+                                     DIISEntry::Pointer,T2_.block("CCVA").numel(),
+                                     DIISEntry::Pointer,T2_.block("CCVV").numel(),
+                                     DIISEntry::Pointer,T2_.block("CAAA").numel(),
+                                     DIISEntry::Pointer,T2_.block("CAAV").numel(),
+                                     DIISEntry::Pointer,T2_.block("CAVA").numel(),
+                                     DIISEntry::Pointer,T2_.block("CAVV").numel(),
+                                     DIISEntry::Pointer,T2_.block("ACAA").numel(),
+                                     DIISEntry::Pointer,T2_.block("ACAV").numel(),
+                                     DIISEntry::Pointer,T2_.block("ACVA").numel(),
+                                     DIISEntry::Pointer,T2_.block("ACVV").numel(),
+                                     DIISEntry::Pointer,T2_.block("AAAV").numel(),
+                                     DIISEntry::Pointer,T2_.block("AAVA").numel(),
+                                     DIISEntry::Pointer,T2_.block("AAVV").numel());
     }
 
     // start iteration
@@ -303,8 +303,8 @@ double MRDSRG::compute_energy_ldsrg2(){
         // compute Hbar
         boost::timer t_hbar;
         compute_hbar();
-        double Edelta = Hbar0 - Ecorr;
-        Ecorr = Hbar0;
+        double Edelta = Hbar0_ - Ecorr;
+        Ecorr = Hbar0_;
         double time_hbar = t_hbar.elapsed();
 
         // compute norms of off-diagonal Hbar
@@ -321,175 +321,175 @@ double MRDSRG::compute_energy_ldsrg2(){
         if(diis_manager){
             if(cycle >= min_diis_vectors){
                 diis_manager->add_entry(102,
-                    &(DT1.block("cv").data()[0]),
-                    &(DT1.block("CV").data()[0]),
-                    &(DT1.block("ca").data()[0]),
-                    &(DT1.block("CA").data()[0]),
-                    &(DT1.block("av").data()[0]),
-                    &(DT1.block("AV").data()[0]),
-                    &(DT2.block("ccaa").data()[0]),
-                    &(DT2.block("ccav").data()[0]),
-                    &(DT2.block("ccva").data()[0]),
-                    &(DT2.block("ccvv").data()[0]),
-                    &(DT2.block("caaa").data()[0]),
-                    &(DT2.block("caav").data()[0]),
-                    &(DT2.block("cava").data()[0]),
-                    &(DT2.block("cavv").data()[0]),
-                    &(DT2.block("acaa").data()[0]),
-                    &(DT2.block("acav").data()[0]),
-                    &(DT2.block("acva").data()[0]),
-                    &(DT2.block("acvv").data()[0]),
-                    &(DT2.block("aaav").data()[0]),
-                    &(DT2.block("aava").data()[0]),
-                    &(DT2.block("aavv").data()[0]),
-                    &(DT2.block("cCaA").data()[0]),
-                    &(DT2.block("cCaV").data()[0]),
-                    &(DT2.block("cCvA").data()[0]),
-                    &(DT2.block("cCvV").data()[0]),
-                    &(DT2.block("cAaA").data()[0]),
-                    &(DT2.block("cAaV").data()[0]),
-                    &(DT2.block("cAvA").data()[0]),
-                    &(DT2.block("cAvV").data()[0]),
-                    &(DT2.block("aCaA").data()[0]),
-                    &(DT2.block("aCaV").data()[0]),
-                    &(DT2.block("aCvA").data()[0]),
-                    &(DT2.block("aCvV").data()[0]),
-                    &(DT2.block("aAaV").data()[0]),
-                    &(DT2.block("aAvA").data()[0]),
-                    &(DT2.block("aAvV").data()[0]),
-                    &(DT2.block("CCAA").data()[0]),
-                    &(DT2.block("CCAV").data()[0]),
-                    &(DT2.block("CCVA").data()[0]),
-                    &(DT2.block("CCVV").data()[0]),
-                    &(DT2.block("CAAA").data()[0]),
-                    &(DT2.block("CAAV").data()[0]),
-                    &(DT2.block("CAVA").data()[0]),
-                    &(DT2.block("CAVV").data()[0]),
-                    &(DT2.block("ACAA").data()[0]),
-                    &(DT2.block("ACAV").data()[0]),
-                    &(DT2.block("ACVA").data()[0]),
-                    &(DT2.block("ACVV").data()[0]),
-                    &(DT2.block("AAAV").data()[0]),
-                    &(DT2.block("AAVA").data()[0]),
-                    &(DT2.block("AAVV").data()[0]),
-                    &(T1.block("cv").data()[0]),
-                    &(T1.block("CV").data()[0]),
-                    &(T1.block("ca").data()[0]),
-                    &(T1.block("CA").data()[0]),
-                    &(T1.block("av").data()[0]),
-                    &(T1.block("AV").data()[0]),
-                    &(T2.block("ccaa").data()[0]),
-                    &(T2.block("ccav").data()[0]),
-                    &(T2.block("ccva").data()[0]),
-                    &(T2.block("ccvv").data()[0]),
-                    &(T2.block("caaa").data()[0]),
-                    &(T2.block("caav").data()[0]),
-                    &(T2.block("cava").data()[0]),
-                    &(T2.block("cavv").data()[0]),
-                    &(T2.block("acaa").data()[0]),
-                    &(T2.block("acav").data()[0]),
-                    &(T2.block("acva").data()[0]),
-                    &(T2.block("acvv").data()[0]),
-                    &(T2.block("aaav").data()[0]),
-                    &(T2.block("aava").data()[0]),
-                    &(T2.block("aavv").data()[0]),
-                    &(T2.block("cCaA").data()[0]),
-                    &(T2.block("cCaV").data()[0]),
-                    &(T2.block("cCvA").data()[0]),
-                    &(T2.block("cCvV").data()[0]),
-                    &(T2.block("cAaA").data()[0]),
-                    &(T2.block("cAaV").data()[0]),
-                    &(T2.block("cAvA").data()[0]),
-                    &(T2.block("cAvV").data()[0]),
-                    &(T2.block("aCaA").data()[0]),
-                    &(T2.block("aCaV").data()[0]),
-                    &(T2.block("aCvA").data()[0]),
-                    &(T2.block("aCvV").data()[0]),
-                    &(T2.block("aAaV").data()[0]),
-                    &(T2.block("aAvA").data()[0]),
-                    &(T2.block("aAvV").data()[0]),
-                    &(T2.block("CCAA").data()[0]),
-                    &(T2.block("CCAV").data()[0]),
-                    &(T2.block("CCVA").data()[0]),
-                    &(T2.block("CCVV").data()[0]),
-                    &(T2.block("CAAA").data()[0]),
-                    &(T2.block("CAAV").data()[0]),
-                    &(T2.block("CAVA").data()[0]),
-                    &(T2.block("CAVV").data()[0]),
-                    &(T2.block("ACAA").data()[0]),
-                    &(T2.block("ACAV").data()[0]),
-                    &(T2.block("ACVA").data()[0]),
-                    &(T2.block("ACVV").data()[0]),
-                    &(T2.block("AAAV").data()[0]),
-                    &(T2.block("AAVA").data()[0]),
-                    &(T2.block("AAVV").data()[0]));
+                    &(DT1_.block("cv").data()[0]),
+                    &(DT1_.block("CV").data()[0]),
+                    &(DT1_.block("ca").data()[0]),
+                    &(DT1_.block("CA").data()[0]),
+                    &(DT1_.block("av").data()[0]),
+                    &(DT1_.block("AV").data()[0]),
+                    &(DT2_.block("ccaa").data()[0]),
+                    &(DT2_.block("ccav").data()[0]),
+                    &(DT2_.block("ccva").data()[0]),
+                    &(DT2_.block("ccvv").data()[0]),
+                    &(DT2_.block("caaa").data()[0]),
+                    &(DT2_.block("caav").data()[0]),
+                    &(DT2_.block("cava").data()[0]),
+                    &(DT2_.block("cavv").data()[0]),
+                    &(DT2_.block("acaa").data()[0]),
+                    &(DT2_.block("acav").data()[0]),
+                    &(DT2_.block("acva").data()[0]),
+                    &(DT2_.block("acvv").data()[0]),
+                    &(DT2_.block("aaav").data()[0]),
+                    &(DT2_.block("aava").data()[0]),
+                    &(DT2_.block("aavv").data()[0]),
+                    &(DT2_.block("cCaA").data()[0]),
+                    &(DT2_.block("cCaV").data()[0]),
+                    &(DT2_.block("cCvA").data()[0]),
+                    &(DT2_.block("cCvV").data()[0]),
+                    &(DT2_.block("cAaA").data()[0]),
+                    &(DT2_.block("cAaV").data()[0]),
+                    &(DT2_.block("cAvA").data()[0]),
+                    &(DT2_.block("cAvV").data()[0]),
+                    &(DT2_.block("aCaA").data()[0]),
+                    &(DT2_.block("aCaV").data()[0]),
+                    &(DT2_.block("aCvA").data()[0]),
+                    &(DT2_.block("aCvV").data()[0]),
+                    &(DT2_.block("aAaV").data()[0]),
+                    &(DT2_.block("aAvA").data()[0]),
+                    &(DT2_.block("aAvV").data()[0]),
+                    &(DT2_.block("CCAA").data()[0]),
+                    &(DT2_.block("CCAV").data()[0]),
+                    &(DT2_.block("CCVA").data()[0]),
+                    &(DT2_.block("CCVV").data()[0]),
+                    &(DT2_.block("CAAA").data()[0]),
+                    &(DT2_.block("CAAV").data()[0]),
+                    &(DT2_.block("CAVA").data()[0]),
+                    &(DT2_.block("CAVV").data()[0]),
+                    &(DT2_.block("ACAA").data()[0]),
+                    &(DT2_.block("ACAV").data()[0]),
+                    &(DT2_.block("ACVA").data()[0]),
+                    &(DT2_.block("ACVV").data()[0]),
+                    &(DT2_.block("AAAV").data()[0]),
+                    &(DT2_.block("AAVA").data()[0]),
+                    &(DT2_.block("AAVV").data()[0]),
+                    &(T1_.block("cv").data()[0]),
+                    &(T1_.block("CV").data()[0]),
+                    &(T1_.block("ca").data()[0]),
+                    &(T1_.block("CA").data()[0]),
+                    &(T1_.block("av").data()[0]),
+                    &(T1_.block("AV").data()[0]),
+                    &(T2_.block("ccaa").data()[0]),
+                    &(T2_.block("ccav").data()[0]),
+                    &(T2_.block("ccva").data()[0]),
+                    &(T2_.block("ccvv").data()[0]),
+                    &(T2_.block("caaa").data()[0]),
+                    &(T2_.block("caav").data()[0]),
+                    &(T2_.block("cava").data()[0]),
+                    &(T2_.block("cavv").data()[0]),
+                    &(T2_.block("acaa").data()[0]),
+                    &(T2_.block("acav").data()[0]),
+                    &(T2_.block("acva").data()[0]),
+                    &(T2_.block("acvv").data()[0]),
+                    &(T2_.block("aaav").data()[0]),
+                    &(T2_.block("aava").data()[0]),
+                    &(T2_.block("aavv").data()[0]),
+                    &(T2_.block("cCaA").data()[0]),
+                    &(T2_.block("cCaV").data()[0]),
+                    &(T2_.block("cCvA").data()[0]),
+                    &(T2_.block("cCvV").data()[0]),
+                    &(T2_.block("cAaA").data()[0]),
+                    &(T2_.block("cAaV").data()[0]),
+                    &(T2_.block("cAvA").data()[0]),
+                    &(T2_.block("cAvV").data()[0]),
+                    &(T2_.block("aCaA").data()[0]),
+                    &(T2_.block("aCaV").data()[0]),
+                    &(T2_.block("aCvA").data()[0]),
+                    &(T2_.block("aCvV").data()[0]),
+                    &(T2_.block("aAaV").data()[0]),
+                    &(T2_.block("aAvA").data()[0]),
+                    &(T2_.block("aAvV").data()[0]),
+                    &(T2_.block("CCAA").data()[0]),
+                    &(T2_.block("CCAV").data()[0]),
+                    &(T2_.block("CCVA").data()[0]),
+                    &(T2_.block("CCVV").data()[0]),
+                    &(T2_.block("CAAA").data()[0]),
+                    &(T2_.block("CAAV").data()[0]),
+                    &(T2_.block("CAVA").data()[0]),
+                    &(T2_.block("CAVV").data()[0]),
+                    &(T2_.block("ACAA").data()[0]),
+                    &(T2_.block("ACAV").data()[0]),
+                    &(T2_.block("ACVA").data()[0]),
+                    &(T2_.block("ACVV").data()[0]),
+                    &(T2_.block("AAAV").data()[0]),
+                    &(T2_.block("AAVA").data()[0]),
+                    &(T2_.block("AAVV").data()[0]));
             }
             if (cycle > max_diis_vectors){
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
                     outfile->Printf(" -> DIIS");
                     outfile->Flush();
                     diis_manager->extrapolate(51,
-                        &(T1.block("cv").data()[0]),
-                        &(T1.block("CV").data()[0]),
-                        &(T1.block("ca").data()[0]),
-                        &(T1.block("CA").data()[0]),
-                        &(T1.block("av").data()[0]),
-                        &(T1.block("AV").data()[0]),
-                        &(T2.block("ccaa").data()[0]),
-                        &(T2.block("ccav").data()[0]),
-                        &(T2.block("ccva").data()[0]),
-                        &(T2.block("ccvv").data()[0]),
-                        &(T2.block("caaa").data()[0]),
-                        &(T2.block("caav").data()[0]),
-                        &(T2.block("cava").data()[0]),
-                        &(T2.block("cavv").data()[0]),
-                        &(T2.block("acaa").data()[0]),
-                        &(T2.block("acav").data()[0]),
-                        &(T2.block("acva").data()[0]),
-                        &(T2.block("acvv").data()[0]),
-                        &(T2.block("aaav").data()[0]),
-                        &(T2.block("aava").data()[0]),
-                        &(T2.block("aavv").data()[0]),
-                        &(T2.block("cCaA").data()[0]),
-                        &(T2.block("cCaV").data()[0]),
-                        &(T2.block("cCvA").data()[0]),
-                        &(T2.block("cCvV").data()[0]),
-                        &(T2.block("cAaA").data()[0]),
-                        &(T2.block("cAaV").data()[0]),
-                        &(T2.block("cAvA").data()[0]),
-                        &(T2.block("cAvV").data()[0]),
-                        &(T2.block("aCaA").data()[0]),
-                        &(T2.block("aCaV").data()[0]),
-                        &(T2.block("aCvA").data()[0]),
-                        &(T2.block("aCvV").data()[0]),
-                        &(T2.block("aAaV").data()[0]),
-                        &(T2.block("aAvA").data()[0]),
-                        &(T2.block("aAvV").data()[0]),
-                        &(T2.block("CCAA").data()[0]),
-                        &(T2.block("CCAV").data()[0]),
-                        &(T2.block("CCVA").data()[0]),
-                        &(T2.block("CCVV").data()[0]),
-                        &(T2.block("CAAA").data()[0]),
-                        &(T2.block("CAAV").data()[0]),
-                        &(T2.block("CAVA").data()[0]),
-                        &(T2.block("CAVV").data()[0]),
-                        &(T2.block("ACAA").data()[0]),
-                        &(T2.block("ACAV").data()[0]),
-                        &(T2.block("ACVA").data()[0]),
-                        &(T2.block("ACVV").data()[0]),
-                        &(T2.block("AAAV").data()[0]),
-                        &(T2.block("AAVA").data()[0]),
-                        &(T2.block("AAVV").data()[0]));
+                        &(T1_.block("cv").data()[0]),
+                        &(T1_.block("CV").data()[0]),
+                        &(T1_.block("ca").data()[0]),
+                        &(T1_.block("CA").data()[0]),
+                        &(T1_.block("av").data()[0]),
+                        &(T1_.block("AV").data()[0]),
+                        &(T2_.block("ccaa").data()[0]),
+                        &(T2_.block("ccav").data()[0]),
+                        &(T2_.block("ccva").data()[0]),
+                        &(T2_.block("ccvv").data()[0]),
+                        &(T2_.block("caaa").data()[0]),
+                        &(T2_.block("caav").data()[0]),
+                        &(T2_.block("cava").data()[0]),
+                        &(T2_.block("cavv").data()[0]),
+                        &(T2_.block("acaa").data()[0]),
+                        &(T2_.block("acav").data()[0]),
+                        &(T2_.block("acva").data()[0]),
+                        &(T2_.block("acvv").data()[0]),
+                        &(T2_.block("aaav").data()[0]),
+                        &(T2_.block("aava").data()[0]),
+                        &(T2_.block("aavv").data()[0]),
+                        &(T2_.block("cCaA").data()[0]),
+                        &(T2_.block("cCaV").data()[0]),
+                        &(T2_.block("cCvA").data()[0]),
+                        &(T2_.block("cCvV").data()[0]),
+                        &(T2_.block("cAaA").data()[0]),
+                        &(T2_.block("cAaV").data()[0]),
+                        &(T2_.block("cAvA").data()[0]),
+                        &(T2_.block("cAvV").data()[0]),
+                        &(T2_.block("aCaA").data()[0]),
+                        &(T2_.block("aCaV").data()[0]),
+                        &(T2_.block("aCvA").data()[0]),
+                        &(T2_.block("aCvV").data()[0]),
+                        &(T2_.block("aAaV").data()[0]),
+                        &(T2_.block("aAvA").data()[0]),
+                        &(T2_.block("aAvV").data()[0]),
+                        &(T2_.block("CCAA").data()[0]),
+                        &(T2_.block("CCAV").data()[0]),
+                        &(T2_.block("CCVA").data()[0]),
+                        &(T2_.block("CCVV").data()[0]),
+                        &(T2_.block("CAAA").data()[0]),
+                        &(T2_.block("CAAV").data()[0]),
+                        &(T2_.block("CAVA").data()[0]),
+                        &(T2_.block("CAVV").data()[0]),
+                        &(T2_.block("ACAA").data()[0]),
+                        &(T2_.block("ACAV").data()[0]),
+                        &(T2_.block("ACVA").data()[0]),
+                        &(T2_.block("ACVV").data()[0]),
+                        &(T2_.block("AAAV").data()[0]),
+                        &(T2_.block("AAVA").data()[0]),
+                        &(T2_.block("AAVV").data()[0]));
                 }
             }
         }
 
         // printing
         outfile->Printf("\n    %5d  %16.12f %10.3e  %10.3e %10.3e  %10.3e %10.3e  %8.3f %8.3f",
-                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms, T2rms, time_hbar, time_amp);
+                        cycle, Ecorr, Edelta, Hbar1od, Hbar2od, T1rms_, T2rms_, time_hbar, time_amp);
 
         // test convergence
-        double rms = T1rms > T2rms ? T1rms : T2rms;
+        double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if(fabs(Edelta) < e_conv && rms < r_conv){
             converged = true;
         }
@@ -505,25 +505,25 @@ double MRDSRG::compute_energy_ldsrg2(){
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2) Energy Summary <==\n");
     std::vector<std::pair<std::string,double>> energy;
-    energy.push_back({"E0 (reference)", Eref});
+    energy.push_back({"E0 (reference)", Eref_});
     energy.push_back({"MR-LDSRG(2) correlation energy", Ecorr});
-    energy.push_back({"MR-LDSRG(2) total energy", Eref + Ecorr});
+    energy.push_back({"MR-LDSRG(2) total energy", Eref_ + Ecorr});
     for (auto& str_dim: energy){
         outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(), str_dim.second);
     }
 
     // analyze converged amplitudes
-    analyze_amplitudes("Final",T1,T2);
+    analyze_amplitudes("Final",T1_,T2_);
 
-    Hbar0 = Ecorr;
+    Hbar0_ = Ecorr;
     return Ecorr;
 }
 
-double MRDSRG::Hbar1od_norm(const std::vector<std::string> &blocks){
+double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks){
     double norm = 0.0;
 
     for(auto& block: blocks){
-        double norm_block = Hbar1.block(block).norm();
+        double norm_block = Hbar1_.block(block).norm();
         norm += 2.0 * norm_block * norm_block;
     }
     norm = std::sqrt(norm);
@@ -531,11 +531,11 @@ double MRDSRG::Hbar1od_norm(const std::vector<std::string> &blocks){
     return norm;
 }
 
-double MRDSRG::Hbar2od_norm(const std::vector<std::string> &blocks){
+double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks){
     double norm = 0.0;
 
     for(auto& block: blocks){
-        double norm_block = Hbar2.block(block).norm();
+        double norm_block = Hbar2_.block(block).norm();
         norm += 2.0 * norm_block * norm_block;
     }
     norm = std::sqrt(norm);
