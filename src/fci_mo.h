@@ -17,7 +17,6 @@
 
 using namespace std;
 
-
 using d1 = vector<double>;
 using d2 = vector<d1>;
 using d3 = vector<d2>;
@@ -32,54 +31,57 @@ class FCI_MO
 public:
 
     /**
-     * @brief FCI_MO
+     * @brief FCI_MO Constructor
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
     FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /// Destructor
     ~FCI_MO();
 
     /// Returns the reference object
     Reference reference();
 
 protected:
-    // Basic Preparation
+    /// Basic Preparation
     void startup(Options &options);
     void read_info(Options &options);
     void cleanup();
 
-    // Integrals
+    /// Integrals
     std::shared_ptr<ForteIntegrals>  integral_;
     std::string int_type_;
 	std::shared_ptr<FCIIntegrals> fci_ints_;
-    // Reference Type
+
+    /// Reference Type
     std::string ref_type_;
 
-    // MO space info
+    /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    // Print Levels
+    /// Print Levels
     int print_;
 
-    // Nucear Repulsion Energy
+    /// Nucear Repulsion Energy
     double e_nuc_;
 
-    // Convergence
+    /// Convergence
     double econv_;
     double dconv_;
 
-    // Multiplicity
+    /// Multiplicity
     int multi_;
     int ms_;
 
-    // Symmetry
+    /// Symmetry
     int nirrep_;             // number of irrep
     int root_sym_;           // root
     vector<int> sym_active_; // active MOs
     vector<int> sym_ncmo_;   // correlated MOs
 
-    // Molecular Orbitals
+    /// Molecular Orbitals
     size_t nmo_;             // total MOs
     Dimension nmopi_;
     size_t ncmo_;            // correlated MOs
@@ -102,39 +104,39 @@ protected:
     size_t npt_;             // particle MOs
     vector<size_t> idx_p_;
 
-    // Number of Alpha and Beta Electrons
+    /// Number of Alpha and Beta Electrons
     long int nalfa_;
     long int nbeta_;
 
-    // Determinants
+    /// Determinants
     void form_det();
     vecdet determinant_;
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
 
-    // Choice of Roots
+    /// Choice of Roots
     int nroot_;  // number of roots
     int root_;   // which root in nroot
 
-    // Diagonalize the CASCI Hamiltonian
+    /// Diagonalize the CASCI Hamiltonian
     vector<pair<SharedVector,double>> eigen_;
     std::string diag_algorithm_;
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
-    // Store and Print the CI Vectors and Configurations
+    /// Store and Print the CI Vectors and Configurations
     double print_CI_threshold;
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
-    // semi-canonicalize
+    /// semi-canonicalize
     void semi_canonicalize();
 
-    // Density Matrix
+    /// Density Matrix
     d2 Da_;
     d2 Db_;
     ambit::Tensor L1a;    // only in active
     ambit::Tensor L1b;    // only in active
     void fill_density();
 
-    // 2-Body Density Cumulant
+    /// 2-Body Density Cumulant
     d4 L2aa_;
     d4 L2ab_;
     d4 L2bb_;
@@ -143,7 +145,7 @@ protected:
     ambit::Tensor L2bb;
     void fill_cumulant2();
 
-    // 3-Body Density Cumulant
+    /// 3-Body Density Cumulant
     d6 L3aaa_;
     d6 L3aab_;
     d6 L3abb_;
@@ -154,31 +156,31 @@ protected:
     ambit::Tensor L3bbb;
     void fill_cumulant3();
 
-    // Print Functions
+    /// Print Functions
     void print_d2(const string &str, const d2 &OnePD);
     void print2PDC(const string &str, const d4 &TwoPDC, const int &PRINT);
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
-    // Form Density Matrix
+    /// Form Density Matrix
     void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
 
-    // Form 2-Particle Density Cumulant
+    /// Form 2-Particle Density Cumulant
     void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
     void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
     void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
-    // Form 3-Particle Density Cumulant
+    /// Form 3-Particle Density Cumulant
     void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
     void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
     void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
-    // N-Particle Operator
+    /// N-Particle Operator
     double OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
     double TwoOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
     double ThreeOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
-    // Fock Matrix
+    /// Fock Matrix
     d2 Fa_;
     d2 Fb_;
     void Form_Fock(d2 &A, d2 &B);
@@ -186,11 +188,11 @@ protected:
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
     void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
 
-    // Reference Energy
+    /// Reference Energy
     double Eref_;
     void compute_ref();
 
-    // Check Sign (inline functons)
+    /// Check Sign (inline functons)
     double CheckSign(const vector<bool>& I, const int &n){
         timer_on("Check Sign");
         size_t count = 0;
@@ -210,7 +212,7 @@ protected:
         return pow(-1.0,count%2);
     }
 
-    // Print Size of a Array with Irrep
+    /// Print Size of a Array with Irrep
     void print_irrep(const string &str, const Dimension &array){
         outfile->Printf("\n    %-30s", str.c_str());
         outfile->Printf("[");
@@ -220,7 +222,7 @@ protected:
         outfile->Printf("]");
     }
 
-    // Print Indices
+    /// Print Indices
     void print_idx(const string &str, const vector<size_t> &vec){
         outfile->Printf("\n    %-30s", str.c_str());
         size_t c = 0;
@@ -231,7 +233,7 @@ protected:
         }
     }
 
-    // Print Determinants
+    /// Print Determinants
     void print_det(const vecdet &dets){
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
         for(BitsetDeterminant x: dets){
@@ -241,7 +243,7 @@ protected:
         outfile->Printf("\n");
     }
 
-    // Permutations for 3-PDC
+    /// Permutations for 3-PDC
     double P3DDD(const d2 &Density, const size_t &p, const size_t &q, const size_t &r, const size_t &s, const size_t &t, const size_t &u){
         double E = 0.0;
         int index[] = {0,1,2};
