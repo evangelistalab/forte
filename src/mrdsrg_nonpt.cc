@@ -494,7 +494,7 @@ double MRDSRG::compute_energy_ldsrg2(){
             converged = true;
         }
         if(cycle > maxiter){
-            outfile->Printf("\n\n    The computation does not converge in %d iterations!\tQuitting.\n", maxiter);
+            outfile->Printf("\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
             converged = true;
         }
         outfile->Flush();

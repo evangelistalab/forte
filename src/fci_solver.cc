@@ -272,6 +272,7 @@ double FCISolver::compute_energy()
     for (int r = 0; r < nroot_; ++r){
         outfile->Printf("\n\n  ==> Root No. %d <==\n",r);
 
+        C_->copy(dls.eigenvector(r));
         std::vector<std::tuple<double,double,size_t,size_t,size_t>>
             dets_config = C_->max_abs_elements(guess_size * ntrial_per_root_);
         Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
