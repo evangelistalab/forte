@@ -247,6 +247,9 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /* - Run a FCI followed by CASSCF computation -*/
         options.add_bool("CASSCF_REFERENCE", false);
+        /* - The number of iterations for CASSCF -*/
+        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_double("CASSCF_CONVERGENCE", 1e-6);
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
