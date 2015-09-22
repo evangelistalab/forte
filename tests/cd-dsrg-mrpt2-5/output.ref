@@ -2,7 +2,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                               Psi4 (no tag) Driver
 
-                          Git: Rev {master} 7baee9b dirty
+                          Git: Rev {master} 7a8bad0 dirty
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -16,9 +16,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Fri Aug 28 11:54:43 2015
+    Psi4 started on: Mon Sep 21 20:33:18 2015
 
-    Process ID:   5723
+    Process ID:  59395
     PSI4DATADIR: /Users/kevinhannon/Programs/psi4private_clang/psi4/lib
     Memory level set to 256.000 MB
 
@@ -52,7 +52,8 @@ molecule mbenzyne{
 set globals{
    basis                   sto-3g
    reference               twocon
-   scf_type                pk
+   scf_type                CD
+   cholesky_tolerance      1e-14
    d_convergence           10
    e_convergence           12
 }
@@ -78,10 +79,10 @@ set forte{
 }
 
 scf = energy('mcscf')
-energy('forte')
+compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
 
-compare_values(refmcscf, scf,10,"SCF energy")
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+energy('forte')
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 
 --------------------------------------------------------------------------
@@ -362,17 +363,17 @@ compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy"
   MCSCF Execution Completed.
 
 
-*** tstop() called on Kevins-MacBook-Pro.local at Fri Aug 28 11:54:44 2015
+*** tstop() called on Kevins-MacBook-Pro-2.local at Mon Sep 21 20:33:19 2015
 Module time:
-	user time   =       0.64 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  = 1440777284 seconds = 24012954.73 minutes
+	user time   =       0.63 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  = 1442881999 seconds = 24048033.32 minutes
 Total time:
-	user time   =       0.64 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  = 1440777284 seconds = 24012954.73 minutes
+	user time   =       0.63 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  = 1442881999 seconds = 24048033.32 minutes
 Reading options from the FORTE block
-Calling plugin forte.so.
+Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
 
 
   ==> MO Space Information <==
@@ -396,8 +397,6 @@ Calling plugin forte.so.
     FROZEN_UOCC         0     0     0     0     0     0     0     0     0
     Total               8     6     1     2     1     2     8     6    34
   -------------------------------------------------------------------------
-  Using the input to select the number of frozen core MOs.
-
 
   ==> Integral Transformation <==
 
@@ -410,166 +409,416 @@ Calling plugin forte.so.
  Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        4.142099 s
+    Computing CD Integrals               ......Done. Timing        4.111540 s
  Need 0.004031 GB to store cd integrals in core
 
  Number of cholesky vectors 468 to satisfy       0.000000000010 tolerance
 
-  Frozen-core energy           -287.155405698903 a.u.
-  Freezing MO 0
-  Freezing MO 1
-  Freezing MO 8
-  Freezing MO 20
-  Freezing MO 21
-  Freezing MO 28
+  Frozen-core energy           -287.155405698903 a.u.  ## C_core (Symmetry 0) ##
+  Irrep: 1 Size: 34 x 6
 
- FrozenOneBody Operator takes  0.04894800 s
+                 1                   2                   3                   4                   5
+
+    1    -0.00668550751541     0.70191092444263     0.00000000000000    -0.00942443447809     0.70180936307821
+    2     0.00713853775898     0.02358927985179     0.00000000000000     0.00736130914240     0.02381976039844
+    3     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000    -0.00410017575799     0.00000000000000     0.00000000000000
+    5     0.00225902711748     0.00386306585836     0.00000000000000     0.00228660773398     0.00449261370139
+    6    -0.00668550751541     0.70191092444263     0.00000000000000     0.00942443447809    -0.70180936307821
+    7     0.00713853775898     0.02358927985179     0.00000000000000    -0.00736130914240    -0.02381976039844
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00410017575799     0.00000000000000     0.00000000000000
+   10    -0.00225902711748    -0.00386306585836     0.00000000000000     0.00228660773398     0.00449261370139
+   11    -0.49630753998209    -0.00417577188915    -0.49587771495808    -0.49583093778756    -0.00624722976969
+   12    -0.01491274932303    -0.00529468017566    -0.02142689737186    -0.02170390423104    -0.00579105240778
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   14    -0.00056599340338    -0.00322418648476    -0.00064637510837    -0.00081152523982    -0.00292864197811
+   15     0.00209784660305     0.00113994498288    -0.00234423768963    -0.00245166096584     0.00112409772533
+   16    -0.49630753998209    -0.00417577188915     0.49587771495808    -0.49583093778756    -0.00624722976969
+   17    -0.01491274932303    -0.00529468017566     0.02142689737186    -0.02170390423104    -0.00579105240778
+   18     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   19     0.00056599340338     0.00322418648476    -0.00064637510837     0.00081152523982     0.00292864197811
+   20     0.00209784660305     0.00113994498288     0.00234423768963    -0.00245166096584     0.00112409772533
+   21    -0.49630753998209    -0.00417577188915    -0.49587771495808     0.49583093778756     0.00624722976969
+   22    -0.01491274932303    -0.00529468017566    -0.02142689737186     0.02170390423104     0.00579105240778
+   23     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   24     0.00056599340338     0.00322418648476     0.00064637510837    -0.00081152523982    -0.00292864197811
+   25    -0.00209784660305    -0.00113994498288     0.00234423768963    -0.00245166096584     0.00112409772533
+   26    -0.49630753998209    -0.00417577188915     0.49587771495808     0.49583093778756     0.00624722976969
+   27    -0.01491274932303    -0.00529468017566     0.02142689737186     0.02170390423104     0.00579105240778
+   28     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   29    -0.00056599340338    -0.00322418648476     0.00064637510837     0.00081152523982     0.00292864197811
+   30    -0.00209784660305    -0.00113994498288    -0.00234423768963    -0.00245166096584     0.00112409772533
+   31     0.00342894293588    -0.00008037784566     0.00344420835325     0.00345440571914     0.00010657944135
+   32     0.00342894293588    -0.00008037784566    -0.00344420835325     0.00345440571914     0.00010657944135
+   33     0.00342894293588    -0.00008037784566     0.00344420835325    -0.00345440571914    -0.00010657944135
+   34     0.00342894293588    -0.00008037784566    -0.00344420835325    -0.00345440571914    -0.00010657944135
+
+                 6
+
+    1     0.00000000000000
+    2     0.00000000000000
+    3     0.00000000000000
+    4     0.00396117916689
+    5     0.00000000000000
+    6     0.00000000000000
+    7     0.00000000000000
+    8     0.00000000000000
+    9     0.00396117916689
+   10     0.00000000000000
+   11     0.49628361575988
+   12     0.01476378534815
+   13     0.00000000000000
+   14     0.00066808800969
+   15    -0.00199400564771
+   16    -0.49628361575988
+   17    -0.01476378534815
+   18     0.00000000000000
+   19     0.00066808800969
+   20     0.00199400564771
+   21    -0.49628361575988
+   22    -0.01476378534815
+   23     0.00000000000000
+   24     0.00066808800969
+   25    -0.00199400564771
+   26     0.49628361575988
+   27     0.01476378534815
+   28     0.00000000000000
+   29     0.00066808800969
+   30     0.00199400564771
+   31    -0.00330908073548
+   32     0.00330908073548
+   33     0.00330908073548
+   34    -0.00330908073548
+
+
+
+  ==> CDJK: Cholesky-decomposed J/K Matrices <==
+
+    J tasked:                     Yes
+    K tasked:                     Yes
+    wK tasked:                     No
+    OpenMP threads:                 1
+    Integrals threads:              1
+    Memory (MB):                 3051
+    Algorithm:                   Core
+    Integral Cache:              NONE
+    Schwarz Cutoff:             1E-12
+    Cholesky tolerance:      1.00E-11
+    No. Cholesky vectors:         468
+
+
+
+ FrozenOneBody Operator takes  4.25758100 s
   Resorting integrals after freezing core.
- CholeskyIntegrals take 4.29581100
+ CholeskyIntegrals take 8.49001000
 
-  ***************************************************
-  * Complete Active Space Configuration Interaction *
-  *                 by Chenyang Li                  *
-  ***************************************************
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
+  Number of electrons: 40
+  Charge: 0
+  Multiplicity: 1
+  M_s: 0
 
-  Options:
-  ----------------------------------------------------------------------------
-(null)
+  ==> String Lists <==
 
-  ==> Input Summary <==
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for Knowles-Handy  =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
 
-    number of atoms                =    10
-    number of electrons            =    40
-    molecular charge               =     0
-    number of alpha electrons      =    20
-    number of beta electrons       =    20
-    multiplicity                   =     1
-    number of molecular orbitals   =    34
+  ==> FCI Solver <==
 
-  ==> Orbital Spaces <==
+  Number of determinants    = 2
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+  Allocating temporary CI vectors
+  Timing for Hdiag          =      0.000 s
 
-    TOTAL MO                      [    8     6     1     2     1     2     8     6 ]
-    FROZEN CORE                   [    2     1     0     0     0     0     2     1 ]
-    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
-    CORRELATED MO                 [    6     5     1     2     1     2     6     5 ]
-    CORE                          [    3     2     1     1     0     1     2     3 ]
-    ACTIVE                        [    1     0     0     0     0     0     1     0 ]
-    VIRTUAL                       [    2     3     0     1     1     1     3     2 ]
+  ==> FCI Initial Guess <==
 
-  ==> Correlated Subspace Indices <==
-
-    CORE                             0    1    2    6    7   11   12   15   17   18   23   24   25 
-    ACTIVE                           3   19 
-    HOLE                             3   19    0    1    2    6    7   11   12   15   17   18   23   24   25 
-                                  
-    VIRTUAL                          4    5    8    9   10   13   14   16   20   21   22   26   27 
-    PARTICLE                         3   19    4    5    8    9   10   13   14   16   20   21   22   26   27 
-                                  
-
-  Forming alpha and beta strings      ...  Done. Timing        0.000030 s
-  Forming determinants                ...  Done. Timing        0.000010 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons    =     1
-    number of beta active electrons     =     1
-    root symmetry (zero based)          =     0
-    number of determinants              =     2
-
-  Diagonalizing Hamiltonian           ...
-  Time spent diagonalizing H using Full: 0.000014 s
-
-  Reference type: TWOCON
-  Threshold for spin check: 0.0001
-
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants)  Done. Timing        0.000108 s
-
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 1 <==
-
-    0 2            0.77476202
-    2 0           -0.63225297
-
-    Total Energy:   -226.575081996527814
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -226.575081996528  0.000  singlet
+      1     -226.082859834276  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
 
 
-  Forming one-particle density        ...  Done. Timing        0.000060 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.036095 s
-  Checking Fock matrices (Fa, Fb)     ...
-  Nonzero criteria: > 1.00E-12
-  Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     8. Largest value:  0.000000000002163
-  Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     8. Largest value:  0.000000000002163
-  Fa_ACTIVE  block is diagonal.
-  Fb_ACTIVE  block is diagonal.
-  Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:    30. Largest value:  0.000000000005096
-  Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:    30. Largest value:  0.000000000005096
-  Done checking Fock matrices.                   Timing        0.000049 s
+  ==> Diagonalizing Hamiltonian <==
 
-  Use semi-canonical orbitals.
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      0     -226.575081996528  -2.266e+02
+      1     -226.575081996528  -1.137e-13
+      2     -226.575081996528  +0.000e+00
+      3     -226.575081996528  +0.000e+00
+      4     -226.575081996528  +0.000e+00
+      5     -226.575081996528  +0.000e+00
+      6     -226.575081996528  +0.000e+00
+      7     -226.575081996528  +0.000e+00
+      8     -226.575081996528  +0.000e+00
+      9     -226.575081996528  +0.000e+00
+     10     -226.575081996528  +0.000e+00
+     11     -226.575081996528  +0.000e+00
+     12     -226.575081996528  +0.000e+00
+     13     -226.575081996528  +0.000e+00
+     14     -226.575081996528  +0.000e+00
+     15     -226.575081996528  +0.000e+00
+     16     -226.575081996528  +0.000e+00
+     17     -226.575081996528  +0.000e+00
+     18     -226.575081996528  +0.000e+00
+     19     -226.575081996528  +0.000e+00
+     20     -226.575081996528  +0.000e+00
+     21     -226.575081996528  +0.000e+00
+     22     -226.575081996528  +0.000e+00
+     23     -226.575081996528  +0.000e+00
+     24     -226.575081996528  +0.000e+00
+     25     -226.575081996528  +0.000e+00
+     26     -226.575081996528  +0.000e+00
+     27     -226.575081996528  +0.000e+00
+     28     -226.575081996528  +0.000e+00
+     29     -226.575081996528  +0.000e+00
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 0 iterations.
+  Time spent diagonalizing H: 0.000000 s
 
-  Block diagonalizing Fock matrices   ...  Done. Timing        0.000249 s
+  ==> Root No. 0 <==
+
+    2 0     -0.77476202
+    0 2     -0.63225297
+
+    Total Energy:      -226.575081996528155
+
+  ==> RDMs for Root No. 0 <==
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+    Timing for 3-RDM: 0.000 s
+
+                          ----------------------------
+                            Semi-Canonical Orbitals
+                            Francesco A. Evangelista
+                          ----------------------------
+
+
+  ==> Integral transformation <==
 
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        4.161624 s
+    Computing CD Integrals               ......Done. Timing        4.126362 s
  Need 0.004031 GB to store cd integrals in core
 
  Number of cholesky vectors 468 to satisfy       0.000000000010 tolerance
 
-  Frozen-core energy           -287.155405698903 a.u.
-  Freezing MO 0
-  Freezing MO 1
-  Freezing MO 8
-  Freezing MO 20
-  Freezing MO 21
-  Freezing MO 28
+  Frozen-core energy           -287.155405698903 a.u.  ## C_core (Symmetry 0) ##
+  Irrep: 1 Size: 34 x 6
 
- FrozenOneBody Operator takes  0.04849900 s
+                 1                   2                   3                   4                   5
+
+    1    -0.00668550751541     0.70191092444263     0.00000000000000    -0.00942443447809     0.70180936307821
+    2     0.00713853775898     0.02358927985179     0.00000000000000     0.00736130914240     0.02381976039844
+    3     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    4     0.00000000000000     0.00000000000000    -0.00410017575799     0.00000000000000     0.00000000000000
+    5     0.00225902711748     0.00386306585836     0.00000000000000     0.00228660773398     0.00449261370139
+    6    -0.00668550751541     0.70191092444263     0.00000000000000     0.00942443447809    -0.70180936307821
+    7     0.00713853775898     0.02358927985179     0.00000000000000    -0.00736130914240    -0.02381976039844
+    8     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+    9     0.00000000000000     0.00000000000000     0.00410017575799     0.00000000000000     0.00000000000000
+   10    -0.00225902711748    -0.00386306585836     0.00000000000000     0.00228660773398     0.00449261370139
+   11    -0.49630753998209    -0.00417577188915    -0.49587771495808    -0.49583093778756    -0.00624722976969
+   12    -0.01491274932303    -0.00529468017566    -0.02142689737186    -0.02170390423104    -0.00579105240778
+   13     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   14    -0.00056599340338    -0.00322418648476    -0.00064637510837    -0.00081152523982    -0.00292864197811
+   15     0.00209784660305     0.00113994498288    -0.00234423768963    -0.00245166096584     0.00112409772533
+   16    -0.49630753998209    -0.00417577188915     0.49587771495808    -0.49583093778756    -0.00624722976969
+   17    -0.01491274932303    -0.00529468017566     0.02142689737186    -0.02170390423104    -0.00579105240778
+   18     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   19     0.00056599340338     0.00322418648476    -0.00064637510837     0.00081152523982     0.00292864197811
+   20     0.00209784660305     0.00113994498288     0.00234423768963    -0.00245166096584     0.00112409772533
+   21    -0.49630753998209    -0.00417577188915    -0.49587771495808     0.49583093778756     0.00624722976969
+   22    -0.01491274932303    -0.00529468017566    -0.02142689737186     0.02170390423104     0.00579105240778
+   23     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   24     0.00056599340338     0.00322418648476     0.00064637510837    -0.00081152523982    -0.00292864197811
+   25    -0.00209784660305    -0.00113994498288     0.00234423768963    -0.00245166096584     0.00112409772533
+   26    -0.49630753998209    -0.00417577188915     0.49587771495808     0.49583093778756     0.00624722976969
+   27    -0.01491274932303    -0.00529468017566     0.02142689737186     0.02170390423104     0.00579105240778
+   28     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000     0.00000000000000
+   29    -0.00056599340338    -0.00322418648476     0.00064637510837     0.00081152523982     0.00292864197811
+   30    -0.00209784660305    -0.00113994498288    -0.00234423768963    -0.00245166096584     0.00112409772533
+   31     0.00342894293588    -0.00008037784566     0.00344420835325     0.00345440571914     0.00010657944135
+   32     0.00342894293588    -0.00008037784566    -0.00344420835325     0.00345440571914     0.00010657944135
+   33     0.00342894293588    -0.00008037784566     0.00344420835325    -0.00345440571914    -0.00010657944135
+   34     0.00342894293588    -0.00008037784566    -0.00344420835325    -0.00345440571914    -0.00010657944135
+
+                 6
+
+    1     0.00000000000000
+    2     0.00000000000000
+    3     0.00000000000000
+    4     0.00396117916689
+    5     0.00000000000000
+    6     0.00000000000000
+    7     0.00000000000000
+    8     0.00000000000000
+    9     0.00396117916689
+   10     0.00000000000000
+   11     0.49628361575988
+   12     0.01476378534815
+   13     0.00000000000000
+   14     0.00066808800969
+   15    -0.00199400564771
+   16    -0.49628361575988
+   17    -0.01476378534815
+   18     0.00000000000000
+   19     0.00066808800969
+   20     0.00199400564771
+   21    -0.49628361575988
+   22    -0.01476378534815
+   23     0.00000000000000
+   24     0.00066808800969
+   25    -0.00199400564771
+   26     0.49628361575988
+   27     0.01476378534815
+   28     0.00000000000000
+   29     0.00066808800969
+   30     0.00199400564771
+   31    -0.00330908073548
+   32     0.00330908073548
+   33     0.00330908073548
+   34    -0.00330908073548
+
+
+
+  ==> CDJK: Cholesky-decomposed J/K Matrices <==
+
+    J tasked:                     Yes
+    K tasked:                     Yes
+    wK tasked:                     No
+    OpenMP threads:                 1
+    Integrals threads:              1
+    Memory (MB):                 3051
+    Algorithm:                   Core
+    Integral Cache:              NONE
+    Schwarz Cutoff:             1E-12
+    Cholesky tolerance:      1.00E-11
+    No. Cholesky vectors:         468
+
+
+
+ FrozenOneBody Operator takes  4.23036600 s
   Resorting integrals after freezing core.
-  Diagonalizing Hamiltonian           ...
-  Time spent diagonalizing H using Full: 0.000012 s
 
-  Reference type: TWOCON
-  Threshold for spin check: 0.0001
+                -----------------------------------------------
+                  String-based Full Configuration Interaction
+                          by Francesco A. Evangelista
+                -----------------------------------------------
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 2 determinants)  Done. Timing        0.000100 s
+  Number of electrons: 40
+  Charge: 0
+  Multiplicity: 1
+  M_s: 0
 
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
+  ==> String Lists <==
 
-  ==> Root No. 1 <==
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for Knowles-Handy  =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
 
-    0 2            0.77476202
-    2 0           -0.63225297
+  ==> FCI Solver <==
 
-    Total Energy:   -226.575081996527359
+  Number of determinants    = 2
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
+  Allocating temporary CI vectors
+  Timing for Hdiag          =      0.000 s
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -226.575081996528  0.000  singlet
+      1     -226.082859834276  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
 
 
-  Forming one-particle density        ...  Done. Timing        0.000054 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.035202 s
-  Checking Fock matrices (Fa, Fb)     ...
-  Nonzero criteria: > 1.00E-12
-  Fa_CORE    block is diagonal.
-  Fb_CORE    block is diagonal.
-  Fa_ACTIVE  block is diagonal.
-  Fb_ACTIVE  block is diagonal.
-  Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:    16. Largest value:  0.000000000001794
-  Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:    16. Largest value:  0.000000000001794
-  Done checking Fock matrices.                   Timing        0.000037 s
+  ==> Diagonalizing Hamiltonian <==
 
-  Forming Lambda2                     ...  Done. Timing        0.000161 s
-  Forming Lambda3                     ...  Done. Timing        0.000085 s
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      0     -226.575081996528  -2.266e+02
+      1     -226.575081996528  -1.137e-13
+      2     -226.575081996528  +0.000e+00
+      3     -226.575081996528  +0.000e+00
+      4     -226.575081996528  +0.000e+00
+      5     -226.575081996528  +0.000e+00
+      6     -226.575081996528  +0.000e+00
+      7     -226.575081996528  +0.000e+00
+      8     -226.575081996528  +0.000e+00
+      9     -226.575081996528  +0.000e+00
+     10     -226.575081996528  +0.000e+00
+     11     -226.575081996528  +0.000e+00
+     12     -226.575081996528  +0.000e+00
+     13     -226.575081996528  +0.000e+00
+     14     -226.575081996528  +0.000e+00
+     15     -226.575081996528  +0.000e+00
+     16     -226.575081996528  +0.000e+00
+     17     -226.575081996528  +0.000e+00
+     18     -226.575081996528  +0.000e+00
+     19     -226.575081996528  +0.000e+00
+     20     -226.575081996528  +0.000e+00
+     21     -226.575081996528  +0.000e+00
+     22     -226.575081996528  +0.000e+00
+     23     -226.575081996528  +0.000e+00
+     24     -226.575081996528  +0.000e+00
+     25     -226.575081996528  +0.000e+00
+     26     -226.575081996528  +0.000e+00
+     27     -226.575081996528  +0.000e+00
+     28     -226.575081996528  +0.000e+00
+     29     -226.575081996528  +0.000e+00
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 0 iterations.
+  Time spent diagonalizing H: 0.000000 s
+
+  ==> Root No. 0 <==
+
+    2 0     -0.77476202
+    0 2     -0.63225297
+
+    Total Energy:      -226.575081996528155
+
+  ==> RDMs for Root No. 0 <==
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+    Timing for 3-RDM: 0.000 s
 
 	  ---------------------------------------------------------
 	      DF/CD - Driven Similarity Renormalization Group MBPT2
@@ -577,7 +826,7 @@ Calling plugin forte.so.
 	                       1 thread(s) 
 	  ---------------------------------------------------------
  Reference = TWOCON
-  Reference Energy = -226.575081996528098
+  Reference Energy = -226.575081996528155
 
   ==> Calculation Information <==
 
@@ -587,40 +836,38 @@ Calling plugin forte.so.
     int_type                                  CHOLESKY
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                         ......Done. Timing        0.002247 s
-    Computing T1                         ......Done. Timing        0.001479 s
-    Renormalizing V                      ......Done. Timing        0.001267 s
-    Renormalizing F                      ......Done. Timing        0.001697 s
-    Computing <[F,T1]>                   ......Done. Timing        0.002591 s
-    Computing <[F, T2]>                  ......Done. Timing        0.001318 s
-    Computing <[V, T1]>                  ......Done. Timing        0.001238 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.082235 s
-Computing <[V, T2]> (C_2)^4 ccvv     with FLY_AMBIT...Done. Timing        0.065252 s
-    Computing <[V, T2]> 4HH              ......Done. Timing        0.006766 s
-    Computing <V, T2]> 4PP               ...  Done. Timing        0.006746 s
-    Computing [V, T2] 4PH                ...  Done. Timing        0.024734 s
-    Computing [V, T2] λ3                ......Done. Timing        0.005480 s
+    Computing T2                         ......Done. Timing        0.013222 s
+    Computing T1                         ......Done. Timing        0.001648 s
+    Renormalizing V                      ......Done. Timing        0.009619 s
+    Renormalizing F                      ......Done. Timing        0.001846 s
+    Computing <[F, T1]>                  ......Done. Timing        0.002719 s
+    Computing <[F, T2]>                  ......Done. Timing        0.001557 s
+    Computing <[V, T1]>                  ......Done. Timing        0.001503 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.010379 s
+    Computing <[V, T2]> (C_2)^4 ccvv     ......Done. Timing        0.079284 s
+    Computing <[V, T2]> 4HH              ......Done. Timing        0.007212 s
+    Computing <V, T2]> 4PP               ...  Done. Timing        0.007184 s
+    Computing [V, T2] 4PH                ...  Done. Timing        0.025978 s
+    Computing [V, T2] λ3                ......Done. Timing        0.006233 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -226.575081996528098
+    E0 (reference)                 =   -226.575081996528155
     <[F, T1]>                      =     -0.004853286198429
     <[F, T2]>                      =      0.004355743295914
     <[V, T1]>                      =      0.004925265678902
-    <[V, T2]> (C_2)^4              =     -0.367931383594959
+    <[V, T2]> (C_2)^4              =     -0.367931383594960
     <[V, T2]> C_4 (C_2)^2 HH       =      0.004345992829626
     <[V, T2]> C_4 (C_2)^2 PP       =      0.003406834114496
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.048649986342682
-    <[V, T2]> C_6 C_2              =     -0.000843884602192
-    <[V, T2]>                      =     -0.312372454910347
-    DSRG-MRPT2 correlation energy  =     -0.307944732133959
-    DSRG-MRPT2 total energy        =   -226.883026728662060
-    max(T1)                        =      0.014696232176216
-    max(T2)                        =      0.033926930812937
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.048649986342681
+    <[V, T2]> C_6 C_2              =     -0.000843884602193
+    <[V, T2]>                      =     -0.312372454910349
+    DSRG-MRPT2 correlation energy  =     -0.307944732133963
+    DSRG-MRPT2 total energy        =   -226.883026728662117
+    max(T1)                        =      0.014696232176217
     ||T1||                         =      0.042810957208171
-    ||T2||                         =      0.541337234538364
 
 
-    CD/DF-DSRG-MRPT2 took   0.20544900 s.
- Your calculation took 9.04165900 seconds
+    CD/DF-DSRG-MRPT2 took   0.16879400 s.
+ Your calculation took 17.56452700 seconds
 *** PSI4 exiting successfully. Buy a developer a beer!

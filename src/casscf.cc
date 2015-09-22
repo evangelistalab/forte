@@ -323,8 +323,30 @@ void CASSCF::orbital_gradient()
     //Form Z (pu | v w) * Gamma2(tuvw)
     //One thing I am not sure about for Gamma2->how to get spin free RDM from spin based RDM
     //gamma1 = gamma1a + gamma1b;
-    //gamma2 =
+    //gamma2 = gamma2aa + gamma2ab + gamma2ba + gamma2bb
+    ambit::Tensor gamma2aa = cas_ref_.L2aa();
+    ambit::Tensor gamma2ab = cas_ref_.L2ab();
+    ambit::Tensor gamma2bb = cas_ref_.L2bb();
 
+    gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+
+    // This may or may not be correct.  Really need to find a way to check this code
+    gamma2_("u,v,x,y") = gamma2aa("u,v,x,y") + 2.0 * gamma2ab("u,v,x,y") + gamma2bb("u,v,x,y");
+    //gamma2_("u,v,x,y") = gamma2_("x,y,u,v");
+    //gamma2_("u,v,x,y") = gamma2_("")
+
+    ambit::Tensor tei_puvy = ambit::Tensor::build(ambit::kCore, "puvy", {nmo_, na_, na_, na_});
+    std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
+    std::vector<size_t> na_array = mo_space_info_->get_absolute_mo("ACTIVE");
+    tei_puvy = ints_->aptei_ab_block(nmo_array, na_array, na_array, na_array);
+    Z_ = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
+
+    Z_("p, t") = tei_puvy("p,u,x,y") * gamma2_("t, u, x, y");
+
+    //Forming Orbital gradient
+    // g_ia = 4F_core + 2F_act
+    // g_ta = 2Y + 4Z
+    // g_it = 4F_core + 2 F_act - 2Y - 4Z;
 
 
 }
