@@ -19,26 +19,18 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte:
 
-1. Use Psi4 to generate a Makefile for Forte that is tailored to your current environment:
+1. Run the `setup` script found in the forte folder:
   ```
-  cd src
-  psi4 --new-plugin-makefile
+  python setup --psi4=<psi4 executable> --ambit-bindir=<ambit installation dir>
   ```
+2. Follow the instructions provided in the output of the `setup` script to compile forte:
+  ```
+   root directory: /Users/francesco/Source/forte
+   psi4 executable: /Users/francesco/Source/psi4-obj-c++11-debug/bin/psi4
+   ambit binary installation directory: /Users/francesco/Source/ambit-bin-release
 
-2. After you have added this Makefile to the Forte directory you must add or
-modify the following lines of your Makefile:
+   configure step is done
+   now you need to compile the sources:
+   >>> cd /Users/francesco/Source/forte/src
+   >>> make
   ```
-  NAME = forte
-  
-  # Define ambit directory
-  AMBIT_DIR = <ambit install directory>
-  
-  # Need to link against Psi4 plugin library
-  PSIPLUGIN = -L$(OBJDIR)/lib -lplugin -L$(AMBIT_DIR)/lib -lambit
-  
-  INCLUDES += -I$(AMBIT_DIR)/include
-  
-  PSITARGET = ../$(NAME).so
-  ```
-
-where (AMBIT_DIR) is the location of your Ambit install directory.
