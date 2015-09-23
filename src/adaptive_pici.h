@@ -151,6 +151,10 @@ private:
     bool do_simple_prescreening_;
     /// Prescreen spawning using schwarz inequality
     bool do_schwarz_prescreening_;
+    /// Prescreen spawning using initiator approximation
+    bool do_initiator_approx_;
+    /// Initiator approximation factor
+    double initiator_approx_factor_;
     /// Maximum value of the one-electron coupling
     double new_max_one_HJI_;
     double old_max_one_HJI_;
@@ -275,7 +279,8 @@ private:
     /// Apply tau H to a determinant
     size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-    size_t apply_tau_H_det(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
