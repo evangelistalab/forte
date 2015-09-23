@@ -258,6 +258,9 @@ double MRDSRG::compute_energy(){
         Etotal += compute_energy_ldsrg2();
         break;
     }
+    case CORR_LV::DSRG_CEPA0:{
+        break;
+    }
     case CORR_LV::LDSRG2_P3:{
         break;
     }
@@ -293,8 +296,8 @@ double MRDSRG::compute_energy_relaxed(){
     }
     nelec -= charge;
     int multi = Process::environment.molecule()->multiplicity();
-    if(options_["MULTI"].has_changed()){
-        multi = options_.get_int("MULTI");
+    if(options_["MULTIPLICITY"].has_changed()){
+        multi = options_.get_int("MULTIPLICITY");
     }
     int ms = multi - 1;
     if(options_["MS"].has_changed()){
@@ -361,12 +364,21 @@ double MRDSRG::compute_energy_relaxed(){
 
             // semi-canonicalize orbitals
             if (options_.get_bool("SEMI_CANONICAL")){
+                // printing
+                print_h2("Semi-canonicalize Orbitals");
+                std::vector<double> timings {0.0};
+                Timer timer;
+
                 // build the new Fock matrix
                 build_fock(H_,V_);
+                outfile->Printf("\n    %-47s %8.3f", "Timing for building new Fock matrix:", timer.get() - timings.back());
+                timings.push_back(timer.get());
 
                 // diagonalize blocks of Fock matrix
                 BlockedTensor U = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
                 diagonalize_Fock_diagblocks(U);
+                outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock matrix:", timer.get() - timings.back());
+                timings.push_back(timer.get());
 
                 // transform O1 to new basis and copy to ints_
                 BlockedTensor O = ambit::BlockedTensor::build(tensor_type_,"Temp One",spin_cases({"gg"}));
@@ -385,6 +397,8 @@ double MRDSRG::compute_energy_relaxed(){
                 O["RS"] = U["RP"] * H_["PQ"] * U["SQ"];
                 H_["pq"] = O["pq"];
                 H_["PQ"] = O["PQ"];
+                outfile->Printf("\n    %-47s %8.3f", "Timing for transforming one-electron integral:", timer.get() - timings.back());
+                timings.push_back(timer.get());
 
                 // transform Hbar2 to new basis and copy to ints_
                 O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",spin_cases({"gggg"}));
@@ -412,6 +426,8 @@ double MRDSRG::compute_energy_relaxed(){
                 V_["pqot"] = O["pqrs"] * U["ts"] * U["or"];
                 V_["pQoT"] = O["pQrS"] * U["TS"] * U["or"];
                 V_["PQOT"] = O["PQRS"] * U["TS"] * U["OR"];
+                outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron integral:", timer.get() - timings.back());
+                timings.push_back(timer.get());
 
                 // diagonalize the Hamiltonian
                 fcisolver = FCISolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
@@ -438,8 +454,9 @@ double MRDSRG::compute_energy_relaxed(){
                 converged = true;
             }
             if(cycle > maxiter){
-                outfile->Printf("\n\n    The reference relaxation does not converge in %d iterations!\tQuitting.\n", maxiter);
+                outfile->Printf("\n\n    The reference relaxation does not converge in %d iterations! Quitting.\n", maxiter);
                 converged = true;
+                failed = true;
                 outfile->Flush();
             }
             ++cycle;
@@ -690,7 +707,8 @@ void MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h.data()[0] = 1.0;
                 }else{
-                    ambit::Tensor T_h = separate_tensor(F_.block(block),space,h);
+                    ambit::Tensor F_block = F_.block(block);
+                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
                     auto Feigen = T_h.syev(kAscending);
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h("pq") = Feigen["eigenvectors"]("pq");
@@ -702,7 +720,7 @@ void MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
     }    
 }
 
-ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor tens, const Dimension& irrep, const int& h){
+ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h){
     // test tens and irrep
     size_t tens_dim = tens.dim(0);
     if(tens_dim != irrep.sum() || tens_dim != tens.dim(1)){

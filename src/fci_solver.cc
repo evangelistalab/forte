@@ -105,7 +105,7 @@ double FCI::compute_energy()
 
     if(ms < 0){
         outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTI = %2d", ms, multiplicity);
+        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms, multiplicity);
         outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
         throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
@@ -272,6 +272,7 @@ double FCISolver::compute_energy()
     for (int r = 0; r < nroot_; ++r){
         outfile->Printf("\n\n  ==> Root No. %d <==\n",r);
 
+        C_->copy(dls.eigenvector(r));
         std::vector<std::tuple<double,double,size_t,size_t,size_t>>
             dets_config = C_->max_abs_elements(guess_size * ntrial_per_root_);
         Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");

@@ -247,6 +247,9 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /* - Run a FCI followed by CASSCF computation -*/
         options.add_bool("CASSCF_REFERENCE", false);
+        /* - The number of iterations for CASSCF -*/
+        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_double("CASSCF_CONVERGENCE", 1e-6);
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
@@ -398,11 +401,8 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PILOT FULL CI CODE
         //////////////////////////////////////////////////////////////
-        /*- Multiplicity -*/
-        boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-        int multi = molecule->multiplicity();
-        options.add_int("MULTI", multi);            /* multiplicity */
-        options.add_int("MS", 0);                   /* (2 * Sz) */
+        /*- 2 * <Sz> -*/
+        options.add_int("MS", 0);
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/
@@ -418,7 +418,7 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
-        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3");
+        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 DSRG_CEPA0");
         /*- Source Operator -*/
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
