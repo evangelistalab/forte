@@ -46,6 +46,39 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
     diag_tei_bb_.resize(nmo2_);
     frozen_core_energy_ = ints->frozen_core_energy();
 
+	std::vector<double> tei_rdocc_aa;
+	std::vector<double> tei_rdocc_ab;
+	std::vector<double> tei_rdocc_bb;
+
+	std::vector<double> tei_gh_aa;
+	std::vector<double> tei_gh_ab;
+	std::vector<double> tei_gh_bb;
+	std::vector<double> tei_gh2_ab;
+	
+	// Grab all integrals in blocks
+	ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	tei_aa_ = act_aa.data();
+	tei_ab_ = act_ab.data();
+	tei_bb_ = act_bb.data();
+
+	ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	tei_rdocc_aa = rdocc_aa.data();
+	tei_rdocc_ab = rdocc_ab.data();
+	tei_rdocc_bb = rdocc_bb.data();
+
+	ambit::Tensor gh_aa  = ints->aptei_aa_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh_ab  = ints->aptei_ab_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
+	tei_gh_aa  = gh_aa.data();
+	tei_gh_ab  = gh_ab.data();
+	tei_gh_bb  = gh_bb.data();
+	tei_gh2_ab = gh2_ab.data();
+
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
     scalar_energy_ = ints->scalar();
@@ -54,10 +87,10 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
         scalar_energy_ += ints->oei_a(ii,ii);
         scalar_energy_ += ints->oei_b(ii,ii);
         for (size_t j = 0; j < nfomo; ++j){
-            size_t jj = fomo_to_mo[j];
-            scalar_energy_ += 0.5 * ints->aptei_aa(ii,jj,ii,jj);
-            scalar_energy_ += 1.0 * ints->aptei_ab(ii,jj,ii,jj);
-            scalar_energy_ += 0.5 * ints->aptei_bb(ii,jj,ii,jj);
+			size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
+            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
+            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
+            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
 
@@ -68,28 +101,15 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
             size_t pq = nmo_ * p + q;
             oei_a_[pq] = ints->oei_a(pp,qq);
             oei_b_[pq] = ints->oei_b(pp,qq);
-            diag_tei_aa_[pq] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
-            diag_tei_ab_[pq] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
-            diag_tei_bb_[pq] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
-
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals
             for (size_t f = 0; f < nfomo; ++f){
-                size_t ff = fomo_to_mo[f];
-                oei_a_[pq] += ints->aptei_aa(pp,ff,qq,ff);
-                oei_a_[pq] += ints->aptei_ab(pp,ff,qq,ff);
-                oei_b_[pq] += ints->aptei_bb(pp,ff,qq,ff);
-                oei_b_[pq] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
-            }
-            for (size_t r = 0; r < nmo_; ++r){
-                size_t rr = cmo_to_mo[r];
-                for (size_t s = 0; s < nmo_; ++s){
-                    size_t ss = cmo_to_mo[s];
-                    size_t pqrs = tei_index(p,q,r,s);
-                    tei_aa_[pqrs] = ints->aptei_aa(pp,qq,rr,ss);
-                    tei_ab_[pqrs] = ints->aptei_ab(pp,qq,rr,ss);
-                    tei_bb_[pqrs] = ints->aptei_bb(pp,qq,rr,ss);
-                }
+				size_t index  = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
+				size_t index2 = nmo_ * nfomo * nmo_ * f + nmo_ * nfomo * p + nmo_ * f + q;
+                oei_a_[pq] += tei_gh_aa[index];
+                oei_a_[pq] += tei_gh_ab[index];
+                oei_b_[pq] += tei_gh_bb[index];
+                oei_b_[pq] += tei_gh2_ab[index2]; // TODO check these factors 0.5
             }
         }
     }
@@ -100,14 +120,11 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     std::vector<size_t> cmo_to_mo;
     std::vector<size_t> fomo_to_mo;
 
-    if (type == Active){
-        nmo_ = mospace_info->size("ACTIVE");
-        cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
-        fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
-    }else if (type == Correlated){
-        nmo_ = mospace_info->size("CORRELATED");
-        cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
-    }
+    nmo_ = mospace_info->size("ACTIVE");
+    cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
+    fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
+    size_t ncmo = mospace_info->size("GENERALIZED HOLE");
+    std::vector<size_t> ncmo_to_mo = mospace_info->get_corr_abs_mo("GENERALIZED HOLE");
 
     nmo2_ = nmo_ * nmo_;
     nmo3_ = nmo_ * nmo_ * nmo_;
@@ -125,8 +142,42 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     diag_tei_ab_.resize(nmo2_);
     diag_tei_bb_.resize(nmo2_);
 
-
     frozen_core_energy_ = ints->frozen_core_energy();
+	//Initialize tei_rdocc vectors, but don't store them as global variable
+
+	std::vector<double> tei_rdocc_aa;
+	std::vector<double> tei_rdocc_ab;
+	std::vector<double> tei_rdocc_bb;
+
+	std::vector<double> tei_gh_aa;
+	std::vector<double> tei_gh_ab;
+	std::vector<double> tei_gh_bb;
+	std::vector<double> tei_gh2_ab;
+	
+	// Grab all integrals in blocks
+	ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+	tei_aa_ = act_aa.data();
+	tei_ab_ = act_ab.data();
+	tei_bb_ = act_bb.data();
+
+	ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+	tei_rdocc_aa = rdocc_aa.data();
+	tei_rdocc_ab = rdocc_ab.data();
+	tei_rdocc_bb = rdocc_bb.data();
+	
+
+	ambit::Tensor gh_aa  = ints->aptei_aa_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh_ab  = ints->aptei_ab_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+	ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
+	tei_gh_aa  = gh_aa.data();
+	tei_gh_ab  = gh_ab.data();
+	tei_gh_bb  = gh_bb.data();
+	tei_gh2_ab = gh2_ab.data();
 
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
@@ -136,10 +187,10 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
         scalar_energy_ += ints->oei_a(ii,ii);
         scalar_energy_ += ints->oei_b(ii,ii);
         for (size_t j = 0; j < nfomo; ++j){
-            size_t jj = fomo_to_mo[j];
-            scalar_energy_ += 0.5 * ints->aptei_aa(ii,jj,ii,jj);
-            scalar_energy_ += 1.0 * ints->aptei_ab(ii,jj,ii,jj);
-            scalar_energy_ += 0.5 * ints->aptei_bb(ii,jj,ii,jj);
+			size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
+            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
+            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
+            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
 
@@ -150,33 +201,18 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
             size_t idx = nmo_ * p + q;
             oei_a_[idx] = ints->oei_a(pp,qq);
             oei_b_[idx] = ints->oei_b(pp,qq);
-			diag_tei_aa_[idx] = ints->diag_aptei_aa(pp,qq);//,pp,qq);
-            diag_tei_ab_[idx] = ints->diag_aptei_ab(pp,qq);//,pp,qq);
-            diag_tei_bb_[idx] = ints->diag_aptei_bb(pp,qq);//,pp,qq);
-
-
             // Compute the one-body contribution to the energy that comes from
             // the restricted occupied orbitals
             for (size_t f = 0; f < nfomo; ++f){
-                size_t ff = fomo_to_mo[f];
-                oei_a_[idx] += ints->aptei_aa(pp,ff,qq,ff);
-                oei_a_[idx] += ints->aptei_ab(pp,ff,qq,ff);
-                oei_b_[idx] += ints->aptei_bb(pp,ff,qq,ff);
-                oei_b_[idx] += ints->aptei_ab(ff,pp,ff,qq); // TODO check these factors 0.5
-            }
-            for (size_t r = 0; r < nmo_; ++r){
-                size_t rr = cmo_to_mo[r];
-                for (size_t s = 0; s < nmo_; ++s){
-                    size_t ss = cmo_to_mo[s];
-                    size_t tei_index = nmo3_ * p + nmo2_ * q + nmo_ * r + s;
-                    tei_aa_[tei_index] = ints->aptei_aa(pp,qq,rr,ss);
-                    tei_ab_[tei_index] = ints->aptei_ab(pp,qq,rr,ss);
-                    tei_bb_[tei_index] = ints->aptei_bb(pp,qq,rr,ss);
-                }
+				size_t index  = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
+				size_t index2 = nmo_ * nfomo * nmo_ * f + nmo_ * nfomo * p + nmo_ * f + q;
+                oei_a_[idx] += tei_gh_aa[index];
+                oei_a_[idx] += tei_gh_ab[index];
+                oei_b_[idx] += tei_gh_bb[index];
+                oei_b_[idx] += tei_gh2_ab[index2]; // TODO check these factors 0.5
             }
         }
     }
-
 }
 
 void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t)
@@ -187,7 +223,7 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t)
     size_t maxC1 = 0;
     for(size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym){
         maxC1 = std::max(maxC1,lists_->alfa_graph()->strpi(Ia_sym));
-    }
+	}
     for(size_t Ib_sym = 0; Ib_sym < nirreps; ++Ib_sym){
         maxC1 = std::max(maxC1,lists_->beta_graph()->strpi(Ib_sym));
     }
