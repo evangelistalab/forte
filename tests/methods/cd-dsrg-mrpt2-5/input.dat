@@ -1,13 +1,10 @@
 #! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne with 2 threads
 
 import forte
 
-
 memory 500 mb
-
-refmcscf   =  -226.575081996603
-refdsrgpt2 =  -226.884456822714441
+refmcscf =   -226.575081996603
+refdsrgpt2 = -226.883026728662060 
 
 molecule mbenzyne{
   0 1
@@ -27,9 +24,9 @@ molecule mbenzyne{
 
 set globals{
    basis                   sto-3g
-   df_basis_mp2            cc-pvdz-ri
-   reference               TWOCON
-   scf_type                pk
+   reference               twocon
+   scf_type                CD
+   cholesky_tolerance      1e-14
    d_convergence           10
    e_convergence           12
 }
@@ -37,27 +34,27 @@ set globals{
 set mcscf{
    docc                   [5, 3, 1, 1, 0, 1, 4, 4]
    socc                   [1, 0, 0, 0, 0, 0, 1, 0]
-   maxiter                 500
-#   level_shift             1.0
+   maxiter                500
+#   level_shift            1.0
 }
 
-set forte {
+set forte{
+   job_type               three-dsrg-mrpt2
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
-   root_sym                0
-   nroot                   1
-#   dsrgpt                  false
-   dsrg_s                  0.5
-   int_type                DF
-   job_type                three-dsrg-mrpt2
+   root_sym               0
+   nroot                  1
+#   dsrgpt                 false
+   dsrg_s                 0.5
+   int_type               cholesky
+   cholesky_tolerance     1e-11
 }
-set_num_threads(2)
 
 scf = energy('mcscf')
-compare_values(refmcscf, scf,10,"SCF Energy")
+compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 

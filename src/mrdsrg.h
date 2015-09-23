@@ -109,11 +109,12 @@ protected:
     // => DSRG related <= //
 
     /// Correlation level
-    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3};
+    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, DSRG_CEPA0};
     std::map<std::string, CORR_LV> corrlevelmap =
             boost::assign::map_list_of("LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)
             ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)
-            ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3);
+            ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3)
+            ("DSRG_CEPA0", CORR_LV::DSRG_CEPA0);
 
     /// The flow parameter
     double s_;
@@ -279,7 +280,7 @@ protected:
     /// Diagonalize the diagonal blocks of the Fock matrix
     void diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor tens, const Dimension& irrep, const int& h);
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
 
