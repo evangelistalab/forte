@@ -522,8 +522,6 @@ void BitsetDeterminant::check_uniqueness(const std::vector<BitsetDeterminant> de
 		if(d.second > 1){
 			outfile->Printf("\n  Duplicate determinant! ==> %s", d.first.str().c_str() );
 			duplicates += d.second;
-		}else{
-			continue;	
 		}
 	}
 	outfile->Printf("\n  Number of duplicate determinants:  %zu  ", duplicates);
