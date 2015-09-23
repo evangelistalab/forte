@@ -21,7 +21,7 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 
 1. Run the `setup` script found in the forte folder:
   ```
-  python setup --psi4=<psi4 executable> --ambit-bindir=<ambit installation dir>
+   python setup --psi4=<psi4 executable> --ambit-bindir=<ambit installation dir>
   ```
 2. Follow the instructions provided in the output of the `setup` script to compile forte:
   ```
