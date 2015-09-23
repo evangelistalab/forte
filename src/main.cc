@@ -331,6 +331,10 @@ read_options(std::string name, Options &options)
         options.add_bool("DYNAMIC_PRESCREENING",false);
         /*- Use schwarz prescreening -*/
         options.add_bool("SCHWARZ_PRESCREENING",false);
+        /*- Use initiator approximation -*/
+        options.add_bool("INITIATOR_APPROX",false);
+        /*- The initiator approximation factor -*/
+        options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
