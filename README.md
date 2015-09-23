@@ -26,12 +26,8 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 
 2. Follow the instructions provided in the output of the `setup` script to compile forte:
   ```
-   root directory: /Users/francesco/Source/forte
-   psi4 executable: /Users/francesco/Source/psi4-obj-c++11-debug/bin/psi4
-   ambit binary installation directory: /Users/francesco/Source/ambit-bin-release
-
    configure step is done
    now you need to compile the sources:
-   >>> cd /Users/francesco/Source/forte/src
+   >>> cd <path to forte>/src
    >>> make
   ```
