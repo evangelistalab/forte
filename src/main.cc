@@ -2,7 +2,6 @@
 #include <memory>
 
 #include <boost/format.hpp>
-
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"
@@ -32,6 +31,7 @@
 #include "sq.h"
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
+#include "casscf.h"
 
 INIT_PLUGIN
 
@@ -71,6 +71,9 @@ read_options(std::string name, Options &options)
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
+
+        /*- The screening for JK builds and DF libraries -*/
+        options.add_double("INTEGRAL_SCREENING", 1e-12);
         
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
@@ -240,6 +243,14 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
 
         //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE CASSCF CODE
+        //////////////////////////////////////////////////////////////
+        /* - Run a FCI followed by CASSCF computation -*/
+        options.add_bool("CASSCF_REFERENCE", false);
+        /* - The number of iterations for CASSCF -*/
+        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_double("CASSCF_CONVERGENCE", 1e-6);
+        //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
 		
@@ -318,8 +329,12 @@ read_options(std::string name, Options &options)
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
         options.add_bool("DYNAMIC_PRESCREENING",false);
-        /*- Use schwartz prescreening -*/
-        options.add_bool("SCHWARTZ_PRESCREENING",false);
+        /*- Use schwarz prescreening -*/
+        options.add_bool("SCHWARZ_PRESCREENING",false);
+        /*- Use initiator approximation -*/
+        options.add_bool("INITIATOR_APPROX",false);
+        /*- The initiator approximation factor -*/
+        options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
@@ -386,11 +401,8 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PILOT FULL CI CODE
         //////////////////////////////////////////////////////////////
-        /*- Multiplicity -*/
-        boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-        int multi = molecule->multiplicity();
-        options.add_int("MULTI", multi);            /* multiplicity */
-        options.add_int("MS", 0);                   /* (2 * Sz) */
+        /*- 2 * <Sz> -*/
+        options.add_int("MS", 0);
         /*- Threshold for Printing CI Vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Semicanonicalize Orbitals -*/
@@ -406,7 +418,7 @@ read_options(std::string name, Options &options)
         ///
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
-        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3");
+        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 DSRG_CEPA0");
         /*- Source Operator -*/
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
@@ -466,6 +478,11 @@ extern "C" PsiReturnType forte(Options &options)
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
     BitsetDeterminant::set_ints(fci_ints_);
 
+    if(options.get_bool("CASSCF_REFERENCE") == true)
+    {
+        boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        casscf->compute_casscf();
+    }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
@@ -674,7 +691,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %8.8f seconds", overall_time.get());
+    outfile->Printf("\n Your calculation took %.8f seconds", overall_time.get());
     return Success;
 }
 

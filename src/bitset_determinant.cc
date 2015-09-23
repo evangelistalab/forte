@@ -17,9 +17,27 @@ std::size_t hash_value(const BitsetDeterminant& input)
     return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
 }
 
+// Static members
+std::vector<BitsetDeterminant::bit_t> BitsetDeterminant::bit_mask_;
 std::shared_ptr<FCIIntegrals> BitsetDeterminant::fci_ints_;
-//boost::dynamic_bitset<> BitsetDeterminant::temp_alfa_bits_;
-//boost::dynamic_bitset<> BitsetDeterminant::temp_beta_bits_;
+
+void BitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
+{
+    fci_ints_ = ints;
+
+    // Initialize the bit masks
+    int n = ints->nmo();
+    outfile->Printf("\n  Generating bit mask for the Bitset class (nmo = %d)",n);
+
+    bit_mask_.clear();
+    for (int i = 0; i < n; ++i){
+        bit_t b(n);
+        for (int j = 0; j < i; ++j){
+            b[j] = 1;
+        }
+        bit_mask_.push_back(b);
+    }
+}
 
 BitsetDeterminant::BitsetDeterminant() : nmo_(0)
 {
@@ -277,12 +295,12 @@ double BitsetDeterminant::energy() const
     //            }
     //        }
     //    }
-    for(size_t p = 0; p < nmo_; ++p){
+    for(int p = 0; p < nmo_; ++p){
         if(alfa_bits_[p]) matrix_element += fci_ints_->oei_a(p,p);
         if(beta_bits_[p]) matrix_element += fci_ints_->oei_b(p,p);
              //   if(alfa_bits_[p]) outfile->Printf("\n  One-electron terms: %20.12f + %20.12f (string)",fci_ints_->oei_a(p,p),fci_ints_->oei_a(p,p));
 
-        for(size_t q = 0; q < nmo_; ++q){
+        for(int q = 0; q < nmo_; ++q){
             if(alfa_bits_[p] and alfa_bits_[q]){
                 matrix_element += 0.5 *  fci_ints_->diag_tei_aa(p,q);
                //                 outfile->Printf("\n  Two-electron terms (%da,%da): 0.5 * %20.12f (string)",p,q,fci_ints_->diag_tei_aa(p,q));
@@ -328,10 +346,10 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     // Slater rule 1 PhiI = PhiJ
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element = fci_ints_->frozen_core_energy();
-        for(size_t p = 0; p < nmo_; ++p){
+        for(int p = 0; p < nmo_; ++p){
             if(alfa_bits_[p]) matrix_element += fci_ints_->oei_a(p,p);
             if(beta_bits_[p]) matrix_element += fci_ints_->oei_b(p,p);
-            for(size_t q = 0; q < nmo_; ++q){
+            for(int q = 0; q < nmo_; ++q){
                 if(alfa_bits_[p] and alfa_bits_[q])
                     matrix_element +=   0.5 * fci_ints_->diag_tei_aa(p,q);
                 //                    matrix_element +=   0.5 * ints_->diag_ce_rtei(p,q);
@@ -507,6 +525,11 @@ double BitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
         if(I[i]) sign *= -1.0;
     }
     return(sign);
+}
+
+double BitsetDeterminant::FastSlaterSign(const boost::dynamic_bitset<>& I,int n)
+{
+    return ((bit_mask_[n] & I).count() % 2) ? -1.0 : 1.0;
 }
 
 void BitsetDeterminant::check_uniqueness(const std::vector<BitsetDeterminant> det_space)
