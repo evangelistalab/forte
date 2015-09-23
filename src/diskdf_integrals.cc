@@ -18,6 +18,38 @@
 using namespace ambit;
 namespace psi{ namespace forte{
 
+DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
+
+    integral_type_ = DiskDF;
+    outfile->Printf("\n DISKDFIntegrals overall time");
+    Timer DFInt;
+    allocate();
+
+    //Form a correlated mo to mo before I create integrals
+    std::vector<size_t> cmo2mo;
+    for (int h = 0, q = 0; h < nirrep_; ++h){
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r){
+            cmo2mo.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+    cmotomo_ = cmo2mo;
+
+    gather_integrals();
+    make_diagonal_integrals();
+    if (ncmo_ < nmo_){
+        freeze_core_orbitals();
+        // Set the new value of the number of orbitals to be used in indexing routines
+        aptei_idx_ = ncmo_;
+    }
+
+    outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
+}
+
 DISKDFIntegrals::~DISKDFIntegrals()
 {
     deallocate();
@@ -410,6 +442,8 @@ void DISKDFIntegrals::gather_integrals()
     //into the C_matrix object
 //    df->set_C(C_ord);
     df->set_C(Ca_ao);
+
+    Ca_ = Ca_ao;
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
@@ -446,37 +480,6 @@ void DISKDFIntegrals::make_diagonal_integrals()
     }
 }
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
-std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
-
-    integral_type_ = DiskDF;
-    outfile->Printf("\n DISKDFIntegrals overall time");
-    Timer DFInt;
-    allocate();
-
-    //Form a correlated mo to mo before I create integrals
-    std::vector<size_t> cmo2mo;
-    for (int h = 0, q = 0; h < nirrep_; ++h){
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r){
-            cmo2mo.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-    cmotomo_ = cmo2mo;
-
-    gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
-    }
-
-    outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
-}
 
 void DISKDFIntegrals::update_integrals(bool freeze_core)
 {
@@ -713,7 +716,7 @@ void DISKDFIntegrals::make_fock_matrix(const boost::dynamic_bitset<>& Ia,const b
             fock_matrix_a[p * ncmo_ + q] = fock_matrix_a[q * ncmo_ + p] = fock_a_pq;
             double fock_b_pq = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
+            for (size_t k = 0; k < ncmo_; ++k) {
                 if (Ib[k]) {
                     fock_b_pq += aptei_bb(p,k,q,k);
                 }
@@ -734,7 +737,7 @@ void DISKDFIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vect
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal_alpha[p] =  oei_a(p,p);// roei(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 //                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_alpha[p] += diag_aptei_aa(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -746,7 +749,7 @@ void DISKDFIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vect
         }
         fock_diagonal_beta[p] =  oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ib[k]) {
                 //                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_beta[p] += diag_aptei_bb(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -765,7 +768,7 @@ void DISKDFIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<do
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal[p] = oei_a(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonal[p] += diag_aptei_aa(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
@@ -781,7 +784,7 @@ void DISKDFIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<do
     for(size_t p = 0; p < ncmo_; ++p){
         fock_diagonals[p] = oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonals[p] += diag_aptei_ab(p,k);  //diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
@@ -792,7 +795,7 @@ void DISKDFIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<do
     }
 }
 
-void DISKDFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
+void DISKDFIntegrals::resort_three(SharedMatrix&,std::vector<size_t>&)
 {
     outfile->Printf("No need to resort a file.  dummy!");
 }
@@ -833,154 +836,48 @@ void DISKDFIntegrals::compute_frozen_core_energy()
 void DISKDFIntegrals::compute_frozen_one_body_operator()
 {
     Timer FrozenOneBody;
-    boost::shared_ptr<BlockedTensorFactory>BTF(new BlockedTensorFactory(options_));
-    ambit::BlockedTensor::reset_mo_spaces();
-
-    size_t f = 0; // The Offset for irrep
-    size_t r = 0; // The MO number for frozen core
-    size_t g = 0; //the Offset for irrep
-    std::vector<size_t> frozen_vec;
-    std::vector<size_t> corrleated_vec;
-
-    for (size_t hi = 0; hi < nirrep_; ++hi){
-        for (size_t i = 0; i < frzcpi_[hi]; ++i){
-            r = f + i;
-            frozen_vec.push_back(r);
+    std::vector<size_t> frozen_dim_abs = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
+    SharedMatrix C_core(new Matrix("C_core",nmo_, frozen_dim_abs.size()));
+    // Need to get the frozen block of the C matrix
+    for(size_t mu = 0; mu < nmo_; mu++){
+        for(size_t i = 0; i < frozen_dim_abs.size(); i++){
+            C_core->set(mu, i, Ca_->get(mu, frozen_dim_abs[i]));
         }
-        f += nmopi_[hi];
-        for (size_t p = frzcpi_[hi]; p < nmopi_[hi]; p++)
-        {
-            size_t mo = p + g;
-            corrleated_vec.push_back(mo);
+    }
+
+    boost::shared_ptr<JK> JK_core = JK::build_JK();
+
+    JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    /// Already transform everything to C1 so make sure JK does not do this.
+    JK_core->set_allow_desymmetrization(false);
+
+    /////TODO: Make this an option in my code
+    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->initialize();
+
+    JK_core->print_header();
+
+
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+
+    Cl.clear();
+    Cl.push_back(C_core);
+
+    JK_core->compute();
+
+    SharedMatrix F_core = JK_core->J()[0];
+    SharedMatrix K_core = JK_core->K()[0];
+
+    F_core->scale(2.0);
+    F_core->subtract(K_core);
+    F_core->transform(Ca_);
+    for(size_t p = 0; p < nmo_; ++p){
+        for(size_t q = 0; q < nmo_; ++q){
+            one_electron_integrals_a[p * nmo_ + q] += F_core->get(p, q);
+            one_electron_integrals_b[p * nmo_ + q] += F_core->get(p ,q);
         }
-        g += nmopi_[hi];
     }
-    //Get the size of frozen MO
-    size_t frozen_size = frozen_vec.size();
-
-    //Form a map that says mo_to_rel[ABS_MO] =relative in frozen array
-    std::map<size_t, size_t>  mo_to_rel;
-    std::vector<size_t> motofrozen(frozen_size);
-    std::iota(motofrozen.begin(), motofrozen.end(), 0);
-
-    int i = 0;
-    for (auto frozen : frozen_vec)
-    {
-        mo_to_rel[frozen] = motofrozen[i];
-        i++;
-    }
-
-    std::vector<size_t> nauxpi(nthree_);
-    std::iota(nauxpi.begin(), nauxpi.end(),0);
-
-    std::vector<size_t> P(nmo_);
-    std::iota(P.begin(), P.end(), 0);
-
-    // <rp || rq> + <rp | rq>
-    // = B_{rr}^{Q} * B_{pq}^{Q} - B_{rp}^{Q} B_{qr}^{Q} + B_{rr}^{Q} * B_{pq}^{Q}
-    // => Assume that I can store all but B_{pq}^{Q} in core (maybe a big assumption . . . . . )
-    //Kevin is lazy.  Going to use ambit to perform this contraction
-    //Create three tensors.  Forgive my terrible naming
-    //B_{rr}^{Q}
-    // B_{rp}^{Q}
-    ambit::Tensor BQrp = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, frozen_vec.size(), nmo_});
-    // B_{pr}^{Q}
-    ambit::Tensor BQpr = ambit::Tensor::build(tensor_type_, "BQrp", {nthree_, nmo_,frozen_vec.size()});
-
-    //Read these into a tensor
-    BQrp = three_integral_block(nauxpi, frozen_vec, P);
-    BQpr = three_integral_block(nauxpi, P, frozen_vec);
-
-    ambit::Tensor rpq = ambit::Tensor::build(tensor_type_, "rpq", {frozen_vec.size(), nmo_, nmo_});
-    ambit::Tensor rpqK = ambit::Tensor::build(tensor_type_, "rpqK", {frozen_vec.size(), nmo_, nmo_});
-
-    //Form the exchange part of this out of loop for blocks
-    //Need to see if this ever gets too large
-    rpqK("r,p,q") = BQrp("Q,r,p") * BQpr("Q,q,r");
-
-    //====Blocking information==========
-    //Hope this is smart enough to figure out not to store B_{pq}^{Q}
-    //Major problem with this is that other tensors are not that small.
-    //Maybe won't work
-    size_t int_mem_int = (nthree_ * nmo_ * nmo_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory();
-    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
-    //Hard wires num_block for testing
-
-    int block_size = nthree_ / num_block;
-    if(block_size < 1)
-    {
-        outfile->Printf("\n\n Block size is FUBAR: %d", block_size);
-        throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
-    }
-    if(num_block != 1)
-    {
-        outfile->Printf("\n---------Blocking Information-------\n");
-        outfile->Printf("\n  %d / %d = %d", int_mem_int, memory_input, int_mem_int / memory_input);
-        outfile->Printf("\nTotal size = %d  Block_size = %d num_block = %d",nthree_ ,block_size, num_block);
-        outfile->Printf("\n rpq is %4.4f GB", nthree_ * frozen_size * nmo_ * 8.0 / (1024 * 1024 * 1024));
-        outfile->Printf("\n BpqQ is %4.4f GB", nthree_ * nmo_ * nmo_ * 8.0 / (1024 * 1024 * 1024));
-    }
-
-    for(int i = 0; i < num_block; i++)
-    {
-        std::vector<size_t> A_block;
-        if(nthree_ % num_block == 0)
-        {
-            A_block.resize(block_size);
-            std::iota(A_block.begin(), A_block.end(), i * block_size);
-        }
-        else
-        {
-            block_size = i==(num_block - 1) ? block_size + nthree_ % num_block : block_size;
-            A_block.resize(block_size);
-            std::iota(A_block.begin(), A_block.end(), i * (nthree_ / num_block));
-        }
-        //This tensor is extremely large for big systems
-        //Needs to be blocked over A
-
-        ambit::Tensor BQpq = ambit::Tensor::build(tensor_type_, "BQpq", {A_block.size(), nmo_, nmo_});
-        BQpq = three_integral_block(A_block, P, P);
-
-        //A_block is the split of the naux -> (0, . . . ,block_size)
-
-        ambit::Tensor Qr = ambit::Tensor::build(tensor_type_, "Qr", {A_block.size(),frozen_vec.size()});
-        ambit::Tensor BQr = three_integral_block(A_block, frozen_vec, frozen_vec);
-
-
-
-        //Go from B_{rr}^{Q} -> B_{r}^{Q}.  Tensor library can not do this.
-
-        std::vector<double>& BQrP = BQr.data(); // get the data from BQr
-        Qr.iterate([&](const std::vector<size_t>& i,double& value){
-            value = BQrP[i[0] * frozen_size * frozen_size + i[1] * frozen_size + i[1]] ;
-        });
-        //^^^^^ -> B_{rr}^{Q} -> B_{r}^{Q}
-        rpq("r,p,q") += 2.0 * Qr("Q,r") * BQpq("Q,p,q");
-
-    }
-    std::vector<double>& rpqP = rpq.data();
-    std::vector<double>& rpqKP = rpqK.data();
-    f = 0;
-    for (size_t hi = 0; hi < nirrep_; ++hi){
-        for (size_t i = 0; i < frzcpi_[hi]; ++i){
-            size_t r = f + i;
-            outfile->Printf("\n  Freezing MO %lu", r);
-            #pragma omp parallel for num_threads(num_threads_) \
-            schedule(dynamic)
-            for(size_t p = 0; p < nmo_; ++p){
-                for(size_t q = 0; q < nmo_; ++q){
-                    one_electron_integrals_a[p * nmo_ + q] += rpqP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ +  q]
-                            - rpqKP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ + q];
-                    one_electron_integrals_b[p * nmo_ + q] += rpqP[mo_to_rel[r] * nmo_ * nmo_ +p * nmo_ + q]
-                            - rpqKP[mo_to_rel[r] * nmo_ * nmo_ + p * nmo_ + q];
-
-                }
-            }
-        }
-        f += nmopi_[hi];
-    }
-    ambit::BlockedTensor::reset_mo_spaces();
 
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
 

@@ -53,6 +53,8 @@ public:
 
     // ==> Class Interface <==
 
+    /// Return the number of MOs
+    size_t nmo() const {return nmo_;}
     /// Return the frozen core energy (contribution from FROZEN_DOCC)
     double frozen_core_energy() const {return frozen_core_energy_;}
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)

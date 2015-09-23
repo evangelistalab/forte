@@ -195,7 +195,7 @@ protected:
     IntegralFrozenCore resort_frozen_core_;
 
     /// Number of irreps
-    size_t nirrep_;
+    int nirrep_;
 
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
@@ -293,6 +293,8 @@ protected:
     ambit::TensorType tensor_type_ = ambit::kCore;
     /// How much memory each integral takes up
     double int_mem_;
+    /// The Cmatrix in a symmetry aware basis
+    SharedMatrix Ca_;
 };
 
 /**
