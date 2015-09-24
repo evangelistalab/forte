@@ -1754,14 +1754,31 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
             }
         }
     }else if (do_schwarz_prescreening_){
-        size_t max_I = dets.size();
+        if (do_initiator_approx_) {
+            size_t max_I = dets.size();
 #pragma omp parallel for
-        for (size_t I = 0; I < max_I; ++I){
-            int thread_id = omp_get_thread_num();
-            spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            for (size_t I = 0; I < max_I; ++I){
+                int thread_id = omp_get_thread_num();
+                if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
+                    spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+                } else {
+                    double det_energy = dets[I].energy();
+    //                double det_energy = dets[I].lazy_energy();
+                    // Diagonal contributions
+                    thread_det_C_map[thread_id][dets[I]] += tau * (det_energy - S) * C[I];
+                }
+            }
+        } else {
+            size_t max_I = dets.size();
+#pragma omp parallel for
+            for (size_t I = 0; I < max_I; ++I){
+                int thread_id = omp_get_thread_num();
+                spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+    //            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+    //            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            }
         }
+
     }else if (do_initiator_approx_){
         size_t max_I = dets.size();
 #pragma omp parallel for

@@ -590,12 +590,11 @@ void ConventionalIntegrals::compute_frozen_one_body_operator()
         f += nmopi_[hi];
     }
 
-    ///Can't figure out how PK builder works.  For time being, just use dumb code.  
 
+    //I think this code works.  Not sure if it is general enough to add in here.  
     //boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    //Dimension nmopi = wfn->nmopi();
+    //Dimension nmopi = mo_space_info_->get_dimension("ALL");
     //SharedMatrix Ca = wfn->Ca();
-    //Ca->print();
 
     //Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     //SharedMatrix C_core(new Matrix(nirrep_, nmopi, frozen_dim));
@@ -619,9 +618,6 @@ void ConventionalIntegrals::compute_frozen_one_body_operator()
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     //JK_core->initialize();
 
-    //JK_core->print_header();
-
-
     //std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
 
     //Cl.clear();
@@ -635,23 +631,16 @@ void ConventionalIntegrals::compute_frozen_one_body_operator()
     //F_sym->scale(2.0);
     //F_sym->subtract(K_sym);
     //F_sym->transform(Ca);
-    //SharedMatrix F_core(new Matrix("F_core", nmo_, nmo_));
 
-    //SharedMatrix so_to_ao = wfn->aotoso()->transpose();
-    //F_core->remove_symmetry(F_sym, so_to_ao);
-    //F_core->print();
-
-    //for(size_t p = 0; p < nmo_; ++p){
-    //    for(size_t q = 0; q < nmo_; ++q){
-    //        one_electron_integrals_a[p * nmo_ + q] += F_core->get(p, q);
-    //        one_electron_integrals_b[p * nmo_ + q] += F_core->get(p ,q);
+    //int offset = 0;
+    //for(int h = 0; h < nirrep_; h++){
+    //    for(size_t p = 0; p < nmopi_[h]; ++p){
+    //        for(size_t q = 0; q < nmopi_[h]; ++q){
+    //            one_electron_integrals_a[(p + offset) * nmo_ + q + offset] += F_sym->get(h, p, q);
+    //            one_electron_integrals_b[(p + offset) * nmo_ + q + offset] += F_sym->get(h, p ,q);
+    //        }
     //    }
-    //}
-    //for(size_t p = 0; p < nmo_; ++p){
-    //    for(size_t q = 0; q < nmo_; ++q){
-    //        outfile->Printf("\n p: %lu q: %lu  %8.8f", p, q,one_electron_integrals_a[p * nmo_ + q] );
-    //        outfile->Printf("\n p: %lu q: %lu  %8.8f", p, q,one_electron_integrals_b[p * nmo_ + q] );
-    //    }
+    //    offset += nmopi_[h];
     //}
 
 }

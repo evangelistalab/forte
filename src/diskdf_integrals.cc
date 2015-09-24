@@ -227,9 +227,22 @@ ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, cons
     ThreeIntpr = three_integral_block(Avec, p, r);
     ThreeIntqs = three_integral_block(Avec, q, s);
 
+
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
     ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
-    ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
+
+
+    /// If p != q != r !=s need to form the Exchane part separately
+    if(r != s)
+    {
+        ambit::Tensor ThreeIntpsK = ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
+        ambit::Tensor ThreeIntqrK = ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
+        ThreeIntpsK = three_integral_block(Avec, p, s);
+        ThreeIntqrK = three_integral_block(Avec, q, r);
+        ReturnTensor ("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+    }
+    else{   ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");  }
+
 
     return ReturnTensor;
 }
@@ -264,7 +277,17 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p, cons
 
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
     ReturnTensor ("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
-    ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
+
+    /// If p != q != r !=s need to form the Exchane part separately
+    if(r != s)
+    {
+        ambit::Tensor ThreeIntpsK = ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
+        ambit::Tensor ThreeIntqrK = ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
+        ThreeIntpsK = three_integral_block(Avec, p, s);
+        ThreeIntqrK = three_integral_block(Avec, q, r);
+        ReturnTensor ("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+    }
+    else{   ReturnTensor ("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");  }
     return ReturnTensor;
 }
 double DISKDFIntegrals::three_integral(size_t A, size_t p, size_t q)
@@ -457,7 +480,6 @@ void DISKDFIntegrals::gather_integrals()
     Timer timer;
     std::string str= "Computing DF Integrals";
     outfile->Printf("\n    %-36s ...", str.c_str());
-    df->print_header();
     df->compute();
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
@@ -856,7 +878,6 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
 
-    JK_core->print_header();
 
 
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
