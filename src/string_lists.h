@@ -249,7 +249,7 @@ private:
 
     void make_strings(GraphPtr graph,StringList& list);
 
-    void make_pair_list(GraphPtr graph,NNList& list);
+    void make_pair_list(NNList& list);
 
     void make_vo_list(GraphPtr graph,VOList& list);
     void make_vo(GraphPtr graph,VOList& list,int p, int q);

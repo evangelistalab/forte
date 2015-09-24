@@ -83,7 +83,7 @@ void StringLists::startup()
     }
     {
         boost::timer t;
-        make_pair_list(pair_graph_,nn_list);
+        make_pair_list(nn_list);
         nn_list_timer += t.elapsed();
     }
 
@@ -175,7 +175,7 @@ void StringLists::startup()
  * Generate all the pairs p > q with pq in pq_sym
  * these are stored as pair<int,int> in pair_list[pq_sym][pairpi]
  */
-void StringLists::make_pair_list(GraphPtr graph,NNList& list)
+void StringLists::make_pair_list(NNList& list)
 {
     // Loop over irreps of the pair pq
     for(int pq_sym = 0; pq_sym < nirrep_; ++pq_sym){
