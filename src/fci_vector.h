@@ -73,11 +73,11 @@ public:
     double tei_bb(size_t p,size_t q,size_t r,size_t s) const {return tei_bb_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||pq>
-    double diag_tei_aa(size_t p,size_t q) const {return diag_tei_aa_[p * nmo_ + q];}
+    double diag_tei_aa(size_t p,size_t q) const {return tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
     /// Return the alpha-beta two-electron integral <pq|rs>
-    double diag_tei_ab(size_t p,size_t q) const {return diag_tei_ab_[p * nmo_ + q];}
+    double diag_tei_ab(size_t p,size_t q) const {return tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
-    double diag_tei_bb(size_t p,size_t q) const {return diag_tei_bb_[p * nmo_ + q];}
+    double diag_tei_bb(size_t p,size_t q) const {return tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
     IntegralType get_integral_type(){return integral_type_;}
 
 private:

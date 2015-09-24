@@ -945,6 +945,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     //TODO: Implement these without storing V and/or T2 by using blocking
     BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aa"}));
+    //V[efmu] = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+
     temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
     temp["vu"] += V_["fEuM"] * T2_["vMfE"];
     temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
