@@ -54,7 +54,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
 	std::vector<double> tei_gh_ab;
 	std::vector<double> tei_gh_bb;
 	std::vector<double> tei_gh2_ab;
-	
+
 	// Grab all integrals in blocks
 	ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
 	ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
@@ -110,6 +110,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
                 oei_a_[pq] += tei_gh_ab[index];
                 oei_b_[pq] += tei_gh_bb[index];
                 oei_b_[pq] += tei_gh2_ab[index2]; // TODO check these factors 0.5
+                //oei_b_[pq] += tei_gh_ab[index2]; // TODO check these factors 0.5
             }
         }
     }
@@ -155,29 +156,32 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
 	std::vector<double> tei_gh2_ab;
 	
 	// Grab all integrals in blocks
-	ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
-	ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
-	ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
-	tei_aa_ = act_aa.data();
-	tei_ab_ = act_ab.data();
-	tei_bb_ = act_bb.data();
+    ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    tei_aa_ = act_aa.data();
+    tei_ab_ = act_ab.data();
+    tei_bb_ = act_bb.data();
 
-	ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-	ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-	ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-	tei_rdocc_aa = rdocc_aa.data();
-	tei_rdocc_ab = rdocc_ab.data();
-	tei_rdocc_bb = rdocc_bb.data();
+    ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    tei_rdocc_aa = rdocc_aa.data();
+    tei_rdocc_ab = rdocc_ab.data();
+    tei_rdocc_bb = rdocc_bb.data();
 	
 
-	ambit::Tensor gh_aa  = ints->aptei_aa_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+    ambit::Tensor gh_aa  = ints->aptei_aa_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
 	ambit::Tensor gh_ab  = ints->aptei_ab_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
-	ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
-	ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
-	tei_gh_aa  = gh_aa.data();
-	tei_gh_ab  = gh_ab.data();
-	tei_gh_bb  = gh_bb.data();
-	tei_gh2_ab = gh2_ab.data();
+    ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
+    ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
+
+    for(auto cmo : cmo_to_mo){outfile->Printf("\n %lu", cmo);}
+    for(auto fmo : fomo_to_mo){outfile->Printf("\n %lu", fmo);}
+    tei_gh_aa  = gh_aa.data();
+    tei_gh_ab  = gh_ab.data();
+    tei_gh_bb  = gh_bb.data();
+    tei_gh2_ab = gh2_ab.data();
 
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
@@ -209,7 +213,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
                 oei_a_[idx] += tei_gh_aa[index];
                 oei_a_[idx] += tei_gh_ab[index];
                 oei_b_[idx] += tei_gh_bb[index];
-                oei_b_[idx] += tei_gh2_ab[index2]; // TODO check these factors 0.5
+                oei_b_[idx] += tei_gh_ab[index]; // TODO check these factors 0.5
             }
         }
     }
