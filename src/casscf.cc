@@ -104,6 +104,8 @@ void CASSCF::compute_casscf()
         Call_->gemm('n', 't', 1.0, Cold, S, 0.0);
         SharedMatrix Ca = wfn->Ca();
         Ca->copy(Call_);
+        // With updated C coefficients, need to retransform integrals so I can run FCI with transformed integrals
+        //ints_->retransform_integrals();
 
         if(options_.get_int("PRINT") > 1)
         {
