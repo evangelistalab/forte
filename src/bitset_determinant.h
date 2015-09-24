@@ -106,7 +106,7 @@ public:
 	/// Get the alpha bits
 	std::vector<bool> get_alfa_bits_vector_bool(){
 		std::vector<bool> result;
-        for(size_t n = 0; n < nmo_;++n){
+        for(int n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -114,7 +114,7 @@ public:
 	// Get the beta bits
 	std::vector<bool> get_beta_bits_vector_bool(){
 		std::vector<bool> result;
-        for(size_t n = 0; n < nmo_; ++n){
+        for(int n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -122,7 +122,7 @@ public:
 	/// Get the alpha bits
 	const std::vector<bool> get_alfa_bits_vector_bool() const {
 		std::vector<bool> result;
-        for(size_t n = 0; n < nmo_;++n){
+        for(int n = 0; n < nmo_;++n){
 			result.push_back(alfa_bits_[n]);
 		}
 		return result;
@@ -130,7 +130,7 @@ public:
 	// Get the beta bits
 	const std::vector<bool> get_beta_bits_vector_bool() const {
 		std::vector<bool> result;
-        for(size_t n = 0; n < nmo_; ++n){
+        for(int n = 0; n < nmo_; ++n){
 			result.push_back(beta_bits_[n]);	
 		}
 		return result;
@@ -198,14 +198,12 @@ public:
 	static void check_uniqueness( std::vector<BitsetDeterminant> );
 
     /// Sets the pointer to the integral object
-	static void set_ints(std::shared_ptr<FCIIntegrals> ints) {
-		fci_ints_ = ints;
-	}
+    static void set_ints(std::shared_ptr<FCIIntegrals> ints);
 
 private:
     // Data
     /// Number of non-frozen molecular orbitals
-    size_t nmo_;
+    int nmo_;
 public:
     /// The occupation vector for the alpha electrons (does not include the frozen orbitals)
     bit_t alfa_bits_;
@@ -213,9 +211,14 @@ public:
     bit_t beta_bits_;
 
     // Static data
+    /// Precomputed bit masks of the form : 111...1000...0.  Used by FastSlaterSign.
+    static std::vector<bit_t> bit_mask_;
     /// A pointer to the integral object
     static std::shared_ptr<FCIIntegrals> fci_ints_;
+    /// Return the sign of a_n applied to string I
     static double SlaterSign(const bit_t& I,int n);
+    /// Return the sign of a_n applied to string I
+    static double FastSlaterSign(const boost::dynamic_bitset<>& I,int n);
 };
 
 typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;

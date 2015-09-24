@@ -945,6 +945,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     //TODO: Implement these without storing V and/or T2 by using blocking
     BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aa"}));
+    //V[efmu] = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+
     temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
     temp["vu"] += V_["fEuM"] * T2_["vMfE"];
     temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
@@ -1311,14 +1313,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     double Ebeta  = 0.0;
     double Emixed = 0.0;
     int nthread = 1;
+    int thread  = 0;
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+        thread  = omp_get_thread_num();
+    #endif
     /// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
     ///general for all, but makes it slow for DiskDF.
 
     if(integral_type_==DiskDF)
     {
-        #ifdef _OPENMP
-            nthread = omp_get_max_threads();
-        #endif
         std::vector<ambit::Tensor> BefVec;
         std::vector<ambit::Tensor> BefJKVec;
         std::vector<ambit::Tensor> RDVec;
@@ -1360,10 +1364,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
 
         for(size_t m = 0; m < core_; ++m){
              
-            int thread = 0;
-            #ifdef _OPENMP
-                thread = omp_get_thread_num();
-            #endif
             size_t ma = acore_mos_[m];
             size_t mb = bcore_mos_[m];
             #pragma omp critical

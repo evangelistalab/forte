@@ -34,13 +34,24 @@ public:
     CASSCF(Options &options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_casscf();
+    ///Return the Converged CMatrix
+    SharedMatrix Call(){return Call_;}
+    ///Return the final gamma1
+    ambit::Tensor gamma1(){return gamma1_;}
+    ///Return the final gamma2;
+    ambit::Tensor gamma2(){return gamma2_;}
+    double E_casscf(){return E_casscf_;}
 private:
     /// The active one RDM in the MO basis
+    SharedMatrix gamma1M_;
     ambit::Tensor gamma1_;
+
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
     Reference cas_ref_;
+    /// The energy computed in FCI with updates from CASSCF and CI
+    double E_casscf_;
     /// The OPtions object
     Options options_;
     /// The ForteIntegrals pointer
@@ -48,6 +59,7 @@ private:
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
+    ///
     SharedMatrix Call_;
     /// The MO Coefficient in the in the Pfitzer ordering for C1
     SharedMatrix C_sym_aware_;
@@ -65,18 +77,18 @@ private:
     /// The core Fock Matrix
     /// Equation 9
 
-    ambit::Tensor F_core_;
+    SharedMatrix F_core_;
     /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all active portion of the OPM
     /// Equation 10
-    ambit::Tensor F_act_;
+    SharedMatrix F_act_;
     /// Intermediate in forming orbital gradient matrix
-    ambit::Tensor Y_;
+    SharedMatrix Y_;
     /// Z intermediate
-    ambit::Tensor Z_;
+    SharedMatrix Z_;
     /// The Orbital gradient
-    ambit::Tensor g_;
+    SharedMatrix g_;
     /// The diagonal Hessian
-    ambit::Tensor d_;
+    SharedMatrix d_;
 
 
 
@@ -90,6 +102,8 @@ private:
     void form_fock_active();
     /// Assemble the orbital gradient (10-15)
     void orbital_gradient();
+    /// Assemble the diagonal Hessian (20-22)
+    void diagonal_hessian();
 
     void startup();
 

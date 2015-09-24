@@ -247,6 +247,9 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /* - Run a FCI followed by CASSCF computation -*/
         options.add_bool("CASSCF_REFERENCE", false);
+        /* - The number of iterations for CASSCF -*/
+        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_double("CASSCF_CONVERGENCE", 1e-6);
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
@@ -328,6 +331,10 @@ read_options(std::string name, Options &options)
         options.add_bool("DYNAMIC_PRESCREENING",false);
         /*- Use schwarz prescreening -*/
         options.add_bool("SCHWARZ_PRESCREENING",false);
+        /*- Use initiator approximation -*/
+        options.add_bool("INITIATOR_APPROX",false);
+        /*- The initiator approximation factor -*/
+        options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
 
@@ -604,11 +611,7 @@ extern "C" PsiReturnType forte(Options &options)
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
            fci->compute_energy();
            Reference reference = fci->reference();
-           if(options.get_str("REFERENCE")=="UHF" || options.get_str("REFERENCE")=="CUHF")
-           {
-                outfile->Printf("\n This method is designed for restricted references (ROHF or RHF)");
-                throw PSIEXCEPTION("Use either ROHF or RHF for THREE_DSRG_MRPT2");
-           }
+
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
            three_dsrg_mrpt2->compute_energy();
        }
