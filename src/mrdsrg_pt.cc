@@ -30,7 +30,7 @@ double MRDSRG::compute_energy_pt2(){
     // test orbitals are semi-canonicalized
     check_semicanonical();
 
-    // initiate Hbar with bare Hamiltonian
+    // initialize Hbar with bare Hamiltonian
     Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
     Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
     Hbar1_["pq"] = F_["pq"];
