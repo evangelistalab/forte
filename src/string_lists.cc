@@ -6,8 +6,8 @@
 
 namespace psi{ namespace forte{
 
-StringLists::StringLists(RequiredLists required_lists,Dimension cmopi,std::vector<size_t> core_mo,std::vector<size_t> cmo_to_mo, size_t na, size_t nb)
-    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo), na_(na), nb_(nb)
+StringLists::StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
+    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo), na_(na), nb_(nb), print_(print)
 {
     startup();
 }
@@ -61,20 +61,6 @@ void StringLists::startup()
         nas_ += alfa_graph_->strpi(h);
         nbs_ += beta_graph_->strpi(h);
     }
-
-    outfile->Printf("\n\n  ==> String Lists <==\n");
-    outfile->Printf("\n  Number of alpha electrons     = %zu",na_);
-    outfile->Printf("\n  Number of beta electrons      = %zu",nb_);
-    outfile->Printf("\n  Number of alpha strings       = %zu",alfa_graph_->nstr());
-    outfile->Printf("\n  Number of beta strings        = %zu",nbs_);
-    if (na_ >= 3){
-        outfile->Printf("\n  Number of alpha strings (N-3) = %zu",alfa_graph_3h_->nstr());
-    }
-    if (nb_ >= 3){
-        outfile->Printf("\n  Number of beta strings (N-3)  = %zu",beta_graph_3h_->nstr());
-    }
-
-    outfile->Flush();
 
     // Timers
     double str_list_timer = 0.0;
@@ -156,18 +142,32 @@ void StringLists::startup()
     }
 
     double total_time = str_list_timer + nn_list_timer + vo_list_timer + oo_list_timer + vvoo_list_timer + vovo_list_timer;
-    outfile->Printf("\n  Timing for strings        = %10.3f s",str_list_timer);
-    outfile->Printf("\n  Timing for NN strings     = %10.3f s",nn_list_timer);
-    outfile->Printf("\n  Timing for VO strings     = %10.3f s",vo_list_timer);
-    outfile->Printf("\n  Timing for OO strings     = %10.3f s",oo_list_timer);
-    outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",kh_list_timer);
-    outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",vvoo_list_timer);
-    outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",vovo_list_timer);
-    outfile->Printf("\n  Timing for 1-hole strings = %10.3f s",h1_list_timer);
-    outfile->Printf("\n  Timing for 2-hole strings = %10.3f s",h2_list_timer);
-    outfile->Printf("\n  Timing for 3-hole strings = %10.3f s",h3_list_timer);
-    outfile->Printf("\n  Total timing              = %10.3f s",total_time);
-    outfile->Flush();
+
+    if (print_){
+        outfile->Printf("\n\n  ==> String Lists <==\n");
+        outfile->Printf("\n  Number of alpha electrons     = %zu",na_);
+        outfile->Printf("\n  Number of beta electrons      = %zu",nb_);
+        outfile->Printf("\n  Number of alpha strings       = %zu",alfa_graph_->nstr());
+        outfile->Printf("\n  Number of beta strings        = %zu",nbs_);
+        if (na_ >= 3){
+            outfile->Printf("\n  Number of alpha strings (N-3) = %zu",alfa_graph_3h_->nstr());
+        }
+        if (nb_ >= 3){
+            outfile->Printf("\n  Number of beta strings (N-3)  = %zu",beta_graph_3h_->nstr());
+        }
+        outfile->Printf("\n  Timing for strings        = %10.3f s",str_list_timer);
+        outfile->Printf("\n  Timing for NN strings     = %10.3f s",nn_list_timer);
+        outfile->Printf("\n  Timing for VO strings     = %10.3f s",vo_list_timer);
+        outfile->Printf("\n  Timing for OO strings     = %10.3f s",oo_list_timer);
+        outfile->Printf("\n  Timing for Knowles-Handy  = %10.3f s",kh_list_timer);
+        outfile->Printf("\n  Timing for VVOO strings   = %10.3f s",vvoo_list_timer);
+        outfile->Printf("\n  Timing for VOVO strings   = %10.3f s",vovo_list_timer);
+        outfile->Printf("\n  Timing for 1-hole strings = %10.3f s",h1_list_timer);
+        outfile->Printf("\n  Timing for 2-hole strings = %10.3f s",h2_list_timer);
+        outfile->Printf("\n  Timing for 3-hole strings = %10.3f s",h3_list_timer);
+        outfile->Printf("\n  Total timing              = %10.3f s",total_time);
+        outfile->Flush();
+    }
 }
 
 
@@ -241,7 +241,7 @@ void StringLists::make_strings(GraphPtr graph,StringList& list)
 short StringLists::string_sign(const bool* I,size_t n)
 {
     short sign = 1;
-    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+    for(size_t i = 0; i < n; ++i){  // This runs up to the operator before n
         if (I[i]) sign *= -1;
     }
     return(sign);

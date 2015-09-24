@@ -192,7 +192,7 @@ public:
     std::vector<std::tuple<double, double, size_t, size_t, size_t> > max_abs_elements(size_t num_dets);
 
     // Temporary memory allocation
-    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t);
+    static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
     static void release_temp_space();
 private:
 
@@ -214,6 +214,8 @@ private:
     size_t ndet_;
     /// The number of determinants per irrep
     std::vector<size_t> detpi_;
+    /// The print level
+    int print_ = 0;
 
     /// The string list
     std::shared_ptr<StringLists> lists_;

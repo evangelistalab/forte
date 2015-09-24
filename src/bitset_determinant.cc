@@ -27,7 +27,6 @@ void BitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 
     // Initialize the bit masks
     int n = ints->nmo();
-    outfile->Printf("\n  Generating bit mask for the Bitset class (nmo = %d)",n);
 
     bit_mask_.clear();
     for (int i = 0; i < n; ++i){
