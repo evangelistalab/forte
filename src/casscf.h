@@ -55,14 +55,15 @@ private:
     /// The OPtions object
     Options options_;
     /// The ForteIntegrals pointer
+    boost::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
-    ///
+    /// this matrix is ao by nmo
     SharedMatrix Call_;
-    /// The MO Coefficient in the in the Pfitzer ordering for C1
-    SharedMatrix C_sym_aware_;
+    /// C matrix in the SO basis
+    SharedMatrix Ca_sym_;
 
     /// The dimension for number of molecular orbitals
     Dimension nmopi_;
@@ -71,7 +72,7 @@ private:
     /// The number of active orbitals
     size_t na_;
     /// The number of irreps
-    ///size_t nirrep_;
+    size_t nirrep_;
 
     /// These member variables are all summarized in Algorithm 1
     /// The core Fock Matrix
