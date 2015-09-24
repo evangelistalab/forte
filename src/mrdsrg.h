@@ -109,12 +109,12 @@ protected:
     // => DSRG related <= //
 
     /// Correlation level
-    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, DSRG_CEPA0};
+    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, CEPA0};
     std::map<std::string, CORR_LV> corrlevelmap =
             boost::assign::map_list_of("LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)
             ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)
             ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3)
-            ("DSRG_CEPA0", CORR_LV::DSRG_CEPA0);
+            ("CEPA0", CORR_LV::CEPA0);
 
     /// The flow parameter
     double s_;
@@ -258,6 +258,23 @@ protected:
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
+    /// Compute off-diagonal blocks labels of a one-body operator
+    std::vector<std::string> od_one_labels();
+    /// Compute off-diagonal blocks labels of a two-body operator
+    std::vector<std::string> od_two_labels();
+    /// Copy T1 and T2 to a big vector for DIIS
+    std::vector<double> copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
+                                      BlockedTensor& T2, const std::vector<std::string>& label2);
+    /// Compute number of elements of the big vector for DIIS
+    size_t vector_size_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
+                            BlockedTensor& T2, const std::vector<std::string>& label2);
+    /// Copy extrapolated values back to T1 and T2
+    void return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
+                         BlockedTensor& T2, const std::vector<std::string>& label2,
+                         const std::vector<double>& data);
+
+    /// Compute MR-DSRG-CEPA0
+    double compute_energy_cepa0();
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
