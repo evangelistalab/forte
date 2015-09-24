@@ -157,9 +157,10 @@ public:
 
     /// Compute the energy
     virtual double compute_energy();
-
     /// Return a reference object
     Reference reference();
+    /// Set the print level
+    void set_print(int value) {print_ = value;}
 
 private:
 
