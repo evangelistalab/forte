@@ -51,8 +51,10 @@ void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints)
     } while (std::next_permutation(Ia,Ia+n));
 
     hdiag_timer += t.elapsed();
-    outfile->Printf("\n  Timing for Hdiag          = %10.3f s",hdiag_timer);
-    outfile->Flush();
+    if (print_){
+        outfile->Printf("\n  Timing for Hdiag          = %10.3f s",hdiag_timer);
+        outfile->Flush();
+    }
 }
 
 

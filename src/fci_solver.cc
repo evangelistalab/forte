@@ -10,6 +10,7 @@
 #include <cmath>
 #include <numeric>
 
+#include <boost/format.hpp>
 #include <boost/timer.hpp>
 
 #include <libciomr/libciomr.h>
@@ -69,7 +70,8 @@ FCI::~FCI()
 
 void FCI::startup()
 {  
-    print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
+    if(print_)
+        print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
 }
 
 double FCI::compute_energy()
@@ -110,13 +112,15 @@ double FCI::compute_energy()
         throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
     }
 
-    outfile->Printf("\n  Number of electrons: %d",nel);
-    outfile->Printf("\n  Charge: %d",charge);
-    outfile->Printf("\n  Multiplicity: %d",multiplicity);
-    if (ms % 2 == 0){
-        outfile->Printf("\n  M_s: %d",ms / 2);
-    }else{
-        outfile->Printf("\n  M_s: %d/2",ms);
+    if (print_){
+        outfile->Printf("\n  Number of electrons: %d",nel);
+        outfile->Printf("\n  Charge: %d",charge);
+        outfile->Printf("\n  Multiplicity: %d",multiplicity);
+        if (ms % 2 == 0){
+            outfile->Printf("\n  M_s: %d",ms / 2);
+        }else{
+            outfile->Printf("\n  M_s: %d/2",ms);
+        }
     }
 
     if( ((nel - ms) % 2) != 0)
@@ -132,11 +136,10 @@ double FCI::compute_energy()
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
-    options_.get_int("NTRIAL_PER_ROOT"));
+                               options_.get_int("NTRIAL_PER_ROOT"),print_);
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
-    fcisolver_->set_print(options_.get_int("PRINT"));
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -153,15 +156,16 @@ Reference FCI::reference()
 }
 
 
-FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
+FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
                      std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     size_t ntrial_per_root)
+                     size_t ntrial_per_root, int print)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
-      ntrial_per_root_(ntrial_per_root), mo_space_info_(mo_space_info)
+      ntrial_per_root_(ntrial_per_root), mo_space_info_(mo_space_info),
+      print_(print)
 {
     startup();
 }
@@ -169,7 +173,7 @@ FCISolver::FCISolver(Dimension active_dim,std::vector<size_t> core_mo,
 void FCISolver::startup()
 {
     // Create the string lists
-    lists_ = std::shared_ptr<StringLists>(new StringLists(twoSubstituitionVVOO,active_dim_,core_mo_,active_mo_,na_,nb_));
+    lists_ = std::shared_ptr<StringLists>(new StringLists(twoSubstituitionVVOO,active_dim_,core_mo_,active_mo_,na_,nb_,print_));
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h){
@@ -177,8 +181,10 @@ void FCISolver::startup()
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
-    outfile->Printf("\n\n  ==> FCI Solver <==\n");
-    outfile->Printf("\n  Number of determinants    = %zu",ndfci);
+    if(print_){
+        outfile->Printf("\n\n  ==> FCI Solver <==\n");
+        outfile->Printf("\n  Number of determinants    = %zu",ndfci);
+    }
 }
 
 /*
@@ -191,9 +197,9 @@ double FCISolver::compute_energy()
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_);
-	BitsetDeterminant::set_ints(fci_ints);
+    BitsetDeterminant::set_ints(fci_ints);
 
-    FCIWfn::allocate_temp_space(lists_,symmetry_);
+    FCIWfn::allocate_temp_space(lists_,print_);
 
     nroot_ = 1;
 
@@ -212,7 +218,7 @@ double FCISolver::compute_energy()
 
     DavidsonLiuSolver dls(fci_size,nroot_);
     dls.set_e_convergence(1.0e-13);
-    dls.set_print_level(0);
+    dls.set_print_level(print_);
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
@@ -231,10 +237,12 @@ double FCISolver::compute_energy()
 
     bool converged = false;
 
-    outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
-    outfile->Printf("\n  ----------------------------------------");
-    outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
-    outfile->Printf("\n  ----------------------------------------");
+    if(print_){
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+        outfile->Printf("\n  ----------------------------------------");
+    }
 
     double old_avg_energy = 0.0;
     for (int cycle = 0; cycle < 30; ++cycle){
@@ -255,13 +263,14 @@ double FCISolver::compute_energy()
         }
         avg_energy /= static_cast<double>(nroot_);
 
-        outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
+        if (print_) outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
+
         old_avg_energy = avg_energy;
 
         if (converged) break;
     }
 
-    outfile->Printf("\n  ----------------------------------------");
+    if (print_) outfile->Printf("\n  ----------------------------------------");
 
     converged = true;
 
@@ -269,52 +278,56 @@ double FCISolver::compute_energy()
         dls.get_results();
     }
 
-    for (int r = 0; r < nroot_; ++r){
-        outfile->Printf("\n\n  ==> Root No. %d <==\n",r);
+    // Print determinants
+    if (print_){
+        for (int r = 0; r < nroot_; ++r){
+            outfile->Printf("\n\n  ==> Root No. %d <==\n",r);
 
-        C_->copy(dls.eigenvector(r));
-        std::vector<std::tuple<double,double,size_t,size_t,size_t>>
-            dets_config = C_->max_abs_elements(guess_size * ntrial_per_root_);
-        Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            C_->copy(dls.eigenvector(r));
+            std::vector<std::tuple<double,double,size_t,size_t,size_t>>
+                    dets_config = C_->max_abs_elements(guess_size * ntrial_per_root_);
+            Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
 
-        for(auto& det_config: dets_config){
-            double ci_abs, ci;
-            size_t h, add_Ia, add_Ib;
-            std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
+            for(auto& det_config: dets_config){
+                double ci_abs, ci;
+                size_t h, add_Ia, add_Ib;
+                std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
 
-            if(ci_abs < 0.1) continue;
+                if(ci_abs < 0.1) continue;
 
-            boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h,add_Ia);
-            boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_,add_Ib);
+                boost::dynamic_bitset<> Ia_v = lists_->alfa_str(h,add_Ia);
+                boost::dynamic_bitset<> Ib_v = lists_->beta_str(h ^ symmetry_,add_Ib);
 
-            outfile->Printf("\n    ");
-            for(size_t h = 0, offset = 0; h < nirrep_; ++h){
-                for(size_t k = 0; k < nactvpi[h]; ++k){
-                    size_t i = k + offset;
-                    bool a = Ia_v[i];
-                    bool b = Ib_v[i];
-                    if(a == b){
-                        outfile->Printf("%d", a ? 2 : 0);
-                    }else{
-                        outfile->Printf("%c", a ? 'a' : 'b');
+                outfile->Printf("\n    ");
+                size_t offset = 0;
+                for(int h = 0; h < nirrep_; ++h){
+                    for(size_t k = 0; k < nactvpi[h]; ++k){
+                        size_t i = k + offset;
+                        bool a = Ia_v[i];
+                        bool b = Ib_v[i];
+                        if(a == b){
+                            outfile->Printf("%d", a ? 2 : 0);
+                        }else{
+                            outfile->Printf("%c", a ? 'a' : 'b');
+                        }
                     }
+                    if(nactvpi[h] != 0)
+                        outfile->Printf(" ");
+                    offset += nactvpi[h];
                 }
-                if(nactvpi[h] != 0)
-                    outfile->Printf(" ");
-                offset += nactvpi[h];
+                outfile->Printf("%15.8f", ci);
             }
-            outfile->Printf("%15.8f", ci);
-        }
 
-        double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
-        outfile->Printf("\n\n    Total Energy: %25.15f",root_energy);
+            double root_energy = dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            outfile->Printf("\n\n    Total Energy: %25.15f",root_energy);
+        }
     }
 
     // Compute the RDMs
     size_t rdm_root = 0;
     if (converged){
         C_->copy(dls.eigenvector(0));
-        outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
+        if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
         C_->compute_rdms(3);
 
         // Optionally, test the RDMs
@@ -384,11 +397,8 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> guess;
 
-    print_h2("FCI Initial Guess");
-    outfile->Printf("\n  ---------------------------------------------");
-    outfile->Printf("\n    Root            Energy     <S^2>   Spin");
-    outfile->Printf("\n  ---------------------------------------------");
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et"});
+    std::vector<string> table;
 
     for (size_t r = 0; r < num_dets; ++r){
         double energy = evals.get(r) + nuclear_repulsion_energy;
@@ -406,7 +416,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         int SS = std::round(S * 2.0);
         size_t state_multp = SS + 1;
         std::string state_label = s2_labels[SS];
-        outfile->Printf("\n    %3d  %20.12f  %.3f  %s",r,energy,std::fabs(S2),state_label.c_str());
+        table.push_back(boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % r % energy % std::fabs(S2) % state_label.c_str()));
         // Save states of the desired multiplicity
         if (state_multp == multiplicity){
             std::vector<std::tuple<size_t,size_t,size_t,double>> solution;
@@ -420,9 +430,16 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             guess.push_back(solution);
         }
     }
-    outfile->Printf("\n  ---------------------------------------------");
-    outfile->Printf("\n  Timing for initial guess  = %10.3f s\n",t.elapsed());
-    outfile->Flush();
+    if (print_){
+        print_h2("FCI Initial Guess");
+        outfile->Printf("\n  ---------------------------------------------");
+        outfile->Printf("\n    Root            Energy     <S^2>   Spin");
+        outfile->Printf("\n  ---------------------------------------------");
+        outfile->Printf("\n%s",to_string(table,"\n").c_str());
+        outfile->Printf("\n  ---------------------------------------------");
+        outfile->Printf("\n  Timing for initial guess  = %10.3f s\n",t.elapsed());
+        outfile->Flush();
+    }
 
     return guess;
 }
@@ -568,33 +585,33 @@ Reference FCISolver::reference()
     L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 
     if (print_ > 1)
-    for (auto L1 : {L1a,L1b}){
-        outfile->Printf("\n\n** %s **",L1.name().c_str());
-        L1.iterate([&](const::vector<size_t>& i,double& value){
-            if (std::fabs(value) > 1.0e-15)
-                outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1], value);
-        });
+        for (auto L1 : {L1a,L1b}){
+            outfile->Printf("\n\n** %s **",L1.name().c_str());
+            L1.iterate([&](const::vector<size_t>& i,double& value){
+                if (std::fabs(value) > 1.0e-15)
+                    outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1], value);
+            });
 
-    }
+        }
 
     if (print_ > 2)
-    for (auto L2 : {L2aa,L2ab,L2bb}){
-        outfile->Printf("\n\n** %s **",L2.name().c_str());
-        L2.iterate([&](const::vector<size_t>& i,double& value){
-            if (std::fabs(value) > 1.0e-15)
-                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-        });
+        for (auto L2 : {L2aa,L2ab,L2bb}){
+            outfile->Printf("\n\n** %s **",L2.name().c_str());
+            L2.iterate([&](const::vector<size_t>& i,double& value){
+                if (std::fabs(value) > 1.0e-15)
+                    outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+            });
 
-    }
+        }
 
     if (print_ > 3)
-    for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
-        outfile->Printf("\n\n** %s **",L3.name().c_str());
-        L3.iterate([&](const::vector<size_t>& i,double& value){
-            if (std::fabs(value) > 1.0e-15)
-                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
-        });
-    }
+        for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
+            outfile->Printf("\n\n** %s **",L3.name().c_str());
+            L3.iterate([&](const::vector<size_t>& i,double& value){
+                if (std::fabs(value) > 1.0e-15)
+                    outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
+            });
+        }
 
     Reference fci_ref(energy_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
     return fci_ref;
