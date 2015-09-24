@@ -125,6 +125,7 @@ void AdaptivePathIntegralCI::startup()
     maxiter_ = options_.get_int("MAXBETA") / time_step_;
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
+    initiator_approx_factor_ = options_.get_double("INITIATOR_APPROX_FACTOR");
 
     max_guess_size_ = options_.get_int("MAX_GUESS_SIZE");
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
@@ -136,6 +137,7 @@ void AdaptivePathIntegralCI::startup()
     do_simple_prescreening_ = options_.get_bool("SIMPLE_PRESCREENING");
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
     do_schwarz_prescreening_ = options_.get_bool("SCHWARZ_PRESCREENING");
+    do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
@@ -200,6 +202,8 @@ void AdaptivePathIntegralCI::print_info()
         {"Use intermediate normalization", use_inter_norm_ ? "YES" : "NO"},
         {"Prescreen spawning",do_simple_prescreening_ ? "YES" : "NO"},
         {"Dynamic prescreening",do_dynamic_prescreening_ ? "YES" : "NO"},
+        {"Schwarz prescreening",do_schwarz_prescreening_ ? "YES" : "NO"},
+        {"Initiator approximation",do_initiator_approx_ ? "YES" : "NO"},
         {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
         {"Using OpenMP", have_omp_ ? "YES" : "NO"},
     };
@@ -1530,7 +1534,8 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det_sym(double tau, double spawning_t
     return spawned;
 }
 
-size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
+
+size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_threshold, Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1546,6 +1551,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
     double my_new_max_two_HJI = 0.0;
 
     double det_energy = detI.energy();
+//    double det_energy = detI.lazy_energy();
     // Diagonal contributions
     new_space_C[detI] += tau * (det_energy - E0) * CI;
 
@@ -1748,13 +1754,44 @@ size_t AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,
             }
         }
     }else if (do_schwarz_prescreening_){
+        if (do_initiator_approx_) {
+            size_t max_I = dets.size();
+#pragma omp parallel for
+            for (size_t I = 0; I < max_I; ++I){
+                int thread_id = omp_get_thread_num();
+                if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
+                    spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+                } else {
+                    double det_energy = dets[I].energy();
+    //                double det_energy = dets[I].lazy_energy();
+                    // Diagonal contributions
+                    thread_det_C_map[thread_id][dets[I]] += tau * (det_energy - S) * C[I];
+                }
+            }
+        } else {
+            size_t max_I = dets.size();
+#pragma omp parallel for
+            for (size_t I = 0; I < max_I; ++I){
+                int thread_id = omp_get_thread_num();
+                spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+    //            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+    //            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            }
+        }
+
+    }else if (do_initiator_approx_){
         size_t max_I = dets.size();
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
-            spawned[thread_id] += apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            spawned[thread_id] += apply_tau_H_det_sym(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
-//            spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
+                spawned[thread_id] += apply_tau_H_det(tau,spawning_threshold,dets[I],C[I],thread_det_C_map[thread_id],S);
+            } else {
+                double det_energy = dets[I].energy();
+//                double det_energy = dets[I].lazy_energy();
+                // Diagonal contributions
+                thread_det_C_map[thread_id][dets[I]] += tau * (det_energy - S) * C[I];
+            }
         }
     }else{
         size_t max_I = dets.size();

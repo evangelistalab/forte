@@ -19,6 +19,7 @@ set globals{
    scf_type             DF
    d_convergence        12
    e_convergence        15
+   df_basis_mp2         cc-pvdz-ri
 }
 
 set mcscf{
@@ -31,6 +32,8 @@ set forte{
    CASSCF_REFERENCE    true
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
+   int_type             DF
+   print                2
 }
 
 basis {
