@@ -61,7 +61,7 @@ public:
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
               size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t
-              initial_guess_per_root = 10);
+              initial_guess_per_root, int print);
 
     ~FCISolver() {}
 
@@ -74,8 +74,6 @@ public:
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void test_rdms(bool value) {test_rdms_ = value;}
-
-    void set_print(int value) {print_ = value;}
 private:
 
     // ==> Class Data <==
@@ -137,7 +135,7 @@ private:
 
 /**
  * @brief The FCI class
- * This class implements FCI
+ * This class implements a FCI wave function and calls FCISolver
  */
 class FCI : public Wavefunction
 {
@@ -159,9 +157,10 @@ public:
 
     /// Compute the energy
     virtual double compute_energy();
-
     /// Return a reference object
     Reference reference();
+    /// Set the print level
+    void set_print(int value) {print_ = value;}
 
 private:
 
@@ -173,8 +172,12 @@ private:
     std::shared_ptr<ForteIntegrals>  ints_;
     /// The information about the molecular orbital spaces
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    /// The information about the molecular orbital spaces
+    /// A pointer to the FCISolver object
     FCISolver* fcisolver_ = nullptr;
+    /// Print level
+    /// 0 : silent mode (no printing)
+    /// 1 : default printing
+    int print_  = 1;
 
     // ==> Class functions <==
 

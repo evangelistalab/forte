@@ -1558,18 +1558,19 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
     size_t spawned = 0;
 
     if (std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold){
+        Determinant detJ(detI);
         // Generate aa excitations
         for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
             for (int a = 0; a < nvalpha; ++a){
                 int aa = avir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                    Determinant detJ(detI);
-                    detJ.set_alfa_bit(ii,false);
-                    detJ.set_alfa_bit(aa,true);
-                    double HJI = detJ.slater_rules(detI);
+                    double HJI = detI.slater_rules_single_alpha(ii,aa);
                     my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
                     if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        detJ.set_alfa_bit(ii,false);
+                        detJ.set_alfa_bit(aa,true);
                         new_space_C[detJ] += tau * HJI * CI;
                         spawned++;
                     }
@@ -1583,12 +1584,12 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
             for (int a = 0; a < nvbeta; ++a){
                 int aa = bvir[a];
                 if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
-                    Determinant detJ(detI);
-                    detJ.set_beta_bit(ii,false);
-                    detJ.set_beta_bit(aa,true);
-                    double HJI = detJ.slater_rules(detI);
+                    double HJI = detI.slater_rules_single_beta(ii,aa);
                     my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
                     if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        detJ.set_beta_bit(ii,false);
+                        detJ.set_beta_bit(aa,true);
                         new_space_C[detJ] += tau * HJI * CI;
                         spawned++;
                     }
@@ -1599,6 +1600,8 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
     }
 
     if (std::fabs(prescreening_tollerance_factor_ * old_max_two_HJI_ * CI) >= spawning_threshold){
+        Determinant detJ(detI);
+
         // Generate aa excitations
         for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
@@ -1613,7 +1616,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                detJ = detI;
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_alfa_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
@@ -1651,7 +1654,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                detJ = detI;
                                 detJ.set_alfa_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_alfa_bit(aa,true);
@@ -1690,7 +1693,7 @@ size_t AdaptivePathIntegralCI::apply_tau_H_det(double tau, double spawning_thres
                             my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
 
                             if (std::fabs(HJI * CI) >= spawning_threshold){
-                                Determinant detJ(detI);
+                                detJ = detI;
                                 detJ.set_beta_bit(ii,false);
                                 detJ.set_beta_bit(jj,false);
                                 detJ.set_beta_bit(aa,true);
