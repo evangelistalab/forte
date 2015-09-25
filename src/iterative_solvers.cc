@@ -116,7 +116,7 @@ bool DavidsonLiuSolver::update()
 
     // If L is close to maxdim, collapse to one guess per root */
     if(subspace_size_ < nroot_ + basis_size_) {
-        if(print_level_ > 0) {
+        if(print_level_ > 1) {
             outfile->Printf("Subspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
             outfile->Printf("Collapsing eigenvectors.\n");
         }
@@ -212,7 +212,7 @@ bool DavidsonLiuSolver::check_convergence()
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;
-    if(print_level_ > 0) {
+    if(print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
         outfile->Printf("  ---- -------------------- --------- ----------\n");
     }
@@ -224,7 +224,7 @@ bool DavidsonLiuSolver::check_convergence()
             converged_++;
         }
         lambda_old->set(k,lambda->get(k));
-        if(print_level_ > 0) {
+        if(print_level_ > 1) {
             outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
                             this_converged ? "Y" : "N");
         }
@@ -267,8 +267,10 @@ void DavidsonLiuSolver::get_results()
             v[i][I] /= norm;
         }
     }
-    outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter_);
-    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",timing_);
+    if (print_level_){
+        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter_);
+        outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",timing_);
+    }
 }
 
 SharedVector DavidsonLiuSolver::eigenvector(size_t n)

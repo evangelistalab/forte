@@ -106,7 +106,7 @@ private:
     /// The maximum subspace size
     size_t subspace_size_;
 
-    size_t iter_ = 0;
+    int iter_ = 0;
     size_t basis_size_;
     /// The size
     size_t sigma_size_;

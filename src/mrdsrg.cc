@@ -320,7 +320,8 @@ double MRDSRG::compute_energy_relaxed(){
         transfer_integrals();
 
         // diagonalize the Hamiltonian
-        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
+        FCISolver* fcisolver = new FCISolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+                                             options_.get_int("NTRIAL_PER_ROOT"),print_);
         Erelax = fcisolver->compute_energy();
 
         // printing
@@ -350,7 +351,8 @@ double MRDSRG::compute_energy_relaxed(){
             transfer_integrals();
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
+            FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+                                options_.get_int("NTRIAL_PER_ROOT"),print_);
             Etemp = Erelax;
             Erelax = fcisolver.compute_energy();
             Erelax_vec.push_back(Erelax);
@@ -431,7 +433,8 @@ double MRDSRG::compute_energy_relaxed(){
                 timings.push_back(timer.get());
 
                 // diagonalize the Hamiltonian
-                fcisolver = FCISolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_);
+                fcisolver = FCISolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+                                      options_.get_int("NTRIAL_PER_ROOT"),print_);
                 Erelax = fcisolver.compute_energy();
                 if(fabs(Erelax - Erelax_vec.back()) > 100.0 * e_conv){
                     throw PSIEXCEPTION("Semi-canonicalization failed.");

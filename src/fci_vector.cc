@@ -219,7 +219,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     }
 }
 
-void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t)
+void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_)
 {
     // TODO Avoid allocating and deallocating these temp
 
@@ -236,30 +236,14 @@ void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, size_t)
     C1 = SharedMatrix(new Matrix("C1",maxC1,maxC1));
     Y1 = SharedMatrix(new Matrix("Y1",maxC1,maxC1));
 
-    outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. Size: 2 x %zu x %zu.   Memory: %8.6f GB",maxC1,maxC1,to_gb(2 * maxC1 * maxC1));
+    if (print_) outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. Size: 2 x %zu x %zu.   Memory: %8.6f GB",maxC1,maxC1,to_gb(2 * maxC1 * maxC1));
 
     sizeC1 = maxC1 * maxC1 * static_cast<size_t>(sizeof(double));
-
-    outfile->Printf("\n  Allocating temporary CI vectors");
-//    tmp_wfn1 = new FCIWfn(lists_,fci_ints,symmetry);
-//    tmp_wfn2 = new FCIWfn(lists_,fci_ints,symmetry);
 }
 
 void FCIWfn::release_temp_space()
 {
-//    outfile->Printf("\n  Deallocating temporary space and scratch vector");
-//    delete tmp_wfn1;
-//    delete tmp_wfn2;
 }
-
-//void FCIWfn::check_temp_space()
-//{
-//  if (C1 == nullptr || Y1 == nullptr) {
-//    outfile->Printf("\n\n  The temp space required by FCIWfn is not allocated!!!");
-//    outfile->Flush();
-//    exit(1);
-//  }
-//}
 
 FCIWfn::FCIWfn(std::shared_ptr<StringLists> lists, size_t symmetry)
     : symmetry_(symmetry),  lists_(lists),
@@ -294,16 +278,16 @@ void FCIWfn::startup()
 //    cmo_to_mo_ = lists_->cmo_to_mo();
 
     ndet_ = 0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-        size_t beta_sym = alfa_sym ^ symmetry_;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
         size_t detpi = alfa_graph_->strpi(alfa_sym) * beta_graph_->strpi(beta_sym);
         ndet_ += detpi;
         detpi_.push_back(detpi);
     }
 
     // Allocate the symmetry blocks of the wave function
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
-        size_t beta_sym = alfa_sym ^ symmetry_;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+        int beta_sym = alfa_sym ^ symmetry_;
         //    outfile->Printf("\n\n  Block %d: allocate %d * %d",alfa_sym,(int)alfa_graph_->strpi(alfa_sym),(int)beta_graph_->strpi(beta_sym));
         C_.push_back(SharedMatrix(new Matrix("C",alfa_graph_->strpi(alfa_sym),beta_graph_->strpi(beta_sym))));
     }
@@ -340,7 +324,7 @@ void FCIWfn::cleanup()
  */
 void FCIWfn::copy(FCIWfn& wfn)
 {
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         C_[alfa_sym]->copy(wfn.C_[alfa_sym]);
     }
 }
@@ -348,7 +332,7 @@ void FCIWfn::copy(FCIWfn& wfn)
 void FCIWfn::copy(SharedVector vec)
 {
     size_t I = 0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
         size_t maxIa = alfa_graph_->strpi(alfa_sym);
         size_t maxIb = beta_graph_->strpi(beta_sym);
@@ -365,7 +349,7 @@ void FCIWfn::copy(SharedVector vec)
 void FCIWfn::copy_to(SharedVector vec)
 {
     size_t I = 0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
         size_t maxIa = alfa_graph_->strpi(alfa_sym);
         size_t maxIb = beta_graph_->strpi(beta_sym);
@@ -489,7 +473,7 @@ void FCIWfn::set(std::vector<std::tuple<size_t,size_t,size_t,double>>& sparse_ve
 void FCIWfn::normalize()
 {
     double factor = norm(2.0);
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
         size_t maxIa = alfa_graph_->strpi(alfa_sym);
         size_t maxIb = beta_graph_->strpi(beta_sym);
@@ -566,7 +550,7 @@ void FCIWfn::zero()
 double FCIWfn::norm(double power)
 {
     double norm = 0.0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
         size_t maxIa = alfa_graph_->strpi(alfa_sym);
         size_t maxIb = beta_graph_->strpi(beta_sym);
@@ -587,7 +571,7 @@ double FCIWfn::norm(double power)
 double FCIWfn::dot(FCIWfn& wfn)
 {
     double dot = 0.0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         dot += C_[alfa_sym]->vector_dot(wfn.C_[alfa_sym]);
     }
     return(dot);
@@ -751,7 +735,7 @@ void FCIWfn::print()
 {
     // print the non-zero elements of the wave function
     size_t det = 0;
-    for(size_t alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
         double** C_ha = C_[alfa_sym]->pointer();
         for(size_t Ia = 0; Ia < alfa_graph_->strpi(alfa_sym); ++Ia){

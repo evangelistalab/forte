@@ -98,12 +98,10 @@ enum RequiredLists {
 class StringLists {
 public:
 
-
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na, size_t nb);
+    StringLists(RequiredLists required_lists, Dimension cmopi, std::vector<size_t> core_mo, std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
     ~StringLists() {}
-
 
     // ==> Class Public Functions <==
 
@@ -116,9 +114,6 @@ public:
     std::vector<size_t> cmopi_offset() const {return cmopi_offset_;}
     size_t nb() const {return nb_;}
     size_t pairpi(int h) const {return pairpi_[h];}
-    //  std::vector<int> get_cmos() const {return cmos;}
-    //  std::vector<int> get_cmos_offset() const {return cmos_offset;}
-    //  std::vector<int> get_cmos_to_mos() const {return cmos_to_mos;}
 
     GraphPtr alfa_graph() {return alfa_graph_;}
     GraphPtr beta_graph() {return beta_graph_;}
@@ -195,6 +190,8 @@ private:
     std::vector<int> pairpi_;
     /// The offset array for pairpi
     std::vector<int> pair_offset_;
+    /// The print level
+    int print_ = 0;
 
     // String lists
     /// The string lists
@@ -252,7 +249,7 @@ private:
 
     void make_strings(GraphPtr graph,StringList& list);
 
-    void make_pair_list(GraphPtr graph,NNList& list);
+    void make_pair_list(NNList& list);
 
     void make_vo_list(GraphPtr graph,VOList& list);
     void make_vo(GraphPtr graph,VOList& list,int p, int q);
