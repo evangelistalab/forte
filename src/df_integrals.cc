@@ -221,7 +221,6 @@ void DFIntegrals::gather_integrals()
     //        }
     //     }
     //}
-    outfile->Printf("...Done.  Timing %15.6f s", timer.get());
 
     ThreeIntegral_ = Bpq;
     //outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
