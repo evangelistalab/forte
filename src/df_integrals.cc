@@ -269,12 +269,18 @@ void DFIntegrals::update_integrals(bool freeze_core)
 
 void DFIntegrals::retransform_integrals()
 {
+    Timer retrans_ints;
+    std::string str_read = "Retransforming integrals";
+    outfile->Printf("\n   %-36s . . .", str_read.c_str());
+    
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
     //TODO:  Remove this function from retransform
     //For DF, reread integrals and then transfrom to new basis
     gather_integrals();
     update_integrals();
+    outfile->Printf("...Done. Timing %15.6f s", retrans_ints.get());
+
 }
 
 void DFIntegrals::deallocate()
