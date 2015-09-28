@@ -538,6 +538,66 @@ double DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) cons
     return(matrix_element);
 }
 
+double DynamicBitsetDeterminant::slater_sign_alpha(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(alfa_bits_[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double DynamicBitsetDeterminant::slater_sign_beta(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(beta_bits_[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double DynamicBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_alpha(j);
+    alfa_bits_[i] = false;
+    alfa_bits_[j] = false;
+    alfa_bits_[a] = true;
+    alfa_bits_[b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_alpha(b);
+    return sign;
+}
+
+double DynamicBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_beta(j);
+    alfa_bits_[i] = false;
+    beta_bits_[j] = false;
+    alfa_bits_[a] = true;
+    beta_bits_[b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
+double DynamicBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_beta(i);
+    sign *= slater_sign_beta(j);
+    beta_bits_[i] = false;
+    beta_bits_[j] = false;
+    beta_bits_[a] = true;
+    beta_bits_[b] = true;
+    sign *= slater_sign_beta(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
 double DynamicBitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
 {
     double sign = 1.0;

@@ -31,6 +31,7 @@
 #include <boost/unordered_map.hpp>
 
 #include "integrals.h"
+#include "stl_bitset_determinant.h"
 #include "dynamic_bitset_determinant.h"
 #include "helpers.h"
 #include "fci_vector.h"
@@ -47,7 +48,7 @@ enum PropagatorType {LinearPropagator,
                      DavidsonLiuPropagator};
 
 using Determinant = DynamicBitsetDeterminant;
-using bit_hash = std::unordered_map<DynamicBitsetDeterminant,double,DynamicBitsetDeterminantHash>;
+using bit_hash = std::unordered_map<Determinant,double,DynamicBitsetDeterminantHash>;
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -104,7 +105,7 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    DynamicBitsetDeterminant reference_determinant_;
+    Determinant reference_determinant_;
     std::vector<std::map<Determinant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -281,15 +282,15 @@ private:
 
     /// Apply tau H to a determinant
     size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+//    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     std::pair<double, double> apply_tau_H_det_hash(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
     size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+//    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
     double form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
