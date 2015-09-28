@@ -18,7 +18,7 @@
 #include "cartographer.h"
 #include "sparse_ci_solver.h"
 #include "string_determinant.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 
 using namespace std;
 using namespace psi;
@@ -40,7 +40,7 @@ void GeneticAlgorithmCI::startup()
 {
     // Connect the integrals to the determinant class
     StringDeterminant::set_ints(ints_);
-    BitsetDeterminant::set_ints(ints_);
+    DynamicBitsetDeterminant::set_ints(ints_);
 
     // The number of correlated molecular orbitals
     ncmo_ = ints_->ncmo();
@@ -80,7 +80,7 @@ void GeneticAlgorithmCI::startup()
         }
         cumidx += ncmopi_[h];
     }
-    reference_determinant_ = SharedBitsetDeterminant(new BitsetDeterminant(occupation));
+    reference_determinant_ = SharedDynamicBitsetDeterminant(new DynamicBitsetDeterminant(occupation));
 
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_->print();
@@ -139,7 +139,7 @@ double GeneticAlgorithmCI::compute_energy()
     SparseCISolver sparse_solver;
 
     // These hold the determinants and the value of the fitness function
-    std::vector<SharedBitsetDeterminant> population;
+    std::vector<SharedDynamicBitsetDeterminant> population;
     std::vector<double> fitness;
     std::unordered_map<std::vector<bool>,bool> unique_list;
 
@@ -205,7 +205,7 @@ double GeneticAlgorithmCI::compute_energy()
 //    // Use the reference determinant as a starting point
 //    std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
 //    std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
-//    SharedBitsetDeterminant bs_det(alfa_bits,beta_bits);
+//    SharedDynamicBitsetDeterminant bs_det(alfa_bits,beta_bits);
 //    P_space_.push_back(bs_det);
 //    P_space_map_[bs_det] = 1;
 
@@ -280,7 +280,7 @@ double GeneticAlgorithmCI::compute_energy()
     return 0.0;
 }
 
-void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedBitsetDeterminant>& population,int size,std::unordered_map<std::vector<bool>,bool>& unique_list)
+void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedDynamicBitsetDeterminant>& population,int size,std::unordered_map<std::vector<bool>,bool>& unique_list)
 {
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,ncmo_ - 1);
@@ -319,7 +319,7 @@ void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedBitsetDeterminan
                 }
                 if (unique_list.count(occupation_ab) == 0){
                     unique_list[occupation_ab] = true;
-                    SharedBitsetDeterminant det(new BitsetDeterminant(occupation_a,occupation_b));
+                    SharedDynamicBitsetDeterminant det(new DynamicBitsetDeterminant(occupation_a,occupation_b));
                     population.push_back(det);
                     break;
                 }
@@ -328,7 +328,7 @@ void GeneticAlgorithmCI::generate_initial_pop(std::vector<SharedBitsetDeterminan
     }
 }
 
-void GeneticAlgorithmCI::weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
+void GeneticAlgorithmCI::weed_out(std::vector<SharedDynamicBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
 {
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,population.size() - 1);
@@ -339,7 +339,7 @@ void GeneticAlgorithmCI::weed_out(std::vector<SharedBitsetDeterminant>& populati
     for (int K = 0; K < ndel; ++K){
         int I = rand_int() % population.size();
         if (fitness[I] < 0.0001){
-            SharedBitsetDeterminant detI = population[I];
+            SharedDynamicBitsetDeterminant detI = population[I];
             std::vector<bool> occupation_ab(2 * ncmo_,false);
             for (int i = 0; i < ncmo_; ++i){
                 occupation_ab[i] = detI->get_alfa_bit(i);
@@ -352,7 +352,7 @@ void GeneticAlgorithmCI::weed_out(std::vector<SharedBitsetDeterminant>& populati
     }
 }
 
-void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
+void GeneticAlgorithmCI::crossover(std::vector<SharedDynamicBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list)
 {
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,population.size() - 1);
@@ -372,8 +372,8 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
             int J = rand_int();
             double importance = fitness[I] + fitness[J];
             if (importance > rand_real()){
-                SharedBitsetDeterminant detI = population[I];
-                SharedBitsetDeterminant detJ = population[J];
+                SharedDynamicBitsetDeterminant detI = population[I];
+                SharedDynamicBitsetDeterminant detJ = population[J];
                 std::vector<bool> occupation_a(ncmo_,false);
                 std::vector<bool> occupation_b(ncmo_,false);
                 std::vector<bool> unoccupied_a(ncmo_,false);
@@ -427,7 +427,7 @@ void GeneticAlgorithmCI::crossover(std::vector<SharedBitsetDeterminant>& populat
                     }
                     if (unique_list.count(occupation_ab) == 0){
                         unique_list[occupation_ab] = true;
-                        SharedBitsetDeterminant det(new BitsetDeterminant(occupation_a,occupation_b));
+                        SharedDynamicBitsetDeterminant det(new DynamicBitsetDeterminant(occupation_a,occupation_b));
                         population.push_back(det);
                         break;
                     }

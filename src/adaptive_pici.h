@@ -28,9 +28,10 @@
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
 #include <physconst.h>
+#include <boost/unordered_map.hpp>
 
 #include "integrals.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "helpers.h"
 #include "fci_vector.h"
 
@@ -45,8 +46,8 @@ enum PropagatorType {LinearPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator};
 
-using Determinant = BitsetDeterminant;
-
+using Determinant = DynamicBitsetDeterminant;
+using bit_hash = std::unordered_map<DynamicBitsetDeterminant,double,DynamicBitsetDeterminantHash>;
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -103,7 +104,7 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    BitsetDeterminant reference_determinant_;
+    DynamicBitsetDeterminant reference_determinant_;
     std::vector<std::map<Determinant,double>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -193,6 +194,8 @@ private:
     /// Number of determinants that don't spawn
     size_t nzerospawn_;
 
+    size_t nvisited_;
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -281,6 +284,7 @@ private:
     size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
     size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    std::pair<double, double> apply_tau_H_det_hash(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
