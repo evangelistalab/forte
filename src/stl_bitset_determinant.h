@@ -27,6 +27,7 @@
 
 #include "integrals.h"
 #include "fci_vector.h"
+#include "dynamic_bitset_determinant.h"
 
 namespace psi{ namespace forte{
 
@@ -46,7 +47,7 @@ namespace psi{ namespace forte{
  */
 class STLBitsetDeterminant{
 public:
-    using bit_t = std::bitset<512>;
+    using bit_t = std::bitset<256>;
 
     //test integrals
     void test_ints(){
@@ -94,6 +95,9 @@ public:
     /// Switch the alpha and beta occupations
     void spin_flip();
 
+    /// Convert to DynamicBitsetDeterminant
+    DynamicBitsetDeterminant to_dynamic_bitset() const;
+
     /// Get the alpha bits
     std::vector<bool> get_alfa_bits_vector_bool(){
         std::vector<bool> result;
@@ -135,7 +139,6 @@ public:
     std::vector<int> get_alfa_vir();
     /// Return a vector of virtual beta orbitals
     std::vector<int> get_beta_vir();
-
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ() const;

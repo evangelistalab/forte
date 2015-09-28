@@ -484,6 +484,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     // Link the integrals to the DynamicBitsetDeterminant class
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+    STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     if(options.get_bool("CASSCF_REFERENCE") == true)
