@@ -18,7 +18,6 @@ std::shared_ptr<FCIIntegrals> STLBitsetDeterminant::fci_ints_;
 void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 {
     fci_ints_ = ints;
-
 //    // Initialize the bit masks
 //    int n = ints->nmo();
 
@@ -181,9 +180,16 @@ void STLBitsetDeterminant::spin_flip()
     }
 }
 
-/**
- * Print the determinant
- */
+DynamicBitsetDeterminant STLBitsetDeterminant::to_dynamic_bitset() const
+{
+    DynamicBitsetDeterminant dbs(nmo_);
+    for (int p = 0; p < nmo_; ++p){
+        dbs.set_alfa_bit(p,bits_[p]);
+        dbs.set_beta_bit(p,bits_[nmo_ + p]);
+    }
+    return dbs;
+}
+
 void STLBitsetDeterminant::print() const
 {
     outfile->Printf("\n  |");

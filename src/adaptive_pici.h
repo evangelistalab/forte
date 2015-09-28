@@ -47,8 +47,9 @@ enum PropagatorType {LinearPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator};
 
-using Determinant = DynamicBitsetDeterminant;
-using bit_hash = std::unordered_map<Determinant,double,DynamicBitsetDeterminantHash>;
+using Determinant = STLBitsetDeterminant;
+using bit_hash = std::unordered_map<Determinant,double,Determinant::Hash>;
+using bit_hash_it = bit_hash::iterator;
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -106,7 +107,7 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    std::vector<std::map<Determinant,double>> solutions_;
+    std::vector<bit_hash> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -174,7 +175,7 @@ private:
     /// determinant to all of its singly and doubly excited states.
     /// Bounds are stored as a pair (f_max,v_max) where f_max and v_max are
     /// the couplings to the singles and doubles, respectively.
-    std::map<Determinant,std::pair<double,double>> dets_max_couplings_;
+    std::unordered_map<Determinant,std::pair<double,double>,Determinant::Hash> dets_max_couplings_;
 
     // * Energy estimation
     /// Estimate the variational energy via a fast procedure?
@@ -209,10 +210,10 @@ private:
     void print_wfn(std::vector<Determinant> &space, std::vector<double> &C);
 
     /// Save a wave function
-    void save_wfn(std::vector<Determinant> &space, std::vector<double> &C,std::vector<std::map<Determinant,double>>& solutions);
+    void save_wfn(std::vector<Determinant> &space, std::vector<double> &C,std::vector<bit_hash>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(std::vector<Determinant>& space,std::vector<double>& C,std::vector<std::map<Determinant,double>>& solutions);
+    void orthogonalize(std::vector<Determinant>& space,std::vector<double>& C,std::vector<bit_hash>& solutions);
 
     /// Initial wave function guess
     double initial_guess(std::vector<Determinant>& dets,std::vector<double>& C);
@@ -273,28 +274,24 @@ private:
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
     double estimate_var_energy_sparse(std::vector<Determinant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
-    /// Perform a time step
-    double time_step_optimized(double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<Determinant> &dets, const std::vector<double>& C, std::map<Determinant,double>& dets_C_map, double S);
-//    size_t apply_tau_H(double tau,double spawning_threshold,std::map<Determinant,double>& det_C_old, std::map<Determinant,double>& dets_C_map, double S);
+    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<Determinant> &dets, const std::vector<double>& C, bit_hash& dets_C_map, double S);
+//    size_t apply_tau_H(double tau,double spawning_threshold,bit_hash& det_C_old, bit_hash& dets_C_map, double S);
 
     /// Apply tau H to a determinant
-    size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-//    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-    size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
-    size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0);
+    size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, bit_hash& new_space_C, double E0);
+//    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0);
+    size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, bit_hash& new_space_C, double E0);
+    size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
     std::pair<double, double> apply_tau_H_det_hash(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
 
 
     /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
-//    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, std::map<Determinant,double>& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
+//    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
 
     /// Form the product H c
-    double form_H_C_sym(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
-    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, std::map<Determinant,double>& det_C,std::pair<double,double>& max_coupling);
+    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& det_C,std::pair<double,double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
     /// Maximum number of threads
