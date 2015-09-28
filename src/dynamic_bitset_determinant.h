@@ -20,14 +20,18 @@
  *@END LICENSE
  */
 
-#ifndef _bitset_determinant_h_
-#define _bitset_determinant_h_
+#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS public
 
+#ifndef _dynamic_bitset_determinant_h_
+#define _dynamic_bitset_determinant_h_
+
+#define mix_fasthash(h) ({              \
+        (h) ^= (h) >> 23;               \
+        (h) *= 0x2127599bf4325c37ULL;   \
+        (h) ^= (h) >> 47; })
+
+#include <boost/dynamic_bitset.hpp>
 #include <unordered_map>
-
-#define BOOST_DYNAMIC_BITSET_DONT_USE_FRIENDS
-#include <boost/functional/hash.hpp>
-#include "boost/dynamic_bitset.hpp"
 
 #include "integrals.h"
 #include "fci_vector.h"
@@ -48,7 +52,7 @@ namespace psi{ namespace forte{
  * true <-> 1
  * false <-> 0
  */
-class BitsetDeterminant{
+class DynamicBitsetDeterminant{
 public:
     using bit_t = boost::dynamic_bitset<>;
 
@@ -59,39 +63,43 @@ public:
 
     // Class Constructor and Destructor
     /// Construct an empty determinant
-    BitsetDeterminant();
+    DynamicBitsetDeterminant();
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<int>& occupation,bool print_det = false);
+    explicit DynamicBitsetDeterminant(int nmo);
 
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<bool>& occupation,bool print_det = false);
+    explicit DynamicBitsetDeterminant(const std::vector<int>& occupation,bool print_det = false);
+
+    /// Construct the determinant from an occupation vector that
+    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
+    explicit DynamicBitsetDeterminant(const std::vector<bool>& occupation,bool print_det = false);
 
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
+    explicit DynamicBitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det = false);
 
-    bool operator<(const BitsetDeterminant& lhs) const{
+    bool operator<(const DynamicBitsetDeterminant& lhs) const{
         if (alfa_bits_ > lhs.alfa_bits_) return false;
         if (alfa_bits_ < lhs.alfa_bits_) return true;
         return beta_bits_ < lhs.beta_bits_;
     }
 
-    bool operator==(const BitsetDeterminant& lhs) const{
+    bool operator==(const DynamicBitsetDeterminant& lhs) const{
         return ((alfa_bits_ == lhs.alfa_bits_) and (beta_bits_ == lhs.beta_bits_));
     }
 
-//    BitsetDeterminant& operator=(const BitsetDeterminant &rhs)
+//    DynamicBitsetDeterminant& operator=(const DynamicBitsetDeterminant &rhs)
 //    {
 //       alfa_bits_ = rhs.alfa_bits_;
 //       beta_bits_ = rhs.beta_bits_;
 //       return *this;
 //    }
 
-    void copy(const BitsetDeterminant &rhs)
+    void copy(const DynamicBitsetDeterminant &rhs)
     {
         nmo_ = rhs.nmo_;
         alfa_bits_ = rhs.alfa_bits_;
@@ -190,25 +198,24 @@ public:
     /// Compute the energy of a Slater determinant
     double energy() const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
-    double slater_rules(const BitsetDeterminant& rhs) const;
+    double slater_rules(const DynamicBitsetDeterminant& rhs) const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules_single_alpha(int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules_single_beta(int i, int a) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
-    double spin2(const BitsetDeterminant& rhs) const;
+    double spin2(const DynamicBitsetDeterminant& rhs) const;
 
 	/// Check if a space of determinants contains duplicates
-	static void check_uniqueness( std::vector<BitsetDeterminant> );
+    static void check_uniqueness( std::vector<DynamicBitsetDeterminant> );
 
     /// Sets the pointer to the integral object
     static void set_ints(std::shared_ptr<FCIIntegrals> ints);
 
-private:
+public:
     // Data
     /// Number of non-frozen molecular orbitals
     int nmo_;
-public:
     /// The occupation vector for the alpha electrons (does not include the frozen orbitals)
     bit_t alfa_bits_;
     /// The occupation vector for the beta electrons (does not include the frozen orbitals)
@@ -225,8 +232,26 @@ public:
     static double FastSlaterSign(const boost::dynamic_bitset<>& I,int n);
 };
 
-typedef boost::shared_ptr<BitsetDeterminant> SharedBitsetDeterminant;
+typedef boost::shared_ptr<DynamicBitsetDeterminant> SharedDynamicBitsetDeterminant;
 
 }} // End Namespaces
 
-#endif // _bitset_determinant_h_
+struct DynamicBitsetDeterminantHash
+{
+    std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const
+    {
+        size_t h = 0;
+        int maxp = std::min(bs.nmo_,32);
+        for (int p = 0; p < bs.nmo_; p++){
+            if (bs.alfa_bits_[p]){
+                h += (1 << p);
+            }
+            if (bs.beta_bits_[p]){
+                h += (1 << (p + bs.nmo_));
+            }
+        }
+        return h;
+    }
+};
+
+#endif // _dynamic_bitset_determinant_h_

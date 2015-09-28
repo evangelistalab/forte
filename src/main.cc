@@ -37,6 +37,8 @@ INIT_PLUGIN
 
 namespace psi{ namespace forte{
 
+void test_bitset_performance();
+
 extern "C" int
 read_options(std::string name, Options &options)
 {
@@ -88,7 +90,7 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG");
+                                              " SOMRDSRG BITSET_PERFORMANCE");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -459,6 +461,10 @@ read_options(std::string name, Options &options)
 
 extern "C" PsiReturnType forte(Options &options)
 {
+    if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
+        test_bitset_performance();
+        return Success;
+    }
     Timer overall_time;
     ambit::initialize();
 
@@ -476,9 +482,9 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
 
-    // Link the integrals to the BitsetDeterminant class
+    // Link the integrals to the DynamicBitsetDeterminant class
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
-    BitsetDeterminant::set_ints(fci_ints_);
+    DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     if(options.get_bool("CASSCF_REFERENCE") == true)
     {
@@ -684,6 +690,9 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SQ"){
         SqTest sqtest;
     }
+
+
+
 
     // Delete ints_;
 

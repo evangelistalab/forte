@@ -32,7 +32,7 @@
 
 #include "integrals.h"
 #include "string_determinant.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 
 namespace psi{ namespace forte{
 
@@ -88,7 +88,7 @@ private:
     int npop_;
 
     /// The reference determinant
-    SharedBitsetDeterminant reference_determinant_;
+    SharedDynamicBitsetDeterminant reference_determinant_;
 //    /// The PT2 energy correction
 //    std::vector<double> multistate_pt2_energy_correction_;
 
@@ -107,11 +107,11 @@ private:
 //    bool energy_selection_;
 
 //    /// A vector of determinants in the P space
-//    std::vector<SharedBitsetDeterminant> P_space_;
+//    std::vector<SharedDynamicBitsetDeterminant> P_space_;
 //    /// A vector of determinants in the P + Q space
-//    std::vector<SharedBitsetDeterminant> PQ_space_;
+//    std::vector<SharedDynamicBitsetDeterminant> PQ_space_;
 //    /// A map of determinants in the P space
-//    std::map<SharedBitsetDeterminant,int> P_space_map_;
+//    std::map<SharedDynamicBitsetDeterminant,int> P_space_map_;
 
 
     // ==> Class functions <==
@@ -123,30 +123,30 @@ private:
     void print_info();
 
     /// Generate an initial random population of a given size
-    void generate_initial_pop(std::vector<SharedBitsetDeterminant>& population,int size,std::unordered_map<std::vector<bool>,bool>& unique_list);
+    void generate_initial_pop(std::vector<SharedDynamicBitsetDeterminant>& population,int size,std::unordered_map<std::vector<bool>,bool>& unique_list);
 
     /// Weed out the population
-    void weed_out(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);
+    void weed_out(std::vector<SharedDynamicBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);
 
     /// Crossover the population
-    void crossover(std::vector<SharedBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);
+    void crossover(std::vector<SharedDynamicBitsetDeterminant>& population,std::vector<double> fitness,std::unordered_map<std::vector<bool>,bool>& unique_list);
 
 
 //    /// Print a wave function
-//    void print_wfn(std::vector<SharedBitsetDeterminant> space, SharedMatrix evecs, int nroot);
+//    void print_wfn(std::vector<SharedDynamicBitsetDeterminant> space, SharedMatrix evecs, int nroot);
 
 //    /// Diagonalize the Hamiltonian in a space of determinants
-//    void diagonalize_hamiltonian(const std::vector<SharedBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+//    void diagonalize_hamiltonian(const std::vector<SharedDynamicBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
 //    /// Diagonalize the Hamiltonian in a space of determinants
-//    void diagonalize_hamiltonian2(const std::vector<SharedBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+//    void diagonalize_hamiltonian2(const std::vector<SharedDynamicBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
 //    /// Find all the relevant SD excitations out of the P space.
 //    void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
 //    /// Prune the space of determinants
-//    void prune_q_space(std::vector<SharedBitsetDeterminant>& large_space,std::vector<SharedBitsetDeterminant>& pruned_space,
-//                                   std::map<SharedBitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
+//    void prune_q_space(std::vector<SharedDynamicBitsetDeterminant>& large_space,std::vector<SharedDynamicBitsetDeterminant>& pruned_space,
+//                                   std::map<SharedDynamicBitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
 
 //    /// Check if the procedure has converged
 //    bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
