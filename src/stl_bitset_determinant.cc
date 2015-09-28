@@ -416,6 +416,66 @@ double STLBitsetDeterminant::slater_rules_single_beta(int i, int a) const
     return sign * matrix_element;
 }
 
+double STLBitsetDeterminant::slater_sign_alpha(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(bits_[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double STLBitsetDeterminant::slater_sign_beta(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(bits_[nmo_ + i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double STLBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_alpha(j);
+    bits_[i] = false;
+    bits_[j] = false;
+    bits_[a] = true;
+    bits_[b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_alpha(b);
+    return sign;
+}
+
+double STLBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_beta(j);
+    bits_[i] = false;
+    bits_[nmo_ + j] = false;
+    bits_[a] = true;
+    bits_[nmo_ + b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
+double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_beta(i);
+    sign *= slater_sign_beta(j);
+    bits_[nmo_ + i] = false;
+    bits_[nmo_ + j] = false;
+    bits_[nmo_ + a] = true;
+    bits_[nmo_ + b] = true;
+    sign *= slater_sign_beta(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
 /**
  * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
  * @return S^2

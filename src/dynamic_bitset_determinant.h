@@ -119,7 +119,7 @@ public:
 		}
 		return result;
 	}
-	// Get the beta bits
+    /// Get the beta bits
 	std::vector<bool> get_beta_bits_vector_bool(){
 		std::vector<bool> result;
         for(int n = 0; n < nmo_; ++n){
@@ -127,7 +127,7 @@ public:
 		}
 		return result;
 	}
-	/// Get the alpha bits
+    /// Get the alpha bits
 	const std::vector<bool> get_alfa_bits_vector_bool() const {
 		std::vector<bool> result;
         for(int n = 0; n < nmo_;++n){
@@ -135,7 +135,7 @@ public:
 		}
 		return result;
 	}
-	// Get the beta bits
+    /// Get the beta bits
 	const std::vector<bool> get_beta_bits_vector_bool() const {
 		std::vector<bool> result;
         for(int n = 0; n < nmo_; ++n){
@@ -205,6 +205,16 @@ public:
     double slater_rules_single_beta(int i, int a) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const DynamicBitsetDeterminant& rhs) const;
+    /// Return the sign of a_n applied to this determinant
+    double slater_sign_alpha(int n) const;
+    /// Return the sign of a_n applied to this determinant
+    double slater_sign_beta(int n) const;
+    /// Perform an alpha-alpha double excitation (ij->ab)
+    double double_excitation_aa(int i, int j, int a, int b);
+    /// Perform an alpha-beta double excitation (iJ -> aB)
+    double double_excitation_ab(int i, int j, int a, int b);
+    /// Perform an alpha-beta double excitation (IJ -> AB)
+    double double_excitation_bb(int i, int j, int a, int b);
 
 	/// Check if a space of determinants contains duplicates
     static void check_uniqueness( std::vector<DynamicBitsetDeterminant> );

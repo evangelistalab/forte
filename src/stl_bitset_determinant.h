@@ -94,6 +94,39 @@ public:
     /// Switch the alpha and beta occupations
     void spin_flip();
 
+    /// Get the alpha bits
+    std::vector<bool> get_alfa_bits_vector_bool(){
+        std::vector<bool> result;
+        for(int n = 0; n < nmo_;++n){
+            result.push_back(bits_[n]);
+        }
+        return result;
+    }
+    /// Get the beta bits
+    std::vector<bool> get_beta_bits_vector_bool(){
+        std::vector<bool> result;
+        for(int n = 0; n < nmo_; ++n){
+            result.push_back(bits_[nmo_ + n]);
+        }
+        return result;
+    }
+    /// Get the alpha bits
+    const std::vector<bool> get_alfa_bits_vector_bool() const {
+        std::vector<bool> result;
+        for(int n = 0; n < nmo_;++n){
+            result.push_back(bits_[n]);
+        }
+        return result;
+    }
+    /// Get the beta bits
+    const std::vector<bool> get_beta_bits_vector_bool() const {
+        std::vector<bool> result;
+        for(int n = 0; n < nmo_; ++n){
+            result.push_back(bits_[nmo_ + n]);
+        }
+        return result;
+    }
+
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
     /// Return a vector of occupied beta orbitals
@@ -138,6 +171,16 @@ public:
     double slater_rules_single_beta(int i, int a) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const STLBitsetDeterminant& rhs) const;
+    /// Return the sign of a_n applied to this determinant
+    double slater_sign_alpha(int n) const;
+    /// Return the sign of a_n applied to this determinant
+    double slater_sign_beta(int n) const;
+    /// Perform an alpha-alpha double excitation (ij->ab)
+    double double_excitation_aa(int i, int j, int a, int b);
+    /// Perform an alpha-beta double excitation (iJ -> aB)
+    double double_excitation_ab(int i, int j, int a, int b);
+    /// Perform an alpha-beta double excitation (IJ -> AB)
+    double double_excitation_bb(int i, int j, int a, int b);
 
     /// Sets the pointer to the integral object
     static void set_ints(std::shared_ptr<FCIIntegrals> ints);
