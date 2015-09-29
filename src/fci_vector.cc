@@ -176,8 +176,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
     ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
 
-    for(auto cmo : cmo_to_mo){outfile->Printf("\n %lu", cmo);}
-    for(auto fmo : fomo_to_mo){outfile->Printf("\n %lu", fmo);}
     tei_gh_aa  = gh_aa.data();
     tei_gh_ab  = gh_ab.data();
     tei_gh_bb  = gh_bb.data();
