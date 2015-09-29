@@ -941,7 +941,6 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
     std::vector<std::pair<double,double>> thread_max_HJI(num_threads_);
 
     if(do_dynamic_prescreening_){
-        outfile->Printf("\n do_dynamic_prescreening_");
         size_t max_I = dets.size();
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
