@@ -136,7 +136,6 @@ void THREE_DSRG_MRPT2::startup()
     std::vector<size_t> nauxpi(nthree_);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-    std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     BTF_->add_mo_space("d","g",nauxpi,NoSpin);
@@ -310,6 +309,7 @@ void THREE_DSRG_MRPT2::startup()
 
     if(integral_type_!=DiskDF)
     {
+        std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
         V_ = BTF_->build(tensor_type_,"V_", BTF_->spin_cases_avoid(list_of_pphh_V, 1));
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", BTF_->spin_cases_avoid(no_hhpp_,1));
         ThreeIntegral_ = BTF_->build(tensor_type_,"ThreeInt",{"dph", "dPH"});
@@ -396,9 +396,25 @@ double THREE_DSRG_MRPT2::compute_energy()
 
         // Compute T2 and T1
         if(integral_type_!=DiskDF){compute_t2();}
+        if(integral_type_!=DiskDF){renormalize_V();}
+        if(integral_type_==DiskDF)
+        {
+            std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
+            std::string str = "Computing T2";
+            outfile->Printf("\n    %-36s ...", str.c_str());
+            Timer T2timer;
+            T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,2));
+            outfile->Printf("...Done. Timing %15.6f s", T2timer.get());
+
+            std::string strV = "Computing V and Renormalizing";
+            outfile->Printf("\n    %-36s ...", strV.c_str());
+            Timer Vtimer;
+            V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
+            outfile->Printf("...Done. Timing %15.6f s", Vtimer.get());
+        }
         compute_t1();
         check_t1();
-        if(integral_type_!=DiskDF){renormalize_V();}
+
 
         // Compute effective integrals
         renormalize_F();
@@ -481,10 +497,6 @@ double THREE_DSRG_MRPT2::compute_ref()
     E += 0.5 * H_["IJ"] * Gamma1_["IJ"];
     E += 0.5 * F_["IJ"] * Gamma1_["IJ"];
 
-    if(integral_type_==DiskDF)
-    {
-        V_ = compute_V_minimal({"aaaa", "AAAA", "aAaA"}, false);
-    }
     E += 0.25 * V_["uvxy"] * Lambda2_["uvxy"];
     E += 0.25 * V_["UVXY"] * Lambda2_["UVXY"];
     E += V_["uVxY"] * Lambda2_["uVxY"];
@@ -751,11 +763,6 @@ void THREE_DSRG_MRPT2::compute_t1()
     //Form the T1 amplitudes
 
     BlockedTensor N = BTF_->build(tensor_type_,"N",spin_cases({"hp"}));
-    if(integral_type_==DiskDF)
-    {
-        T2_  = compute_T2_minimal({"cava", "caaa", "aaaa","aava", "cAvA", "aAvA", "cAaA", "aCaV", "aAaA", "aCaA", "aAaV", "CAVA", "CAAA",
-        "AAVA", "AAAA"});
-    }
 
     N["ia"]  = F_["ia"];
     N["ia"] += temp["xu"] * T2_["iuax"];
@@ -817,11 +824,6 @@ void THREE_DSRG_MRPT2::renormalize_F()
 
     BlockedTensor temp1 = BTF_->build(tensor_type_,"temp1",spin_cases({"hp"}));
     BlockedTensor temp2 = BTF_->build(tensor_type_,"temp2",spin_cases({"hp"}));
-    if(integral_type_==DiskDF)
-    {
-        T2_  = compute_T2_minimal({"cava", "caaa", "aaaa", "cAvA","aava", "aAvA", "cAaA", "aCaV", "aAaA", "aCaA", "aAaV", "CAVA", "CAAA",
-        "AAVA", "AAAA"});
-    }
 
     temp1["ia"] += temp_aa["xu"] * T2_["iuax"];
     temp1["ia"] += temp_aa["XU"] * T2_["iUaX"];
@@ -869,9 +871,6 @@ double THREE_DSRG_MRPT2::E_VT1()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaa"}));
-    if(integral_type_==DiskDF){
-        V_ = compute_V_minimal({"vaaa", "aaca", "VAAA", "AACA", "vAaA", "aVaA", "aAcA", "aAaC"}, true);
-    }
     
 
     temp["uvxy"] += V_["evxy"] * T1_["ue"];
@@ -902,10 +901,6 @@ double THREE_DSRG_MRPT2::E_FT2()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}));
-    if(integral_type_==DiskDF)
-    {
-        T2_ = compute_T2_minimal({"aava", "acaa", "AAVA", "ACAA", "aAvA", "aAaV", "aCaA", "cAaA"});
-    }
     
     temp["uvxy"] += F_["xe"] * T2_["uvey"];
     temp["uvxy"] -= F_["mv"] * T2_["umxy"];
@@ -933,19 +928,11 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    BlockedTensor temp1;
-    BlockedTensor temp2;
-    std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
     
     double memory_cost = core_ * virtual_ * virtual_ * active_ * 8.0;
     bool exceed_memory = false;
     if(memory_cost > Process::environment.get_memory()){exceed_memory = true;}
 
-    if(integral_type_==DiskDF)
-    {
-        T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,1));
-        V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 1));
-    }
 
     //TODO: Implement these without storing V and/or T2 by using blocking
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
@@ -1246,11 +1233,6 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     temp1 = BTF_->build(tensor_type_,"temp1", spin_cases({"aahh"}));
     temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    if(integral_type_==DiskDF)
-    {
-        V_ = compute_V_minimal(temp1.block_labels());
-        T2_ = compute_T2_minimal({"ccaa", "caaa", "acaa", "aaaa", "CCAA", "CAAA", "ACAA", "AAAA", "cCaA", "cAaA", "aAaA", "aCaA"});
-    }
 
     temp1["uvij"] += V_["uvkl"] * Gamma1_["ki"] * Gamma1_["lj"];
     temp1["UVIJ"] += V_["UVKL"] * Gamma1_["KI"] * Gamma1_["LJ"];
@@ -1281,11 +1263,6 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
 
     temp1 = BTF_->build(tensor_type_,"temp1", spin_cases({"aapp"}));
     temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
-    if(integral_type_==DiskDF)
-    {
-        T2_ = compute_T2_minimal(temp1.block_labels());
-        V_ = compute_V_minimal({"aaaa", "avaa", "vvaa", "vaaa", "AAAA", "AVAA", "VVAA", "VAAA", "aAaA", "aVaA", "vVaA", "vAaA"});
-    }   
 
     temp1["uvcd"] += T2_["uvab"] * Eta1_["ac"] * Eta1_["bd"];
     temp1["UVCD"] += T2_["UVAB"] * Eta1_["AC"] * Eta1_["BD"];
@@ -1314,14 +1291,6 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     BlockedTensor temp2;
     temp1 = BTF_->build(tensor_type_,"temp1",{"hapa", "HAPA", "hApA", "ahap", "AHAP", "aHaP", "aHpA", "hAaP"});
     temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
-    std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
-    if(integral_type_==DiskDF)
-    {
-        T2_ = compute_T2_minimal(temp1.block_labels());
-        V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V,2));
-    }
-
-    
 
     temp1["juby"]  =  T2_["iuay"] * Gamma1_["ji"] * Eta1_["ab"];
     temp2["uvxy"] +=  V_["vbjx"] * temp1["juby"];
@@ -1368,14 +1337,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
-    std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
     
-    if(integral_type_==DiskDF)
-    {
-        T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,3));
-        V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 3));
-    }
-
     temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
     temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
     temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
