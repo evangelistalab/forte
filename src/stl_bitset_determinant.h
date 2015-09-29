@@ -189,13 +189,13 @@ public:
     static void set_ints(std::shared_ptr<FCIIntegrals> ints);
 
 public:
-    // Data
-    /// Number of non-frozen molecular orbitals
-    int nmo_;
+    // Object Data
     /// The occupation vector (does not include the frozen orbitals)
     bit_t bits_;
 
     // Static data
+    /// Number of non-frozen molecular orbitals
+    static int nmo_;
     /// A pointer to the integral object
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// Return the sign of a_n applied to string I
