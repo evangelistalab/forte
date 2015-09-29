@@ -452,7 +452,7 @@ void test_bitset_performance()
 
     for (int nmo : {8,16,32,64}){
         for (double pop : {0.1,0.25,0.5}){
-            int nset = std::ceilf(double(nmo) * pop);
+            int nset = std::ceil(double(nmo) * pop);
             run_tests(nmo,nset,nrepeat);
         }
     }
