@@ -121,6 +121,8 @@ public:
 
     virtual double three_integral(size_t A, size_t p, size_t q) = 0;
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q) = 0;
+    /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>& q) = 0;
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
 
@@ -337,6 +339,12 @@ public:
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
         throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
     }
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t, const std::vector<size_t>&)
+    {
+        outfile->Printf("\n Oh no! this isn't here");
+        throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    }
+
     virtual double** three_integral_pointer()
     {
         outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
@@ -427,6 +435,11 @@ public:
     virtual double three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(p * aptei_idx_ + q, A);}
     virtual double** three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual ambit::Tensor three_integral_block(const std::vector<size_t> &A, const std::vector<size_t> &p, const std::vector<size_t> &q);
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t, const std::vector<size_t>&)
+    {
+        outfile->Printf("\n Oh no! this isn't here");
+        throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    }
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
     ///Do not use this if you are using CD/DF integrals
@@ -497,6 +510,11 @@ public:
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
     virtual double three_integral(size_t A, size_t p, size_t q){return ThreeIntegral_->get(p * aptei_idx_ + q, A);}
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t, const std::vector<size_t>&)
+    {
+        outfile->Printf("\n Oh no! this isn't here");
+        throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    }
     virtual double** three_integral_pointer(){return ThreeIntegral_->pointer();}
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);
@@ -567,6 +585,8 @@ public:
     }
     ///Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
+    ///return ambit tensor of size A by q
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>&q);
 
     virtual void retransform_integrals();
     virtual void update_integrals(bool freeze_core = true);

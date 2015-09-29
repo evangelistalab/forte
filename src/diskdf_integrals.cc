@@ -922,4 +922,57 @@ void DISKDFIntegrals::resort_integrals_after_freezing()
 
     outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
 }
+ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>& q)
+{
+    //Since file is formatted as p by A * q
+    bool frozen_core = false;
+
+    ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{A.size(), q.size()});
+
+    if(frzcpi_.sum() && aptei_idx_==ncmo_)
+    {
+        frozen_core = true;
+    }
+
+    size_t pn;
+    if(nthree_ == A.size())
+    {
+            if(frozen_core)
+            {
+                pn = cmotomo_[p];
+            }
+            else
+            {
+                pn = p;
+            }
+
+            boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+
+            fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
+            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+
+
+        if(frozen_core)
+        {
+            ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+                value = Aq->get(cmotomo_[q[i[1]]], A[i[0]]);
+            });
+        }
+        else
+        {
+            ReturnTensor.iterate([&](const std::vector<size_t>& i,double& value){
+                value = Aq->get(q[i[1]], A[i[0]]);
+            });
+
+        }
+    }
+    else
+    {
+        outfile->Printf("\n Not implemened for variable size in A");
+        throw PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
+    }
+
+    return ReturnTensor;
+
+}
 }}
