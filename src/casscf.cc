@@ -45,8 +45,7 @@ void CASSCF::compute_casscf()
         throw PSIEXCEPTION("The active space is all the MOs.  Orbitals don't matter at this point");
     }
     SharedMatrix Cold(Call_->clone());
-    //int maxiter = options_.get_int("CASSCF_ITERATIONS");
-    int maxiter = 1;
+    int maxiter = options_.get_int("CASSCF_ITERATIONS");
     std::vector<int> iter_con;
     std::vector<double> g_norm_con;
     std::vector<double> E_casscf_con;
@@ -66,7 +65,7 @@ void CASSCF::compute_casscf()
         form_fock_active();
 
         orbital_gradient();
-        double g_norm = g_->sum_of_squares();
+        double g_norm = g_->rms();
         g_norm_con.push_back(g_norm);
 
         if(g_norm < options_.get_double("CASSCF_CONVERGENCE"))
@@ -97,16 +96,39 @@ void CASSCF::compute_casscf()
                 }
             }
         }
+        S->back_transform(Call_);
+        SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
+        S_sym->apply_symmetry(S, wfn_->aotoso());
 
-        ///Last Step: Update MO Coefficients
-        //C' = C * Exp(S)
+        // Build exp(U) = 1 + U + 1/2 U U + 1/6 U U U
+        SharedMatrix expS = S_sym->clone();
+        expS->zero();
 
-        //S->power(exp(1.0));
-        //Call_->gemm('n', 't', 1.0, Cold, S, 0.0);
-        //SharedMatrix Ca = wfn_->Ca();
-        //Ca->copy(Call_);
+        for (size_t h=0; h<nirrep_; h++){
+            if (!expS->rowspi()[h]) continue;
+            double** Sp = expS->pointer(h);
+            for (size_t i=0; i<(expS->colspi()[h]); i++){
+                Sp[i][i] += 1.0;
+            }
+        }
+
+        expS->gemm(false, false, 0.5, S_sym, S_sym, 1.0);
+
+        SharedMatrix S_third = Matrix::triplet(S_sym, S_sym, S_sym);
+        S_third->scale(1.0/6.0);
+        expS->add(S_third);
+        S_third.reset();
+
+        // We did not fully exponentiate the matrix, need to orthogonalize
+        expS->schmidt();
+
+        // C' = C U
+        SharedMatrix Cp = Matrix::doublet(Ca_sym_, expS);
+
+        SharedMatrix Ca = wfn_->Ca();
+        Ca->copy(Cp);
         // With updated C coefficients, need to retransform integrals so I can run FCI with transformed integrals
-        //ints_->retransform_integrals();
+        ints_->retransform_integrals();
 
         if(options_.get_int("PRINT") > 1)
         {
@@ -122,6 +144,7 @@ void CASSCF::compute_casscf()
     {
         outfile->Printf("\n %d  %8.8f   %8.8f", i, g_norm_con[i], E_casscf_con[i]);
     }
+
 
 
 }
@@ -141,15 +164,17 @@ void CASSCF::startup()
 
     SharedMatrix Call_sym = wfn_->Ca();
     Ca_sym_ = Call_sym;
-    // This is commented out because I may need it at some point, but I don't not think it is necessary as of now.
-    //Dimension nsopi_ = wfn->nsopi();
+
     SharedMatrix aotoso = wfn_->aotoso();
+
+    /// I want a C matrix in the C1 basis but symmetry aware
     SharedMatrix Call(new Matrix("Call_", nmo_, nmo_));
     Dimension nsopi_ = wfn_->nsopi();
     size_t nso = wfn_->nso();
     nirrep_ = wfn_->nirrep();
 
-    // Transform from the SO to the AO basis
+    // Transform from the SO to the AO basis for the C matrix.  
+    // just transfroms the C_{mu i_so} -> C_{mu i_ao}
     for (size_t h = 0, index = 0; h < nirrep_; ++h){
         for (int i = 0; i < nmopi_[h]; ++i){
             size_t nao = nso;
@@ -167,8 +192,10 @@ void CASSCF::startup()
 }
 void CASSCF::cas_ci()
 {
+    ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
     boost::shared_ptr<FCI> fci_casscf(new FCI(wfn_,options_,ints_,mo_space_info_));
     fci_casscf->compute_energy();
+    //Used to grab the computed energy and RDMs.  
     cas_ref_ = fci_casscf->reference();
     E_casscf_ = cas_ref_.get_Eref();
 }
@@ -180,85 +207,81 @@ void CASSCF::form_fock_core()
 
     //boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
-    if(true)
-    {
-        boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-        SharedMatrix T = mints->so_kinetic();
-        SharedMatrix V = mints->so_potential();
-        SharedMatrix H = T->clone();
-        H->add(V);
+    boost::shared_ptr<MintsHelper> mints(new MintsHelper());
+    SharedMatrix T = mints->so_kinetic();
+    SharedMatrix V = mints->so_potential();
+    SharedMatrix H = T->clone();
+    H->add(V);
 
-        Ca_sym_->print();
-        H->transform(Ca_sym_);
+    H->transform(Ca_sym_);
 
 
-        ///Step 2: From Hamiltonian elements
-        ///This will use JK builds (Equation 18 - 22)
-        /// F_{pq}^{core} = C_{mu p}C_{nu q} [h_{uv} + 2J^{(D_c) - K^{(D_c)}]
+    ///Step 2: From Hamiltonian elements
+    ///This will use JK builds (Equation 18 - 22)
+    /// F_{pq}^{core} = C_{mu p}C_{nu q} [h_{uv} + 2J^{(D_c) - K^{(D_c)}]
 
 
-        ///Have to go from the full C matrix to the C_core in the SO basis
-        /// tricky...tricky
-        Dimension inactive_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
-        SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi_, inactive_dim));
-        for(size_t h = 0; h < nirrep_; h++){
-            for(int mu = 0; mu < nmopi_[h]; mu++){
-                for(int i = 0; i <  inactive_dim[h]; i++){
-                    C_core->set(h,mu, i, Ca_sym_->get(h,mu, i));
-                }
+    ///Have to go from the full C matrix to the C_core in the SO basis
+    /// tricky...tricky
+    Dimension inactive_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi_, inactive_dim));
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int mu = 0; mu < nmopi_[h]; mu++){
+            for(int i = 0; i <  inactive_dim[h]; i++){
+                C_core->set(h,mu, i, Ca_sym_->get(h,mu, i));
             }
         }
-        // Need to get the inactive block of the C matrix
-        //for(size_t mu = 0; mu < nmo_; mu++){
-        //    for(size_t i = 0; i <  inactive_dim_abs.size(); i++){
-        //        C_core->set(mu, i, Call_->get(mu, inactive_dim_abs[i]));
-        //    }
-        //}
+    }
+    // Need to get the inactive block of the C matrix
+    //for(size_t mu = 0; mu < nmo_; mu++){
+    //    for(size_t i = 0; i <  inactive_dim_abs.size(); i++){
+    //        C_core->set(mu, i, Call_->get(mu, inactive_dim_abs[i]));
+    //    }
+    //}
 
-        boost::shared_ptr<JK> JK_core = JK::build_JK();
+    boost::shared_ptr<JK> JK_core = JK::build_JK();
 
-        JK_core->set_memory(Process::environment.get_memory() * 0.8);
-        /// Already transform everything to C1 so make sure JK does not do this.
+    JK_core->set_memory(Process::environment.get_memory() * 0.8);
+    /// Already transform everything to C1 so make sure JK does not do this.
 
-        /////TODO: Make this an option in my code
-        //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-        JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-        JK_core->initialize();
+    /////TODO: Make this an option in my code
+    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    JK_core->initialize();
 
 
 
-        std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
 
-        Cl.clear();
-        Cl.push_back(C_core);
+    Cl.clear();
+    Cl.push_back(C_core);
 
-        JK_core->compute();
+    JK_core->compute();
 
-        SharedMatrix J_core = JK_core->J()[0];
-        SharedMatrix K_core = JK_core->K()[0];
+    SharedMatrix J_core = JK_core->J()[0];
+    SharedMatrix K_core = JK_core->K()[0];
 
-        J_core->scale(2.0);
-        SharedMatrix F_core = J_core->clone();
-        F_core->subtract(K_core);
-        F_core->add(H);
-        F_core->transform(Ca_sym_);
+    J_core->scale(2.0);
+    SharedMatrix F_core = J_core->clone();
+    F_core->subtract(K_core);
+    F_core->add(H);
+    F_core->transform(Ca_sym_);
 
-        SharedMatrix F_core_c1(new Matrix("F_core_c1", nmo_, nmo_));
+    SharedMatrix F_core_c1(new Matrix("F_core_c1", nmo_, nmo_));
 
-        int offset = 0;
-        for(size_t h = 0; h < nirrep_; h++){
-            for(int p = 0; p < nmopi_[h]; p++){
-                for(int q = 0; q < nmopi_[h]; q++){
-                   F_core_c1->set(p + offset, q + offset, F_core->get(h, p, q));
-                }
+    int offset = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+               F_core_c1->set(p + offset, q + offset, F_core->get(h, p, q));
             }
-            offset += nmopi_[h];
         }
-        F_core_ = F_core_c1;
+        offset += nmopi_[h];
+    }
+    F_core_ = F_core_c1;
 
    }
 
-}
 void CASSCF::form_fock_active()
 {
     ///Step 3:
@@ -338,7 +361,6 @@ void CASSCF::form_fock_active()
     F_act->subtract(K_core);
     SharedMatrix F_act_sym(new Matrix("F_ACT", nirrep_, nmopi_, nmopi_));
     F_act_sym->apply_symmetry(F_act, wfn_->aotoso());
-    F_act_sym->print();
 
 
     F_act_sym->transform(Ca_sym_);
@@ -443,7 +465,7 @@ void CASSCF::orbital_gradient()
     }
     for(auto i : occ_array){
         for(auto a : virt_array){
-            double value_ia = F_core_->get(i, a) * 4 + F_act_->get(i, a);
+            double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 2.0;
             Orb_grad->set(i, a, value_ia);
 
         }
@@ -452,7 +474,7 @@ void CASSCF::orbital_gradient()
         for(size_t ti = 0; ti < active_array.size(); ti++){
             size_t t = active_array[ti];
             size_t a = virt_array[ai];
-            double value_ta = 2 * Y_->get(a, ti) + 4 * Z_->get(a,ti);
+            double value_ta = 2.0 * Y_->get(a, ti) + 4.0 * Z_->get(a,ti);
             Orb_grad->set(t,a, value_ta);
         }
     }
@@ -493,7 +515,7 @@ void CASSCF::diagonal_hessian()
             size_t t = t_array[ti];
             double value_it = 4.0 * F_core_->get(t,t)
                     + 2.0 * F_act_->get(t,t)
-                    + 2 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
+                    + 2.0 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
             value_it+=gamma1M_->get(ti,ti) * F_act_->get(i,i);
             value_it-=4.0 * F_core_->get(i,i) + 2.0 * F_act_->get(i,i);
             value_it-=2.0*Y_->get(t,ti) + 4.0 * Z_->get(t,ti);
