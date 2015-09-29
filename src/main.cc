@@ -17,7 +17,7 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "adaptive-ci.h"
-#include "adaptive_pici.h"
+#include "apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"

@@ -13,11 +13,13 @@ using namespace psi;
 namespace psi{ namespace forte{
 
 // Static members
+int STLBitsetDeterminant::nmo_;
 std::shared_ptr<FCIIntegrals> STLBitsetDeterminant::fci_ints_;
 
 void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 {
     fci_ints_ = ints;
+    nmo_ = ints->nmo();
 //    // Initialize the bit masks
 //    int n = ints->nmo();
 
@@ -31,19 +33,15 @@ void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 //    }
 }
 
-STLBitsetDeterminant::STLBitsetDeterminant() : nmo_(0)
-{
-}
-
-STLBitsetDeterminant::STLBitsetDeterminant(int nmo)
-    : nmo_(nmo), bits_(2 * nmo_)
+STLBitsetDeterminant::STLBitsetDeterminant()
+    : bits_(2 * nmo_)
 {
 }
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation)
-    : nmo_(occupation.size() / 2), bits_(2 * nmo_)
+    : bits_(2 * nmo_)
 {
     for(int p = 0; p < 2 * nmo_; ++p){
         bits_[p] = occupation[p];
@@ -53,7 +51,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation)
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation)
-    : nmo_(occupation.size() / 2), bits_(2 * nmo_)
+    : bits_(2 * nmo_)
 {
     for(int p = 0; p < 2 * nmo_; ++p){
         bits_[p] = occupation[p];
@@ -61,7 +59,7 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation)
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b)
-    : nmo_(occupation_a.size()), bits_(2 * nmo_)
+    : bits_(2 * nmo_)
 {
     for(int p = 0; p < nmo_; ++p){
         bits_[p] = occupation_a[p];

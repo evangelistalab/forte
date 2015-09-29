@@ -43,13 +43,13 @@ enum PropagatorType {LinearPropagator,
                      CubicPropagator,
                      QuarticPropagator,
                      PowerPropagator,
-                     TrotterLinearPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator};
 
 using Determinant = STLBitsetDeterminant;
-using bit_hash = std::unordered_map<Determinant,double,Determinant::Hash>;
-using bit_hash_it = bit_hash::iterator;
+using det_vec = std::vector<Determinant>;
+using det_hash = std::unordered_map<Determinant,double,Determinant::Hash>;
+using bit_hash_it = det_hash::iterator;
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -68,15 +68,10 @@ public:
      */
     AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /// Destructor
-    ~AdaptivePathIntegralCI();
-
     // ==> Class Interface <==
 
     /// Compute the energy
     double compute_energy();
-
-    double compute_energy_parallel();
 
 private:
 
@@ -107,7 +102,7 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    std::vector<bit_hash> solutions_;
+    std::vector<det_hash> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -167,7 +162,6 @@ private:
     /// The tollerance factor applied when prescreening singles
     double prescreening_tollerance_factor_;
 
-
     // * Dynamics Prescreening
     /// Prescreen spawning using a dynamic integral upper bounds
     bool do_dynamic_prescreening_;
@@ -185,19 +179,6 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
-
-    // * Calculation statistics
-    /// Number of determinants visited during a time step
-    size_t ndet_visited_;
-    /// Number of determinants accepted during a time step
-    size_t ndet_accepted_;
-    /// Number of determinants spawned during a time step
-    size_t nspawned_;
-    /// Number of determinants that don't spawn
-    size_t nzerospawn_;
-
-    size_t nvisited_;
-
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -207,16 +188,16 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<Determinant> &space, std::vector<double> &C);
+    void print_wfn(det_vec &space, std::vector<double> &C);
 
     /// Save a wave function
-    void save_wfn(std::vector<Determinant> &space, std::vector<double> &C,std::vector<bit_hash>& solutions);
+    void save_wfn(det_vec &space, std::vector<double> &C,std::vector<det_hash>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(std::vector<Determinant>& space,std::vector<double>& C,std::vector<bit_hash>& solutions);
+    void orthogonalize(det_vec& space,std::vector<double>& C,std::vector<det_hash>& solutions);
 
     /// Initial wave function guess
-    double initial_guess(std::vector<Determinant>& dets,std::vector<double>& C);
+    double initial_guess(det_vec& dets,std::vector<double>& C);
 
     /**
     * Propagate the wave function by a step of length tau
@@ -227,75 +208,50 @@ private:
     * @param spawning_threshold The threshold used to accept or reject spawning events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(PropagatorType propagator,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate(PropagatorType propagator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// A first-order propagator
-    void propagate_first_order(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An experimental second-order propagator
-    void propagate_second_order(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_second_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An experimental arbitrary-order Taylor series propagator
-    void propagate_Taylor(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
-    /// An experimental arbitrary-order Chebyshev series propagator
-    void propagate_Chebyshev(int order,std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_Taylor(int order,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The power propagator
-    void propagate_power(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_power(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The power propagator
-    void propagate_power_quadratic_extrapolation(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
-    /// The Trotter propagator
-    void propagate_Trotter(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_power_quadratic_extrapolation(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Olsen propagator
-    void propagate_Olsen(std::vector<Determinant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-
+    void propagate_Olsen(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Davidson-Liu propagator
-    void propagate_DavidsonLiu(std::vector<Determinant>& dets, std::vector<double>& C, double tau, double spawning_threshold);
+    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double tau, double spawning_threshold);
+
+    /// Apply tau H to a set of determinants
+    void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash& dets_C_map, double S);
+    /// Apply tau H to a determinant using screening based on the maxim couplings
+    std::pair<double, double> apply_tau_H_det_prescreening(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash& new_space_C, double E0);
+    /// Apply tau H to a determinant using dynamic screening
+    void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, det_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    /// Apply tau H to a determinant using Schwarz screening
+    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, det_hash& new_space_C, double E0);
 
     /// Estimates the energy give a wave function
-    std::map<std::string, double> estimate_energy(std::vector<Determinant>& dets,std::vector<double>& C);
-
+    std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
     /// Estimates the projective energy
-    double estimate_proj_energy(std::vector<Determinant>& dets,std::vector<double>& C);
-
+    double estimate_proj_energy(det_vec& dets,std::vector<double>& C);
     /// Estimates the variational energy
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
-    double estimate_var_energy(std::vector<Determinant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
-
+    double estimate_var_energy(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
     /// Estimates the variational energy using a sparse algorithm
     /// @param dets The set of determinants that form the wave function
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
-    double estimate_var_energy_sparse(std::vector<Determinant>& dets, std::vector<double>& C, double tollerance = 1.0e-14);
-
-    /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H(double tau, double spawning_threshold, std::vector<Determinant> &dets, const std::vector<double>& C, bit_hash& dets_C_map, double S);
-//    size_t apply_tau_H(double tau,double spawning_threshold,bit_hash& det_C_old, bit_hash& dets_C_map, double S);
-
-    /// Apply tau H to a determinant
-    size_t apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, bit_hash& new_space_C, double E0);
-//    size_t apply_tau_H_det_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0);
-    size_t apply_tau_H_det_initiator(double tau, double spawning_threshold, const Determinant &detI, double CI, bit_hash& new_space_C, double E0);
-    size_t apply_tau_H_det(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
-    std::pair<double, double> apply_tau_H_det_hash(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& new_space_C, double E0);
-
-
-    /// Apply tau H to a determinant using dynamic screening
-    size_t apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
-//    size_t apply_tau_H_det_dynamic_sym(double tau,double spawning_threshold,const Determinant& detI, double CI, bit_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
     /// Form the product H c
-    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, bit_hash& det_C,std::pair<double,double>& max_coupling);
+    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash& det_C,std::pair<double,double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
-    /// Maximum number of threads
-    //int num_threads_;
 };
 
 }} // End Namespaces
