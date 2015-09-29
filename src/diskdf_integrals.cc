@@ -878,8 +878,6 @@ void DISKDFIntegrals::compute_frozen_one_body_operator()
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
 
-
-
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
 
     Cl.clear();
