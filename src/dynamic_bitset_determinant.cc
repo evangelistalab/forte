@@ -4,7 +4,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
 using namespace std;
@@ -12,16 +12,16 @@ using namespace psi;
 
 namespace psi{ namespace forte{
 
-std::size_t hash_value(const BitsetDeterminant& input)
+std::size_t hash_value(const DynamicBitsetDeterminant& input)
 {
     return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
 }
 
 // Static members
-std::vector<BitsetDeterminant::bit_t> BitsetDeterminant::bit_mask_;
-std::shared_ptr<FCIIntegrals> BitsetDeterminant::fci_ints_;
+std::vector<DynamicBitsetDeterminant::bit_t> DynamicBitsetDeterminant::bit_mask_;
+std::shared_ptr<FCIIntegrals> DynamicBitsetDeterminant::fci_ints_;
 
-void BitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
+void DynamicBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 {
     fci_ints_ = ints;
 
@@ -38,13 +38,19 @@ void BitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
     }
 }
 
-BitsetDeterminant::BitsetDeterminant() : nmo_(0)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant() : nmo_(0)
 {
 }
 
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(int nmo)
+    : nmo_(nmo), alfa_bits_(nmo_), beta_bits_(nmo_)
+{
+}
+
+
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-BitsetDeterminant::BitsetDeterminant(const std::vector<int>& occupation,bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<int>& occupation,bool print_det)
     : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
 {
     for(int p = 0; p < nmo_; ++p){
@@ -56,7 +62,7 @@ BitsetDeterminant::BitsetDeterminant(const std::vector<int>& occupation,bool pri
 
 /// Construct the determinant from an occupation vector that
 /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation,bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<bool>& occupation,bool print_det)
     : nmo_(occupation.size() / 2), alfa_bits_(nmo_), beta_bits_(nmo_)
 {
     for(int p = 0; p < nmo_; ++p){
@@ -66,7 +72,7 @@ BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation,bool pr
     if (print_det) print();
 }
 
-BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
+DynamicBitsetDeterminant::DynamicBitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b,bool print_det)
     : nmo_(occupation_a.size()), alfa_bits_(nmo_), beta_bits_(nmo_)
 {
     for(int p = 0; p < nmo_; ++p){
@@ -76,7 +82,7 @@ BitsetDeterminant::BitsetDeterminant(const std::vector<bool>& occupation_a,const
     if (print_det) print();
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_occ()
+std::vector<int> DynamicBitsetDeterminant::get_alfa_occ()
 {
     std::vector<int> occ(alfa_bits_.count());
     size_t index = alfa_bits_.find_first();
@@ -90,7 +96,7 @@ std::vector<int> BitsetDeterminant::get_alfa_occ()
     return occ;
 }
 
-std::vector<int> BitsetDeterminant::get_beta_occ()
+std::vector<int> DynamicBitsetDeterminant::get_beta_occ()
 {
     std::vector<int> occ(beta_bits_.count());
     size_t index = beta_bits_.find_first();
@@ -104,7 +110,7 @@ std::vector<int> BitsetDeterminant::get_beta_occ()
     return occ;
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_vir()
+std::vector<int> DynamicBitsetDeterminant::get_alfa_vir()
 {
     alfa_bits_.flip();
     std::vector<int> vir(alfa_bits_.count());
@@ -120,7 +126,7 @@ std::vector<int> BitsetDeterminant::get_alfa_vir()
     return vir;
 }
 
-std::vector<int> BitsetDeterminant::get_beta_vir()
+std::vector<int> DynamicBitsetDeterminant::get_beta_vir()
 {
     beta_bits_.flip();
     std::vector<int> vir(beta_bits_.count());
@@ -137,7 +143,7 @@ std::vector<int> BitsetDeterminant::get_beta_vir()
 }
 
 
-std::vector<int> BitsetDeterminant::get_alfa_occ() const
+std::vector<int> DynamicBitsetDeterminant::get_alfa_occ() const
 {
     std::vector<int> occ(alfa_bits_.count());
     size_t index = alfa_bits_.find_first();
@@ -151,7 +157,7 @@ std::vector<int> BitsetDeterminant::get_alfa_occ() const
     return occ;
 }
 
-std::vector<int> BitsetDeterminant::get_beta_occ() const
+std::vector<int> DynamicBitsetDeterminant::get_beta_occ() const
 {
     std::vector<int> occ(beta_bits_.count());
     size_t index = beta_bits_.find_first();
@@ -165,7 +171,7 @@ std::vector<int> BitsetDeterminant::get_beta_occ() const
     return occ;
 }
 
-std::vector<int> BitsetDeterminant::get_alfa_vir() const
+std::vector<int> DynamicBitsetDeterminant::get_alfa_vir() const
 {
     boost::dynamic_bitset<> alfa_bits(alfa_bits_);
     alfa_bits.flip();
@@ -181,7 +187,7 @@ std::vector<int> BitsetDeterminant::get_alfa_vir() const
     return vir;
 }
 
-std::vector<int> BitsetDeterminant::get_beta_vir() const
+std::vector<int> DynamicBitsetDeterminant::get_beta_vir() const
 {
     boost::dynamic_bitset<> beta_bits(beta_bits_);
     beta_bits.flip();
@@ -197,21 +203,21 @@ std::vector<int> BitsetDeterminant::get_beta_vir() const
     return vir;
 }
 
-double BitsetDeterminant::create_alfa_bit(int n)
+double DynamicBitsetDeterminant::create_alfa_bit(int n)
 {
     if (alfa_bits_[n]) return 0.0;
     alfa_bits_[n] = true;
     return SlaterSign(alfa_bits_,n);
 }
 
-double BitsetDeterminant::create_beta_bit(int n)
+double DynamicBitsetDeterminant::create_beta_bit(int n)
 {
     if (beta_bits_[n]) return 0.0;
     beta_bits_[n] = true;
     return SlaterSign(beta_bits_,n);
 }
 
-double BitsetDeterminant::destroy_alfa_bit(int n)
+double DynamicBitsetDeterminant::destroy_alfa_bit(int n)
 {
     if (not alfa_bits_[n]) return 0.0;
     alfa_bits_[n] = false;
@@ -219,7 +225,7 @@ double BitsetDeterminant::destroy_alfa_bit(int n)
 }
 
 /// Set the value of a beta bit
-double BitsetDeterminant::destroy_beta_bit(int n)
+double DynamicBitsetDeterminant::destroy_beta_bit(int n)
 {
     if (not beta_bits_[n]) return 0.0;
     beta_bits_[n] = false;
@@ -227,7 +233,7 @@ double BitsetDeterminant::destroy_beta_bit(int n)
 }
 
 /// Switch alfa and beta bits
-void BitsetDeterminant::spin_flip()
+void DynamicBitsetDeterminant::spin_flip()
 {
     std::swap(alfa_bits_,beta_bits_);
 }
@@ -235,7 +241,7 @@ void BitsetDeterminant::spin_flip()
 /**
  * Print the determinant
  */
-void BitsetDeterminant::print() const
+void DynamicBitsetDeterminant::print() const
 {
     outfile->Printf("\n  |");
     for(int p = 0; p < nmo_; ++p){
@@ -252,7 +258,7 @@ void BitsetDeterminant::print() const
 /**
  * Print the determinant
  */
-std::string BitsetDeterminant::str() const
+std::string DynamicBitsetDeterminant::str() const
 {
     std::string s;
     s += "|";
@@ -271,16 +277,18 @@ std::string BitsetDeterminant::str() const
  * Compute the energy of this determinant
  * @return the electronic energy (does not include the nuclear repulsion energy)
  */
-double BitsetDeterminant::energy() const
+double DynamicBitsetDeterminant::energy() const
 {
     double matrix_element = fci_ints_->frozen_core_energy();
     for(int p = 0; p < nmo_; ++p){
         if(alfa_bits_[p]){
             matrix_element += fci_ints_->oei_a(p,p);
-            for(int q = 0; q < nmo_; ++q){
+            for(int q = p + 1; q < nmo_; ++q){
                 if(alfa_bits_[q]){
-                    matrix_element += 0.5 * fci_ints_->diag_tei_aa(p,q);
+                    matrix_element += fci_ints_->diag_tei_aa(p,q);
                 }
+            }
+            for(int q = 0; q < nmo_; ++q){
                 if(beta_bits_[q]){
                     matrix_element += fci_ints_->diag_tei_ab(p,q);
                 }
@@ -288,9 +296,9 @@ double BitsetDeterminant::energy() const
         }
         if(beta_bits_[p]){
             matrix_element += fci_ints_->oei_b(p,p);
-            for(int q = 0; q < nmo_; ++q){
+            for(int q = p + 1; q < nmo_; ++q){
                 if(beta_bits_[q]){
-                    matrix_element += 0.5 * fci_ints_->diag_tei_bb(p,q);
+                    matrix_element += fci_ints_->diag_tei_bb(p,q);
                 }
             }
         }
@@ -303,7 +311,7 @@ double BitsetDeterminant::energy() const
  * @param rhs
  * @return
  */
-double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
+double DynamicBitsetDeterminant::slater_rules(const DynamicBitsetDeterminant& rhs) const
 {
     const boost::dynamic_bitset<>& Ia = alfa_bits_;
     const boost::dynamic_bitset<>& Ib = beta_bits_;
@@ -440,7 +448,7 @@ double BitsetDeterminant::slater_rules(const BitsetDeterminant& rhs) const
     return(matrix_element);
 }
 
-double BitsetDeterminant::slater_rules_single_alpha(int i, int a) const
+double DynamicBitsetDeterminant::slater_rules_single_alpha(int i, int a) const
 {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = SlaterSign(alfa_bits_,i) * SlaterSign(alfa_bits_,a) * (a > i ? -1.0 : 1.0);
@@ -456,7 +464,7 @@ double BitsetDeterminant::slater_rules_single_alpha(int i, int a) const
     return sign * matrix_element;
 }
 
-double BitsetDeterminant::slater_rules_single_beta(int i, int a) const
+double DynamicBitsetDeterminant::slater_rules_single_beta(int i, int a) const
 {
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = SlaterSign(beta_bits_,i) * SlaterSign(beta_bits_,a) * (a > i ? -1.0 : 1.0);
@@ -476,7 +484,7 @@ double BitsetDeterminant::slater_rules_single_beta(int i, int a) const
  * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
  * @return S^2
  */
-double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
+double DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) const
 {
     const boost::dynamic_bitset<>& Ia = alfa_bits_;
     const boost::dynamic_bitset<>& Ib = beta_bits_;
@@ -530,7 +538,67 @@ double BitsetDeterminant::spin2(const BitsetDeterminant& rhs) const
     return(matrix_element);
 }
 
-double BitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
+double DynamicBitsetDeterminant::slater_sign_alpha(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(alfa_bits_[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double DynamicBitsetDeterminant::slater_sign_beta(int n) const
+{
+    double sign = 1.0;
+    for(int i = 0; i < n; ++i){  // This runs up to the operator before n
+        if(beta_bits_[i]) sign *= -1.0;
+    }
+    return(sign);
+}
+
+double DynamicBitsetDeterminant::double_excitation_aa(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_alpha(j);
+    alfa_bits_[i] = false;
+    alfa_bits_[j] = false;
+    alfa_bits_[a] = true;
+    alfa_bits_[b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_alpha(b);
+    return sign;
+}
+
+double DynamicBitsetDeterminant::double_excitation_ab(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_alpha(i);
+    sign *= slater_sign_beta(j);
+    alfa_bits_[i] = false;
+    beta_bits_[j] = false;
+    alfa_bits_[a] = true;
+    beta_bits_[b] = true;
+    sign *= slater_sign_alpha(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
+double DynamicBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b)
+{
+    double sign = 1.0;
+    sign *= slater_sign_beta(i);
+    sign *= slater_sign_beta(j);
+    beta_bits_[i] = false;
+    beta_bits_[j] = false;
+    beta_bits_[a] = true;
+    beta_bits_[b] = true;
+    sign *= slater_sign_beta(a);
+    sign *= slater_sign_beta(b);
+    return sign;
+}
+
+double DynamicBitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
 {
     double sign = 1.0;
     for(int i = 0; i < n; ++i){  // This runs up to the operator before n
@@ -539,16 +607,16 @@ double BitsetDeterminant::SlaterSign(const boost::dynamic_bitset<>& I,int n)
     return(sign);
 }
 
-double BitsetDeterminant::FastSlaterSign(const boost::dynamic_bitset<>& I,int n)
+double DynamicBitsetDeterminant::FastSlaterSign(const boost::dynamic_bitset<>& I,int n)
 {
     return ((bit_mask_[n] & I).count() % 2) ? -1.0 : 1.0;
 }
 
-void BitsetDeterminant::check_uniqueness(const std::vector<BitsetDeterminant> det_space)
+void DynamicBitsetDeterminant::check_uniqueness(const std::vector<DynamicBitsetDeterminant> det_space)
 {
     size_t duplicates = 0;
     size_t dim = det_space.size();
-    std::unordered_map<BitsetDeterminant, size_t, function<decltype(hash_value)>> det_map(dim, hash_value);
+    std::unordered_map<DynamicBitsetDeterminant, size_t, function<decltype(hash_value)>> det_map(dim, hash_value);
 
     for(const auto &i : det_space){
         ++det_map[i];
