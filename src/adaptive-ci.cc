@@ -45,6 +45,11 @@ inline double clamp(double x, double a, double b)
     return x < a ? a : (x > b ? b : x);
 }
 
+// Hash for BSD 
+std::size_t BSD_hash_value(const BitsetDeterminant& input)
+{
+    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
+}
 
 /**
  * This is a smooth step function that is
@@ -623,7 +628,7 @@ double AdaptiveCI::compute_energy()
 	print_wfn(PQ_space_, PQ_evecs, nroot_);
 	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	outfile->Printf(  "\n  __________ 	____________   ________________ ");
-    wfn_analyzer(P_space_, P_evecs, nroot_);	
+    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
 
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
@@ -1868,6 +1873,52 @@ void AdaptiveCI::print_wfn(std::vector<BitsetDeterminant> space,SharedMatrix eve
     }
 	outfile->Flush();
 }
+
+void AdaptiveCI::lowdin_spin_project( std::vector< BitsetDeterminant > det_space, SharedMatrix cI, int nroot){
+	Timer timer;
+	outfile->Printf("\n  Performing Loewdin's spin projection...");
+	
+	//First implementation for singlets
+	double spin_contam = compute_spin_contamination( det_space, cI, nroot);
+	int i = 1;
+
+	// Build hash to connect BSD to its cI
+	std::unordered_map<BitsetDeterminant, size_t, function<decltype(BSD_hash_value)>> det_map(det_space.size(), BSD_hash_value);
+	
+	// need to use larger loop for muliple roots---to implement later
+	for(size_t I = 0, maxI = det_space.size(); I < maxI; ++I){
+		det_map[det_space[I]] = I;
+	}	 
+	double denom = 1 / ( i * ( i + 1 ) );
+
+	for( size_t I = 0, maxi = det_space.size(); I < maxi; ++I){
+		for( size_t i = 0; i < nact_; ++i ){
+			BitsetDeterminant det(det_space[I]);
+			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
+					//destroy alfa bit i, create beta bit i
+					det.set_alfa_bit(i, false );
+					det.set_beta_bit(i, true );
+			}
+			for( size_t j = 0; j < nact_; ++j ){
+				if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
+					//destroy beta bit j, create alfa bit j
+					det.set_beta_bit(j, false );
+					det.set_alfa_bit(j, true );
+
+					if( det_map.count(det) == 0 ){
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
+					}else{
+						cI->set(det_map[det],0, cI->get(det_map[det],0) - denom );
+						det.set_beta_bit(j, true );
+						det.set_alfa_bit(j, false );
+					}
+				}
+			}
+		}
+	}
+		
+}	
 
 void AdaptiveCI::spin_transform( std::vector< BitsetDeterminant > det_space, SharedMatrix cI, int nroot )
 {
