@@ -36,9 +36,9 @@ namespace psi{ namespace forte{
 typedef std::map<FastDeterminant,double> fdmap;
 typedef std::map<FastDeterminant,double>::iterator fdmap_it;
 
-void combine_maps(std::vector<fdmap>& thread_det_C_map, fdmap& dets_C_map);
-void combine_maps(fdmap& dets_C_map_A,fdmap& dets_C_map_B);
-void copy_map_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C);
+void combine_hashes(std::vector<fdmap>& thread_det_C_map, fdmap& dets_C_map);
+void combine_hashes(fdmap& dets_C_map_A,fdmap& dets_C_map_B);
+void copy_hash_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C);
 void scale(std::map<FastDeterminant,double>& A,double alpha);
 double dot(std::map<FastDeterminant,double>& A,std::map<FastDeterminant,double>& B);
 void add(std::map<FastDeterminant,double>& A,double beta,std::map<FastDeterminant,double>& B);
@@ -371,7 +371,7 @@ double FastAdaptivePathIntegralCI::initial_guess(std::vector<FastDeterminant>& d
     time_step_optimized(spawning_threshold_ * 10.0,bs_det,1.0,dets_C,0.0);
 
     // Save the list of determinants
-    copy_map_to_vec(dets_C,dets,C);
+    copy_hash_to_vec(dets_C,dets,C);
 
     // Consider the 1000 largest contributions
 
@@ -471,7 +471,7 @@ void FastAdaptivePathIntegralCI::propagate_first_order(std::vector<FastDetermina
     apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_map,S);
 
     // Overwrite the input vectors with the updated wave function
-    copy_map_to_vec(dets_C_map,dets,C);
+    copy_hash_to_vec(dets_C_map,dets,C);
 }
 
 void FastAdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
@@ -493,10 +493,10 @@ void FastAdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<FastDete
         apply_tau_H(delta_tau,spawning_threshold,dets,C,dets_C_map,S);
 
         // Add this term to the total vector
-        combine_maps(dets_C_map,dets_sum_map);
+        combine_hashes(dets_C_map,dets_sum_map);
         // Copy the wave function to a vector
         if (j < order){
-            copy_map_to_vec(dets_C_map,dets,C);
+            copy_hash_to_vec(dets_C_map,dets,C);
         }
         dets_C_map.clear();
 //        if(iter_ % energy_estimate_freq_ == 0){
@@ -506,7 +506,7 @@ void FastAdaptivePathIntegralCI::propagate_Taylor(int order,std::vector<FastDete
 //            outfile->Printf("\n  ||C(%d)-C(%d)|| = %e (%f)",j,j-1,norm,delta_tau);
 //        }
     }
-    copy_map_to_vec(dets_sum_map,dets,C);
+    copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
 void FastAdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
@@ -578,13 +578,13 @@ void FastAdaptivePathIntegralCI::propagate_Chebyshev(int order,std::vector<FastD
 
 
 
-        combine_maps(dets_C_map,dets_sum_map);
+        combine_hashes(dets_C_map,dets_sum_map);
         // Reset the maps
         for (int t = 0; t < thread_det_C_map.size(); ++t) thread_det_C_map[t].clear();
         // Copy the wave function to a vector
-        copy_map_to_vec(dets_C_map,dets,C);
+        copy_hash_to_vec(dets_C_map,dets,C);
     }
-    copy_map_to_vec(dets_sum_map,dets,C);
+    copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
 
@@ -596,7 +596,7 @@ void FastAdaptivePathIntegralCI::propagate_power(std::vector<FastDeterminant>& d
     apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_map,S);
 
     // Overwrite the input vectors with the updated wave function
-    copy_map_to_vec(dets_C_map,dets,C);
+    copy_hash_to_vec(dets_C_map,dets,C);
 }
 
 
@@ -621,7 +621,7 @@ void FastAdaptivePathIntegralCI::propagate_Trotter(std::vector<FastDeterminant>&
     apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_map,S);
 
     // Overwrite the input vectors with the updated wave function
-    copy_map_to_vec(dets_C_map,dets,C);
+    copy_hash_to_vec(dets_C_map,dets,C);
 }
 
 void FastAdaptivePathIntegralCI::propagate_Olsen(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
@@ -684,7 +684,7 @@ void FastAdaptivePathIntegralCI::propagate_Olsen(std::vector<FastDeterminant>& d
     }
 
     // Overwrite the input vectors with the updated wave function
-    copy_map_to_vec(dets_C_map,dets,C);
+    copy_hash_to_vec(dets_C_map,dets,C);
 }
 
 void FastAdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<FastDeterminant>& dets,std::vector<double>& C,double tau,double spawning_threshold)
@@ -781,7 +781,7 @@ void FastAdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<FastDetermina
             }
         }
 
-        copy_map_to_vec(dets_C_map,dets,C);
+        copy_hash_to_vec(dets_C_map,dets,C);
         double var_energy = estimate_var_energy_sparse(dets,C,1.0e-8);
 
         double var_energy_gradient = var_energy - old_energy;
@@ -985,7 +985,7 @@ void FastAdaptivePathIntegralCI::propagate_DavidsonLiu(std::vector<FastDetermina
 //        }
 //    }
 
-    copy_map_to_vec(dets_C_map,dets,C);
+    copy_hash_to_vec(dets_C_map,dets,C);
 
 
 
@@ -1410,7 +1410,7 @@ size_t FastAdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_thresh
     }
 
     // Combine the results of all the threads
-    combine_maps(thread_det_C_map,dets_C_map);
+    combine_hashes(thread_det_C_map,dets_C_map);
 
     nspawned_ = 0;
     for (size_t t = 0; t < num_threads_; ++t) nspawned_ += spawned[t];
@@ -1828,10 +1828,10 @@ void FastAdaptivePathIntegralCI::orthogonalize(std::vector<FastDeterminant>& spa
         add(det_C,-dot_prod,solutions[n]);
     }
     normalize(det_C);
-    copy_map_to_vec(det_C,space,C);
+    copy_hash_to_vec(det_C,space,C);
 }
 
-void combine_maps(std::vector<fdmap>& thread_det_C_map,fdmap& dets_C_map)
+void combine_hashes(std::vector<fdmap>& thread_det_C_map,fdmap& dets_C_map)
 {
     // Combine the content of varius wave functions stored as maps
     for (size_t t = 0; t < thread_det_C_map.size(); ++t){
@@ -1841,7 +1841,7 @@ void combine_maps(std::vector<fdmap>& thread_det_C_map,fdmap& dets_C_map)
     }
 }
 
-void combine_maps(fdmap& dets_C_map_A,fdmap& dets_C_map_B)
+void combine_hashes(fdmap& dets_C_map_A,fdmap& dets_C_map_B)
 {
     // Combine the content of varius wave functions stored as maps
     for (fdmap_it it = dets_C_map_A.begin(), endit = dets_C_map_A.end(); it != endit; ++it){
@@ -1849,7 +1849,7 @@ void combine_maps(fdmap& dets_C_map_A,fdmap& dets_C_map_B)
     }
 }
 
-void copy_map_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C)
+void copy_hash_to_vec(fdmap& dets_C_map,std::vector<FastDeterminant>& dets,std::vector<double>& C)
 {
     size_t size = dets_C_map.size();
     dets.resize(size);

@@ -31,7 +31,7 @@
 
 #include "integrals.h"
 #include "helpers.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
 namespace psi{ namespace forte{
@@ -108,7 +108,7 @@ private:
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
-    BitsetDeterminant reference_determinant_;
+    DynamicBitsetDeterminant reference_determinant_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
 	/// The current iteration
@@ -156,13 +156,13 @@ private:
 	bool det_hist_;
 
     /// A vector of determinants in the P space
-    std::vector<BitsetDeterminant> P_space_;
+    std::vector<DynamicBitsetDeterminant> P_space_;
     /// A vector of determinants in the P + Q space
-    std::vector<BitsetDeterminant> PQ_space_;
+    std::vector<DynamicBitsetDeterminant> PQ_space_;
     /// A map of determinants in the P space
-    std::map<BitsetDeterminant,int> P_space_map_;
+    std::map<DynamicBitsetDeterminant,int> P_space_map_;
 	/// A History of Determinants
-	std::map<BitsetDeterminant, std::vector< std::pair<size_t, std::string>> > det_history_;
+	std::map<DynamicBitsetDeterminant, std::vector< std::pair<size_t, std::string>> > det_history_;
 
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
@@ -193,13 +193,13 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot);
+    void print_wfn(std::vector<DynamicBitsetDeterminant> space, SharedMatrix evecs, int nroot);
 
     /// Diagonalize the Hamiltonian in a space of determinants
-    void diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+    void diagonalize_hamiltonian(const std::vector<DynamicBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
     /// Diagonalize the Hamiltonian in a space of determinants
-    void diagonalize_hamiltonian2(const std::vector<BitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+    void diagonalize_hamiltonian2(const std::vector<DynamicBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
@@ -214,19 +214,19 @@ private:
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate excited determinants
-    void generate_excited_determinants_single_root(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant, double> &V_hash);
+    void generate_excited_determinants_single_root(int nroot, int I, SharedMatrix evecs, DynamicBitsetDeterminant &det, std::map<DynamicBitsetDeterminant, double> &V_hash);
 
     /// Generate excited determinants
-    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, BitsetDeterminant &det, std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+    void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, DynamicBitsetDeterminant &det, std::map<DynamicBitsetDeterminant,std::vector<double>>& V_hash);
 
     /// Experimental
-    void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,BitsetDeterminant& det,std::map<BitsetDeterminant,std::vector<double>>& V_hash);
+    void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,DynamicBitsetDeterminant& det,std::map<DynamicBitsetDeterminant,std::vector<double>>& V_hash);
 
     /// Prune the space of determinants
-    void prune_q_space(std::vector<BitsetDeterminant>& large_space,std::vector<BitsetDeterminant>& pruned_space,
-                                   std::map<BitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
+    void prune_q_space(std::vector<DynamicBitsetDeterminant>& large_space,std::vector<DynamicBitsetDeterminant>& pruned_space,
+                                   std::map<DynamicBitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot);
 
-    void smooth_hamiltonian(std::vector<BitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot);
+    void smooth_hamiltonian(std::vector<DynamicBitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot);
 
     /// Check if the procedure has converged
     bool check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector new_energies);
@@ -235,7 +235,7 @@ private:
 	bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
 	/// Analyze the wavefunction
-	void wfn_analyzer(std::vector<BitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
+	void wfn_analyzer(std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
 
 	/// Take the direct product of two symmetry elements
 	int direct_sym_product( int sym1, int sym2 );
@@ -244,28 +244,28 @@ private:
 	std::vector<std::pair<double, std::pair<int,int> > > sym_labeled_orbitals(std::string type);
 
 	/// Computes spin
-	std::vector<std::pair<std::pair<double,double>, std::pair<size_t,double>>> compute_spin(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot);
+	std::vector<std::pair<std::pair<double,double>, std::pair<size_t,double>>> compute_spin(std::vector<DynamicBitsetDeterminant> space, SharedMatrix evecs, int nroot);
 
 	/// Compute 1-RDM
-	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<BitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
+	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
 
 	/// One-electron operator
-	double OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q);
+	double OneOP(const DynamicBitsetDeterminant &J, DynamicBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q);
 
 	/// Check the sign
 	double CheckSign(std::vector<int> I, const int &n);
 
 	/// Compute S^2 matrix and diagonalize it
-	void spin_transform(std::vector<BitsetDeterminant> det_space, SharedMatrix cI, int nroot);
+	void spin_transform(std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix cI, int nroot);
 
 	/// Perform Loewdin spin projection
-	void lowdin_spin_project( std::vector< BitsetDeterminant > det_space, SharedMatrix cI, int nroot);
+	void lowdin_spin_project( std::vector< DynamicBitsetDeterminant > det_space, SharedMatrix cI, int nroot);
 
 	/// Check for spin complete determinants
-	void check_spin_completeness(std::vector<BitsetDeterminant>& det_space);
+	void check_spin_completeness(std::vector<DynamicBitsetDeterminant>& det_space);
 
 	/// Check for spin contamination
-	double compute_spin_contamination(std::vector<BitsetDeterminant> space, SharedMatrix evecs, int nroot);
+	double compute_spin_contamination(std::vector<DynamicBitsetDeterminant> space, SharedMatrix evecs, int nroot);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

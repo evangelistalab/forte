@@ -78,7 +78,7 @@ void LambdaCI::startup(Options& options)
 
     // Connect the integrals to the determinant class
     StringDeterminant::set_ints(ints_);
-    BitsetDeterminant::set_ints(ints_);
+    DynamicBitsetDeterminant::set_ints(ints_);
 
 
     // Build the reference determinant and compute its energy
