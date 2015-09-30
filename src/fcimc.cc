@@ -56,7 +56,7 @@ void FCIQMC::startup()
 {
     // Connect the integrals to the determinant class
 	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    BitsetDeterminant::set_ints(fci_ints_);
+    DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     // The number of correlated molecular orbitals
     ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
@@ -108,7 +108,7 @@ void FCIQMC::startup()
         }
         cumidx += ncmopi_[h];
     }
-    BitsetDeterminant reference_determinant(occupation);
+    DynamicBitsetDeterminant reference_determinant(occupation);
     reference_ = reference_determinant;
 
     outfile->Printf("\n  The reference determinant is:\n");
@@ -267,7 +267,7 @@ double FCIQMC::compute_energy()
     outfile->Printf("\nnuclear_repulsion_energy:%lf, Ehf:%lf",nre, Ehf_);
 
     // Create the initial walker population
-    std::map<BitsetDeterminant,double> walkers;
+    std::map<DynamicBitsetDeterminant,double> walkers;
     walkers[reference_] = start_num_walkers_;
 
     bool shift_flag = false;
@@ -297,7 +297,7 @@ double FCIQMC::compute_energy()
             shifts.push_back(shift_);
         }
 
-        std::map<BitsetDeterminant,double> new_walkers;
+        std::map<DynamicBitsetDeterminant,double> new_walkers;
 
         // Step #1.  Spawning
         timer_on("FCIQMC:Spawn");
@@ -399,7 +399,7 @@ void FCIQMC::adjust_shift(double pre_nWalker, size_t pre_iter){
 
 void FCIQMC::spawn_generative(walker_map& walkers,walker_map& new_walkers) {
     for (auto& det_coef : walkers){
-        const BitsetDeterminant& det = det_coef.first;
+        const DynamicBitsetDeterminant& det = det_coef.first;
 //        det.print();
         double coef = det_coef.second;
         size_t nid = std::round(std::fabs(coef));
@@ -412,7 +412,7 @@ void FCIQMC::spawn_generative(walker_map& walkers,walker_map& new_walkers) {
         switch (spawn_type_) {
         case random:
             for (size_t detW = 0; detW < nid; ++detW){
-                BitsetDeterminant new_det(det);
+                DynamicBitsetDeterminant new_det(det);
                 bool successFlag = false;
 //                do {
                     size_t rand_ext = rand_int() % sumgen_;
@@ -470,7 +470,7 @@ void FCIQMC::spawn_generative(walker_map& walkers,walker_map& new_walkers) {
 void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 {
     for (auto& det_coef : walkers){
-        const BitsetDeterminant& det = det_coef.first;
+        const DynamicBitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
         size_t nid = std::round(std::fabs(coef));
         if (use_initiator_ && nid < std::round(initiator_na_))
@@ -500,7 +500,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
             timer_off("FCIQMC:Compute_excitations");
 
             for (size_t detW = 0; detW < nid; ++detW){
-                BitsetDeterminant new_det(det);
+                DynamicBitsetDeterminant new_det(det);
                 // Select a random number within the range of allowed determinants
     //            singleWalkerSpawn(new_det,det,pgen,sumgen);
 
@@ -566,7 +566,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
             sumgen = sumSingle+sumDouble;
             timer_off("FCIQMC:Compute_excitations");
             for (size_t gen = 0; gen < sumgen; ++gen){
-                BitsetDeterminant new_det(det);
+                DynamicBitsetDeterminant new_det(det);
                 if (gen<sumDouble)
                     detDoubleExcitation(new_det, doubleExcitations[gen]);
                 else
@@ -596,7 +596,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
             timer_off("FCIQMC:Compute_excitations");
 
             for (size_t detW = 0; detW < nid; ++detW){
-                BitsetDeterminant new_det(det);
+                DynamicBitsetDeterminant new_det(det);
                 size_t rand_ext = rand_int() % sumgen;
                 detExcitation(new_det, rand_ext, excitationDivides, excitationType, obtCount);
                 if (new_det == reference_) {
@@ -649,7 +649,7 @@ void FCIQMC::spawn(walker_map& walkers,walker_map& new_walkers)
 
 }
 
-void FCIQMC::singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDeterminant& det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen)
+void FCIQMC::singleWalkerSpawn(DynamicBitsetDeterminant & new_det, const DynamicBitsetDeterminant& det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen)
 {
 
     size_t nsa,nsb,ndaa,ndab,ndbb;
@@ -715,7 +715,7 @@ void FCIQMC::singleWalkerSpawn(BitsetDeterminant & new_det, const BitsetDetermin
 void FCIQMC::death_clone(walker_map& walkers, double shift)
 {
     for (auto& det_coef : walkers){
-        const BitsetDeterminant& det = det_coef.first;
+        const DynamicBitsetDeterminant& det = det_coef.first;
         double coef = det_coef.second;
         double HII = det.energy();
         double pDeathClone = time_step_ * (HII-Ehf_-shift);
@@ -745,7 +745,7 @@ void FCIQMC::death_clone(walker_map& walkers, double shift)
 
 }
 
-void FCIQMC::detClone(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone){
+void FCIQMC::detClone(walker_map& walkers, const DynamicBitsetDeterminant& det, double coef, double pDeathClone){
     int pDC_trunc = std::trunc(pDeathClone);
     size_t nid = std::round(std::fabs(coef));
     int cloneCount = 0;
@@ -771,7 +771,7 @@ void FCIQMC::detClone(walker_map& walkers, const BitsetDeterminant& det, double 
 
 }
 
-void FCIQMC::detDeath(walker_map& walkers, const BitsetDeterminant& det, double coef, double pDeathClone){
+void FCIQMC::detDeath(walker_map& walkers, const DynamicBitsetDeterminant& det, double coef, double pDeathClone){
     int pDC_trunc = std::trunc(pDeathClone);
     size_t nid = std::round(std::fabs(coef));
     int deathCount = 0;
@@ -799,9 +799,9 @@ void FCIQMC::detDeath(walker_map& walkers, const BitsetDeterminant& det, double 
 
 // Step #3.  Merge
 void FCIQMC::merge(walker_map& walkers,walker_map& new_walkers){
-    std::vector<BitsetDeterminant> removeDets;
+    std::vector<DynamicBitsetDeterminant> removeDets;
     for (auto& det_coef : walkers){
-        const BitsetDeterminant& det = det_coef.first;
+        const DynamicBitsetDeterminant& det = det_coef.first;
         if (new_walkers.count(det)){
             walkers[det] += new_walkers[det];
             new_walkers.erase(det);
@@ -811,7 +811,7 @@ void FCIQMC::merge(walker_map& walkers,walker_map& new_walkers){
         }
     }
     for (auto& det_coef : new_walkers){
-        const BitsetDeterminant& det = det_coef.first;
+        const DynamicBitsetDeterminant& det = det_coef.first;
         walkers[det] = det_coef.second;
         if (int(std::round(walkers[det]))==0){
             removeDets.push_back(det);
@@ -828,7 +828,7 @@ void FCIQMC::annihilate(walker_map& walkers,walker_map& new_walkers)
 
 }
 
-std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen_C1(const BitsetDeterminant &det)
+std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen_C1(const DynamicBitsetDeterminant &det)
 {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
@@ -848,7 +848,7 @@ std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen_C1(const Bit
     return std::make_tuple(nsa,nsb,ndaa,ndab,ndbb);
 }
 
-std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen(const BitsetDeterminant &det)
+std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen(const DynamicBitsetDeterminant &det)
 {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
@@ -934,13 +934,13 @@ std::tuple<size_t,size_t,size_t,size_t,size_t> FCIQMC::compute_pgen(const Bitset
     return std::make_tuple(nsa,nsb,ndaa,ndab,ndbb);
 }
 
-void FCIQMC::compute_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
+void FCIQMC::compute_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
 {
     compute_single_excitations(det, singleExcitations);
     compute_double_excitations(det, doubleExcitations);
 }
 
-void FCIQMC::compute_single_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations)
+void FCIQMC::compute_single_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations)
 {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
@@ -981,7 +981,7 @@ void FCIQMC::compute_single_excitations(const BitsetDeterminant &det, std::vecto
     }
 }
 
-void FCIQMC::compute_double_excitations(const BitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
+void FCIQMC::compute_double_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations)
 {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
@@ -1055,7 +1055,7 @@ void FCIQMC::compute_double_excitations(const BitsetDeterminant &det, std::vecto
  * @return
  * total number of excitations
  */
-size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
+size_t FCIQMC::compute_irrep_divided_excitations(const DynamicBitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
     const std::vector<int> aocc = det.get_alfa_occ();
     const std::vector<int> bocc = det.get_beta_occ();
     const std::vector<int> avir = det.get_alfa_vir();
@@ -1146,7 +1146,7 @@ size_t FCIQMC::compute_irrep_divided_excitations(const BitsetDeterminant &det, s
     return totalExcitation;
 }
 
-bool FCIQMC::detSingleRandomExcitation(BitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha) {
+bool FCIQMC::detSingleRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha) {
     int o=0, v=0;
     int randO=0, randV=0;
 //    do {
@@ -1170,7 +1170,7 @@ bool FCIQMC::detSingleRandomExcitation(BitsetDeterminant &new_det, const std::ve
     return false;
 }
 
-bool FCIQMC::detDoubleSoloSpinRandomExcitation(BitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha) {
+bool FCIQMC::detDoubleSoloSpinRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha) {
     int o1=0,o2=0, v1=0, v2=0;
     int randO1=0, randO2=0, randV1=0, randV2=0;
 //    int count = 0;
@@ -1205,7 +1205,7 @@ bool FCIQMC::detDoubleSoloSpinRandomExcitation(BitsetDeterminant &new_det, const
     return false;
 }
 
-bool FCIQMC::detDoubleMixSpinRandomExcitation(BitsetDeterminant &new_det, const std::vector<int> &aocc, const std::vector<int> &bocc, const std::vector<int> &avir, const std::vector<int> &bvir) {
+bool FCIQMC::detDoubleMixSpinRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &aocc, const std::vector<int> &bocc, const std::vector<int> &avir, const std::vector<int> &bvir) {
     int o1=0,o2=0, v1=0, v2=0;
     int randO1=0, randO2=0, randV1=0, randV2=0;
 //    int count = 0;
@@ -1234,7 +1234,7 @@ bool FCIQMC::detDoubleMixSpinRandomExcitation(BitsetDeterminant &new_det, const 
     return false;
 }
 
-void FCIQMC::detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
+void FCIQMC::detExcitation(DynamicBitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount) {
     size_t begin=0, end=excitationDivides.size()-1;
     size_t middle = (begin+end)/2;
     rand_ext++;
@@ -1778,7 +1778,7 @@ void FCIQMC::detExcitation(BitsetDeterminant &new_det, size_t rand_ext,  std::ve
 //    outfile->Printf("Error in spawning excitation:end of choice");
 }
 
-void FCIQMC::detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext){
+void FCIQMC::detSingleExcitation(DynamicBitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext){
     size_t ii,aa;
     std::tie (ii,aa) = rand_ext;
     if (ii<ncmo_){
@@ -1791,7 +1791,7 @@ void FCIQMC::detSingleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,s
 
 }
 
-void FCIQMC::detDoubleExcitation(BitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext){
+void FCIQMC::detDoubleExcitation(DynamicBitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext){
     size_t ii,aa,jj,bb;
     std::tie (ii,aa,jj,bb) = rand_ext;
     if (ii>=ncmo_){
@@ -1825,12 +1825,12 @@ double FCIQMC::count_walkers(walker_map& walkers) {
     return countWalkers;
 }
 
-double FCIQMC::compute_proj_energy(BitsetDeterminant& ref, walker_map& walkers) {
+double FCIQMC::compute_proj_energy(DynamicBitsetDeterminant& ref, walker_map& walkers) {
     timer_on("FCIQMC:Calc_Eproj");
     double Cref = walkers[ref];
     Eproj_ = nuclear_repulsion_energy_;
     for (auto walker:walkers){
-        const BitsetDeterminant& det = walker.first;
+        const DynamicBitsetDeterminant& det = walker.first;
         double Cwalker = walker.second;
         Eproj_ += ref.slater_rules(det)*Cwalker/Cref;
     }
@@ -1843,11 +1843,11 @@ double FCIQMC::compute_var_energy(walker_map& walkers) {
     Evar_ = 0;
     double mod2 = 0.0;
     for (auto walker:walkers){
-        const BitsetDeterminant& det = walker.first;
+        const DynamicBitsetDeterminant& det = walker.first;
         double Cwalker = walker.second;
         mod2 += Cwalker*Cwalker;
         for (auto walker2:walkers){
-            const BitsetDeterminant& det2 = walker2.first;
+            const DynamicBitsetDeterminant& det2 = walker2.first;
             double Cwalker2 = walker2.second;
             Evar_ += det.slater_rules(det2)*Cwalker*Cwalker2;
         }
