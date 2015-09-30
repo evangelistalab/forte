@@ -945,7 +945,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eFmU"] * T2_["mVeF"];
         E += temp["vu"] * Gamma1_["uv"];
 
-        outfile->Printf("\n %8.8f", E);
         E += temp["VU"] * Gamma1_["UV"];
         temp.zero();
         temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
@@ -954,9 +953,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eVnM"] * T2_["nMeU"];
         E += temp["vu"] * Eta1_["uv"];
         E += temp["VU"] * Eta1_["UV"];
-
-
-        outfile->Printf("\n %8.8f", E);
     }
     else
     {
