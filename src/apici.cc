@@ -1030,6 +1030,11 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
 {
     bool do_singles = std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold;
     bool do_doubles = std::fabs(prescreening_tollerance_factor_ * old_max_two_HJI_ * CI) >= spawning_threshold;
+
+    // Diagonal contributions
+    double det_energy = detI.energy();
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
+
     if (do_singles or do_doubles){
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
@@ -1058,10 +1063,6 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
 
         double my_new_max_one_HJI = 0.0;
         double my_new_max_two_HJI = 0.0;
-
-        double det_energy = detI.energy();
-        // Diagonal contributions
-        new_space_C[detI] += tau * (det_energy - E0) * CI;
 
         if (do_singles){
             Determinant detJ(detI);
@@ -1478,6 +1479,10 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
     bool do_singles = (max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles = (max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold);
 
+    // Diagonal contributions
+    double det_energy = detI.energy();
+    new_space_C[detI] += tau * (det_energy - E0) * CI;
+
     if (do_singles or do_doubles){
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
@@ -1488,10 +1493,6 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
         int nobeta  = bocc.size();
         int nvalpha = avir.size();
         int nvbeta  = bvir.size();
-
-        // Diagonal contributions
-        double det_energy = detI.energy();
-        new_space_C[detI] += tau * (det_energy - E0) * CI;
 
         if (do_singles){
             // Generate alpha excitations
