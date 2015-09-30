@@ -258,6 +258,9 @@ private:
 	/// Compute S^2 matrix and diagonalize it
 	void spin_transform(std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix cI, int nroot);
 
+	/// Perform Loewdin spin projection
+	void lowdin_spin_project( std::vector< DynamicBitsetDeterminant > det_space, SharedMatrix cI, int nroot);
+
 	/// Check for spin complete determinants
 	void check_spin_completeness(std::vector<DynamicBitsetDeterminant>& det_space);
 
