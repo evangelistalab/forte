@@ -242,8 +242,6 @@ public:
     static double FastSlaterSign(const boost::dynamic_bitset<>& I,int n);
 };
 
-typedef boost::shared_ptr<DynamicBitsetDeterminant> SharedDynamicBitsetDeterminant;
-
 }} // End Namespaces
 
 struct DynamicBitsetDeterminantHash
