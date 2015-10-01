@@ -108,7 +108,7 @@ void CASSCF::compute_casscf()
             if (!expS->rowspi()[h]) continue;
             double** Sp = expS->pointer(h);
             for (size_t i=0; i<(expS->colspi()[h]); i++){
-                Sp[i][i] += 1.0;
+                Sp[i][i] = 1.0;
             }
         }
 
@@ -293,7 +293,7 @@ void CASSCF::form_fock_active()
     ambit::Tensor gamma1a = cas_ref_.L1a();
     ambit::Tensor gamma1b = cas_ref_.L1b();
 
-    gamma_no_spin("i,j") = gamma1a("i,j") + gamma1b("i,j");
+    gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j"));
 
     SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
     gamma_no_spin.iterate([&](const std::vector<size_t>& i,double& value){
@@ -412,7 +412,7 @@ void CASSCF::orbital_gradient()
     L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
 
     L2ab("pqrs") += L1a("pr") * L1b("qs");
-    L2ab("pqrs") += L1b("pr") * L1a("qs");
+    //L2ab("pqrs") += L1b("pr") * L1a("qs");
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
@@ -425,6 +425,7 @@ void CASSCF::orbital_gradient()
     gamma2("u,v,x,y") +=  L2ab("u,v,x,y");
     gamma2("u,v,x,y") +=  L2ab("x,y,u,v");
     gamma2("u,v,x,y") +=  L2bb("u,v,x,y");
+    gamma2.scale(0.25);
 
     //gamma2_("u,v,x,y") = gamma2_("x,y,u,v");
     //gamma2_("u,v,x,y") = gamma2_("")
