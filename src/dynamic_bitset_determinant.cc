@@ -515,7 +515,7 @@ double DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) cons
 
     double Ms = 0.5 * static_cast<double>(na - nb);
 
-    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta + Npairs
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
     }
@@ -536,6 +536,50 @@ double DynamicBitsetDeterminant::spin2(const DynamicBitsetDeterminant& rhs) cons
         }
     }
     return(matrix_element);
+}
+
+std::vector<std::pair<DynamicBitsetDeterminant,double>> DynamicBitsetDeterminant::spin_plus() const
+{
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> res;
+    for(int i = 0; i < nmo_; ++i){
+        if((not alfa_bits_[i]) and beta_bits_[i]){
+            double sign = SlaterSign(alfa_bits_,i) * SlaterSign(beta_bits_,i);
+            DynamicBitsetDeterminant new_det(*this);
+            new_det.set_alfa_bit(i,true);
+            new_det.set_beta_bit(i,false);
+            res.push_back(std::make_pair(new_det,sign));
+        }
+    }
+    return res;
+}
+
+std::vector<std::pair<DynamicBitsetDeterminant,double>> DynamicBitsetDeterminant::spin_minus() const
+{
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> res;
+    for(int i = 0; i < nmo_; ++i){
+        if(alfa_bits_[i] and (not beta_bits_[i])){
+            double sign = SlaterSign(alfa_bits_,i) * SlaterSign(beta_bits_,i);
+            DynamicBitsetDeterminant new_det(*this);
+            new_det.set_alfa_bit(i,false);
+            new_det.set_beta_bit(i,true);
+            res.push_back(std::make_pair(new_det,sign));
+        }
+    }
+    return res;
+}
+
+double DynamicBitsetDeterminant::spin_z() const
+{
+    return 0.5 * static_cast<double>(alfa_bits_.count() - beta_bits_.count());
+}
+
+double DynamicBitsetDeterminant::spin2_slow(const DynamicBitsetDeterminant& rhs) const
+{
+    double s2 = 0.0;
+    if (rhs == *this){
+        double sz = spin_z();
+        s2 += sz * (sz + 1.0);
+    }
 }
 
 double DynamicBitsetDeterminant::slater_sign_alpha(int n) const
