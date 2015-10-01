@@ -98,7 +98,7 @@ private:
     double nuclear_repulsion_energy_;
     /// The reference determinant
     Determinant reference_determinant_;
-    std::vector<det_hash> solutions_;
+    std::vector<det_hash<>> solutions_;
     /// The information of mo space
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// (pq|pq) matrix for prescreening
@@ -187,10 +187,10 @@ private:
     void print_wfn(det_vec &space, std::vector<double> &C);
 
     /// Save a wave function
-    void save_wfn(det_vec &space, std::vector<double> &C,std::vector<det_hash>& solutions);
+    void save_wfn(det_vec &space, std::vector<double> &C,std::vector<det_hash<>>& solutions);
 
     /// Orthogonalize the wave function to previous solutions
-    void orthogonalize(det_vec& space,std::vector<double>& C,std::vector<det_hash>& solutions);
+    void orthogonalize(det_vec& space,std::vector<double>& C,std::vector<det_hash<>>& solutions);
 
     /// Initial wave function guess
     double initial_guess(det_vec& dets,std::vector<double>& C);
@@ -221,13 +221,13 @@ private:
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double tau, double spawning_threshold);
 
     /// Apply tau H to a set of determinants
-    void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash& dets_C_map, double S);
+    void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
-    std::pair<double, double> apply_tau_H_det_prescreening(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash& new_space_C, double E0);
+    std::pair<double, double> apply_tau_H_det_prescreening(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash<>& new_space_C, double E0);
     /// Apply tau H to a determinant using dynamic screening
-    void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, det_hash& new_space_C, double E0,std::pair<double,double>& max_coupling);
+    void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, det_hash<>& new_space_C, double E0,std::pair<double,double>& max_coupling);
     /// Apply tau H to a determinant using Schwarz screening
-    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, det_hash& new_space_C, double E0);
+    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, det_hash<>& new_space_C, double E0);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
@@ -245,7 +245,7 @@ private:
     double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
 
     /// Form the product H c
-    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash& det_C,std::pair<double,double>& max_coupling);
+    double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash<>& det_C,std::pair<double,double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
 };

@@ -297,6 +297,8 @@ protected:
     double int_mem_;
     /// The Cmatrix in a symmetry aware basis
     SharedMatrix Ca_;
+    /// Control printing of timings
+    int print_;
 };
 
 /**
