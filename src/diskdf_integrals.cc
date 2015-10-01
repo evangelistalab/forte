@@ -598,7 +598,6 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
     size_t memory_input = Process::environment.get_memory();
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
-    //Hard wires num_block for testing
 
     int block_size = nthree_ / num_block;
     if(block_size < 1)

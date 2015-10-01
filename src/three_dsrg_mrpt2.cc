@@ -928,12 +928,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    
-    double memory_cost = core_ * virtual_ * virtual_ * active_ * 8.0;
-    bool exceed_memory = false;
-    if(memory_cost > Process::environment.get_memory()){exceed_memory = true;}
-
-
     //TODO: Implement these without storing V and/or T2 by using blocking
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
     if(integral_type_!=DiskDF)
