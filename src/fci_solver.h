@@ -56,12 +56,31 @@ public:
      * @param multiplicity The spin multiplicity (2S + 1).  1 = singlet, 2 = doublet, ...
      * @param symmetry The irrep of the FCI wave function
      * @param ints An integral object
+     * @param mo_space_info -> MOSpaceInfo
      * @param initial_guess_per_root get from options object
+     * @param print Control printing of FCISolver
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
               size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t
-              initial_guess_per_root, int print);
+              initial_guess_per_root, int print, Options& options);
+    /**
+     * @brief FCISolver
+     * @param active_dim The dimension of the active orbital space
+     * @param core_mo A Vector of doubly occupied orbitals
+     * @param active_mo A vector of active orbitals
+     * @param na Number of alpha electrons
+     * @param nb Number of beta electrons
+     * @param multiplicity The spin multiplicity (2S + 1)
+     * @param symmetry The Irrep of the FCI wave function
+     * @param ints An integral object
+     * @param mo_space_info -> mo_space_info object
+     * @param options object
+     */
+    FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+              std::vector<size_t> active_mo, size_t na, size_t nb,
+              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              Options& options);
 
     ~FCISolver() {}
 
@@ -130,6 +149,8 @@ private:
     std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > >
     initial_guess(FCIWfn& diag,size_t n,size_t multiplicity,
                   std::shared_ptr<FCIIntegrals> fci_ints);
+    /// The options object
+    Options& options_;
 };
 
 

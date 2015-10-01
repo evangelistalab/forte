@@ -399,17 +399,33 @@ double THREE_DSRG_MRPT2::compute_energy()
         if(integral_type_!=DiskDF){renormalize_V();}
         if(integral_type_==DiskDF)
         {
+            size_t memory_cost = nmo_ * nmo_ * nmo_ * active_ * 16;
+            bool exceed_memory = memory_cost < Process::environment.get_memory();
+
             std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
             std::string str = "Computing T2";
             outfile->Printf("\n    %-36s ...", str.c_str());
             Timer T2timer;
-            T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,2));
+
+            // If exceed memory, use diskbased algorithm
+            //for all terms with <= 1 active idex
+            //If not, just compute V in the beginning
+
+            if(!exceed_memory)
+            {
+                T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,2));
+            }
+            else { T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_, 1));}
             outfile->Printf("...Done. Timing %15.6f s", T2timer.get());
 
             std::string strV = "Computing V and Renormalizing";
             outfile->Printf("\n    %-36s ...", strV.c_str());
             Timer Vtimer;
-            V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
+            if(!exceed_memory)
+            {
+                V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
+            }
+            else {V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 1));}
             outfile->Printf("...Done. Timing %15.6f s", Vtimer.get());
         }
         compute_t1();
@@ -928,15 +944,14 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
     outfile->Printf("\n    %-36s ...", str.c_str());
 
-    
-    double memory_cost = core_ * virtual_ * virtual_ * active_ * 8.0;
-    bool exceed_memory = false;
-    if(memory_cost > Process::environment.get_memory()){exceed_memory = true;}
-
-
     //TODO: Implement these without storing V and/or T2 by using blocking
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
-    if(integral_type_!=DiskDF)
+
+    ///Is it possible to store these terms in core anyway?
+    size_t memory_cost = nmo_ * nmo_ * nmo_ * active_ * 16;
+    bool exceed_memory = memory_cost < Process::environment.get_memory();
+
+    if( (integral_type_!=DiskDF) | exceed_memory)
     {
         temp.zero();
         temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
@@ -944,7 +959,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
         temp["VU"] += V_["eFmU"] * T2_["mVeF"];
         E += temp["vu"] * Gamma1_["uv"];
-
         E += temp["VU"] * Gamma1_["UV"];
         temp.zero();
         temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];

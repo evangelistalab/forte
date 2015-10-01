@@ -16,6 +16,7 @@
 #include "adaptive-ci.h"
 #include "sparse_ci_solver.h"
 #include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 #include "fci_vector.h"
 
 using namespace std;
@@ -45,11 +46,16 @@ inline double clamp(double x, double a, double b)
     return x < a ? a : (x > b ? b : x);
 }
 
-// Hash for BSD 
-std::size_t BSD_hash_value(const DynamicBitsetDeterminant& input)
-{
-    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
+bool pairComp(const std::pair<double, STLBitsetDeterminant> E1, const std::pair<double, STLBitsetDeterminant> E2){
+	return E1.first < E2.first;
 }
+
+
+// Hash for BSD 
+//std::size_t BSD_hash_value(const STLBitsetDeterminant& input)
+//{
+//    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
+//}
 
 /**
  * This is a smooth step function that is
@@ -87,7 +93,7 @@ std::shared_ptr<FCIIntegrals> AdaptiveCI::fci_ints_ = 0;
 void AdaptiveCI::startup()
 {
 	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    DynamicBitsetDeterminant::set_ints(fci_ints_);
+    STLBitsetDeterminant::set_ints(fci_ints_);
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();
 	//Get wfn info
@@ -143,7 +149,7 @@ void AdaptiveCI::startup()
 
 
     // Build the reference determinant and compute its energy
-    reference_determinant_ = DynamicBitsetDeterminant(get_occupation());
+    reference_determinant_ = STLBitsetDeterminant(get_occupation());
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
 	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
@@ -457,14 +463,14 @@ double AdaptiveCI::compute_energy()
     // Use the reference determinant as a starting point
     std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
     std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
-    DynamicBitsetDeterminant bs_det(alfa_bits,beta_bits);
+    STLBitsetDeterminant bs_det(alfa_bits,beta_bits);
 	P_space_.push_back(bs_det);
     P_space_map_[bs_det] = 1;
 	
 	det_history_[bs_det].push_back(std::make_pair(0, "I"));
 	
 //	if( alfa_bits != beta_bits){
-//		DynamicBitsetDeterminant ref2 = bs_det;
+//		STLBitsetDeterminant ref2 = bs_det;
 //		ref2.spin_flip();
 //		P_space_.push_back(ref2);
 //	}
@@ -600,7 +606,7 @@ double AdaptiveCI::compute_energy()
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
 
-	DynamicBitsetDeterminant::check_uniqueness(P_space_);
+	//STLBitsetDeterminant::check_uniqueness(P_space_);
 
 	// Ensure the solutions are spin-pure
 	if( spin_projection == 2 or spin_projection == 3){
@@ -695,10 +701,10 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     boost::timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
-    std::map<DynamicBitsetDeterminant,std::vector<double> > V_hash;
+    det_hash<std::vector<double> > V_hash;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-        DynamicBitsetDeterminant& det = P_space_[I];
+        STLBitsetDeterminant& det = P_space_[I];
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
@@ -722,7 +728,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	std::vector<double> e2(nroot_,0.0);
     std::vector<double> ept2(nroot_,0.0);
 	double criteria;
-    std::vector<std::pair<double,DynamicBitsetDeterminant>> sorted_dets;
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
 
 	// Define coupling out of loop, assume perturb_select_ = false	
 	std::function<double (double A, double B, double C)> C1_eq = [](double A, double B, double C)->double 
@@ -772,11 +778,11 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     } // end loop over determinants 
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
+        std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
 
         double sum = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
-            const DynamicBitsetDeterminant& det = sorted_dets[I].second;
+            const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
@@ -888,16 +894,16 @@ double AdaptiveCI::root_select( int nroot, std::vector<double> C1, std::vector<d
 void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMatrix evecs)
 {
     // Find the SD space out of the reference
-    std::vector<DynamicBitsetDeterminant> sd_dets_vec;
-    std::map<DynamicBitsetDeterminant,int> new_dets_map;
+    std::vector<STLBitsetDeterminant> sd_dets_vec;
+	det_hash<int> new_dets_map;
 
     boost::timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
-    std::map<DynamicBitsetDeterminant,double> V_map;
+    det_hash<> V_map;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-        DynamicBitsetDeterminant& det = P_space_[I];
+        STLBitsetDeterminant& det = P_space_[I];
         generate_excited_determinants_single_root(nroot,I,evecs,det,V_map);
     }
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_map.size());
@@ -915,12 +921,11 @@ void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMat
 
     boost::timer t_ms_screen;
 
-    typedef std::map<DynamicBitsetDeterminant,std::vector<double> >::iterator bsmap_it;
     std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
     std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
     std::vector<double> ept2(nroot_,0.0);
 
-    std::vector<std::pair<double,DynamicBitsetDeterminant>> sorted_dets;
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
 
     // Check the coupling between the reference and the SD space
     for (const auto& det_V : V_map){
@@ -954,11 +959,11 @@ void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMat
 
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end());
+        std::sort(sorted_dets.begin(),sorted_dets.end(), pairComp);
 
         double sum = 0.0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
-            const DynamicBitsetDeterminant& det = sorted_dets[I].second;
+            const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
@@ -981,7 +986,7 @@ void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMat
 }
 
 
-void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,SharedMatrix evecs,DynamicBitsetDeterminant& det,std::map<DynamicBitsetDeterminant,double>& V_hash)
+void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
@@ -1000,7 +1005,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
                 double HIJ = det.slater_rules(new_det);
@@ -1014,7 +1019,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
                 double HIJ = det.slater_rules(new_det);
@@ -1033,7 +1038,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
@@ -1041,12 +1046,8 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
 
                         double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
 
-                        // grap the alpha bits of both determinants
-                        const boost::dynamic_bitset<>& Ia = det.alfa_bits();
-                        const boost::dynamic_bitset<>& Ja = new_det.alfa_bits();
-
                         // compute the sign of the matrix element
-                        HIJ *= DynamicBitsetDeterminant::SlaterSign(Ia,ii) * DynamicBitsetDeterminant::SlaterSign(Ia,jj) * DynamicBitsetDeterminant::SlaterSign(Ja,aa) * DynamicBitsetDeterminant::SlaterSign(Ja,bb);
+                        HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
@@ -1064,7 +1065,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
@@ -1072,14 +1073,8 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
 
                         double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
 
-                        // grap the alpha bits of both determinants
-                        const boost::dynamic_bitset<>& Ia = det.alfa_bits();
-                        const boost::dynamic_bitset<>& Ib = det.beta_bits();
-                        const boost::dynamic_bitset<>& Ja = new_det.alfa_bits();
-                        const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
-
                         // compute the sign of the matrix element
-                        HIJ *= DynamicBitsetDeterminant::SlaterSign(Ia,ii) * DynamicBitsetDeterminant::SlaterSign(Ib,jj) * DynamicBitsetDeterminant::SlaterSign(Ja,aa) * DynamicBitsetDeterminant::SlaterSign(Jb,bb);
+                        HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
@@ -1096,7 +1091,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
                         new_det.set_beta_bit(aa,true);
@@ -1105,11 +1100,9 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
                         double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
 
                         // grap the alpha bits of both determinants
-                        const boost::dynamic_bitset<>& Ib = det.beta_bits();
-                        const boost::dynamic_bitset<>& Jb = new_det.beta_bits();
 
                         // compute the sign of the matrix element
-                        HIJ *= DynamicBitsetDeterminant::SlaterSign(Ib,ii) * DynamicBitsetDeterminant::SlaterSign(Ib,jj) * DynamicBitsetDeterminant::SlaterSign(Jb,aa) * DynamicBitsetDeterminant::SlaterSign(Jb,bb);
+                        HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
 
                         V_hash[new_det] += HIJ * evecs->get(I,n);
                     }
@@ -1119,7 +1112,7 @@ void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,Share
     }
 }
 
-void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,DynamicBitsetDeterminant& det,std::map<DynamicBitsetDeterminant,std::vector<double>>& V_hash)
+void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
@@ -1137,7 +1130,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
@@ -1158,7 +1151,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
@@ -1184,7 +1177,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
@@ -1192,12 +1185,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
 							double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
 
-							const DynamicBitsetDeterminant::bit_t& Ia = det.alfa_bits();
-							const DynamicBitsetDeterminant::bit_t& Ib = det.alfa_bits();
-							const DynamicBitsetDeterminant::bit_t& Ja = new_det.alfa_bits();
-							const DynamicBitsetDeterminant::bit_t& Jb = new_det.alfa_bits();
-
-							HIJ *= DynamicBitsetDeterminant::SlaterSign(Ia, ii) * DynamicBitsetDeterminant::SlaterSign(Ib, jj) * DynamicBitsetDeterminant::SlaterSign(Ja,aa) * DynamicBitsetDeterminant::SlaterSign(Jb, bb);
+							HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
 
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
@@ -1221,7 +1209,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
@@ -1229,12 +1217,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
 							double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
 
-							const DynamicBitsetDeterminant::bit_t& Ia = det.alfa_bits();
-							const DynamicBitsetDeterminant::bit_t& Ib = det.beta_bits();
-							const DynamicBitsetDeterminant::bit_t& Ja = new_det.alfa_bits();
-							const DynamicBitsetDeterminant::bit_t& Jb = new_det.beta_bits();
-
-							HIJ *= DynamicBitsetDeterminant::SlaterSign(Ia, ii) * DynamicBitsetDeterminant::SlaterSign(Ib, jj) * DynamicBitsetDeterminant::SlaterSign(Ja,aa) * DynamicBitsetDeterminant::SlaterSign(Jb, bb);
+							HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
 
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
@@ -1257,7 +1240,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        DynamicBitsetDeterminant new_det(det);
+                        STLBitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(jj,false);
                         new_det.set_beta_bit(aa,true);
@@ -1265,12 +1248,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                         if(P_space_map_.find(new_det) == P_space_map_.end()){
                             double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
 
-							const DynamicBitsetDeterminant::bit_t& Ia = det.beta_bits();
-							const DynamicBitsetDeterminant::bit_t& Ib = det.beta_bits();
-							const DynamicBitsetDeterminant::bit_t& Ja = new_det.beta_bits();
-							const DynamicBitsetDeterminant::bit_t& Jb = new_det.beta_bits();
-
-							HIJ *= DynamicBitsetDeterminant::SlaterSign(Ia, ii) * DynamicBitsetDeterminant::SlaterSign(Ib, jj) * DynamicBitsetDeterminant::SlaterSign(Ja,aa) * DynamicBitsetDeterminant::SlaterSign(Jb, bb);
+							HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
                             if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
                             }
@@ -1285,7 +1263,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
     }
 }
 
-void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,DynamicBitsetDeterminant& det,std::map<DynamicBitsetDeterminant,std::vector<double>>& V_hash)
+void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
@@ -1303,7 +1281,7 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
@@ -1324,7 +1302,7 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
-                DynamicBitsetDeterminant new_det(det);
+                STLBitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
@@ -1350,7 +1328,7 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
                 int aa = avir[a];
                 if (not det.get_beta_bit(aa)){
                     int bb = aa;
-                    DynamicBitsetDeterminant new_det(det);
+                    STLBitsetDeterminant new_det(det);
                     new_det.set_alfa_bit(ii,false);
                     new_det.set_beta_bit(jj,false);
                     new_det.set_alfa_bit(aa,true);
@@ -1416,8 +1394,8 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
     //        }
 }
 
-void AdaptiveCI::prune_q_space(std::vector<DynamicBitsetDeterminant>& large_space,std::vector<DynamicBitsetDeterminant>& pruned_space,
-                               std::map<DynamicBitsetDeterminant,int>& pruned_space_map,SharedMatrix evecs,int nroot)
+void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,std::vector<STLBitsetDeterminant>& pruned_space,
+                               det_hash<int>& pruned_space_map,SharedMatrix evecs,int nroot)
 {
     // Select the new reference space using the sorted CI coefficients
     pruned_space.clear();
@@ -1469,7 +1447,7 @@ void AdaptiveCI::prune_q_space(std::vector<DynamicBitsetDeterminant>& large_spac
 }
 
 
-void AdaptiveCI::smooth_hamiltonian(std::vector<DynamicBitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
+void AdaptiveCI::smooth_hamiltonian(std::vector<STLBitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
 {
     size_t ndets = space.size();
 
@@ -1530,7 +1508,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 	}
 }
 
-pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<DynamicBitsetDeterminant> space,
+pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant> space,
 																					  SharedMatrix evecs,
 																					  int nroot)
 {
@@ -1644,7 +1622,7 @@ int AdaptiveCI::direct_sym_product( int sym1, int sym2 )
 
 }
 
-void AdaptiveCI::wfn_analyzer(std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
+void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
 	for(int n = 0; n < nroot; ++n){
 		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
@@ -1656,23 +1634,18 @@ void AdaptiveCI::wfn_analyzer(std::vector<DynamicBitsetDeterminant> det_space, S
 		std::sort(det_weight.begin(), det_weight.end());
 		std::reverse(det_weight.begin(), det_weight.end());
 	
-		DynamicBitsetDeterminant ref;
-		ref.copy( det_space[det_weight[0].second] );
+		STLBitsetDeterminant ref;
+		ref = det_space[det_weight[0].second];
 
-		auto alfa_bits = ref.alfa_bits();
-		auto beta_bits = ref.beta_bits();
+		auto ref_bits = ref.bits();
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
-			auto ex_alfa_bits = det_space[det_weight[I].second].alfa_bits();
-			auto ex_beta_bits = det_space[det_weight[I].second].beta_bits();
+			auto ex_bits = det_space[det_weight[I].second].bits();
 
 			//Compute number of differences in both alpha and beta strings wrt ref
-			for(size_t a = 0, max = alfa_bits.size(); a < max; ++a){
-				if(alfa_bits[a] != ex_alfa_bits[a]){
-					++ndiff;
-				}
-				if(beta_bits[a] != ex_beta_bits[a]){
+			for(size_t a = 0; a < nact_; ++a){
+				if(ref_bits[a] != ex_bits[a]){
 					++ndiff;
 				}
 			}
@@ -1741,7 +1714,7 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 	
 }
 
-void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<DynamicBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
+void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
 	// Make a vector of indices for core and active orbitals
 	
@@ -1781,9 +1754,9 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<Dynam
 	outfile->Printf("\n\n Trace of 1-RDM: %6.3f\n", trace); 
 }
 
-double AdaptiveCI::OneOP(const DynamicBitsetDeterminant &J, DynamicBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q)
+double AdaptiveCI::OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q)
 {
-	DynamicBitsetDeterminant tmp = J;
+	STLBitsetDeterminant tmp = J;
 
 	double sign = 1.0;
 
@@ -1798,7 +1771,7 @@ double AdaptiveCI::OneOP(const DynamicBitsetDeterminant &J, DynamicBitsetDetermi
 		if( !tmp.get_alfa_bit(p) ){
 			sign *= CheckSign(tmp.get_alfa_occ(),p);
 			tmp.set_alfa_bit(p,1);
-			Jnew.copy(tmp);
+			Jnew = tmp;
 			return sign;
 		}else{
 			return 0.0;
@@ -1814,7 +1787,7 @@ double AdaptiveCI::OneOP(const DynamicBitsetDeterminant &J, DynamicBitsetDetermi
 		if( !tmp.get_beta_bit(p) ){
 			sign *= CheckSign(tmp.get_beta_occ(),p);
 			tmp.set_beta_bit(p,1);
-			Jnew.copy(tmp);
+			Jnew = tmp;
 			return sign;
 		 }else{
 			return 0.0;
@@ -1835,7 +1808,7 @@ double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
 
 }
 
-void AdaptiveCI::print_wfn(std::vector<DynamicBitsetDeterminant> space,SharedMatrix evecs,int nroot)
+void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix evecs,int nroot)
 {
 	std::string state_label;
 	std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet","septet","octet","nonet", "decatet"});
@@ -1874,8 +1847,9 @@ void AdaptiveCI::print_wfn(std::vector<DynamicBitsetDeterminant> space,SharedMat
 	outfile->Flush();
 }
 
-void AdaptiveCI::lowdin_spin_project( std::vector< DynamicBitsetDeterminant > det_space, SharedMatrix cI, int nroot){
-	Timer timer;
+void AdaptiveCI::lowdin_spin_project( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot){
+    /*
+    Timer timer;
 	outfile->Printf("\n  Performing Loewdin's spin projection...");
 	
 	//First implementation for singlets
@@ -1883,7 +1857,7 @@ void AdaptiveCI::lowdin_spin_project( std::vector< DynamicBitsetDeterminant > de
 	int i = 1;
 
 	// Build hash to connect BSD to its cI
-	std::unordered_map<DynamicBitsetDeterminant, size_t, function<decltype(BSD_hash_value)>> det_map(det_space.size(), BSD_hash_value);
+	det_hash<size_t> det_map;
 	
 	// need to use larger loop for muliple roots---to implement later
 	for(size_t I = 0, maxI = det_space.size(); I < maxI; ++I){
@@ -1892,8 +1866,25 @@ void AdaptiveCI::lowdin_spin_project( std::vector< DynamicBitsetDeterminant > de
 	double denom = 1 / ( i * ( i + 1 ) );
 
 	for( size_t I = 0, maxi = det_space.size(); I < maxi; ++I){
+		int na = 0;
+		int nb = 0;
+		STLBitsetDeterminant det(det_space[I]);
 		for( size_t i = 0; i < nact_; ++i ){
-			DynamicBitsetDeterminant det(det_space[I]);
+			//Compute unpaired alpha and beta electrons
+		    if(det.get_alfa_bit(i) == 1 and det.get_beta_bit(i) == 0) {
+				na++;
+			}
+			else if(det.get_alfa_bit(i) == 0 and det.get_beta_bit(i) == 1 ){
+				nb++;
+			}	
+		}
+		na /= 2;
+		nb /= 2;
+		double ms = (na + nb)/ 2.0 ;
+		double prefactor = 0.25 * (na - nb) * (na - nb)	+ 2 * (na + nb);	
+	
+		for( size_t i = 0; i < nact_; ++i ){
+
 			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
 					//destroy alfa bit i, create beta bit i
 					det.set_alfa_bit(i, false );
@@ -1917,10 +1908,10 @@ void AdaptiveCI::lowdin_spin_project( std::vector< DynamicBitsetDeterminant > de
 			}
 		}
 	}
-		
+*/
 }	
 
-void AdaptiveCI::spin_transform( std::vector< DynamicBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
+void AdaptiveCI::spin_transform( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
 {
 	Timer timer;
 	outfile->Printf("\n  Performing spin projection...");
@@ -1983,9 +1974,9 @@ void AdaptiveCI::spin_transform( std::vector< DynamicBitsetDeterminant > det_spa
 	outfile->Flush();
 }
 
-void AdaptiveCI::check_spin_completeness(std::vector<DynamicBitsetDeterminant>& det_space)
+void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_space)
 {
-	std::map< DynamicBitsetDeterminant, bool > det_map;
+	det_hash<bool> det_map;    
 	
 	//Add all determinants to the map, assume set is mostly spin complete
 	for(auto& I : det_space){
@@ -1998,7 +1989,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<DynamicBitsetDeterminant>& 
 		// Loop over MOs
 	//	outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
 		for( size_t i = 0; i < nact_; ++i ){
-			DynamicBitsetDeterminant det(det_space[I]);
+			STLBitsetDeterminant det(det_space[I]);
 			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
 					//destroy alfa bit i, create beta bit i
 					det.set_alfa_bit(i, false );
@@ -2039,7 +2030,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<DynamicBitsetDeterminant>& 
 	}
 }
 
-double AdaptiveCI::compute_spin_contamination( std::vector<DynamicBitsetDeterminant> space, SharedMatrix evecs, int nroot)
+double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot)
 {
 	auto spins = compute_spin(space, evecs, nroot);
 	double spin_contam = 0.0;

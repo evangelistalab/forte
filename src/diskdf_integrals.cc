@@ -596,9 +596,8 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
 
     //====Blocking information==========
     size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory();
+    size_t memory_input = Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
-    //Hard wires num_block for testing
 
     int block_size = nthree_ / num_block;
     if(block_size < 1)
@@ -610,8 +609,8 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     if(num_block >= 1)
     {
         outfile->Printf("\n---------Blocking Information-------\n");
-        outfile->Printf("\n  %d / %d = %d", int_mem_int, memory_input, int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %d num_block = %d", block_size, num_block);
+        outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
     }
     ambit::Tensor ThreeIntegralTensorK;
     ambit::Tensor ThreeIntegralTensorJ;
