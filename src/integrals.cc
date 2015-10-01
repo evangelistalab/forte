@@ -90,6 +90,7 @@ void ForteIntegrals::startup()
     num_tei = INDEX4(nmo_ - 1,nmo_ - 1,nmo_ - 1,nmo_ - 1) + 1;
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
+    print_       = options_.get_int("PRINT");
 }
 
 void ForteIntegrals::ForteIntegrals::allocate()
