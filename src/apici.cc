@@ -71,7 +71,7 @@ void AdaptivePathIntegralCI::startup()
     // Connect the integrals to the determinant class
     fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
     Determinant::set_ints(fci_ints_);
-    DynamicBitsetDeterminant::set_ints(fci_ints_);
+ //   DynamicBitsetDeterminant::set_ints(fci_ints_);
 
     // The number of correlated molecular orbitals
     ncmo_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
@@ -454,12 +454,12 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
 
     SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_));
     SharedVector evals(new Vector("Eigenvalues",nroot_));
-    std::vector<DynamicBitsetDeterminant> dyn_dets;
-    for (auto& d : dets){
-        DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
-        dyn_dets.push_back(dbs);
-    }
-    sparse_solver.diagonalize_hamiltonian(dyn_dets,evals,evecs,nroot_);
+  //  std::vector<DynamicBitsetDeterminant> dyn_dets;
+   // for (auto& d : dets){
+     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
+      //  dyn_dets.push_back(dbs);
+   // }
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
 
