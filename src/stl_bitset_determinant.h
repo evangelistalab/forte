@@ -24,6 +24,7 @@
 #define _bitset_determinant_h_
 
 #include <unordered_map>
+#include <bitset>
 
 #include "integrals.h"
 #include "fci_vector.h"
@@ -47,7 +48,7 @@ namespace psi{ namespace forte{
  */
 class STLBitsetDeterminant{
 public:
-    using bit_t = std::bitset<256>;
+    using bit_t = typename std::bitset<256>;
 
     //test integrals
     void test_ints(){
