@@ -92,7 +92,7 @@ for d in tests:
         msg = bcolors.FAIL + "DOES NOT MATCH" + bcolors.ENDC
         nnomatch += 1
 
-    filler = " " * (81 - len(d + msg))
+    filler = "." * (81 - len(d + msg))
     summary.append("        %s%s%s" % (d.upper(),filler,msg))
 
 print "Summary:"
