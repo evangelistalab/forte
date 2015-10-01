@@ -645,24 +645,24 @@ void SigmaVectorList::get_diagonal(Vector& diag)
     }
 }
 
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
+void SparseCISolver::diagonalize_hamiltonian(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
     if (space.size() < 5){
-        diagonalize_full(space,evals,evecs,nroot);
+        diagonalize_full(space,evals,evecs,nroot,multiplicity);
     }else{
         if (diag_method == Full){
-            diagonalize_full(space,evals,evecs,nroot);
+            diagonalize_full(space,evals,evecs,nroot,multiplicity);
         }else if (diag_method == DavidsonLiuDense){
-            diagonalize_davidson_liu_dense(space,evals,evecs,nroot);
+            diagonalize_davidson_liu_dense(space,evals,evecs,nroot,multiplicity);
         }else if (diag_method == DavidsonLiuSparse){
-            diagonalize_davidson_liu_sparse(space,evals,evecs,nroot);
+            diagonalize_davidson_liu_sparse(space,evals,evecs,nroot,multiplicity);
         }else if (diag_method == DavidsonLiuList){
-            diagonalize_davidson_liu_list(space,evals,evecs,nroot);
+            diagonalize_davidson_liu_list(space,evals,evecs,nroot,multiplicity);
         }
     }
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_full(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian(space);
@@ -678,7 +678,7 @@ void SparseCISolver::diagonalize_full(const std::vector<DynamicBitsetDeterminant
 }
 
 
-void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)
 {
     outfile->Printf("\n  Using <diagonalize_davidson_liu_dense>");
     outfile->Flush();
@@ -695,7 +695,7 @@ void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<DynamicBit
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<DynamicBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
@@ -712,7 +712,7 @@ void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<DynamicBi
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<DynamicBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
     outfile->Printf("\n\n  Davidson-liu list algorithm");
     outfile->Flush();
@@ -724,6 +724,7 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<DynamicBits
     // Diagonalize H
     SigmaVectorList svl (space);
     SigmaVector* sigma_vector = &svl;
+    initial_guess(space,evecs,nroot,multiplicity);
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
@@ -833,6 +834,100 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     outfile->Printf("\n  %s: %f s","Time spent building H (openmp)",t_h_build2.elapsed());
     outfile->Flush();
     return H_sparse;
+}
+
+void SparseCISolver::initial_guess(const std::vector<DynamicBitsetDeterminant>& space, SharedMatrix& evecs, int nroot, int multiplicity)
+{
+    size_t ndets = space.size();
+    size_t ntrial = nroot * 10;
+
+    // Find the ntrial lowest diagonals
+    std::vector<std::pair<DynamicBitsetDeterminant,size_t>> trial_dets_pos;
+    std::vector<std::pair<double,size_t>> smallest(ntrial);
+    for(size_t I = 0; I < ndets; ++I){
+        smallest[I] = std::make_pair(space[I].energy(),I);
+    }
+    std::sort(smallest.begin(),smallest.end());
+    for(int i = 0; i < ntrial; i++) {
+        size_t I = smallest[i].second;
+        trial_dets_pos.push_back(std::make_pair(space[I],I));  // store a det and its position
+    }
+
+    // Form the S^2 operator matrix and diagonalize it
+    Matrix S2("S^2",ntrial,ntrial);
+    for(int I = 0; I < ntrial; I++) {
+        for(int J = I; J < ntrial; J++) {
+            const DynamicBitsetDeterminant& detI = trial_dets_pos[I].first;
+            const DynamicBitsetDeterminant& detJ = trial_dets_pos[J].first;
+            double S2IJ = detI.spin2(detJ);
+            S2.set(I,J,S2IJ);
+            S2.set(J,I,S2IJ);
+        }
+    }
+    Matrix S2evecs("S^2",ntrial,ntrial);
+    Vector S2evals("S^2",ntrial);
+    S2.diagonalize(S2evecs,S2evals);
+
+    S2.print();
+    S2evals.print();
+    S2evecs.print();
+
+    // Find all roots with eigenvalues close to S (S + 1)
+    double S2tollerance = 1.0e-6;
+    double S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
+    double target_eval = S * (S + 1.0);
+    int nspin_states = 0;
+    S2.zero();
+    for(int I = 0; I < ntrial; I++) {
+        if (std::fabs(S2evals.get(I) - target_eval) < S2tollerance){
+            for(int J = 0; J < ntrial; J++) {
+                S2.set(J,nspin_states,S2evecs.get(J,I));
+            }
+            nspin_states += 1;
+        }
+    }
+    if (nspin_states < nroot){
+        outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nroot,multiplicity,nspin_states);
+        exit(1);
+    }
+    outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d",nspin_states,multiplicity);
+
+    // Form the Hamiltonian
+    Matrix H("H",ntrial,ntrial);
+    for(int I = 0; I < ntrial; I++) {
+        for(int J = I; J < ntrial; J++) {
+            const DynamicBitsetDeterminant& detI = trial_dets_pos[I].first;
+            const DynamicBitsetDeterminant& detJ = trial_dets_pos[J].first;
+            double HIJ = detI.slater_rules(detJ);
+            H.set(I,J,HIJ);
+            H.set(J,I,HIJ);
+        }
+    }
+
+    // Project H onto the spin-adapted subspace
+    H.transform(S2);
+
+    // Extract the spin manifold
+    Matrix HS2("HS2",nspin_states,nspin_states);
+    Vector HS2evals("HS2",nspin_states);
+    Matrix HS2evecs("HS2",nspin_states,nspin_states);
+    for(size_t I = 0; I < nspin_states; I++) {
+        for(size_t J = 0; J < nspin_states; J++) {
+            HS2.set(I,J,H.get(I,J));
+        }
+    }
+    HS2.diagonalize(HS2evecs,HS2evals);
+
+    // Project the spin-adapted solution onto the full manifold
+    for (size_t I = 0; I < ntrial; I++) {
+        for (int r = 0; r < nroot; ++r){
+            double CIr = 0.0;
+            for (size_t J = 0; J < nspin_states; ++J){
+                CIr += S2.get(I,J) * HS2evecs(J,r);
+            }
+            evecs->set(trial_dets_pos[I].second,r,CIr);
+        }
+    }
 }
 
 bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot_s)

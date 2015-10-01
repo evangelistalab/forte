@@ -210,8 +210,10 @@ public:
     };
 };
 
-typedef boost::shared_ptr<STLBitsetDeterminant> SharedSTLBitsetDeterminant;
-typedef std::unordered_map<STLBitsetDeterminant,double,STLBitsetDeterminant::Hash> hash_det;
+using Determinant = STLBitsetDeterminant;
+using det_vec = std::vector<Determinant>;
+using det_hash = std::unordered_map<Determinant,double,Determinant::Hash>;
+using bit_hash_it = det_hash::iterator;
 
 }} // End Namespaces
 

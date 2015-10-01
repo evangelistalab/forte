@@ -513,7 +513,7 @@ double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const
 
     double Ms = 0.5 * static_cast<double>(na - nb);
 
-    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta + Npairs
+    // PhiI = PhiJ -> S^2 = Sz (Sz + 1) + Nbeta - Npairs
     if ((nadiff == 0) and (nbdiff == 0)) {
         matrix_element += Ms * (Ms + 1.0) + double(nb) - double(npair);
     }

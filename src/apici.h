@@ -30,6 +30,7 @@
 #include <physconst.h>
 #include <boost/unordered_map.hpp>
 
+#include "forte-def.h"
 #include "integrals.h"
 #include "stl_bitset_determinant.h"
 #include "dynamic_bitset_determinant.h"
@@ -45,11 +46,6 @@ enum PropagatorType {LinearPropagator,
                      PowerPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator};
-
-using Determinant = STLBitsetDeterminant;
-using det_vec = std::vector<Determinant>;
-using det_hash = std::unordered_map<Determinant,double,Determinant::Hash>;
-using bit_hash_it = det_hash::iterator;
 
 /**
  * @brief The SparsePathIntegralCI class

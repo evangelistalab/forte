@@ -205,6 +205,14 @@ public:
     double slater_rules_single_beta(int i, int a) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const DynamicBitsetDeterminant& rhs) const;
+    /// Apply S+ to this determinant
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> spin_plus() const;
+    /// Apply S- to this determinant
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> spin_minus() const;
+    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    double spin2_slow(const DynamicBitsetDeterminant& rhs) const;
+    /// Return the eigenvalue of Sz
+    double spin_z() const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_alpha(int n) const;
     /// Return the sign of a_n applied to this determinant
