@@ -1,24 +1,15 @@
 #include <cmath>
 
 #include <boost/timer.hpp>
-//#include <boost/format.hpp>
 
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
-/// This needs to be in here to avoid problems with compiling without openmp
+#include "forte-def.h"
 #include "sparse_ci_solver.h"
 #include "fci_vector.h"
-#ifdef _OPENMP
-    #include <omp.h>
-#else
-    #define omp_get_max_threads() 1
-    #define omp_get_thread_num()  0
-#endif
-
-
 
 namespace psi{ namespace forte{
 
@@ -671,23 +662,6 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<DynamicBitsetDete
     }
 }
 
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<SharedDynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
-{
-    if (space.size() < 200){
-        diagonalize_full(space,evals,evecs,nroot);
-    }else{
-        if (diag_method == Full){
-            diagonalize_full(space,evals,evecs,nroot);
-        }else if (diag_method == DavidsonLiuDense){
-            diagonalize_davidson_liu_dense(space,evals,evecs,nroot);
-        }else if (diag_method == DavidsonLiuSparse){
-            diagonalize_davidson_liu_sparse(space,evals,evecs,nroot);
-        }else if (diag_method == DavidsonLiuList){
-            diagonalize_davidson_liu_list(space,evals,evecs,nroot);
-        }
-    }
-}
-
 void SparseCISolver::diagonalize_full(const std::vector<DynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
@@ -860,179 +834,6 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     outfile->Flush();
     return H_sparse;
 }
-
-void SparseCISolver::diagonalize_full(const std::vector<SharedDynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
-{
-    // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    SharedMatrix H = build_full_hamiltonian(space);
-
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,dim_space));
-    evals.reset(new Vector("e",dim_space));
-
-    // Diagonalize H
-    boost::timer t_diag;
-    H->diagonalize(evecs,evals);
-    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_diag.elapsed());
-}
-
-
-void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<SharedDynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
-{
-    outfile->Printf("\n  Using <diagonalize_davidson_liu_dense>");
-    outfile->Flush();
-    // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    SharedMatrix H = build_full_hamiltonian(space);
-
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,nroot));
-    evals.reset(new Vector("e",nroot));
-
-    // Diagonalize H
-    SigmaVectorFull svf (H);
-    SigmaVector* sigma_vector = &svf;
-    davidson_liu(sigma_vector,evals,evecs,nroot);
-}
-
-void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedDynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
-{
-    outfile->Printf("\n\n  Davidson-liu sparse algorithm");
-    outfile->Flush();
-    // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> H = build_sparse_hamiltonian(space);
-
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,nroot));
-    evals.reset(new Vector("e",nroot));
-
-    // Diagonalize H
-    SigmaVectorSparse svs (H);
-    SigmaVector* sigma_vector = &svs;
-    davidson_liu(sigma_vector,evals,evecs,nroot);
-}
-
-void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<SharedDynamicBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
-{
-    //    outfile->Printf("\n\n  Davidson-liu list algorithm");
-    //    outfile->Flush();
-
-    //    size_t dim_space = space.size();
-    //    evecs.reset(new Matrix("U",dim_space,nroot));
-    //    evals.reset(new Vector("e",nroot));
-
-    //    // Diagonalize H
-    //    SigmaVectorList svs (space);
-    //    SigmaVector* sigma_vector = &svs;
-    //    davidson_liu(sigma_vector,evals,evecs,nroot);
-}
-
-SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedDynamicBitsetDeterminant> &space)
-{
-    // Build the H matrix
-    size_t dim_space = space.size();
-    SharedMatrix H(new Matrix("H",dim_space,dim_space));
-
-    int threads = 0;
-    if(DynamicBitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
-    {
-       threads = 1;
-    }
-    else
-    {
-       threads = omp_get_max_threads();
-    }
-    #pragma omp parallel for schedule(dynamic) num_threads(threads)
-    for (size_t I = 0; I < dim_space; ++I){
-        SharedDynamicBitsetDeterminant detI = space[I];
-        for (size_t J = I; J < dim_space; ++J){
-            SharedDynamicBitsetDeterminant detJ = space[J];
-            double HIJ = detI->slater_rules(*detJ);
-            H->set(I,J,HIJ);
-            H->set(J,I,HIJ);
-        }
-    }
-    return H;
-}
-
-std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<SharedDynamicBitsetDeterminant> &space)
-{
-    boost::timer t_h_build2;
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse;
-    size_t dim_space = space.size();
-
-    size_t num_nonzero = 0;
-    // Form the Hamiltonian matrix
-    int threads = 0;
-   if(DynamicBitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
-   {
-      threads = 1;
-   }
-   else
-   {
-      threads = omp_get_max_threads();
-   }
-    #pragma omp parallel for schedule(dynamic) num_threads(threads)
-    for (size_t I = 0; I < dim_space; ++I){
-        std::vector<double> H_row;
-        std::vector<int> index_row;
-        SharedDynamicBitsetDeterminant detI = space[I];
-        double HII = detI->slater_rules(*detI);
-        H_row.push_back(HII);
-        index_row.push_back(I);
-        for (size_t J = 0; J < dim_space; ++J){
-            if (I != J){
-                SharedDynamicBitsetDeterminant detJ = space[J];
-                double HIJ = detI->slater_rules(*detJ);
-                if (std::fabs(HIJ) >= 1.0e-12){
-                    H_row.push_back(HIJ);
-                    index_row.push_back(J);
-                    num_nonzero += 1;
-                }
-            }
-        }
-        H_sparse.push_back(make_pair(index_row,H_row));
-    }
-    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
-    outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
-    outfile->Flush();
-    return H_sparse;
-}
-
-
-std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_sparse_hamiltonian2(const std::vector<SharedDynamicBitsetDeterminant> &space)
-{
-    boost::timer t_h_build2;
-    std::vector<std::pair<std::vector<int>,SharedVector>> H_sparse;
-    size_t dim_space = space.size();
-
-    size_t num_nonzero = 0;
-    // Form the Hamiltonian matrix
-    for (size_t I = 0; I < dim_space; ++I){
-        std::vector<double> H_row;
-        std::vector<int> index_row;
-        SharedDynamicBitsetDeterminant detI = space[I];
-        double HII = detI->slater_rules(*detI);
-        H_row.push_back(HII);
-        index_row.push_back(I);
-        for (size_t J = 0; J < dim_space; ++J){
-            if (I != J){
-                SharedDynamicBitsetDeterminant detJ = space[J];
-                double HIJ = detI->slater_rules(*detJ);
-                if (std::fabs(HIJ) >= 1.0e-12){
-                    H_row.push_back(HIJ);
-                    index_row.push_back(J);
-                    num_nonzero += 1;
-                }
-            }
-        }
-        //        H_sparse.push_back(make_pair(index_row,H_row));
-    }
-    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
-    outfile->Printf("\n  %s: %f s","Time spent building H",t_h_build2.elapsed());
-    outfile->Flush();
-    return H_sparse;
-}
-
 
 bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot_s)
 {
