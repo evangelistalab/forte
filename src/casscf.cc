@@ -107,7 +107,7 @@ void CASSCF::compute_casscf()
         for (size_t h=0; h<nirrep_; h++){
             if (!expS->rowspi()[h]) continue;
             double** Sp = expS->pointer(h);
-            for (size_t i=0; i<(expS->colspi()[h]); i++){
+            for (int i=0; i<(expS->colspi()[h]); i++){
                 Sp[i][i] = 1.0;
             }
         }
@@ -293,6 +293,7 @@ void CASSCF::form_fock_active()
     ambit::Tensor gamma1a = cas_ref_.L1a();
     ambit::Tensor gamma1b = cas_ref_.L1b();
 
+    //gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j"));
     gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j"));
 
     SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
@@ -359,13 +360,14 @@ void CASSCF::form_fock_active()
     SharedMatrix F_act = J_core->clone();
     F_act->scale(2.0);
     F_act->subtract(K_core);
+
     SharedMatrix F_act_sym(new Matrix("F_ACT", nirrep_, nmopi_, nmopi_));
     F_act_sym->apply_symmetry(F_act, wfn_->aotoso());
 
 
     F_act_sym->transform(Ca_sym_);
 
-    SharedMatrix F_active_c1(new Matrix("F_core_c1", nmo_, nmo_));
+    SharedMatrix F_active_c1(new Matrix("F_active_c1", nmo_, nmo_));
 
     int offset = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -377,6 +379,51 @@ void CASSCF::form_fock_active()
         offset += nmopi_[h];
     }
     F_act_ = F_active_c1;
+    F_act_->print();
+
+    ambit::Tensor tei_pqaa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, nmo_, na_, na_});
+    ambit::Tensor tei_paqa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, na_, nmo_, na_});
+
+    std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
+    std::vector<size_t> na_array = mo_space_info_->get_absolute_mo("ACTIVE");
+
+    tei_pqaa = ints_->aptei_ab_block(nmo_array, nmo_array, na_array, na_array);
+    tei_paqa = ints_->aptei_ab_block(nmo_array, na_array, nmo_array, na_array);
+    ambit::Tensor Fock_act_test = ambit::Tensor::build(ambit::kCore, "Fock_A", {nmo_, nmo_});
+    Fock_act_test("p, q") = 2.0 * tei_pqaa("p, q, t, u") * gamma_no_spin("t, u");
+    Fock_act_test("p, q") -= 1.0 * tei_paqa("p, t, q, u") * gamma_no_spin("t, u");
+    boost::shared_ptr<Matrix> F_act_testM(new Matrix("F_act", nmo_, nmo_));
+    F_act_sym->zero();
+
+
+    Fock_act_test.iterate([&](const std::vector<size_t>& i,double& value){
+        F_act_testM->set(i[0], i[1], value);});
+
+    F_act_sym->zero();
+    F_act_sym->apply_symmetry(F_act_testM, wfn_->aotoso());
+
+
+    F_act_sym->transform(Ca_sym_);
+
+    F_active_c1->zero();
+
+    offset = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+               F_active_c1->set(p + offset, q + offset, F_act_sym->get(h, p, q));
+            }
+        }
+        offset += nmopi_[h];
+    }
+    F_act_ = F_active_c1;
+    F_act_->print();
+
+
+
+
+
+    
 
 
 }
