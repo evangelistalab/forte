@@ -401,6 +401,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         {
             size_t memory_cost = nmo_ * nmo_ * nmo_ * active_ * 16;
             bool exceed_memory = memory_cost < Process::environment.get_memory();
+            exceed_memory = false;
 
             std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
             std::string str = "Computing T2";
@@ -947,11 +948,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     //TODO: Implement these without storing V and/or T2 by using blocking
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
 
-    ///Is it possible to store these terms in core anyway?
-    size_t memory_cost = nmo_ * nmo_ * nmo_ * active_ * 16;
-    bool exceed_memory = memory_cost < Process::environment.get_memory();
-
-    if( (integral_type_!=DiskDF) | exceed_memory)
+    if( (integral_type_!=DiskDF))
     {
         temp.zero();
         temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
@@ -970,258 +967,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     }
     else
     {
-        int nthread = 1;
-        int thread  = 0;
-        #ifdef _OPENMP
-            nthread = omp_get_max_threads();
-            thread  = omp_get_thread_num();
-        #endif
-    /// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
-        std::vector<size_t> naux(nthree_);
-        std::iota(naux.begin(), naux.end(), 0);
-        ambit::Tensor  Gamma1_aa  = Gamma1_.block("aa");
-        ambit::Tensor  Gamma1_AA  = Gamma1_.block("AA");
-        
-
-        std::vector<ambit::Tensor>  Be_mQ;     
-        std::vector<ambit::Tensor>  Bf_uQ;     
-        std::vector<ambit::Tensor>  Bf_mQ;     
-        std::vector<ambit::Tensor>  Be_uQ;     
-
-        std::vector<ambit::Tensor>  V_mu;     
-        std::vector<ambit::Tensor>  T_mv;     
-        std::vector<ambit::Tensor>  tempTaa;
-        std::vector<ambit::Tensor>  tempTAA;
-        for(int thread = 0; thread < nthread; thread++)
-        {
-        Be_mQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, core_}));
-        Bf_uQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, active_}));
-        Bf_mQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, core_}));
-        Be_uQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, active_}));
-
-        V_mu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {core_, active_}));
-        T_mv.push_back(ambit::Tensor::build(tensor_type_, "T2", {core_, active_}));
-
-        tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
-        tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
-
-        }
-
-        ///Loop over e and f to compute V
-        #pragma omp parallel for num_threads(num_threads_) 
-        for(size_t e = 0; e < virtual_; ++e){
-            int thread = 0;
-            #ifdef _OPENMP
-                thread = omp_get_thread_num();
-            #endif
-            size_t ea = avirt_mos_[e];
-            size_t eb = bvirt_mos_[e];
-
-            #pragma omp critical
-            {
-                Be_mQ[thread] = ints_->three_integral_block_two_index(naux, ea, acore_mos_);
-                Be_uQ[thread] = ints_->three_integral_block_two_index(naux, ea, aactv_mos_);
-            }
-
-            for(size_t f = 0; f < virtual_; ++f){
-            // alpha-aplha
-                size_t fa = avirt_mos_[f];
-                size_t fb = bvirt_mos_[f];
-
-                #pragma omp critical
-                {
-                    Bf_mQ[thread] = ints_->three_integral_block_two_index(naux, fa, acore_mos_);
-                    Bf_uQ[thread]= ints_->three_integral_block_two_index(naux, fa, aactv_mos_);
-                }
-                
-                //V[efmu] = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
-                //V[efmu] = V[efmu] + V[efmu] * exp[efmu]
-                //T2["mvef"] = V["mvef"] * D["mvef"]
-                //temp["uv"] = V * T2
-
-                V_mu[thread]("m, u") = Be_mQ[thread]("Q, m") * Bf_uQ[thread]("Q, u");
-                V_mu[thread]("m, u")-= Be_uQ[thread]("Q, u") * Bf_mQ[thread]("Q, m");
-                //E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} * Denom^{mv}_{ef}
-                T_mv[thread].data() = V_mu[thread].data();
-
-                V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fa_[ea] + Fa_[fa] - Fa_[aactv_mos_[i[1]]] - Fa_[acore_mos_[i[0]]];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
-                    value = value * renormalized_denominator(D);});
-
-                tempTaa[thread]("u,v")+= 0.5 * V_mu[thread]("m,u") * T_mv[thread]("m,v");
-                V_mu[thread].zero();
-                T_mv[thread].zero();
-
-
-                //alpha-beta
-                //V[eFmU] = B_{em}^Q * B_{FU}^Q
-                V_mu[thread]("M,u") = Be_mQ[thread]("Q, M") * Bf_uQ[thread]("Q, u");
-                T_mv[thread].data() = V_mu[thread].data();
-                V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fa_[fa] + Fb_[eb] - Fa_[aactv_mos_[i[1]]] - Fb_[bcore_mos_[i[0]]];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fa_[aactv_mos_[i[1]]] + Fb_[bcore_mos_[i[0]]] - Fa_[fa] - Fb_[eb];
-                    value = value * renormalized_denominator(D);});
-
-                tempTAA[thread]("vu")+=V_mu[thread]("M,v") * T_mv[thread]("M,u");
-                tempTaa[thread]("vu")+=V_mu[thread]("M,v") * T_mv[thread]("M, u");
-
-                //beta-beta
-                V_mu[thread].zero();
-                T_mv[thread].zero();
-                V_mu[thread]("M,U") = Be_mQ[thread]("Q, M") * Bf_uQ[thread]("Q,U");
-                V_mu[thread]("M,U")-= Be_uQ[thread]("Q, U") * Bf_mQ[thread]("Q, M");
-                T_mv[thread].data() = V_mu[thread].data();
-
-                V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fb_[fb] + Fb_[eb] - Fb_[bactv_mos_[i[1]]] - Fb_[bcore_mos_[i[0]]];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fb_[bactv_mos_[i[1]]] + Fb_[bcore_mos_[i[0]]] - Fb_[fb] - Fb_[eb];
-                    value = value * renormalized_denominator(D);});
-                tempTAA[thread]("v,u")+= 0.5 * V_mu[thread]("m,v") * T_mv[thread]("m,u");
-                V_mu[thread].zero();
-                T_mv[thread].zero();
-
-
-            }
-        }
-        ambit::Tensor tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {active_, active_});
-        ambit::Tensor tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {active_, active_});
-        for(int thread = 0; thread < nthread; thread++)
-        {
-        tempTAA_all("v, u") += tempTAA[thread]("v, u");
-        tempTaa_all("v, u") += tempTaa[thread]("v, u");
-        }
-
-        E += tempTAA_all("v,u") * Gamma1_AA("v,u");
-        E += tempTaa_all("v,u") * Gamma1_aa("v,u");
-
-        std::vector<ambit::Tensor>  Bm_vQ;
-        std::vector<ambit::Tensor>  Bn_eQ;
-        std::vector<ambit::Tensor>  Bm_eQ;
-        std::vector<ambit::Tensor>  Bn_vQ;
-
-        std::vector<ambit::Tensor>  V_eu;
-        std::vector<ambit::Tensor>  T_ev;
-        std::vector<ambit::Tensor>  tempTaa_e;
-        std::vector<ambit::Tensor>  tempTAA_e;
-        for(int thread = 0; thread < nthread; thread++)
-        {
-            Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, core_}));
-            Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, virtual_}));
-            Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, virtual_}));
-            Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, active_}));
-
-            V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {virtual_, active_}));
-            T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2",   {virtual_, active_}));
-
-            tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
-            tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
-        }
-        ambit::Tensor Eta1_aa = Eta1_.block("aa");
-        ambit::Tensor Eta1_AA = Eta1_.block("AA");
-
-        #pragma omp parallel for num_threads(num_threads_) 
-        for(size_t m = 0; m < core_; ++m){
-            size_t ma = acore_mos_[m];
-            size_t mb = bcore_mos_[m];
-            int thread = 0;
-            #ifdef _OPENMP
-                thread = omp_get_thread_num();
-            #endif
-            
-            #pragma omp critical
-            {
-                Bm_vQ[thread] = ints_->three_integral_block_two_index(naux, ma, aactv_mos_);
-                Bm_eQ[thread] = ints_->three_integral_block_two_index(naux, ma, avirt_mos_);
-            }
-
-            for(size_t n = 0; n < core_; ++n){
-            // alpha-aplha
-                size_t na = acore_mos_[n];
-                size_t nb = bcore_mos_[n];
-
-                #pragma omp critical
-                {
-                    Bn_eQ[thread] = ints_->three_integral_block_two_index(naux, na, avirt_mos_);
-                    Bn_vQ[thread] = ints_->three_integral_block_two_index(naux, na, aactv_mos_);
-                }
-
-                V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
-                V_eu[thread]("e, u")-= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
-                //E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} * Denom^{mv}_{ef}
-                T_ev[thread].data() = V_eu[thread].data();
-
-                V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fa_[aactv_mos_[i[1]]] + Fa_[avirt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fa_[ma] + Fa_[na] - Fa_[aactv_mos_[i[1]]] - Fa_[avirt_mos_[i[0]]];
-                    value = value * renormalized_denominator(D);});
-
-                tempTaa_e[thread]("u,v")+= 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
-                V_eu[thread].zero();
-                T_ev[thread].zero();
-
-
-                //alpha-beta
-                //temp["vu"] += V_["vEmN"] * T2_["mNuE"];
-                //
-                V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
-                T_ev[thread].data() = V_eu[thread].data();
-                V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fa_[aactv_mos_[i[1]]] + Fb_[bvirt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fa_[ma] + Fb_[nb] - Fa_[aactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
-                    value = value * renormalized_denominator(D);});
-
-                tempTAA_e[thread]("vu")+=V_eu[thread]("M,v") * T_ev[thread]("M,u");
-                tempTaa_e[thread]("vu")+=V_eu[thread]("M,v") * T_ev[thread]("M, u");
-
-                //beta-beta
-                V_eu[thread].zero();
-                T_ev[thread].zero();
-                V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
-                V_eu[thread]("E,U")-= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
-                T_ev[thread].data() = V_eu[thread].data();
-
-                V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double Exp = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
-                    value = value + value * renormalized_exp(Exp);});
-
-                T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
-                    value = value * renormalized_denominator(D);});
-                tempTAA_e[thread]("v,u")+= 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
-                V_eu[thread].zero();
-                T_ev[thread].zero();
-            }
-        }
-        
-        tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {active_, active_});
-        tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {active_, active_});
-        for(int thread = 0; thread < nthread; thread++)
-        {
-            tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
-            tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
-        }
-        E += tempTaa_all("vu") * Eta1_aa("uv");
-        E += tempTAA_all("VU") * Eta1_AA("UV");
-
-
+        E += E_VT2_2_one_active();
     }
-
     /// These terms all have two active indices -> I will assume these can be store in core.
 
     temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
@@ -1800,6 +1547,314 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
     }
 
     return E2_core;
+}
+double THREE_DSRG_MRPT2::E_VT2_2_one_active()
+{
+    double Eccva = 0;
+    double Eacvv = 0;
+    int nthread = 1;
+    int thread  = 0;
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+        thread  = omp_get_thread_num();
+    #endif
+/// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
+    std::vector<size_t> naux(nthree_);
+    std::iota(naux.begin(), naux.end(), 0);
+    ambit::Tensor  Gamma1_aa  = Gamma1_.block("aa");
+    ambit::Tensor  Gamma1_AA  = Gamma1_.block("AA");
+
+
+    std::vector<ambit::Tensor>  Be_mQ;
+    std::vector<ambit::Tensor>  Bf_uQ;
+    std::vector<ambit::Tensor>  Bf_mQ;
+    std::vector<ambit::Tensor>  Be_uQ;
+
+    std::vector<ambit::Tensor>  V_mu;
+    std::vector<ambit::Tensor>  T_mv;
+    std::vector<ambit::Tensor>  tempTaa;
+    std::vector<ambit::Tensor>  tempTAA;
+
+    Timer ccvaTimer;
+    for(int thread = 0; thread < nthread; thread++)
+    {
+    Be_mQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, core_}));
+    Bf_uQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, active_}));
+    Bf_mQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, core_}));
+    Be_uQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, active_}));
+
+    V_mu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {core_, active_}));
+    T_mv.push_back(ambit::Tensor::build(tensor_type_, "T2", {core_, active_}));
+
+    tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
+    tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
+
+    }
+    //ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_, avirt_mos_);
+    //ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_, avirt_mos_);
+
+    ///Loop over e and f to compute V
+
+    ambit::Tensor BemQ = ints_->three_integral_block(naux, avirt_mos_, acore_mos_);
+    ambit::Tensor BeuQ = ints_->three_integral_block(naux, avirt_mos_, aactv_mos_);
+
+    std::vector<double>& BemQ_data = BemQ.data();
+    std::vector<double>& BeuQ_data = BeuQ.data();
+
+    double time_two_index = 0.0;
+    #pragma omp parallel for num_threads(num_threads_)
+    for(size_t e = 0; e < virtual_; ++e){
+        int thread = 0;
+        #ifdef _OPENMP
+            thread = omp_get_thread_num();
+        #endif
+        size_t ea = avirt_mos_[e];
+        size_t eb = bvirt_mos_[e];
+
+        #pragma omp critical
+        {
+            //Be_mQ[thread] = ints_->three_integral_block_two_index(naux, ea, acore_mos_);
+            //Be_uQ[thread] = ints_->three_integral_block_two_index(naux, ea, aactv_mos_);
+            Be_mQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                value = BemQ_data[i[0] * virtual_ * core_ + e * core_ + i[1] ];
+            });
+            Be_uQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                value = BeuQ_data[i[0] * virtual_ * active_ + e * active_ + i[1] ];
+            });
+        }
+
+        for(size_t f = 0; f < virtual_; ++f){
+        // alpha-aplha
+            size_t fa = avirt_mos_[f];
+            size_t fb = bvirt_mos_[f];
+
+            #pragma omp critical
+            {
+                Bf_mQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                    value = BemQ_data[i[0] * virtual_ * core_ + f * core_ + i[1] ];
+                });
+                Bf_uQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                    value = BeuQ_data[i[0] * virtual_ * active_ + f * active_ + i[1] ];
+                });
+            }
+
+            //V[efmu] = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+            //V[efmu] = V[efmu] + V[efmu] * exp[efmu]
+            //T2["mvef"] = V["mvef"] * D["mvef"]
+            //temp["uv"] = V * T2
+
+            V_mu[thread]("m, u") = Be_mQ[thread]("Q, m") * Bf_uQ[thread]("Q, u");
+            V_mu[thread]("m, u")-= Be_uQ[thread]("Q, u") * Bf_mQ[thread]("Q, m");
+
+            //E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} * Denom^{mv}_{ef}
+            T_mv[thread].data() = V_mu[thread].data();
+
+            std::vector<double>& T_mv_data = T_mv[thread].data();
+            V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fa_[ea] + Fa_[fa] - Fa_[aactv_mos_[i[1]]] - Fa_[acore_mos_[i[0]]];
+                double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+                value = value + value * renormalized_exp(Exp);
+                T_mv_data[i[0] * active_ + i[1]] *= renormalized_denominator(D);
+                });
+
+            //T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
+            //    double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+            //    value = value * renormalized_denominator(D);});
+
+            tempTaa[thread]("u,v")+= 0.5 * V_mu[thread]("m,u") * T_mv[thread]("m,v");
+            V_mu[thread].zero();
+            T_mv[thread].zero();
+
+
+            //alpha-beta
+            //V[eFmU] = B_{em}^Q * B_{FU}^Q
+            V_mu[thread]("M,u") = Be_mQ[thread]("Q, M") * Bf_uQ[thread]("Q, u");
+            T_mv[thread].data() = V_mu[thread].data();
+
+            T_mv_data = T_mv[thread].data();
+            V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fa_[ea] + Fa_[fa] - Fa_[aactv_mos_[i[1]]] - Fa_[acore_mos_[i[0]]];
+                double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+                value = value + value * renormalized_exp(Exp);
+                T_mv_data[i[0] * active_ + i[1]] *= renormalized_denominator(D);
+                });
+
+            tempTAA[thread]("vu")+=V_mu[thread]("M,v") * T_mv[thread]("M,u");
+            tempTaa[thread]("vu")+=V_mu[thread]("M,v") * T_mv[thread]("M, u");
+
+            //beta-beta
+            V_mu[thread].zero();
+            T_mv[thread].zero();
+            V_mu[thread]("M,U") = Be_mQ[thread]("Q, M") * Bf_uQ[thread]("Q,U");
+            V_mu[thread]("M,U")-= Be_uQ[thread]("Q, U") * Bf_mQ[thread]("Q, M");
+            T_mv[thread].data() = V_mu[thread].data();
+
+            T_mv_data = T_mv[thread].data();
+            V_mu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fa_[ea] + Fa_[fa] - Fa_[aactv_mos_[i[1]]] - Fa_[acore_mos_[i[0]]];
+                double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+                value = value + value * renormalized_exp(Exp);
+                T_mv_data[i[0] * active_ + i[1]] *= renormalized_denominator(D);
+                });
+
+            tempTAA[thread]("v,u")+= 0.5 * V_mu[thread]("m,v") * T_mv[thread]("m,u");
+            V_mu[thread].zero();
+            T_mv[thread].zero();
+
+
+        }
+    }
+
+    ambit::Tensor tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {active_, active_});
+    ambit::Tensor tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {active_, active_});
+    for(int thread = 0; thread < nthread; thread++)
+    {
+    tempTAA_all("v, u") += tempTAA[thread]("v, u");
+    tempTaa_all("v, u") += tempTaa[thread]("v, u");
+    }
+
+    Eacvv += tempTAA_all("v,u") * Gamma1_AA("v,u");
+    Eacvv += tempTaa_all("v,u") * Gamma1_aa("v,u");
+
+    if(print_ > 0)
+    {
+        outfile->Printf("\n\n CAVV computation takes %8.8f", ccvaTimer.get());
+    }
+
+    std::vector<ambit::Tensor>  Bm_vQ;
+    std::vector<ambit::Tensor>  Bn_eQ;
+    std::vector<ambit::Tensor>  Bm_eQ;
+    std::vector<ambit::Tensor>  Bn_vQ;
+
+    std::vector<ambit::Tensor>  V_eu;
+    std::vector<ambit::Tensor>  T_ev;
+    std::vector<ambit::Tensor>  tempTaa_e;
+    std::vector<ambit::Tensor>  tempTAA_e;
+
+    ambit::Tensor BmvQ = ints_->three_integral_block(naux, acore_mos_, aactv_mos_);
+    ambit::Tensor BmeQ = ints_->three_integral_block(naux, acore_mos_, avirt_mos_);
+
+    std::vector<double>& BmvQ_data = BmvQ.data();
+    std::vector<double>& BmeQ_data = BmeQ.data();
+
+    Timer cavvTimer;
+    for(int thread = 0; thread < nthread; thread++)
+    {
+        Bm_vQ.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, active_}));
+        Bn_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bf_uQ", {nthree_, virtual_}));
+        Bm_eQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, virtual_}));
+        Bn_vQ.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, active_}));
+
+        V_eu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {virtual_, active_}));
+        T_ev.push_back(ambit::Tensor::build(tensor_type_, "T2",   {virtual_, active_}));
+
+        tempTaa_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
+        tempTAA_e.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
+    }
+    ambit::Tensor Eta1_aa = Eta1_.block("aa");
+    ambit::Tensor Eta1_AA = Eta1_.block("AA");
+
+    #pragma omp parallel for num_threads(num_threads_)
+    for(size_t m = 0; m < core_; ++m){
+        size_t ma = acore_mos_[m];
+        size_t mb = bcore_mos_[m];
+        int thread = 0;
+        #ifdef _OPENMP
+            thread = omp_get_thread_num();
+        #endif
+
+        #pragma omp critical
+        {
+            Bm_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                value = BmvQ_data[i[0] * core_ * active_ + m * active_ + i[1] ];
+            });
+            Bm_eQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                value = BmeQ_data[i[0] * virtual_ * core_ + m * virtual_ + i[1] ];
+            });
+        }
+
+        for(size_t n = 0; n < core_; ++n){
+        // alpha-aplha
+            size_t na = acore_mos_[n];
+            size_t nb = bcore_mos_[n];
+
+            #pragma omp critical
+            {
+                Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                    value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
+                });
+                Bn_eQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                    value = BmeQ_data[i[0] * virtual_ * core_ + n * virtual_ + i[1] ];
+                });
+            }
+
+            V_eu[thread]("e, u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, e");
+            V_eu[thread]("e, u")-= Bm_eQ[thread]("Q, e") * Bn_vQ[thread]("Q, u");
+            //E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} * Denom^{mv}_{ef}
+            T_ev[thread].data() = V_eu[thread].data();
+
+            V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fa_[aactv_mos_[i[1]]] + Fa_[avirt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
+                value = value + value * renormalized_exp(Exp);});
+
+            T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa_[ma] + Fa_[na] - Fa_[aactv_mos_[i[1]]] - Fa_[avirt_mos_[i[0]]];
+                value = value * renormalized_denominator(D);});
+
+            tempTaa_e[thread]("u,v")+= 0.5 * V_eu[thread]("e,u") * T_ev[thread]("e,v");
+            V_eu[thread].zero();
+            T_ev[thread].zero();
+
+
+            //alpha-beta
+            //temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+            //
+            V_eu[thread]("E,u") = Bm_vQ[thread]("Q, u") * Bn_eQ[thread]("Q, E");
+            T_ev[thread].data() = V_eu[thread].data();
+            V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fa_[aactv_mos_[i[1]]] + Fb_[bvirt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
+                value = value + value * renormalized_exp(Exp);});
+
+            T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fa_[ma] + Fb_[nb] - Fa_[aactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
+                value = value * renormalized_denominator(D);});
+
+            tempTAA_e[thread]("vu")+=V_eu[thread]("M,v") * T_ev[thread]("M,u");
+            tempTaa_e[thread]("vu")+=V_eu[thread]("M,v") * T_ev[thread]("M, u");
+
+            //beta-beta
+            V_eu[thread].zero();
+            T_ev[thread].zero();
+            V_eu[thread]("E,U") = Bm_vQ[thread]("Q, U") * Bn_eQ[thread]("Q,E");
+            V_eu[thread]("E,U")-= Bm_eQ[thread]("Q, E") * Bn_vQ[thread]("Q, U");
+            T_ev[thread].data() = V_eu[thread].data();
+
+            V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double Exp = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
+                value = value + value * renormalized_exp(Exp);});
+
+            T_ev[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                double D = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
+                value = value * renormalized_denominator(D);});
+            tempTAA_e[thread]("v,u")+= 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
+            V_eu[thread].zero();
+            T_ev[thread].zero();
+        }
+    }
+
+    tempTAA_all = ambit::Tensor::build(tensor_type_, "tempTAA_all", {active_, active_});
+    tempTaa_all = ambit::Tensor::build(tensor_type_, "tempTaa_all", {active_, active_});
+    for(int thread = 0; thread < nthread; thread++)
+    {
+        tempTAA_all("u, v") += tempTAA_e[thread]("u,v");
+        tempTaa_all("u, v") += tempTaa_e[thread]("u,v");
+    }
+    Eccva += tempTaa_all("vu") * Eta1_aa("uv");
+    Eccva += tempTAA_all("VU") * Eta1_AA("UV");
+    outfile->Printf("\n\n CCVA takes %8.8f", cavvTimer.get());
+
+    return (Eacvv + Eccva);
+
 }
 
 }} // End Namespaces

@@ -155,6 +155,8 @@ protected:
     double E_VT1();
     double E_FT2();
     double E_VT2_2();
+    ///Compute hhva and acvv terms
+    double E_VT2_2_one_active();
     ///Different algorithms for handling ccvv term
     /// Core -> builds everything in core.  Probably fastest
     double E_VT2_2_core();
