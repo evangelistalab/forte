@@ -10,6 +10,9 @@
 using namespace std;
 using namespace psi;
 
+#define ALFA(n) bits_[n]
+#define BETA(n) bits_[nmo_ + n]
+
 namespace psi{ namespace forte{
 
 // Static members
@@ -20,51 +23,84 @@ void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
 {
     fci_ints_ = ints;
     nmo_ = ints->nmo();
-//    // Initialize the bit masks
-//    int n = ints->nmo();
-
-//    bit_mask_.clear();
-//    for (int i = 0; i < n; ++i){
-//        bit_t b(n);
-//        for (int j = 0; j < i; ++j){
-//            b[j] = 1;
-//        }
-//        bit_mask_.push_back(b);
-//    }
 }
 
-STLBitsetDeterminant::STLBitsetDeterminant()
-    : bits_(2 * nmo_)
-{
-}
+STLBitsetDeterminant::STLBitsetDeterminant() {}
 
-/// Construct the determinant from an occupation vector that
-/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation)
-    : bits_(2 * nmo_)
 {
-    for(int p = 0; p < 2 * nmo_; ++p){
-        bits_[p] = occupation[p];
-    }
+    for(int p = 0; p < 2 * nmo_; ++p) bits_[p] = occupation[p];
 }
 
-/// Construct the determinant from an occupation vector that
-/// specifies the alpha and beta strings.  occupation = [Ia,Ib]
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation)
-    : bits_(2 * nmo_)
 {
-    for(int p = 0; p < 2 * nmo_; ++p){
-        bits_[p] = occupation[p];
-    }
+    for(int p = 0; p < 2 * nmo_; ++p) bits_[p] = occupation[p];
 }
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a,const std::vector<bool>& occupation_b)
-    : bits_(2 * nmo_)
 {
     for(int p = 0; p < nmo_; ++p){
         bits_[p] = occupation_a[p];
         bits_[p + nmo_] = occupation_b[p];
     }
+}
+
+inline bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
+{
+    return (bits_ == lhs.bits_);
+}
+
+inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
+{
+    for (int p = nmo_ - 1; p >= 0; --p){
+        if ((bits_[p] == false) and (lhs.bits_[p] == true)) return true;
+        if ((bits_[p] == true) and (lhs.bits_[p] == false)) return false;
+    }
+    return false;
+}
+
+inline const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const {return bits_;}
+
+inline bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
+
+inline bool STLBitsetDeterminant::get_beta_bit(int n) const {return bits_[n + nmo_];}
+
+inline void STLBitsetDeterminant::set_alfa_bit(int n, bool value) {bits_[n] = value;}
+
+inline void STLBitsetDeterminant::set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
+
+std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool()
+{
+    std::vector<bool> result;
+    for(int n = 0; n < nmo_;++n){
+        result.push_back(bits_[n]);
+    }
+    return result;
+}
+
+std::vector<bool> STLBitsetDeterminant::get_beta_bits_vector_bool()
+{
+    std::vector<bool> result;
+    for(int n = 0; n < nmo_; ++n){
+        result.push_back(bits_[nmo_ + n]);
+    }
+    return result;
+}
+
+const std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool() const {
+    std::vector<bool> result;
+    for(int n = 0; n < nmo_;++n){
+        result.push_back(bits_[n]);
+    }
+    return result;
+}
+
+const std::vector<bool> STLBitsetDeterminant::get_beta_bits_vector_bool() const {
+    std::vector<bool> result;
+    for(int n = 0; n < nmo_; ++n){
+        result.push_back(bits_[nmo_ + n]);
+    }
+    return result;
 }
 
 std::vector<int> STLBitsetDeterminant::get_alfa_occ()
@@ -191,8 +227,16 @@ DynamicBitsetDeterminant STLBitsetDeterminant::to_dynamic_bitset() const
 void STLBitsetDeterminant::print() const
 {
     outfile->Printf("\n  |");
-    for(int p = 0; p < 2 * nmo_; ++p){
-        outfile->Printf("%d",bits_[p] ? 1 :0);
+    for(int p = 0; p < nmo_; ++p){
+        if (ALFA(p) and BETA(p)){
+            outfile->Printf("%d",2);
+        }else if (ALFA(p) and not BETA(p)){
+            outfile->Printf("+");
+        }else if (not ALFA(p) and BETA(p)){
+            outfile->Printf("-");
+        }else{
+            outfile->Printf("0");
+        }
     }
     outfile->Printf(">");
     outfile->Flush();
@@ -205,12 +249,17 @@ std::string STLBitsetDeterminant::str() const
 {
     std::string s;
     s += "|";
+
     for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(bits_[p]);
-    }
-    s += "|";
-    for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(bits_[nmo_ + p]);
+        if (ALFA(p) and BETA(p)){
+            s += "2";
+        }else if (ALFA(p) and not BETA(p)){
+            s += "+";
+        }else if (not ALFA(p) and BETA(p)){
+            s += "-";
+        }else{
+            s += "0";
+        }
     }
     s += ">";
     return s;
@@ -480,10 +529,55 @@ double STLBitsetDeterminant::double_excitation_bb(int i, int j, int a, int b)
     return sign;
 }
 
-/**
- * Compute the S^2 matrix element of the Hamiltonian between two determinants specified by the strings (Ia,Ib) and (Ja,Jb)
- * @return S^2
- */
+std::vector<std::pair<STLBitsetDeterminant,double>> STLBitsetDeterminant::spin_plus() const
+{
+    std::vector<std::pair<STLBitsetDeterminant,double>> res;
+    for(int i = 0; i < nmo_; ++i){
+        if((not ALFA(i)) and BETA(i)){
+            double sign = slater_sign_alpha(i) * slater_sign_beta(i);
+            STLBitsetDeterminant new_det(*this);
+            new_det.set_alfa_bit(i,true);
+            new_det.set_beta_bit(i,false);
+            res.push_back(std::make_pair(new_det,sign));
+        }
+    }
+    return res;
+}
+
+std::vector<std::pair<STLBitsetDeterminant,double>> STLBitsetDeterminant::spin_minus() const
+{
+    std::vector<std::pair<STLBitsetDeterminant,double>> res;
+    for(int i = 0; i < nmo_; ++i){
+        if(ALFA(i) and (not BETA(i))){
+            double sign = slater_sign_alpha(i) * slater_sign_beta(i);
+            STLBitsetDeterminant new_det(*this);
+            new_det.set_alfa_bit(i,false);
+            new_det.set_beta_bit(i,true);
+            res.push_back(std::make_pair(new_det,sign));
+        }
+    }
+    return res;
+}
+
+double STLBitsetDeterminant::spin_z() const
+{
+    int n = 0;
+    for(int i = 0; i < nmo_; ++i){
+        if (ALFA(i)) n++;
+        if (BETA(i)) n--;
+    }
+    return 0.5 * static_cast<double>(n);
+}
+
+double STLBitsetDeterminant::spin2_slow(const STLBitsetDeterminant& rhs) const
+{
+    double s2 = 0.0;
+    if (rhs == *this){
+        double sz = spin_z();
+        s2 += sz * (sz + 1.0);
+    }
+    return s2;
+}
 double STLBitsetDeterminant::spin2(const STLBitsetDeterminant& rhs) const
 {
     const bit_t& I = bits_;
@@ -543,6 +637,76 @@ double STLBitsetDeterminant::SlaterSign(const bit_t& I,int n)
         if(I[i]) sign *= -1.0;
     }
     return(sign);
+}
+
+void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space)
+{
+    det_hash<bool> det_map;
+
+    //Add all determinants to the map, assume set is mostly spin complete
+    for(auto& I : det_space){
+        det_map[I] = true;
+    }
+    //Loop over determinants
+    size_t ndet_added = 0;
+    std::vector<size_t> closed(nmo_,0);
+    std::vector<size_t> open(nmo_,0);
+    std::vector<size_t> open_bits(nmo_,0);
+    for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
+        const STLBitsetDeterminant& det = det_space[I];
+//        outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+        int naopen = 0;
+        int nbopen = 0;
+        int nclosed = 0;
+        for( size_t i = 0; i < nmo_; ++i ){
+            if (det.get_alfa_bit(i) and not det.get_beta_bit(i)){
+                open[naopen + nbopen] = i;
+                naopen += 1;
+            }
+            if (not det.get_alfa_bit(i) and det.get_beta_bit(i)){
+                open[naopen + nbopen] = i;
+                nbopen += 1;
+            }
+            if (det.get_alfa_bit(i) and det.get_beta_bit(i)){
+                closed[nclosed] = i;
+                nclosed += 1;
+            }
+        }
+
+        if (naopen + nbopen == 0) continue;
+
+        // Generate the strings 1111100000
+        //                      {nao}{nbo}
+        for(int i = 0; i < nbopen; ++i) open_bits[i] = false; // 0
+        for(int i = nbopen; i < naopen + nbopen; ++i) open_bits[i] = true;  // 1
+        do{
+            STLBitsetDeterminant new_det;
+            for (int c = 0; c < nclosed; ++c){
+                new_det.set_alfa_bit(closed[c],true);
+                new_det.set_beta_bit(closed[c],true);
+            }
+            for (int o = 0; o < naopen + nbopen; ++o){
+                if (open_bits[o]){ //? not
+                    new_det.set_alfa_bit(open[o],true);
+                }else{
+                    new_det.set_beta_bit(open[o],true);
+                }
+            }
+
+            if (det_map.count(new_det) == 0){
+                det_space.push_back(new_det);
+                det_map[new_det] = true;
+//                outfile->Printf("\n  added determinant:    %s", new_det.str().c_str());
+                ndet_added++;
+            }
+        } while (std::next_permutation(open_bits.begin(),open_bits.begin() + naopen + nbopen));
+    }
+    if( ndet_added > 0 ){
+        outfile->Printf("\n\n  Determinant space is spin incomplete!");
+        outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
+    }else{
+        outfile->Printf("\n\n  Determinant space is spin complete.");
+    }
 }
 
 }} // end namespace

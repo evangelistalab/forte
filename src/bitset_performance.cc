@@ -35,7 +35,7 @@ DynamicBitsetDeterminant random_bitset_determinant(int nmo,int nset)
 
 STLBitsetDeterminant random_bitset_determinant2(int nmo,int nset)
 {
-    STLBitsetDeterminant I(nmo);
+    STLBitsetDeterminant I;
     for (int k = 0; k < nset; ++k){
         I.set_alfa_bit(rand() % nmo,true);
         I.set_beta_bit(rand() % nmo,true);
@@ -258,7 +258,7 @@ double test___int128_place_in_map(int nmo,int nset,int repeat)
 double test_bitset_determinant_place_in_hash(int nmo,int nset,int repeat)
 {
     std::vector<DynamicBitsetDeterminant> det_vec;
-    std::unordered_map<DynamicBitsetDeterminant,double,DynamicBitsetDeterminantHash> det_hash;
+    std::unordered_map<DynamicBitsetDeterminant,double,DynamicBitsetDeterminant::Hash> det_hash;
     for (int n = 0; n < repeat; ++n){
         det_vec.push_back(random_bitset_determinant(nmo,nset));
     }

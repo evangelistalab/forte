@@ -502,7 +502,7 @@ double AdaptiveCI::compute_energy()
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
-			check_spin_completeness(P_space_);
+            STLBitsetDeterminant::enforce_spin_completeness(P_space_);
 			outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
         }else{
 			outfile->Printf("\n Not checking for spin-completeness.");
@@ -512,9 +512,9 @@ double AdaptiveCI::compute_energy()
 		
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
         }else{
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuSparse);
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
         }
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
@@ -527,7 +527,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-				sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots, DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
 			}else{
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -552,15 +552,15 @@ double AdaptiveCI::compute_energy()
 
 		// Check if P+Q space is spin complete
 		if(spin_complete_){
-			check_spin_completeness(PQ_space_);
+            STLBitsetDeterminant::enforce_spin_completeness(PQ_space_);
 			outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,DavidsonLiuList);
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
         }else{
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,DavidsonLiuSparse);
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
         }
 
 		// Ensure the solutions are spin-pure
@@ -1985,11 +1985,12 @@ void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_
 	
 	size_t ndet = 0;
 	//Loop over determinants
+    STLBitsetDeterminant det;
 	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
 		// Loop over MOs
-	//	outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
+        outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
 		for( size_t i = 0; i < nact_; ++i ){
-			STLBitsetDeterminant det(det_space[I]);
+            det = det_space[I];
 			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
 					//destroy alfa bit i, create beta bit i
 					det.set_alfa_bit(i, false );
@@ -2006,7 +2007,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_
 					if( det_map.count(det) == 0 ){
 						det_space.push_back(det);
 						det_map[det] = false;
-						//outfile->Printf("\n  added determinant:    %s", det.str().c_str());
+                        outfile->Printf("\n  added determinant:    %s", det.str().c_str());
 						det_history_[det].push_back(std::make_pair( cycle_, "S"));
 						ndet++;
 						det.set_beta_bit(j, true );

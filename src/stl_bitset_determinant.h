@@ -50,48 +50,37 @@ class STLBitsetDeterminant{
 public:
     using bit_t = typename std::bitset<256>;
 
-    //test integrals
-    void test_ints(){
-        outfile->Printf("\n FC energy: %1.8f", fci_ints_->frozen_core_energy());
-    }
-
     // Class Constructor and Destructor
     /// Construct an empty determinant
     STLBitsetDeterminant();
-
-    /// Construct the determinant from an occupation vector that
-    /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
-    explicit STLBitsetDeterminant(int nmo);
-
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<int>& occupation);
-
     /// Construct the determinant from an occupation vector that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation);
-
     /// Construct an excited determinant of a given reference
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b);
 
-    bool operator==(const STLBitsetDeterminant& lhs) const{
-        return (bits_ == lhs.bits_);
-    }
+    /// Equal operator
+    bool operator==(const STLBitsetDeterminant& lhs) const;
+    /// Less than operator
+    bool operator<(const STLBitsetDeterminant& lhs) const;
 
     /// Get a pointer to the alpha bits
-    const bit_t& bits() const {return bits_;}
+    const bit_t& bits() const;
 
     /// Return the value of an alpha bit
-    bool get_alfa_bit(int n) const {return bits_[n];}
+    bool get_alfa_bit(int n) const;
     /// Return the value of a beta bit
-    bool get_beta_bit(int n) const {return bits_[n + nmo_];}
+    bool get_beta_bit(int n) const;
 
     /// Set the value of an alpha bit
-    void set_alfa_bit(int n, bool value) {bits_[n] = value;}
+    void set_alfa_bit(int n, bool value);
     /// Set the value of a beta bit
-    void set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
+    void set_beta_bit(int n, bool value);
 
     /// Switch the alpha and beta occupations
     void spin_flip();
@@ -100,37 +89,13 @@ public:
     DynamicBitsetDeterminant to_dynamic_bitset() const;
 
     /// Get the alpha bits
-    std::vector<bool> get_alfa_bits_vector_bool(){
-        std::vector<bool> result;
-        for(int n = 0; n < nmo_;++n){
-            result.push_back(bits_[n]);
-        }
-        return result;
-    }
+    std::vector<bool> get_alfa_bits_vector_bool();
     /// Get the beta bits
-    std::vector<bool> get_beta_bits_vector_bool(){
-        std::vector<bool> result;
-        for(int n = 0; n < nmo_; ++n){
-            result.push_back(bits_[nmo_ + n]);
-        }
-        return result;
-    }
+    std::vector<bool> get_beta_bits_vector_bool();
     /// Get the alpha bits
-    const std::vector<bool> get_alfa_bits_vector_bool() const {
-        std::vector<bool> result;
-        for(int n = 0; n < nmo_;++n){
-            result.push_back(bits_[n]);
-        }
-        return result;
-    }
+    const std::vector<bool> get_alfa_bits_vector_bool() const;
     /// Get the beta bits
-    const std::vector<bool> get_beta_bits_vector_bool() const {
-        std::vector<bool> result;
-        for(int n = 0; n < nmo_; ++n){
-            result.push_back(bits_[nmo_ + n]);
-        }
-        return result;
-    }
+    const std::vector<bool> get_beta_bits_vector_bool() const;
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
@@ -173,6 +138,14 @@ public:
     double slater_rules_single_alpha(int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules_single_beta(int i, int a) const;
+    /// Apply S+ to this determinant
+    std::vector<std::pair<STLBitsetDeterminant,double>> spin_plus() const;
+    /// Apply S- to this determinant
+    std::vector<std::pair<STLBitsetDeterminant,double>> spin_minus() const;
+    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    double spin2_slow(const STLBitsetDeterminant& rhs) const;
+    /// Return the eigenvalue of Sz
+    double spin_z() const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const STLBitsetDeterminant& rhs) const;
     /// Return the sign of a_n applied to this determinant
@@ -201,6 +174,9 @@ public:
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// Return the sign of a_n applied to string I
     static double SlaterSign(const bit_t& I,int n);
+    /// Given a set of determinant adds new elements necessary to have a spin
+    /// complete set
+    static void enforce_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);
 
     struct Hash
     {
