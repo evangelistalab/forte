@@ -111,9 +111,12 @@ void AdaptivePathIntegralCI::startup()
 
     outfile->Printf("\n  The reference determinant is:\n");
     reference_determinant_.print();
-	reference_determinant_.test_ints();
 
     // Read options
+    wavefunction_multiplicity_ = 1;
+    if(options_["MULTIPLICITY"].has_changed()){
+        wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
+    }
     nroot_ = options_.get_int("NROOT");
     current_root_ = -1;
     post_diagonalization_ = false;
@@ -174,6 +177,7 @@ void AdaptivePathIntegralCI::print_info()
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info{
         {"Symmetry",wavefunction_symmetry_},
+        {"Multiplicity",wavefunction_multiplicity_},
         {"Number of roots",nroot_},
         {"Root used for properties",options_.get_int("ROOT")},
         {"Maximum number of iterations",maxiter_},
@@ -448,7 +452,7 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
      //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
       //  dyn_dets.push_back(dbs);
    // }
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_);
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DavidsonLiuList);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
 

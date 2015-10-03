@@ -94,6 +94,8 @@ private:
     int ncmo_;
     /// The number of correlated molecular orbitals per irrep
     Dimension ncmopi_;
+    /// The multiplicity of the wave function
+    int wavefunction_multiplicity_;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant

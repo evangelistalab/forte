@@ -248,26 +248,27 @@ public:
     static double SlaterSign(const bit_t& I,int n);
     /// Return the sign of a_n applied to string I
     static double FastSlaterSign(const boost::dynamic_bitset<>& I,int n);
+
+    struct Hash
+    {
+        std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const
+        {
+            size_t h = 0;
+            for (int p = 0; p < bs.nmo_; p++){
+                if (bs.alfa_bits_[p]){
+                    h += (1 << p);
+                }
+                if (bs.beta_bits_[p]){
+                    h += (1 << (p + bs.nmo_));
+                }
+            }
+            return h;
+        }
+    };
 };
 
 }} // End Namespaces
 
-struct DynamicBitsetDeterminantHash
-{
-    std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const
-    {
-        size_t h = 0;
-        int maxp = std::min(bs.nmo_,32);
-        for (int p = 0; p < bs.nmo_; p++){
-            if (bs.alfa_bits_[p]){
-                h += (1 << p);
-            }
-            if (bs.beta_bits_[p]){
-                h += (1 << (p + bs.nmo_));
-            }
-        }
-        return h;
-    }
-};
+
 
 #endif // _dynamic_bitset_determinant_h_

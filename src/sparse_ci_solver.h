@@ -165,7 +165,8 @@ public:
                                    SharedVector& evals,
                                    SharedMatrix& evecs,
                                    int nroot,
-                                   DiagonalizationMethod diag_method = DavidsonLiuSparse);
+                                   int multiplicity,
+                                   DiagonalizationMethod diag_method);
 
 	/**
 	 * Compute the energy when CI vector is already known
@@ -223,15 +224,20 @@ private:
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian_parallel(const std::vector<STLBitsetDeterminant> &space);
 
     /// Computed initial guess for the Davidson-Liu algorithm
-    void initial_guess(const std::vector<STLBitsetDeterminant>& space, SharedMatrix& evecs, int nroot, int multiplicity);
+    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
+    bool davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess, SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot, int multiplicity);
 
     /// Use a OMP parallel algorithm?
     bool parallel_;
     /// Print details?
     bool print_details_;
+    /// Number of collapse vectors per roots
+    int ncollapse_per_root_ = 2;
+    /// Number of max subspace vectors per roots
+    int nsubspace_per_root_ = 4;
 };
 
 }}
