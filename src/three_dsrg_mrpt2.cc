@@ -1601,7 +1601,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     std::vector<double>& BemQ_data = BemQ.data();
     std::vector<double>& BeuQ_data = BeuQ.data();
 
-    double time_two_index = 0.0;
     #pragma omp parallel for num_threads(num_threads_)
     for(size_t e = 0; e < virtual_; ++e){
         int thread = 0;
@@ -1851,7 +1850,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     }
     Eccva += tempTaa_all("vu") * Eta1_aa("uv");
     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
-    outfile->Printf("\n\n CCVA takes %8.8f", cavvTimer.get());
+    if(print_ > 0)
+    {
+        outfile->Printf("\n\n CCVA takes %8.8f", cavvTimer.get());
+    }
 
     return (Eacvv + Eccva);
 

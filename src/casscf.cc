@@ -86,13 +86,13 @@ void CASSCF::compute_casscf()
 
                 if(p < q)
                 {
-                    if(d_->get(p, q) > 1e-8)
+                        if(d_->get(p,q) > 1e-8)
                         S->set(p,q, g_->get(p,q) / d_->get(p,q));
                 }
                 else if(p > q)
                 {
-                    if(d_->get(q, p) > 1e-8)
-                        S->add(p,q,-1.0 * g_->get(q,p) / d_->get(q,p));
+                        if(d_->get(q,p) > 1e-8)
+                        S->set(p,q,-1.0 * g_->get(q,p) / d_->get(q,p));
                 }
             }
         }
@@ -294,7 +294,7 @@ void CASSCF::form_fock_active()
     ambit::Tensor gamma1b = cas_ref_.L1b();
 
     //gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j"));
-    gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j"));
+    gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j") + gamma1a("j,i") + gamma1b("j,i"));
 
     SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
     gamma_no_spin.iterate([&](const std::vector<size_t>& i,double& value){
@@ -379,7 +379,6 @@ void CASSCF::form_fock_active()
         offset += nmopi_[h];
     }
     F_act_ = F_active_c1;
-    F_act_->print();
 
     ambit::Tensor tei_pqaa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, nmo_, na_, na_});
     ambit::Tensor tei_paqa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, na_, nmo_, na_});
@@ -393,16 +392,13 @@ void CASSCF::form_fock_active()
     Fock_act_test("p, q") = 2.0 * tei_pqaa("p, q, t, u") * gamma_no_spin("t, u");
     Fock_act_test("p, q") -= 1.0 * tei_paqa("p, t, q, u") * gamma_no_spin("t, u");
     boost::shared_ptr<Matrix> F_act_testM(new Matrix("F_act", nmo_, nmo_));
-    F_act_sym->zero();
-
 
     Fock_act_test.iterate([&](const std::vector<size_t>& i,double& value){
         F_act_testM->set(i[0], i[1], value);});
 
     F_act_sym->zero();
+    F_act_testM->back_transform(Call_);
     F_act_sym->apply_symmetry(F_act_testM, wfn_->aotoso());
-
-
     F_act_sym->transform(Ca_sym_);
 
     F_active_c1->zero();
@@ -417,14 +413,6 @@ void CASSCF::form_fock_active()
         offset += nmopi_[h];
     }
     F_act_ = F_active_c1;
-    F_act_->print();
-
-
-
-
-
-    
-
 
 }
 void CASSCF::orbital_gradient()
@@ -472,7 +460,6 @@ void CASSCF::orbital_gradient()
     gamma2("u,v,x,y") +=  L2ab("u,v,x,y");
     gamma2("u,v,x,y") +=  L2ab("x,y,u,v");
     gamma2("u,v,x,y") +=  L2bb("u,v,x,y");
-    gamma2.scale(0.25);
 
     //gamma2_("u,v,x,y") = gamma2_("x,y,u,v");
     //gamma2_("u,v,x,y") = gamma2_("")
@@ -526,6 +513,9 @@ void CASSCF::orbital_gradient()
             Orb_grad->set(t,a, value_ta);
         }
     }
+    //Orb_grad->set_diagonal(1.0);
+    for(size_t p = 0; p < nmo_; p++)
+        Orb_grad->set(p,p, 2 * F_core_->get(p, p) + 2 * F_act_->get(p, p));
 
     g_ = Orb_grad;
 
