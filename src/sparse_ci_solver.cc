@@ -862,14 +862,20 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     STLBitsetDeterminant::enforce_spin_completeness(guess_det);
     if (guess_det.size() > nguess){
         size_t nnew_dets = guess_det.size() - nguess;
-        outfile->Printf("\n  Initial guess space is incomplete.  Adding %d determinant(s).",nnew_dets);
+        outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
+        int nfound = 0;
         for (size_t i = 0; i < nnew_dets; ++i){
-//            outfile->Printf("\n  Adding:");
-//            guess_det[nguess + i].print();
-            size_t I = std::distance(space.begin(),std::find(space.begin(),space.end(),guess_det[nguess + i]));
-//            outfile->Printf("\n  Found at position %zu.",I);
-            guess_dets_pos.push_back(std::make_pair(space[I],I));  // store a det and its position
+            bool found = false;
+            for (size_t j = nguess; j < ndets; ++j){
+                size_t J = smallest[j].second;
+                if (space[J] == guess_det[nguess + i]){
+                    guess_dets_pos.push_back(std::make_pair(space[J],J));  // store a det and its position
+                    nfound++;
+                    break;
+                }
+            }
         }
+        outfile->Printf("  %d determinant(s) added.",nfound);
     }
     nguess = guess_dets_pos.size();
 
@@ -906,41 +912,41 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 
     // Find groups of solutions with same spin
     double Stollerance = 1.0e-6;
-    std::map<int,int> mult_size;
+    std::map<int,std::vector<int>> mult_list;
     for (int i = 0; i < nguess; ++i){
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
         int mult_int = std::round(mult);
         double error = mult - static_cast<double>(mult_int);
         if (std::fabs(error) < Stollerance){
-            mult_size[mult_int] += 1;
+            mult_list[mult_int].push_back(i);
         }else{
             outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
             S2evals.print();
-            exit(1);
         }
     }
-    if (mult_size[multiplicity] < nroot){
-        outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,mult_size[multiplicity]);
+    if (mult_list[multiplicity].size() < nroot){
+        size_t nfound = mult_list[multiplicity].size();
+        outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
         exit(1);
     }
 
-    std::vector<int> S_vals;
-    for (auto kv : mult_size){
-        S_vals.push_back(kv.first);
+    std::vector<int> mult_vals;
+    for (auto kv : mult_list){
+        mult_vals.push_back(kv.first);
     }
-    std::sort(S_vals.begin(),S_vals.end());
+    std::sort(mult_vals.begin(),mult_vals.end());
 
-    int n = 0;
-    for (int s : S_vals){
-        outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d",mult_size[s],s);
+    for (int m : mult_vals){
+        std::vector<int>& mult_list_s = mult_list[m];
+        int nspin_states = mult_list_s.size();
+        outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c",nspin_states,m,m == multiplicity ? '*' : ' ');
         // Extract the spin manifold
-        int nspin_states = mult_size[s];
         Matrix HS2("HS2",nspin_states,nspin_states);
         Vector HS2evals("HS2",nspin_states);
         Matrix HS2evecs("HS2",nspin_states,nspin_states);
         for(int I = 0; I < nspin_states; I++) {
             for(int J = 0; J < nspin_states; J++) {
-                HS2.set(I,J,H.get(n + I,n + J));
+                HS2.set(I,J,H.get(mult_list_s[I],mult_list_s[J]));
             }
         }
         HS2.diagonalize(HS2evecs,HS2evals);
@@ -951,16 +957,13 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             for (size_t I = 0; I < nguess; I++) {
                 double CIr = 0.0;
                 for (int J = 0; J < nspin_states; ++J){
-                    CIr += S2evecs.get(I,n + J) * HS2evecs(J,r);
+                    CIr += S2evecs.get(I,mult_list_s[J]) * HS2evecs(J,r);
                 }
                 det_C.push_back(std::make_pair(guess_dets_pos[I].second,CIr));
             }
-            guess.push_back(std::make_pair(s,det_C));
+            guess.push_back(std::make_pair(m,det_C));
         }
-        n += nspin_states;
     }
-
-    outfile->Printf("\n  Finished initial guess");
 
     return guess;
 
@@ -1075,7 +1078,6 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
         G.zero();
         G.gemm(false,false,1.0,b,sigma,0.0);
-        G.print();
 
         // diagonalize mini-matrix
         G.diagonalize(alpha,lambda);
@@ -1129,19 +1131,6 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
                     }
                 }
             }
-
-            // project out spin contaminants
-//            TODO
-//            for (auto& g : guess){
-//                guess_mult.push_back(g.first);
-//            }
-//            auto it = std::find(guess_mult.begin(),guess_mult.end(),multiplicity);
-//            size_t guess_first = std::distance(guess_mult.begin(), it);
-//            for(int i = 0; i < M; i++) { // loop over roots
-//                for (auto& guess_vec_info : guess[i + guess_first].second){
-//                    b.set(i,guess_vec_info.first,guess_vec_info.second);
-//                }
-//            }
 
             // normalize new vectors
             for(size_t i = 0; i < collapse_size; i++){
@@ -1204,6 +1193,31 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
             norm = std::sqrt(norm);
             for(size_t I = 0; I < N; I++) {
                 f_p[k][I] /= norm;
+            }
+        }
+
+        for(size_t i = 0; i < M; i++){
+//            outfile->Printf("\n  Correction vector %d",i);
+            int n = 0;
+            for (auto& g : guess){
+                int g_mult = g.first;
+                double overlap = 0.0;
+                for (auto& guess_vec_info : g.second){
+                    size_t I = guess_vec_info.first;
+                    double CI = guess_vec_info.second;
+                    overlap += f_p[i][I] * CI;
+                }
+                n++;
+//                if (std::fabs(overlap) > 1.0e-3){
+//                    outfile->Printf("\n     has overlap = %10.6f with guess %d (2S + 1 = %d)",overlap,n,g_mult);
+//                }
+                if (g_mult != multiplicity){
+                    for (auto& guess_vec_info : g.second){
+                        size_t I = guess_vec_info.first;
+                        double CI = guess_vec_info.second;
+                        f_p[i][I] -= overlap * CI;
+                    }
+                }
             }
         }
 

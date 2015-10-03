@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 import re
+import datetime
 
 class bcolors:
     HEADER = '\033[95m'
@@ -79,18 +80,19 @@ for d in tests:
         print out
     os.chdir(maindir)
 
+
 summary = []
-nfailed = 0
-nnomatch = 0
+failed = []
+nomatch = []
 for d in tests:
     if test_results[d] == "PASSED":
         msg = bcolors.OKGREEN + "PASSED" + bcolors.ENDC
     elif test_results[d] == "FAILED":
         msg = bcolors.FAIL + "FAILED" + bcolors.ENDC
-        nfailed += 1
+        failed.append(d)
     elif test_results[d] == "DOES NOT MATCH":
         msg = bcolors.FAIL + "DOES NOT MATCH" + bcolors.ENDC
-        nnomatch += 1
+        nomatch.append(d)
 
     filler = "." * (81 - len(d + msg))
     summary.append("        %s%s%s" % (d.upper(),filler,msg))
@@ -100,8 +102,20 @@ print " " * 8 + "-" * 72
 print "\n".join(summary)
 print " " * 8 + "-" * 72
 
-
+nfailed = len(failed)
+nnomatch = len(nomatch)
 if nnomatch + nfailed == 0:
     print "Tests: All passed\n"
 else:
     print "Tests: %d passed, %d failed, %d did not match\n" % (len(tests) -  nnomatch - nfailed,nfailed,nnomatch)
+    # Get the current date and time
+    dt = datetime.datetime.now()
+    now = dt.strftime("%Y-%m-%d-%H:%M")
+    if nfailed > 0:
+        failed_log = open("failed_tests","w+")
+        failed_log.write("# %s\n" % now)
+        failed_log.write("\n".join(failed))
+    if nnomatch > 0:
+        nomatch_log = open("nomatch_tests","w+")
+        nomatch_log.write("# %s\n" % now)
+        nomatch_log.write("\n".join(nomatch))

@@ -59,7 +59,7 @@ inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) con
     return false;
 }
 
-inline const STLBitsetDeterminant::bit_t& STLBitsetDeterminant::bits() const {return bits_;}
+const std::bitset<256>& STLBitsetDeterminant::bits() const {return bits_;}
 
 inline bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
 

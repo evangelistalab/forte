@@ -48,7 +48,7 @@ namespace psi{ namespace forte{
  */
 class STLBitsetDeterminant{
 public:
-    using bit_t = typename std::bitset<256>;
+    using bit_t = std::bitset<256>;
 
     // Class Constructor and Destructor
     /// Construct an empty determinant
@@ -70,7 +70,7 @@ public:
     bool operator<(const STLBitsetDeterminant& lhs) const;
 
     /// Get a pointer to the alpha bits
-    const bit_t& bits() const;
+    const std::bitset<256>& bits() const;
 
     /// Return the value of an alpha bit
     bool get_alfa_bit(int n) const;
