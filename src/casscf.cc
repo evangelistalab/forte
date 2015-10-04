@@ -96,9 +96,11 @@ void CASSCF::compute_casscf()
                 }
             }
         }
+        S->print();
         S->back_transform(Call_);
         SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
         S_sym->apply_symmetry(S, wfn_->aotoso());
+        S_sym->transform(Ca_sym_);
 
         // Build exp(U) = 1 + U + 1/2 U U + 1/6 U U U
         SharedMatrix expS = S_sym->clone();
@@ -108,7 +110,7 @@ void CASSCF::compute_casscf()
             if (!expS->rowspi()[h]) continue;
             double** Sp = expS->pointer(h);
             for (int i=0; i<(expS->colspi()[h]); i++){
-                Sp[i][i] = 1.0;
+                Sp[i][i] += 1.0;
             }
         }
 
