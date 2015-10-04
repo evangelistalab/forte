@@ -296,6 +296,9 @@ read_options(std::string name, Options &options)
 		options.add_double("LAMBDA_THRESH", 1.0);
 		/*- Add determinants to enforce spin-complete set? -*/
 		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
+        /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
+        options.add_bool("PROJECT_SPIN", false);
+
 		/*- Print an analysis of determinant history? -*/
 		options.add_bool("DETERMINANT_HISTORY", false);
 
