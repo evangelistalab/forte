@@ -144,14 +144,6 @@ protected:
 class SparseCISolver
 {
 public:    
-    // ==> Class Constructor and Destructor <==
-
-    /// Constructor
-    SparseCISolver() : parallel_(false), print_details_(false) {};
-
-    /// Destructor
-    ~SparseCISolver() {};
-
     // ==> Class Interface <==
 
     /**
@@ -180,12 +172,14 @@ public:
 									int nroot,
 									DiagonalizationMethod diag_method);
 
-    /// Enable or disable the parallel algorithms
+    /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
-    /// Enable or disable printing of details
+    /// Enable/disable printing of details
     void set_print_details(bool print_details) {print_details_ = print_details;}
 
+    /// Enable/disable spin projection
+    void set_spin_project(bool value);
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -231,9 +225,11 @@ private:
     bool davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess, SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot, int multiplicity);
 
     /// Use a OMP parallel algorithm?
-    bool parallel_;
+    bool parallel_ = false;
     /// Print details?
-    bool print_details_;
+    bool print_details_ = false;
+    /// Project solutions onto given multiplicity?
+    bool spin_project_ = false;
     /// Number of collapse vectors per roots
     int ncollapse_per_root_ = 2;
     /// Number of max subspace vectors per roots

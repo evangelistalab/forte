@@ -645,6 +645,11 @@ void SigmaVectorList::get_diagonal(Vector& diag)
     }
 }
 
+void SparseCISolver::set_spin_project(bool value)
+{
+    spin_project_ = value;
+}
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
     if (space.size() < 5){
@@ -859,25 +864,27 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         guess_det.push_back(space[I]);
     }
 
-    STLBitsetDeterminant::enforce_spin_completeness(guess_det);
-    if (guess_det.size() > nguess){
-        size_t nnew_dets = guess_det.size() - nguess;
-        outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
-        int nfound = 0;
-        for (size_t i = 0; i < nnew_dets; ++i){
-            bool found = false;
-            for (size_t j = nguess; j < ndets; ++j){
-                size_t J = smallest[j].second;
-                if (space[J] == guess_det[nguess + i]){
-                    guess_dets_pos.push_back(std::make_pair(space[J],J));  // store a det and its position
-                    nfound++;
-                    break;
+    if (spin_project_){
+        STLBitsetDeterminant::enforce_spin_completeness(guess_det);
+        if (guess_det.size() > nguess){
+            size_t nnew_dets = guess_det.size() - nguess;
+            outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
+            int nfound = 0;
+            for (size_t i = 0; i < nnew_dets; ++i){
+                bool found = false;
+                for (size_t j = nguess; j < ndets; ++j){
+                    size_t J = smallest[j].second;
+                    if (space[J] == guess_det[nguess + i]){
+                        guess_dets_pos.push_back(std::make_pair(space[J],J));  // store a det and its position
+                        nfound++;
+                        break;
+                    }
                 }
             }
+            outfile->Printf("  %d determinant(s) added.",nfound);
         }
-        outfile->Printf("  %d determinant(s) added.",nfound);
+        nguess = guess_dets_pos.size();
     }
-    nguess = guess_dets_pos.size();
 
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2",nguess,nguess);
@@ -1196,26 +1203,24 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
             }
         }
 
-        for(size_t i = 0; i < M; i++){
-//            outfile->Printf("\n  Correction vector %d",i);
-            int n = 0;
-            for (auto& g : guess){
-                int g_mult = g.first;
-                double overlap = 0.0;
-                for (auto& guess_vec_info : g.second){
-                    size_t I = guess_vec_info.first;
-                    double CI = guess_vec_info.second;
-                    overlap += f_p[i][I] * CI;
-                }
-                n++;
-//                if (std::fabs(overlap) > 1.0e-3){
-//                    outfile->Printf("\n     has overlap = %10.6f with guess %d (2S + 1 = %d)",overlap,n,g_mult);
-//                }
-                if (g_mult != multiplicity){
+        if(spin_project_){
+            for(size_t i = 0; i < M; i++){
+                int n = 0;
+                for (auto& g : guess){
+                    int g_mult = g.first;
+                    double overlap = 0.0;
                     for (auto& guess_vec_info : g.second){
                         size_t I = guess_vec_info.first;
                         double CI = guess_vec_info.second;
-                        f_p[i][I] -= overlap * CI;
+                        overlap += f_p[i][I] * CI;
+                    }
+                    n++;
+                    if (g_mult != multiplicity){
+                        for (auto& guess_vec_info : g.second){
+                            size_t I = guess_vec_info.first;
+                            double CI = guess_vec_info.second;
+                            f_p[i][I] -= overlap * CI;
+                        }
                     }
                 }
             }
