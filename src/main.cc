@@ -244,6 +244,9 @@ read_options(std::string name, Options &options)
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
 
+        /*- The maximum number of iterations -*/
+        options.add_int("MAXITER_DAVIDSON",100);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE
         //////////////////////////////////////////////////////////////

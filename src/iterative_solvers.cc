@@ -63,6 +63,26 @@ DavidsonLiuSolver::~DavidsonLiuSolver()
 
 }
 
+void DavidsonLiuSolver::set_print_level(size_t n)
+{
+    print_level_ = n;
+}
+
+void DavidsonLiuSolver::set_e_convergence(double value)
+{
+    e_convergence_ = value;
+}
+
+void DavidsonLiuSolver::set_r_convergence(double value)
+{
+    r_convergence_ = value;
+}
+
+size_t DavidsonLiuSolver::collapse_size() const
+{
+    return collapse_size_;
+}
+
 void DavidsonLiuSolver::add_b(SharedVector vec)
 {
     // Give the next b that does not have a sigma
@@ -87,7 +107,33 @@ bool DavidsonLiuSolver::add_sigma(SharedVector vec)
         sigma_->set(j,sigma_size_,vec->get(j));
     }
     sigma_size_++;
-    return (sigma_size_ < basis_size_);
+    return (sigma_size_ >= basis_size_);
+}
+
+void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out)
+{
+    project_out_ = project_out;
+}
+
+SharedVector DavidsonLiuSolver::eigenvalues() const
+{
+    return lambda;
+}
+
+SharedMatrix DavidsonLiuSolver::eigenvectors() const
+{
+    return b_;
+}
+
+SharedVector DavidsonLiuSolver::eigenvector(size_t n) const
+{
+    double** v = bnew->pointer();
+
+    SharedVector evec(new Vector("V",size_));
+    for(size_t I = 0; I < size_; I++) {
+        evec->set(I,v[n][I]);
+    }
+    return evec;
 }
 
 bool DavidsonLiuSolver::update()
@@ -157,6 +203,7 @@ bool DavidsonLiuSolver::update()
     }
 
     if(check_convergence()){
+        get_results();
         return true;
     }
 
@@ -238,9 +285,7 @@ bool DavidsonLiuSolver::check_convergence()
 
 void DavidsonLiuSolver::get_results()
 {
-
     /* generate final eigenvalues and eigenvectors */
-    //if(converged == M) {
     double** alpha_p = alpha->pointer();
     double** b_p = b_->pointer();
     double* eps = lambda_old->pointer();
@@ -249,9 +294,6 @@ void DavidsonLiuSolver::get_results()
 
     for(int i = 0; i < nroot_; i++) {
         eps[i] = lambda->get(i);
-//        for(int I = 0; I < size_; I++){
-//            v[I][i] = 0.0;
-//        }
         for(int j = 0; j < basis_size_; j++) {
             for(size_t I = 0; I < size_; I++) {
                 v[i][I] += alpha_p[j][i] * b_p[j][I];
@@ -273,18 +315,6 @@ void DavidsonLiuSolver::get_results()
     }
 }
 
-SharedVector DavidsonLiuSolver::eigenvector(size_t n)
-{
-    double** v = bnew->pointer();
-
-    SharedVector evec(new Vector("V",size_));
-    for(int I = 0; I < size_; I++) {
-        evec->set(I,v[n][I]);
-    }
-    return evec;
-}
-
-
 bool DavidsonLiuSolver::check_orthogonality()
 {
     bool is_orthonormal = true;
@@ -305,7 +335,7 @@ bool DavidsonLiuSolver::check_orthogonality()
         }
         if ((not zero) and (not one)){
             if (is_orthonormal) {
-                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero");
+                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero",i);
                 is_orthonormal = false;
             }
         }
