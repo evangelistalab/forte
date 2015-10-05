@@ -44,6 +44,7 @@ public:
 
     size_t size() {return size_;}
 
+    virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
     virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
 
@@ -60,6 +61,7 @@ class SigmaVectorFull : public SigmaVector
 public:
     SigmaVectorFull(SharedMatrix H) : SigmaVector(H->ncol()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -76,6 +78,7 @@ class SigmaVectorSparse : public SigmaVector
 public:
     SigmaVectorSparse(std::vector<std::pair<std::vector<int>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -93,6 +96,7 @@ class SigmaVectorSparse2 : public SigmaVector
 public:
     SigmaVectorSparse2(std::vector<std::pair<std::vector<int>,SharedVector>>& H) : SigmaVector(H.size()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -110,6 +114,7 @@ class SigmaVectorList : public SigmaVector
 public:
     SigmaVectorList(const std::vector<STLBitsetDeterminant>& space);
 
+    void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void get_hamiltonian(Matrix& H);
@@ -181,6 +186,12 @@ public:
     /// Enable/disable spin projection
     void set_spin_project(bool value);
 
+    /// Set convergence threshold
+    void set_e_convergence(double value);
+
+    /// The maximum number of iterations for the Davidson algorithm
+    void set_maxiter_davidson(int value);
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
@@ -210,6 +221,8 @@ private:
                                        int nroot,
                                        int multiplicity);
 
+    void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
+
     /// Build the full Hamiltonian matrix
     SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
 
@@ -223,17 +236,26 @@ private:
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
     bool davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess, SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot, int multiplicity);
-
+    bool davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+                                             SigmaVector* sigma_vector,
+                                             SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors,
+                                             int nroot,
+                                             int multiplicity);
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
     bool print_details_ = false;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
+    /// The energy convergence threshold
+    double e_convergence_ = 1.0e-12;
     /// Number of collapse vectors per roots
     int ncollapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
     int nsubspace_per_root_ = 4;
+    /// Maximum number of iterations in the Davidson-Liu algorithm
+    int maxiter_davidson_ = 100;
 };
 
 }}

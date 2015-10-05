@@ -33,9 +33,31 @@ namespace psi{ namespace forte{
  * @brief The DavidsonLiuSolver class
  * This class diagonalizes the Hamiltonian in a basis
  * of determinants.
+ *
+ * Example use:
+ *
+ *     DavidsonLiuSolver dls(nbasis,nroots);      // create solver
+ *     dls.startup(diagonal);                     // initialize solver with diagonal of Matrix
+ *     size_t guess_size = dls.collapse_size();   // get the size of the guess
+ *
+ *     for (size_t n = 0; n < guess_size; ++n){
+ *         dls.add_b(guess[n]);                   // add guess vectors
+ *     }
+ *
+ *     bool converged = false;
+ *     for (int cycle = 0; cycle < max_cycle; ++cycle){
+ *         do{
+ *             dls.get_b(b);                      // solver provides a vector b
+ *             ...                                // code to compute sigma = Hb
+ *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to solver
+ *         } while (add_sigma);
+ *         converged = dls.update();              // check convergence
+ *         if (converged) break;
+ *     }
  */
 class DavidsonLiuSolver
 {
+    using sparse_vec = std::vector<std::pair<size_t,double>>;
 public:
 
     // ==> Class Constructor and Destructor <==
@@ -48,22 +70,31 @@ public:
 
     // ==> Class Interface <==
 
-    void set_print_level(size_t n) {print_level_ = n;}
-
+    /// Set the print level
+    void set_print_level(size_t n);
     /// Set the energy convergence
-    void set_e_convergence(double value) {e_convergence_ = value;}
+    void set_e_convergence(double value);
     /// Set the residual convergence
-    void set_r_convergence(double value) {r_convergence_ = value;}
+    void set_r_convergence(double value);
 
-    size_t collapse_size() const {return collapse_size_;}
+    /// Return the size of the collapse vectors
+    size_t collapse_size() const;
 
+    /// Add a basis vector
     void add_b(SharedVector vec);
+    /// Get a basis vector
     void get_b(SharedVector vec);
+    /// Add a sigma vector
     bool add_sigma(SharedVector vec);
 
-    SharedVector eigenvalues() const {return lambda;}
-    SharedMatrix eigenvectors() const {return b_;}
-    SharedVector eigenvector(size_t n);
+    void set_project_out(std::vector<sparse_vec> project_out);
+
+    /// Return the eigenvalues
+    SharedVector eigenvalues() const;
+    /// Return the eigenvectors
+    SharedMatrix eigenvectors() const;
+    /// Return the n-th eigenvector
+    SharedVector eigenvector(size_t n) const;
 
     /// Initialize the object
     void startup(SharedVector diagonal);
@@ -134,6 +165,9 @@ private:
     SharedVector lambda_old;
     /// Diagonal elements of the Hamiltonian
     SharedVector h_diag;
+
+    /// Approximate eigenstates to project out
+    std::vector<sparse_vec> project_out_;
 };
 
 }}

@@ -488,6 +488,8 @@ double AdaptiveCI::compute_energy()
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 

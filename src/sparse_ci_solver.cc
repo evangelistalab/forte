@@ -8,6 +8,7 @@
 #include <libqt/qt.h>
 
 #include "forte-def.h"
+#include "iterative_solvers.h"
 #include "sparse_ci_solver.h"
 #include "fci_vector.h"
 
@@ -416,6 +417,102 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
     }
 }
 
+void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
+{
+    sigma->zero();
+    double* sigma_p = sigma->pointer();
+    double* b_p = b->pointer();
+    for (size_t J = 0; J < size_; ++J){
+        // reference
+        sigma_p[J] += diag_[J] * b_p[J];
+
+        // aa singles
+        for (auto& aJ_mo_sign : a_ann_list[J]){
+            const size_t aJ_add = aJ_mo_sign.first;
+            const size_t p = std::abs(aJ_mo_sign.second) - 1;
+            for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
+                const size_t q = std::abs(aaJ_mo_sign.second) - 1;
+                if (p != q){
+                    const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
+                    const size_t I = aaJ_mo_sign.first;
+                    sigma_p[I] += HIJ * b_p[J];
+                }
+            }
+        }
+
+        // bb singles
+        for (auto& bJ_mo_sign : b_ann_list[J]){
+            const size_t bJ_add = bJ_mo_sign.first;
+            const size_t p = std::abs(bJ_mo_sign.second) - 1;
+            for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
+                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
+                if (p != q){
+                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
+                    const size_t I = bbJ_mo_sign.first;
+                    sigma_p[I] += HIJ * b_p[J];
+                }
+            }
+        }
+
+        // aaaa doubles
+        for (auto& aaJ_mo_sign : aa_ann_list[J]){
+            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(aaJ_mo_sign);
+            for (auto& aaaaJ_mo_sign : aa_cre_list[aaJ_add]){
+                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(aaaaJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
+                    const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const size_t I = aaaaJ_add;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    sigma_p[I] += HIJ * b_p[J];
+                }
+            }
+        }
+
+        // aabb singles
+        for (auto& abJ_mo_sign : ab_ann_list[J]){
+            const size_t abJ_add = std::get<0>(abJ_mo_sign);
+            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(abJ_mo_sign);
+            for (auto& ababJ_mo_sign : ab_cre_list[abJ_add]){
+                const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(ababJ_mo_sign);
+                if ((p != r) and (q != s)){
+                    const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
+                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const size_t I = ababJ_add;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    sigma_p[I] += HIJ * b_p[J];
+                }
+            }
+        }
+
+        // bbbb singles
+        for (auto& bbJ_mo_sign : bb_ann_list[J]){
+            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
+            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(bbJ_mo_sign);
+            for (auto& bbbbJ_mo_sign : bb_cre_list[bbJ_add]){
+                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(bbbbJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
+                    const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const size_t I = bbbbJ_add;
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    sigma_p[I] += HIJ * b_p[J];
+                }
+            }
+        }
+    }
+}
+
 void SigmaVectorList::get_hamiltonian(Matrix& H)
 {
     double** h_p = H.pointer();
@@ -650,6 +747,16 @@ void SparseCISolver::set_spin_project(bool value)
     spin_project_ = value;
 }
 
+void SparseCISolver::set_e_convergence(double value)
+{
+    e_convergence_ = value;
+}
+
+void SparseCISolver::set_maxiter_davidson(int value)
+{
+    maxiter_davidson_ = value;
+}
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
     if (space.size() < 5){
@@ -662,7 +769,8 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
         }else if (diag_method == DavidsonLiuSparse){
             diagonalize_davidson_liu_sparse(space,evals,evecs,nroot,multiplicity);
         }else if (diag_method == DavidsonLiuList){
-            diagonalize_davidson_liu_list(space,evals,evecs,nroot,multiplicity);
+//            diagonalize_davidson_liu_list(space,evals,evecs,nroot,multiplicity);
+            diagonalize_davidson_liu_solver(space,evals,evecs,nroot,multiplicity);
         }
     }
 }
@@ -733,6 +841,21 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<STLBitsetDe
     SigmaVector* sigma_vector = &svl;
     auto guess = initial_guess(space,nroot,multiplicity);
     davidson_liu_guess(guess,sigma_vector,evals,evecs,nroot,multiplicity);
+}
+
+void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
+{
+    outfile->Printf("\n\n  Davidson-liu list algorithm");
+    outfile->Flush();
+
+    size_t dim_space = space.size();
+    evecs.reset(new Matrix("U",dim_space,nroot));
+    evals.reset(new Vector("e",nroot));
+
+    // Diagonalize H
+    SigmaVectorList svl (space);
+    SigmaVector* sigma_vector = &svl;
+    davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
 }
 
 SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
@@ -916,7 +1039,6 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     // Project H onto the spin-adapted subspace
     H.transform(S2evecs);
 
-
     // Find groups of solutions with same spin
     double Stollerance = 1.0e-6;
     std::map<int,std::vector<int>> mult_list;
@@ -928,7 +1050,6 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             mult_list[mult_int].push_back(i);
         }else{
             outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
-            S2evals.print();
         }
     }
     if (mult_list[multiplicity].size() < nroot){
@@ -991,6 +1112,106 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 //        outfile->Printf("\n  Guess Root %d: <E> = %f, <S^2> = %f",r,e,s2);
 //    }
  }
+
+bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+                                         SigmaVector* sigma_vector,
+                                         SharedVector Eigenvalues,
+                                         SharedMatrix Eigenvectors,
+                                         int nroot,
+                                         int multiplicity)
+{
+    print_details_ = true;
+    size_t fci_size = sigma_vector->size();
+    DavidsonLiuSolver dls(fci_size,nroot);
+    outfile->Printf("\n e_convergence_ = %e",e_convergence_);
+    dls.set_e_convergence(e_convergence_);    
+    dls.set_print_level(1);
+
+    // allocate vectors
+    SharedVector b(new Vector("b",fci_size));
+    SharedVector sigma(new Vector("sigma",fci_size));
+
+    // get and pass diagonal
+    sigma_vector->get_diagonal(*sigma);
+    dls.startup(sigma);
+
+    size_t guess_size = dls.collapse_size();
+    outfile->Printf("\n  number of guess vectors: %d",guess_size);
+
+    auto guess = initial_guess(space,nroot,multiplicity);
+
+    guess_size = std::min(guess.size(),guess_size);
+    if (guess_size == 0){
+        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+    }
+
+    // Find the guess vectors with the correct multiplicity
+    std::vector<int> guess_mult;
+    for (auto& g : guess){
+        guess_mult.push_back(g.first);
+    }
+    auto it = std::find(guess_mult.begin(),guess_mult.end(),multiplicity);
+    size_t guess_first = std::distance(guess_mult.begin(), it);
+
+    for (size_t n = 0; n < guess_size; ++n){
+        b->zero();
+        for (auto& guess_vec_info : guess[n + guess_first].second){
+            b->set(guess_vec_info.first,guess_vec_info.second);
+        }
+        outfile->Printf("\n  Adding guess %d",n);
+        dls.add_b(b);
+    }
+
+    bool converged = false;
+
+    if(print_details_){
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
+        outfile->Printf("\n  ----------------------------------------");
+    }
+
+    double old_avg_energy = 0.0;
+    for (int cycle = 0; cycle < maxiter_davidson_; ++cycle){
+        bool add_sigma = true;
+        do{
+            dls.get_b(b);
+            sigma_vector->compute_sigma(sigma,b);
+            add_sigma = dls.add_sigma(sigma);
+        } while (add_sigma);
+        converged = dls.update();
+
+        double avg_energy = 0.0;
+        for (int r = 0; r < nroot; ++r){
+            avg_energy += dls.eigenvalues()->get(r);
+        }
+        avg_energy /= static_cast<double>(nroot);
+
+        if (print_details_) outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
+
+        old_avg_energy = avg_energy;
+
+        if (converged) break;
+    }
+
+    if (print_details_) outfile->Printf("\n  ----------------------------------------");
+
+    converged = true;
+
+    if (not converged){
+        outfile->Printf("\n  FCI did not converge!");
+        exit(1);
+    }
+
+    SharedVector evals = dls.eigenvalues();
+    SharedMatrix evecs = dls.eigenvectors();
+    for (int r = 0; r < nroot; ++r){
+        Eigenvalues->set(r,evals->get(r));
+        for (size_t I = 0; I < fci_size; ++I){
+            Eigenvectors->set(I,r,evecs->get(r,I));
+        }
+    }
+}
 
 bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess,
                                         SigmaVector* sigma_vector,
