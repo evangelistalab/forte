@@ -150,7 +150,6 @@ void AdaptiveCI::startup()
 	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
 	outfile->Printf("\n  There are %zu active orbitals.", nact_);
 
-
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
     outfile->Printf("\n  The reference determinant is:\n");
@@ -1629,6 +1628,18 @@ int AdaptiveCI::direct_sym_product( int sym1, int sym2 )
 
 void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
+
+    std::vector<bool> occ(2*nact_,0);
+    oVector<double,int,int> labeled_orb_en = sym_labeled_orbitals("RHF");
+    for(int i = 0 ; i < nalpha_; ++i){
+        occ[labeled_orb_en[i].second.second] = 1;
+    }
+    for(int i = 0; i < nbeta_; ++i){
+        occ[nact_ + labeled_orb_en[i].second.second] = 1;
+    } 
+    
+    STLBitsetDeterminant rdet(occ);
+	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
 		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
 		pVector<double,size_t> det_weight;
@@ -1639,14 +1650,13 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 		std::sort(det_weight.begin(), det_weight.end());
 		std::reverse(det_weight.begin(), det_weight.end());
 
-		auto ref_bits = reference_determinant_.bits();
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
 			auto ex_bits = det_space[det_weight[I].second].bits();
 
 			//Compute number of differences in both alpha and beta strings wrt ref
-			for(size_t a = 0; a < nact_; ++a){
+			for(size_t a = 0; a < nact_ *2; ++a){
 				if(ref_bits[a] != ex_bits[a]){
 					++ndiff;
 				}
