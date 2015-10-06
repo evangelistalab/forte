@@ -80,8 +80,8 @@ public:
     /// Return the size of the collapse vectors
     size_t collapse_size() const;
 
-    /// Add a basis vector
-    void add_b(SharedVector vec);
+    /// Add a guess basis vector
+    void add_guess(SharedVector vec);
     /// Get a basis vector
     void get_b(SharedVector vec);
     /// Add a sigma vector
@@ -113,6 +113,14 @@ private:
     bool check_orthogonality();
     /// Check if the the iterative procedure has converged
     bool check_convergence();
+    /// Build the correction vectors
+    void form_correction_vectors();
+    /// Project out undesired roots
+    void project_out_roots(SharedMatrix v);
+    /// Normalize the correction vectors
+    void normalize_vectors(SharedMatrix v, size_t n);
+    /// Collapse the vectors
+    void collapse_vectors();
 
     // ==> Class Private Data <==
 

@@ -1124,7 +1124,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size,nroot);
     outfile->Printf("\n e_convergence_ = %e",e_convergence_);
-    dls.set_e_convergence(e_convergence_);    
+    dls.set_e_convergence(e_convergence_);
     dls.set_print_level(1);
 
     // allocate vectors
@@ -1140,6 +1140,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
 
     auto guess = initial_guess(space,nroot,multiplicity);
 
+    // TODO fix the logic here, need to make sure we have enough guess vectors.
     guess_size = std::min(guess.size(),guess_size);
     if (guess_size == 0){
         throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
@@ -1152,15 +1153,21 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     }
     auto it = std::find(guess_mult.begin(),guess_mult.end(),multiplicity);
     size_t guess_first = std::distance(guess_mult.begin(), it);
-
     for (size_t n = 0; n < guess_size; ++n){
         b->zero();
         for (auto& guess_vec_info : guess[n + guess_first].second){
             b->set(guess_vec_info.first,guess_vec_info.second);
         }
-        outfile->Printf("\n  Adding guess %d",n);
+        outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[n + guess_first].first);
         dls.add_b(b);
     }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    for (auto& g : guess){
+        if (g.first != multiplicity) bad_roots.push_back(g.second);
+    }
+    dls.set_project_out(bad_roots);
 
     bool converged = false;
 
