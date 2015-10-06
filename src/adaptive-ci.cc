@@ -147,7 +147,6 @@ void AdaptiveCI::startup()
 	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
 	outfile->Printf("\n  There are %zu active orbitals.", nact_);
 
-
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
     outfile->Printf("\n  The reference determinant is:\n");
@@ -612,13 +611,15 @@ double AdaptiveCI::compute_energy()
 
 	// Ensure the solutions are spin-pure
 	if( spin_projection == 2 or spin_projection == 3){
-		double spin_contamination = compute_spin_contamination(P_space_, P_evecs, nroot_);
+		double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, nroot_);
 		if(spin_contamination >= spin_tol_){
 			outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-			spin_transform(P_space_, P_evecs, nroot_);
-			P_evecs->zero();
-			P_evecs = PQ_spin_evecs_->clone();
-			sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_, DavidsonLiuList);
+			spin_transform(PQ_space_, PQ_evecs, nroot_);
+			outfile->Printf("\n  ...done");
+			PQ_evecs->print();
+		//	P_evecs->zero();
+			//P_evecs = PQ_spin_evecs_->clone();
+			sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_, DavidsonLiuList);
 		}else{
 			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 			outfile->Printf("\n  No need to perform spin projection.");
@@ -1626,6 +1627,18 @@ int AdaptiveCI::direct_sym_product( int sym1, int sym2 )
 
 void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
+
+    std::vector<bool> occ(2*nact_,0);
+    oVector<double,int,int> labeled_orb_en = sym_labeled_orbitals("RHF");
+    for(int i = 0 ; i < nalpha_; ++i){
+        occ[labeled_orb_en[i].second.second] = 1;
+    }
+    for(int i = 0; i < nbeta_; ++i){
+        occ[nact_ + labeled_orb_en[i].second.second] = 1;
+    } 
+    
+    STLBitsetDeterminant rdet(occ);
+	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
 		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
 		pVector<double,size_t> det_weight;
@@ -1635,18 +1648,14 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 
 		std::sort(det_weight.begin(), det_weight.end());
 		std::reverse(det_weight.begin(), det_weight.end());
-	
-		STLBitsetDeterminant ref;
-		ref = det_space[det_weight[0].second];
 
-		auto ref_bits = ref.bits();
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
 			auto ex_bits = det_space[det_weight[I].second].bits();
 
 			//Compute number of differences in both alpha and beta strings wrt ref
-			for(size_t a = 0; a < nact_; ++a){
+			for(size_t a = 0; a < nact_ *2; ++a){
 				if(ref_bits[a] != ex_bits[a]){
 					++ndiff;
 				}
@@ -1856,59 +1865,65 @@ void AdaptiveCI::lowdin_spin_project( std::vector< STLBitsetDeterminant > det_sp
 	
 	//First implementation for singlets
 	double spin_contam = compute_spin_contamination( det_space, cI, nroot);
-	int i = 1;
-
+	int p_spin = 0;
+	
 	// Build hash to connect BSD to its cI
 	det_hash<size_t> det_map;
 	
-	// need to use larger loop for muliple roots---to implement later
 	for(size_t I = 0, maxI = det_space.size(); I < maxI; ++I){
 		det_map[det_space[I]] = I;
-	}	 
-	double denom = 1 / ( i * ( i + 1 ) );
+	}
+	while( spin_contam > spin_tol_){	 
+		++p_spin;
+		double denom = 1 / ( p_spin * ( p_spin + 1 ) );
+		for( int n = 0; n < nroot; ++n){
+			for( size_t I = 0, maxi = det_space.size(); I < maxi; ++I){
+				int na = 0;
+				int nb = 0;
+				STLBitsetDeterminant det(det_space[I]);
+				for( size_t i = 0; i < nact_; ++i ){
+					//Compute unpaired alpha and beta electrons
+				    if(det.get_alfa_bit(i) == 1 and det.get_beta_bit(i) == 0) {
+						na++;
+					}
+					else if(det.get_alfa_bit(i) == 0 and det.get_beta_bit(i) == 1 ){
+						nb++;
+					}	
+				}
+				na /= 2;
+				nb /= 2;
+				double ms = (na + nb)/ 2.0 ;
+				double prefactor = 0.25 * (na - nb) * (na - nb)	+ 2 * (na + nb);	
+			
+				for( size_t i = 0; i < nact_; ++i ){
 
-	for( size_t I = 0, maxi = det_space.size(); I < maxi; ++I){
-		int na = 0;
-		int nb = 0;
-		STLBitsetDeterminant det(det_space[I]);
-		for( size_t i = 0; i < nact_; ++i ){
-			//Compute unpaired alpha and beta electrons
-		    if(det.get_alfa_bit(i) == 1 and det.get_beta_bit(i) == 0) {
-				na++;
-			}
-			else if(det.get_alfa_bit(i) == 0 and det.get_beta_bit(i) == 1 ){
-				nb++;
-			}	
-		}
-		na /= 2;
-		nb /= 2;
-		double ms = (na + nb)/ 2.0 ;
-		double prefactor = 0.25 * (na - nb) * (na - nb)	+ 2 * (na + nb);	
-	
-		for( size_t i = 0; i < nact_; ++i ){
+					if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
+							cI->set(det_map[det],n, cI->get(det_map[det],n) - 0.25* prefactor*denom);
+							//destroy alfa bit i, create beta bit i
+							det.set_alfa_bit(i, false );
+							det.set_beta_bit(i, true );
+					}
+					for( size_t j = 0; j < nact_; ++j ){
+						if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
+							//destroy beta bit j, create alfa bit j
+							det.set_beta_bit(j, false );
+							det.set_alfa_bit(j, true );
 
-			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
-					//destroy alfa bit i, create beta bit i
-					det.set_alfa_bit(i, false );
-					det.set_beta_bit(i, true );
-			}
-			for( size_t j = 0; j < nact_; ++j ){
-				if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
-					//destroy beta bit j, create alfa bit j
-					det.set_beta_bit(j, false );
-					det.set_alfa_bit(j, true );
-
-					if( det_map.count(det) == 0 ){
-						det.set_beta_bit(j, true );
-						det.set_alfa_bit(j, false );
-					}else{
-						cI->set(det_map[det],0, cI->get(det_map[det],0) - denom );
-						det.set_beta_bit(j, true );
-						det.set_alfa_bit(j, false );
+							if( det_map.count(det) == 0 ){
+								det.set_beta_bit(j, true );
+								det.set_alfa_bit(j, false );
+							}else{
+								cI->set(det_map[det],n, cI->get(det_map[det],n) - denom );
+								det.set_beta_bit(j, true );
+								det.set_alfa_bit(j, false );
+							}
+						}
 					}
 				}
 			}
 		}
+    spin_contam = compute_spin_contamination( det_space, cI, nroot);
+    outfile->Printf("\n p_spin: %zu, spin contam : %1.8f", p_spin, spin_contam);
 	}
 */
 }	
