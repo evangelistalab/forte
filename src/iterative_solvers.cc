@@ -83,7 +83,7 @@ size_t DavidsonLiuSolver::collapse_size() const
     return collapse_size_;
 }
 
-void DavidsonLiuSolver::add_b(SharedVector vec)
+void DavidsonLiuSolver::add_guess(SharedVector vec)
 {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j){
@@ -143,13 +143,6 @@ bool DavidsonLiuSolver::update()
 
     boost::timer t_davidson;
 
-    double* lambda_p = lambda->pointer();
-    double* Adiag_p = h_diag->pointer();
-    double** b_p = b_->pointer();
-    double** f_p = f->pointer();
-    double** alpha_p = alpha->pointer();
-    double** sigma_p = sigma_->pointer();
-
     G->zero();
     G->gemm(false,false,1.0,b_,sigma_,0.0);
 
@@ -166,34 +159,18 @@ bool DavidsonLiuSolver::update()
             outfile->Printf("Subspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
             outfile->Printf("Collapsing eigenvectors.\n");
         }
-        bnew->zero();
-        double** bnew_p = bnew->pointer();
-        for(int i = 0; i < collapse_size_; i++) {
-            for(int j = 0; j < basis_size_; j++) {
-                for(int k = 0; k < size_; k++) {
-                    bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
-                }
-            }
-        }
+        // collapse vectors
+        collapse_vectors();
 
         // normalize new vectors
-        for(int i = 0; i < collapse_size_; i++){
-            double norm = 0.0;
-            for(int k = 0; k < size_; k++){
-                norm += bnew_p[i][k] * bnew_p[i][k];
-            }
-            norm = std::sqrt(norm);
-            for(int k = 0; k < size_; k++){
-                bnew_p[i][k] = bnew_p[i][k] / norm;
-            }
-        }
+        normalize_vectors(bnew,collapse_size_);
 
         // Copy them into place
         b_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
         for(int k = 0; k < collapse_size_; k++){
-            if(schmidt_add(b_p,k,size_, bnew_p[k])) {
+            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
                 basis_size_++;  // <- Increase L if we add one more basis vector
             }
         }
@@ -209,7 +186,39 @@ bool DavidsonLiuSolver::update()
 
     // Step #3: Build the Correction Vectors
     // form preconditioned residue vectors
+    form_correction_vectors();
+
+    // Step #3b: Project out undesired roots
+    project_out_roots(f);
+
+    // Step #4: Orthonormalize the Correction Vectors
+    normalize_vectors(f,nroot_);
+
+    // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
+    for(size_t k = 0; k < nroot_; k++){
+        if (basis_size_ < subspace_size_){
+            if(schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
+                basis_size_++;  // <- Increase L if we add one more basis vector
+            }
+        }
+    }
+
+    iter_++;
+
+    timing_ += t_davidson.elapsed();
+
+    return false;
+}
+
+void DavidsonLiuSolver::form_correction_vectors()
+{
     f->zero();
+    double* lambda_p = lambda->pointer();
+    double* Adiag_p = h_diag->pointer();
+    double** b_p = b_->pointer();
+    double** f_p = f->pointer();
+    double** alpha_p = alpha->pointer();
+    double** sigma_p = sigma_->pointer();
     for(int k = 0; k < nroot_; k++){  // loop over roots
         for(int I = 0; I < size_; I++) {  // loop over elements
             for(int i = 0; i < basis_size_; i++) {
@@ -224,34 +233,57 @@ bool DavidsonLiuSolver::update()
             }
         }
     }
+}
 
-    // Step #4: Orthonormalize the Correction Vectors
-    /* normalize each residual */
+void DavidsonLiuSolver::project_out_roots(SharedMatrix v)
+{
+    double** v_p = v->pointer();
     for(int k = 0; k < nroot_; k++) {
-        double norm = 0.0;
-        for(int I = 0; I < size_; I++) {
-            norm += f_p[k][I] * f_p[k][I];
-        }
-        norm = std::sqrt(norm);
-        for(int I = 0; I < size_; I++) {
-            f_p[k][I] /= norm;
-        }
-    }
-
-    // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
-    for(int k = 0; k < nroot_; k++){
-        if (basis_size_ < subspace_size_){
-            if(schmidt_add(b_p, basis_size_, size_, f_p[k])) {
-                basis_size_++;  // <- Increase L if we add one more basis vector
+        for (auto& bad_root : project_out_){
+            double overlap = 0.0;
+            for (auto& I_CI : bad_root){
+                size_t I = I_CI.first;
+                double CI = I_CI.second;
+                overlap += v_p[k][I] * CI;
+            }
+            for (auto& I_CI : bad_root){
+                size_t I = I_CI.first;
+                double CI = I_CI.second;
+                v_p[k][I] -= overlap * CI;
             }
         }
     }
+}
 
-    iter_++;
+void DavidsonLiuSolver::normalize_vectors(SharedMatrix v,size_t n)
+{
+    // normalize each residual
+    double** v_p = v->pointer();
+    for(size_t k = 0; k < n; k++) {
+        double norm = 0.0;
+        for(size_t I = 0; I < size_; I++) {
+            norm += v_p[k][I] * v_p[k][I];
+        }
+        norm = std::sqrt(norm);
+        for(size_t I = 0; I < size_; I++) {
+            v_p[k][I] /= norm;
+        }
+    }
+}
 
-    timing_ += t_davidson.elapsed();
-
-    return false;
+void DavidsonLiuSolver::collapse_vectors()
+{
+    bnew->zero();
+    double** alpha_p = alpha->pointer();
+    double** b_p = b_->pointer();
+    double** bnew_p = bnew->pointer();
+    for(int i = 0; i < collapse_size_; i++) {
+        for(int j = 0; j < basis_size_; j++) {
+            for(size_t k = 0; k < size_; k++) {
+                bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
+            }
+        }
+    }
 }
 
 bool DavidsonLiuSolver::check_convergence()
