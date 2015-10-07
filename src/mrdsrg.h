@@ -285,7 +285,7 @@ protected:
     /// Compute DSRG-MRPT3 energy
     double compute_energy_pt3();
     /// Check if orbitals are semi-canonicalized
-    void check_semicanonical();
+    bool check_semicanonical();
 
 
     // => Reference relaxation <= //

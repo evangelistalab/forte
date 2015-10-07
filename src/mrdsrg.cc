@@ -367,17 +367,28 @@ double MRDSRG::compute_energy_relaxed(){
             // refill densities
             build_density();
 
+            // build the new Fock matrix
+            build_fock(H_,V_);
+
+            // diagonal blocks of Fock
+            H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",spin_cases({"gg"}));
+            H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+                if(i[0] == i[1]){
+                    if(spin[0] == AlphaSpin){
+                        value = Fa_[i[0]];
+                    }else{
+                        value = Fb_[i[0]];
+                    }
+                }
+            });
+
             // semi-canonicalize orbitals
-            if (options_.get_bool("SEMI_CANONICAL")){
-                // printing
-                print_h2("Semi-canonicalize Orbitals");
+            print_h2("Semi-canonicalize Orbitals");
+            bool semi = check_semicanonical();
+            if (options_.get_bool("SEMI_CANONICAL") && !semi){
+                // set up timer
                 std::vector<double> timings {0.0};
                 Timer timer;
-
-                // build the new Fock matrix
-                build_fock(H_,V_);
-                outfile->Printf("\n    %-47s %8.3f", "Timing for building new Fock matrix:", timer.get() - timings.back());
-                timings.push_back(timer.get());
 
                 // diagonalize blocks of Fock matrix
                 BlockedTensor U = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
@@ -447,10 +458,10 @@ double MRDSRG::compute_energy_relaxed(){
 
                 // refill densities
                 build_density();
-            }
 
-            // rebuild Fock matrix
-            build_fock(H_,V_);
+                // rebuild Fock matrix
+                build_fock(H_,V_);
+            }
 
             // test convergence
             if(fabs(Edelta_dsrg) < e_conv && fabs(Edelta_relax) < e_conv){
