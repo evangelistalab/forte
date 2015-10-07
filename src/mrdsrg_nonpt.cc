@@ -32,10 +32,11 @@ void MRDSRG::compute_hbar(){
     O2_["pQrS"] = V_["pQrS"];
     O2_["PQRS"] = V_["PQRS"];
 
-    // iterator variables
+    // iteration variables
     bool converged = false;
     int maxn = options_.get_int("SRG_RSC_NCOMM");
     double ct_threshold = options_.get_double("SRG_RSC_THRESHOLD");
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     // compute Hbar recursively
     for(int n = 1; n <= maxn; ++n){
@@ -75,17 +76,19 @@ void MRDSRG::compute_hbar(){
         }
 
         // [H, A] = [H, T] + [H, T]^dagger
-        C0 *= 2.0;
-        O1_["pq"]  = C1_["pq"];
-        O1_["PQ"]  = C1_["PQ"];
-        C1_["pq"] += O1_["qp"];
-        C1_["PQ"] += O1_["QP"];
-        O2_["pqrs"]  = C2_["pqrs"];
-        O2_["pQrS"]  = C2_["pQrS"];
-        O2_["PQRS"]  = C2_["PQRS"];
-        C2_["pqrs"] += O2_["rspq"];
-        C2_["pQrS"] += O2_["rSpQ"];
-        C2_["PQRS"] += O2_["RSPQ"];
+        if(dsrg_op == "UNITARY"){
+            C0 *= 2.0;
+            O1_["pq"]  = C1_["pq"];
+            O1_["PQ"]  = C1_["PQ"];
+            C1_["pq"] += O1_["qp"];
+            C1_["PQ"] += O1_["QP"];
+            O2_["pqrs"]  = C2_["pqrs"];
+            O2_["pQrS"]  = C2_["pQrS"];
+            O2_["PQRS"]  = C2_["PQRS"];
+            C2_["pqrs"] += O2_["rspq"];
+            C2_["pQrS"] += O2_["rSpQ"];
+            C2_["PQRS"] += O2_["RSPQ"];
+        }
 
         // Hbar += C
         Hbar0_ += C0;
@@ -105,6 +108,7 @@ void MRDSRG::compute_hbar(){
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
+        outfile->Printf("\n  n = %d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             converged = true;
             break;
@@ -283,6 +287,7 @@ double MRDSRG::compute_energy_cepa0(){
     DT2_ = BTF_->build(tensor_type_,"DT2",spin_cases({"hhpp"}));
     std::vector<double> big_T, big_DT;
     size_t numel = vector_size_diis(T1_,blocks1,T2_,blocks2);
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
 
     // setup DIIS
     std::shared_ptr<DIISManager> diis_manager;
@@ -322,15 +327,18 @@ double MRDSRG::compute_energy_cepa0(){
         H1_T2_C2(F_,T2_,0.5,C2_);
 
         O1_["pq"] += C1_["pq"];
-        O1_["pq"] += C1_["qp"];
         O1_["PQ"] += C1_["PQ"];
-        O1_["PQ"] += C1_["QP"];
         O2_["pqrs"] += C2_["pqrs"];
-        O2_["pqrs"] += C2_["rspq"];
         O2_["pQrS"] += C2_["pQrS"];
-        O2_["pQrS"] += C2_["rSpQ"];
         O2_["PQRS"] += C2_["PQRS"];
-        O2_["PQRS"] += C2_["RSPQ"];
+
+        if(dsrg_op == "UNITARY"){
+            O1_["pq"] += C1_["qp"];
+            O1_["PQ"] += C1_["QP"];
+            O2_["pqrs"] += C2_["rspq"];
+            O2_["pQrS"] += C2_["rSpQ"];
+            O2_["PQRS"] += C2_["RSPQ"];
+        }
 
         // Compute [H, T] + 0.5 * [[F, A], T]
         double C0 = 0.0;
@@ -353,17 +361,26 @@ double MRDSRG::compute_energy_cepa0(){
         H2_T2_C2(O2_,T2_,1.0,C2_);
 
         // Hbar += [H, T] + [H, T]^dagger
-        Hbar0_ += 2.0 * C0;
-        Hbar1_["pq"] += C1_["pq"];
-        Hbar1_["PQ"] += C1_["PQ"];
-        Hbar1_["pq"] += C1_["qp"];
-        Hbar1_["PQ"] += C1_["QP"];
-        Hbar2_["pqrs"] += C2_["pqrs"];
-        Hbar2_["pQrS"] += C2_["pQrS"];
-        Hbar2_["PQRS"] += C2_["PQRS"];
-        Hbar2_["pqrs"] += C2_["rspq"];
-        Hbar2_["pQrS"] += C2_["rSpQ"];
-        Hbar2_["PQRS"] += C2_["RSPQ"];
+        if(dsrg_op == "UNITARY"){
+            Hbar0_ += 2.0 * C0;
+            Hbar1_["pq"] += C1_["pq"];
+            Hbar1_["PQ"] += C1_["PQ"];
+            Hbar1_["pq"] += C1_["qp"];
+            Hbar1_["PQ"] += C1_["QP"];
+            Hbar2_["pqrs"] += C2_["pqrs"];
+            Hbar2_["pQrS"] += C2_["pQrS"];
+            Hbar2_["PQRS"] += C2_["PQRS"];
+            Hbar2_["pqrs"] += C2_["rspq"];
+            Hbar2_["pQrS"] += C2_["rSpQ"];
+            Hbar2_["PQRS"] += C2_["RSPQ"];
+        }else{
+            Hbar0_ += C0;
+            Hbar1_["pq"] += C1_["pq"];
+            Hbar1_["PQ"] += C1_["PQ"];
+            Hbar2_["pqrs"] += C2_["pqrs"];
+            Hbar2_["pQrS"] += C2_["pQrS"];
+            Hbar2_["PQRS"] += C2_["PQRS"];
+        }
 
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
@@ -440,42 +457,22 @@ double MRDSRG::compute_energy_cepa0(){
 }
 
 std::vector<std::string> MRDSRG::od_one_labels(){
-    std::vector<std::string> blocks1;
-    blocks1.push_back(acore_label_ + aactv_label_);
-    blocks1.push_back(acore_label_ + avirt_label_);
-    blocks1.push_back(aactv_label_ + avirt_label_);
-    blocks1.push_back(bcore_label_ + bactv_label_);
-    blocks1.push_back(bcore_label_ + bvirt_label_);
-    blocks1.push_back(bactv_label_ + bvirt_label_);
+    std::vector<std::string> blocks1 (T1_.block_labels());
+    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_, bactv_label_ + bactv_label_};
+    blocks1.erase(std::remove_if(blocks1.begin(), blocks1.end(),
+                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
+            blocks1.end());
     return blocks1;
 }
 
 std::vector<std::string> MRDSRG::od_two_labels(){
-    std::vector<std::string> blocks2;
-    std::vector<std::string> hole, particle;
-    hole.push_back(acore_label_); hole.push_back(aactv_label_);
-    particle.push_back(aactv_label_); particle.push_back(avirt_label_);
-    for(auto& idx0: hole){
-        for(auto& idx1: hole){
-            for(auto& idx2: particle){
-                for(auto& idx3: particle){
-                    if(idx0 == aactv_label_ && idx1 == aactv_label_ &&
-                            idx2 == aactv_label_ && idx3 == aactv_label_){
-                        continue;
-                    }
-                    std::string index;
-                    index = idx0 + idx1 + idx2 + idx3;
-                    blocks2.push_back(index);
-                    index[1] = toupper(index[1]);
-                    index[3] = toupper(index[3]);
-                    blocks2.push_back(index);
-                    index[0] = toupper(index[0]);
-                    index[2] = toupper(index[2]);
-                    blocks2.push_back(index);
-                }
-            }
-        }
-    }
+    std::vector<std::string> blocks2 (T2_.block_labels());
+    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
+                aactv_label_ + bactv_label_ + aactv_label_ + bactv_label_,
+                bactv_label_ + bactv_label_ + bactv_label_ + bactv_label_};
+    blocks2.erase(std::remove_if(blocks2.begin(), blocks2.end(),
+                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
+            blocks2.end());
     return blocks2;
 }
 

@@ -40,9 +40,6 @@ using oVector = std::vector<std::pair<a, std::pair< b,c >> >;
 template < typename a, typename b>
 using pVector = std::vector<std::pair< a,b> >;
 
-template < typename a >
-using det_hash = std::unordered_map<STLBitsetDeterminant, a, STLBitsetDeterminant::Hash>;
-
 inline double clamp(double x, double a, double b)
 
 {
@@ -149,7 +146,6 @@ void AdaptiveCI::startup()
 
 	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
 	outfile->Printf("\n  There are %zu active orbitals.", nact_);
-
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
@@ -491,6 +487,8 @@ double AdaptiveCI::compute_energy()
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -505,7 +503,7 @@ double AdaptiveCI::compute_energy()
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
-			check_spin_completeness(P_space_);
+            STLBitsetDeterminant::enforce_spin_completeness(P_space_);
 			outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
         }else{
 			outfile->Printf("\n Not checking for spin-completeness.");
@@ -515,9 +513,9 @@ double AdaptiveCI::compute_energy()
 		
 
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
         }else{
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuSparse);
+            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
         }
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
@@ -530,7 +528,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-				sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots, DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
 			}else{
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -555,15 +553,15 @@ double AdaptiveCI::compute_energy()
 
 		// Check if P+Q space is spin complete
 		if(spin_complete_){
-			check_spin_completeness(PQ_space_);
+            STLBitsetDeterminant::enforce_spin_completeness(PQ_space_);
 			outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,DavidsonLiuList);
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
         }else{
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,DavidsonLiuSparse);
+            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
         }
 
 		// Ensure the solutions are spin-pure
@@ -905,7 +903,7 @@ void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMat
     boost::timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
-	det_hash<double> V_map;
+    det_hash<> V_map;
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
         STLBitsetDeterminant& det = P_space_[I];
@@ -991,7 +989,7 @@ void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMat
 }
 
 
-void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<double>& V_hash)
+void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
@@ -1629,6 +1627,18 @@ int AdaptiveCI::direct_sym_product( int sym1, int sym2 )
 
 void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
 {
+
+    std::vector<bool> occ(2*nact_,0);
+    oVector<double,int,int> labeled_orb_en = sym_labeled_orbitals("RHF");
+    for(int i = 0 ; i < nalpha_; ++i){
+        occ[labeled_orb_en[i].second.second] = 1;
+    }
+    for(int i = 0; i < nbeta_; ++i){
+        occ[nact_ + labeled_orb_en[i].second.second] = 1;
+    } 
+    
+    STLBitsetDeterminant rdet(occ);
+	auto ref_bits = rdet.bits();
 	for(int n = 0; n < nroot; ++n){
 		pVector<size_t,double> excitation_counter( 1 + (1 + cycle_) * 2 );
 		pVector<double,size_t> det_weight;
@@ -1639,14 +1649,13 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 		std::sort(det_weight.begin(), det_weight.end());
 		std::reverse(det_weight.begin(), det_weight.end());
 
-		auto ref_bits = reference_determinant_.bits();
 
 		for(size_t I = 0, max = det_space.size(); I < max; ++I){
 			int ndiff = 0;
 			auto ex_bits = det_space[det_weight[I].second].bits();
 
 			//Compute number of differences in both alpha and beta strings wrt ref
-			for(size_t a = 0; a < nact_; ++a){
+			for(size_t a = 0; a < nact_ *2; ++a){
 				if(ref_bits[a] != ex_bits[a]){
 					++ndiff;
 				}
@@ -1850,7 +1859,8 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 }
 
 void AdaptiveCI::lowdin_spin_project( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot){
-	Timer timer;
+    /*
+    Timer timer;
 	outfile->Printf("\n  Performing Loewdin's spin projection...");
 	
 	//First implementation for singlets
@@ -1912,9 +1922,10 @@ void AdaptiveCI::lowdin_spin_project( std::vector< STLBitsetDeterminant > det_sp
 				}
 			}
 		}
-		spin_contam = compute_spin_contamination( det_space, cI, nroot); 
-		outfile->Printf("\n p_spin: %zu, spin contam : %1.8f", p_spin, spin_contam);
-	}	
+    spin_contam = compute_spin_contamination( det_space, cI, nroot);
+    outfile->Printf("\n p_spin: %zu, spin contam : %1.8f", p_spin, spin_contam);
+	}
+*/
 }	
 
 void AdaptiveCI::spin_transform( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
@@ -1991,11 +2002,12 @@ void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_
 	
 	size_t ndet = 0;
 	//Loop over determinants
+    STLBitsetDeterminant det;
 	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
 		// Loop over MOs
-//	outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
+        outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
 		for( size_t i = 0; i < nact_; ++i ){
-			STLBitsetDeterminant det(det_space[I]);
+            det = det_space[I];
 			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
 					//destroy alfa bit i, create beta bit i
 					det.set_alfa_bit(i, false );
@@ -2012,7 +2024,7 @@ void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_
 					if( det_map.count(det) == 0 ){
 						det_space.push_back(det);
 						det_map[det] = false;
-					//	outfile->Printf("\n  added determinant:    %s", det.str().c_str());
+                        outfile->Printf("\n  added determinant:    %s", det.str().c_str());
 						det_history_[det].push_back(std::make_pair( cycle_, "S"));
 						ndet++;
 						det.set_beta_bit(j, true );

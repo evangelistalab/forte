@@ -9,6 +9,7 @@
 # based on initial work by Andy Simmonett (May 2013)
 
 import os
+import os.path
 import sys
 import string
 import re
@@ -51,43 +52,40 @@ def generate_makefile(args):
     print "   root directory: %s" % root_directory
     print "   psi4 executable: %s" % args.psi4
     print "   ambit binary installation directory: %s\n" % args.ambit_bindir
-    if args.psi4 and args.ambit_bindir:
-        os.chdir(root_directory + "/src")
 
-        # Run psi4 --new-plugin-makefile
-        command = [args.psi4,"--new-plugin-makefile"]
-        p = subprocess.call(command, stdout=subprocess.PIPE)
+    os.chdir(root_directory + "/src")
 
-        with open('Makefile','r') as f:
-            makefile = f.read()
+    # Run psi4 --new-plugin-makefile
+    command = [args.psi4,"--new-plugin-makefile"]
+    p = subprocess.call(command, stdout=subprocess.PIPE)
 
-        if makefile:
-            # "NAME = $(shell basename `pwd`)" -> "NAME = forte"
-            re_name = re.compile(r"NAME = \$\(shell basename `pwd`\)")
-            makefile = re_name.sub("NAME = forte",makefile)
+    with open('Makefile','r') as f:
+        makefile = f.read()
 
-            # "PSITARGET = $(NAME).so" -> "PSITARGET = ../forte.so"
-            re_target = re.compile(r"PSITARGET = \$\(NAME\)\.so")
-            makefile = re_target.sub("PSITARGET = ../forte.so",makefile)
+    if makefile:
+        # "NAME = $(shell basename `pwd`)" -> "NAME = forte"
+        re_name = re.compile(r"NAME = \$\(shell basename `pwd`\)")
+        makefile = re_name.sub("NAME = forte",makefile)
 
-            # Add "AMBIT_BINDIR = <args.ambit_bindir>"
-            # Add "INCLUDES += -I$(AMBIT_BINDIR)/include"
-            # Add "LDFLAGS += -L$(AMBIT_DIR)/lib -lambit"
-            addons = "# Added by FORTE setup\n"
-            addons += "AMBIT_BINDIR = %s\n" % args.ambit_bindir
-            addons += "INCLUDES += -I$(AMBIT_BINDIR)/include\n"
-            addons += "LDFLAGS += -L$(AMBIT_BINDIR)/lib -lambit\n"
-            re_addons = re.compile(r"DEPENDINCLUDE")
-            makefile = re_addons.sub(addons + "\nDEPENDINCLUDE",makefile)
+        # "PSITARGET = $(NAME).so" -> "PSITARGET = ../forte.so"
+        re_target = re.compile(r"PSITARGET = \$\(NAME\)\.so")
+        makefile = re_target.sub("PSITARGET = ../forte.so",makefile)
 
-            with open('Makefile','w+') as f:
-                f.write(makefile)
-        else:
-            print "Failed to generate a Makefile via 'psi4 --new-plugin-makefile'"
-            return False
+        # Add "AMBIT_BINDIR = <args.ambit_bindir>"
+        # Add "INCLUDES += -I$(AMBIT_BINDIR)/include"
+        # Add "LDFLAGS += -L$(AMBIT_DIR)/lib -lambit"
+        addons = "# Added by FORTE setup\n"
+        addons += "AMBIT_BINDIR = %s\n" % args.ambit_bindir
+        addons += "INCLUDES += -I$(AMBIT_BINDIR)/include\n"
+        addons += "LDFLAGS += -L$(AMBIT_BINDIR)/lib -lambit -Wl,-rpath $(AMBIT_BINDIR)/lib\n"
+        re_addons = re.compile(r"DEPENDINCLUDE")
+        makefile = re_addons.sub(addons + "\nDEPENDINCLUDE",makefile)
 
-    elif args.psi4:
-        print "Please specify the location of the AMBIT directory."
+        with open('Makefile','w+') as f:
+            f.write(makefile)
+    else:
+        print "Failed to generate a Makefile via 'psi4 --new-plugin-makefile'"
+        return False
     return True
 
 
@@ -111,7 +109,8 @@ def main(argv):
         argv.append("--help")
     args = parse_input()
     save_setup_command(argv,root_directory)
-    configure_default_psi4(args)
+    configure_psi4(args)
+    configure_ambit(args)
     status = generate_makefile(args)
 
     if status:
@@ -122,16 +121,48 @@ def main(argv):
         print "Sorry, something went wrong :("
 
 
-def configure_default_psi4(args):
+def configure_psi4(args):
     if not args.psi4:
-        # no --psi4-exe provided
+        # no --psi4 provided
         command = ["which","psi4"]
         p = subprocess.Popen(command, stdout=subprocess.PIPE)
         result = p.stdout.readlines()
-        if len(res) == 0:
+        if len(result) == 0:
             print "Could not detect your PSI4 executable.  Please specify its location."
             exit(1)
         args.psi4 = result[0][:-1]
+
+    # check if psi4 executable exists
+    if os.path.isfile(args.psi4):
+        command = [args.psi4,"--version"]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        result = p.stdout.readlines()
+    else:
+        print "The psi4 executable \"%s\" could not be found" % args.psi4
+        exit(1)
+
+
+def configure_ambit(args):
+    if not args.ambit_bindir:
+        # no --ambit-bindir provided
+        print "Please specify the location of the AMBIT installation directory.\nThis directory is created after compiling and installing AMBIT (make; make install)"
+        exit(1)
+    else:
+        # check if psi4 executable exists
+        ambit_libdir = args.ambit_bindir + "/lib/"
+        if os.path.isdir(ambit_libdir):
+            # check for lib/libambit.*
+            found = False
+            for file in os.listdir(ambit_libdir):
+                if 'libambit.' in file:
+                    found = True
+
+            if not found:
+                print "The ambit directory \"%s\" does not contain a library file." % ambit_libdir
+                exit(1)
+        else:
+            print "The ambit directory \"%s\" does not contain a libambit file.\nCheck the argument passed via --ambit-bindir." % ambit_libdir
+            exit(1)
 
 if __name__ == '__main__':
     main(sys.argv)

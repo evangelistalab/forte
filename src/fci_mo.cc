@@ -230,7 +230,7 @@ void FCI_MO::read_info(Options &options){
     if(nalfa_ < 0 || nbeta_ < 0 || (nalfa_ + nbeta_) != nelec){
         outfile->Printf("\n  Number of alpha electrons or beta electrons is negative.");
         outfile->Printf("\n  Nalpha = %5ld, Nbeta = %5ld", nalfa_, nbeta_);
-        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f", charge, multi_, ms_ / 2.0);
+        outfile->Printf("\n  Charge = %3d, Multiplicity = %3d, Ms = %.1f", charge, multi_, ms_);
         outfile->Printf("\n  Check the Charge, Multiplicity, and Ms! \n");
         outfile->Printf("\n  Note that Ms is 2 * Sz \n");
         throw PSIEXCEPTION("Negative number of alpha electrons or beta electrons. Check output for details.");
@@ -496,7 +496,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     int nroot = det_size < 25 ? det_size : 25;
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
-    sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,DavidsonLiuList);
+    sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,multi_,DavidsonLiuList);
 
     // add doubly occupied energy
     double vdocc = fci_ints_->scalar_energy();
