@@ -90,7 +90,7 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -441,6 +441,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- DSRG Transformation Type -*/
+        options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Zero T1 Amplitudes -*/
@@ -541,6 +543,9 @@ extern "C" PsiReturnType forte(Options &options)
         if(options.get_str("RELAX_REF") == "NONE"){
             mrdsrg->compute_energy();
         }else{
+            if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+            }
             mrdsrg->compute_energy_relaxed();
         }
     }
