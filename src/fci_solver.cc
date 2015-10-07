@@ -503,7 +503,6 @@ Reference FCISolver::reference()
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
 
-    //L2ab("pqrs") -= L1a("pr") * L1a("qs");
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     L2bb("pqrs") -= L1b("pr") * L1b("qs");
