@@ -32,7 +32,7 @@ void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
                 other_blocks.end());
 
         // map spin with Fock matrices
-        std::map<bool, const std::vector<double>&> Fock_spin {{true, Fa_}, {false, Fb_}};
+        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
         // ccvv blocks
         for(const std::string& block: cv_blocks){
@@ -191,7 +191,7 @@ void MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
                 other_blocks.end());
 
         // map spin with Fock matrices
-        std::map<bool, const std::vector<double>&> Fock_spin {{true, Fa_}, {false, Fb_}};
+        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
         // cv blocks
         for(const std::string& block: cv_blocks){
@@ -318,7 +318,7 @@ void MRDSRG::update_t2(){
                 other_blocks.end());
 
         // map spin with Fock matrices
-        std::map<bool, const std::vector<double>&> Fock_spin {{true, Fa_}, {false, Fb_}};
+        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
         // ccvv blocks
         for(const std::string& block: cv_blocks){
@@ -472,7 +472,7 @@ void MRDSRG::update_t1(){
                 other_blocks.end());
 
         // map spin with Fock matrices
-        std::map<bool, const std::vector<double>&> Fock_spin {{true, Fa_}, {false, Fb_}};
+        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
         // cv blocks
         for(const std::string& block: cv_blocks){
