@@ -28,7 +28,10 @@ double MRDSRG::compute_energy_pt2(){
     });
 
     // test orbitals are semi-canonicalized
-    check_semicanonical();
+    if(!check_semicanonical()){
+        outfile->Printf("\n    DSRG-MRPT2 is currently only formulated using semi-canonical orbitals!");
+        throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
+    }
 
     // initialize Hbar with bare Hamiltonian
     Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
@@ -163,7 +166,10 @@ double MRDSRG::compute_energy_pt3(){
     });
 
     // test orbitals are semi-canonicalized
-    check_semicanonical();
+    if(!check_semicanonical()){
+        outfile->Printf("\n    DSRG-MRPT3 is currently only formulated using semi-canonical orbitals!");
+        throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
+    }
 
     // create first-order bare Hamiltonian
     BlockedTensor H1st_1 = BTF_->build(tensor_type_,"H1st_1",spin_cases({"gg"}));
@@ -375,7 +381,7 @@ double MRDSRG::compute_energy_pt3(){
     return Ecorr;
 }
 
-void MRDSRG::check_semicanonical(){
+bool MRDSRG::check_semicanonical(){
     outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
     std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
     std::vector<double> Foff;
@@ -387,20 +393,21 @@ void MRDSRG::check_semicanonical(){
         Foff_sum += value;
     }
     double threshold = 10.0 * options_.get_double("D_CONVERGENCE");
+    bool semi = false;
     if(Foff_sum > threshold){
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-        outfile->Printf("\n    DSRG-MRPT2 is currently only formulated using semi-canonical orbitals!");
         outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix");
         outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
         outfile->Printf("\n    %s", sep.c_str());
         outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
         outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
         outfile->Printf("\n    %s\n", sep.c_str());
-        throw PSIEXCEPTION("Orbitals are not semi-canonicalized.");
     }else{
         outfile->Printf("     OK.");
+        semi = true;
     }
+    return semi;
 }
 
 }}
