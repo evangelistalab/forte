@@ -48,39 +48,61 @@ double MRDSRG::compute_energy_pt2(){
 
     // [H, A] = [H, T] + [H, T]^dagger
     Hbar1_["pq"] += O1_["pq"];
-    Hbar1_["pq"] += O1_["qp"];
     Hbar1_["PQ"] += O1_["PQ"];
-    Hbar1_["PQ"] += O1_["QP"];
     Hbar2_["pqrs"] += O2_["pqrs"];
-    Hbar2_["pqrs"] += O2_["rspq"];
     Hbar2_["pQrS"] += O2_["pQrS"];
-    Hbar2_["pQrS"] += O2_["rSpQ"];
     Hbar2_["PQRS"] += O2_["PQRS"];
-    Hbar2_["PQRS"] += O2_["RSPQ"];
+
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+    if(dsrg_op == "UNITARY"){
+        Hbar1_["pq"] += O1_["qp"];
+        Hbar1_["PQ"] += O1_["QP"];
+        Hbar2_["pqrs"] += O2_["rspq"];
+        Hbar2_["pQrS"] += O2_["rSpQ"];
+        Hbar2_["PQRS"] += O2_["RSPQ"];
+    }
 
     // compute PT2 energy
     std::vector<std::pair<std::string,double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
     double Ecorr = 0.0, Etemp = 0.0;
 
-    H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
-    energy.push_back({"<[F, A1]>", 2 * (Ecorr - Etemp)});
-    Etemp = Ecorr;
+    if(dsrg_op == "UNITARY"){
+        H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
+        energy.push_back({"<[F, A1]>", 2 * (Ecorr - Etemp)});
+        Etemp = Ecorr;
 
-    H1_T2_C0(Hbar1_,T2_,1.0,Ecorr);
-    energy.push_back({"<[F, A2]>", 2 * (Ecorr - Etemp)});
-    Etemp = Ecorr;
+        H1_T2_C0(Hbar1_,T2_,1.0,Ecorr);
+        energy.push_back({"<[F, A2]>", 2 * (Ecorr - Etemp)});
+        Etemp = Ecorr;
 
-    H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
-    energy.push_back({"<[V, A1]>", 2 * (Ecorr - Etemp)});
-    Etemp = Ecorr;
+        H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
+        energy.push_back({"<[V, A1]>", 2 * (Ecorr - Etemp)});
+        Etemp = Ecorr;
 
-    H2_T2_C0(Hbar2_,T2_,1.0,Ecorr);
-    energy.push_back({"<[V, A2]>", 2 * (Ecorr - Etemp)});
-    Etemp = Ecorr;
+        H2_T2_C0(Hbar2_,T2_,1.0,Ecorr);
+        energy.push_back({"<[V, A2]>", 2 * (Ecorr - Etemp)});
+        Etemp = Ecorr;
 
-    // <[H, A]> = 2 * <[H, T]>
-    Ecorr *= 2.0;
+        // <[H, A]> = 2 * <[H, T]>
+        Ecorr *= 2.0;
+    }else{
+        H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
+        energy.push_back({"<[F, T1]>", Ecorr - Etemp});
+        Etemp = Ecorr;
+
+        H1_T2_C0(Hbar1_,T2_,1.0,Ecorr);
+        energy.push_back({"<[F, T2]>", Ecorr - Etemp});
+        Etemp = Ecorr;
+
+        H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
+        energy.push_back({"<[V, T1]>", Ecorr - Etemp});
+        Etemp = Ecorr;
+
+        H2_T2_C0(Hbar2_,T2_,1.0,Ecorr);
+        energy.push_back({"<[V, T2]>", Ecorr - Etemp});
+        Etemp = Ecorr;
+    }
 
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
@@ -166,15 +188,19 @@ double MRDSRG::compute_energy_pt3(){
     Hbar1_ = BTF_->build(tensor_type_,"temp1",spin_cases({"gg"}));
     Hbar2_ = BTF_->build(tensor_type_,"temp2",spin_cases({"gggg"}));
     Hbar1_["pq"] += 0.5 * O1_["pq"];
-    Hbar1_["pq"] += 0.5 * O1_["qp"];
     Hbar1_["PQ"] += 0.5 * O1_["PQ"];
-    Hbar1_["PQ"] += 0.5 * O1_["QP"];
     Hbar2_["pqrs"] += 0.5 * O2_["pqrs"];
-    Hbar2_["pqrs"] += 0.5 * O2_["rspq"];
     Hbar2_["pQrS"] += 0.5 * O2_["pQrS"];
-    Hbar2_["pQrS"] += 0.5 * O2_["rSpQ"];
     Hbar2_["PQRS"] += 0.5 * O2_["PQRS"];
-    Hbar2_["PQRS"] += 0.5 * O2_["RSPQ"];
+
+    std::string dsrg_op = options_.get_str("DSRG_TRANS_TYPE");
+    if(dsrg_op == "UNITARY"){
+        Hbar1_["pq"] += 0.5 * O1_["qp"];
+        Hbar1_["PQ"] += 0.5 * O1_["QP"];
+        Hbar2_["pqrs"] += 0.5 * O2_["rspq"];
+        Hbar2_["pQrS"] += 0.5 * O2_["rSpQ"];
+        Hbar2_["PQRS"] += 0.5 * O2_["RSPQ"];
+    }
 
     Hbar1_["pq"] += H1st_1["pq"];
     Hbar1_["PQ"] += H1st_1["PQ"];
@@ -188,7 +214,9 @@ double MRDSRG::compute_energy_pt3(){
     H1_T2_C0(Hbar1_,T2_,1.0,Ept2);
     H2_T1_C0(Hbar2_,T1_,1.0,Ept2);
     H2_T2_C0(Hbar2_,T2_,1.0,Ept2);
-    Ept2 *= 2.0;
+    if(dsrg_op == "UNITARY"){
+        Ept2 *= 2.0;
+    }
     energy.push_back({"2nd-order correlation energy", Ept2});
 
     // compute [H~1st, T1st]
@@ -206,15 +234,18 @@ double MRDSRG::compute_energy_pt3(){
     BlockedTensor Hbar2nd_1 = BTF_->build(tensor_type_,"Hbar2nd_1",spin_cases({"gg"}));
     BlockedTensor Hbar2nd_2 = BTF_->build(tensor_type_,"Hbar2nd_2",spin_cases({"gggg"}));
     Hbar2nd_1["pq"] += O1_["pq"];
-    Hbar2nd_1["pq"] += O1_["qp"];
     Hbar2nd_1["PQ"] += O1_["PQ"];
-    Hbar2nd_1["PQ"] += O1_["QP"];
     Hbar2nd_2["pqrs"] += O2_["pqrs"];
-    Hbar2nd_2["pqrs"] += O2_["rspq"];
     Hbar2nd_2["pQrS"] += O2_["pQrS"];
-    Hbar2nd_2["pQrS"] += O2_["rSpQ"];
     Hbar2nd_2["PQRS"] += O2_["PQRS"];
-    Hbar2nd_2["PQRS"] += O2_["RSPQ"];
+
+    if(dsrg_op == "UNITARY"){
+        Hbar2nd_1["pq"] += O1_["qp"];
+        Hbar2nd_1["PQ"] += O1_["QP"];
+        Hbar2nd_2["pqrs"] += O2_["rspq"];
+        Hbar2nd_2["pQrS"] += O2_["rSpQ"];
+        Hbar2nd_2["PQRS"] += O2_["RSPQ"];
+    }
 
     // compute second-order amplitudes
     BlockedTensor T2nd_1 = BTF_->build(tensor_type_,"temp1",spin_cases({"hp"}));
@@ -229,8 +260,12 @@ double MRDSRG::compute_energy_pt3(){
     H1_T2_C0(Hbar1_,T2nd_2,1.0,Ecorr1);
     H2_T1_C0(Hbar2_,T2nd_1,1.0,Ecorr1);
     H2_T2_C0(Hbar2_,T2nd_2,1.0,Ecorr1);
-    Ecorr1 *= 2.0;
-    energy.push_back({"<[H~1st, A2nd]>", Ecorr1});
+    if(dsrg_op == "UNITARY"){
+        Ecorr1 *= 2.0;
+        energy.push_back({"<[H~1st, A2nd]>", Ecorr1});
+    }else{
+        energy.push_back({"<[H~1st, T2nd]>", Ecorr1});
+    }
 
     // compute 1 / 3 * [H~1st, A1st]
     Hbar2nd_1.scale(1.0/3.0);
@@ -252,15 +287,18 @@ double MRDSRG::compute_energy_pt3(){
     H2_T2_C2(H1st_2,T2_,1.0/6.0,O2_);
 
     Hbar2nd_1["pq"] += O1_["pq"];
-    Hbar2nd_1["pq"] += O1_["qp"];
     Hbar2nd_1["PQ"] += O1_["PQ"];
-    Hbar2nd_1["PQ"] += O1_["QP"];
     Hbar2nd_2["pqrs"] += O2_["pqrs"];
-    Hbar2nd_2["pqrs"] += O2_["rspq"];
     Hbar2nd_2["pQrS"] += O2_["pQrS"];
-    Hbar2nd_2["pQrS"] += O2_["rSpQ"];
     Hbar2nd_2["PQRS"] += O2_["PQRS"];
-    Hbar2nd_2["PQRS"] += O2_["RSPQ"];
+
+    if(dsrg_op == "UNITARY"){
+        Hbar2nd_1["pq"] += O1_["qp"];
+        Hbar2nd_1["PQ"] += O1_["QP"];
+        Hbar2nd_2["pqrs"] += O2_["rspq"];
+        Hbar2nd_2["pQrS"] += O2_["rSpQ"];
+        Hbar2nd_2["PQRS"] += O2_["RSPQ"];
+    }
 
     // compute <[H~2nd, A1st]>
     double Ecorr2 = 0.0;
@@ -268,8 +306,12 @@ double MRDSRG::compute_energy_pt3(){
     H1_T2_C0(Hbar2nd_1,T2_,1.0,Ecorr2);
     H2_T1_C0(Hbar2nd_2,T1_,1.0,Ecorr2);
     H2_T2_C0(Hbar2nd_2,T2_,1.0,Ecorr2);
-    Ecorr2 *= 2.0;
-    energy.push_back({"<[H~2nd, A1st]>", Ecorr2});
+    if(dsrg_op == "UNITARY"){
+        Ecorr2 *= 2.0;
+        energy.push_back({"<[H~2nd, A1st]>", Ecorr2});
+    }else{
+        energy.push_back({"<[H~2nd, T1st]>", Ecorr2});
+    }
 
     // print summary
     double Ecorr = Ecorr1 + Ecorr2;

@@ -204,7 +204,9 @@ void MRDSRG::print_options()
         {"corr_level", options_.get_str("CORR_LEVEL")},
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"reference relaxation", options_.get_str("RELAX_REF")}};
+        {"reference relaxation", options_.get_str("RELAX_REF")},
+        {"dsrg trans. type", options_.get_str("DSRG_TRANS_TYPE")},
+        {"core virtual source", options_.get_str("CCVV_SOURCE")}};
 
     // print some information
     print_h2("Calculation Information");
@@ -447,9 +449,6 @@ double MRDSRG::compute_energy_relaxed(){
                 build_density();
             }
 
-            // reset integrals
-            reset_ints(H_,V_);
-
             // rebuild Fock matrix
             build_fock(H_,V_);
 
@@ -505,7 +504,7 @@ void MRDSRG::transfer_integrals(){
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy()
-            - ints_->scalar() - ints_->frozen_core_energy();
+            - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;
