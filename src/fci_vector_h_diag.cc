@@ -3,7 +3,7 @@
 #include <numeric>
 #include <vector>
 
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
 namespace psi{ namespace forte{

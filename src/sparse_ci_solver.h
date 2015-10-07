@@ -23,7 +23,8 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 
 #define BIGNUM 1E100
 #define MAXIT 100
@@ -107,7 +108,7 @@ protected:
 class SigmaVectorList : public SigmaVector
 {
 public:
-    SigmaVectorList(const std::vector<BitsetDeterminant>& space);
+    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space);
 
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
@@ -115,7 +116,7 @@ public:
     std::vector<std::pair<std::vector<int>,std::vector<double>>> get_sparse_hamiltonian();
 
 protected:
-    const std::vector<BitsetDeterminant>& space_;
+    const std::vector<STLBitsetDeterminant>& space_;
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t,short>>> a_ann_list;
     std::vector<std::vector<std::pair<size_t,short>>> b_ann_list;
@@ -155,11 +156,11 @@ public:
 
     /**
      * Diagonalize the Hamiltonian in a basis of determinants
-     * @param space The basis for the CI given as a vector of BitsetDeterminant objects
+     * @param space The basis for the CI given as a vector of STLBitsetDeterminant objects
      * @param nroot The number of solutions to find
      * @param diag_method The diagonalization algorithm
      */
-    void diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space,
+    void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                    SharedVector& evals,
                                    SharedMatrix& evecs,
                                    int nroot,
@@ -167,11 +168,11 @@ public:
 
     /**
      * Diagonalize the Hamiltonian in a basis of determinants
-     * @param space The basis for the CI given as a vector of BitsetDeterminant objects
+     * @param space The basis for the CI given as a vector of STLBitsetDeterminant objects
      * @param nroot The number of solutions to find
      * @param diag_method The diagonalization algorithm
      */
-    void diagonalize_hamiltonian(const std::vector<SharedBitsetDeterminant>& space,
+    void diagonalize_hamiltonian(const std::vector<SharedSTLBitsetDeterminant>& space,
                                    SharedVector& evals,
                                    SharedMatrix& evecs,
                                    int nroot,
@@ -179,12 +180,12 @@ public:
 
 	/**
 	 * Compute the energy when CI vector is already known
-	 * @param space The basis for the CI given as a vector of BitsetDeterminant objects
+	 * @param space The basis for the CI given as a vector of STLBitsetDeterminant objects
 	 * @param evecs The known eigenvectors
 	 * @param nroot The number of solutions to compute
 	 */
 
-	void compute_H_expectation_val(const std::vector<BitsetDeterminant> space,
+	void compute_H_expectation_val(const std::vector<STLBitsetDeterminant> space,
 									SharedVector& evals,
 									const SharedMatrix evecs,
 									int nroot,
@@ -199,68 +200,68 @@ public:
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<BitsetDeterminant>& space,
+    void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
                           SharedVector& evals,
                           SharedMatrix& evecs,
                           int nroot);
 
     /// Form the full Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_dense(const std::vector<BitsetDeterminant>& space,
+    void diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,
                                         SharedVector& evals,
                                         SharedMatrix& evecs,
                                         int nroot);
 
     /// Form a sparse Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_sparse(const std::vector<BitsetDeterminant>& space,
+    void diagonalize_davidson_liu_sparse(const std::vector<STLBitsetDeterminant>& space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
                                          int nroot);
 
     /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_list(const std::vector<BitsetDeterminant> &space,
+    void diagonalize_davidson_liu_list(const std::vector<STLBitsetDeterminant> &space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
                                          int nroot);
 
     /// Build the full Hamiltonian matrix
-    SharedMatrix build_full_hamiltonian(const std::vector<BitsetDeterminant>& space);
+    SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
 
     /// Build a sparse Hamiltonian matrix
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<BitsetDeterminant> &space);
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian_parallel(const std::vector<BitsetDeterminant> &space);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian_parallel(const std::vector<STLBitsetDeterminant> &space);
 
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<SharedBitsetDeterminant>& space,
+    void diagonalize_full(const std::vector<SharedSTLBitsetDeterminant>& space,
                           SharedVector& evals,
                           SharedMatrix& evecs,
                           int nroot);
 
     /// Form the full Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_dense(const std::vector<SharedBitsetDeterminant>& space,
+    void diagonalize_davidson_liu_dense(const std::vector<SharedSTLBitsetDeterminant>& space,
                                         SharedVector& evals,
                                         SharedMatrix& evecs,
                                         int nroot);
 
     /// Form a sparse Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_sparse(const std::vector<SharedBitsetDeterminant>& space,
+    void diagonalize_davidson_liu_sparse(const std::vector<SharedSTLBitsetDeterminant>& space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
                                          int nroot);
 
     /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_list(const std::vector<SharedBitsetDeterminant>& space,
+    void diagonalize_davidson_liu_list(const std::vector<SharedSTLBitsetDeterminant>& space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
                                          int nroot);
 
     /// Build the full Hamiltonian matrix
-    SharedMatrix build_full_hamiltonian(const std::vector<SharedBitsetDeterminant>& space);
+    SharedMatrix build_full_hamiltonian(const std::vector<SharedSTLBitsetDeterminant>& space);
 
     /// Build a sparse Hamiltonian matrix
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<SharedBitsetDeterminant> &space);
+    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<SharedSTLBitsetDeterminant> &space);
 
     /// Build a sparse Hamiltonian matrix and store a row of H in a SharedVector
-    std::vector<std::pair<std::vector<int>,SharedVector>> build_sparse_hamiltonian2(const std::vector<SharedBitsetDeterminant> &space);
+    std::vector<std::pair<std::vector<int>,SharedVector>> build_sparse_hamiltonian2(const std::vector<SharedSTLBitsetDeterminant> &space);
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);

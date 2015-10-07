@@ -22,7 +22,7 @@
 #include "libmints/matrix.h"
 #include "libmints/vector.h"
 
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "integrals.h"
 #include "iterative_solvers.h"
 #include "fci_solver.h"
@@ -59,6 +59,7 @@ FCI::FCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
 {
     // Copy the wavefunction information
     copy(wfn);
+    print_ = options_.get_int("PRINT");
 
     startup();
 }
@@ -136,7 +137,7 @@ double FCI::compute_energy()
     //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
 
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
-                               options_.get_int("NTRIAL_PER_ROOT"),print_);
+                               options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
 
 
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
@@ -160,13 +161,30 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
                      std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     size_t ntrial_per_root, int print)
+                     size_t ntrial_per_root, int print, Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
       ntrial_per_root_(ntrial_per_root), mo_space_info_(mo_space_info),
-      print_(print)
+      print_(print),
+      options_(options)
 {
+    nroot_ = options_.get_int("NROOT");
+    startup();
+}
+FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+                     std::vector<size_t> active_mo,
+                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
+                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
+    : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
+      ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
+      na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
+      mo_space_info_(mo_space_info), options_(options)
+{
+    ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
+    print_ = options_.get_int("PRINT");
+    nroot_ = options_.get_int("NROOT");
+
     startup();
 }
 
@@ -197,11 +215,9 @@ double FCISolver::compute_energy()
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_);
-    BitsetDeterminant::set_ints(fci_ints);
+    DynamicBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);
-
-    nroot_ = 1;
 
     FCIWfn Hdiag(lists_,symmetry_);
     C_ = std::make_shared<FCIWfn>(lists_,symmetry_);
@@ -355,7 +371,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     size_t num_dets = dets.size();
 
-    std::vector<BitsetDeterminant> bsdets;
+    std::vector<DynamicBitsetDeterminant> bsdets;
 
     // Build the full determinants
     size_t nact = active_mo_.size();
@@ -376,7 +392,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             if (Ia_v[i]) Ia[i] = true;
             if (Ib_v[i]) Ib[i] = true;
         }
-        BitsetDeterminant bsdet(Ia,Ib);
+        DynamicBitsetDeterminant bsdet(Ia,Ib);
         bsdets.push_back(bsdet);
     }
 

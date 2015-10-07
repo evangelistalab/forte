@@ -125,7 +125,7 @@ void DFIntegrals::gather_integrals()
 {
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
-    outfile->Printf("\n Computing Density fitted integrals \n");
+    if(print_ > 0){outfile->Printf("\n Computing Density fitted integrals \n");}
 
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
@@ -133,8 +133,11 @@ void DFIntegrals::gather_integrals()
     size_t nprim = primary->nbf();
     size_t naux  = auxiliary->nbf();
     nthree_ = naux;
-    outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
-    outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
+    if(print_ > 0)
+    {
+        outfile->Printf("\n Number of auxiliary basis functions:  %u", naux);
+        outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
+    }
 
     Dimension nsopi_ = wfn->nsopi();
     SharedMatrix aotoso = wfn->aotoso();
@@ -181,9 +184,9 @@ void DFIntegrals::gather_integrals()
     //Does the timings also
     Timer timer;
     std::string str= "Computing DF Integrals";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    if(print_ > 0){outfile->Printf("\n    %-36s ...", str.c_str());}
     df->compute();
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    if(print_ > 0){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
     boost::shared_ptr<psi::Tensor> B = df->ints()["B"];
     df.reset();
@@ -195,36 +198,28 @@ void DFIntegrals::gather_integrals()
     //Reads the DF integrals into Bpq.  Stores them as nmo by (nmo*naux)
 
     std::string str_seek= "Seeking DF Integrals";
-    outfile->Printf("\n    %-36s ...", str_seek.c_str());
+    if(print_ > 0)
+    {
+        outfile->Printf("\n    %-36s ...", str_seek.c_str());
+    }
     fseek(Bf,0L, SEEK_SET);
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    if(print_ > 0)
+    {
+        outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    }
 
     std::string str_read = "Reading DF Integrals";
-    outfile->Printf("\n   %-36s . . .", str_read.c_str());
+    if(print_ > 0)
+    {
+        outfile->Printf("\n   %-36s . . .", str_read.c_str());
+    }
     fread(&(Bpq->pointer()[0][0]), sizeof(double),naux*(nmo_)*(nmo_), Bf);
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
-    //This has a different dimension than two_electron_integrals in the integral code that francesco wrote.
-    //This is because francesco reads only the nonzero integrals
-    //I store all of them into this array.
-
-    // Store the integrals in the form of nmo*nmo by B
-    //Makes a gemm call very easy
-    //std::string re_sort = "Resorting DF Integrals";
-    //outfile->Printf("\n   %-36s ...",re_sort.c_str());
-    //for (size_t p = 0; p < nmo_; ++p){
-    //    for (size_t q = 0; q < nmo_; ++q){
-    //        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-    //        for(size_t B = 0; B < naux; B++){
-    //            size_t qB = q * naux + B;
-    //            tBpq->set(B,p*nmo_ + q, Bpq->get(p,qB));
-    //        }
-    //     }
-    //}
-    outfile->Printf("...Done.  Timing %15.6f s", timer.get());
+    if(print_ > 0)
+    {
+        outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    }
 
     ThreeIntegral_ = Bpq;
-    //outfile->Printf("\n %8.8f integral", aptei_ab(10,8,5,2));
 
 }
 
@@ -243,6 +238,9 @@ DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restrict
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
     integral_type_ = DF;
+    // If code calls constructor print things
+    // But if someone calls retransform integrals do not print it
+    print_         =  1;
 
     outfile->Printf("\n DFIntegrals overall time");
     Timer DFInt;
@@ -270,12 +268,25 @@ void DFIntegrals::update_integrals(bool freeze_core)
 
 void DFIntegrals::retransform_integrals()
 {
+    Timer retrans_ints;
+    print_ = options_.get_int("PRINT");
+    std::string str_read = "Retransforming integrals";
+    if(print_ > 0)
+    {
+        outfile->Printf("\n   %-36s . . .", str_read.c_str());
+    }
+    
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
     //TODO:  Remove this function from retransform
     //For DF, reread integrals and then transfrom to new basis
     gather_integrals();
     update_integrals();
+    if(print_ > 0)
+    {
+        outfile->Printf("...Done. Timing %15.6f s", retrans_ints.get());
+    }
+
 }
 
 void DFIntegrals::deallocate()
@@ -509,7 +520,11 @@ void DFIntegrals::freeze_core_orbitals()
     if (resort_frozen_core_ == RemoveFrozenMOs){
         resort_integrals_after_freezing();
     }
-    outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
+    if(print_)
+    {
+        outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
+    }
+
 }
 
 void DFIntegrals::compute_frozen_core_energy()
@@ -530,8 +545,11 @@ void DFIntegrals::compute_frozen_core_energy()
         }
         p += nmopi_[hi]; // orbital offset for the irrep hi
     }
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
-    outfile->Printf("\n\n Frozen_Core_Energy takes   %8.8f s", FrozenEnergy.get());
+    if(print_)
+    {
+        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
+        outfile->Printf("\n\n Frozen_Core_Energy takes   %8.8f s", FrozenEnergy.get());
+    }
 }
 
 void DFIntegrals::compute_frozen_one_body_operator()
@@ -580,14 +598,18 @@ void DFIntegrals::compute_frozen_one_body_operator()
 
 
     ambit::BlockedTensor::reset_mo_spaces();
-    outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
+    if(print_)
+    {outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());}
 
 }
 
 void DFIntegrals::resort_integrals_after_freezing()
 {
     Timer resort_integrals;
-    outfile->Printf("\n  Resorting integrals after freezing core.");
+    if(print_)
+    {
+        outfile->Printf("\n  Resorting integrals after freezing core.");
+    }
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
     std::vector<size_t> cmo2mo;
@@ -610,7 +632,10 @@ void DFIntegrals::resort_integrals_after_freezing()
 
     resort_three(ThreeIntegral_,cmo2mo);
 
-    outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
+    if(print_)
+    {
+        outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
+    }
 }
 
 

@@ -9,7 +9,8 @@
 #include <tuple>
 #include <string>
 #include "integrals.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "ambit/tensor.h"
 #include "reference.h"
@@ -23,7 +24,7 @@ using d3 = vector<d2>;
 using d4 = vector<d3>;
 using d5 = vector<d4>;
 using d6 = vector<d5>;
-using vecdet = vector<psi::forte::BitsetDeterminant>;
+using vecdet = vector<psi::forte::STLBitsetDeterminant>;
 
 namespace psi{ namespace forte{
 class FCI_MO
@@ -176,9 +177,9 @@ protected:
     void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     /// N-Particle Operator
-    double OneOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
-    double TwoOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
-    double ThreeOP(const BitsetDeterminant &J, BitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
+    double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
+    double TwoOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss);
+    double ThreeOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq, const size_t &r, const bool &sr, const size_t &s, const bool &ss, const size_t &t, const bool &st, const size_t &u, const bool &su);
 
     /// Fock Matrix
     d2 Fa_;
@@ -236,7 +237,7 @@ protected:
     /// Print Determinants
     void print_det(const vecdet &dets){
         outfile->Printf("\n\n  ==> Determinants |alpha|beta> <==\n");
-        for(BitsetDeterminant x: dets){
+        for(STLBitsetDeterminant x: dets){
             outfile->Printf("  ");
             x.print();
         }

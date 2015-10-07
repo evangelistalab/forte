@@ -30,6 +30,7 @@ set mcscf{
 
 set forte{
    CASSCF_REFERENCE    true
+   CASSCF_ITERATIONS   15
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    int_type             DF
