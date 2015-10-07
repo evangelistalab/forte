@@ -30,7 +30,7 @@ elif len(sys.argv) == 2:
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
-fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-rdms-1","fci-rdms-2"]
+fci_tests = ["fci-1","fci-2","fci-3","fci-4","fci-5","fci-rdms-1","fci-rdms-2"]
 
 lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
                      "casci-5-fc","casci-6-fc","casci-7-fc","casci-8-fc",
@@ -41,7 +41,7 @@ adaptive_ci_tests = ["adaptive-ci-1","adaptive-ci-2","adaptive-ci-3",
                      "adaptive-ci-7","adaptive-ci-8","adaptive-ci-9",
 					 "adaptive-ci-10","adaptive-ci-11"]
 
-apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4","apifci-5"]
+apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4","apifci-5", "apifci-6", "apifci-7"]
 fciqmc_tests = ["fciqmc"]
 ct_tests = ["ct-1","ct-2","ct-3","ct-4","ct-5","ct-6","ct-7-fc"]
 dsrg_tests = ["dsrg-1","dsrg-2"]

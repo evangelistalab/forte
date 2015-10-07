@@ -31,7 +31,7 @@
 
 #include "integrals.h"
 #include "string_determinant.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 
 namespace psi{ namespace forte{
 

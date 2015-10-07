@@ -59,10 +59,11 @@ void SigmaVectorSparse::get_diagonal(Vector& diag){
     }
 }
 
-SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
+SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space)
     : SigmaVector(space.size()), space_(space)
 {
-    typedef std::map<BitsetDeterminant,size_t>::iterator bstmap_it;
+	using det_hash = std::unordered_map<STLBitsetDeterminant,size_t,STLBitsetDeterminant::Hash>;
+    using bstmap_it = det_hash::iterator;
 
     size_t max_I = space.size();
 
@@ -71,12 +72,18 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
     size_t naa_ann = 0;
     size_t nab_ann = 0;
     size_t nbb_ann = 0;
-    std::map<BitsetDeterminant,size_t> map_a_ann;
-    std::map<BitsetDeterminant,size_t> map_b_ann;
+   // std::map<STLBitsetDeterminant,size_t> map_a_ann;
+   // std::map<STLBitsetDeterminant,size_t> map_b_ann;
 
-    std::map<BitsetDeterminant,size_t> map_aa_ann;
-    std::map<BitsetDeterminant,size_t> map_ab_ann;
-    std::map<BitsetDeterminant,size_t> map_bb_ann;
+   // std::map<STLBitsetDeterminant,size_t> map_aa_ann;
+   // std::map<STLBitsetDeterminant,size_t> map_ab_ann;
+   // std::map<STLBitsetDeterminant,size_t> map_bb_ann;
+	det_hash map_a_ann;
+	det_hash map_b_ann;
+	
+	det_hash map_aa_ann;
+	det_hash map_ab_ann;
+	det_hash map_bb_ann;
 
     a_ann_list.resize(max_I);
     b_ann_list.resize(max_I);
@@ -86,7 +93,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
 
     outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
     for (size_t I = 0; I < max_I; ++I){
-        BitsetDeterminant detI = space[I];
+        STLBitsetDeterminant detI = space[I];
 
         double EI = detI.energy();
         diag_.push_back(EI);
@@ -103,11 +110,10 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
         // Generate alpha annihilation
         for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
-            BitsetDeterminant detJ(detI);
+            STLBitsetDeterminant detJ(detI);
             detJ.set_alfa_bit(ii,false);
 
-            const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
-            double sign = BitsetDeterminant::SlaterSign(Ia,ii);
+            double sign = detI.slater_sign_alpha(ii);
 
             bstmap_it it = map_a_ann.find(detJ);
             size_t detJ_add;
@@ -125,11 +131,10 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
         // Generate beta annihilation
         for (int i = 0; i < nobeta; ++i){
             int ii = bocc[i];
-            BitsetDeterminant detJ(detI);
+            STLBitsetDeterminant detJ(detI);
             detJ.set_beta_bit(ii,false);
 
-            const boost::dynamic_bitset<>& Ib = detI.beta_bits();
-            double sign = BitsetDeterminant::SlaterSign(Ib,ii);
+            double sign = detI.slater_sign_beta(ii);
 
             bstmap_it it = map_b_ann.find(detJ);
             size_t detJ_add;
@@ -178,7 +183,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
 
     outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
     for (size_t I = 0; I < max_I; ++I){
-        BitsetDeterminant detI = space[I];
+        STLBitsetDeterminant detI = space[I];
 
         std::vector<int> aocc = detI.get_alfa_occ();
         std::vector<int> bocc = detI.get_beta_occ();
@@ -195,12 +200,11 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
             for (size_t j = i + 1; j < noalpha; ++j, ++ij){
                 int ii = aocc[i];
                 int jj = aocc[j];
-                BitsetDeterminant detJ(detI);
+                STLBitsetDeterminant detJ(detI);
                 detJ.set_alfa_bit(ii,false);
                 detJ.set_alfa_bit(jj,false);
 
-                const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
-                double sign = BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ia,jj);
+                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
 
                 bstmap_it it = map_aa_ann.find(detJ);
                 size_t detJ_add;
@@ -221,12 +225,11 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
             for (size_t j = i + 1; j < nobeta; ++j, ++ij){
                 int ii = bocc[i];
                 int jj = bocc[j];
-                BitsetDeterminant detJ(detI);
+                STLBitsetDeterminant detJ(detI);
                 detJ.set_beta_bit(ii,false);
                 detJ.set_beta_bit(jj,false);
 
-                const boost::dynamic_bitset<>& Ib = detI.beta_bits();
-                double sign = BitsetDeterminant::SlaterSign(Ib,ii) * BitsetDeterminant::SlaterSign(Ib,jj);;
+                double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);;
 
                 bstmap_it it = map_bb_ann.find(detJ);
                 size_t detJ_add;
@@ -246,14 +249,11 @@ SigmaVectorList::SigmaVectorList(const std::vector<BitsetDeterminant>& space)
             for (size_t j = 0; j < nobeta; ++j, ++ij){
                 int ii = aocc[i];
                 int jj = bocc[j];
-                BitsetDeterminant detJ(detI);
+                STLBitsetDeterminant detJ(detI);
                 detJ.set_alfa_bit(ii,false);
                 detJ.set_beta_bit(jj,false);
 
-                const boost::dynamic_bitset<>& Ia = detI.alfa_bits();
-                const boost::dynamic_bitset<>& Ib = detI.beta_bits();
-
-                double sign = BitsetDeterminant::SlaterSign(Ia,ii) * BitsetDeterminant::SlaterSign(Ib,jj);
+                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
 
                 bstmap_it it = map_ab_ann.find(detJ);
                 size_t detJ_add;
@@ -373,7 +373,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -394,7 +394,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -415,7 +415,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
                     }
@@ -473,7 +473,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -492,7 +492,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -511,7 +511,7 @@ void SigmaVectorList::get_hamiltonian(Matrix& H)
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ1 = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    const double HIJ1 = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     h_p[I][J] = HIJ1;
                 }
             }
@@ -584,7 +584,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t aaaaJ_add = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = aaaaJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -607,7 +607,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t ababJ_add = std::get<0>(ababJ_mo_sign);
                     const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = ababJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -630,7 +630,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SigmaVectorList::ge
                     const size_t bbbbJ_add = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const size_t I = bbbbJ_add;
-                    const double HIJ = sign_pq * sign_rs * BitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     if (std::fabs(HIJ) >= 1.0e-12){
                         H_row.push_back(HIJ);
                         index_row.push_back(I);
@@ -654,7 +654,7 @@ void SigmaVectorList::get_diagonal(Vector& diag)
     }
 }
 
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
+void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
 {
     if (space.size() < 5){
         diagonalize_full(space,evals,evecs,nroot);
@@ -671,7 +671,7 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<BitsetDeterminant
     }
 }
 
-void SparseCISolver::diagonalize_hamiltonian(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
+void SparseCISolver::diagonalize_hamiltonian(const std::vector<SharedSTLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,DiagonalizationMethod diag_method)
 {
     if (space.size() < 200){
         diagonalize_full(space,evals,evecs,nroot);
@@ -688,7 +688,7 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<SharedBitsetDeter
     }
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian(space);
@@ -704,7 +704,7 @@ void SparseCISolver::diagonalize_full(const std::vector<BitsetDeterminant>& spac
 }
 
 
-void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     outfile->Printf("\n  Using <diagonalize_davidson_liu_dense>");
     outfile->Flush();
@@ -721,7 +721,7 @@ void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<BitsetDete
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
@@ -738,7 +738,7 @@ void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<BitsetDet
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<BitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     outfile->Printf("\n\n  Davidson-liu list algorithm");
     outfile->Flush();
@@ -753,14 +753,14 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<BitsetDeter
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDeterminant> &space)
+SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
 {
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
     //If you are using DiskDF, Kevin found that openmp does not like this! 
     int threads = 0;
-    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+    if(STLBitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
     {
        threads = 1;
     }
@@ -770,9 +770,9 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
-        const BitsetDeterminant& detI = space[I];
+        const STLBitsetDeterminant& detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
-            const BitsetDeterminant& detJ = space[J];
+            const STLBitsetDeterminant& detJ = space[J];
             double HIJ = detI.slater_rules(detJ);
             H->set(I,J,HIJ);
             H->set(J,I,HIJ);
@@ -781,7 +781,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<BitsetDete
     return H;
 }
 
-std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<BitsetDeterminant> &space)
+std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
 {
     boost::timer t_h_build2;
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse;
@@ -792,13 +792,13 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
-        const BitsetDeterminant& detI = space[I];
+        const STLBitsetDeterminant& detI = space[I];
         double HII = detI.slater_rules(detI);
         H_row.push_back(HII);
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J){
             if (I != J){
-                const BitsetDeterminant& detJ = space[J];
+                const STLBitsetDeterminant& detJ = space[J];
                 double HIJ = detI.slater_rules(detJ);
                 if (std::fabs(HIJ) >= 1.0e-12){
                     H_row.push_back(HIJ);
@@ -816,7 +816,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 }
 
 
-std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian_parallel(const std::vector<BitsetDeterminant> &space)
+std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian_parallel(const std::vector<STLBitsetDeterminant> &space)
 {
     boost::timer t_h_build2;
     // Allocate as many elements as we need
@@ -834,13 +834,13 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
-        const BitsetDeterminant& detI = space[I];
+        const STLBitsetDeterminant& detI = space[I];
         double HII = detI.slater_rules(detI);
         H_row.push_back(HII);
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J){
             if (I != J){
-                const BitsetDeterminant detJ = space[J];
+                const STLBitsetDeterminant detJ = space[J];
                 double HIJ = detI.slater_rules(detJ);
                 if (std::fabs(HIJ) >= 1.0e-12){
                     H_row.push_back(HIJ);
@@ -861,7 +861,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     return H_sparse;
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_full(const std::vector<SharedSTLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian(space);
@@ -877,7 +877,7 @@ void SparseCISolver::diagonalize_full(const std::vector<SharedBitsetDeterminant>
 }
 
 
-void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<SharedSTLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     outfile->Printf("\n  Using <diagonalize_davidson_liu_dense>");
     outfile->Flush();
@@ -894,7 +894,7 @@ void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<SharedBits
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedSTLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     outfile->Printf("\n\n  Davidson-liu sparse algorithm");
     outfile->Flush();
@@ -911,7 +911,7 @@ void SparseCISolver::diagonalize_davidson_liu_sparse(const std::vector<SharedBit
     davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<SharedBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
+void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<SharedSTLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot)
 {
     //    outfile->Printf("\n\n  Davidson-liu list algorithm");
     //    outfile->Flush();
@@ -926,14 +926,14 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<SharedBitse
     //    davidson_liu(sigma_vector,evals,evecs,nroot);
 }
 
-SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBitsetDeterminant> &space)
+SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedSTLBitsetDeterminant> &space)
 {
     // Build the H matrix
     size_t dim_space = space.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
 
     int threads = 0;
-    if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+    if(STLBitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
     {
        threads = 1;
     }
@@ -943,9 +943,9 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     }
     #pragma omp parallel for schedule(dynamic) num_threads(threads)
     for (size_t I = 0; I < dim_space; ++I){
-        SharedBitsetDeterminant detI = space[I];
+        SharedSTLBitsetDeterminant detI = space[I];
         for (size_t J = I; J < dim_space; ++J){
-            SharedBitsetDeterminant detJ = space[J];
+            SharedSTLBitsetDeterminant detJ = space[J];
             double HIJ = detI->slater_rules(*detJ);
             H->set(I,J,HIJ);
             H->set(J,I,HIJ);
@@ -954,7 +954,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<SharedBits
     return H;
 }
 
-std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<SharedBitsetDeterminant> &space)
+std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<SharedSTLBitsetDeterminant> &space)
 {
     boost::timer t_h_build2;
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse;
@@ -963,7 +963,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     size_t num_nonzero = 0;
     // Form the Hamiltonian matrix
     int threads = 0;
-   if(BitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
+   if(STLBitsetDeterminant::fci_ints_->get_integral_type()==DiskDF)
    {
       threads = 1;
    }
@@ -975,13 +975,13 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
-        SharedBitsetDeterminant detI = space[I];
+        SharedSTLBitsetDeterminant detI = space[I];
         double HII = detI->slater_rules(*detI);
         H_row.push_back(HII);
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J){
             if (I != J){
-                SharedBitsetDeterminant detJ = space[J];
+                SharedSTLBitsetDeterminant detJ = space[J];
                 double HIJ = detI->slater_rules(*detJ);
                 if (std::fabs(HIJ) >= 1.0e-12){
                     H_row.push_back(HIJ);
@@ -999,7 +999,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 }
 
 
-std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_sparse_hamiltonian2(const std::vector<SharedBitsetDeterminant> &space)
+std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_sparse_hamiltonian2(const std::vector<SharedSTLBitsetDeterminant> &space)
 {
     boost::timer t_h_build2;
     std::vector<std::pair<std::vector<int>,SharedVector>> H_sparse;
@@ -1010,13 +1010,13 @@ std::vector<std::pair<std::vector<int>,SharedVector>> SparseCISolver::build_spar
     for (size_t I = 0; I < dim_space; ++I){
         std::vector<double> H_row;
         std::vector<int> index_row;
-        SharedBitsetDeterminant detI = space[I];
+        SharedSTLBitsetDeterminant detI = space[I];
         double HII = detI->slater_rules(*detI);
         H_row.push_back(HII);
         index_row.push_back(I);
         for (size_t J = 0; J < dim_space; ++J){
             if (I != J){
-                SharedBitsetDeterminant detJ = space[J];
+                SharedSTLBitsetDeterminant detJ = space[J];
                 double HIJ = detI->slater_rules(*detJ);
                 if (std::fabs(HIJ) >= 1.0e-12){
                     H_row.push_back(HIJ);
@@ -1306,7 +1306,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     return true;
 }
 
-void SparseCISolver::compute_H_expectation_val(const std::vector<BitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs,int nroot, DiagonalizationMethod diag_method)
+void SparseCISolver::compute_H_expectation_val(const std::vector<STLBitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs,int nroot, DiagonalizationMethod diag_method)
 {
 	// Build the Hamiltonian
 	bool Hmat = true;

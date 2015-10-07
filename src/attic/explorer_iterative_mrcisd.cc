@@ -21,7 +21,7 @@
 #include "lambda-ci.h"
 #include "cartographer.h"
 #include "string_determinant.h"
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 
 using namespace std;
 using namespace psi;
@@ -573,8 +573,8 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
     SharedMatrix evecs;
     SharedVector evals;
 
-    std::vector<BitsetDeterminant> ref_space;
-    std::map<BitsetDeterminant,int> ref_space_map;
+    std::vector<DynamicBitsetDeterminant> ref_space;
+    std::map<DynamicBitsetDeterminant,int> ref_space_map;
 
     // Copy the determinants from the previous Lambda-CI
     for (size_t I = 0, maxI = determinants_.size(); I < maxI; ++I){
@@ -587,7 +587,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         std::vector<bool> alfa_bits = det.get_alfa_bits_vector_bool();
         std::vector<bool> beta_bits = det.get_beta_bits_vector_bool();
-        BitsetDeterminant bs_det(alfa_bits,beta_bits);
+        DynamicBitsetDeterminant bs_det(alfa_bits,beta_bits);
         ref_space.push_back(bs_det);
         ref_space_map[bs_det] = 1;
     }
@@ -630,7 +630,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
 //    std::vector<bool> ref_abits = reference_determinant_.get_alfa_bits_vector_bool();
 //    std::vector<bool> ref_bbits = reference_determinant_.get_beta_bits_vector_bool();
-//    BitsetDeterminant bs_ref_(ref_abits,ref_bbits);
+//    DynamicBitsetDeterminant bs_ref_(ref_abits,ref_bbits);
 //    ref_space.push_back(bs_ref_);
 //    ref_space_map[bs_ref_] = 1;
 
@@ -654,9 +654,9 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         boost::timer t_h_build;
 #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < dim_ref_space; ++I){
-            const BitsetDeterminant& detI = ref_space[I];
+            const DynamicBitsetDeterminant& detI = ref_space[I];
             for (size_t J = I; J < dim_ref_space; ++J){
-                const BitsetDeterminant& detJ = ref_space[J];
+                const DynamicBitsetDeterminant& detJ = ref_space[J];
                 double HIJ = detI.slater_rules(detJ);
                 H->set(I,J,HIJ);
                 H->set(J,I,HIJ);
@@ -699,16 +699,16 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         int nvbeta  = ncmo_ - nbeta_;
 
         // Find the SD space out of the reference
-        std::vector<BitsetDeterminant> sd_dets_vec;
-        std::map<BitsetDeterminant,int> new_dets_map;
+        std::vector<DynamicBitsetDeterminant> sd_dets_vec;
+        std::map<DynamicBitsetDeterminant,int> new_dets_map;
 
         boost::timer t_ms_build;
 
         // This hash saves the determinant coupling to the model space eigenfunction
-        std::map<BitsetDeterminant,std::vector<double> > V_hash;
+        std::map<DynamicBitsetDeterminant,std::vector<double> > V_hash;
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
-            const BitsetDeterminant& det = ref_space[I];
+            const DynamicBitsetDeterminant& det = ref_space[I];
             for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
                 if (det.get_alfa_bit(p)){
 //                    if (std::count (frzc_.begin(),frzc_.end(),p) == 0){
@@ -742,7 +742,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                 for (int a = 0; a < nvalpha; ++a){
                     int aa = avir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == wavefunction_symmetry_){
-                        BitsetDeterminant new_det(det);
+                        DynamicBitsetDeterminant new_det(det);
                         new_det.set_alfa_bit(ii,false);
                         new_det.set_alfa_bit(aa,true);
                         if(ref_space_map.find(new_det) == ref_space_map.end()){
@@ -763,7 +763,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                 for (int a = 0; a < nvbeta; ++a){
                     int aa = bvir[a];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == wavefunction_symmetry_){
-                        BitsetDeterminant new_det(det);
+                        DynamicBitsetDeterminant new_det(det);
                         new_det.set_beta_bit(ii,false);
                         new_det.set_beta_bit(aa,true);
                         if(ref_space_map.find(new_det) == ref_space_map.end()){
@@ -789,7 +789,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         for (int b = a + 1; b < nvalpha; ++b){
                             int bb = avir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                                BitsetDeterminant new_det(det);
+                                DynamicBitsetDeterminant new_det(det);
                                 new_det.set_alfa_bit(ii,false);
                                 new_det.set_alfa_bit(jj,false);
                                 new_det.set_alfa_bit(aa,true);
@@ -818,7 +818,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         for (int b = 0; b < nvbeta; ++b){
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == wavefunction_symmetry_){
-                                BitsetDeterminant new_det(det);
+                                DynamicBitsetDeterminant new_det(det);
                                 new_det.set_alfa_bit(ii,false);
                                 new_det.set_beta_bit(jj,false);
                                 new_det.set_alfa_bit(aa,true);
@@ -846,7 +846,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
                         for (int b = a + 1; b < nvbeta; ++b){
                             int bb = bvir[b];
                             if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == wavefunction_symmetry_){
-                                BitsetDeterminant new_det(det);
+                                DynamicBitsetDeterminant new_det(det);
                                 new_det.set_beta_bit(ii,false);
                                 new_det.set_beta_bit(jj,false);
                                 new_det.set_beta_bit(aa,true);
@@ -871,7 +871,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         outfile->Flush();
 
         // This will contain all the determinants
-        std::vector<BitsetDeterminant> ref_sd_dets;
+        std::vector<DynamicBitsetDeterminant> ref_sd_dets;
 
         // Add  the P-space determinants
         for (size_t J = 0, max_J = ref_space.size(); J < max_J; ++J){
@@ -880,7 +880,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         boost::timer t_ms_screen;
 
-        typedef std::map<BitsetDeterminant,std::vector<double> >::iterator bsmap_it;
+        typedef std::map<DynamicBitsetDeterminant,std::vector<double> >::iterator bsmap_it;
         std::vector<std::pair<double,double> > C1(nroot,make_pair(0.0,0.0));
         std::vector<std::pair<double,double> > E2(nroot,make_pair(0.0,0.0));
         std::vector<double> ept2(nroot,0.0);
@@ -929,9 +929,9 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             boost::timer t_h_build2;
 #pragma omp parallel for schedule(dynamic)
             for (size_t I = 0; I < dim_ref_sd_dets; ++I){
-                const BitsetDeterminant& detI = ref_sd_dets[I];
+                const DynamicBitsetDeterminant& detI = ref_sd_dets[I];
                 for (size_t J = I; J < dim_ref_sd_dets; ++J){
-                    const BitsetDeterminant& detJ = ref_sd_dets[J];
+                    const DynamicBitsetDeterminant& detJ = ref_sd_dets[J];
                     double HIJ = detI.slater_rules(detJ);
                     H->set(I,J,HIJ);
                     H->set(J,I,HIJ);
@@ -962,12 +962,12 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             // Form the Hamiltonian matrix
             for (size_t I = 0; I < dim_ref_sd_dets; ++I){
                 std::vector<std::pair<int,double> > H_row;
-                const BitsetDeterminant& detI = ref_sd_dets[I];
+                const DynamicBitsetDeterminant& detI = ref_sd_dets[I];
                 double HII = detI.slater_rules(detI);
                 H_row.push_back(make_pair(int(I),HII));
                 for (size_t J = 0; J < dim_ref_sd_dets; ++J){
                     if (I != J){
-                        const BitsetDeterminant& detJ = ref_sd_dets[J];
+                        const DynamicBitsetDeterminant& detJ = ref_sd_dets[J];
                         double HIJ = detI.slater_rules(detJ);
                         if (std::fabs(HIJ) >= 1.0e-12){
                             H_row.push_back(make_pair(int(J),HIJ));

@@ -6,7 +6,7 @@
 
 #include <libqt/qt.h>
 
-#include "bitset_determinant.h"
+#include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
 extern int fci_debug_level;
@@ -529,8 +529,8 @@ void FCIWfn::rdm_test()
     for(int i = 0; i < ncmo_ - nb; ++i) Ib[i] = false; // 0
     for(int i = ncmo_ - nb; i < ncmo_; ++i) Ib[i] = true;  // 1
 
-    std::vector<BitsetDeterminant> dets;
-    std::map<BitsetDeterminant,size_t> dets_map;
+    std::vector<DynamicBitsetDeterminant> dets;
+    std::map<DynamicBitsetDeterminant,size_t> dets_map;
 
     std::vector<double> C;
     std::vector<bool> a_occ(ncmo_);
@@ -542,7 +542,7 @@ void FCIWfn::rdm_test()
         do{
             for (int i = 0; i < ncmo_; ++i) b_occ[i] = Ib[i];
             if((alfa_graph_->sym(Ia) ^ beta_graph_->sym(Ib)) == symmetry_){
-                BitsetDeterminant d(a_occ,b_occ);
+                DynamicBitsetDeterminant d(a_occ,b_occ);
                 dets.push_back(d);
                 double c = C_[alfa_graph_->sym(Ia)]->get(alfa_graph_->rel_add(Ia),beta_graph_->rel_add(Ib));
                 C.push_back(c);
@@ -553,7 +553,7 @@ void FCIWfn::rdm_test()
     } while (std::next_permutation(Ia,Ia + ncmo_));
 
 
-    BitsetDeterminant I;
+    DynamicBitsetDeterminant I;
 
     bool test_2rdm_aa = true;
     bool test_2rdm_bb = true;
