@@ -247,7 +247,7 @@ double FCISolver::compute_energy()
     for (size_t n = 0; n < guess_size; ++n){
         HC.set(guess[n]);
         HC.copy_to(sigma);
-        dls.add_b(sigma);
+        dls.add_guess(sigma);
     }
 
 
