@@ -1125,7 +1125,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     DavidsonLiuSolver dls(fci_size,nroot);
     outfile->Printf("\n e_convergence_ = %e",e_convergence_);
     dls.set_e_convergence(e_convergence_);
-    dls.set_print_level(1);
+    dls.set_print_level(0);
 
     // allocate vectors
     SharedVector b(new Vector("b",fci_size));
@@ -1140,26 +1140,25 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
 
     auto guess = initial_guess(space,nroot,multiplicity);
 
-    // TODO fix the logic here, need to make sure we have enough guess vectors.
-    guess_size = std::min(guess.size(),guess_size);
-    if (guess_size == 0){
+    std::vector<int> guess_list;
+    for (size_t g = 0; g < guess.size(); ++g){
+        if (guess[g].first == multiplicity) guess_list.push_back(g);
+    }
+
+    // number of guess to be used
+    size_t nguess = std::min(guess_list.size(),guess_size);
+
+    if (nguess == 0){
         throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
     }
 
-    // Find the guess vectors with the correct multiplicity
-    std::vector<int> guess_mult;
-    for (auto& g : guess){
-        guess_mult.push_back(g.first);
-    }
-    auto it = std::find(guess_mult.begin(),guess_mult.end(),multiplicity);
-    size_t guess_first = std::distance(guess_mult.begin(), it);
-    for (size_t n = 0; n < guess_size; ++n){
+    for (size_t n = 0; n < nguess; ++n){
         b->zero();
-        for (auto& guess_vec_info : guess[n + guess_first].second){
+        for (auto& guess_vec_info : guess[guess_list[n]].second){
             b->set(guess_vec_info.first,guess_vec_info.second);
         }
-        outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[n + guess_first].first);
-        dls.add_b(b);
+        outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+        dls.add_guess(b);
     }
 
     // Prepare a list of bad roots to project out and pass them to the solver
@@ -1218,6 +1217,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
             Eigenvectors->set(I,r,evecs->get(r,I));
         }
     }
+    return true;
 }
 
 bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess,
