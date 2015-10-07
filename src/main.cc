@@ -90,7 +90,7 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -244,6 +244,9 @@ read_options(std::string name, Options &options)
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
 
+        /*- The maximum number of iterations -*/
+        options.add_int("MAXITER_DAVIDSON",100);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE
         //////////////////////////////////////////////////////////////
@@ -296,6 +299,9 @@ read_options(std::string name, Options &options)
 		options.add_double("LAMBDA_THRESH", 1.0);
 		/*- Add determinants to enforce spin-complete set? -*/
 		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
+        /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
+        options.add_bool("PROJECT_SPIN", false);
+
 		/*- Print an analysis of determinant history? -*/
 		options.add_bool("DETERMINANT_HISTORY", false);
 
@@ -435,6 +441,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- DSRG Transformation Type -*/
+        options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Zero T1 Amplitudes -*/
@@ -535,6 +543,9 @@ extern "C" PsiReturnType forte(Options &options)
         if(options.get_str("RELAX_REF") == "NONE"){
             mrdsrg->compute_energy();
         }else{
+            if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+            }
             mrdsrg->compute_energy_relaxed();
         }
     }

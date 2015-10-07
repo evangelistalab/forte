@@ -4,6 +4,19 @@
 
 #include "iterative_solvers.h"
 
+#define PRINT_VARS(msg) \
+//    std::vector<std::pair<size_t,std::string>> v = \
+//        {{collapse_size_,"collapse_size_"}, \
+//        {subspace_size_,"subspace_size_"}, \
+//        {basis_size_,"basis_size_"}, \
+//        {sigma_size_,"sigma_size_"}, \
+//        {nroot_,"nroot_"}}; \
+//    outfile->Printf("\n\n => %s <=",msg); \
+//    for (auto vk : v){ \
+//        outfile->Printf("\n    %-30s  %zu",vk.second.c_str(),vk.first); \
+//    }
+
+
 namespace psi{ namespace forte{
 
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size,size_t nroot)
@@ -32,26 +45,6 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
 
     h_diag->copy(*diagonal);
 
-//    // Find the initial_size lowest diagonals
-//    {
-//        double max_value = 1.e100;
-//        std::vector<std::pair<double,size_t>> smallest(collapse_size_,std::make_pair(1.0e100,0));
-
-//        for (size_t j = 0; j < size_; ++j){
-//            double value = h_diag->get(j);
-//            if (value < max_value){
-//                // Find where to inser this determinant
-//                smallest.pop_back();
-//                auto it = std::find_if(smallest.begin(),smallest.end(),[&value](const std::pair<double,size_t>& p){return value < p.first;});
-//                smallest.insert(it,std::pair<double,size_t>(value,j));
-//                max_value = smallest.back().first;
-//            }
-//        }
-//        for(int i = 0; i < collapse_size_; i++) {
-//            b_->set(i,smallest[i].second,1.0);
-//        }
-//    }
-
     basis_size_ = 0; //collapse_size_; //collapse_size_;
     sigma_size_ = 0; // at the beginning we do not have sigmas for the guess vectors
     iter_ = 0;
@@ -63,7 +56,27 @@ DavidsonLiuSolver::~DavidsonLiuSolver()
 
 }
 
-void DavidsonLiuSolver::add_b(SharedVector vec)
+void DavidsonLiuSolver::set_print_level(size_t n)
+{
+    print_level_ = n;
+}
+
+void DavidsonLiuSolver::set_e_convergence(double value)
+{
+    e_convergence_ = value;
+}
+
+void DavidsonLiuSolver::set_r_convergence(double value)
+{
+    r_convergence_ = value;
+}
+
+size_t DavidsonLiuSolver::collapse_size() const
+{
+    return collapse_size_;
+}
+
+void DavidsonLiuSolver::add_guess(SharedVector vec)
 {
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j){
@@ -74,6 +87,7 @@ void DavidsonLiuSolver::add_b(SharedVector vec)
 
 void DavidsonLiuSolver::get_b(SharedVector vec)
 {
+    PRINT_VARS("get_b")
     // Give the next b that does not have a sigma
     for (size_t j = 0; j < size_; ++j){
         vec->set(j,b_->get(sigma_size_,j));
@@ -82,6 +96,7 @@ void DavidsonLiuSolver::get_b(SharedVector vec)
 
 bool DavidsonLiuSolver::add_sigma(SharedVector vec)
 {
+    PRINT_VARS("add_sigma")
     // Place the new sigma vector at the end
     for (size_t j = 0; j < size_; ++j){
         sigma_->set(j,sigma_size_,vec->get(j));
@@ -90,24 +105,44 @@ bool DavidsonLiuSolver::add_sigma(SharedVector vec)
     return (sigma_size_ < basis_size_);
 }
 
+void DavidsonLiuSolver::set_project_out(std::vector<sparse_vec> project_out)
+{
+    project_out_ = project_out;
+}
+
+SharedVector DavidsonLiuSolver::eigenvalues() const
+{
+    return lambda;
+}
+
+SharedMatrix DavidsonLiuSolver::eigenvectors() const
+{
+    return b_;
+}
+
+SharedVector DavidsonLiuSolver::eigenvector(size_t n) const
+{
+    double** v = bnew->pointer();
+
+    SharedVector evec(new Vector("V",size_));
+    for(size_t I = 0; I < size_; I++) {
+        evec->set(I,v[n][I]);
+    }
+    return evec;
+}
+
 bool DavidsonLiuSolver::update()
 {
     // If converged or exceeded the maximum number of iterations return true
-    if ((converged_ > nroot_) or (iter_ > maxiter_)) return false;
+    if ((converged_ >= nroot_) or (iter_ > maxiter_)) return true;
+
+    PRINT_VARS("update")
 
     boost::timer t_davidson;
 
-    double* lambda_p = lambda->pointer();
-    double* Adiag_p = h_diag->pointer();
-    double** b_p = b_->pointer();
-    double** f_p = f->pointer();
-    double** alpha_p = alpha->pointer();
-    double** sigma_p = sigma_->pointer();
-
+    // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false,false,1.0,b_,sigma_,0.0);
-
-    // diagonalize mini-matrix
     G->diagonalize(alpha,lambda);
 
     if (size_ == 1) return true;
@@ -117,85 +152,56 @@ bool DavidsonLiuSolver::update()
     // If L is close to maxdim, collapse to one guess per root */
     if(subspace_size_ < nroot_ + basis_size_) {
         if(print_level_ > 1) {
-            outfile->Printf("Subspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
+            outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
             outfile->Printf("Collapsing eigenvectors.\n");
         }
-        bnew->zero();
-        double** bnew_p = bnew->pointer();
-        for(int i = 0; i < collapse_size_; i++) {
-            for(int j = 0; j < basis_size_; j++) {
-                for(int k = 0; k < size_; k++) {
-                    bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
-                }
-            }
-        }
+        // collapse vectors
+        collapse_vectors();
 
         // normalize new vectors
-        for(int i = 0; i < collapse_size_; i++){
-            double norm = 0.0;
-            for(int k = 0; k < size_; k++){
-                norm += bnew_p[i][k] * bnew_p[i][k];
-            }
-            norm = std::sqrt(norm);
-            for(int k = 0; k < size_; k++){
-                bnew_p[i][k] = bnew_p[i][k] / norm;
-            }
-        }
+        normalize_vectors(bnew,collapse_size_);
 
         // Copy them into place
         b_->zero();
         basis_size_ = 0;
         sigma_size_ = 0;
-        for(int k = 0; k < collapse_size_; k++){
-            if(schmidt_add(b_p,k,size_, bnew_p[k])) {
+        for(size_t k = 0; k < collapse_size_; k++){
+            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
                 basis_size_++;  // <- Increase L if we add one more basis vector
             }
         }
+
+//        check_convergence();
+//        if(check_convergence()){
+//            get_results();
+//            return true;
+//        }
 
         /// Need new sigma vectors to continue, so return control to caller
         return false;
     }
 
     if(check_convergence()){
+        get_results();
         return true;
     }
 
     // Step #3: Build the Correction Vectors
     // form preconditioned residue vectors
-    f->zero();
-    for(int k = 0; k < nroot_; k++){  // loop over roots
-        for(int I = 0; I < size_; I++) {  // loop over elements
-            for(int i = 0; i < basis_size_; i++) {
-                f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
-            }
-            double denom = lambda_p[k] - Adiag_p[I];
-            if(fabs(denom) > 1e-6){
-                f_p[k][I] /= denom;
-            }
-            else{
-                f_p[k][I] = 0.0;
-            }
-        }
-    }
+    form_correction_vectors();
+
+    // Step #3b: Project out undesired roots
+    project_out_roots(f);
 
     // Step #4: Orthonormalize the Correction Vectors
-    /* normalize each residual */
-    for(int k = 0; k < nroot_; k++) {
-        double norm = 0.0;
-        for(int I = 0; I < size_; I++) {
-            norm += f_p[k][I] * f_p[k][I];
-        }
-        norm = std::sqrt(norm);
-        for(int I = 0; I < size_; I++) {
-            f_p[k][I] /= norm;
-        }
-    }
+    normalize_vectors(f,nroot_);
 
     // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
-    for(int k = 0; k < nroot_; k++){
+    for(size_t k = 0; k < nroot_; k++){
         if (basis_size_ < subspace_size_){
-            if(schmidt_add(b_p, basis_size_, size_, f_p[k])) {
+            if(schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
                 basis_size_++;  // <- Increase L if we add one more basis vector
+            }else{
             }
         }
     }
@@ -207,16 +213,92 @@ bool DavidsonLiuSolver::update()
     return false;
 }
 
+void DavidsonLiuSolver::form_correction_vectors()
+{
+    f->zero();
+    double* lambda_p = lambda->pointer();
+    double* Adiag_p = h_diag->pointer();
+    double** b_p = b_->pointer();
+    double** f_p = f->pointer();
+    double** alpha_p = alpha->pointer();
+    double** sigma_p = sigma_->pointer();
+    for(size_t k = 0; k < nroot_; k++){  // loop over roots
+        for(size_t I = 0; I < size_; I++) {  // loop over elements
+            for(size_t i = 0; i < basis_size_; i++) {
+                f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
+            }
+            double denom = lambda_p[k] - Adiag_p[I];
+            if(fabs(denom) > 1e-6){
+                f_p[k][I] /= denom;
+            }
+            else{
+                f_p[k][I] = 0.0;
+            }
+        }
+    }
+}
+
+void DavidsonLiuSolver::project_out_roots(SharedMatrix v)
+{
+    double** v_p = v->pointer();
+    for(size_t k = 0; k < nroot_; k++) {
+        for (auto& bad_root : project_out_){
+            double overlap = 0.0;
+            for (auto& I_CI : bad_root){
+                size_t I = I_CI.first;
+                double CI = I_CI.second;
+                overlap += v_p[k][I] * CI;
+            }
+            for (auto& I_CI : bad_root){
+                size_t I = I_CI.first;
+                double CI = I_CI.second;
+                v_p[k][I] -= overlap * CI;
+            }
+        }
+    }
+}
+
+void DavidsonLiuSolver::normalize_vectors(SharedMatrix v,size_t n)
+{
+    // normalize each residual
+    double** v_p = v->pointer();
+    for(size_t k = 0; k < n; k++) {
+        double norm = 0.0;
+        for(size_t I = 0; I < size_; I++) {
+            norm += v_p[k][I] * v_p[k][I];
+        }
+        norm = std::sqrt(norm);
+        for(size_t I = 0; I < size_; I++) {
+            v_p[k][I] /= norm;
+        }
+    }
+}
+
+void DavidsonLiuSolver::collapse_vectors()
+{
+    bnew->zero();
+    double** alpha_p = alpha->pointer();
+    double** b_p = b_->pointer();
+    double** bnew_p = bnew->pointer();
+    for(size_t i = 0; i < collapse_size_; i++) {
+        for(size_t j = 0; j < basis_size_; j++) {
+            for(size_t k = 0; k < size_; k++) {
+                bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
+            }
+        }
+    }
+}
+
 bool DavidsonLiuSolver::check_convergence()
 {
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;
-    if(print_level_ > 1) {
+{//    if(print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
         outfile->Printf("  ---- -------------------- --------- ----------\n");
     }
-    for(int k = 0; k < nroot_; k++) {
+    for(size_t k = 0; k < nroot_; k++) {
         double diff = std::fabs(lambda->get(k) - lambda_old->get(k));
         bool this_converged = false;
         if(diff < e_convergence_) {
@@ -224,7 +306,7 @@ bool DavidsonLiuSolver::check_convergence()
             converged_++;
         }
         lambda_old->set(k,lambda->get(k));
-        if(print_level_ > 1) {
+{ //       if(print_level_ > 1) {
             outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
                             this_converged ? "Y" : "N");
         }
@@ -238,32 +320,27 @@ bool DavidsonLiuSolver::check_convergence()
 
 void DavidsonLiuSolver::get_results()
 {
-
     /* generate final eigenvalues and eigenvectors */
-    //if(converged == M) {
     double** alpha_p = alpha->pointer();
     double** b_p = b_->pointer();
     double* eps = lambda_old->pointer();
     double** v = bnew->pointer();
     bnew->zero();
 
-    for(int i = 0; i < nroot_; i++) {
+    for(size_t i = 0; i < nroot_; i++) {
         eps[i] = lambda->get(i);
-//        for(int I = 0; I < size_; I++){
-//            v[I][i] = 0.0;
-//        }
-        for(int j = 0; j < basis_size_; j++) {
+        for(size_t j = 0; j < basis_size_; j++) {
             for(size_t I = 0; I < size_; I++) {
                 v[i][I] += alpha_p[j][i] * b_p[j][I];
             }
         }
         // Normalize v
         double norm = 0.0;
-        for(int I = 0; I < size_; I++) {
+        for(size_t I = 0; I < size_; I++) {
             norm += v[i][I] * v[i][I];
         }
         norm = std::sqrt(norm);
-        for(int I = 0; I < size_; I++) {
+        for(size_t I = 0; I < size_; I++) {
             v[i][I] /= norm;
         }
     }
@@ -273,18 +350,6 @@ void DavidsonLiuSolver::get_results()
     }
 }
 
-SharedVector DavidsonLiuSolver::eigenvector(size_t n)
-{
-    double** v = bnew->pointer();
-
-    SharedVector evec(new Vector("V",size_));
-    for(int I = 0; I < size_; I++) {
-        evec->set(I,v[n][I]);
-    }
-    return evec;
-}
-
-
 bool DavidsonLiuSolver::check_orthogonality()
 {
     bool is_orthonormal = true;
@@ -293,7 +358,7 @@ bool DavidsonLiuSolver::check_orthogonality()
     S->gemm(false,true,1.0,b_,b_,0.0);
 
     // Check for orthogonality
-    for (int i = 0; i < basis_size_; ++i){
+    for (size_t i = 0; i < basis_size_; ++i){
         double diag = S->get(i,i);
         double zero = false;
         double one = false;
@@ -305,12 +370,12 @@ bool DavidsonLiuSolver::check_orthogonality()
         }
         if ((not zero) and (not one)){
             if (is_orthonormal) {
-                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero");
+                outfile->Printf("\n  WARNING: Vector %d is not normalized or zero",i);
                 is_orthonormal = false;
             }
         }
         double offdiag = 0.0;
-        for (int j = i + 1; j < basis_size_; ++j){
+        for (size_t j = i + 1; j < basis_size_; ++j){
             offdiag += std::fabs(S->get(i,j));
         }
         if (offdiag > 1.0e-6){

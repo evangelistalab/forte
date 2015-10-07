@@ -205,6 +205,14 @@ public:
     double slater_rules_single_beta(int i, int a) const;
     /// Compute the matrix element of the S^2 operator between this determinant and a given one
     double spin2(const DynamicBitsetDeterminant& rhs) const;
+    /// Apply S+ to this determinant
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> spin_plus() const;
+    /// Apply S- to this determinant
+    std::vector<std::pair<DynamicBitsetDeterminant,double>> spin_minus() const;
+    /// Compute the matrix element of the S^2 operator between this determinant and a given one
+    double spin2_slow(const DynamicBitsetDeterminant& rhs) const;
+    /// Return the eigenvalue of Sz
+    double spin_z() const;
     /// Return the sign of a_n applied to this determinant
     double slater_sign_alpha(int n) const;
     /// Return the sign of a_n applied to this determinant
@@ -240,28 +248,27 @@ public:
     static double SlaterSign(const bit_t& I,int n);
     /// Return the sign of a_n applied to string I
     static double FastSlaterSign(const boost::dynamic_bitset<>& I,int n);
-};
 
-typedef boost::shared_ptr<DynamicBitsetDeterminant> SharedDynamicBitsetDeterminant;
+    struct Hash
+    {
+        std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const
+        {
+            size_t h = 0;
+            for (int p = 0; p < bs.nmo_; p++){
+                if (bs.alfa_bits_[p]){
+                    h += (1 << p);
+                }
+                if (bs.beta_bits_[p]){
+                    h += (1 << (p + bs.nmo_));
+                }
+            }
+            return h;
+        }
+    };
+};
 
 }} // End Namespaces
 
-struct DynamicBitsetDeterminantHash
-{
-    std::size_t operator()(const psi::forte::DynamicBitsetDeterminant& bs) const
-    {
-        size_t h = 0;
-        int maxp = std::min(bs.nmo_,32);
-        for (int p = 0; p < bs.nmo_; p++){
-            if (bs.alfa_bits_[p]){
-                h += (1 << p);
-            }
-            if (bs.beta_bits_[p]){
-                h += (1 << (p + bs.nmo_));
-            }
-        }
-        return h;
-    }
-};
+
 
 #endif // _dynamic_bitset_determinant_h_

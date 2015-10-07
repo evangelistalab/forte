@@ -233,7 +233,7 @@ double FCISolver::compute_energy()
 
 
     DavidsonLiuSolver dls(fci_size,nroot_);
-    dls.set_e_convergence(1.0e-13);
+    dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     dls.set_print_level(print_);
     dls.startup(sigma);
 
@@ -247,7 +247,7 @@ double FCISolver::compute_energy()
     for (size_t n = 0; n < guess_size; ++n){
         HC.set(guess[n]);
         HC.copy_to(sigma);
-        dls.add_b(sigma);
+        dls.add_guess(sigma);
     }
 
 
@@ -261,21 +261,20 @@ double FCISolver::compute_energy()
     }
 
     double old_avg_energy = 0.0;
-    for (int cycle = 0; cycle < 30; ++cycle){
+    for (int cycle = 0; cycle < 31; ++cycle){
         bool add_sigma = true;
-        for (int r = 0; r < nroot_ * 10; ++r){ // TODO : fix this loop
+        do{
             dls.get_b(b);
             C_->copy(b);
             C_->Hamiltonian(HC,fci_ints,twoSubstituitionVVOO);
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
-            if (not add_sigma) break;
-        }
+        } while (add_sigma);
         converged = dls.update();
 
         double avg_energy = 0.0;
         for (int r = 0; r < nroot_; ++r){
-            avg_energy += dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
+            avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
         }
         avg_energy /= static_cast<double>(nroot_);
 
@@ -290,8 +289,9 @@ double FCISolver::compute_energy()
 
     converged = true;
 
-    if (converged){
-        dls.get_results();
+    if (not converged){
+        outfile->Printf("\n  FCI did not converge!");
+        exit(1);
     }
 
     // Print determinants
@@ -503,7 +503,6 @@ Reference FCISolver::reference()
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
 
-    //L2ab("pqrs") -= L1a("pr") * L1a("qs");
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     L2bb("pqrs") -= L1b("pr") * L1b("qs");

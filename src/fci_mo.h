@@ -206,7 +206,7 @@ protected:
     double CheckSign(bool *I, const int &n){
         timer_on("Check Sign");
         size_t count = 0;
-        for(size_t i=0; i<n; ++i){
+        for(int i=0; i<n; ++i){
             if(I[i])  ++count;
         }
         timer_off("Check Sign");

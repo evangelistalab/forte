@@ -204,7 +204,9 @@ void MRDSRG::print_options()
         {"corr_level", options_.get_str("CORR_LEVEL")},
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
-        {"reference relaxation", options_.get_str("RELAX_REF")}};
+        {"reference relaxation", options_.get_str("RELAX_REF")},
+        {"dsrg trans. type", options_.get_str("DSRG_TRANS_TYPE")},
+        {"core virtual source", options_.get_str("CCVV_SOURCE")}};
 
     // print some information
     print_h2("Calculation Information");
@@ -333,7 +335,7 @@ double MRDSRG::compute_energy_relaxed(){
     else if(relax_algorithm == "ITERATE"){
         // iteration variables
         int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-        double e_conv = options_.get_double("E_CONVERGENCE");
+        double e_conv = 5.0e-8;
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
@@ -365,17 +367,28 @@ double MRDSRG::compute_energy_relaxed(){
             // refill densities
             build_density();
 
+            // build the new Fock matrix
+            build_fock(H_,V_);
+
+            // diagonal blocks of Fock
+            H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",spin_cases({"gg"}));
+            H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+                if(i[0] == i[1]){
+                    if(spin[0] == AlphaSpin){
+                        value = Fa_[i[0]];
+                    }else{
+                        value = Fb_[i[0]];
+                    }
+                }
+            });
+
             // semi-canonicalize orbitals
-            if (options_.get_bool("SEMI_CANONICAL")){
-                // printing
-                print_h2("Semi-canonicalize Orbitals");
+            print_h2("Semi-canonicalize Orbitals");
+            bool semi = check_semicanonical();
+            if (options_.get_bool("SEMI_CANONICAL") && !semi){
+                // set up timer
                 std::vector<double> timings {0.0};
                 Timer timer;
-
-                // build the new Fock matrix
-                build_fock(H_,V_);
-                outfile->Printf("\n    %-47s %8.3f", "Timing for building new Fock matrix:", timer.get() - timings.back());
-                timings.push_back(timer.get());
 
                 // diagonalize blocks of Fock matrix
                 BlockedTensor U = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
@@ -445,13 +458,10 @@ double MRDSRG::compute_energy_relaxed(){
 
                 // refill densities
                 build_density();
+
+                // rebuild Fock matrix
+                build_fock(H_,V_);
             }
-
-            // reset integrals
-            reset_ints(H_,V_);
-
-            // rebuild Fock matrix
-            build_fock(H_,V_);
 
             // test convergence
             if(fabs(Edelta_dsrg) < e_conv && fabs(Edelta_relax) < e_conv){
@@ -505,7 +515,7 @@ void MRDSRG::transfer_integrals(){
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
     double scalar0 = Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy()
-            - ints_->scalar() - ints_->frozen_core_energy();
+            - ints_->frozen_core_energy();
 
     // scalar from Hbar1
     double scalar1 = 0.0;

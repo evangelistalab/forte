@@ -44,6 +44,7 @@ public:
 
     size_t size() {return size_;}
 
+    virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
     virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
 
@@ -60,6 +61,7 @@ class SigmaVectorFull : public SigmaVector
 public:
     SigmaVectorFull(SharedMatrix H) : SigmaVector(H->ncol()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -76,6 +78,7 @@ class SigmaVectorSparse : public SigmaVector
 public:
     SigmaVectorSparse(std::vector<std::pair<std::vector<int>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -93,6 +96,7 @@ class SigmaVectorSparse2 : public SigmaVector
 public:
     SigmaVectorSparse2(std::vector<std::pair<std::vector<int>,SharedVector>>& H) : SigmaVector(H.size()), H_(H) {};
 
+    void compute_sigma(SharedVector sigma, SharedVector b) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -110,6 +114,7 @@ class SigmaVectorList : public SigmaVector
 public:
     SigmaVectorList(const std::vector<STLBitsetDeterminant>& space);
 
+    void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
     void get_hamiltonian(Matrix& H);
@@ -144,14 +149,6 @@ protected:
 class SparseCISolver
 {
 public:    
-    // ==> Class Constructor and Destructor <==
-
-    /// Constructor
-    SparseCISolver() : parallel_(false), print_details_(false) {};
-
-    /// Destructor
-    ~SparseCISolver() {};
-
     // ==> Class Interface <==
 
     /**
@@ -159,24 +156,14 @@ public:
      * @param space The basis for the CI given as a vector of STLBitsetDeterminant objects
      * @param nroot The number of solutions to find
      * @param diag_method The diagonalization algorithm
+     * @param multiplicity The spin multiplicity of the solution (2S + 1).  1 = singlet, 2 = doublet, ...
      */
     void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,
                                    SharedVector& evals,
                                    SharedMatrix& evecs,
                                    int nroot,
-                                   DiagonalizationMethod diag_method = DavidsonLiuSparse);
-
-    /**
-     * Diagonalize the Hamiltonian in a basis of determinants
-     * @param space The basis for the CI given as a vector of STLBitsetDeterminant objects
-     * @param nroot The number of solutions to find
-     * @param diag_method The diagonalization algorithm
-     */
-    void diagonalize_hamiltonian(const std::vector<SharedSTLBitsetDeterminant>& space,
-                                   SharedVector& evals,
-                                   SharedMatrix& evecs,
-                                   int nroot,
-                                   DiagonalizationMethod diag_method = DavidsonLiuSparse);
+                                   int multiplicity,
+                                   DiagonalizationMethod diag_method);
 
 	/**
 	 * Compute the energy when CI vector is already known
@@ -184,44 +171,57 @@ public:
 	 * @param evecs The known eigenvectors
 	 * @param nroot The number of solutions to compute
 	 */
-
 	void compute_H_expectation_val(const std::vector<STLBitsetDeterminant> space,
 									SharedVector& evals,
 									const SharedMatrix evecs,
 									int nroot,
 									DiagonalizationMethod diag_method);
 
-    /// Enable or disable the parallel algorithms
+    /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
 
-    /// Enable or disable printing of details
+    /// Enable/disable printing of details
     void set_print_details(bool print_details) {print_details_ = print_details;}
 
+    /// Enable/disable spin projection
+    void set_spin_project(bool value);
+
+    /// Set convergence threshold
+    void set_e_convergence(double value);
+
+    /// The maximum number of iterations for the Davidson algorithm
+    void set_maxiter_davidson(int value);
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
                           SharedVector& evals,
                           SharedMatrix& evecs,
-                          int nroot);
+                          int nroot,
+                          int multiplicity);
 
     /// Form the full Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
     void diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,
                                         SharedVector& evals,
                                         SharedMatrix& evecs,
-                                        int nroot);
+                                        int nroot,
+                                        int multiplicity);
 
     /// Form a sparse Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
     void diagonalize_davidson_liu_sparse(const std::vector<STLBitsetDeterminant>& space,
                                          SharedVector& evals,
                                          SharedMatrix& evecs,
-                                         int nroot);
+                                         int nroot,
+                                         int multiplicity);
 
     /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
     void diagonalize_davidson_liu_list(const std::vector<STLBitsetDeterminant> &space,
-                                         SharedVector& evals,
-                                         SharedMatrix& evecs,
-                                         int nroot);
+                                       SharedVector& evals,
+                                       SharedMatrix& evecs,
+                                       int nroot,
+                                       int multiplicity);
+
+    void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
 
     /// Build the full Hamiltonian matrix
     SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
@@ -230,46 +230,32 @@ private:
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space);
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian_parallel(const std::vector<STLBitsetDeterminant> &space);
 
-    /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<SharedSTLBitsetDeterminant>& space,
-                          SharedVector& evals,
-                          SharedMatrix& evecs,
-                          int nroot);
-
-    /// Form the full Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_dense(const std::vector<SharedSTLBitsetDeterminant>& space,
-                                        SharedVector& evals,
-                                        SharedMatrix& evecs,
-                                        int nroot);
-
-    /// Form a sparse Hamiltonian and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_sparse(const std::vector<SharedSTLBitsetDeterminant>& space,
-                                         SharedVector& evals,
-                                         SharedMatrix& evecs,
-                                         int nroot);
-
-    /// Form a sparse Hamiltonian using strings and use the Davidson-Liu method to compute the first nroot eigenvalues
-    void diagonalize_davidson_liu_list(const std::vector<SharedSTLBitsetDeterminant>& space,
-                                         SharedVector& evals,
-                                         SharedMatrix& evecs,
-                                         int nroot);
-
-    /// Build the full Hamiltonian matrix
-    SharedMatrix build_full_hamiltonian(const std::vector<SharedSTLBitsetDeterminant>& space);
-
-    /// Build a sparse Hamiltonian matrix
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<SharedSTLBitsetDeterminant> &space);
-
-    /// Build a sparse Hamiltonian matrix and store a row of H in a SharedVector
-    std::vector<std::pair<std::vector<int>,SharedVector>> build_sparse_hamiltonian2(const std::vector<SharedSTLBitsetDeterminant> &space);
+    /// Computed initial guess for the Davidson-Liu algorithm
+    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
     bool davidson_liu(SigmaVector* sigma_vector,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroot_s);
-
+    bool davidson_liu_guess(std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess, SigmaVector* sigma_vector, SharedVector Eigenvalues, SharedMatrix Eigenvectors, int nroot, int multiplicity);
+    bool davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
+                                             SigmaVector* sigma_vector,
+                                             SharedVector Eigenvalues,
+                                             SharedMatrix Eigenvectors,
+                                             int nroot,
+                                             int multiplicity);
     /// Use a OMP parallel algorithm?
-    bool parallel_;
+    bool parallel_ = false;
     /// Print details?
-    bool print_details_;
+    bool print_details_ = false;
+    /// Project solutions onto given multiplicity?
+    bool spin_project_ = false;
+    /// The energy convergence threshold
+    double e_convergence_ = 1.0e-12;
+    /// Number of collapse vectors per roots
+    int ncollapse_per_root_ = 2;
+    /// Number of max subspace vectors per roots
+    int nsubspace_per_root_ = 4;
+    /// Maximum number of iterations in the Davidson-Liu algorithm
+    int maxiter_davidson_ = 100;
 };
 
 }}
