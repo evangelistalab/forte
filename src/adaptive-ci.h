@@ -73,7 +73,7 @@ private:
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals>  ints_;
 	///Pointer to FCI integrals
-	static std::shared_ptr<FCIIntegrals> fci_ints_;	
+    std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The wave function symmetry
@@ -116,6 +116,7 @@ private:
 	/// The current iteration
 	int cycle_;
 
+    // ==> ACI Options <==
     /// The threshold applied to the primary space
     double tau_p_;
     /// The threshold applied to the secondary space
@@ -124,6 +125,12 @@ private:
     int nroot_;
 	/// Use threshold from perturbation theory?
 	bool perturb_select_;
+
+    /// Add missing degenerate determinants excluded from the aimed selection?
+    bool add_aimed_degenerate_;
+    /// Add missing degenerate determinants excluded from the aimed selection?
+    bool project_out_spin_contaminants_;
+
 	/// The function of the q-space criteria per root
 	std::string pq_function_;
 	/// The type of q criteria

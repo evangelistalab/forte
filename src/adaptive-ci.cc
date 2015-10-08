@@ -50,7 +50,6 @@ bool pairComp(const std::pair<double, STLBitsetDeterminant> E1, const std::pair<
 	return E1.first < E2.first;
 }
 
-
 // Hash for BSD 
 //std::size_t BSD_hash_value(const STLBitsetDeterminant& input)
 //{
@@ -87,8 +86,9 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, st
     print_info();
 }
 
-//Initialize copy of integrals, define then in startup
-std::shared_ptr<FCIIntegrals> AdaptiveCI::fci_ints_ = 0;
+AdaptiveCI::~AdaptiveCI()
+{
+}
 
 void AdaptiveCI::startup()
 {
@@ -156,9 +156,12 @@ void AdaptiveCI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
+
+    add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
+    project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
+    spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
@@ -182,7 +185,7 @@ void AdaptiveCI::startup()
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     form_1_RDM_ = options_.get_bool("1_RDM");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
-	spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
+
 
     if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
         diag_method_ = Full;
@@ -211,8 +214,46 @@ void AdaptiveCI::startup()
     }
 }
 
-AdaptiveCI::~AdaptiveCI()
+void AdaptiveCI::print_info()
 {
+   // print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+
+    // Print a summary
+    std::vector<std::pair<std::string,int>> calculation_info{
+        {"Multiplicity",wavefunction_multiplicity_},
+        {"Symmetry",wavefunction_symmetry_},
+        {"Number of roots",nroot_},
+        {"Root used for properties",options_.get_int("ROOT")}};
+
+    std::vector<std::pair<std::string,double>> calculation_info_double{
+        {"P-threshold",tau_p_},
+        {"Q-threshold",tau_q_},
+        {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
+
+    std::vector<std::pair<std::string,std::string>> calculation_info_string{
+        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
+        {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
+        {"PQ Function", options_.get_str("PQ_FUNCTION")},
+        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
+        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
+        {"Project out spin contaminants",project_out_spin_contaminants_ ? "True" : "False"},
+        {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
+        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
+
+    // Print some information
+    outfile->Printf("\n\n  ==> Calculation Information <==\n");
+    outfile->Printf("\n  %s",string(52,'-').c_str());
+    for (auto& str_dim : calculation_info){
+        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_double){
+        outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_string){
+        outfile->Printf("\n    %-39s %s",str_dim.first.c_str(),str_dim.second.c_str());
+    }
+    outfile->Printf("\n  %s",string(52,'-').c_str());
+    outfile->Flush();
 }
 
 std::vector<int> AdaptiveCI::get_occupation()
@@ -412,51 +453,6 @@ std::vector<int> AdaptiveCI::get_occupation()
 	return occupation;	
 }
 
-void AdaptiveCI::print_info()
-{
-   // print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
-
-    // Print a summary
-    std::vector<std::pair<std::string,int>> calculation_info{
-        {"Symmetry",wavefunction_symmetry_},
-        {"Number of roots",nroot_},
-        {"Root used for properties",options_.get_int("ROOT")}};
-
-    std::vector<std::pair<std::string,double>> calculation_info_double{
-        {"P-threshold",tau_p_},
-        {"Q-threshold",tau_q_},
-        {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
-
-    std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
-        {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
-		{"PQ Function", options_.get_str("PQ_FUNCTION")},
-		{"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-		{"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"}};
-//    {"Number of electrons",nel},
-//    {"Number of correlated alpha electrons",nalpha_},
-//    {"Number of correlated beta electrons",nbeta_},
-//    {"Number of restricted docc electrons",rdoccpi_.sum()},
-//    {"Charge",charge},
-//    {"Multiplicity",multiplicity},
-
-    // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s",string(52,'-').c_str());
-    for (auto& str_dim : calculation_info){
-        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double){
-        outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string){
-        outfile->Printf("\n    %-39s %s",str_dim.first.c_str(),str_dim.second.c_str());
-    }
-    outfile->Printf("\n  %s",string(52,'-').c_str());
-    outfile->Flush();
-}
-
-
 double AdaptiveCI::compute_energy()
 {
     boost::timer t_iamrcisd;
@@ -498,7 +494,7 @@ double AdaptiveCI::compute_energy()
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
-    sparse_solver.set_spin_project(true);
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -807,17 +803,19 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
             }
         }
-        // add missing determinants
-        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
-            size_t J = last_excluded - I;
-            if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
-                PQ_space_.push_back(sorted_dets[J].second);
-                det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
-            }else{
-                break;
+
+        // add missing determinants that have the same weight as the last one included
+        if (add_aimed_degenerate_){
+            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+                size_t J = last_excluded - I;
+                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
+                    PQ_space_.push_back(sorted_dets[J].second);
+                    det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
+                }else{
+                    break;
+                }
             }
         }
-
     }
 
     multistate_pt2_energy_correction_ = ept2;
