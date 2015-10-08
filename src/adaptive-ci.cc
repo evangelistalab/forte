@@ -790,12 +790,8 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         double sum = 0.0;
         size_t last_excluded = 0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
-
-            outfile->Printf("\n %zu %s %20.6f %20.6f",I,sorted_dets[I].second.str().c_str(),sorted_dets[I].first,sum + sorted_dets[I].first);
-
             const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
-                outfile->Printf(" -");
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
                 const std::vector<double>& V_vec = V_hash[det];
@@ -807,7 +803,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 }
                 last_excluded = I;
             }else{
-                outfile->Printf(" +");
                 PQ_space_.push_back(sorted_dets[I].second);
                 det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
             }
@@ -816,7 +811,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
             size_t J = last_excluded - I;
             if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
-                outfile->Printf("\n =>> Added");
                 PQ_space_.push_back(sorted_dets[J].second);
                 det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
             }else{
@@ -1453,12 +1447,10 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
         double sum = 0.0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
-            outfile->Printf("\n %zu %s %f %f",I,large_space[dm_det_list[I].second].str().c_str(),dm_det_list[I].first,sum + dsum);
+//            outfile->Printf("\n %zu %s %f %f",I,large_space[dm_det_list[I].second].str().c_str(),dm_det_list[I].first,sum + dsum);
             if (sum + dsum < tau_p_){
-                outfile->Printf(" -");
                 sum += dsum;
             }else{
-                outfile->Printf(" +");
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
             }

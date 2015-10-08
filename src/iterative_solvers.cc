@@ -143,20 +143,13 @@ bool DavidsonLiuSolver::update()
     // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false,false,1.0,b_,sigma_,0.0);
-
     G->diagonalize(alpha,lambda);
-    if (size_ < 20){
-        G->print();
-        alpha->print();
-        lambda->print();
-    }
 
     if (not last_update_collapsed_){
         if(check_convergence()){
             get_results();
             return true;
         }
-        last_update_collapsed_ = false;
     }
 
     if (size_ == 1) return true;
@@ -167,6 +160,8 @@ bool DavidsonLiuSolver::update()
     if(subspace_collapse()) {
         last_update_collapsed_ = true;
         return false;
+    }else{
+        last_update_collapsed_ = false;
     }
 
     // Step #3: Build the Correction Vectors
@@ -327,7 +322,7 @@ bool DavidsonLiuSolver::check_convergence()
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;
-{//    if(print_level_ > 1) {
+    if(print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
         outfile->Printf("  ---- -------------------- --------- ----------\n");
     }
@@ -339,15 +334,15 @@ bool DavidsonLiuSolver::check_convergence()
             converged_++;
         }
         lambda_old->set(k,lambda->get(k));
-{ //       if(print_level_ > 1) {
+        if(print_level_ > 1) {
             outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
                             this_converged ? "Y" : "N");
         }
     }
+
     if (converged_ == nroot_){
         has_converged = true;
     }
-    outfile->Flush();
     return has_converged;
 }
 
