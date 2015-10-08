@@ -1123,7 +1123,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     print_details_ = true;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size,nroot);
-    outfile->Printf("\n e_convergence_ = %e",e_convergence_);
     dls.set_e_convergence(e_convergence_);
     dls.set_print_level(0);
 
