@@ -184,6 +184,15 @@ void AdaptiveCI::startup()
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
 	spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 
+    if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
+        diag_method_ = Full;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        diag_method_ = DavidsonLiuSparse;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
+        diag_method_ = DavidsonLiuList;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER"){
+        diag_method_ = DLSolver;
+    }
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -489,6 +498,7 @@ double AdaptiveCI::compute_energy()
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_spin_project(true);
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -501,6 +511,10 @@ double AdaptiveCI::compute_energy()
 		print_h2(cycle_h);
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
 
+        for (auto& det : P_space_){
+            det.print();
+        }
+
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
             STLBitsetDeterminant::enforce_spin_completeness(P_space_);
@@ -508,15 +522,9 @@ double AdaptiveCI::compute_energy()
         }else{
 			outfile->Printf("\n Not checking for spin-completeness.");
 		}
-		
-		outfile->Flush();
-		
+        // Diagonalize H in the P space
+        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
-        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
-        }else{
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
-        }
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
 
@@ -528,7 +536,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
 			}else{
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -558,11 +566,7 @@ double AdaptiveCI::compute_energy()
 		}
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
-        }else{
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
-        }
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
 		// Ensure the solutions are spin-pure
 		if( spin_projection == 1 or spin_projection == 3){
@@ -572,7 +576,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
 				PQ_evecs->zero();
 				PQ_evecs = PQ_spin_evecs_->clone();
-				sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots, DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
 			}else{
 				outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n No need to perform spin projection.");
@@ -619,7 +623,7 @@ double AdaptiveCI::compute_energy()
 			PQ_evecs->print();
 		//	P_evecs->zero();
 			//P_evecs = PQ_spin_evecs_->clone();
-			sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_, DavidsonLiuList);
+            sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_,diag_method_);
 		}else{
 			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 			outfile->Printf("\n  No need to perform spin projection.");
@@ -784,9 +788,14 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
 
         double sum = 0.0;
+        size_t last_excluded = 0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+
+            outfile->Printf("\n %zu %s %20.6f %20.6f",I,sorted_dets[I].second.str().c_str(),sorted_dets[I].first,sum + sorted_dets[I].first);
+
             const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
+                outfile->Printf(" -");
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
                 const std::vector<double>& V_vec = V_hash[det];
@@ -794,13 +803,27 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                     double V = V_vec[n];
                     double E2_I = E2_eq( V, EI, evals->get(n) );
 
-					ept2[n] += E2_I;
+                    ept2[n] += E2_I;
                 }
+                last_excluded = I;
             }else{
+                outfile->Printf(" +");
                 PQ_space_.push_back(sorted_dets[I].second);
-				det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
+                det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
             }
         }
+        // add missing determinants
+        for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+            size_t J = last_excluded - I;
+            if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
+                outfile->Printf("\n =>> Added");
+                PQ_space_.push_back(sorted_dets[J].second);
+                det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
+            }else{
+                break;
+            }
+        }
+
     }
 
     multistate_pt2_energy_correction_ = ept2;
@@ -1430,9 +1453,12 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
         double sum = 0.0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
+            outfile->Printf("\n %zu %s %f %f",I,large_space[dm_det_list[I].second].str().c_str(),dm_det_list[I].first,sum + dsum);
             if (sum + dsum < tau_p_){
+                outfile->Printf(" -");
                 sum += dsum;
             }else{
+                outfile->Printf(" +");
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
             }

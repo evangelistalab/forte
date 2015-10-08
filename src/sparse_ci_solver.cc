@@ -759,7 +759,7 @@ void SparseCISolver::set_maxiter_davidson(int value)
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
-    if (space.size() < 5){
+    if (space.size() <= 5){
         diagonalize_full(space,evals,evecs,nroot,multiplicity);
     }else{
         if (diag_method == Full){
@@ -769,7 +769,8 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
         }else if (diag_method == DavidsonLiuSparse){
             diagonalize_davidson_liu_sparse(space,evals,evecs,nroot,multiplicity);
         }else if (diag_method == DavidsonLiuList){
-//            diagonalize_davidson_liu_list(space,evals,evecs,nroot,multiplicity);
+            diagonalize_davidson_liu_list(space,evals,evecs,nroot,multiplicity);
+        }else if (diag_method == DLSolver){
             diagonalize_davidson_liu_solver(space,evals,evecs,nroot,multiplicity);
         }
     }
@@ -789,7 +790,6 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
     H->diagonalize(evecs,evals);
     outfile->Printf("\n  %s: %f s","Time spent diagonalizing H using Full",t_diag.elapsed());
 }
-
 
 void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)
 {
@@ -845,7 +845,7 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<STLBitsetDe
 
 void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
-    outfile->Printf("\n\n  Davidson-liu list algorithm");
+    outfile->Printf("\n\n  Davidson-liu solver algorithm");
     outfile->Flush();
 
     size_t dim_space = space.size();
@@ -1209,6 +1209,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         exit(1);
     }
 
+//    dls.get_results();
     SharedVector evals = dls.eigenvalues();
     SharedMatrix evecs = dls.eigenvectors();
     for (int r = 0; r < nroot; ++r){
