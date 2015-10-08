@@ -31,7 +31,7 @@
 
 namespace psi{ namespace forte{
 
-enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList};
+enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList,DLSolver};
 
 /**
  * @brief The SigmaVector class
@@ -61,7 +61,7 @@ class SigmaVectorFull : public SigmaVector
 public:
     SigmaVectorFull(SharedMatrix H) : SigmaVector(H->ncol()), H_(H) {};
 
-    void compute_sigma(SharedVector sigma, SharedVector b) {}
+    void compute_sigma(SharedVector, SharedVector) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -78,7 +78,7 @@ class SigmaVectorSparse : public SigmaVector
 public:
     SigmaVectorSparse(std::vector<std::pair<std::vector<int>,std::vector<double>>>& H) : SigmaVector(H.size()), H_(H) {};
 
-    void compute_sigma(SharedVector sigma, SharedVector b) {}
+    void compute_sigma(SharedVector, SharedVector) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 
@@ -96,7 +96,7 @@ class SigmaVectorSparse2 : public SigmaVector
 public:
     SigmaVectorSparse2(std::vector<std::pair<std::vector<int>,SharedVector>>& H) : SigmaVector(H.size()), H_(H) {};
 
-    void compute_sigma(SharedVector sigma, SharedVector b) {}
+    void compute_sigma(SharedVector, SharedVector) {}
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
 

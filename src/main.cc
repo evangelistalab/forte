@@ -197,7 +197,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST");
+        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER");
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",1);

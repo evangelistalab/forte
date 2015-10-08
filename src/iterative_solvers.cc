@@ -143,47 +143,30 @@ bool DavidsonLiuSolver::update()
     // form and diagonalize mini-matrix
     G->zero();
     G->gemm(false,false,1.0,b_,sigma_,0.0);
+
     G->diagonalize(alpha,lambda);
+    if (size_ < 20){
+        G->print();
+        alpha->print();
+        lambda->print();
+    }
+
+    if (not last_update_collapsed_){
+        if(check_convergence()){
+            get_results();
+            return true;
+        }
+        last_update_collapsed_ = false;
+    }
 
     if (size_ == 1) return true;
 
     check_orthogonality();
 
-    // If L is close to maxdim, collapse to one guess per root */
-    if(subspace_size_ < nroot_ + basis_size_) {
-        if(print_level_ > 1) {
-            outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
-            outfile->Printf("Collapsing eigenvectors.\n");
-        }
-        // collapse vectors
-        collapse_vectors();
-
-        // normalize new vectors
-        normalize_vectors(bnew,collapse_size_);
-
-        // Copy them into place
-        b_->zero();
-        basis_size_ = 0;
-        sigma_size_ = 0;
-        for(size_t k = 0; k < collapse_size_; k++){
-            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
-                basis_size_++;  // <- Increase L if we add one more basis vector
-            }
-        }
-
-//        check_convergence();
-//        if(check_convergence()){
-//            get_results();
-//            return true;
-//        }
-
-        /// Need new sigma vectors to continue, so return control to caller
+    // Do subspace collapse
+    if(subspace_collapse()) {
+        last_update_collapsed_ = true;
         return false;
-    }
-
-    if(check_convergence()){
-        get_results();
-        return true;
     }
 
     // Step #3: Build the Correction Vectors
@@ -272,6 +255,56 @@ void DavidsonLiuSolver::normalize_vectors(SharedMatrix v,size_t n)
             v_p[k][I] /= norm;
         }
     }
+}
+
+bool DavidsonLiuSolver::subspace_collapse()
+{
+    if(collapse_size_ + nroot_ > subspace_size_){ // in this case I will never be able to add new vectors
+        // collapse vectors
+        collapse_vectors();
+
+        // normalize new vectors
+        normalize_vectors(bnew,collapse_size_);
+
+        // Copy them into place
+        b_->zero();
+        basis_size_ = 0;
+        sigma_size_ = 0;
+        for(size_t k = 0; k < collapse_size_; k++){
+            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
+                basis_size_++;  // <- Increase L if we add one more basis vector
+            }
+        }
+
+        return false;
+    }
+
+    // If L is close to maxdim, collapse to one guess per root */
+    if(nroot_ + basis_size_ > subspace_size_) { // this means that next iteration I cannot add more roots so I need to collapse
+        if(print_level_ > 1) {
+            outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
+            outfile->Printf("Collapsing eigenvectors.\n");
+        }
+        // collapse vectors
+        collapse_vectors();
+
+        // normalize new vectors
+        normalize_vectors(bnew,collapse_size_);
+
+        // Copy them into place
+        b_->zero();
+        basis_size_ = 0;
+        sigma_size_ = 0;
+        for(size_t k = 0; k < collapse_size_; k++){
+            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
+                basis_size_++;  // <- Increase L if we add one more basis vector
+            }
+        }
+
+        /// Need new sigma vectors to continue, so return control to caller
+        return true;
+    }
+    return false;
 }
 
 void DavidsonLiuSolver::collapse_vectors()

@@ -33,6 +33,7 @@
 #include "helpers.h"
 #include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
+#include "sparse_ci_solver.h"
 #include "fci_vector.h"
 
 namespace psi{ namespace forte{
@@ -131,6 +132,8 @@ private:
 	std::string q_reference_;
 	/// Algorithm for computing excited states
 	std::string ex_alg_;
+    /// The eigensolver type
+    DiagonalizationMethod diag_method_ = DavidsonLiuList;
 	/// The reference root
 	int ref_root_;
     /// Enable aimed selection
