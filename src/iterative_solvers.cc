@@ -31,6 +31,7 @@ DavidsonLiuSolver::DavidsonLiuSolver(size_t size,size_t nroot)
 void DavidsonLiuSolver::startup(SharedVector diagonal)
 {
     b_ = SharedMatrix(new Matrix("b",subspace_size_,size_));
+    b_->zero();
     bnew = SharedMatrix(new Matrix("bnew",subspace_size_,size_));
     f = SharedMatrix(new Matrix("f",subspace_size_,size_));
     sigma_ = SharedMatrix(new Matrix("sigma",size_,subspace_size_));
@@ -145,45 +146,23 @@ bool DavidsonLiuSolver::update()
     G->gemm(false,false,1.0,b_,sigma_,0.0);
     G->diagonalize(alpha,lambda);
 
+    if (not last_update_collapsed_){
+        if(check_convergence()){
+            get_results();
+            return true;
+        }
+    }
+
     if (size_ == 1) return true;
 
     check_orthogonality();
 
-    // If L is close to maxdim, collapse to one guess per root */
-    if(subspace_size_ < nroot_ + basis_size_) {
-        if(print_level_ > 1) {
-            outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
-            outfile->Printf("Collapsing eigenvectors.\n");
-        }
-        // collapse vectors
-        collapse_vectors();
-
-        // normalize new vectors
-        normalize_vectors(bnew,collapse_size_);
-
-        // Copy them into place
-        b_->zero();
-        basis_size_ = 0;
-        sigma_size_ = 0;
-        for(size_t k = 0; k < collapse_size_; k++){
-            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
-                basis_size_++;  // <- Increase L if we add one more basis vector
-            }
-        }
-
-//        check_convergence();
-//        if(check_convergence()){
-//            get_results();
-//            return true;
-//        }
-
-        /// Need new sigma vectors to continue, so return control to caller
+    // Do subspace collapse
+    if(subspace_collapse()) {
+        last_update_collapsed_ = true;
         return false;
-    }
-
-    if(check_convergence()){
-        get_results();
-        return true;
+    }else{
+        last_update_collapsed_ = false;
     }
 
     // Step #3: Build the Correction Vectors
@@ -199,9 +178,12 @@ bool DavidsonLiuSolver::update()
     // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
     for(size_t k = 0; k < nroot_; k++){
         if (basis_size_ < subspace_size_){
-            if(schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
-                basis_size_++;  // <- Increase L if we add one more basis vector
-            }else{
+            double norm_bnew_k = std::fabs(f->get_row(0,k)->norm());
+            if (norm_bnew_k > schmidt_threshold_){
+                if(schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
+                    basis_size_++;  // <- Increase L if we add one more basis vector
+                }else{
+                }
             }
         }
     }
@@ -222,6 +204,7 @@ void DavidsonLiuSolver::form_correction_vectors()
     double** f_p = f->pointer();
     double** alpha_p = alpha->pointer();
     double** sigma_p = sigma_->pointer();
+
     for(size_t k = 0; k < nroot_; k++){  // loop over roots
         for(size_t I = 0; I < size_; I++) {  // loop over elements
             for(size_t i = 0; i < basis_size_; i++) {
@@ -274,6 +257,59 @@ void DavidsonLiuSolver::normalize_vectors(SharedMatrix v,size_t n)
     }
 }
 
+bool DavidsonLiuSolver::subspace_collapse()
+{
+    if(collapse_size_ + nroot_ > subspace_size_){ // in this case I will never be able to add new vectors
+
+        // collapse vectors
+        collapse_vectors();
+
+        // normalize new vectors
+        normalize_vectors(bnew,collapse_size_);
+
+        // Copy them into place
+        b_->zero();
+        basis_size_ = 0;
+        sigma_size_ = 0;
+        for(size_t k = 0; k < collapse_size_; k++){
+            double norm_bnew_k = std::fabs(bnew->get_row(0,k)->norm());
+            if (norm_bnew_k > schmidt_threshold_){
+                if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
+                    basis_size_++;  // <- Increase L if we add one more basis vector
+                }
+            }
+        }
+        return false;
+    }
+
+    // If L is close to maxdim, collapse to one guess per root */
+    if(nroot_ + basis_size_ > subspace_size_) { // this means that next iteration I cannot add more roots so I need to collapse
+        if(print_level_ > 1) {
+            outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
+            outfile->Printf("Collapsing eigenvectors.\n");
+        }
+        // collapse vectors
+        collapse_vectors();
+
+        // normalize new vectors
+        normalize_vectors(bnew,collapse_size_);
+
+        // Copy them into place
+        b_->zero();
+        basis_size_ = 0;
+        sigma_size_ = 0;
+        for(size_t k = 0; k < collapse_size_; k++){
+            if(schmidt_add(b_->pointer(),k,size_, bnew->pointer()[k])) {
+                basis_size_++;  // <- Increase L if we add one more basis vector
+            }
+        }
+
+        /// Need new sigma vectors to continue, so return control to caller
+        return true;
+    }
+    return false;
+}
+
 void DavidsonLiuSolver::collapse_vectors()
 {
     bnew->zero();
@@ -294,7 +330,7 @@ bool DavidsonLiuSolver::check_convergence()
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;
-{//    if(print_level_ > 1) {
+    if(print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
         outfile->Printf("  ---- -------------------- --------- ----------\n");
     }
@@ -306,15 +342,15 @@ bool DavidsonLiuSolver::check_convergence()
             converged_++;
         }
         lambda_old->set(k,lambda->get(k));
-{ //       if(print_level_ > 1) {
+        if(print_level_ > 1) {
             outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
                             this_converged ? "Y" : "N");
         }
     }
+
     if (converged_ == nroot_){
         has_converged = true;
     }
-    outfile->Flush();
     return has_converged;
 }
 

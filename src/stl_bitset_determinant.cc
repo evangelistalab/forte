@@ -45,12 +45,12 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
     }
 }
 
-inline bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
+bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
 {
     return (bits_ == lhs.bits_);
 }
 
-inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
+bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
 {
     for (int p = nmo_ - 1; p >= 0; --p){
         if ((bits_[p] == false) and (lhs.bits_[p] == true)) return true;
@@ -61,13 +61,13 @@ inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) con
 
 const std::bitset<256>& STLBitsetDeterminant::bits() const {return bits_;}
 
-inline bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
+bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
 
-inline bool STLBitsetDeterminant::get_beta_bit(int n) const {return bits_[n + nmo_];}
+bool STLBitsetDeterminant::get_beta_bit(int n) const {return bits_[n + nmo_];}
 
-inline void STLBitsetDeterminant::set_alfa_bit(int n, bool value) {bits_[n] = value;}
+void STLBitsetDeterminant::set_alfa_bit(int n, bool value) {bits_[n] = value;}
 
-inline void STLBitsetDeterminant::set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
+void STLBitsetDeterminant::set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
 
 std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool()
 {
@@ -655,19 +655,21 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
     for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
         const STLBitsetDeterminant& det = det_space[I];
 //        outfile->Printf("\n  Original determinant: %s", det.str().c_str());
+        for(int i = 0; i < nmo_; ++i ){
+            closed[i] = open[i] = 0;
+            open_bits[i] = false;
+        }
         int naopen = 0;
         int nbopen = 0;
         int nclosed = 0;
-        for( size_t i = 0; i < nmo_; ++i ){
-            if (det.get_alfa_bit(i) and not det.get_beta_bit(i)){
+        for(int i = 0; i < nmo_; ++i ){
+            if (det.get_alfa_bit(i) and (not det.get_beta_bit(i))){
                 open[naopen + nbopen] = i;
                 naopen += 1;
-            }
-            if (not det.get_alfa_bit(i) and det.get_beta_bit(i)){
+            } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)){
                 open[naopen + nbopen] = i;
                 nbopen += 1;
-            }
-            if (det.get_alfa_bit(i) and det.get_beta_bit(i)){
+            } else if (det.get_alfa_bit(i) and det.get_beta_bit(i)){
                 closed[nclosed] = i;
                 nclosed += 1;
             }
@@ -692,7 +694,6 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
                     new_det.set_beta_bit(open[o],true);
                 }
             }
-
             if (det_map.count(new_det) == 0){
                 det_space.push_back(new_det);
                 det_map[new_det] = true;
