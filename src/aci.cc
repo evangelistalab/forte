@@ -1169,7 +1169,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         int ii = bocc[i];
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                 STLBitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
