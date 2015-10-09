@@ -31,7 +31,9 @@ set forte {
   job_type = aci
   multiplicity 1
   perturb_select false
-  SELECT_TYPE aimed-energy
+  aci_add_aimed_degenerate false
+  project_out_spin_contaminants false
+  enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
   TAUP 0.05
   TAUQ 0.05

@@ -216,7 +216,7 @@ void AdaptiveCI::startup()
 
 void AdaptiveCI::print_info()
 {
-   // print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
 
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info{
@@ -241,18 +241,18 @@ void AdaptiveCI::print_info()
         {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
 
     // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s",string(52,'-').c_str());
+    outfile->Printf("\n  ==> Calculation Information <==\n");
+    outfile->Printf("\n  %s",string(65,'-').c_str());
     for (auto& str_dim : calculation_info){
-        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-40s %-5d",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_double){
-        outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-40s %8.2e",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_string){
-        outfile->Printf("\n    %-39s %s",str_dim.first.c_str(),str_dim.second.c_str());
+        outfile->Printf("\n    %-40s %s",str_dim.first.c_str(),str_dim.second.c_str());
     }
-    outfile->Printf("\n  %s",string(52,'-').c_str());
+    outfile->Printf("\n  %s",string(65,'-').c_str());
     outfile->Flush();
 }
 
@@ -506,10 +506,6 @@ double AdaptiveCI::compute_energy()
 		std::string cycle_h = "Cycle " + std::to_string(cycle_); 
 		print_h2(cycle_h);
         outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
-
-        for (auto& det : P_space_){
-            det.print();
-        }
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
@@ -806,14 +802,19 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
         // add missing determinants that have the same weight as the last one included
         if (add_aimed_degenerate_){
+            size_t num_extra = 0;
             for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
                 size_t J = last_excluded - I;
                 if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
                     PQ_space_.push_back(sorted_dets[J].second);
                     det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
+                    num_extra++;
                 }else{
                     break;
                 }
+            }
+            if (num_extra > 0){
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",num_extra);
             }
         }
     }
@@ -1439,18 +1440,36 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
+        size_t last_excluded = 0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
-//            outfile->Printf("\n %zu %s %f %f",I,large_space[dm_det_list[I].second].str().c_str(),dm_det_list[I].first,sum + dsum);
-            if (sum + dsum < tau_p_){
+            if (sum + dsum < tau_p_){ // exclude small contributions that sum to less than tau_p
                 sum += dsum;
+                last_excluded = I;
             }else{
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
+            }
+        }
+
+        // add missing determinants that have the same weight as the last one included
+        if (add_aimed_degenerate_){
+            size_t num_extra = 0;
+            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+                size_t J = last_excluded - I;
+                if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) < 1.0e-9){
+                    pruned_space.push_back(large_space[dm_det_list[J].second]);
+                    pruned_space_map[large_space[dm_det_list[J].second]] = 1;
+                    num_extra += 1;
+                }else{
+                    break;
+                }
+            }
+            if (num_extra > 0){
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",num_extra);
             }
         }
     }
@@ -1863,7 +1882,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-		outfile->Printf("\n\n Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,
