@@ -35,6 +35,7 @@ set forte {
   TAUQ 0.001000
   nroot 2
   charge 0
+  enforce_spin_complete false
 }
 
 energy('scf')

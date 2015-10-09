@@ -38,7 +38,10 @@ set forte {
   TAUQ 0.01000
   nroot 3
   charge 0
-  spin_projection 2
+  enforce_spin_complete true
+  DIAG_ALGORITHM DAVIDSONLIST
+
+#  spin_projection 2
 }
 
 energy('scf')
