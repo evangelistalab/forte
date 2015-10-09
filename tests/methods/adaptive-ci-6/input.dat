@@ -38,6 +38,8 @@ set forte {
   charge 0
   spin_projection 1
   enforce_spin_complete false
+  aci_add_aimed_degenerate false
+  project_out_spin_contaminants false
 }
 
 energy('scf')

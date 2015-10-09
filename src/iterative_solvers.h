@@ -119,6 +119,8 @@ private:
     void project_out_roots(SharedMatrix v);
     /// Normalize the correction vectors
     void normalize_vectors(SharedMatrix v, size_t n);
+    /// Perform subspace collapse
+    bool subspace_collapse();
     /// Collapse the vectors
     void collapse_vectors();
 
@@ -132,6 +134,8 @@ private:
     double e_convergence_ = 1.0e-15;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
+    /// The threshold used to discard vectors
+    double schmidt_threshold_ = 1.0e-3;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
@@ -151,6 +155,7 @@ private:
     size_t sigma_size_;
     size_t converged_ = 0;
     double timing_ = 0.0;
+    bool last_update_collapsed_ = false;
 
     /// Current set of guess vectors stored by row
     SharedMatrix b_;

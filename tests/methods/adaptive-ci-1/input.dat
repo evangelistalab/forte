@@ -33,6 +33,7 @@ set forte {
   nroot 1
   charge 0
   perturb_select true
+  enforce_spin_complete false
 }
 
 energy('scf')

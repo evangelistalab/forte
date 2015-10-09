@@ -50,7 +50,6 @@ bool pairComp(const std::pair<double, STLBitsetDeterminant> E1, const std::pair<
 	return E1.first < E2.first;
 }
 
-
 // Hash for BSD 
 //std::size_t BSD_hash_value(const STLBitsetDeterminant& input)
 //{
@@ -87,8 +86,9 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, st
     print_info();
 }
 
-//Initialize copy of integrals, define then in startup
-std::shared_ptr<FCIIntegrals> AdaptiveCI::fci_ints_ = 0;
+AdaptiveCI::~AdaptiveCI()
+{
+}
 
 void AdaptiveCI::startup()
 {
@@ -156,9 +156,12 @@ void AdaptiveCI::startup()
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
+
+    add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
+    project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
+    spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
@@ -182,8 +185,17 @@ void AdaptiveCI::startup()
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     form_1_RDM_ = options_.get_bool("1_RDM");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
-	spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 
+
+    if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
+        diag_method_ = Full;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
+        diag_method_ = DavidsonLiuSparse;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
+        diag_method_ = DavidsonLiuList;
+    } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER"){
+        diag_method_ = DLSolver;
+    }
 
     aimed_selection_ = false;
     energy_selection_ = false;
@@ -202,8 +214,46 @@ void AdaptiveCI::startup()
     }
 }
 
-AdaptiveCI::~AdaptiveCI()
+void AdaptiveCI::print_info()
 {
+    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+
+    // Print a summary
+    std::vector<std::pair<std::string,int>> calculation_info{
+        {"Multiplicity",wavefunction_multiplicity_},
+        {"Symmetry",wavefunction_symmetry_},
+        {"Number of roots",nroot_},
+        {"Root used for properties",options_.get_int("ROOT")}};
+
+    std::vector<std::pair<std::string,double>> calculation_info_double{
+        {"P-threshold",tau_p_},
+        {"Q-threshold",tau_q_},
+        {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
+
+    std::vector<std::pair<std::string,std::string>> calculation_info_string{
+        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
+        {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
+        {"PQ Function", options_.get_str("PQ_FUNCTION")},
+        {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
+        {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
+        {"Project out spin contaminants",project_out_spin_contaminants_ ? "True" : "False"},
+        {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
+        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
+
+    // Print some information
+    outfile->Printf("\n  ==> Calculation Information <==\n");
+    outfile->Printf("\n  %s",string(65,'-').c_str());
+    for (auto& str_dim : calculation_info){
+        outfile->Printf("\n    %-40s %-5d",str_dim.first.c_str(),str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_double){
+        outfile->Printf("\n    %-40s %8.2e",str_dim.first.c_str(),str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_string){
+        outfile->Printf("\n    %-40s %s",str_dim.first.c_str(),str_dim.second.c_str());
+    }
+    outfile->Printf("\n  %s",string(65,'-').c_str());
+    outfile->Flush();
 }
 
 std::vector<int> AdaptiveCI::get_occupation()
@@ -403,51 +453,6 @@ std::vector<int> AdaptiveCI::get_occupation()
 	return occupation;	
 }
 
-void AdaptiveCI::print_info()
-{
-   // print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
-
-    // Print a summary
-    std::vector<std::pair<std::string,int>> calculation_info{
-        {"Symmetry",wavefunction_symmetry_},
-        {"Number of roots",nroot_},
-        {"Root used for properties",options_.get_int("ROOT")}};
-
-    std::vector<std::pair<std::string,double>> calculation_info_double{
-        {"P-threshold",tau_p_},
-        {"Q-threshold",tau_q_},
-        {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
-
-    std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
-        {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
-		{"PQ Function", options_.get_str("PQ_FUNCTION")},
-		{"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
-		{"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"}};
-//    {"Number of electrons",nel},
-//    {"Number of correlated alpha electrons",nalpha_},
-//    {"Number of correlated beta electrons",nbeta_},
-//    {"Number of restricted docc electrons",rdoccpi_.sum()},
-//    {"Charge",charge},
-//    {"Multiplicity",multiplicity},
-
-    // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
-    outfile->Printf("\n  %s",string(52,'-').c_str());
-    for (auto& str_dim : calculation_info){
-        outfile->Printf("\n    %-40s   %5d",str_dim.first.c_str(),str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double){
-        outfile->Printf("\n    %-39s %8.2e",str_dim.first.c_str(),str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string){
-        outfile->Printf("\n    %-39s %s",str_dim.first.c_str(),str_dim.second.c_str());
-    }
-    outfile->Printf("\n  %s",string(52,'-').c_str());
-    outfile->Flush();
-}
-
-
 double AdaptiveCI::compute_energy()
 {
     boost::timer t_iamrcisd;
@@ -489,6 +494,7 @@ double AdaptiveCI::compute_energy()
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_spin_project(project_out_spin_contaminants_);
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -508,15 +514,9 @@ double AdaptiveCI::compute_energy()
         }else{
 			outfile->Printf("\n Not checking for spin-completeness.");
 		}
-		
-		outfile->Flush();
-		
+        // Diagonalize H in the P space
+        sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
-        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
-        }else{
-            sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
-        }
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
 
@@ -528,7 +528,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
 			}else{
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -558,11 +558,7 @@ double AdaptiveCI::compute_energy()
 		}
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuList);
-        }else{
-            sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,DavidsonLiuSparse);
-        }
+        sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
 		// Ensure the solutions are spin-pure
 		if( spin_projection == 1 or spin_projection == 3){
@@ -572,7 +568,7 @@ double AdaptiveCI::compute_energy()
 				spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
 				PQ_evecs->zero();
 				PQ_evecs = PQ_spin_evecs_->clone();
-				sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots, DavidsonLiuList);
+                sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
 			}else{
 				outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n No need to perform spin projection.");
@@ -619,7 +615,7 @@ double AdaptiveCI::compute_energy()
 			PQ_evecs->print();
 		//	P_evecs->zero();
 			//P_evecs = PQ_spin_evecs_->clone();
-			sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_, DavidsonLiuList);
+            sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_,diag_method_);
 		}else{
 			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 			outfile->Printf("\n  No need to perform spin projection.");
@@ -784,6 +780,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
 
         double sum = 0.0;
+        size_t last_excluded = 0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const STLBitsetDeterminant& det = sorted_dets[I].second;
             if (sum + sorted_dets[I].first < tau_q_){
@@ -794,11 +791,30 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                     double V = V_vec[n];
                     double E2_I = E2_eq( V, EI, evals->get(n) );
 
-					ept2[n] += E2_I;
+                    ept2[n] += E2_I;
                 }
+                last_excluded = I;
             }else{
                 PQ_space_.push_back(sorted_dets[I].second);
-				det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
+                det_history_[sorted_dets[I].second].push_back(std::make_pair(cycle_, "Q"));
+            }
+        }
+
+        // add missing determinants that have the same weight as the last one included
+        if (add_aimed_degenerate_){
+            size_t num_extra = 0;
+            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+                size_t J = last_excluded - I;
+                if (std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
+                    PQ_space_.push_back(sorted_dets[J].second);
+                    det_history_[sorted_dets[J].second].push_back(std::make_pair(cycle_, "Q"));
+                    num_extra++;
+                }else{
+                    break;
+                }
+            }
+            if (num_extra > 0){
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",num_extra);
             }
         }
     }
@@ -1424,17 +1440,36 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     // sum_I |C_I|^2 < tau_p, where the sum runs over all the excluded determinants
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
-        outfile->Printf("AIMED SELECTION");
         std::sort(dm_det_list.begin(),dm_det_list.end());
 
         double sum = 0.0;
+        size_t last_excluded = 0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
-            if (sum + dsum < tau_p_){
+            if (sum + dsum < tau_p_){ // exclude small contributions that sum to less than tau_p
                 sum += dsum;
+                last_excluded = I;
             }else{
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
+            }
+        }
+
+        // add missing determinants that have the same weight as the last one included
+        if (add_aimed_degenerate_){
+            size_t num_extra = 0;
+            for (size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+                size_t J = last_excluded - I;
+                if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) < 1.0e-9){
+                    pruned_space.push_back(large_space[dm_det_list[J].second]);
+                    pruned_space_map[large_space[dm_det_list[J].second]] = 1;
+                    num_extra += 1;
+                }else{
+                    break;
+                }
+            }
+            if (num_extra > 0){
+                outfile->Printf("\n  Added %zu missing determinants in aimed selection.",num_extra);
             }
         }
     }
@@ -1847,7 +1882,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-		outfile->Printf("\n\n Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,
