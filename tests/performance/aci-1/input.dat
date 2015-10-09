@@ -1,0 +1,40 @@
+#! Generated using commit GITCOMMIT 
+# Basic ACI calculation with energy threshold selection
+
+import forte
+
+refscf = -14.839846512738 #TEST
+refaci = -14.888681221669 #TEST
+refacipt2 = -14.890314474716 #TEST
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis cc-pvtz
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+}
+
+set scf {
+  scf_type pk
+  reference rhf
+  docc = [2,0,0,0,0,1,0,0]
+}
+
+set forte {
+  job_type = aci
+  SELECT_TYPE aimed_energy
+  diag_algorithm davidsonliulist
+  TAUP 0.0015
+  TAUQ 0.0015
+  nroot 1
+  charge 0
+  enforce_spin_complete true
+}
+
+energy('scf')
+energy('forte')
