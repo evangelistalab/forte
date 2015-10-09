@@ -245,6 +245,14 @@ void THREE_DSRG_MRPT2::startup()
         Fa_[p] = ints_->get_fock_a(p,p);
         Fb_[p] = ints_->get_fock_b(p,p);
     }
+    //if(options_.get_bool("MOLDEN_WRITE"))
+    //{
+    //    int nirrep = Process::environment.wavefunction()->nirrep();
+    //    boost::shared_ptr<Vector> Fa_sym(new Vector(nirrep, ncmopi_));
+    //
+    //    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Fa_, occ_vector );
+    //}
+
 
     Delta1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin){
