@@ -45,12 +45,12 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
     }
 }
 
-inline bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
+bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
 {
     return (bits_ == lhs.bits_);
 }
 
-inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
+bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
 {
     for (int p = nmo_ - 1; p >= 0; --p){
         if ((bits_[p] == false) and (lhs.bits_[p] == true)) return true;
@@ -61,13 +61,13 @@ inline bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) con
 
 const std::bitset<256>& STLBitsetDeterminant::bits() const {return bits_;}
 
-inline bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
+bool STLBitsetDeterminant::get_alfa_bit(int n) const {return bits_[n];}
 
-inline bool STLBitsetDeterminant::get_beta_bit(int n) const {return bits_[n + nmo_];}
+bool STLBitsetDeterminant::get_beta_bit(int n) const {return bits_[n + nmo_];}
 
-inline void STLBitsetDeterminant::set_alfa_bit(int n, bool value) {bits_[n] = value;}
+void STLBitsetDeterminant::set_alfa_bit(int n, bool value) {bits_[n] = value;}
 
-inline void STLBitsetDeterminant::set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
+void STLBitsetDeterminant::set_beta_bit(int n, bool value) {bits_[n + nmo_] = value;}
 
 std::vector<bool> STLBitsetDeterminant::get_alfa_bits_vector_bool()
 {
