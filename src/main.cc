@@ -53,6 +53,7 @@ read_options(std::string name, Options &options)
         options.add_bool("NAT_ORBS_PRINT", false);
         /*- Use Natural Orbitals to suggest active space -*/
         options.add_bool("NAT_ACT", false);
+        options.add_bool("MOLDEN_WRITE", false);
 
         // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
 
