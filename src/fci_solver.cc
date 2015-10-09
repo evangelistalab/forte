@@ -484,10 +484,14 @@ Reference FCISolver::reference()
     std::vector<double>& opdm_b = C_->opdm_b();
     ambit::Tensor L1a = ambit::Tensor::build(ambit::kCore,"L1a",{nact,nact});
     ambit::Tensor L1b = ambit::Tensor::build(ambit::kCore,"L1b",{nact,nact});
-    L1a.iterate([&](const::vector<size_t>& i,double& value){
-        value = opdm_a[i[0] * nact + i[1]]; });
-    L1b.iterate([&](const::vector<size_t>& i,double& value){
-        value = opdm_b[i[0] * nact + i[1]]; });
+    if (na_ >= 1){
+        L1a.iterate([&](const::vector<size_t>& i,double& value){
+            value = opdm_a[i[0] * nact + i[1]]; });
+    }
+    if (nb_ >= 1){
+        L1b.iterate([&](const::vector<size_t>& i,double& value){
+            value = opdm_b[i[0] * nact + i[1]]; });
+    }
 
     // Two-particle density matrices in the active space
     ambit::Tensor L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{nact,nact,nact,nact});
