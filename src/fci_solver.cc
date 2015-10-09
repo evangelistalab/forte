@@ -244,7 +244,6 @@ double FCISolver::compute_energy()
 
     Hdiag.copy_to(sigma);
 
-
     DavidsonLiuSolver dls(fci_size,nroot_);
     dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     dls.set_print_level(print_);
@@ -262,7 +261,6 @@ double FCISolver::compute_energy()
         HC.copy_to(sigma);
         dls.add_guess(sigma);
     }
-
 
     bool converged = false;
 
