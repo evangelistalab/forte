@@ -28,6 +28,9 @@ set {
 set forte {
   job_type aci
   SELECT_TYPE amp
+  aci_add_aimed_degenerate false
+  project_out_spin_contaminants false
+  enforce_spin_complete false
   TAUP 0.0040000
   TAUQ 0.000500
   nroot 1

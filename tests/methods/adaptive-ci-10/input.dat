@@ -3,13 +3,11 @@
 
 import forte
 
-
 memory 500 mb
 
-refscf   = -229.20378006852584 
-refaci =  -229.35934975211
-refacipt2 = -229.360334985878
- 
+refscf    = -229.20378006852584 
+refaci    = -229.359450812283
+refacipt2 = -229.360444943286
 
 molecule mbenzyne{
   0 1
@@ -37,18 +35,20 @@ set globals{
 }
 
 set forte {
-   multiplicity 1
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc		  [3,2,0,0,0,0,2,3]
-   active                 [1, 0, 1, 2, 1, 2, 1, 0]
-   root_sym               0
-   nroot                  1
-   job_type               aci
-   taup					  0.001
-   tauq					  0.001
-   select_type			  aimed_energy	 
-   spin_projection		  1
-   enforce_spin_complete  true
+  multiplicity 1
+  frozen_docc            [2,1,0,0,0,0,2,1]
+  restricted_docc	  [3,2,0,0,0,0,2,3]
+  active                 [1,0,1,2,1,2,1,0]
+  root_sym               0
+  nroot                  1
+  job_type               aci
+  taup	                  0.001
+  tauq                   0.001
+  select_type            aimed_energy	 
+  spin_projection        1
+  enforce_spin_complete  true
+  aci_add_aimed_degenerate false
+  project_out_spin_contaminants false
 }
 
 scf = energy('scf')
