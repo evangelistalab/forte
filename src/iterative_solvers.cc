@@ -260,7 +260,6 @@ void DavidsonLiuSolver::normalize_vectors(SharedMatrix v,size_t n)
 bool DavidsonLiuSolver::subspace_collapse()
 {
     if(collapse_size_ + nroot_ > subspace_size_){ // in this case I will never be able to add new vectors
-        outfile->Printf("\n  subspace_collapse() 1");
 
         // collapse vectors
         collapse_vectors();
@@ -285,7 +284,6 @@ bool DavidsonLiuSolver::subspace_collapse()
 
     // If L is close to maxdim, collapse to one guess per root */
     if(nroot_ + basis_size_ > subspace_size_) { // this means that next iteration I cannot add more roots so I need to collapse
-        outfile->Printf("\n  subspace_collapse() 2");
         if(print_level_ > 1) {
             outfile->Printf("\nSubspace too large: max subspace size = %d, basis size = %d\n", subspace_size_, basis_size_);
             outfile->Printf("Collapsing eigenvectors.\n");
