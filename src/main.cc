@@ -239,11 +239,12 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
+        /*- The number of trial guess vectors to generate per root -*/
+        options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
-
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
 

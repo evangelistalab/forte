@@ -62,8 +62,8 @@ public:
      */
     FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
               std::vector<size_t> active_mo, size_t na, size_t nb,
-              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, size_t
-              initial_guess_per_root, int print, Options& options);
+              size_t multiplicity, size_t symmetry, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
+              size_t initial_guess_per_root, int print, Options& options);
     /**
      * @brief FCISolver
      * @param active_dim The dimension of the active orbital space
@@ -89,6 +89,9 @@ public:
 
     /// Return a reference object
     Reference reference();
+
+    /// Set the maximum RDM computed (0 - 3)
+    void set_max_rdm_level(int value);
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -133,6 +136,8 @@ private:
     int nroot_;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_; 
+    /// The maximum RDM computed (0 - 3)
+    int max_rdm_level_ = 1;
     /// Test the RDMs?
     bool test_rdms_ = false;
     ///
@@ -182,6 +187,8 @@ public:
     Reference reference();
     /// Set the print level
     void set_print(int value) {print_ = value;}
+    /// Set the maximum RDM computed (0 - 3)
+    void set_max_rdm_level(int value);
 
 private:
 
@@ -199,6 +206,9 @@ private:
     /// 0 : silent mode (no printing)
     /// 1 : default printing
     int print_  = 1;
+
+    /// Set the maximum RDM computed (0 - 3)
+    int max_rdm_level_;
 
     // ==> Class functions <==
 
