@@ -134,6 +134,8 @@ private:
     double e_convergence_ = 1.0e-15;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
+    /// The threshold used to discard vectors
+    double schmidt_threshold_ = 1.0e-3;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
