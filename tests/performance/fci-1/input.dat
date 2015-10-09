@@ -14,7 +14,7 @@ units bohr
 }
 
 set {
-  basis sto-3g
+  basis 6-311G
   scf_type pk
   e_convergence 12
 }

@@ -198,7 +198,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST");
+        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER");
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",1);
@@ -240,11 +240,12 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
+        /*- The number of trial guess vectors to generate per root -*/
+        options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
-
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
 
@@ -299,9 +300,11 @@ read_options(std::string name, Options &options)
 		/*- Threshold for Lambda guess -*/
 		options.add_double("LAMBDA_THRESH", 1.0);
 		/*- Add determinants to enforce spin-complete set? -*/
-		options.add_bool("ENFORCE_SPIN_COMPLETE", false);
+        options.add_bool("ENFORCE_SPIN_COMPLETE", true);
         /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
-        options.add_bool("PROJECT_SPIN", false);
+        options.add_bool("PROJECT_OUT_SPIN_CONTAMINANTS", true);
+        /*- Add "degenerate" determinants not included in the aimed selection? -*/
+        options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
 
 		/*- Print an analysis of determinant history? -*/
 		options.add_bool("DETERMINANT_HISTORY", false);
