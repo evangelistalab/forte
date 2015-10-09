@@ -10,7 +10,9 @@ import string
 # Define tests here
 fci_tests = ["fci-1"]
 
-tests =  fci_tests
+apifci_tests = ["apifci-1"]
+
+tests =  fci_tests + apifci_tests
 
 class bcolors:
     HEADER = '\033[95m'
