@@ -251,9 +251,6 @@ private:
 	/// Analyze the wavefunction
 	void wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
 
-	/// Take the direct product of two symmetry elements
-	int direct_sym_product( int sym1, int sym2 );
-
 	/// Returns a vector of orbital energy, sym label pairs
 	std::vector<std::pair<double, std::pair<int,int> > > sym_labeled_orbitals(std::string type);
 
