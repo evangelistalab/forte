@@ -126,6 +126,11 @@ void DFIntegrals::gather_integrals()
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
     if(print_ > 0){outfile->Printf("\n Computing Density fitted integrals \n");}
+    if(options_.get_str("DF_BASIS_MP2").length() == 0)
+    {
+        outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
+        throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
+    }
 
     boost::shared_ptr<BasisSet> primary = wfn->basisset();
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
