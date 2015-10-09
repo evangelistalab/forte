@@ -69,10 +69,17 @@ FCI::~FCI()
     if (fcisolver_ != nullptr) delete fcisolver_;
 }
 
+void FCI::set_max_rdm_level(int value)
+{
+    max_rdm_level_ = value;
+}
+
 void FCI::startup()
 {  
     if(print_)
         print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
+
+    max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
 }
 
 double FCI::compute_energy()
@@ -82,7 +89,7 @@ double FCI::compute_energy()
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
-    int charge       = Process::environment.molecule()->molecular_charge();
+    int charge = Process::environment.molecule()->molecular_charge();
     if(options_["CHARGE"].has_changed()){
         charge = options_.get_int("CHARGE");
     }
@@ -140,6 +147,7 @@ double FCI::compute_energy()
                                options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
 
 
+    fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
 
     double fci_energy = fcisolver_->compute_energy();
@@ -186,6 +194,11 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     nroot_ = options_.get_int("NROOT");
 
     startup();
+}
+
+void FCISolver::set_max_rdm_level(int value)
+{
+    max_rdm_level_ = value;
 }
 
 void FCISolver::startup()
@@ -344,7 +357,7 @@ double FCISolver::compute_energy()
     if (converged){
         C_->copy(dls.eigenvector(0));
         if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
-        C_->compute_rdms(3);
+        C_->compute_rdms(max_rdm_level_);
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
