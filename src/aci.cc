@@ -13,7 +13,7 @@
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
 
-#include "adaptive-ci.h"
+#include "aci.h"
 #include "sparse_ci_solver.h"
 #include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
@@ -303,12 +303,12 @@ std::vector<int> AdaptiveCI::get_occupation()
 			orb_sym = wavefunction_symmetry_; 
 			
 			if(wavefunction_multiplicity_ == 1){
-				orb_sym = direct_sym_product( labeled_orb_en[nalpha_ - 1].second.first, orb_sym);
+				orb_sym = labeled_orb_en[nalpha_ - 1].second.first ^ orb_sym;
 			}else{
 				for(int i = 1; i <= nsym; ++i){
-					orb_sym = direct_sym_product(labeled_orb_en[nalpha_ - i].second.first, orb_sym);
+					orb_sym = labeled_orb_en[nalpha_ - i].second.first ^ orb_sym;
 				}
-				orb_sym  = direct_sym_product(labeled_orb_en[nalpha_ - k].second.first, orb_sym);
+				orb_sym  = labeled_orb_en[nalpha_ - k].second.first ^ orb_sym;
 			}
 
 			outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
@@ -367,12 +367,12 @@ std::vector<int> AdaptiveCI::get_occupation()
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - 1].second.first, orb_sym);
+					orb_sym = labeled_orb_en_alfa[nalpha_ - 1].second.first ^ orb_sym;
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = direct_sym_product( labeled_orb_en_alfa[nalpha_ - i].second.first, orb_sym);
+						orb_sym = labeled_orb_en_alfa[nalpha_ - i].second.first ^ orb_sym;
 					}
-					orb_sym = direct_sym_product(labeled_orb_en_alfa[nalpha_ - k].second.first,orb_sym);
+					orb_sym = labeled_orb_en_alfa[nalpha_ - k].second.first ^ orb_sym;
 				}
 
 				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
@@ -415,12 +415,12 @@ std::vector<int> AdaptiveCI::get_occupation()
 				orb_sym = wavefunction_symmetry_;
 
 				if(wavefunction_multiplicity_ == 1){
-					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - 1].second.first, orb_sym);
+					orb_sym = labeled_orb_en_beta[nbeta_ - 1].second.first ^ orb_sym;
 				}else{
 					for(int i = 1; i <= nsym; ++i){
-						orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - i].second.first, orb_sym);
+						orb_sym = labeled_orb_en_beta[nbeta_ - i].second.first ^ orb_sym;
 					}
-					orb_sym = direct_sym_product(labeled_orb_en_beta[nbeta_ - k].second.first, orb_sym);
+					orb_sym = labeled_orb_en_beta[nbeta_ - k].second.first ^  orb_sym;
 				}
 
 				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
@@ -1605,59 +1605,6 @@ pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute
 		spin_vec.push_back( make_pair(make_pair(S,S2), make_pair(max_I, sum_weight)));
 	}
 	return spin_vec;
-}
-
-int AdaptiveCI::direct_sym_product( int sym1, int sym2 )
-{
-	/* Create a matrix for direct products of Abelian symmetry groups
-	 *
-	 * This creates an 8x8 matrix, so it works for C2V and D2H symmetries
-	 *
-	 * Due to properties of groups, direct_sym_product(a,b) solves both:
-	 *
-	 * a (x) b = ?
-	 * and
-	 * a (x) ? = b
-	 */
-
-    boost::shared_ptr<Matrix> dp(new Matrix("dp",8,8));
-
-    for(int p = 0; p < 2; ++p){
-        for(int q = 0; q < 2; ++q){
-            if(p != q){
-                dp->set(p,q, 1);
-            }
-        }
-    }
-
-    for(int p = 2; p < 4; ++p){
-        for(int q = 0; q < 2; ++q){
-            dp->set(p,q, dp->get(p-2,q) + 2);
-            dp->set(q,p, dp->get(p-2,q) + 2);
-        }
-    }
-
-    for(int p = 2; p < 4; ++p){
-        for(int q = 2; q < 4; ++q){
-            dp->set(p,q, dp->get(p-2,q-2));
-        }
-    }
-
-    for(int p = 4; p < 8; ++p){
-        for(int q = 0; q < 4; ++q){
-            dp->set(p,q, dp->get(p-4,q)+4);
-            dp->set(q,p, dp->get(p-4,q)+4);
-        }
-    }
-
-    for(int p = 4; p < 8; ++p){
-        for(int q = 4; q < 8; ++q){
-            dp->set(p,q, dp->get(p-4,q-4));
-        }
-    }
-
-    return dp->get(sym1, sym2);
-
 }
 
 void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)

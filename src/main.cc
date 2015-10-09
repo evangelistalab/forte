@@ -16,7 +16,7 @@
 #include "helpers.h"
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
-#include "adaptive-ci.h"
+#include "aci.h"
 #include "apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
