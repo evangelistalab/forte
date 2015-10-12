@@ -53,7 +53,7 @@ read_options(std::string name, Options &options)
         options.add_bool("NAT_ORBS_PRINT", false);
         /*- Use Natural Orbitals to suggest active space -*/
         options.add_bool("NAT_ACT", false);
-        options.add_bool("MOLDEN_WRITE", false);
+        options.add_bool("MOLDEN_WRITE_FORTE", false);
 
         // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
 
@@ -585,11 +585,13 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference = fci->reference();
                 boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
@@ -626,11 +628,13 @@ extern "C" PsiReturnType forte(Options &options)
 
            if (options.get_bool("SEMI_CANONICAL")){
                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+               fci->set_max_rdm_level(3);
                fci->compute_energy();
                Reference reference2 = fci->reference();
                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
            }
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+           fci->set_max_rdm_level(3);
            fci->compute_energy();
            Reference reference = fci->reference();
 
