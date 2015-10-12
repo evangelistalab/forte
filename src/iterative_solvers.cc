@@ -132,10 +132,10 @@ SharedVector DavidsonLiuSolver::eigenvector(size_t n) const
     return evec;
 }
 
-bool DavidsonLiuSolver::update()
+SolverStatus DavidsonLiuSolver::update()
 {
     // If converged or exceeded the maximum number of iterations return true
-    if ((converged_ >= nroot_) or (iter_ > maxiter_)) return true;
+    if ((converged_ >= nroot_) or (iter_ > maxiter_)) return SolverStatus::Converged;
 
     PRINT_VARS("update")
 
@@ -149,18 +149,18 @@ bool DavidsonLiuSolver::update()
     if (not last_update_collapsed_){
         if(check_convergence()){
             get_results();
-            return true;
+            return SolverStatus::Converged;
         }
     }
 
-    if (size_ == 1) return true;
+    if (size_ == 1) return SolverStatus::Converged;
 
     check_orthogonality();
 
     // Do subspace collapse
     if(subspace_collapse()) {
         last_update_collapsed_ = true;
-        return false;
+        return SolverStatus::Collapse;
     }else{
         last_update_collapsed_ = false;
     }
@@ -192,7 +192,7 @@ bool DavidsonLiuSolver::update()
 
     timing_ += t_davidson.elapsed();
 
-    return false;
+    return SolverStatus::NotConverged;
 }
 
 void DavidsonLiuSolver::form_correction_vectors()
@@ -380,10 +380,10 @@ void DavidsonLiuSolver::get_results()
             v[i][I] /= norm;
         }
     }
-    if (print_level_){
-        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter_);
-        outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",timing_);
-    }
+//    if (print_level_){
+//        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter_);
+//        outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",timing_);
+//    }
 }
 
 bool DavidsonLiuSolver::check_orthogonality()

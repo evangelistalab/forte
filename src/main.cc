@@ -584,11 +584,13 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference = fci->reference();
                 boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
@@ -625,11 +627,13 @@ extern "C" PsiReturnType forte(Options &options)
 
            if (options.get_bool("SEMI_CANONICAL")){
                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+               fci->set_max_rdm_level(3);
                fci->compute_energy();
                Reference reference2 = fci->reference();
                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
            }
            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+           fci->set_max_rdm_level(3);
            fci->compute_energy();
            Reference reference = fci->reference();
 
@@ -690,11 +694,13 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 Reference reference = fci->reference();
                 boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
@@ -706,14 +712,11 @@ extern "C" PsiReturnType forte(Options &options)
         SqTest sqtest;
     }
 
-
-
-
     // Delete ints_;
 
     ambit::finalize();
 
-    outfile->Printf("\n Your calculation took %.8f seconds", overall_time.get());
+    outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
     return Success;
 }
 
