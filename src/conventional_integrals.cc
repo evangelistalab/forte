@@ -30,7 +30,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
     integral_type_ = ConventionalInts;
 
-    outfile->Printf("\n Overall Conventional Integrals timings");
+    outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
     allocate();
     transform_integrals();
@@ -41,7 +41,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
-    outfile->Printf("\n Conventional integrals take %8.8f s", ConvTime.get());
+    outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
 ConventionalIntegrals::~ConventionalIntegrals()

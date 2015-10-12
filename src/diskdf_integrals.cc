@@ -23,7 +23,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
 
     integral_type_ = DiskDF;
-    outfile->Printf("\n DISKDFIntegrals overall time");
+    outfile->Printf("\n  DISKDFIntegrals overall time");
     Timer DFInt;
     allocate();
 
@@ -47,7 +47,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         aptei_idx_ = ncmo_;
     }
 
-    outfile->Printf("\n DISKDFIntegrals take %15.8f s", DFInt.get());
+    outfile->Printf("\n  DISKDFIntegrals take %15.8f s", DFInt.get());
 }
 
 DISKDFIntegrals::~DISKDFIntegrals()
