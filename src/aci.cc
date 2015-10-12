@@ -116,7 +116,6 @@ void AdaptiveCI::startup()
 	// "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-
 	rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
 
 	// Number of correlated electrons
@@ -125,7 +124,7 @@ void AdaptiveCI::startup()
 	nbeta_ = 0;
 	int nel = 0;
 	for(int h = 0; h < nirrep_; ++h){
-		nel += 2*doccpi_[h] + soccpi_[h];
+        nel += 2 * doccpi_[h] + soccpi_[h];
 	}
 		
 	int ms = wavefunction_multiplicity_ - 1;
@@ -268,7 +267,6 @@ std::vector<int> AdaptiveCI::get_occupation()
 	//nyms denotes the number of electrons needed to assign symmetry and multiplicity
 	int nsym = wavefunction_multiplicity_ - 1;
 	int orb_sym = wavefunction_symmetry_;
-
 
 	if(wavefunction_multiplicity_ == 1){
 		nsym = 2;
@@ -1669,7 +1667,7 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		int cumidx = 0;
 		for(int h = 0; h < nirrep_; ++h){
 			for(int a = 0; a < nactpi_[h]; ++a ){
-				orb_e.push_back(make_pair(epsilon_a_->get(h,a), a + cumidx));
+                orb_e.push_back(make_pair(epsilon_a_->get(h,frzcpi_[h] + a), a + cumidx));
 			}
 			cumidx += nactpi_[h];
 		}
@@ -1687,7 +1685,7 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 		int cumidx = 0;
 		for(int h  = 0; h < nirrep_; ++h){
 			for(size_t a = 0, max = nactpi_[h]; a < max; ++a){
-				orb_e.push_back(make_pair(epsilon_b_->get(h,a), a+cumidx));
+                orb_e.push_back(make_pair(epsilon_b_->get(h,frzcpi_[h] + a), a+cumidx));
 			}
 			cumidx += nactpi_[h];
 		}
