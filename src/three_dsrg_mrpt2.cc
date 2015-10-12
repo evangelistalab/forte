@@ -245,13 +245,24 @@ void THREE_DSRG_MRPT2::startup()
         Fa_[p] = ints_->get_fock_a(p,p);
         Fb_[p] = ints_->get_fock_b(p,p);
     }
-    //if(options_.get_bool("MOLDEN_WRITE"))
-    //{
-    //    int nirrep = Process::environment.wavefunction()->nirrep();
-    //    boost::shared_ptr<Vector> Fa_sym(new Vector(nirrep, ncmopi_));
-    //
-    //    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Fa_, occ_vector );
-    //}
+    if(options_.get_bool("MOLDEN_WRITE_FORTE"))
+    {
+        Dimension nmopi_ = mo_space_info_->get_dimension("ALL");
+        int nirrep = Process::environment.wavefunction()->nirrep();
+        boost::shared_ptr<Vector>occ_vector(new Vector(nirrep, nmopi_));
+
+        for(auto orb_energy : Fa_)
+        {
+            outfile->Printf(" %8.8f", orb_energy);
+        }
+        ///Not right, but I do not care about occupation.  Look at orbital energies
+        for(int h = 0; h < nirrep; h++)
+            for(int i = 0; i < nmopi_[h]; i++)
+                occ_vector->set(h, i, 0.0);
+
+
+        view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+    }
 
 
     Delta1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
