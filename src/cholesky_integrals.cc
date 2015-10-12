@@ -32,7 +32,7 @@ CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestrict
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
     integral_type_ = Cholesky;
-    outfile->Printf("\n Cholesky integrals time");
+    outfile->Printf("\n  Cholesky integrals time");
     Timer CholInt;
     allocate();
     gather_integrals();
@@ -42,7 +42,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
-    outfile->Printf("\n CholeskyIntegrals take %8.8f", CholInt.get());
+    outfile->Printf("\n  CholeskyIntegrals take %8.8f", CholInt.get());
 }
 
 CholeskyIntegrals::~CholeskyIntegrals()

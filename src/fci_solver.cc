@@ -262,16 +262,17 @@ double FCISolver::compute_energy()
         dls.add_guess(sigma);
     }
 
-    bool converged = false;
+    SolverStatus converged = SolverStatus::NotConverged;
 
     if(print_){
-        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  ==> Diagonalizing Hamiltonian <==\n");
         outfile->Printf("\n  ----------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
         outfile->Printf("\n  ----------------------------------------");
     }
 
     double old_avg_energy = 0.0;
+    int real_cycle = 1;
     for (int cycle = 0; cycle < 31; ++cycle){
         bool add_sigma = true;
         do{
@@ -281,26 +282,33 @@ double FCISolver::compute_energy()
             HC.copy_to(sigma);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
+
         converged = dls.update();
 
-        double avg_energy = 0.0;
-        for (int r = 0; r < nroot_; ++r){
-            avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+        if (converged != SolverStatus::Collapse){
+            double avg_energy = 0.0;
+            for (int r = 0; r < nroot_; ++r){
+                avg_energy += dls.eigenvalues()->get(r) + nuclear_repulsion_energy;
+            }
+            avg_energy /= static_cast<double>(nroot_);
+            if (print_){
+                outfile->Printf("\n    %3d  %20.12f  %+.3e",real_cycle,avg_energy,avg_energy - old_avg_energy);
+            }
+            old_avg_energy = avg_energy;
+            real_cycle++;
         }
-        avg_energy /= static_cast<double>(nroot_);
 
-        if (print_) outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
-
-        old_avg_energy = avg_energy;
-
-        if (converged) break;
+        if (converged == SolverStatus::Converged) break;
     }
 
-    if (print_) outfile->Printf("\n  ----------------------------------------");
+    if (print_){
+        outfile->Printf("\n  ----------------------------------------");
+        if (converged == SolverStatus::Converged){
+            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", real_cycle);
+        }
+    }
 
-    converged = true;
-
-    if (not converged){
+    if (converged == SolverStatus::NotConverged){
         outfile->Printf("\n  FCI did not converge!");
         exit(1);
     }
@@ -328,7 +336,7 @@ double FCISolver::compute_energy()
                 outfile->Printf("\n    ");
                 size_t offset = 0;
                 for(int h = 0; h < nirrep_; ++h){
-                    for(size_t k = 0; k < nactvpi[h]; ++k){
+                    for(int k = 0; k < nactvpi[h]; ++k){
                         size_t i = k + offset;
                         bool a = Ia_v[i];
                         bool b = Ib_v[i];
@@ -352,7 +360,7 @@ double FCISolver::compute_energy()
 
     // Compute the RDMs
     size_t rdm_root = 0;
-    if (converged){
+    if (converged == SolverStatus::Converged){
         C_->copy(dls.eigenvector(0));
         if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
         C_->compute_rdms(max_rdm_level_);
