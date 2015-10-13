@@ -391,8 +391,8 @@ void CASSCF::form_fock_active()
     tei_pqaa = ints_->aptei_ab_block(nmo_array, nmo_array, na_array, na_array);
     tei_paqa = ints_->aptei_ab_block(nmo_array, na_array, nmo_array, na_array);
     ambit::Tensor Fock_act_test = ambit::Tensor::build(ambit::kCore, "Fock_A", {nmo_, nmo_});
-    Fock_act_test("p, q") = 2.0 * tei_pqaa("p, q, t, u") * gamma_no_spin("t, u");
-    Fock_act_test("p, q") -= 1.0 * tei_paqa("p, t, q, u") * gamma_no_spin("t, u");
+    Fock_act_test("p, q") = 1.0 * tei_pqaa("p, q, t, u") * gamma_no_spin("t, u");
+    Fock_act_test("p, q") -= 0.5 * tei_paqa("p, t, q, u") * gamma_no_spin("t, u");
     boost::shared_ptr<Matrix> F_act_testM(new Matrix("F_act", nmo_, nmo_));
 
     Fock_act_test.iterate([&](const std::vector<size_t>& i,double& value){
@@ -496,13 +496,15 @@ void CASSCF::orbital_gradient()
             {
                 size_t i = occ_array[ii];
                 size_t t = active_array[ti];
-                double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
+                //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
+                double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
                 Orb_grad->set(i,t, value_it) ;
             }
     }
     for(auto i : occ_array){
         for(auto a : virt_array){
-            double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 2.0;
+            //double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 2.0;
+            double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
             Orb_grad->set(i, a, value_ia);
 
         }
@@ -511,13 +513,14 @@ void CASSCF::orbital_gradient()
         for(size_t ti = 0; ti < active_array.size(); ti++){
             size_t t = active_array[ti];
             size_t a = virt_array[ai];
-            double value_ta = 2.0 * Y_->get(a, ti) + 4.0 * Z_->get(a,ti);
+            //double value_ta = 2.0 * Y_->get(a, ti) + 4.0 * Z_->get(a,ti);
+            double value_ta = 2.0 * Y_->get(a, ti) + 2.0 * Z_->get(a,ti);
             Orb_grad->set(t,a, value_ta);
         }
     }
     //Orb_grad->set_diagonal(1.0);
-    for(size_t p = 0; p < nmo_; p++)
-        Orb_grad->set(p,p, 2 * F_core_->get(p, p) + 2 * F_act_->get(p, p));
+    //for(size_t p = 0; p < nmo_; p++)
+    //    Orb_grad->set(p,p, 2 * F_core_->get(p, p) + 2 * F_act_->get(p, p));
 
     g_ = Orb_grad;
 
@@ -534,8 +537,10 @@ void CASSCF::diagonal_hessian()
         for(size_t ai = 0; ai < a_array.size(); ai++){
             size_t a = a_array[ai];
             size_t i = i_array[ii];
-            double value_ia = F_core_->get(a,a) * 4.0 + 2 * F_act_->get(a,a);
-            value_ia -= 4.0 * F_core_->get(i,i)  - 2 * F_act_->get(i,i);
+            //double value_ia = F_core_->get(a,a) * 4.0 + 2 * F_act_->get(a,a);
+            //value_ia -= 4.0 * F_core_->get(i,i)  - 2 * F_act_->get(i,i);
+            double value_ia = F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a);
+            value_ia -= 4.0 * F_core_->get(i,i)  - 4.0 * F_act_->get(i,i);
             D->set(i,a,value_ia);
         }
     }
@@ -543,9 +548,12 @@ void CASSCF::diagonal_hessian()
         for(size_t ti = 0; ti < t_array.size(); ti++){
             size_t a = a_array[ai];
             size_t t = t_array[ti];
+            //double value_ta = 2.0 * gamma1M_->get(ti,ti) * F_core_->get(a,a);
+            //value_ta += gamma1M_->get(ti,ti) * F_act_->get(a,a);
+            //value_ta -= 2*Y_->get(t,ti) + 4.0 *Z_->get(t,ti);
             double value_ta = 2.0 * gamma1M_->get(ti,ti) * F_core_->get(a,a);
-            value_ta += gamma1M_->get(ti,ti) * F_act_->get(a,a);
-            value_ta -= 2*Y_->get(t,ti) + 4.0 *Z_->get(t,ti);
+            value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
+            value_ta -= 2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti);
             D->set(t,a, value_ta);
         }
     }
@@ -553,12 +561,18 @@ void CASSCF::diagonal_hessian()
         for(size_t ti = 0; ti < t_array.size(); ti++){
             size_t i = i_array[ii];
             size_t t = t_array[ti];
+            //double value_it = 4.0 * F_core_->get(t,t)
+            //        + 2.0 * F_act_->get(t,t)
+            //        + 2.0 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
+            //value_it+=gamma1M_->get(ti,ti) * F_act_->get(i,i);
+            //value_it-=4.0 * F_core_->get(i,i) + 2.0 * F_act_->get(i,i);
+            //value_it-=2.0*Y_->get(t,ti) + 4.0 * Z_->get(t,ti);
             double value_it = 4.0 * F_core_->get(t,t)
-                    + 2.0 * F_act_->get(t,t)
+                    + 4.0 * F_act_->get(t,t)
                     + 2.0 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
-            value_it+=gamma1M_->get(ti,ti) * F_act_->get(i,i);
-            value_it-=4.0 * F_core_->get(i,i) + 2.0 * F_act_->get(i,i);
-            value_it-=2.0*Y_->get(t,ti) + 4.0 * Z_->get(t,ti);
+            value_it+=2.0 * gamma1M_->get(ti,ti) * F_act_->get(i,i);
+            value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
+            value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(i,t, value_it);
         }
     }

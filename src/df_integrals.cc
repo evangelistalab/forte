@@ -247,7 +247,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     // But if someone calls retransform integrals do not print it
     print_         =  1;
 
-    outfile->Printf("\n DFIntegrals overall time");
+    outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
     allocate();
     gather_integrals();
@@ -257,7 +257,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
-    outfile->Printf("\n DFIntegrals take %15.8f s", DFInt.get());
+    outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
 }
 
 void DFIntegrals::update_integrals(bool freeze_core)

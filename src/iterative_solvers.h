@@ -29,6 +29,9 @@
 
 namespace psi{ namespace forte{
 
+/// Result of the update step
+enum class SolverStatus {Converged,NotConverged,Collapse};
+
 /**
  * @brief The DavidsonLiuSolver class
  * This class diagonalizes the Hamiltonian in a basis
@@ -52,7 +55,7 @@ namespace psi{ namespace forte{
  *             add_sigma = dls.add_sigma(sigma);  // return sigma vector to solver
  *         } while (add_sigma);
  *         converged = dls.update();              // check convergence
- *         if (converged) break;
+ *         if (converged == Converged) break;
  *     }
  */
 class DavidsonLiuSolver
@@ -99,10 +102,10 @@ public:
     /// Initialize the object
     void startup(SharedVector diagonal);
 
-    /// Add a new vector
-    bool update();
+    /// Perform an update step
+    SolverStatus update();
 
-    ///
+    /// Produce the final eigenvectors and eigenvalues
     void get_results();
 
 private:

@@ -994,7 +994,6 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
             int nfound = 0;
             for (size_t i = 0; i < nnew_dets; ++i){
-                bool found = false;
                 for (size_t j = nguess; j < ndets; ++j){
                     size_t J = smallest[j].second;
                     if (space[J] == guess_det[nguess + i]){
@@ -1042,7 +1041,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     // Find groups of solutions with same spin
     double Stollerance = 1.0e-6;
     std::map<int,std::vector<int>> mult_list;
-    for (int i = 0; i < nguess; ++i){
+    for (size_t i = 0; i < nguess; ++i){
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
         int mult_int = std::round(mult);
         double error = mult - static_cast<double>(mult_int);
@@ -1052,7 +1051,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
         }
     }
-    if (mult_list[multiplicity].size() < nroot){
+    if (mult_list[multiplicity].size() < static_cast<size_t>(nroot)){
         size_t nfound = mult_list[multiplicity].size();
         outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
         exit(1);
@@ -1167,7 +1166,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     }
     dls.set_project_out(bad_roots);
 
-    bool converged = false;
+    SolverStatus converged = SolverStatus::NotConverged;
 
     if(print_details_){
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
@@ -1177,6 +1176,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     }
 
     double old_avg_energy = 0.0;
+    int real_cycle = 1;
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle){
         bool add_sigma = true;
         do{
@@ -1184,26 +1184,31 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
             sigma_vector->compute_sigma(sigma,b);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
+
         converged = dls.update();
 
-        double avg_energy = 0.0;
-        for (int r = 0; r < nroot; ++r){
-            avg_energy += dls.eigenvalues()->get(r);
+        if (converged != SolverStatus::Collapse){
+            double avg_energy = 0.0;
+            for (int r = 0; r < nroot; ++r) avg_energy += dls.eigenvalues()->get(r);
+            avg_energy /= static_cast<double>(nroot);
+            if (print_details_){
+                outfile->Printf("\n    %3d  %20.12f  %+.3e",real_cycle,avg_energy,avg_energy - old_avg_energy);
+            }
+            old_avg_energy = avg_energy;
+            real_cycle++;
         }
-        avg_energy /= static_cast<double>(nroot);
 
-        if (print_details_) outfile->Printf("\n    %3d  %20.12f  %+.3e",cycle,avg_energy,avg_energy - old_avg_energy);
-
-        old_avg_energy = avg_energy;
-
-        if (converged) break;
+        if (converged == SolverStatus::Converged) break;
     }
 
-    if (print_details_) outfile->Printf("\n  ----------------------------------------");
+    if (print_details_){
+        outfile->Printf("\n  ----------------------------------------");
+        if (converged == SolverStatus::Converged){
+            outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", real_cycle);
+        }
+    }
 
-    converged = true;
-
-    if (not converged){
+    if (converged == SolverStatus::NotConverged){
         outfile->Printf("\n  FCI did not converge!");
         exit(1);
     }
@@ -1432,7 +1437,7 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
         }
 
         if(spin_project_){
-            for(size_t i = 0; i < M; i++){
+            for(int i = 0; i < M; i++){
                 int n = 0;
                 for (auto& g : guess){
                     int g_mult = g.first;
@@ -1532,7 +1537,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
     bool print = print_details_;
 
     // Use unit vectors as initial guesses
-    int N = sigma_vector->size();
+    size_t N = sigma_vector->size();
     // Number of roots
     int M = nroot_s;
 
