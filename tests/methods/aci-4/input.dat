@@ -5,8 +5,8 @@
 import forte 
 
 refscf = -14.839846512738 #TEST
-refaci = -14.8829305594 #TEST
-refacipt2 = -14.889437076 #TEST
+refaci = -14.884407984072 #TEST
+refacipt2 = -14.889672294670 #TEST
 
 molecule li2{
    Li
