@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.0525898271660026 
-refaci = -75.321271108746 
-refacipt2 = -75.436493214153
+refaci = -75.335740411714 
+refacipt2 = -75.426488135461
 
 molecule N2{
 0 1
@@ -38,7 +38,6 @@ set forte {
   TAUQ 0.05
   nroot 1
   charge 0
-  spin_projection 1
   enforce_spin_complete true
 }
 
