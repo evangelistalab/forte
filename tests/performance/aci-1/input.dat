@@ -3,9 +3,9 @@
 
 import forte
 
-refscf = -14.839846512738 #TEST
-refaci = -14.888681221669 #TEST
-refacipt2 = -14.890314474716 #TEST
+refscf = -14.8434765720002879 #TEST
+refaci = -14.908856510747 #TEST
+refacipt2 = -14.910355929416 #TEST
 
 molecule li2{
    Li
@@ -37,4 +37,11 @@ set forte {
 }
 
 energy('scf')
+
+compare_values(refscf, get_variable("CURRENT ENERGY"),9,"SCF energy")
+
 energy('forte')
+
+compare_values(refaci, get_variable("ACI ENERGY"),9,"ACI energy")
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),9,"ACI+PT2 energy")
+
