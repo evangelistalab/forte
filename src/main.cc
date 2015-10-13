@@ -248,6 +248,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
+        /*- Number of iterations for FCI code -*/
+        options.add_int("FCI_ITERATIONS", 30);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE

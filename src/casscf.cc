@@ -96,7 +96,6 @@ void CASSCF::compute_casscf()
                 }
             }
         }
-        S->print();
         S->back_transform(Call_);
         SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
         S_sym->apply_symmetry(S, wfn_->aotoso());
@@ -196,6 +195,7 @@ void CASSCF::cas_ci()
 {
     ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
     boost::shared_ptr<FCI> fci_casscf(new FCI(wfn_,options_,ints_,mo_space_info_));
+    fci_casscf->set_max_rdm_level(3);
     fci_casscf->compute_energy();
     //Used to grab the computed energy and RDMs.  
     cas_ref_ = fci_casscf->reference();

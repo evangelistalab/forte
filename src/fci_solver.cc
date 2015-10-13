@@ -73,6 +73,10 @@ void FCI::set_max_rdm_level(int value)
 {
     max_rdm_level_ = value;
 }
+void FCI::set_fci_iterations(int value)
+{
+    fci_iterations_ = value;
+}
 
 void FCI::startup()
 {  
@@ -80,6 +84,7 @@ void FCI::startup()
         print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
 
     max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
+    fci_iterations_ = options_.get_int("FCI_ITERATIONS");
 }
 
 double FCI::compute_energy()
@@ -149,6 +154,7 @@ double FCI::compute_energy()
 
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -161,6 +167,7 @@ double FCI::compute_energy()
 
 Reference FCI::reference()
 {
+    fcisolver_->set_max_rdm_level(3);
     return fcisolver_->reference();
 }
 
@@ -199,6 +206,11 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
 void FCISolver::set_max_rdm_level(int value)
 {
     max_rdm_level_ = value;
+}
+
+void FCISolver::set_fci_iterations(int value)
+{
+    fci_iterations_ = value;
 }
 
 void FCISolver::startup()
@@ -273,7 +285,7 @@ double FCISolver::compute_energy()
 
     double old_avg_energy = 0.0;
     int real_cycle = 1;
-    for (int cycle = 0; cycle < 31; ++cycle){
+    for (int cycle = 0; cycle < fci_iterations_; ++cycle){
         bool add_sigma = true;
         do{
             dls.get_b(b);
@@ -367,6 +379,11 @@ double FCISolver::compute_energy()
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
+    }
+    else
+    {
+        outfile->Printf("\n CI did not converge.");
+        throw PSIEXCEPTION("CI did not converge.  Try setting FCI_ITERATIONS higher");
     }
 
     energy_ = dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
