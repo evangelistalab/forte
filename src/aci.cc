@@ -184,6 +184,7 @@ void AdaptiveCI::startup()
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     form_1_RDM_ = options_.get_bool("1_RDM");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
+    det_save_ = options_.get_bool("SAVE_DET_FILE");
 
 
     if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
@@ -471,21 +472,8 @@ double AdaptiveCI::compute_energy()
 	
 	det_history_[bs_det].push_back(std::make_pair(0, "I"));
 	
-//	if( alfa_bits != beta_bits){
-//		STLBitsetDeterminant ref2 = bs_det;
-//		ref2.spin_flip();
-//		P_space_.push_back(ref2);
-//	}
-
-//	if( do_guess_ ){
-//		form_initial_space(P_space_, nroot_);
-//	}
-
     outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
     outfile->Flush();
-
-   // double old_avg_energy = reference_determinant_.energy() + nuclear_repulsion_energy_;
-   // double new_avg_energy = 0.0;
 
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
@@ -496,8 +484,10 @@ double AdaptiveCI::compute_energy()
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
+	if( det_save_) det_list_.open("det_list.txt");
     int maxcycle = 20;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
+
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
@@ -514,6 +504,7 @@ double AdaptiveCI::compute_energy()
 		}
         // Diagonalize H in the P space
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
@@ -523,7 +514,7 @@ double AdaptiveCI::compute_energy()
 			double spin_contamination = compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
 			if(spin_contamination >= spin_tol_){
 				outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				spin_transform(P_space_, P_evecs, num_ref_roots);
+				full_spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
                 sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
@@ -557,13 +548,14 @@ double AdaptiveCI::compute_energy()
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
 		// Ensure the solutions are spin-pure
 		if( spin_projection == 1 or spin_projection == 3){
 			double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, num_ref_roots);
 			if(spin_contamination >= spin_tol_){
 				outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
+				full_spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
 				PQ_evecs->zero();
 				PQ_evecs = PQ_spin_evecs_->clone();
                 sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
@@ -599,6 +591,7 @@ double AdaptiveCI::compute_energy()
         print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
     }// end iterations
 
+	if( det_save_ ) det_list_.close();
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
 
 	//STLBitsetDeterminant::check_uniqueness(P_space_);
@@ -608,7 +601,7 @@ double AdaptiveCI::compute_energy()
 		double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, nroot_);
 		if(spin_contamination >= spin_tol_){
 			outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-			spin_transform(PQ_space_, PQ_evecs, nroot_);
+			full_spin_transform(PQ_space_, PQ_evecs, nroot_);
 			outfile->Printf("\n  ...done");
 			PQ_evecs->print();
 		//	P_evecs->zero();
@@ -906,227 +899,6 @@ double AdaptiveCI::root_select( int nroot, std::vector<double> C1, std::vector<d
 	}
 
 	return select_value;
-}
-
-void AdaptiveCI::find_q_space_single_root(int nroot,SharedVector evals,SharedMatrix evecs)
-{
-    // Find the SD space out of the reference
-    std::vector<STLBitsetDeterminant> sd_dets_vec;
-	det_hash<int> new_dets_map;
-
-    boost::timer t_ms_build;
-
-    // This hash saves the determinant coupling to the model space eigenfunction
-    det_hash<> V_map;
-
-    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-        STLBitsetDeterminant& det = P_space_[I];
-        generate_excited_determinants_single_root(nroot,I,evecs,det,V_map);
-    }
-    outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_map.size());
-    outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
-    outfile->Flush();
-
-    // This will contain all the determinants
-    PQ_space_.clear();
-
-    // Add the P-space determinants to PQ and remove them from the hash
-    for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
-        PQ_space_.push_back(P_space_[J]);
-        V_map.erase(P_space_[J]);
-    }
-
-    boost::timer t_ms_screen;
-
-    std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));
-    std::vector<std::pair<double,double> > E2(nroot_,make_pair(0.0,0.0));
-    std::vector<double> ept2(nroot_,0.0);
-
-    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
-
-    // Check the coupling between the reference and the SD space
-    for (const auto& det_V : V_map){
-        double EI = det_V.first.energy();
-        for (int n = 0; n < nroot; ++n){
-            double V = det_V.second;
-            double C1_I = -V / (EI - evals->get(n));
-            double E2_I = -V * V / (EI - evals->get(n));
-
-            C1[n] = make_pair(std::fabs(C1_I),C1_I);
-            E2[n] = make_pair(std::fabs(E2_I),E2_I);
-        }
-
-        std::pair<double,double> max_C1 = *std::max_element(C1.begin(),C1.end());
-        std::pair<double,double> max_E2 = *std::max_element(E2.begin(),E2.end());
-
-        if (aimed_selection_){
-            double aimed_value = energy_selection_ ? max_E2.first : std::pow(max_C1.first,2.0);
-            sorted_dets.push_back(std::make_pair(aimed_value,det_V.first));
-        }else{
-            double select_value = energy_selection_ ? max_E2.first : max_C1.first;
-            if (std::fabs(select_value) > tau_q_){
-                PQ_space_.push_back(det_V.first);
-            }else{
-                for (int n = 0; n < nroot; ++n){
-                    ept2[n] += E2[n].second;
-                }
-            }
-        }
-    }
-
-    if (aimed_selection_){
-        // Sort the CI coefficients in ascending order
-        std::sort(sorted_dets.begin(),sorted_dets.end(), pairComp);
-
-        double sum = 0.0;
-        for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
-            const STLBitsetDeterminant& det = sorted_dets[I].second;
-            if (sum + sorted_dets[I].first < tau_q_){
-                sum += sorted_dets[I].first;
-                double EI = det.energy();
-                const double V = V_map[det];
-                for (int n = 0; n < nroot; ++n){
-                    double E2_I = -V * V / (EI - evals->get(n));
-                    ept2[n] += E2_I;
-                }
-            }else{
-                PQ_space_.push_back(sorted_dets[I].second);
-            }
-        }
-    }
-
-    multistate_pt2_energy_correction_ = ept2;
-
-    outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
-    outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
-    outfile->Flush();
-}
-
-
-void AdaptiveCI::generate_excited_determinants_single_root(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<>& V_hash)
-{
-    std::vector<int> aocc = det.get_alfa_occ();
-    std::vector<int> bocc = det.get_beta_occ();
-    std::vector<int> avir = det.get_alfa_vir();
-    std::vector<int> bvir = det.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta  = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta  = bvir.size();
-
-    int n = 0;
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a){
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_alfa_bit(ii,false);
-                new_det.set_alfa_bit(aa,true);
-                double HIJ = det.slater_rules(new_det);
-                V_hash[new_det] += HIJ * evecs->get(I,n);
-            }
-        }
-    }
-
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a){
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_beta_bit(ii,false);
-                new_det.set_beta_bit(aa,true);
-                double HIJ = det.slater_rules(new_det);
-                V_hash[new_det] += HIJ * evecs->get(I,n);
-            }
-        }
-    }
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = i + 1; j < noalpha; ++j){
-            int jj = aocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = a + 1; b < nvalpha; ++b){
-                    int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_alfa_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_alfa_bit(bb,true);
-
-                        double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
-
-                        // compute the sign of the matrix element
-                        HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
-
-                        V_hash[new_det] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = 0; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = 0; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
-
-                        double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
-
-                        // compute the sign of the matrix element
-                        HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
-
-                        V_hash[new_det] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int j = i + 1; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvbeta; ++a){
-                int aa = bvir[a];
-                for (int b = a + 1; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_beta_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_beta_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
-
-                        double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
-
-                        // grap the alpha bits of both determinants
-
-                        // compute the sign of the matrix element
-                        HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
-
-                        V_hash[new_det] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
 }
 
 void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
@@ -1483,42 +1255,6 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 }
 
 
-void AdaptiveCI::smooth_hamiltonian(std::vector<STLBitsetDeterminant>& space,SharedVector evals,SharedMatrix evecs,int nroot)
-{
-    size_t ndets = space.size();
-
-    SharedMatrix H(new Matrix("H-smooth",ndets,ndets));
-
-    SharedMatrix F(new Matrix("F-smooth",ndets,ndets));
-
-    // Build the smoothed Hamiltonian
-    for (size_t I = 0; I < ndets; ++I){
-        for (size_t J = 0; J < ndets; ++J){
-            double CI = evecs->get(I,0);
-            double CJ = evecs->get(J,0);
-            double HIJ = space[I].slater_rules(space[J]);
-            double factorI = smootherstep(tau_p_ * tau_p_,smooth_threshold_,CI * CI);
-            double factorJ = smootherstep(tau_p_ * tau_p_,smooth_threshold_,CJ * CJ);
-            if (I != J){
-                HIJ *= factorI * factorJ;
-                F->set(I,J,factorI * factorJ);
-            }
-            H->set(I,J,HIJ);
-        }
-    }
-
-    evecs->print();
-    H->print();
-    F->print();
-
-    SharedMatrix evecs_s(new Matrix("C-smooth",ndets,ndets));
-    SharedVector evals_s(new Vector("lambda-smooth",ndets));
-
-    H->diagonalize(evecs_s,evals_s);
-
-    outfile->Printf("\n  * sAdaptive-CI Energy Root %3d        = %.12f Eh",1,evals_s->get(0) + nuclear_repulsion_energy_);
-}
-
 bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
 {
 	int nroot = evals->dim();
@@ -1720,8 +1456,6 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<STLBi
 				idx_c.push_back(idx);
 			}else if( i >= frzcpi_[h] and i < (frzcpi_[h] + ncmopi_[h])){
 				idx_a.push_back(idx);
-			}else{
-				continue;
 			}
 		}
 		ncmopi += nmopi_[h];
@@ -1838,77 +1572,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 	outfile->Flush();
 }
 
-void AdaptiveCI::lowdin_spin_project( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot){
-    /*
-    Timer timer;
-	outfile->Printf("\n  Performing Loewdin's spin projection...");
-	
-	//First implementation for singlets
-	double spin_contam = compute_spin_contamination( det_space, cI, nroot);
-	int p_spin = 0;
-	
-	// Build hash to connect BSD to its cI
-	det_hash<size_t> det_map;
-	
-	for(size_t I = 0, maxI = det_space.size(); I < maxI; ++I){
-		det_map[det_space[I]] = I;
-	}
-	while( spin_contam > spin_tol_){	 
-		++p_spin;
-		double denom = 1 / ( p_spin * ( p_spin + 1 ) );
-		for( int n = 0; n < nroot; ++n){
-			for( size_t I = 0, maxi = det_space.size(); I < maxi; ++I){
-				int na = 0;
-				int nb = 0;
-				STLBitsetDeterminant det(det_space[I]);
-				for( size_t i = 0; i < nact_; ++i ){
-					//Compute unpaired alpha and beta electrons
-				    if(det.get_alfa_bit(i) == 1 and det.get_beta_bit(i) == 0) {
-						na++;
-					}
-					else if(det.get_alfa_bit(i) == 0 and det.get_beta_bit(i) == 1 ){
-						nb++;
-					}	
-				}
-				na /= 2;
-				nb /= 2;
-				double ms = (na + nb)/ 2.0 ;
-				double prefactor = 0.25 * (na - nb) * (na - nb)	+ 2 * (na + nb);	
-			
-				for( size_t i = 0; i < nact_; ++i ){
-
-					if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
-							cI->set(det_map[det],n, cI->get(det_map[det],n) - 0.25* prefactor*denom);
-							//destroy alfa bit i, create beta bit i
-							det.set_alfa_bit(i, false );
-							det.set_beta_bit(i, true );
-					}
-					for( size_t j = 0; j < nact_; ++j ){
-						if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
-							//destroy beta bit j, create alfa bit j
-							det.set_beta_bit(j, false );
-							det.set_alfa_bit(j, true );
-
-							if( det_map.count(det) == 0 ){
-								det.set_beta_bit(j, true );
-								det.set_alfa_bit(j, false );
-							}else{
-								cI->set(det_map[det],n, cI->get(det_map[det],n) - denom );
-								det.set_beta_bit(j, true );
-								det.set_alfa_bit(j, false );
-							}
-						}
-					}
-				}
-			}
-		}
-    spin_contam = compute_spin_contamination( det_space, cI, nroot);
-    outfile->Printf("\n p_spin: %zu, spin contam : %1.8f", p_spin, spin_contam);
-	}
-*/
-}	
-
-void AdaptiveCI::spin_transform( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
+void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
 {
 	Timer timer;
 	outfile->Printf("\n  Performing spin projection...");
@@ -1971,63 +1635,6 @@ void AdaptiveCI::spin_transform( std::vector< STLBitsetDeterminant > det_space, 
 	outfile->Flush();
 }
 
-void AdaptiveCI::check_spin_completeness(std::vector<STLBitsetDeterminant>& det_space)
-{
-	det_hash<bool> det_map;    
-	
-	//Add all determinants to the map, assume set is mostly spin complete
-	for(auto& I : det_space){
-		det_map[I] = true;
-	}
-	
-	size_t ndet = 0;
-	//Loop over determinants
-    STLBitsetDeterminant det;
-	for(size_t I = 0, det_size = det_space.size(); I < det_size; ++I){
-		// Loop over MOs
-        outfile->Printf("\n  Original determinant: %s", det_space[I].str().c_str());
-		for( size_t i = 0; i < nact_; ++i ){
-            det = det_space[I];
-			if( (det.get_alfa_bit(i) * ( 1 - det.get_beta_bit(i)) ) == 1 ){
-					//destroy alfa bit i, create beta bit i
-					det.set_alfa_bit(i, false );
-					det.set_beta_bit(i, true );
-			}else{
-				continue;
-			}
-			for( size_t j = 0; j < nact_; ++j ){
-				if( (det.get_beta_bit(j) * ( 1 - det.get_alfa_bit(j)) ) == 1){
-					//destroy beta bit j, create alfa bit j
-					det.set_beta_bit(j, false );
-					det.set_alfa_bit(j, true );
-
-					if( det_map.count(det) == 0 ){
-						det_space.push_back(det);
-						det_map[det] = false;
-                        outfile->Printf("\n  added determinant:    %s", det.str().c_str());
-						det_history_[det].push_back(std::make_pair( cycle_, "S"));
-						ndet++;
-						det.set_beta_bit(j, true );
-						det.set_alfa_bit(j, false );
-					}else{
-						det.set_beta_bit(j, true );
-						det.set_alfa_bit(j, false );
-						continue;
-					}
-				}else{
-					continue;
-				}
-			}
-		}
-	}
-	if( ndet > 0 ){
-		outfile->Printf("\n\n  Determinant space is spin incomplete!");
-		outfile->Printf("\n  %zu more determinants are needed.", ndet);
-	}else{
-		outfile->Printf("\n\n  Determinant space is spin complete.");
-	}
-}
-
 double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot)
 {
 	auto spins = compute_spin(space, evecs, nroot);
@@ -2039,6 +1646,15 @@ double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant>
 	spin_contam -= (0.25 * (wavefunction_multiplicity_ * wavefunction_multiplicity_ - 1.0));
 
 	return spin_contam;
+}
+
+void AdaptiveCI::save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs )
+{
+	//Use for single-root calculations only
+	for(size_t I = 0, max = space.size(); I < max; ++I){
+		det_list_ << fabs(evecs->get(I,0)) << " ";	
+	}
+	det_list_ << "\n";
 }
 
 }} // EndNamespaces
