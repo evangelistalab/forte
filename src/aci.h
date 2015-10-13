@@ -165,6 +165,8 @@ private:
 	bool spin_complete_;
 	/// Print a determinant analysis?
 	bool det_hist_;
+	/// Save dets to file?
+	bool det_save_;
 
     /// A vector of determinants in the P space
     std::vector<STLBitsetDeterminant> P_space_;
@@ -174,6 +176,8 @@ private:
     std::unordered_map<STLBitsetDeterminant,int, STLBitsetDeterminant::Hash> P_space_map_;
 	/// A History of Determinants
 	std::unordered_map<STLBitsetDeterminant, std::vector< std::pair<size_t, std::string>>, STLBitsetDeterminant::Hash > det_history_;
+	/// Stream for printing determinant coefficients
+	std::ofstream det_list_;
 
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
@@ -266,17 +270,14 @@ private:
 	/// Check the sign
 	double CheckSign(std::vector<int> I, const int &n);
 
-	/// Compute S^2 matrix and diagonalize it
-	void spin_transform(std::vector<STLBitsetDeterminant> det_space, SharedMatrix cI, int nroot);
-
-	/// Perform Loewdin spin projection
-	void lowdin_spin_project( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot);
-
-	/// Check for spin complete determinants
-	void check_spin_completeness(std::vector<STLBitsetDeterminant>& det_space);
+	/// Compute full S^2 matrix and diagonalize it
+	void full_spin_transform(std::vector<STLBitsetDeterminant> det_space, SharedMatrix cI, int nroot);
 
 	/// Check for spin contamination
 	double compute_spin_contamination(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot);
+	
+	/// Save coefficients of lowest-root determinant	
+	void save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs );
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

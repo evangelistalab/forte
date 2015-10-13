@@ -307,6 +307,8 @@ read_options(std::string name, Options &options)
 
 		/*- Print an analysis of determinant history? -*/
 		options.add_bool("DETERMINANT_HISTORY", false);
+		/*- Save determinants to file? -*/
+		options.add_bool("SAVE_DET_FILE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
