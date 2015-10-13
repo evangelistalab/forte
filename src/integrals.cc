@@ -183,12 +183,6 @@ void ForteIntegrals::transform_one_electron_integrals()
     }
 }
 
-/**
-     * @brief ConventionalIntegrals::ConventionalIntegrals
-     * @param options - psi options class
-     * @param restricted - type of integral transformation
-     * @param resort_frozen_core -
-     */
 
 
 }}

@@ -27,6 +27,8 @@
 #include <libmints/molecule.h>
 #include <libmints/pointgrp.h>
 #include "libmints/wavefunction.h"
+#include "libmints/writer.h"
+#include <libmints/writer_file_prefix.h>
 
 #include "helpers.h"
 
@@ -339,6 +341,17 @@ Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims)
         offset += dims[h];
     }
     return M_sym;
+}
+void view_modified_orbitals(const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
+{
+        boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(Process::environment.wavefunction()));
+        std::string filename = get_writer_file_prefix() + ".molden";
+
+        if(remove(filename.c_str()) == 0){
+            outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
+        }
+        outfile->Printf("\n  Write molden file to %s.", filename.c_str());
+        molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
 }
 
 }} // End Namespaces
