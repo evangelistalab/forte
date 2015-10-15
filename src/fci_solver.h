@@ -90,6 +90,10 @@ public:
     /// Return a reference object
     Reference reference();
 
+    /// Set the number of desired roots
+    void set_nroot(int value);
+    /// Set the root that will be used to compute the properties
+    void set_root(int value);
     /// Set the maximum RDM computed (0 - 3)
     void set_max_rdm_level(int value);
 
@@ -131,9 +135,11 @@ private:
     size_t nb_;
     /// The multiplicity (2S + 1) of the state to target.
     /// (1 = singlet, 2 = doublet, 3 = triplet, ...)
-    size_t multiplicity_;
-    /// The number of roots
-    int nroot_;
+    int multiplicity_;
+    /// The number of roots (default = 1)
+    int nroot_ = 1;
+    /// The root used to compute properties (zero based, default = 0)
+    int root_ = 0;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_; 
     /// The maximum RDM computed (0 - 3)
@@ -151,7 +157,7 @@ private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// Initial CI wave function guess
-    std::vector<std::vector<std::tuple<size_t, size_t, size_t, double> > >
+    std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>>
     initial_guess(FCIWfn& diag,size_t n,size_t multiplicity,
                   std::shared_ptr<FCIIntegrals> fci_ints);
     /// The options object
