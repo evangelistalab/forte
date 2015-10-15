@@ -7,7 +7,7 @@ import forte
 #The triplet ROHF energy
 ref_rohf = -3.85103041668458
 #Reference value in wavenumbers
-ref_split = -45.5643475323
+ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
 
 
 memory 1 GB
@@ -31,8 +31,7 @@ set forte {
 restricted_docc [ 1,0,0,0,0,0,0,0]
 active [1, 0, 0, 0, 0, 1, 0, 0]
 dsrg_s  0.5
-int_type conventional
-job_type dsrg-mrpt2
+job_type FCI
 multiplicity 3
 root_sym     5
 ms           0
@@ -49,7 +48,7 @@ restricted_docc    [1, 0, 0, 0, 0, 0, 0, 0]
 active             [1, 0, 0, 0, 0, 1, 0, 0]
 dsrg_s  0.5
 int_type conventional
-job_type dsrg-mrpt2
+job_type FCI
 multiplicity 1
 root_sym     0
 ms           0

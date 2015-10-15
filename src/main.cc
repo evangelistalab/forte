@@ -53,6 +53,7 @@ read_options(std::string name, Options &options)
         options.add_bool("NAT_ORBS_PRINT", false);
         /*- Use Natural Orbitals to suggest active space -*/
         options.add_bool("NAT_ACT", false);
+        options.add_bool("MOLDEN_WRITE_FORTE", false);
 
         // Natural Orbital selection criteria.  Used to fine tune how many active orbitals there are
 
@@ -247,6 +248,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
+        /*- Number of iterations for FCI code -*/
+        options.add_int("FCI_ITERATIONS", 30);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE
@@ -307,6 +310,8 @@ read_options(std::string name, Options &options)
 
 		/*- Print an analysis of determinant history? -*/
 		options.add_bool("DETERMINANT_HISTORY", false);
+		/*- Save determinants to file? -*/
+		options.add_bool("SAVE_DET_FILE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
