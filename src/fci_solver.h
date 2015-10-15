@@ -1,24 +1,3 @@
-/*
- *@BEGIN LICENSE
- *
- * Libadaptive: an ab initio quantum chemistry software package
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- *@END LICENSE
- */
 
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
@@ -96,6 +75,8 @@ public:
     void set_root(int value);
     /// Set the maximum RDM computed (0 - 3)
     void set_max_rdm_level(int value);
+    /// Set the convergence for FCI
+    void set_fci_iterations(int value);
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -143,7 +124,9 @@ private:
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_; 
     /// The maximum RDM computed (0 - 3)
-    int max_rdm_level_ = 1;
+    int max_rdm_level_;
+    /// Iterations for FCI
+    int fci_iterations_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
     ///
@@ -195,6 +178,8 @@ public:
     void set_print(int value) {print_ = value;}
     /// Set the maximum RDM computed (0 - 3)
     void set_max_rdm_level(int value);
+    /// FCI  iterations
+    void set_fci_iterations(int value);
 
 private:
 
@@ -215,6 +200,8 @@ private:
 
     /// Set the maximum RDM computed (0 - 3)
     int max_rdm_level_;
+    /// The number of iterations for FCI
+    int fci_iterations_;
 
     // ==> Class functions <==
 

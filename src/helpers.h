@@ -152,6 +152,14 @@ Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims);
 void print_method_banner(const std::vector<std::string>& text, const std::string& separator = "-");
 
 /**
+ * @brief view_modified_orbitals Write orbitals using molden
+ * @param Ca  The Ca matrix to be viewed with MOLDEN
+ * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
+ * @param occupation -> occupation vector
+ */
+void view_modified_orbitals(const boost::shared_ptr<Matrix>& Ca, const boost::shared_ptr<Vector> &diag_F, const boost::shared_ptr<Vector> &occupation);
+
+/**
  * @brief print_h2 Print a header
  * @param text The string to print in the header.
  * @param left_separator The left separator (default = "==>")

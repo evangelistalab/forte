@@ -4,21 +4,22 @@
 
 import forte
 
-refscf = -75.37487863589541 
-refaci = -75.479410527618
-refacipt2 = -75.723333873985 
+refscf = -75.0525898271660026 
+refaci = -75.335740411714 
+refacipt2 = -75.426488135461
 
 molecule N2{
+0 1
 C 
-C 1 1.3
+C 1 2.6
 units angstrom
 }
 
 set {
-  basis 6-31g* 
+  basis DZ
   scf_type pk
   freeze_core true
-  reference rhf 
+  reference rohf 
   e_convergence 10
   d_convergence 10
   r_convergence 10
@@ -31,16 +32,13 @@ set forte {
   job_type = aci
   multiplicity 1
   perturb_select false
-  aci_add_aimed_degenerate false
-  project_out_spin_contaminants false
-  enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
+  root_sym 0
   TAUP 0.05
   TAUQ 0.05
-  nroot 3
-  mp2_nos true
+  nroot 1
   charge 0
-  spin_projection 1
+  enforce_spin_complete true
 }
 
 energy('scf')
@@ -48,5 +46,5 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refaci, get_variable("ACI ENERGY"),9, "EX-ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST
