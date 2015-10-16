@@ -19,7 +19,7 @@ set globals{
    reference               rhf
    scf_type                pk
    d_convergence           12
-   e_convergence           15
+   e_convergence           13
 }
 
 set forte{
