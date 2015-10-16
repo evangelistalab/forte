@@ -429,9 +429,7 @@ read_options(std::string name, Options &options)
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
 
         //////////////////////////////////////////////////////////////
-        ///
         ///              OPTIONS FOR THE MR-DSRG MODULE
-        ///
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
         options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 CEPA0");
@@ -451,6 +449,8 @@ read_options(std::string name, Options &options)
         options.add_double("INTRUDER_TAMP", 0.10);
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
+        /*- Automatic Adjusting Flow Parameter -*/
+        options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Zero T1 Amplitudes -*/
@@ -544,18 +544,45 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        FCI_MO fci_mo(options,ints_,mo_space_info);
-        Reference reference = fci_mo.reference();
 
-        std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
-        if(options.get_str("RELAX_REF") == "NONE"){
-            mrdsrg->compute_energy();
-        }else{
-            if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
-                throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+        std::string cas_type = options.get_str("CAS_TYPE");
+        if (cas_type == "CAS") {
+            FCI_MO fci_mo(options,ints_,mo_space_info);
+            Reference reference = fci_mo.reference();
+
+            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                mrdsrg->compute_energy();
+            }else{
+                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                }
+                mrdsrg->compute_energy_relaxed();
             }
-            mrdsrg->compute_energy_relaxed();
+        } else if (cas_type == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+
+            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                mrdsrg->compute_energy();
+            }else{
+                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                }
+                mrdsrg->compute_energy_relaxed();
+            }
         }
+
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(options,ints_,mo_space_info);
