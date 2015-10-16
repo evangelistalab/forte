@@ -96,38 +96,43 @@ void CASSCF::compute_casscf()
                 }
             }
         }
-        S->back_transform(Call_);
-        SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
-        S_sym->apply_symmetry(S, wfn_->aotoso());
-        S_sym->transform(Ca_sym_);
-        S_sym->print();
+        Matrix S_mat;
+        S_mat.copy(S);
+        S_mat.expm();
+        SharedMatrix S_mat_s = S_mat.clone();
+        //S->back_transform(Call_);
+        //SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
+        //S_sym->apply_symmetry(S, wfn_->aotoso());
+        //S_sym->transform(Ca_sym_);
+        //S_sym->print();
 
         // Build exp(U) = 1 + U + 1/2 U U + 1/6 U U U
-        SharedMatrix expS = S_sym->clone();
+        ////SharedMatrix expS = S_sym->clone();
 
-        for (size_t h=0; h<nirrep_; h++){
-            if (!expS->rowspi()[h]) continue;
-            double** Sp = expS->pointer(h);
-            for (int i=0; i<(expS->colspi()[h]); i++){
-                Sp[i][i] += 1.0;
-            }
-        }
+        //for (size_t h=0; h<nirrep_; h++){
+        //    if (!expS->rowspi()[h]) continue;
+        //    double** Sp = expS->pointer(h);
+        //    for (int i=0; i<(expS->colspi()[h]); i++){
+        //        Sp[i][i] += 1.0;
+        //    }
+        //}
 
-        expS->gemm(false, false, 0.5, S_sym, S_sym, 1.0);
+        //expS->gemm(false, false, 0.5, S_sym, S_sym, 1.0);
 
-        SharedMatrix S_third = Matrix::triplet(S_sym, S_sym, S_sym);
-        S_third->scale(1.0/6.0);
-        expS->add(S_third);
-        S_third.reset();
+        //SharedMatrix S_third = Matrix::triplet(S_sym, S_sym, S_sym);
+        //S_third->scale(1.0/6.0);
+        //expS->add(S_third);
+        //S_third.reset();
 
-        // We did not fully exponentiate the matrix, need to orthogonalize
-        expS->schmidt();
+        //// We did not fully exponentiate the matrix, need to orthogonalize
+        //expS->schmidt();
 
-        // C' = C U
-        SharedMatrix Cp = Matrix::doublet(Ca_sym_, expS);
+        //// C' = C U
+        /// expS->expm();
+        //SharedMatrix Cp = Matrix::doublet(Ca_sym_, expS);
+        SharedMatrix Cp = Matrix::doublet(Call_, S_mat_s);
 
         SharedMatrix Ca = wfn_->Ca();
-        Cp->print();
         Ca->copy(Cp);
         // With updated C coefficients, need to retransform integrals so I can run FCI with transformed integrals
         ints_->retransform_integrals();
@@ -216,7 +221,8 @@ void CASSCF::form_fock_core()
     SharedMatrix H = T->clone();
     H->add(V);
 
-    H->transform(Ca_sym_);
+    //H->transform(Ca_sym_);
+    H->transform(Call_);
 
 
     ///Step 2: From Hamiltonian elements
@@ -228,19 +234,20 @@ void CASSCF::form_fock_core()
     /// tricky...tricky
     Dimension inactive_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
     SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi_, inactive_dim));
-    for(size_t h = 0; h < nirrep_; h++){
-        for(int mu = 0; mu < nmopi_[h]; mu++){
-            for(int i = 0; i <  inactive_dim[h]; i++){
-                C_core->set(h,mu, i, Ca_sym_->get(h,mu, i));
-            }
-        }
-    }
-    // Need to get the inactive block of the C matrix
-    //for(size_t mu = 0; mu < nmo_; mu++){
-    //    for(size_t i = 0; i <  inactive_dim_abs.size(); i++){
-    //        C_core->set(mu, i, Call_->get(mu, inactive_dim_abs[i]));
+    //for(size_t h = 0; h < nirrep_; h++){
+    //    for(int mu = 0; mu < nmopi_[h]; mu++){
+    //        for(int i = 0; i <  inactive_dim[h]; i++){
+    //            C_core->set(h,mu, i, Ca_sym_->get(h,mu, i));
+    //        }
     //    }
     //}
+    auto      inactive_dim_abs = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
+    // Need to get the inactive block of the C matrix
+    for(size_t mu = 0; mu < nmo_; mu++){
+        for(size_t i = 0; i <  inactive_dim_abs.size(); i++){
+            C_core->set(mu, i, Call_->get(mu, inactive_dim_abs[i]));
+        }
+    }
 
     boost::shared_ptr<JK> JK_core = JK::build_JK();
 
@@ -267,21 +274,23 @@ void CASSCF::form_fock_core()
     J_core->scale(2.0);
     SharedMatrix F_core = J_core->clone();
     F_core->subtract(K_core);
-    F_core->transform(Ca_sym_);
+    //F_core->transform(Ca_sym_);
+    F_core->transform(Call_);
     F_core->add(H);
 
-    SharedMatrix F_core_c1(new Matrix("F_core_c1", nmo_, nmo_));
+    //SharedMatrix F_core_c1(new Matrix("F_core_c1", nmo_, nmo_));
 
-    int offset = 0;
-    for(size_t h = 0; h < nirrep_; h++){
-        for(int p = 0; p < nmopi_[h]; p++){
-            for(int q = 0; q < nmopi_[h]; q++){
-               F_core_c1->set(p + offset, q + offset, F_core->get(h, p, q));
-            }
-        }
-        offset += nmopi_[h];
-    }
-    F_core_ = F_core_c1;
+    //int offset = 0;
+    //for(size_t h = 0; h < nirrep_; h++){
+    //    for(int p = 0; p < nmopi_[h]; p++){
+    //        for(int q = 0; q < nmopi_[h]; q++){
+    //           F_core_c1->set(p + offset, q + offset, F_core->get(h, p, q));
+    //        }
+    //    }
+    //    offset += nmopi_[h];
+    //}
+    //F_core_ = F_core_c1;
+    F_core_   = F_core;
 
    }
 
@@ -303,7 +312,6 @@ void CASSCF::form_fock_active()
     gamma_no_spin.iterate([&](const std::vector<size_t>& i,double& value){
         gamma_spin_free->set(i[0], i[1], value);});
     gamma1M_ = gamma_spin_free;
-    gamma1M_->print();
     gamma1_ = gamma_no_spin;
 
     std::vector<size_t> active_abs_mo = mo_space_info_->get_absolute_mo("ACTIVE");
@@ -384,20 +392,21 @@ void CASSCF::form_fock_active()
     }
     F_act_ = F_active_c1;
 
-    ambit::Tensor tei_pqaa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, nmo_, na_, na_});
-    ambit::Tensor tei_paqa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, na_, nmo_, na_});
+    ambit::Tensor tei_pqaa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, na_, nmo_, na_});
+    ambit::Tensor tei_paqa = ambit::Tensor::build(ambit::kCore, "tei_pqaa", {nmo_, na_, na_, nmo_});
 
     std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
     std::vector<size_t> na_array = mo_space_info_->get_absolute_mo("ACTIVE");
 
-    tei_pqaa = ints_->aptei_ab_block(nmo_array, nmo_array, na_array, na_array);
-    tei_paqa = ints_->aptei_ab_block(nmo_array, na_array, nmo_array, na_array);
+    // (pq | uv) - (pu | q v)
+    //<(pu | qv> - <pu | vq>
+    tei_pqaa = ints_->aptei_ab_block(nmo_array, na_array, nmo_array, na_array);
+    tei_paqa = ints_->aptei_ab_block(nmo_array, na_array, na_array, nmo_array);
     ambit::Tensor Fock_act_test = ambit::Tensor::build(ambit::kCore, "Fock_A", {nmo_, nmo_});
-    Fock_act_test("p, q") = 1.0 * tei_pqaa("p, q, t, u") * gamma_no_spin("t, u");
-    Fock_act_test("p, q") -= 0.5 * tei_paqa("p, t, q, u") * gamma_no_spin("t, u");
+    Fock_act_test("p, q") = tei_pqaa("p, u, q, v") * gamma_no_spin("u, v");
+    Fock_act_test("p, q") -= 0.5 * tei_paqa("p, u, v, q") * gamma_no_spin("u, v");
     boost::shared_ptr<Matrix> F_act_testM(new Matrix("F_act", nmo_, nmo_));
 
-    Fock_act_test.print(stdout);
     Fock_act_test.iterate([&](const std::vector<size_t>& i,double& value){
         F_act_testM->set(i[0], i[1], value);});
 
@@ -421,7 +430,6 @@ void CASSCF::form_fock_active()
     //    offset += nmopi_[h];
     //}
     F_act_ = F_act_testM;
-    F_act_->print();
 
 }
 void CASSCF::orbital_gradient()
@@ -475,7 +483,6 @@ void CASSCF::orbital_gradient()
     gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
     gamma2_("u,v,x,y") = (gamma2("u, v, x, y") + gamma2("v,u,x,y") + gamma2("u,v,y,x") + gamma2("v,u, y, x"));
     gamma2_.scale(0.25);
-    gamma2_.print(stdout);
 
     ambit::Tensor tei_puvy = ambit::Tensor::build(ambit::kCore, "puvy", {nmo_, na_, na_, na_});
     std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
@@ -483,7 +490,8 @@ void CASSCF::orbital_gradient()
     tei_puvy = ints_->aptei_ab_block(nmo_array, na_array, na_array, na_array);
     ambit::Tensor Z = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
 
-    Z("p, t") = tei_puvy("p,u,x,y") * gamma2_("t, u, x, y");
+    //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
+    Z("p, t") = tei_puvy("p,x,u,y") * gamma2_("t, u, x, y");
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
         Zm->set(i[0],i[1], value);});
