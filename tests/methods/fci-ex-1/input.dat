@@ -1,0 +1,54 @@
+import forte
+
+refgs = -190.903043269471823
+refex = -190.460579057245468
+ 
+memory 1 gb
+
+molecule acetone {
+0   1
+H   0.000000   2.136732  -0.112445
+H   0.000000  -2.136732  -0.112445
+H  -0.881334   1.333733  -1.443842
+H   0.881334  -1.333733  -1.443842
+H  -0.881334  -1.333733  -1.443842
+H   0.881334   1.333733  -1.443842
+C   0.000000   0.000000   0.000000
+C   0.000000   1.287253  -0.795902
+C   0.000000  -1.287253  -0.795902
+O   0.000000   0.000000   1.227600
+units angstrom
+}
+
+set globals {
+  scf_type         PK
+  basis            3-21g
+  docc             [8, 1, 2, 5]
+  guess            GWH
+  reference        RHF
+  e_convergence    12
+}
+
+set forte{
+  frozen_docc      [3, 0, 0, 1]
+  restricted_docc  [4, 1, 1, 3]
+  active           [2, 0, 2, 1]
+  cas_type          fci
+  multiplicity      1
+  root_sym          0
+  nroot             1
+  int_type          conventional
+  job_type          fci
+}
+
+energy('scf')
+gs_energy = energy('forte')
+compare_values(refgs,gs_energy,11, "Ground state FCI energy") #TEST
+
+set forte nroot 2
+set forte root  1
+
+energy('scf')
+ex_energy = energy('forte')
+compare_values(refex,ex_energy,11, "Singlet Excited State FCI energy") #TEST
+
