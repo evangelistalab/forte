@@ -186,8 +186,7 @@ double MRDSRG::compute_energy_ldsrg2(){
 
         // update amplitudes
         boost::timer t_amp;
-        update_t2();
-        update_t1();
+        update_t();
         double time_amp = t_amp.elapsed();
 
         // copy amplitudes to the big vector
@@ -392,8 +391,7 @@ double MRDSRG::compute_energy_cepa0(){
 
         // update amplitudes
         boost::timer t_amp;
-        update_t2();
-        update_t1();
+        update_t();
         double time_amp = t_amp.elapsed();
 
         // copy amplitudes to the big vector
