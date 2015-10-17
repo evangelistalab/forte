@@ -105,6 +105,8 @@ private:
     void orbital_gradient();
     /// Assemble the diagonal Hessian (20-22)
     void diagonal_hessian();
+    /// SOSCF_PSI
+    void SOSCF_PSI();
 
     void startup();
 

@@ -73,6 +73,10 @@ void FCI::set_max_rdm_level(int value)
 {
     max_rdm_level_ = value;
 }
+void FCI::set_fci_iterations(int value)
+{
+    fci_iterations_ = value;
+}
 
 void FCI::startup()
 {  
@@ -80,6 +84,7 @@ void FCI::startup()
         print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
 
     max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
+    fci_iterations_ = options_.get_int("FCI_ITERATIONS");
 }
 
 double FCI::compute_energy()
@@ -148,7 +153,10 @@ double FCI::compute_energy()
 
 
     fcisolver_->set_max_rdm_level(max_rdm_level_);
+    fcisolver_->set_nroot(options_.get_int("NROOT"));
+    fcisolver_->set_root(options_.get_int("ROOT"));
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -161,6 +169,7 @@ double FCI::compute_energy()
 
 Reference FCI::reference()
 {
+    fcisolver_->set_max_rdm_level(3);
     return fcisolver_->reference();
 }
 
@@ -180,6 +189,7 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     nroot_ = options_.get_int("NROOT");
     startup();
 }
+
 FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
                      size_t na, size_t nb, size_t multiplicity, size_t symmetry,
@@ -191,14 +201,27 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
 {
     ntrial_per_root_ = options_.get_int("NTRIAL_PER_ROOT");
     print_ = options_.get_int("PRINT");
-    nroot_ = options_.get_int("NROOT");
-
     startup();
 }
 
 void FCISolver::set_max_rdm_level(int value)
 {
     max_rdm_level_ = value;
+}
+
+void FCISolver::set_nroot(int value)
+{
+    nroot_ = value;
+}
+
+void FCISolver::set_root(int value)
+{
+    root_ = value;
+}
+
+void FCISolver::set_fci_iterations(int value)
+{
+    fci_iterations_ = value;
 }
 
 void FCISolver::startup()
@@ -213,8 +236,20 @@ void FCISolver::startup()
         ndfci += nastr * nbstr;
     }
     if(print_){
-        outfile->Printf("\n\n  ==> FCI Solver <==\n");
-        outfile->Printf("\n  Number of determinants    = %zu",ndfci);
+        // Print a summary of options
+        std::vector<std::pair<std::string,int>> calculation_info{
+            {"Number of determinants",ndfci},
+            {"Symmetry",symmetry_},
+            {"Multiplicity",multiplicity_},
+            {"Number of roots",nroot_},
+            {"Target root",root_}};
+
+        // Print some information
+        outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
+        for (auto& str_dim : calculation_info){
+            outfile->Printf("    %-39s %10d\n",str_dim.first.c_str(),str_dim.second);
+        }
+        outfile->Flush();
     }
 }
 
@@ -252,15 +287,40 @@ double FCISolver::compute_energy()
     size_t guess_size = dls.collapse_size();
     auto guess = initial_guess(Hdiag,guess_size,multiplicity_,fci_ints);
 
-    guess_size = std::min(guess.size(),guess_size);
-    if (guess_size == 0){
+    std::vector<int> guess_list;
+    for (size_t g = 0; g < guess.size(); ++g){
+        if (guess[g].first == multiplicity_) guess_list.push_back(g);
+    }
+
+    // number of guess to be used
+    size_t nguess = std::min(guess_list.size(),guess_size);
+
+    if (nguess == 0){
         throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
     }
-    for (size_t n = 0; n < guess_size; ++n){
-        HC.set(guess[n]);
+
+    for (size_t n = 0; n < nguess; ++n){
+        HC.set(guess[guess_list[n]].second);
         HC.copy_to(sigma);
         dls.add_guess(sigma);
     }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    for (auto& g : guess){
+        if (g.first != multiplicity_){
+            HC.set(g.second);
+            HC.copy_to(sigma);
+            std::vector<std::pair<size_t,double>> bad_root;
+            for (size_t I = 0; I < fci_size; ++I){
+                if (std::fabs(sigma->get(I)) > 1.0e-12){
+                    bad_root.push_back(std::make_pair(I,sigma->get(I)));
+                }
+            }
+            bad_roots.push_back(bad_root);
+        }
+    }
+    dls.set_project_out(bad_roots);
 
     SolverStatus converged = SolverStatus::NotConverged;
 
@@ -273,7 +333,7 @@ double FCISolver::compute_energy()
 
     double old_avg_energy = 0.0;
     int real_cycle = 1;
-    for (int cycle = 0; cycle < 31; ++cycle){
+    for (int cycle = 0; cycle < fci_iterations_; ++cycle){
         bool add_sigma = true;
         do{
             dls.get_b(b);
@@ -359,22 +419,26 @@ double FCISolver::compute_energy()
     }
 
     // Compute the RDMs
-    size_t rdm_root = 0;
     if (converged == SolverStatus::Converged){
-        C_->copy(dls.eigenvector(0));
-        if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",rdm_root);
+        C_->copy(dls.eigenvector(root_));
+        if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",root_);
         C_->compute_rdms(max_rdm_level_);
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
     }
+    else
+    {
+        outfile->Printf("\n CI did not converge.");
+        throw PSIEXCEPTION("CI did not converge.  Try setting FCI_ITERATIONS higher");
+    }
 
-    energy_ = dls.eigenvalues()->get(0) + nuclear_repulsion_energy;
+    energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
 
     return energy_;
 }
 
-std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>>
+std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>>
 FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints)
 {
@@ -430,7 +494,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     H.diagonalize(evecs,evals);
 
-    std::vector<std::vector<std::tuple<size_t,size_t,size_t,double>>> guess;
+    std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>> guess;
 
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et"});
     std::vector<string> table;
@@ -449,21 +513,19 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         S2 /= norm;
         double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
         int SS = std::round(S * 2.0);
-        size_t state_multp = SS + 1;
+        int state_multp = SS + 1;
         std::string state_label = s2_labels[SS];
         table.push_back(boost::str(boost::format("    %3d  %20.12f  %.3f  %s") % r % energy % std::fabs(S2) % state_label.c_str()));
         // Save states of the desired multiplicity
-        if (state_multp == multiplicity){
-            std::vector<std::tuple<size_t,size_t,size_t,double>> solution;
-            for (size_t I = 0; I < num_dets; ++I){
-                auto det = dets[I];
-                double e;
-                size_t h, add_Ia, add_Ib;
-                std::tie(e,h,add_Ia,add_Ib) = det;
-                solution.push_back(std::make_tuple(h,add_Ia,add_Ib,evecs.get(I,r)));
-            }
-            guess.push_back(solution);
+        std::vector<std::tuple<size_t,size_t,size_t,double>> solution;
+        for (size_t I = 0; I < num_dets; ++I){
+            auto det = dets[I];
+            double e;
+            size_t h, add_Ia, add_Ib;
+            std::tie(e,h,add_Ia,add_Ib) = det;
+            solution.push_back(std::make_tuple(h,add_Ia,add_Ib,evecs.get(I,r)));
         }
+        guess.push_back(std::make_pair(state_multp,solution));
     }
     if (print_){
         print_h2("FCI Initial Guess");

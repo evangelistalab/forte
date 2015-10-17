@@ -109,6 +109,9 @@ void MRDSRG::startup()
     // build Fock matrix
     F_ = BTF_->build(tensor_type_,"Fock",spin_cases({"gg"}));
     build_fock(H_,V_);
+
+    // auto adjusted s_
+    s_ = make_s_smart();
 }
 
 void MRDSRG::build_ints(){
@@ -204,9 +207,10 @@ void MRDSRG::print_options()
         {"corr_level", options_.get_str("CORR_LEVEL")},
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
+        {"smart_dsrg_s", options_.get_str("SMART_DSRG_S")},
         {"reference relaxation", options_.get_str("RELAX_REF")},
-        {"dsrg trans. type", options_.get_str("DSRG_TRANS_TYPE")},
-        {"core virtual source", options_.get_str("CCVV_SOURCE")}};
+        {"dsrg transformation type", options_.get_str("DSRG_TRANS_TYPE")},
+        {"core virtual source type", options_.get_str("CCVV_SOURCE")}};
 
     // print some information
     print_h2("Calculation Information");
@@ -245,8 +249,7 @@ double MRDSRG::compute_energy(){
     print_h2("Build Initial Amplitude from DSRG-MRPT2");
     T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
     T2_ = BTF_->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
-    guess_t2(V_,T2_);
-    guess_t1(F_,T2_,T1_);
+    guess_t(V_,T2_,F_,T1_);
 
     // check initial amplitudes
     analyze_amplitudes("First-Order",T1_,T2_);
@@ -362,6 +365,7 @@ double MRDSRG::compute_energy_relaxed(){
             Edelta_relax_vec.push_back(Edelta_relax);
 
             // obtain new reference
+            fcisolver.set_max_rdm_level(3);
             reference_ = fcisolver.reference();
 
             // refill densities
@@ -454,6 +458,7 @@ double MRDSRG::compute_energy_relaxed(){
                 }
 
                 // obtain new reference
+                fcisolver.set_max_rdm_level(3);
                 reference_ = fcisolver.reference();
 
                 // refill densities
