@@ -1,24 +1,18 @@
-#include <cmath>
-#include <functional>
-#include <algorithm>
-#include <unordered_map>
-#include <numeric>
+//#include <cmath>
+//#include <functional>
+//#include <algorithm>
+//#include <unordered_map>
+//#include <numeric>
 
 #include <boost/timer.hpp>
-#include <boost/format.hpp>
 
-#include <libciomr/libciomr.h>
-#include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
-#include <libqt/qt.h>
 #include <libmints/molecule.h>
 
 #include "aci.h"
 #include "sparse_ci_solver.h"
-#include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
-#include "mp2_nos.h"
 
 using namespace std;
 using namespace psi;
@@ -50,12 +44,6 @@ inline double clamp(double x, double a, double b)
 bool pairComp(const std::pair<double, STLBitsetDeterminant> E1, const std::pair<double, STLBitsetDeterminant> E2){
 	return E1.first < E2.first;
 }
-
-// Hash for BSD 
-//std::size_t BSD_hash_value(const STLBitsetDeterminant& input)
-//{
-//    return (input.alfa_bits_.to_ulong() % 100000 + input.beta_bits_.to_ulong() % 100000);
-//}
 
 /**
  * This is a smooth step function that is
