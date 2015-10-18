@@ -12,6 +12,7 @@
 #include "aci.h"
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
+#include "fci_vector.h"
 
 using namespace std;
 using namespace psi;
@@ -65,7 +66,8 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, st
     : Wavefunction(options,_default_psio_lib_),
 		options_(options), 
 		ints_(ints), 
-		mo_space_info_(mo_space_info)
+		mo_space_info_(mo_space_info),
+		wfn_(wfn)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -93,6 +95,7 @@ void AdaptiveCI::startup()
 	if(options_["MULTIPLICITY"].has_changed()){
 		wavefunction_multiplicity_ = options_.get_int("MULTIPLICITY");
 	}
+
 	nact_ = mo_space_info_->size("ACTIVE");
 	nactpi_ = mo_space_info_->get_dimension("ACTIVE");
 
@@ -614,12 +617,25 @@ double AdaptiveCI::compute_energy()
 	outfile->Printf(  "\n  __________ 	____________   ________________ ");
     wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
 
+	std::vector<double> davidson;
+	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs, PQ_space_, PQ_evals ); 
+	}
+	for( auto& i : davidson ){
+		outfile->Printf("\n Davidson corr: %1.9f", i);
+	}
+
+
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
         outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
                 exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+		if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
+                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
+		}
     }
 
 
@@ -644,12 +660,12 @@ double AdaptiveCI::compute_energy()
 
 		SharedVector no_occnum(new Vector("NO occ num", nmo_));
 		SharedMatrix NO_evecs(new Matrix("NO Evecs", nmo_,nmo_));
-		D1_->diagonalize(NO_evecs, no_occnum, nMatz);
+		oRDM_->diagonalize(NO_evecs, no_occnum, nMatz);
 		no_occnum->print();
 
 		std::vector<int> active_space(nirrep_, 0);
-		for(size_t p = 0, maxp = D1_->nrow(); p < maxp; ++p){
-			if( (D1_->get(p,p) >= 0.02) and (D1_->get(p,p) <= 1.98) ){
+		for(size_t p = 0, maxp = oRDM_->nrow(); p < maxp; ++p){
+			if( (oRDM_->get(p,p) >= 0.02) and (oRDM_->get(p,p) <= 1.98) ){
 				active_space[mo_symmetry_[p]] += 1;
 			}else{
 				continue;
@@ -911,7 +927,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules(new_det);
+                    double HIJ = det.slater_rules_single_alpha(ii,aa);
                     if (V_hash.count(new_det) == 0){
                         V_hash[new_det] = std::vector<double>(nroot);
                     }
@@ -932,7 +948,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
                 if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules(new_det);
+                    double HIJ = det.slater_rules_single_beta(ii,aa);
                     if (V_hash.count(new_det) == 0){
                         V_hash[new_det] = std::vector<double>(nroot);
                     }
@@ -1039,6 +1055,170 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         }
     }
 }
+
+void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
+{
+    std::vector<int> aocc = det.get_alfa_occ();
+    std::vector<int> bocc = det.get_beta_occ();
+    std::vector<int> avir = det.get_alfa_vir();
+    std::vector<int> bvir = det.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+	size_t nscreened = 0;
+
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int a = 0; a < nvalpha; ++a){
+            int aa = avir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                STLBitsetDeterminant new_det(det);
+                new_det.set_alfa_bit(ii,false);
+                new_det.set_alfa_bit(aa,true);
+                if(P_space_map_.find(new_det) == P_space_map_.end()){
+                    double HIJ = det.slater_rules_single_alpha(ii,aa);
+					if ( (HIJ * evecs->get_row(0,I)->norm() ) > tau_q_ ){
+						V_hash[new_det] = std::vector<double>(nroot);
+                    	for (int n = 0; n < nroot; ++n){
+                    	    V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                    	}
+					}else{
+						nscreened++;
+					}
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int a = 0; a < nvbeta; ++a){
+            int aa = bvir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                STLBitsetDeterminant new_det(det);
+                new_det.set_beta_bit(ii,false);
+                new_det.set_beta_bit(aa,true);
+                if(P_space_map_.find(new_det) == P_space_map_.end()){
+                    double HIJ = det.slater_rules_single_beta(ii,aa);
+					if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                        V_hash[new_det] = std::vector<double>(nroot);
+						for (int n = 0; n < nroot; ++n){
+							V_hash[new_det][n] += HIJ * evecs->get(I,n);
+						}
+					}else{
+						nscreened++;
+					}
+                }
+            }
+        }
+    }
+
+    // Generate aa excitations
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = a + 1; b < nvalpha; ++b){
+                    int bb = avir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                        STLBitsetDeterminant new_det(det);
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_alfa_bit(jj,false);
+                        new_det.set_alfa_bit(aa,true);
+                        new_det.set_alfa_bit(bb,true);
+                        if(P_space_map_.find(new_det) == P_space_map_.end()){
+                            double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+
+                            HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
+							
+							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                                V_hash[new_det] = std::vector<double>(nroot);
+								for (int n = 0; n < nroot; ++n){
+									V_hash[new_det][n] += HIJ * evecs->get(I,n);
+								}
+                            }else{
+								nscreened++;
+							}
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                for (int b = 0; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                        STLBitsetDeterminant new_det(det);
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_beta_bit(jj,false);
+                        new_det.set_alfa_bit(aa,true);
+                        new_det.set_beta_bit(bb,true);
+                        if(P_space_map_.find(new_det) == P_space_map_.end()){
+                            double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+
+                            HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
+
+							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                                V_hash[new_det] = std::vector<double>(nroot);
+								for (int n = 0; n < nroot; ++n){
+									V_hash[new_det][n] += HIJ * evecs->get(I,n);
+								}
+                            }else{
+								nscreened++;
+							}
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                for (int b = a + 1; b < nvbeta; ++b){
+                    int bb = bvir[b];
+                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                        STLBitsetDeterminant new_det(det);
+                        new_det.set_beta_bit(ii,false);
+                        new_det.set_beta_bit(jj,false);
+                        new_det.set_beta_bit(aa,true);
+                        new_det.set_beta_bit(bb,true);
+                        if(P_space_map_.find(new_det) == P_space_map_.end()){
+                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+
+                            HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
+							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                                V_hash[new_det] = std::vector<double>(nroot);
+								for (int n = 0; n < nroot; ++n){
+                            	    V_hash[new_det][n] += HIJ * evecs->get(I,n);
+								}
+                            }else{
+								nscreened++;
+							}
+                        }
+                    }
+                }
+            }
+        }
+    }
+	outfile->Printf("\n %zu determinants were removed from the SD space. ");
+}
+
 
 void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
@@ -1460,8 +1640,8 @@ void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<STLBi
 	for(int p = 0; p < ncmo_; ++p){
 		//size_t np = idx_a[p];
 		for(int q = p; q < nmo_; ++q){
-			D1_->add(p,q, B->get(p,q));
-			if(p ==q) trace += D1_->get(p,p);
+			oRDM_->add(p,q, B->get(p,q));
+			if(p ==q) trace += oRDM_->get(p,p);
 		}
 	}
 	outfile->Printf("\n\n Trace of 1-RDM: %6.3f\n", trace); 
@@ -1640,9 +1820,42 @@ void AdaptiveCI::save_dets_to_file( std::vector<STLBitsetDeterminant> space, Sha
 {
 	//Use for single-root calculations only
 	for(size_t I = 0, max = space.size(); I < max; ++I){
-		det_list_ << fabs(evecs->get(I,0)) << " ";	
+		det_list_ << space[I].str().c_str() << " " <<fabs(evecs->get(I,0))  << " ";
+		for(size_t J = 0, maxJ = space.size(); J < maxJ; ++J){
+			det_list_ << space[I].slater_rules(space[J]) << " ";
+		}
+		det_list_ << "\n";
 	}
 	det_list_ << "\n";
+}
+
+std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterminant> P_dets,  SharedVector P_evals, 
+													 SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals)
+{
+	outfile->Printf("\n  There are %zu PQ dets.", PQ_dets.size());
+	outfile->Printf("\n  There are %zu P dets.", P_dets.size());
+	
+	// The energy correction per root
+	std::vector<double> dc(nroot_,0.0);
+
+	std::unordered_map<STLBitsetDeterminant, double, STLBitsetDeterminant::Hash> PQ_map;
+	for(int n = 0; n < nroot_; ++n){
+		
+		//Build the map for each root
+		for(size_t I = 0, max = PQ_dets.size(); I < max; ++I){
+			PQ_map[PQ_dets[I]] = PQ_evecs->get(I,n);
+		}
+			
+		//Compute the sum of c^2 of all P space dets 
+		double c_sum = 0.0;
+		for(auto& P : P_dets){
+			c_sum += PQ_map[P] * PQ_map[P];
+		}	
+		c_sum = 1 - c_sum;
+		outfile->Printf("\n c_sum : %1.12f", c_sum);
+		dc[n] = c_sum * (PQ_evals->get(n) - P_evals->get(n));
+	}	
+	return dc;
 }
 
 }} // EndNamespaces

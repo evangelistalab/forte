@@ -312,6 +312,10 @@ read_options(std::string name, Options &options)
 		options.add_bool("DETERMINANT_HISTORY", false);
 		/*- Save determinants to file? -*/
 		options.add_bool("SAVE_DET_FILE", false);
+		/*- Screen Virtuals? -*/
+		options.add_bool("SCREEN_VIRTUALS", false);
+		/*- Perform size extensivity correction -*/
+		options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -510,7 +514,7 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
+        auto mp2_nos = std::make_shared<MP2_NOS>(wfn,options,ints_, mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
