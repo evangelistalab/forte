@@ -716,7 +716,7 @@ void MRDSRG_SO::compute_qhbar(){
             break;
         }
     }
-    outfile->Printf("\n  -----------------------------------------------------------------");
+//    outfile->Printf("\n  -----------------------------------------------------------------");
 }
 
 void MRDSRG_SO::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0)

@@ -121,9 +121,9 @@ protected:
 
     /// Source operator
     std::string source_;
-    enum class SOURCE {STANDARD, LABS, AMP, EMP2, LAMP, LEMP2};
+    enum class SOURCE {STANDARD, LABS, DYSON, AMP, EMP2, LAMP, LEMP2};
     std::map<std::string, SOURCE> sourcemap =
-            boost::assign::map_list_of("STANDARD", SOURCE::STANDARD)("LABS", SOURCE::LABS)
+            boost::assign::map_list_of("STANDARD", SOURCE::STANDARD)("LABS", SOURCE::LABS)("DYSON", SOURCE::DYSON)
             ("AMP", SOURCE::AMP)("LAMP", SOURCE::LAMP)("EMP2", SOURCE::EMP2)("LEMP2",SOURCE::LEMP2);
 
     /// Smaller than which we will do Taylor expansion of f(z) = (1-exp(-z^2))/z
@@ -166,6 +166,7 @@ protected:
     /// Renormalize denominator
     double renormalized_denominator(const double& D);
     double renormalized_denominator_labs(const double& D);
+    double renormalized_denominator_dyson(const double& D) {return s_ * D / (1.0 + s_ * D * D);}
 //    double renormalized_denominator_amp(double V,double D);
 //    double renormalized_denominator_emp2(double V,double D);
 //    double renormalized_denominator_lamp(double V,double D);
@@ -347,7 +348,7 @@ protected:
     // => Useful Inline functions <= //
 
     /// Return exp(-s * D^2)
-    double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
+    double renormalized_exp(const double& D) {return std::exp(-s_ * std::pow(D, 2.0));}
     /// Taylor Expansion of [1 - exp(- Z^2)] / Z
     double Taylor_Exp(const double& Z, const int& n){
         if(n > 0){
@@ -361,7 +362,7 @@ protected:
     }
 
     /// Return exp(-s * |D|)
-    double renormalized_exp_linear(double D) {return std::exp(-s_ * std::fabs(D));}
+    double renormalized_exp_linear(const double& D) {return std::exp(-s_ * std::fabs(D));}
     /// Taylor Expansion of [1 - exp(-|Z|)] / Z
     double Taylor_Exp_Linear(const double& Z, const int& n){
         double Zabs = std::fabs(Z);
@@ -378,6 +379,9 @@ protected:
             }
         }else{return 0.0;}
     }
+
+    /// Return 1.0 / (1.0 + s * D^2)
+    double renormalized_dyson(const double& D) {return 1.0 / (1.0 + s_ * D * D);}
 };
 
 }}
