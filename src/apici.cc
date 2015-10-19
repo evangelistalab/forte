@@ -930,7 +930,7 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(det_vec& dets,std::vector<dou
 void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash, double S)
 {
     // A vector of maps that hold (determinant,coefficient)
-    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
+//    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
     std::vector<std::pair<double,double>> thread_max_HJI(num_threads_);
 
     if(do_dynamic_prescreening_){
@@ -946,15 +946,30 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
                 max_coupling = dets_max_couplings_[dets[I]];
             }
             if (max_coupling == zero_pair){
-                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S,max_coupling);
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S,max_coupling);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
                 #pragma omp critical
                 {
                     dets_max_couplings_[dets[I]] = max_coupling;
                 }
             }else{
-                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S,max_coupling);
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S,max_coupling);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
             }
         }
+        // Combine the results of all the threads
     }else if (do_schwarz_prescreening_){
         if (do_initiator_approx_) {
             size_t max_I = dets.size();
@@ -962,11 +977,22 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             for (size_t I = 0; I < max_I; ++I){
                 int thread_id = omp_get_thread_num();
                 if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
-                    apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S);
+                    std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                    apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
+                    #pragma omp critical
+                    {
+                        for (auto det_C : thread_det_C_vec) {
+                            dets_C_hash[det_C.first] += det_C.second;
+                        }
+                    }
                 } else {
                     // Diagonal contribution
                     double det_energy = dets[I].energy();
-                    thread_det_C_hash[thread_id][dets[I]] += tau * (det_energy - S) * C[I];
+                    // Diagonal contributions
+                    #pragma omp critical
+                    {
+                        dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
+                    }
                 }
             }
         } else {
@@ -974,23 +1000,41 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I){
                 int thread_id = omp_get_thread_num();
-                apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S);
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
             }
         }
 
+        // Combine the results of all the threads
     }else if (do_initiator_approx_){
         size_t max_I = dets.size();
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
             if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
-                const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S);
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
                 thread_max_HJI[thread_id].first = std::max(thread_max_HJI[thread_id].first,max_HJI.first);    // to avoid race condition
                 thread_max_HJI[thread_id].second = std::max(thread_max_HJI[thread_id].second,max_HJI.second); // to avoid race condition
             } else {
                 double det_energy = dets[I].energy();
                 // Diagonal contributions
-                thread_det_C_hash[thread_id][dets[I]] += tau * (det_energy - S) * C[I];
+                #pragma omp critical
+                {
+                    dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
+                }
             }
         }
         // Combine the bounds on the couplings
@@ -1004,7 +1048,14 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
-            const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_hash[thread_id],S);
+            std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+            const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
+            #pragma omp critical
+            {
+                for (auto det_C : thread_det_C_vec) {
+                    dets_C_hash[det_C.first] += det_C.second;
+                }
+            }
             thread_max_HJI[thread_id].first = std::max(thread_max_HJI[thread_id].first,max_HJI.first);    // to avoid race condition
             thread_max_HJI[thread_id].second = std::max(thread_max_HJI[thread_id].second,max_HJI.second); // to avoid race condition
         }
@@ -1015,18 +1066,17 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
         }
     }
 
-    // Combine the results of all the threads
-    combine_hashes_into_hash(thread_det_C_hash,dets_C_hash);
 }
 
-std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant &detI, double CI, det_hash<>& new_space_C, double E0)
+std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
 {
     bool do_singles = std::fabs(prescreening_tollerance_factor_ * old_max_one_HJI_ * CI) >= spawning_threshold;
     bool do_doubles = std::fabs(prescreening_tollerance_factor_ * old_max_two_HJI_ * CI) >= spawning_threshold;
 
     // Diagonal contributions
     double det_energy = detI.energy();
-    new_space_C[detI] += tau * (det_energy - E0) * CI;
+//    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     if (do_singles or do_doubles){
         std::vector<int> aocc = detI.get_alfa_occ();
@@ -1072,7 +1122,8 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
                             detJ = detI;
                             detJ.set_alfa_bit(ii,false);
                             detJ.set_alfa_bit(aa,true);
-                            new_space_C[detJ] += tau * HJI * CI;
+//                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1089,7 +1140,8 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
                             detJ = detI;
                             detJ.set_beta_bit(ii,false);
                             detJ.set_beta_bit(aa,true);
-                            new_space_C[detJ] += tau * HJI * CI;
+//                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1115,7 +1167,8 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 detJ = detI;
                                 HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
-                                new_space_C[detJ] += tau * HJI * CI;
+//                                new_space_C[detJ] += tau * HJI * CI;
+                                new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                             }
                         }
                     }
@@ -1139,7 +1192,8 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 detJ = detI;
                                 HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
-                                new_space_C[detJ] += tau * HJI * CI;
+//                                new_space_C[detJ] += tau * HJI * CI;
+                                new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                             }
                         }
                     }
@@ -1163,7 +1217,8 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
                             if (std::fabs(HJI * CI) >= spawning_threshold){
                                 detJ = detI;
                                 HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
-                                new_space_C[detJ] += tau * HJI * CI;
+//                                new_space_C[detJ] += tau * HJI * CI;
+                                new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                             }
                         }
                     }
@@ -1313,7 +1368,7 @@ std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(do
     return std::make_pair(0.0,0.0);
 }
 
-void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, det_hash<>& new_space_C, double E0)
+void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0)
 {
     std::vector<int> aocc = detI.get_alfa_occ();
     std::vector<int> bocc = detI.get_beta_occ();
@@ -1327,7 +1382,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
 
     // Diagonal contributions
     double det_energy = detI.energy();
-    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
@@ -1340,7 +1395,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
                 detJ.set_alfa_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += tau * HJI * CI;
+                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                 }
             }
         }
@@ -1356,7 +1411,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
                 detJ.set_beta_bit(aa,true);
                 double HJI = detJ.slater_rules(detI);
                 if (std::fabs(HJI * CI) >= spawning_threshold){
-                    new_space_C[detJ] += tau * HJI * CI;
+                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                 }
             }
         }
@@ -1390,7 +1445,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
                             HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
-                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1425,7 +1480,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
                             HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
-                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1458,7 +1513,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
                         if (std::fabs(HJI * CI) >= spawning_threshold){
                             Determinant detJ(detI);
                             HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
-                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1467,14 +1522,14 @@ void AdaptivePathIntegralCI::apply_tau_H_det_schwarz(double tau, double spawning
     }
 }
 
-void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const Determinant &detI, double CI, det_hash<>& new_space_C, double E0, std::pair<double,double>& max_coupling)
+void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling)
 {
     bool do_singles = (max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold);
     bool do_doubles = (max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold);
 
     // Diagonal contributions
     double det_energy = detI.energy();
-    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
 
     if (do_singles or do_doubles){
         std::vector<int> aocc = detI.get_alfa_occ();
@@ -1500,7 +1555,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
                         double HJI = detJ.slater_rules(detI);
                         max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1517,7 +1572,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
                         double HJI = detJ.slater_rules(detI);
                         max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
                         if (std::fabs(HJI * CI) >= spawning_threshold){
-                            new_space_C[detJ] += tau * HJI * CI;
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                         }
                     }
                 }
@@ -1540,7 +1595,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
                                 if (std::fabs(HJI * CI) >= spawning_threshold){
                                     Determinant detJ(detI);
                                     HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
-                                    new_space_C[detJ] += tau * HJI * CI;
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                                 }
                             }
                         }
@@ -1562,7 +1617,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
                                 if (std::fabs(HJI * CI) >= spawning_threshold){
                                     Determinant detJ(detI);
                                     HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
-                                    new_space_C[detJ] += tau * HJI * CI;
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                                 }
                             }
                         }
@@ -1584,7 +1639,7 @@ void AdaptivePathIntegralCI::apply_tau_H_det_dynamic(double tau, double spawning
                                 if (std::fabs(HJI * CI) >= spawning_threshold){
                                     Determinant detJ(detI);
                                     HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
-                                    new_space_C[detJ] += tau * HJI * CI;
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                                 }
                             }
                         }
