@@ -438,7 +438,7 @@ read_options(std::string name, Options &options)
         /*- Correlation level -*/
         options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 CEPA0");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
+        options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Reference Relaxation -*/
