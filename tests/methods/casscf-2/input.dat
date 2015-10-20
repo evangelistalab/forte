@@ -26,11 +26,11 @@ set globals{
    active                  [2]
    reference               RHF
    mcscf_type              conv
-   scf_type                pk
+   scf_type                out_of_core
    e_convergence           1e-10
    d_convergence           1e-10
 }
-#energy('casscf')
+energy('casscf')
 mints()
 set globals {
     basis   cc-pvdz
@@ -50,6 +50,7 @@ set forte{
    active                  [2]
    multiplicity             1
    cas_type                 FCI
+   CASSCF_DEBUG_PRINTING    true
 }
 energy('forte')
 
