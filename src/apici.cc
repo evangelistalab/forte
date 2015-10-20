@@ -943,9 +943,9 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
     // A vector of maps that hold (determinant,coefficient)
 //    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
     std::vector<std::pair<double,double>> thread_max_HJI(num_threads_);
-    std::vector<size_t> thread_buffer_length(num_threads_, 0);
-    std::vector<int> thread_buffer_cycle(num_threads_, 0);
-    std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vec(num_threads_, std::vector<std::pair<Determinant, double>>(2 * max_single_spawn_));
+//    std::vector<size_t> thread_buffer_length(num_threads_, 0);
+//    std::vector<int> thread_buffer_cycle(num_threads_, 0);
+//    std::vector<std::vector<std::pair<Determinant, double>>> thread_det_C_vec(num_threads_, std::vector<std::pair<Determinant, double>>(2 * max_single_spawn_));
     size_t flush_critical = max_single_spawn_;
 
     if(do_dynamic_prescreening_){
@@ -960,25 +960,22 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             {
                 max_coupling = dets_max_couplings_[dets[I]];
             }
+            std::vector<std::pair<Determinant, double>> thread_det_C_vec(max_single_spawn_);
+            size_t thread_buffer_length = 0;
+
             if (max_coupling == zero_pair){
-                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S,max_coupling);
-                thread_buffer_cycle[thread_id]++;
+                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S,max_coupling);
                 #pragma omp critical
                 {
                     dets_max_couplings_[dets[I]] = max_coupling;
                 }
             }else{
-                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S,max_coupling);
-                thread_buffer_cycle[thread_id]++;
+                apply_tau_H_det_dynamic(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S,max_coupling);
             }
-            if (thread_buffer_cycle[thread_id] >= buffer_flush_freq_ || thread_buffer_length[thread_id] > flush_critical) {
-                #pragma omp critical
-                {
-                    for (size_t i = 0; i < thread_buffer_length[thread_id]; i++) {
-                        dets_C_hash[thread_det_C_vec[thread_id][i].first] += thread_det_C_vec[thread_id][i].second;
-                    }
-                    thread_buffer_length[thread_id] = 0;
-                    thread_buffer_cycle[thread_id] = 0;
+            #pragma omp critical
+            {
+                for (size_t i = 0; i < thread_buffer_length; i++) {
+                    dets_C_hash[thread_det_C_vec[i].first] += thread_det_C_vec[i].second;
                 }
             }
 
@@ -991,23 +988,20 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I){
                 int thread_id = omp_get_thread_num();
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec(max_single_spawn_);
+                size_t thread_buffer_length = 0;
                 if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
-                    apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S);
-                    thread_buffer_cycle[thread_id]++;
+                    apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S);
                 } else {
                     // Diagonal contribution
                     double det_energy = dets[I].energy();
                     // Diagonal contributions
-                    thread_det_C_vec[thread_id][thread_buffer_length[thread_id]++] = std::make_pair(dets[I], tau * (det_energy - S) * C[I]);
+                    thread_det_C_vec[thread_buffer_length++] = std::make_pair(dets[I], tau * (det_energy - S) * C[I]);
                 }
-                if (thread_buffer_cycle[thread_id] >= buffer_flush_freq_ || thread_buffer_length[thread_id] > flush_critical) {
-                    #pragma omp critical
-                    {
-                        for (size_t i = 0; i < thread_buffer_length[thread_id]; i++) {
-                            dets_C_hash[thread_det_C_vec[thread_id][i].first] += thread_det_C_vec[thread_id][i].second;
-                        }
-                        thread_buffer_length[thread_id] = 0;
-                        thread_buffer_cycle[thread_id] = 0;
+                #pragma omp critical
+                {
+                    for (size_t i = 0; i < thread_buffer_length; i++) {
+                        dets_C_hash[thread_det_C_vec[i].first] += thread_det_C_vec[i].second;
                     }
                 }
             }
@@ -1016,16 +1010,13 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I){
                 int thread_id = omp_get_thread_num();
-                apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S);
-                thread_buffer_cycle[thread_id]++;
-                if (thread_buffer_cycle[thread_id] >= buffer_flush_freq_ || thread_buffer_length[thread_id] > flush_critical) {
-                    #pragma omp critical
-                    {
-                        for (size_t i = 0; i < thread_buffer_length[thread_id]; i++) {
-                            dets_C_hash[thread_det_C_vec[thread_id][i].first] += thread_det_C_vec[thread_id][i].second;
-                        }
-                        thread_buffer_length[thread_id] = 0;
-                        thread_buffer_cycle[thread_id] = 0;
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec(max_single_spawn_);
+                size_t thread_buffer_length = 0;
+                apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S);
+                #pragma omp critical
+                {
+                    for (size_t i = 0; i < thread_buffer_length; i++) {
+                        dets_C_hash[thread_det_C_vec[i].first] += thread_det_C_vec[i].second;
                     }
                 }
             }
@@ -1037,24 +1028,21 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
+            std::vector<std::pair<Determinant, double>> thread_det_C_vec(max_single_spawn_);
+            size_t thread_buffer_length = 0;
             if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
-                const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S);
-                thread_buffer_cycle[thread_id]++;
+                const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S);
                 thread_max_HJI[thread_id].first = std::max(thread_max_HJI[thread_id].first,max_HJI.first);    // to avoid race condition
                 thread_max_HJI[thread_id].second = std::max(thread_max_HJI[thread_id].second,max_HJI.second); // to avoid race condition
             } else {
                 double det_energy = dets[I].energy();
                 // Diagonal contributions
-                thread_det_C_vec[thread_id][thread_buffer_length[thread_id]++] = std::make_pair(dets[I], tau * (det_energy - S) * C[I]);
+                thread_det_C_vec[thread_buffer_length++] = std::make_pair(dets[I], tau * (det_energy - S) * C[I]);
             }
-            if (thread_buffer_cycle[thread_id] >= buffer_flush_freq_ || thread_buffer_length[thread_id] > flush_critical) {
-                #pragma omp critical
-                {
-                    for (size_t i = 0; i < thread_buffer_length[thread_id]; i++) {
-                        dets_C_hash[thread_det_C_vec[thread_id][i].first] += thread_det_C_vec[thread_id][i].second;
-                    }
-                    thread_buffer_length[thread_id] = 0;
-                    thread_buffer_cycle[thread_id] = 0;
+            #pragma omp critical
+            {
+                for (size_t i = 0; i < thread_buffer_length; i++) {
+                    dets_C_hash[thread_det_C_vec[i].first] += thread_det_C_vec[i].second;
                 }
             }
         }
@@ -1069,16 +1057,13 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             int thread_id = omp_get_thread_num();
-            const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec[thread_id], thread_buffer_length[thread_id],S);
-            thread_buffer_cycle[thread_id]++;
-            if (thread_buffer_cycle[thread_id] >= buffer_flush_freq_ || thread_buffer_length[thread_id] > flush_critical) {
-                #pragma omp critical
-                {
-                    for (size_t i = 0; i < thread_buffer_length[thread_id]; i++) {
-                        dets_C_hash[thread_det_C_vec[thread_id][i].first] += thread_det_C_vec[thread_id][i].second;
-                    }
-                    thread_buffer_length[thread_id] = 0;
-                    thread_buffer_cycle[thread_id] = 0;
+            std::vector<std::pair<Determinant, double>> thread_det_C_vec(max_single_spawn_);
+            size_t thread_buffer_length = 0;
+            const std::pair<double,double> max_HJI = apply_tau_H_det_prescreening(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec, thread_buffer_length,S);
+            #pragma omp critical
+            {
+                for (size_t i = 0; i < thread_buffer_length; i++) {
+                    dets_C_hash[thread_det_C_vec[i].first] += thread_det_C_vec[i].second;
                 }
             }
             thread_max_HJI[thread_id].first = std::max(thread_max_HJI[thread_id].first,max_HJI.first);    // to avoid race condition
@@ -1090,12 +1075,6 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             new_max_one_HJI_ = std::max(thread_max_HJI[t].first,new_max_one_HJI_);
             new_max_two_HJI_ = std::max(thread_max_HJI[t].second,new_max_two_HJI_);
         }
-    }
-    for (int j = 0; j < num_threads_; j++){
-        for (size_t i = 0; i < thread_buffer_length[j]; i++) {
-            dets_C_hash[thread_det_C_vec[j][i].first] += thread_det_C_vec[j][i].second;
-        }
-        thread_buffer_length[j] = 0;
     }
 }
 
