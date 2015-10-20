@@ -7,8 +7,8 @@ import forte
 
 memory 500 mb
 
-refmcscf   =  -228.520042391299
-refdsrgpt2 =  -230.139347495912602
+refmcscf   =  -228.52004239
+refdsrgpt2 =  -230.13927634
 
 molecule mbenzyne{
   0 3
@@ -50,12 +50,14 @@ set forte {
    int_type                DISKDF
    job_type                three-dsrg-mrpt2
    cas_type                FCI
+   FCI_ITERATIONS          50
+   e_convergence           10
 }
 
 scf = energy('mcscf')
-compare_values(refmcscf, scf,10,"SCF Energy")
+compare_values(refmcscf, scf,8,"SCF Energy")
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")
 
 

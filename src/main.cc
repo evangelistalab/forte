@@ -258,7 +258,11 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_REFERENCE", false);
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 10);
+        /* - The convergence for the energy for casscf -*/
         options.add_double("CASSCF_CONVERGENCE", 1e-6);
+        /* - Debug printing for CASSCF -*/
+        options.add_bool("CASSCF_DEBUG_PRINTING", false);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
