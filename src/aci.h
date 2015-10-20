@@ -68,6 +68,8 @@ private:
 
     // ==> Class data <==
 
+	/// The Wavefuction object
+	boost::shared_ptr<Wavefunction> wfn_;	
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer
@@ -182,7 +184,7 @@ private:
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
 	/// 1-RDM
-	SharedMatrix D1_;
+	SharedMatrix oRDM_;
 	/// Form initial guess space with correct spin? ****OBSOLETE?*****
 	bool do_guess_;
 	///Spin-symmetrized evecs
@@ -231,6 +233,8 @@ private:
     /// Generate excited determinants
     void generate_excited_determinants_single_root(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
 													std::unordered_map<STLBitsetDeterminant, double,STLBitsetDeterminant::Hash> &V_hash);
+    void generate_screened_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,
+                                                det_hash<std::vector<double>>& V_hash);
 
     /// Generate excited determinants
     void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
@@ -278,6 +282,8 @@ private:
 	
 	/// Save coefficients of lowest-root determinant	
 	void save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs );
+	/// Compute the Davidson correction
+	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant> P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals );   
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

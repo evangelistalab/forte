@@ -91,7 +91,7 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -312,6 +312,10 @@ read_options(std::string name, Options &options)
 		options.add_bool("DETERMINANT_HISTORY", false);
 		/*- Save determinants to file? -*/
 		options.add_bool("SAVE_DET_FILE", false);
+		/*- Screen Virtuals? -*/
+		options.add_bool("SCREEN_VIRTUALS", false);
+		/*- Perform size extensivity correction -*/
+		options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -434,7 +438,7 @@ read_options(std::string name, Options &options)
         /*- Correlation level -*/
         options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 CEPA0");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
+        options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Reference Relaxation -*/
@@ -514,7 +518,7 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
+        auto mp2_nos = std::make_shared<MP2_NOS>(wfn,options,ints_, mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
