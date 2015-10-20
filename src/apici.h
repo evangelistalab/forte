@@ -143,6 +143,8 @@ private:
     int current_root_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
+    /// Number of cycles between two flushes if det number criteria was not met
+    int buffer_flush_freq_;
 
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
