@@ -98,6 +98,10 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints)
     }
     double total_energy = nuclear_repulsion_energy + scalar_energy + energy_1rdm + energy_2rdm;
     outfile->Printf("\n    Total Energy: %25.15f\n",total_energy);
+    outfile->Printf("\n scalar_energy = %8.8f", scalar_energy);
+    outfile->Printf("\n energy_1rdm = %8.8f", energy_1rdm);
+    outfile->Printf("\n energy_2rdm = %8.8f", energy_2rdm);
+    outfile->Printf("\n nuc_repulsion_energy = %8.8f", nuclear_repulsion_energy);
     return total_energy;
 }
 

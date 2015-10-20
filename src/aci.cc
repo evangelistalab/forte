@@ -305,7 +305,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 			// Add electron to lowest-energy orbital of proper symmetry
 			// Loop from current occupation to max MO until correct orbital is reached
-			for(int i = nalpha_ - k, maxi = nactel_; i < maxi; ++i){
+			for(int i = nalpha_ - k, maxi = nact_; i < maxi; ++i){
 				if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] != 1){
 					occupation[labeled_orb_en[i].second.second] = 1;
 					outfile->Printf("\n  Added electron to %d", labeled_orb_en[i].second.second);

@@ -107,6 +107,9 @@ private:
     void diagonal_hessian();
     /// SOSCF_PSI
     void SOSCF_PSI();
+    /// check the cas_ci energy with spin-free RDM
+    double cas_check(Reference cas);
+
 
     void startup();
 
