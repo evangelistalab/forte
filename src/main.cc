@@ -494,8 +494,12 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
         ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else {
+    }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }
+    else{
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
+        throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
     // Link the integrals to the DynamicBitsetDeterminant class
