@@ -113,8 +113,6 @@ private:
     size_t schwarz_total_;
     /// 2loop schwarz succeed count
     size_t schwarz_succ_;
-    /// maximum number of single determinant spawns
-    size_t max_single_spawn_;
 
     // * Calculation info
     /// The threshold applied to the primary space
@@ -143,8 +141,6 @@ private:
     int current_root_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
-    /// Number of cycles between two flushes if det number criteria was not met
-    int buffer_flush_freq_;
 
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
@@ -229,11 +225,11 @@ private:
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
-    std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, size_t &buf_length, double E0);
+    std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening
-    void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, size_t &buf_length, double E0,std::pair<double,double>& max_coupling);
+    void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,std::pair<double,double>& max_coupling);
     /// Apply tau H to a determinant using Schwarz screening
-    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, size_t &buf_length, double E0);
+    void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
