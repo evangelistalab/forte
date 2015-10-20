@@ -16,23 +16,26 @@ molecule {
 }
 
 set globals{
-   scf_type             pk
-   d_convergence        8
-   e_convergence        8
+   scf_type             out_of_core
+   d_convergence        10
+   e_convergence        10
    basis                3-21g
 #   docc                 [2,0,0,0]
 #   socc                 [1,0,0,1]
    restricted_docc                  [2]
    active                  [2]
    maxiter              20
+   reference            RHF
+   mcscf_type           conv
 }
-#energy('casscf')
+energy('casscf')
+clean()
 
 energy('mcscf')
 
 set forte{
    CASSCF_REFERENCE    true
-   CASSCF_ITERATIONS   15
+   CASSCF_ITERATIONS   25
    #restricted_docc      [2,0,0,0]
    restricted_docc       [2]
    active                [2]

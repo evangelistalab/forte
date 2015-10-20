@@ -109,6 +109,8 @@ private:
     void SOSCF_PSI();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
+    /// Make C_matrix symmetry aware from SO C
+    boost::shared_ptr<Matrix> make_c_sym_aware();
 
 
     void startup();
