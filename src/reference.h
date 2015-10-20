@@ -33,8 +33,9 @@ namespace forte{
 class Reference // : public Wavefunction
 {
 protected:
-    /// Reference energy
+    /// Reference energy = FCI_energy + frozen_core_energy + restricted_docc + nuclear_replusion
     double Eref_;
+    /// Frozen_core_energy
 
     /// Density cumulants
     ambit::Tensor L1a_;
@@ -46,6 +47,11 @@ protected:
     ambit::Tensor L3aab_;
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
+
+    /// The RDM
+    ambit::Tensor g2aa_;
+    ambit::Tensor g2ab_;
+    ambit::Tensor g2bb_;
 
 public:
     /// Default constructor
@@ -63,6 +69,7 @@ public:
 
     /// Obtain reference energy
     double get_Eref() {return Eref_;}
+    /// Use RDM as reference rather than cumulants
 
     /// Obtain density cumulants
     ambit::Tensor L1a() {return L1a_;}
@@ -74,6 +81,10 @@ public:
     ambit::Tensor L3aab() {return L3aab_;}
     ambit::Tensor L3abb() {return L3abb_;}
     ambit::Tensor L3bbb() {return L3bbb_;}
+    /// The RDM
+    ambit::Tensor g2aa() {return g2aa_;}
+    ambit::Tensor g2ab() {return g2ab_;}
+    ambit::Tensor g2bb() {return g2bb_;}
 
     /// Set density cumulants
     void set_L1a(ambit::Tensor L1a) {L1a_ = L1a;}
@@ -85,6 +96,9 @@ public:
     void set_L3aab(ambit::Tensor L3aab) {L3aab_ = L3aab;}
     void set_L3abb(ambit::Tensor L3abb) {L3abb_ = L3abb;}
     void set_L3bbb(ambit::Tensor L3bbb) {L3bbb_ = L3bbb;}
+    void set_g2aa(ambit::Tensor g2aa) {g2aa_ = g2aa;}
+    void set_g2ab(ambit::Tensor g2ab) {g2ab_ = g2ab;}
+    void set_g2bb(ambit::Tensor g2bb) {g2bb_ = g2bb;}
 };
 
 }} // End Namespaces

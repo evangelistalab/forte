@@ -14,6 +14,7 @@
 #include <libmints/factory.h>
 #include <libmints/mintshelper.h>
 #include <lib3index/cholesky.h>
+#include "fci_mo.h"
 
 namespace psi{ namespace forte{
 
@@ -24,16 +25,10 @@ CASSCF::CASSCF(Options &options,
          ints_(ints),
          mo_space_info_(mo_space_info)
 {
-    if(options_.get_str("SCF_TYPE") == "PK")
-    {
-        outfile->Printf("\n Kevin has yet to figure out PKJK so only works for DF/CD ");
-        throw PSIEXCEPTION("Need to set SCF_TYPE==DF/CD to use CASSCF code");
-    }
     startup();
 }
 void CASSCF::compute_casscf()
 {
-    outfile->Printf("\n nmo:%lu  na_:%lu", nmo_, na_);
     if(na_ == 0)
     {
         outfile->Printf("\n\n\n Please set the active space");
@@ -44,11 +39,47 @@ void CASSCF::compute_casscf()
         outfile->Printf("\n Your about to do an all active CASSCF");
         throw PSIEXCEPTION("The active space is all the MOs.  Orbitals don't matter at this point");
     }
-    SharedMatrix Cold(Call_->clone());
+
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
     std::vector<int> iter_con;
     std::vector<double> g_norm_con;
     std::vector<double> E_casscf_con;
+    ///Step 1: Obtain guess MO coefficients C_{mup}
+    /// Since I want to use these in a symmetry aware basis,
+    /// I will move the C matrix into a Pfitzer ordering
+    nmopi_ = wfn_->nmopi();
+
+    nmo_ = mo_space_info_->size("ALL");
+    na_  = mo_space_info_->size("ACTIVE");
+
+    //SharedMatrix Call_sym = wfn_->Ca();
+    //Ca_sym_ = Call_sym;
+
+    //SharedMatrix aotoso = wfn_->aotoso();
+
+    ///// I want a C matrix in the C1 basis but symmetry aware
+    //size_t nso_ = wfn_->nso();
+    //SharedMatrix Call(new Matrix("Call_", nso_, nmo_));
+    //Dimension nsopi_ = wfn_->nsopi();
+    //size_t nso = wfn_->nso();
+    //nirrep_ = wfn_->nirrep();
+
+    //// Transform from the SO to the AO basis for the C matrix.
+    //// just transfroms the C_{mu i_so} -> C_{mu i_ao}
+    //for (size_t h = 0, index = 0; h < nirrep_; ++h){
+    //    for (int i = 0; i < nmopi_[h]; ++i){
+    //        size_t nao = nso;
+    //        size_t nso = nsopi_[h];
+
+    //        if (!nso) continue;
+
+    //        C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Call_sym->pointer(h)[0][i],nmopi_[h],0.0,&Call->pointer()[0][index],nmopi_.sum());
+
+    //        index += 1;
+    //    }
+
+    //}
+    //Call_ = Call;
     for(int iter = 0; iter < maxiter; iter++)
     {
        iter_con.push_back(iter);
@@ -100,40 +131,21 @@ void CASSCF::compute_casscf()
         S_mat.copy(S);
         S_mat.expm();
         SharedMatrix S_mat_s = S_mat.clone();
-        //S->back_transform(Call_);
-        //SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
-        //S_sym->apply_symmetry(S, wfn_->aotoso());
-        //S_sym->transform(Ca_sym_);
-        //S_sym->print();
 
-        // Build exp(U) = 1 + U + 1/2 U U + 1/6 U U U
-        ////SharedMatrix expS = S_sym->clone();
+        SharedMatrix S_sym(new Matrix(nirrep_, nmopi_, nmopi_));
 
-        //for (size_t h=0; h<nirrep_; h++){
-        //    if (!expS->rowspi()[h]) continue;
-        //    double** Sp = expS->pointer(h);
-        //    for (int i=0; i<(expS->colspi()[h]); i++){
-        //        Sp[i][i] += 1.0;
-        //    }
-        //}
-
-        //expS->gemm(false, false, 0.5, S_sym, S_sym, 1.0);
-
-        //SharedMatrix S_third = Matrix::triplet(S_sym, S_sym, S_sym);
-        //S_third->scale(1.0/6.0);
-        //expS->add(S_third);
-        //S_third.reset();
-
-        //// We did not fully exponentiate the matrix, need to orthogonalize
-        //expS->schmidt();
-
-        //// C' = C U
-        /// expS->expm();
-        //SharedMatrix Cp = Matrix::doublet(Ca_sym_, expS);
-        SharedMatrix Cp = Matrix::doublet(Call_, S_mat_s);
-
+        S_sym->apply_symmetry(S_mat_s, wfn_->aotoso());
+        ///Step 1: Obtain guess MO coefficients C_{mup}
+        /// Since I want to use these in a symmetry aware basis,
+        /// I will move the C matrix into a Pfitzer ordering
+        ///
         SharedMatrix Ca = wfn_->Ca();
+        SharedMatrix Cb = wfn_->Cb();
+
+        SharedMatrix Cp = Matrix::doublet(Ca, S_sym);
+
         Ca->copy(Cp);
+        Cb->copy(Cp);
         // With updated C coefficients, need to retransform integrals so I can run FCI with transformed integrals
         ints_->retransform_integrals();
 
@@ -142,14 +154,14 @@ void CASSCF::compute_casscf()
             S->print();
             g_->print();
             d_->print();
+            Cp->print();
         }
-
 
     }
     outfile->Printf("\n iter    g_norm      E_CASSCF");
     for(size_t i = 0; i < iter_con.size(); i++)
     {
-        outfile->Printf("\n %d  %8.8f   %8.8f", i, g_norm_con[i], E_casscf_con[i]);
+        outfile->Printf("\n %d  %10.12f   %10.12f", i, g_norm_con[i], E_casscf_con[i]);
     }
 
 
@@ -164,7 +176,7 @@ void CASSCF::startup()
     ///Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
-    nmopi_ = mo_space_info_->get_dimension("ALL");
+    nmopi_ = wfn_->nmopi();
 
     nmo_ = mo_space_info_->size("ALL");
     na_  = mo_space_info_->size("ACTIVE");
@@ -175,7 +187,8 @@ void CASSCF::startup()
     SharedMatrix aotoso = wfn_->aotoso();
 
     /// I want a C matrix in the C1 basis but symmetry aware
-    SharedMatrix Call(new Matrix("Call_", nmo_, nmo_));
+    size_t nso_ = wfn_->nso();
+    SharedMatrix Call(new Matrix("Call_", nso_, nmo_));
     Dimension nsopi_ = wfn_->nsopi();
     size_t nso = wfn_->nso();
     nirrep_ = wfn_->nirrep();
@@ -195,17 +208,27 @@ void CASSCF::startup()
         }
 
     }
-    Call_ = Call;
+    //Call_ = Call;
+    Call_ = wfn_->Ca();
 }
 void CASSCF::cas_ci()
 {
     ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
-    boost::shared_ptr<FCI> fci_casscf(new FCI(wfn_,options_,ints_,mo_space_info_));
-    fci_casscf->set_max_rdm_level(3);
-    fci_casscf->compute_energy();
+    if(options_.get_str("CAS_TYPE") == "FCI")
+    {
+        boost::shared_ptr<FCI> fci_casscf(new FCI(wfn_,options_,ints_,mo_space_info_));
+        fci_casscf->set_max_rdm_level(3);
+        fci_casscf->compute_energy();
     //Used to grab the computed energy and RDMs.  
-    cas_ref_ = fci_casscf->reference();
-    E_casscf_ = cas_ref_.get_Eref();
+        cas_ref_ = fci_casscf->reference();
+        E_casscf_ = cas_ref_.get_Eref();
+    }
+    else if(options_.get_str("CAS_TYPE") == "CAS")
+    {
+        FCI_MO cas(options_, ints_, mo_space_info_);
+        cas_ref_ = cas.reference();
+        E_casscf_ = cas_ref_.get_Eref();
+    }
 }
 
 void CASSCF::form_fock_core()
@@ -216,8 +239,8 @@ void CASSCF::form_fock_core()
     //boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
     boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-    SharedMatrix T = mints->so_kinetic();
-    SharedMatrix V = mints->so_potential();
+    SharedMatrix T = mints->ao_kinetic();
+    SharedMatrix V = mints->ao_potential();
     SharedMatrix H = T->clone();
     H->add(V);
 
@@ -228,20 +251,11 @@ void CASSCF::form_fock_core()
     ///Step 2: From Hamiltonian elements
     ///This will use JK builds (Equation 18 - 22)
     /// F_{pq}^{core} = C_{mu p}C_{nu q} [h_{uv} + 2J^{(D_c) - K^{(D_c)}]
-
-
+    auto inactive_dim_abs = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     ///Have to go from the full C matrix to the C_core in the SO basis
     /// tricky...tricky
-    Dimension inactive_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi_, inactive_dim));
-    //for(size_t h = 0; h < nirrep_; h++){
-    //    for(int mu = 0; mu < nmopi_[h]; mu++){
-    //        for(int i = 0; i <  inactive_dim[h]; i++){
-    //            C_core->set(h,mu, i, Ca_sym_->get(h,mu, i));
-    //        }
-    //    }
-    //}
-    auto      inactive_dim_abs = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
+    SharedMatrix C_core(new Matrix("C_core", nmo_, inactive_dim_abs.size()));
+
     // Need to get the inactive block of the C matrix
     for(size_t mu = 0; mu < nmo_; mu++){
         for(size_t i = 0; i <  inactive_dim_abs.size(); i++){
@@ -253,6 +267,7 @@ void CASSCF::form_fock_core()
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
+    JK_core->set_allow_desymmetrization(false);
 
     /////TODO: Make this an option in my code
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
@@ -415,7 +430,6 @@ void CASSCF::form_fock_active()
     //F_act_sym->apply_symmetry(F_act_testM, wfn_->aotoso());
     //F_act_sym->transform(Ca_sym_);
     //F_act_sym->set_name("AFock");
-    //F_act_sym->print();
 
     //F_active_c1->zero();
     //F_act_->zero();
@@ -440,7 +454,7 @@ void CASSCF::orbital_gradient()
     auto active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
     F_pu.iterate([&](const std::vector<size_t>& i,double& value){
         value = F_core_->get(i[0],active_mo[i[1]]);});
-    Y("p,t") = F_pu("p,u") * gamma1_("t, u");
+    Y("p,t") = F_pu("p,u") * gamma1_("u, t");
     SharedMatrix Y_m(new Matrix("Y_m", nmo_, na_));
 
     Y.iterate([&](const std::vector<size_t>& i,double& value){
@@ -452,37 +466,36 @@ void CASSCF::orbital_gradient()
     //gamma1 = gamma1a + gamma1b;
     //gamma2 = gamma2aa + gamma2ab + gamma2ba + gamma2bb
     /// lambda2 = gamma1*gamma1
-    ambit::Tensor L1a  = cas_ref_.L1a();
-    ambit::Tensor L1b  = cas_ref_.L1b();
-    ambit::Tensor L2aa = cas_ref_.L2aa();
-    ambit::Tensor L2ab = cas_ref_.L2ab();
-    ambit::Tensor L2bb = cas_ref_.L2bb();
+    ambit::Tensor L2aa = cas_ref_.g2aa();
+    ambit::Tensor L2ab = cas_ref_.g2ab();
+    ambit::Tensor L2bb = cas_ref_.g2bb();
 
-    //lambda^{pq}_{rs} = gamma^{pq}_{rs} - gamma^p_r gamma^q_s + gamma^p_s gamma^q_r
+    ////lambda^{pq}_{rs} = gamma^{pq}_{rs} - gamma^p_r gamma^q_s + gamma^p_s gamma^q_r
 
-    L2aa("p,q,r,s") += L1a("p,r") * L1a("q,s");
-    L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
+    //L2aa("p,q,r,s") += L1a("p,r") * L1a("q,s");
+    //L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
 
-    L2ab("pqrs") +=  L1a("pr") * L1b("qs");
-    //L2ab("pqrs") += L1b("pr") * L1a("qs");
+    //L2ab("pqrs") +=  L1a("pr") * L1b("qs");
+    ////L2ab("pqrs") += L1b("pr") * L1a("qs");
 
-    L2bb("pqrs") += L1b("pr") * L1b("qs");
-    L2bb("pqrs") -= L1b("ps") * L1b("qr");
+    //L2bb("pqrs") += L1b("pr") * L1b("qs");
+    //L2bb("pqrs") -= L1b("ps") * L1b("qr");
 
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
 
-    // This may or may not be correct.  Really need to find a way to check this code
-    gamma2("u,v,x,y") +=  L2aa("u,v,x, y");
-    gamma2("u,v,x,y") +=  L2ab("u,v,x,y");
-    gamma2("u,v,x,y") +=  L1b("ux") * L1a("vy");
-    gamma2("u,v,x,y") +=  L2bb("u,v,x,y");
+    //// This may or may not be correct.  Really need to find a way to check this code
+    //gamma2("u,v,x,y") +=  L2aa("u,v,x, y");
+    //gamma2("u,v,x,y") +=  L2ab("u,v,x,y");
+    //gamma2("u,v,x,y") +=  L2ab("v, u, y, x");
+    //gamma2("u,v,x,y") +=  L2bb("u,v,x,y");
+    gamma2("u, v, x, y") = L2aa("u, v, x, y") + L2ab("u, v, x, y") + L2ab("v, u, y, x") + L2bb("u, v, x, y");
+    gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+    gamma2_.copy(gamma2);
 
     //gamma2_("u,v,x,y") = gamma2_("x,y,u,v");
     //gamma2_("u,v,x,y") = gamma2_("")
-    gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
-    gamma2_("u,v,x,y") = (gamma2("u, v, x, y") + gamma2("v,u,x,y") + gamma2("u,v,y,x") + gamma2("v,u, y, x"));
-    gamma2_.scale(0.25);
+    //gamma2_("u,v,x,y") = (gamma2("u, v, x, y") + gamma2("v,u,x,y") + gamma2("u,v,y,x") + gamma2("v,u, y, x"));
 
     ambit::Tensor tei_puvy = ambit::Tensor::build(ambit::kCore, "puvy", {nmo_, na_, na_, na_});
     std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
@@ -491,7 +504,7 @@ void CASSCF::orbital_gradient()
     ambit::Tensor Z = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
-    Z("p, t") = tei_puvy("p,x,u,y") * gamma2_("t, u, x, y");
+    Z("p, t") = tei_puvy("p,u,x,y") * gamma2_("t, u, x, y");
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
         Zm->set(i[0],i[1], value);});
@@ -508,6 +521,7 @@ void CASSCF::orbital_gradient()
     auto virt_array = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
     auto active_array = mo_space_info_->get_absolute_mo("ACTIVE");
     SharedMatrix Orb_grad(new Matrix("G_pq", nmo_, nmo_));
+
     for(size_t ii = 0; ii < occ_array.size(); ii++)
         for(size_t ti = 0; ti < active_array.size(); ti++){
             {
@@ -538,8 +552,72 @@ void CASSCF::orbital_gradient()
     //Orb_grad->set_diagonal(1.0);
     //for(size_t p = 0; p < nmo_; p++)
     //    Orb_grad->set(p,p, 2 * F_core_->get(p, p) + 2 * F_act_->get(p, p));
+    auto nh_vec = mo_space_info_->get_absolute_mo("GENERALIZED HOLE");
+    auto np_vec = mo_space_info_->get_absolute_mo("GENERALIZED PARTICLE");
+    size_t nh = nh_vec.size();
+    size_t np = np_vec.size();
+
+    SharedMatrix Orb_grad_nonzero(new Matrix("Orb_grad_nonzero", nh, np));
+    for(size_t i = 0; i < nh; i++){
+        for(size_t a = 0; a < np; a++){
+            Orb_grad_nonzero->set(i, a, Orb_grad->get(nh_vec[i], np_vec[a]));
+            if(nh_vec[i] == np_vec[a])
+            {
+                Orb_grad_nonzero->set(i, a, 0.0);
+            }
+        }
+    }
 
     g_ = Orb_grad;
+
+    auto nmo_vec = mo_space_info_->get_corr_abs_mo("ALL");
+    auto nocc_vec = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    auto nac_vec  = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto nvir_vec = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+
+    SharedMatrix Fock(new Matrix("FOCK", nmo_, nmo_));
+    g_->zero();
+
+    for(size_t p = 0; p < nmo_vec.size(); p++)
+    {
+        size_t p_abs = nmo_vec[p];
+        for(auto i : nocc_vec)
+        {
+            size_t i_abs = nocc_vec[i];
+            double value = 2.0 * F_core_->get(i, p) + 2.0 * F_act_->get(i, p);
+            Fock->set(i_abs, p_abs, value);
+        }
+        for(size_t u = 0; u < na_; u++)
+        {
+            size_t u_abs = nac_vec[u];
+            double value = Y_->get(p_abs, u) + Z_->get(p_abs, u);
+            Fock->set(u_abs, p_abs, value);
+        }
+        for(size_t a = 0; a < nvir_vec.size(); a++)
+        {
+            Fock->set(nvir_vec[a], p_abs, 0.0);
+        }
+    }
+    for(auto p : nmo_vec)
+    {
+        for(auto q : nmo_vec){
+            g_->set(p, q, 2.0 * (Fock->get(p, q) - Fock->get(q, p)));
+        }
+    }
+    for(size_t i = 0; i < nh; i++){
+        for(size_t a = 0; a < np; a++){
+            double value_ia = Fock->get(nh_vec[i], np_vec[a]);
+            double value_ai = Fock->get(np_vec[a], nh_vec[i]);
+
+            Orb_grad_nonzero->set(i, a, 2.0 * value_ia - 2.0 * value_ai);
+            if(nh_vec[i] == np_vec[a])
+            {
+                Orb_grad_nonzero->set(i, a, 0.0);
+            }
+        }
+    }
+
+
 
 
 }
@@ -557,7 +635,7 @@ void CASSCF::diagonal_hessian()
             //double value_ia = F_core_->get(a,a) * 4.0 + 2 * F_act_->get(a,a);
             //value_ia -= 4.0 * F_core_->get(i,i)  - 2 * F_act_->get(i,i);
             double value_ia = F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a);
-            value_ia -= 4.0 * F_core_->get(i,i)  - 4.0 * F_act_->get(i,i);
+            value_ia -= (4.0 * F_core_->get(i,i)  + 4.0 * F_act_->get(i,i));
             D->set(i,a,value_ia);
         }
     }
@@ -570,7 +648,7 @@ void CASSCF::diagonal_hessian()
             //value_ta -= 2*Y_->get(t,ti) + 4.0 *Z_->get(t,ti);
             double value_ta = 2.0 * gamma1M_->get(ti,ti) * F_core_->get(a,a);
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
-            value_ta -= 2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti);
+            value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
             D->set(t,a, value_ta);
         }
     }
@@ -594,7 +672,79 @@ void CASSCF::diagonal_hessian()
         }
     }
     d_ = D;
+    auto nh_vec = mo_space_info_->get_absolute_mo("GENERALIZED HOLE");
+    auto np_vec = mo_space_info_->get_absolute_mo("GENERALIZED PARTICLE");
+    size_t nh = nh_vec.size();
+    size_t np = np_vec.size();
 
+    SharedMatrix Hessian_nonzero(new Matrix("Hessian_nonzero", nh, np));
+    for(size_t i = 0; i < nh; i++){
+        for(size_t a = 0; a < np; a++){
+            Hessian_nonzero->set(i, a, D->get(nh_vec[i], np_vec[a]));
+            if(nh_vec[i] == np_vec[a])
+            {
+               Hessian_nonzero->set(i, a, 1.0);
+            }
+        }
+    }
+
+
+}
+double CASSCF::cas_check(Reference cas_ref)
+{
+    ambit::Tensor gamma1 = ambit::Tensor::build(ambit::kCore, "Gamma1", {na_, na_});
+    ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+
+    /// Spin-free ORDM = gamma1_a + gamma1_b
+    ambit::Tensor L1b = cas_ref.L1b();
+    ambit::Tensor L1a = cas_ref.L1a();
+    gamma1("u, v") = (L1a("u, v") + L1b("u, v"));
+
+    ambit::Tensor L2aa = cas_ref.L2aa();
+    ambit::Tensor L2ab = cas_ref.L2ab();
+    ambit::Tensor L2bb = cas_ref.L2bb();
+
+    gamma2("u, v, x, y") = L2aa("u, v, x, y") + L2bb("u, v, x, y") + L2ab("u, v, x, y") + L2ab("v, u, y, x");
+
+    //lambda^{pq}_{rs} = gamma^{pq}_{rs} - gamma^p_r gamma^q_s + gamma^p_s gamma^q_r
+
+    //L2aa("p,q,r,s") += L1a("p,r") * L1a("q,s");
+    //L2aa("p,q,r,s") -= L1a("p,s") * L1a("q,r");
+
+    //L2ab("pqrs") +=  L1a("pr") * L1b("qs");
+    ////L2ab("pqrs") += L1b("pr") * L1a("qs");
+
+    //L2bb("pqrs") += L1b("pr") * L1b("qs");
+    //L2bb("pqrs") -= L1b("ps") * L1b("qr");
+
+    //// This may or may not be correct.  Really need to find a way to check this code
+    //ambit::Tensor gamma2aa = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
+    //ambit::Tensor gamma2ab = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
+    //gamma2aa("u,v,x,y") +=  L2aa("u,v,x, y");
+    //gamma2ab("u,v,x,y") +=  L2ab("u,v,x,y");
+    ////gamma2("u,v,x,y") +=  L2ab("v, u, y, x");
+    ////gamma2("u,v,x,y") +=  L2bb("u,v,x,y");
+    //gamma2("u, v, x, y") = gamma2aa("u, v, x, y") + gamma2ab("u, v, x, y");
+    //gamma2.scale(2.0);
+
+    double E_casscf = 0.0;
+
+    std::vector<size_t> nmo_array = mo_space_info_->get_absolute_mo("ALL");
+    std::vector<size_t> na_array = mo_space_info_->get_absolute_mo("ACTIVE");
+
+    ambit::Tensor tei_ab = ints_->aptei_ab_block(na_array, na_array, na_array, na_array);
+    for (size_t p = 0; p < na_array.size(); ++p){
+        for (size_t q = 0; q < na_array.size(); ++q){
+            E_casscf += gamma1.data()[na_ * p + q] * fci_ints->oei_a(p,q);
+        }
+    }
+
+    E_casscf += 0.5 * gamma2("u, v, x, y") * tei_ab("u, v, x, y");
+    E_casscf += ints_->frozen_core_energy();
+    E_casscf += fci_ints->scalar_energy();
+    E_casscf += Process::environment.molecule()->nuclear_repulsion_energy();
+    return E_casscf;
 
 }
 
