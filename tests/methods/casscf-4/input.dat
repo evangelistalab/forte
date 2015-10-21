@@ -1,0 +1,41 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf     = -15.59096672235
+refdsrgpt2   = -15.627184888920119 #TEST
+
+molecule {
+  0 1
+  Be        0.000000000000     0.000000000000     0.000000000000
+  H         0.000000000000     1.390000000000     2.500000000000
+  H         0.000000000000    -1.390000000000     2.500000000000
+  units bohr
+  no_reorient
+}
+
+set globals{
+   scf_type             out_of_core
+   d_convergence        10
+   e_convergence        10
+   basis                3-21g
+   restricted_docc                 [2,0,0,0]
+   active                          [1,0,0,1]
+   maxiter              20
+   reference            RHF
+   mcscf_type           conv
+}
+energy('casscf')
+clean()
+mints()
+
+set scf_type direct
+energy('scf')
+set forte{
+   CASSCF_REFERENCE    true
+   CASSCF_ITERATIONS   25
+   restricted_docc      [2,0,0,0]
+   active               [1,0,0,1]
+   int_type             conventional
+}
+energy('forte')
