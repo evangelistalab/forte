@@ -87,11 +87,13 @@ read_options(std::string name, Options &options)
          *  - ACI Adaptive configuration interaction
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
+         *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
+         *  - CASSCF     A AO based CASSCF code by Kevin Hannon
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
