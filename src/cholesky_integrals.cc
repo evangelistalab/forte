@@ -516,11 +516,18 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
     Timer FrozenOneBody;
 
     std::vector<size_t> frozen_dim_abs = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
-    SharedMatrix C_core(new Matrix("C_core",nmo_, frozen_dim_abs.size()));
+    Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
+    Dimension nmopi      = mo_space_info_->get_dimension("ALL");
+    SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi, frozen_dim));
     // Need to get the inactive block of the C matrix
-    for(size_t mu = 0; mu < nmo_; mu++){
-        for(size_t i = 0; i < frozen_dim_abs.size(); i++){
-            C_core->set(mu, i, Ca_->get(mu, frozen_dim_abs[i]));
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    SharedMatrix Ca = wfn->Ca();
+
+    for(size_t h = 0; h < nirrep_; h++){
+        for(size_t mu = 0; mu < nmopi[h]; mu++){
+            for(size_t i = 0; i < frozen_dim[h]; i++){
+                C_core->set(h, mu, i, Ca->get(h, mu, i));
+            }
         }
     }
     C_core->print();
@@ -529,7 +536,6 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
-    JK_core->set_allow_desymmetrization(false);
 
     /////TODO: Make this an option in my code
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
@@ -551,12 +557,16 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
-    F_core->transform(Ca_);
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = 0; q < nmo_; ++q){
-            one_electron_integrals_a[p * nmo_ + q] += F_core->get(p, q);
-            one_electron_integrals_b[p * nmo_ + q] += F_core->get(p ,q);
+    F_core->transform(Ca);
+    int offset = 0;
+    for(int h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi[h]; ++p){
+            for(int q = 0; q < nmopi[h]; ++q){
+                one_electron_integrals_a[(p + offset) * nmo_ + (q + offset)] += F_core->get(h, p, q);
+                one_electron_integrals_b[(p + offset) * nmo_ + (q + offset)] += F_core->get(h, p ,q);
+            }
         }
+        offset += nmopi[h];
     }
 
     ambit::BlockedTensor::reset_mo_spaces();
