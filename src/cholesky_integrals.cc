@@ -20,14 +20,14 @@
 
 using namespace ambit;
 
+namespace psi{ namespace forte{
+
 /**
      * @brief CholeskyIntegrals::CholeskyIntegrals
      * @param options - psi options class
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-namespace psi{ namespace forte{
-
 CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
@@ -305,7 +305,7 @@ void CholeskyIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
             // Builf Fock Diagonal alpha-alpha
             fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
+            for (size_t k = 0; k < ncmo_; ++k) {
                 if (Ia[k]) {
                     fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,k,q,k);
                 }
@@ -315,7 +315,7 @@ void CholeskyIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
             }
             fock_matrix_b[p * ncmo_ + q] = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
+            for (size_t k = 0; k < ncmo_; ++k) {
                 if (Ib[k]) {
                     fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,k,q,k);
                 }
@@ -335,7 +335,7 @@ void CholeskyIntegrals::make_fock_matrix(const boost::dynamic_bitset<>& Ia,const
             double fock_a_pq = oei_a(p,q);
             //            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
+            for (size_t k = 0; k < ncmo_; ++k) {
                 if (Ia[k]) {
                     fock_a_pq += aptei_aa(p,k,q,k);
                 }
@@ -346,7 +346,7 @@ void CholeskyIntegrals::make_fock_matrix(const boost::dynamic_bitset<>& Ia,const
             fock_matrix_a[p * ncmo_ + q] = fock_matrix_a[q * ncmo_ + p] = fock_a_pq;
             double fock_b_pq = oei_b(p,q);
             // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
+            for (size_t k = 0; k < ncmo_; ++k) {
                 if (Ib[k]) {
                     fock_b_pq += aptei_bb(p,k,q,k);
                 }
@@ -367,7 +367,7 @@ void CholeskyIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal_alpha[p] =  oei_a(p,p);// roei(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 //                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_alpha[p] += diag_aptei_aa(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -379,7 +379,7 @@ void CholeskyIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::ve
         }
         fock_diagonal_beta[p] =  oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ib[k]) {
                 //                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
                 fock_diagonal_beta[p] += diag_aptei_bb(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
@@ -398,7 +398,7 @@ void CholeskyIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<
         // Builf Fock Diagonal alpha-alpha
         fock_diagonal[p] = oei_a(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonal[p] += diag_aptei_aa(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
             }
@@ -414,7 +414,7 @@ void CholeskyIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<
     for(size_t p = 0; p < ncmo_; ++p){
         fock_diagonals[p] = oei_b(p,p);
         // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
+        for (size_t k = 0; k < ncmo_; ++k) {
             if (Ia[k]) {
                 fock_diagonals[p] += diag_aptei_ab(p,k);  //diag_c_rtei(p,k); //rtei(p,p,k,k);
             }
@@ -476,7 +476,7 @@ void CholeskyIntegrals::resort_three(boost::shared_ptr<Matrix>& threeint,std::ve
     threeint->copy(temp_threeint);
 }
 
-void CholeskyIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1, bool alpha2)
+void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool)
 {
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
@@ -523,9 +523,9 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
     SharedMatrix Ca = wfn->Ca();
 
-    for(size_t h = 0; h < nirrep_; h++){
-        for(size_t mu = 0; mu < nmopi[h]; mu++){
-            for(size_t i = 0; i < frozen_dim[h]; i++){
+    for(int h = 0; h < nirrep_; h++){
+        for(int mu = 0; mu < nmopi[h]; mu++){
+            for(int i = 0; i < frozen_dim[h]; i++){
                 C_core->set(h, mu, i, Ca->get(h, mu, i));
             }
         }
