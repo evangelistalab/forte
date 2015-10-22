@@ -106,6 +106,9 @@ private:
 
     void startup();
 
+    /// DEBUG PRINTING
+    bool casscf_debug_print_;
+
 
 };
 

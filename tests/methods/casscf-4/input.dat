@@ -1,9 +1,10 @@
 #! Generated using commit GITCOMMIT
+#! BeH2 with symmetry
 
 import forte
 
-refmcscf     = -15.59096672235
-refdsrgpt2   = -15.627184888920119 #TEST
+refscf     = -15.50490325102
+refcasscf  = -15.51070257217
 
 molecule {
   0 1
@@ -23,19 +24,21 @@ set globals{
    active                          [1,0,0,1]
    maxiter              20
    reference            RHF
-   mcscf_type           conv
 }
-energy('casscf')
-clean()
-mints()
+
+scf = energy('scf')
 
 set scf_type direct
-energy('scf')
 set forte{
    CASSCF_REFERENCE    true
    CASSCF_ITERATIONS   25
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
    int_type             conventional
+   cholesky_tolerance   1e-10
+   print                0
 }
-energy('forte')
+casscf = energy('forte')
+
+compare_values(refscf, scf, 8, "SCF ENERGY")
+compare_values(refcasscf, casscf, 6, "CASSCF ENERGY")
