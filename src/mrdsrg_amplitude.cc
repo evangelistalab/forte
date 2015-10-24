@@ -8,7 +8,211 @@
 
 namespace psi{ namespace forte{
 
-void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
+void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1){
+    // if fully decouple core-core-virtual-virtual block
+    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+
+    if (ccvv_source == "ZERO"){
+        guess_t2_noccvv(V, T2);
+        guess_t1_nocv(F, T2, T1);
+    } else if (ccvv_source == "NORMAL"){
+        guess_t2_std(V, T2);
+        guess_t1_std(F, T2, T1);
+    }
+}
+
+void MRDSRG::update_t(){
+    // if fully decouple core-core-virtual-virtual block
+    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    if (ccvv_source == "ZERO"){
+        update_t2_noccvv();
+        update_t1_nocv();
+    } else if (ccvv_source == "NORMAL"){
+        update_t2_std();
+        update_t1_std();
+    }
+}
+
+void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
+    Timer timer;
+    std::string str = "Computing T2 amplitudes ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
+
+    T2["ijab"] = V["ijab"];
+    T2["iJaB"] = V["iJaB"];
+    T2["IJAB"] = V["IJAB"];
+
+    switch (sourcemap[source_]){
+    case SOURCE::LABS:{
+        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (value != 0.0){
+                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                    t2aa_norm_ += value * value;
+                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                    t2ab_norm_ += value * value;
+                } else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                    t2bb_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+            }
+        });
+        break;
+    }
+    case SOURCE::DYSON:{
+        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (value != 0.0){
+                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                    value *= renormalized_denominator_dyson(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                    t2aa_norm_ += value * value;
+                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator_dyson(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                    t2ab_norm_ += value * value;
+                } else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator_dyson(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                    t2bb_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+            }
+        });
+        break;
+    }
+    default:{
+        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (value != 0.0){
+                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                    value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                    t2aa_norm_ += value * value;
+                }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                    t2ab_norm_ += value * value;
+                }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                    value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                    t2bb_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+            }
+        });
+    }}
+
+    // zero internal amplitudes
+    T2.block("aaaa").iterate([&](const std::vector<size_t>& i,double& value){
+        t2aa_norm_ -= value * value;
+        value = 0.0;
+    });
+    T2.block("aAaA").iterate([&](const std::vector<size_t>& i,double& value){
+        t2ab_norm_ -= value * value;
+        value = 0.0;
+    });
+    T2.block("AAAA").iterate([&](const std::vector<size_t>& i,double& value){
+        t2bb_norm_ -= value * value;
+        value = 0.0;
+    });
+
+    // norms
+    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
+    t2aa_norm_ = std::sqrt(t2aa_norm_);
+    t2ab_norm_ = std::sqrt(t2ab_norm_);
+    t2bb_norm_ = std::sqrt(t2bb_norm_);
+    T2rms_ = 0.0;
+
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
+
+void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1){
+    Timer timer;
+    std::string str = "Computing T1 amplitudes ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
+
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aa"}));
+    temp["xu"] = Gamma1_["xu"];
+    temp["XU"] = Gamma1_["XU"];
+    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value *= Fa_[i[0]] - Fa_[i[1]];
+        }else{
+            value *= Fb_[i[0]] - Fb_[i[1]];
+        }
+    });
+
+    T1["ia"]  = F["ia"];
+    T1["ia"] += temp["xu"] * T2["iuax"];
+    T1["ia"] += temp["XU"] * T2["iUaX"];
+
+    T1["IA"]  = F["IA"];
+    T1["IA"] += temp["xu"] * T2["uIxA"];
+    T1["IA"] += temp["XU"] * T2["IUAX"];
+
+    switch (sourcemap[source_]){
+    case SOURCE::LABS:{
+        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if(value != 0.0){
+                if (spin[0]  == AlphaSpin){
+                    value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
+                    t1a_norm_ += value * value;
+                }else{
+                    value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
+                    t1b_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+            }
+        });
+        break;
+    }
+    case SOURCE::DYSON:{
+        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if(value != 0.0){
+                if (spin[0]  == AlphaSpin){
+                    value *= renormalized_denominator_dyson(Fa_[i[0]] - Fa_[i[1]]);
+                    t1a_norm_ += value * value;
+                }else{
+                    value *= renormalized_denominator_dyson(Fb_[i[0]] - Fb_[i[1]]);
+                    t1b_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+            }
+        });
+        break;
+    }
+    default:{
+        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if(value != 0.0){
+                if (spin[0]  == AlphaSpin){
+                    value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+                    t1a_norm_ += value * value;
+                }else{
+                    value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+                    t1b_norm_ += value * value;
+                }
+                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+            }
+        });
+    }}
+
+    // zero internal amplitudes
+    T1.block("aa").iterate([&](const std::vector<size_t>& i,double& value){
+        t1a_norm_ -= value * value;
+        value = 0.0;
+    });
+    T1.block("AA").iterate([&](const std::vector<size_t>& i,double& value){
+        t1b_norm_ -= value * value;
+        value = 0.0;
+    });
+
+    // norms
+    T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
+    t1a_norm_ = std::sqrt(t1a_norm_);
+    t1b_norm_ = std::sqrt(t1b_norm_);
+    T1rms_ = 0.0;
+
+    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+}
+
+void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2)
 {
     Timer timer;
     std::string str = "Computing T2 amplitudes ...";
@@ -19,115 +223,77 @@ void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
     T2["iJaB"] = V["iJaB"];
     T2["IJAB"] = V["IJAB"];
 
-    // if fully decouple core-core-virtual-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    // labels for ccvv blocks and the rest blocks
+    std::vector<std::string> cv_blocks {acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
+                acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
+                bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
+    std::vector<std::string> other_blocks (T2.block_labels());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
+            other_blocks.end());
 
-    if (ccvv_source == "ZERO"){
-        std::vector<std::string> cv_blocks {acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
-                    acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
-                    bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
-        std::vector<std::string> other_blocks (T2.block_labels());
-        other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
-                                          [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
-                other_blocks.end());
+    // map spin with Fock matrices
+    std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
-        // map spin with Fock matrices
-        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
+    // ccvv blocks
+    for(const std::string& block: cv_blocks){
+        // spin
+        bool spin0 = islower(block[0]);
+        bool spin1 = islower(block[1]);
 
-        // ccvv blocks
-        for(const std::string& block: cv_blocks){
-            // spin
-            bool spin0 = islower(block[0]);
-            bool spin1 = islower(block[1]);
+        // diagonal Fock matrix elements
+        const std::vector<double>& F0 = Fock_spin[spin0];
+        const std::vector<double>& F1 = Fock_spin[spin1];
 
-            // diagonal Fock matrix elements
-            const std::vector<double>& F0 = Fock_spin[spin0];
-            const std::vector<double>& F1 = Fock_spin[spin1];
+        T2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
+            if (spin0 && spin1){
+                t2aa_norm_ += value * value;
+            }else if (spin0 && !spin1){
+                t2ab_norm_ += value * value;
+            }else if (!spin0 && !spin1){
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
+    }
 
-            T2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-                if (spin0 && spin1){
-                    t2aa_norm_ += value * value;
-                }else if (spin0 && !spin1){
-                    t2ab_norm_ += value * value;
-                }else if (!spin0 && !spin1){
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
-        }
+    // other blocks
+    for(const std::string& block: other_blocks){
+        // spin
+        bool spin0 = islower(block[0]);
+        bool spin1 = islower(block[1]);
 
-        // other blocks
-        for(const std::string& block: other_blocks){
-            // spin
-            bool spin0 = islower(block[0]);
-            bool spin1 = islower(block[1]);
+        // diagonal Fock matrix elements
+        const std::vector<double>& F0 = Fock_spin[spin0];
+        const std::vector<double>& F1 = Fock_spin[spin1];
 
-            // diagonal Fock matrix elements
-            const std::vector<double>& F0 = Fock_spin[spin0];
-            const std::vector<double>& F1 = Fock_spin[spin1];
+        T2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            if (source_ == "LABS"){
+                value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }else if (source_ == "DYSON"){
+                value *= renormalized_denominator_dyson(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }else{
+                value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }
 
-            T2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                if (source_ == "LABS"){
-                    value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-                }else{
-                    value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-                }
-
-                if (spin0 && spin1){
-                    t2aa_norm_ += value * value;
-                }else if (spin0 && !spin1){
-                    t2ab_norm_ += value * value;
-                }else if (!spin0 && !spin1){
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
-        }
-    }else if (ccvv_source == "NORMAL"){
-        if (source_ == "LABS"){
-            T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if (value != 0.0){
-                    if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                        value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                        t2aa_norm_ += value * value;
-                    }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                        value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                        t2ab_norm_ += value * value;
-                    }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                        value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                        t2bb_norm_ += value * value;
-                    }
-
-                    if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-                }
-            });
-        }else{
-            T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if (value != 0.0){
-                    if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                        value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                        t2aa_norm_ += value * value;
-                    }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                        value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                        t2ab_norm_ += value * value;
-                    }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                        value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                        t2bb_norm_ += value * value;
-                    }
-
-                    if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-                }
-            });
-        }
+            if (spin0 && spin1){
+                t2aa_norm_ += value * value;
+            }else if (spin0 && !spin1){
+                t2ab_norm_ += value * value;
+            }else if (!spin0 && !spin1){
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
     }
 
     // zero internal amplitudes
@@ -154,7 +320,7 @@ void MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2)
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
+void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
 {
     Timer timer;
     std::string str = "Computing T1 amplitudes ...";
@@ -180,89 +346,57 @@ void MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     T1["IA"] += temp["xu"] * T2["uIxA"];
     T1["IA"] += temp["XU"] * T2["IUAX"];
 
-    // if fully decouple core-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    // labels for ccvv blocks and the rest blocks
+    std::vector<std::string> cv_blocks {acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
+    std::vector<std::string> other_blocks (T1.block_labels());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
+            other_blocks.end());
 
-    if (ccvv_source == "ZERO"){
-        std::vector<std::string> cv_blocks {acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
-        std::vector<std::string> other_blocks (T1.block_labels());
-        other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
-                                          [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
-                other_blocks.end());
+    // map spin with Fock matrices
+    std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
-        // map spin with Fock matrices
-        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
+    // cv blocks
+    for(const std::string& block: cv_blocks){
+        bool spin0 = islower(block[0]);
+        const std::vector<double>& F0 = Fock_spin[spin0];
 
-        // cv blocks
-        for(const std::string& block: cv_blocks){
-            bool spin0 = islower(block[0]);
-            const std::vector<double>& F0 = Fock_spin[spin0];
+        T1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value /= F0[i0] - F0[i1];
+            if (spin0){
+                t1a_norm_ += value * value;
+            }else if (!spin0){
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
+    }
 
-            T1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                value /= F0[i0] - F0[i1];
-                if (spin0){
-                    t1a_norm_ += value * value;
-                }else if (!spin0){
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }
+    // other blocks
+    for(const std::string& block: other_blocks){
+        bool spin0 = islower(block[0]);
+        const std::vector<double>& F0 = Fock_spin[spin0];
 
-        // other blocks
-        for(const std::string& block: other_blocks){
-            bool spin0 = islower(block[0]);
-            const std::vector<double>& F0 = Fock_spin[spin0];
+        T1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            if (source_ == "LABS"){
+                value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
+            }else if (source_ == "DYSON"){
+                value *= renormalized_denominator_dyson(F0[i0] - F0[i1]);
+            }else{
+                value *= renormalized_denominator(F0[i0] - F0[i1]);
+            }
 
-            T1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                if (source_ == "LABS"){
-                    value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
-                }else{
-                    value *= renormalized_denominator(F0[i0] - F0[i1]);
-                }
-
-                if (spin0){
-                    t1a_norm_ += value * value;
-                }else if (!spin0){
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }
-    }else if (ccvv_source == "NORMAL"){
-        if (source_ == "LABS"){
-            T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if(value != 0.0){
-                    if (spin[0]  == AlphaSpin){
-                        value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
-                        t1a_norm_ += value * value;
-                    }else{
-                        value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
-                        t1b_norm_ += value * value;
-                    }
-
-                    if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-                }
-            });
-        }else{
-            T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if(value != 0.0){
-                    if (spin[0]  == AlphaSpin){
-                        value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                        t1a_norm_ += value * value;
-                    }else{
-                        value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                        t1b_norm_ += value * value;
-                    }
-
-                    if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-                }
-            });
-        }
+            if (spin0){
+                t1a_norm_ += value * value;
+            }else if (!spin0){
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
     }
 
     // zero internal amplitudes
@@ -284,7 +418,7 @@ void MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
 
-void MRDSRG::update_t2(){
+void MRDSRG::update_t2_std(){
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     // create a temporary tensor
@@ -305,111 +439,265 @@ void MRDSRG::update_t2(){
     R2["iJaB"] += Hbar2_["iJaB"];
     R2["IJAB"] += Hbar2_["IJAB"];
 
-    // if fully decouple core-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    switch (sourcemap[source_]){
+    case SOURCE::LABS:{
+        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                t2aa_norm_ += value * value;
+            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                t2ab_norm_ += value * value;
+            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
+        break;
+    }
+    case SOURCE::DYSON:{
+        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                value *= renormalized_denominator_dyson(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                t2aa_norm_ += value * value;
+            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator_dyson(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                t2ab_norm_ += value * value;
+            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator_dyson(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
+        break;
+    }
+    default:{
+        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                t2aa_norm_ += value * value;
+            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                t2ab_norm_ += value * value;
+            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                t2bb_norm_ += value * value;
+            }
 
-    if (ccvv_source == "ZERO"){
-        std::vector<std::string> cv_blocks {acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
-                    acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
-                    bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
-        std::vector<std::string> other_blocks (R2.block_labels());
-        other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
-                                          [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
-                other_blocks.end());
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
+    }}
 
-        // map spin with Fock matrices
-        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
+    // zero internal amplitudes
+    R2.block("aaaa").iterate([&](const std::vector<size_t>& i,double& value){
+        t2aa_norm_ -= value * value;
+        value = 0.0;
+    });
+    R2.block("aAaA").iterate([&](const std::vector<size_t>& i,double& value){
+        t2ab_norm_ -= value * value;
+        value = 0.0;
+    });
+    R2.block("AAAA").iterate([&](const std::vector<size_t>& i,double& value){
+        t2bb_norm_ -= value * value;
+        value = 0.0;
+    });
 
-        // ccvv blocks
-        for(const std::string& block: cv_blocks){
-            // spin
-            bool spin0 = islower(block[0]);
-            bool spin1 = islower(block[1]);
+    // compute RMS
+    DT2_["ijab"] = T2_["ijab"] - R2["ijab"];
+    DT2_["iJaB"] = T2_["iJaB"] - R2["iJaB"];
+    DT2_["IJAB"] = T2_["IJAB"] - R2["IJAB"];
+    T2rms_ = DT2_.norm();
 
-            // diagonal Fock matrix elements
-            const std::vector<double>& F0 = Fock_spin[spin0];
-            const std::vector<double>& F1 = Fock_spin[spin1];
+    // copy R2 to T2
+    T2_["ijab"] = R2["ijab"];
+    T2_["iJaB"] = R2["iJaB"];
+    T2_["IJAB"] = R2["IJAB"];
 
-            R2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-                if (spin0 && spin1){
-                    t2aa_norm_ += value * value;
-                }else if (spin0 && !spin1){
-                    t2ab_norm_ += value * value;
-                }else if (!spin0 && !spin1){
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
-        }
+    // norms
+    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
+    t2aa_norm_ = std::sqrt(t2aa_norm_);
+    t2ab_norm_ = std::sqrt(t2ab_norm_);
+    t2bb_norm_ = std::sqrt(t2bb_norm_);
+}
 
-        // other blocks
-        for(const std::string& block: other_blocks){
-            // spin
-            bool spin0 = islower(block[0]);
-            bool spin1 = islower(block[1]);
+void MRDSRG::update_t1_std(){
+    T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
-            // diagonal Fock matrix elements
-            const std::vector<double>& F0 = Fock_spin[spin0];
-            const std::vector<double>& F1 = Fock_spin[spin1];
-
-            R2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                size_t i2 = label_to_spacemo_[block[2]][i[2]];
-                size_t i3 = label_to_spacemo_[block[3]][i[3]];
-                if (source_ == "LABS"){
-                    value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-                }else{
-                    value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-                }
-
-                if (spin0 && spin1){
-                    t2aa_norm_ += value * value;
-                }else if (spin0 && !spin1){
-                    t2ab_norm_ += value * value;
-                }else if (!spin0 && !spin1){
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
-        }
-    }else if (ccvv_source == "NORMAL"){
-        if (source_ == "LABS"){
-            R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    t2aa_norm_ += value * value;
-                }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    t2ab_norm_ += value * value;
-                }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    t2bb_norm_ += value * value;
-                }
-
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
+    // create a temporary tensor
+    BlockedTensor R1 = ambit::BlockedTensor::build(tensor_type_,"R1",spin_cases({"hp"}));
+    R1["ia"] = T1_["ia"];
+    R1["IA"] = T1_["IA"];
+    R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value *= Fa_[i[0]] - Fa_[i[1]];
         }else{
-            R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                    value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    t2aa_norm_ += value * value;
-                }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    t2ab_norm_ += value * value;
-                }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    t2bb_norm_ += value * value;
-                }
-
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            });
+            value *= Fb_[i[0]] - Fb_[i[1]];
         }
+    });
+    R1["ia"] += Hbar1_["ia"];
+    R1["IA"] += Hbar1_["IA"];
+
+    switch (sourcemap[source_]){
+    case SOURCE::LABS:{
+        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0] == AlphaSpin){
+                value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
+                t1a_norm_ += value * value;
+            }else{
+                value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
+                t1b_norm_ += value * value;
+            }
+
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
+        break;
+    }
+    case SOURCE::DYSON:{
+        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0] == AlphaSpin){
+                value *= renormalized_denominator_dyson(Fa_[i[0]] - Fa_[i[1]]);
+                t1a_norm_ += value * value;
+            }else{
+                value *= renormalized_denominator_dyson(Fb_[i[0]] - Fb_[i[1]]);
+                t1b_norm_ += value * value;
+            }
+
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
+        break;
+    }
+    default:{
+        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+            if (spin[0] == AlphaSpin){
+                value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+                t1a_norm_ += value * value;
+            }else{
+                value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+                t1b_norm_ += value * value;
+            }
+
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
+    }}
+
+    // zero internal amplitudes
+    R1.block("aa").iterate([&](const std::vector<size_t>& i,double& value){
+        t1a_norm_ -= value * value;
+        value = 0.0;
+    });
+    R1.block("AA").iterate([&](const std::vector<size_t>& i,double& value){
+        t1b_norm_ -= value * value;
+        value = 0.0;
+    });
+
+    // compute RMS
+    DT1_["ia"] = T1_["ia"] - R1["ia"];
+    DT1_["IA"] = T1_["IA"] - R1["IA"];
+    T1rms_ = DT1_.norm();
+
+    // copy R1 to T1
+    T1_["ia"] = R1["ia"];
+    T1_["IA"] = R1["IA"];
+
+    // norms
+    T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
+    t1a_norm_ = std::sqrt(t1a_norm_);
+    t1b_norm_ = std::sqrt(t1b_norm_);
+}
+
+void MRDSRG::update_t2_noccvv(){
+    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
+
+    // create a temporary tensor
+    BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_,"R2",spin_cases({"hhpp"}));
+    R2["ijab"] = T2_["ijab"];
+    R2["iJaB"] = T2_["iJaB"];
+    R2["IJAB"] = T2_["IJAB"];
+    R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            value *= Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            value *= Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            value *= Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]];
+        }
+    });
+    R2["ijab"] += Hbar2_["ijab"];
+    R2["iJaB"] += Hbar2_["iJaB"];
+    R2["IJAB"] += Hbar2_["IJAB"];
+
+    // block labels
+    std::vector<std::string> cv_blocks {acore_label_ + acore_label_ + avirt_label_ + avirt_label_,
+                acore_label_ + bcore_label_ + avirt_label_ + bvirt_label_,
+                bcore_label_ + bcore_label_ + bvirt_label_ + bvirt_label_};
+    std::vector<std::string> other_blocks (R2.block_labels());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
+            other_blocks.end());
+
+    // map spin with Fock matrices
+    std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
+
+    // ccvv blocks
+    for(const std::string& block: cv_blocks){
+        // spin
+        bool spin0 = islower(block[0]);
+        bool spin1 = islower(block[1]);
+
+        // diagonal Fock matrix elements
+        const std::vector<double>& F0 = Fock_spin[spin0];
+        const std::vector<double>& F1 = Fock_spin[spin1];
+
+        R2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
+            if (spin0 && spin1){
+                t2aa_norm_ += value * value;
+            }else if (spin0 && !spin1){
+                t2ab_norm_ += value * value;
+            }else if (!spin0 && !spin1){
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
+    }
+
+    // other blocks
+    for(const std::string& block: other_blocks){
+        // spin
+        bool spin0 = islower(block[0]);
+        bool spin1 = islower(block[1]);
+
+        // diagonal Fock matrix elements
+        const std::vector<double>& F0 = Fock_spin[spin0];
+        const std::vector<double>& F1 = Fock_spin[spin1];
+
+        R2.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            if (source_ == "LABS"){
+                value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }else if (source_ == "DYSON"){
+                value *= renormalized_denominator_dyson(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }else{
+                value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
+            }
+
+            if (spin0 && spin1){
+                t2aa_norm_ += value * value;
+            }else if (spin0 && !spin1){
+                t2ab_norm_ += value * value;
+            }else if (!spin0 && !spin1){
+                t2bb_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        });
     }
 
     // zero internal amplitudes
@@ -444,7 +732,7 @@ void MRDSRG::update_t2(){
     t2bb_norm_ = std::sqrt(t2bb_norm_);
 }
 
-void MRDSRG::update_t1(){
+void MRDSRG::update_t1_nocv(){
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
     // create a temporary tensor
@@ -461,85 +749,57 @@ void MRDSRG::update_t1(){
     R1["ia"] += Hbar1_["ia"];
     R1["IA"] += Hbar1_["IA"];
 
-    // if fully decouple core-virtual block
-    std::string ccvv_source = options_.get_str("CCVV_SOURCE");
+    // block labels
+    std::vector<std::string> cv_blocks {acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
+    std::vector<std::string> other_blocks (R1.block_labels());
+    other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
+                                      [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
+            other_blocks.end());
 
-    if (ccvv_source == "ZERO"){
-        std::vector<std::string> cv_blocks {acore_label_ + avirt_label_, bcore_label_ + bvirt_label_};
-        std::vector<std::string> other_blocks (R1.block_labels());
-        other_blocks.erase(std::remove_if(other_blocks.begin(), other_blocks.end(),
-                                          [&](std::string i) {return std::find(cv_blocks.begin(), cv_blocks.end(), i) != cv_blocks.end();}),
-                other_blocks.end());
+    // map spin with Fock matrices
+    std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
 
-        // map spin with Fock matrices
-        std::map<bool, const std::vector<double>> Fock_spin {{true, Fa_}, {false, Fb_}};
+    // cv blocks
+    for(const std::string& block: cv_blocks){
+        bool spin0 = islower(block[0]);
+        const std::vector<double>& F0 = Fock_spin[spin0];
 
-        // cv blocks
-        for(const std::string& block: cv_blocks){
-            bool spin0 = islower(block[0]);
-            const std::vector<double>& F0 = Fock_spin[spin0];
+        R1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value /= F0[i0] - F0[i1];
+            if (spin0){
+                t1a_norm_ += value * value;
+            }else if (!spin0){
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
+    }
 
-            R1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                value /= F0[i0] - F0[i1];
-                if (spin0){
-                    t1a_norm_ += value * value;
-                }else if (!spin0){
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }
+    // other blocks
+    for(const std::string& block: other_blocks){
+        bool spin0 = islower(block[0]);
+        const std::vector<double>& F0 = Fock_spin[spin0];
 
-        // other blocks
-        for(const std::string& block: other_blocks){
-            bool spin0 = islower(block[0]);
-            const std::vector<double>& F0 = Fock_spin[spin0];
+        R1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            if (source_ == "LABS"){
+                value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
+            }else if (source_ == "DYSON"){
+                value *= renormalized_denominator_dyson(F0[i0] - F0[i1]);
+            }else{
+                value *= renormalized_denominator(F0[i0] - F0[i1]);
+            }
 
-            R1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
-                size_t i0 = label_to_spacemo_[block[0]][i[0]];
-                size_t i1 = label_to_spacemo_[block[1]][i[1]];
-                if (source_ == "LABS"){
-                    value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
-                }else{
-                    value *= renormalized_denominator(F0[i0] - F0[i1]);
-                }
-
-                if (spin0){
-                    t1a_norm_ += value * value;
-                }else if (!spin0){
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }
-    }else if (ccvv_source == "NORMAL"){
-        if (source_ == "LABS"){
-            R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if (spin[0] == AlphaSpin){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
-                    t1a_norm_ += value * value;
-                }else{
-                    value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
-                    t1b_norm_ += value * value;
-                }
-
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }else{
-            R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if (spin[0] == AlphaSpin){
-                    value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                    t1a_norm_ += value * value;
-                }else{
-                    value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                    t1b_norm_ += value * value;
-                }
-
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            });
-        }
+            if (spin0){
+                t1a_norm_ += value * value;
+            }else if (!spin0){
+                t1b_norm_ += value * value;
+            }
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        });
     }
 
     // zero internal amplitudes
@@ -788,6 +1048,8 @@ void MRDSRG::print_amp_summary(const std::string& name,
         summary += blank + strnorm;
 
         output = title + spin_title + mo_title + line + output + line + summary + line;
+    }else{
+        output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
 }

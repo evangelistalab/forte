@@ -580,6 +580,7 @@ double DynamicBitsetDeterminant::spin2_slow(const DynamicBitsetDeterminant& rhs)
         double sz = spin_z();
         s2 += sz * (sz + 1.0);
     }
+    return s2;
 }
 
 double DynamicBitsetDeterminant::slater_sign_alpha(int n) const

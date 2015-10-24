@@ -36,14 +36,16 @@ public:
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
+     * @param semi_canoicalize_orbitals Avoid this if running CASSCF
      */
-    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize = true);
 
     /// Destructor
     ~FCI_MO();
 
     /// Returns the reference object
     Reference reference();
+
 
 protected:
     /// Basic Preparation
@@ -129,6 +131,8 @@ protected:
 
     /// semi-canonicalize
     void semi_canonicalize();
+    /// turn off semi-canonicalize for CASSCF computation
+    bool semi_canonicalize_orbs_ = true;
 
     /// Density Matrix
     d2 Da_;
@@ -144,6 +148,10 @@ protected:
     ambit::Tensor L2aa;
     ambit::Tensor L2ab;
     ambit::Tensor L2bb;
+    /// 2-Body density matrix
+    ambit::Tensor ga2aa_;
+    ambit::Tensor g2bb_;
+    ambit::Tensor g2ab_;
     void fill_cumulant2();
 
     /// 3-Body Density Cumulant

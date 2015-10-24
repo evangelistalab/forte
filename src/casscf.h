@@ -12,12 +12,6 @@
 
 namespace psi{ namespace forte{
 
-/*
- * For the first implementation of this method, I will just try and get it to work with DF.
- *
- *
- */
-
 class CASSCF
 {
 public:
@@ -105,10 +99,15 @@ private:
     void orbital_gradient();
     /// Assemble the diagonal Hessian (20-22)
     void diagonal_hessian();
-    /// SOSCF_PSI
-    void SOSCF_PSI();
+    /// check the cas_ci energy with spin-free RDM
+    double cas_check(Reference cas);
+    /// Make C_matrix symmetry aware from SO C
+    boost::shared_ptr<Matrix> make_c_sym_aware();
 
     void startup();
+
+    /// DEBUG PRINTING
+    bool casscf_debug_print_;
 
 
 };
