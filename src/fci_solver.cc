@@ -419,11 +419,14 @@ double FCISolver::compute_energy()
         }
     }
 
+
     // Compute the RDMs
     if (converged == SolverStatus::Converged){
         C_->copy(dls.eigenvector(root_));
         if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",root_);
         C_->compute_rdms(max_rdm_level_);
+
+        if(print_ > 1){C_->energy_from_rdms(fci_ints);}
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
@@ -492,8 +495,8 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             H.set(J,I,HIJ);
         }
     }
+    H.diagonalize(evecs, evals);
 
-    H.diagonalize(evecs,evals);
 
     std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>> guess;
 
@@ -568,6 +571,9 @@ Reference FCISolver::reference()
     ambit::Tensor L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{nact,nact,nact,nact});
     ambit::Tensor L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{nact,nact,nact,nact});
     ambit::Tensor L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{nact,nact,nact,nact});
+    ambit::Tensor g2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{nact,nact,nact,nact});
+    ambit::Tensor g2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{nact,nact,nact,nact});
+    ambit::Tensor g2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{nact,nact,nact,nact});
 
     if (na_ >= 2){
         std::vector<double>& tpdm_aa = C_->tpdm_aa();
@@ -584,6 +590,10 @@ Reference FCISolver::reference()
         L2bb.iterate([&](const::vector<size_t>& i,double& value){
             value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
     }
+    g2aa.copy(L2aa);
+    g2ab.copy(L2ab);
+    g2bb.copy(L2bb);
+
 
     // Convert the 2-RDMs to 2-RCMs
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
@@ -716,6 +726,9 @@ Reference FCISolver::reference()
         }
 
     Reference fci_ref(energy_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
+    fci_ref.set_g2aa(g2aa);
+    fci_ref.set_g2ab(g2ab);
+    fci_ref.set_g2bb(g2bb);
     return fci_ref;
 }
 

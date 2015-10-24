@@ -20,9 +20,11 @@ units angstrom
 }
 
 set global{
-scf_type  pk
-basis def2-tzvp
-reference ROHF
+    e_convergence 1e-10
+    d_convergence 1e-10
+    scf_type  pk
+    basis def2-tzvp
+    reference ROHF
 }
 
 scf_first = energy('scf')
@@ -36,6 +38,7 @@ multiplicity 3
 root_sym     5
 ms           0
 cas_type     FCI
+e_convergence 1e-10
 }
 
 triplet = energy('forte')
@@ -56,6 +59,6 @@ cas_type     FCI
 }
 singlet = energy('forte')
 fci_split = (singlet - triplet) * 219474.63
-compare_values(ref_split, fci_split, 5, "FCI splitting")
+compare_values(ref_split, fci_split, 3, "FCI splitting")
 
 

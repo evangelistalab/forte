@@ -87,11 +87,13 @@ read_options(std::string name, Options &options)
          *  - ACI Adaptive configuration interaction
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
+         *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
+         *  - CASSCF     A AO based CASSCF code by Kevin Hannon
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -264,7 +266,11 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_REFERENCE", false);
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 10);
+        /* - The convergence for the energy for casscf -*/
         options.add_double("CASSCF_CONVERGENCE", 1e-6);
+        /* - Debug printing for CASSCF -*/
+        options.add_bool("CASSCF_DEBUG_PRINTING", false);
+
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
@@ -318,6 +324,10 @@ read_options(std::string name, Options &options)
 		options.add_bool("DETERMINANT_HISTORY", false);
 		/*- Save determinants to file? -*/
 		options.add_bool("SAVE_DET_FILE", false);
+		/*- Screen Virtuals? -*/
+		options.add_bool("SCREEN_VIRTUALS", false);
+		/*- Perform size extensivity correction -*/
+		options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -435,14 +445,12 @@ read_options(std::string name, Options &options)
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
 
         //////////////////////////////////////////////////////////////
-        ///
         ///              OPTIONS FOR THE MR-DSRG MODULE
-        ///
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
         options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 CEPA0");
         /*- Source Operator -*/
-        options.add_str("SOURCE", "STANDARD", "STANDARD LABS AMP EMP2 LAMP LEMP2");
+        options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
         /*- Reference Relaxation -*/
@@ -457,6 +465,8 @@ read_options(std::string name, Options &options)
         options.add_double("INTRUDER_TAMP", 0.10);
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
+        /*- Automatic Adjusting Flow Parameter -*/
+        options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Zero T1 Amplitudes -*/
@@ -500,8 +510,12 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
         ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
-    }else {
+    }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }
+    else{
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
+        throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
     // Link the integrals to the DynamicBitsetDeterminant class
@@ -516,7 +530,7 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        MP2_NOS mp2_nos(wfn,options,ints_, mo_space_info);
+        auto mp2_nos = std::make_shared<MP2_NOS>(wfn,options,ints_, mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
@@ -550,18 +564,45 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        FCI_MO fci_mo(options,ints_,mo_space_info);
-        Reference reference = fci_mo.reference();
 
-        std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
-        if(options.get_str("RELAX_REF") == "NONE"){
-            mrdsrg->compute_energy();
-        }else{
-            if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
-                throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+        std::string cas_type = options.get_str("CAS_TYPE");
+        if (cas_type == "CAS") {
+            FCI_MO fci_mo(options,ints_,mo_space_info);
+            Reference reference = fci_mo.reference();
+
+            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                mrdsrg->compute_energy();
+            }else{
+                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                }
+                mrdsrg->compute_energy_relaxed();
             }
-            mrdsrg->compute_energy_relaxed();
+        } else if (cas_type == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+
+            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                mrdsrg->compute_energy();
+            }else{
+                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                }
+                mrdsrg->compute_energy_relaxed();
+            }
         }
+
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
         FCI_MO fci_mo(options,ints_,mo_space_info);

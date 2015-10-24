@@ -118,8 +118,13 @@ protected:
 
     /// The flow parameter
     double s_;
+
     /// Source operator
     std::string source_;
+    enum class SOURCE {STANDARD, LABS, DYSON, AMP, EMP2, LAMP, LEMP2};
+    std::map<std::string, SOURCE> sourcemap =
+            boost::assign::map_list_of("STANDARD", SOURCE::STANDARD)("LABS", SOURCE::LABS)("DYSON", SOURCE::DYSON)
+            ("AMP", SOURCE::AMP)("LAMP", SOURCE::LAMP)("EMP2", SOURCE::EMP2)("LEMP2",SOURCE::LEMP2);
 
     /// Smaller than which we will do Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
@@ -161,13 +166,32 @@ protected:
     /// Renormalize denominator
     double renormalized_denominator(const double& D);
     double renormalized_denominator_labs(const double& D);
+    double renormalized_denominator_dyson(const double& D) {return s_ * D / (1.0 + s_ * D * D);}
 //    double renormalized_denominator_amp(double V,double D);
 //    double renormalized_denominator_emp2(double V,double D);
 //    double renormalized_denominator_lamp(double V,double D);
 //    double renormalized_denominator_lemp2(double V,double D);
 
+    /// Automatic adjust the flow parameter
+    enum class SMART_S {DSRG_S, MIN_DELTA1, MAX_DELTA1, DAVG_MIN_DELTA1, DAVG_MAX_DELTA1};
+    std::map<std::string, SMART_S> smartsmap =
+            boost::assign::map_list_of("DSRG_S", SMART_S::DSRG_S)
+            ("MIN_DELTA1", SMART_S::MIN_DELTA1)("DAVG_MIN_DELTA1", SMART_S::DAVG_MIN_DELTA1)
+            ("MAX_DELTA1", SMART_S::MAX_DELTA1)("DAVG_MAX_DELTA1", SMART_S::DAVG_MAX_DELTA1);
+    /// Automatic adjusting the flow parameter
+    double make_s_smart();
+    /// Algorithm to compute energy threshold according to Delta1
+    double smart_s_min_delta1();
+    double smart_s_max_delta1();
+    double smart_s_davg_min_delta1();
+    double smart_s_davg_max_delta1();
+
     /// Algorithm for computing amplitudes
     std::string T_algor_;
+    /// Initial guess of T amplitudes
+    void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
+    /// Update T amplitude in every iteration
+    void update_t();
     /// Analyze T1 and T2 amplitudes
     void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
 
@@ -180,12 +204,14 @@ protected:
     double t2bb_norm_;
     /// Signed max of T2
     double T2max_;
-    /// Initial guess of T2
-    void guess_t2(BlockedTensor& V, BlockedTensor& T2);
-    /// Update T2 in every iteration
-    void update_t2();
     /// Check T2 and store the largest amplitudes
     void check_t2(BlockedTensor& T2);
+    /// Initial guess of T2
+    void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
+    void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
+    /// Update T2 in every iteration
+    void update_t2_std();
+    void update_t2_noccvv();
 
     /// RMS of T1
     double T1rms_;
@@ -195,12 +221,14 @@ protected:
     double t1b_norm_;
     /// Signed max of T1
     double T1max_;
-    /// Initial guess of T1
-    void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
-    /// Update T1 in every iteration
-    void update_t1();
     /// Check T1 and store the largest amplitudes
     void check_t1(BlockedTensor& T1);
+    /// Initial guess of T1
+    void guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
+    void guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
+    /// Update T1 in every iteration
+    void update_t1_std();
+    void update_t1_nocv();
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
@@ -320,7 +348,7 @@ protected:
     // => Useful Inline functions <= //
 
     /// Return exp(-s * D^2)
-    double renormalized_exp(double D) {return std::exp(-s_ * std::pow(D, 2.0));}
+    double renormalized_exp(const double& D) {return std::exp(-s_ * std::pow(D, 2.0));}
     /// Taylor Expansion of [1 - exp(- Z^2)] / Z
     double Taylor_Exp(const double& Z, const int& n){
         if(n > 0){
@@ -334,7 +362,7 @@ protected:
     }
 
     /// Return exp(-s * |D|)
-    double renormalized_exp_linear(double D) {return std::exp(-s_ * std::fabs(D));}
+    double renormalized_exp_linear(const double& D) {return std::exp(-s_ * std::fabs(D));}
     /// Taylor Expansion of [1 - exp(-|Z|)] / Z
     double Taylor_Exp_Linear(const double& Z, const int& n){
         double Zabs = std::fabs(Z);
@@ -351,6 +379,9 @@ protected:
             }
         }else{return 0.0;}
     }
+
+    /// Return 1.0 / (1.0 + s * D^2)
+    double renormalized_dyson(const double& D) {return 1.0 / (1.0 + s_ * D * D);}
 };
 
 }}

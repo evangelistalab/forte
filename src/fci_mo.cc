@@ -13,11 +13,12 @@ namespace psi{ namespace forte{
 
 
 
-FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : integral_(ints), mo_space_info_(mo_space_info) 
+FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize_orbs)
+    : integral_(ints), mo_space_info_(mo_space_info)
 {
     // basic preparation: form determinants
     startup(options);
+    semi_canonicalize_orbs_ = semi_canonicalize_orbs;
 
     // diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
@@ -61,7 +62,7 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
     }
 
     // Semi-Canonicalize Orbitals
-    if(count != 0 && options.get_bool("SEMI_CANONICAL")){
+    if(count != 0 && options.get_bool("SEMI_CANONICAL") && semi_canonicalize_orbs_){
         semi_canonicalize();
     }
 

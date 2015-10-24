@@ -182,6 +182,7 @@ protected:
     ambit::BlockedTensor Hbar1;
     ambit::BlockedTensor Hbar2;
     void compute_hbar();
+    void compute_qhbar();
 
     /// Compute zero-term term of commutator [H, T]
     void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
@@ -194,11 +195,18 @@ protected:
     void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
     void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H3_T1_C1(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H3_T2_C1(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H, T]
     void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H3_T1_C2(BlockedTensor& H3, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H3_T2_C2(BlockedTensor& H3, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    /// Compute three-body term of commutator [H, T]
+    void H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3);
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n){

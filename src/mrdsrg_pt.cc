@@ -256,8 +256,7 @@ double MRDSRG::compute_energy_pt3(){
     // compute second-order amplitudes
     BlockedTensor T2nd_1 = BTF_->build(tensor_type_,"temp1",spin_cases({"hp"}));
     BlockedTensor T2nd_2 = BTF_->build(tensor_type_,"temp2",spin_cases({"hhpp"}));
-    guess_t2(Hbar2nd_2,T2nd_2);
-    guess_t1(Hbar2nd_1,T2nd_2,T2nd_1);
+    guess_t(Hbar2nd_2,T2nd_2,Hbar2nd_1,T2nd_1);
     analyze_amplitudes("Second-Order",T2nd_1,T2nd_2);
 
     // compute <[H~1st, A2nd]>
