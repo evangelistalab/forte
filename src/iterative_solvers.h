@@ -79,6 +79,10 @@ public:
     void set_e_convergence(double value);
     /// Set the residual convergence
     void set_r_convergence(double value);
+    /// Set the number of collapse vectors for each root
+    void set_collapse_per_root(int value);
+    /// Set the maximum subspace size for each root
+    void set_subspace_per_root(int value);
 
     /// Return the size of the collapse vectors
     size_t collapse_size() const;
@@ -143,7 +147,7 @@ private:
     size_t size_;
     /// The number of roots requested
     size_t nroot_;
-    /// The number of vectors to retain for each root
+    /// The number of collapse vectors for each root
     size_t collapse_per_root_ = 2;
     /// The maximum subspace size for each root
     size_t subspace_per_root_ = 4;

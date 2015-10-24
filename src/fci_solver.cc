@@ -129,6 +129,8 @@ double FCI::compute_energy()
         outfile->Printf("\n  Number of electrons: %d",nel);
         outfile->Printf("\n  Charge: %d",charge);
         outfile->Printf("\n  Multiplicity: %d",multiplicity);
+        outfile->Printf("\n  Davidson subspace max dim: %d",options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+        outfile->Printf("\n  Davidson subspace min dim: %d",options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         if (ms % 2 == 0){
             outfile->Printf("\n  M_s: %d",ms / 2);
         }else{
@@ -145,21 +147,18 @@ double FCI::compute_energy()
     size_t na = (nactel + ms) / 2;
     size_t nb =  nactel - na;
 
-    //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
-    //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
-
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
-
-
+    // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("NROOT"));
     fcisolver_->set_root(options_.get_int("ROOT"));
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+    fcisolver_->set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
 
     double fci_energy = fcisolver_->compute_energy();
-
 
     Process::environment.globals["CURRENT ENERGY"] = fci_energy;
     Process::environment.globals["FCI ENERGY"] = fci_energy;
@@ -282,6 +281,8 @@ double FCISolver::compute_energy()
     DavidsonLiuSolver dls(fci_size,nroot_);
     dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     dls.set_print_level(print_);
+    dls.set_collapse_per_root(collapse_per_root_);
+    dls.set_subspace_per_root(subspace_per_root_);
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
