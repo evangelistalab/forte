@@ -593,7 +593,6 @@ Reference FCISolver::reference()
     g2ab.copy(L2ab);
     g2bb.copy(L2bb);
 
-
     // Convert the 2-RDMs to 2-RCMs
     L2aa("pqrs") -= L1a("pr") * L1a("qs");
     L2aa("pqrs") += L1a("ps") * L1a("qr");
