@@ -143,19 +143,9 @@ void MRDSRG::startup()
             throw PSIEXCEPTION("Orbital invariant formalism is not implemented for the RELAX_REF option.");
         }else{
             U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
-            diagonalize_Fock_diagblocks(U_);
-            BlockedTensor Focks = ambit::BlockedTensor::build(tensor_type_,"Fock",spin_cases({"gg"}));
-            Focks["rs"] = U_["rp"] * F_["pq"] * U_["sq"];
-            Focks["RS"] = U_["RP"] * F_["PQ"] * U_["SQ"];
-            Focks.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-                if(i[0] == i[1]){
-                    if(spin[0] == AlphaSpin){
-                        Fa_[i[0]] = value;
-                    }else{
-                        Fb_[i[0]] = value;
-                    }
-                }
-            });
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+            Fa_ = eigens[0];
+            Fb_ = eigens[1];
         }
     }else{
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
@@ -784,7 +774,7 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     };
 
     // diagonalize diagonal blocks
-    for(auto& block: blocks){
+    for(const auto& block: blocks){
         size_t dim = F_.block(block).dim(0);
         if(dim == 0){
             continue;

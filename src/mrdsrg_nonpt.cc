@@ -108,7 +108,9 @@ void MRDSRG::compute_hbar(){
         // test convergence of C
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
-        outfile->Printf("\n  n = %d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        if(print_ > 2){
+            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+        }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold){
             converged = true;
             break;
