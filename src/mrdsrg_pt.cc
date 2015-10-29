@@ -380,15 +380,25 @@ double MRDSRG::compute_energy_pt3(){
     return Ecorr;
 }
 
+std::vector<std::string> MRDSRG::diag_labels(){
+    // C-A-V ordering
+    std::vector<std::string> labels{acore_label_ + acore_label_, aactv_label_ + aactv_label_, avirt_label_ + avirt_label_,
+                bcore_label_ + bcore_label_, bactv_label_ + bactv_label_, bvirt_label_ + bvirt_label_};
+    return labels;
+}
+
 bool MRDSRG::check_semicanonical(){
     outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
-    std::vector<std::string> blocks{"cc","aa","vv","CC","AA","VV"};
+    std::vector<std::string> blocks = diag_labels();
     std::vector<double> Foff;
     double Foff_sum = 0.0;
     for(auto& block: blocks){
-        double value = std::pow(F_.block(block).norm(), 2.0) - std::pow(H0th_.block(block).norm(), 2.0);
-        value = std::sqrt(value);
-        Foff.push_back(value);
+        size_t dim = F_.block(block).dim(0);
+        ambit::Tensor diff = ambit::Tensor::build(tensor_type_,"F - H0",std::vector<size_t> (2, dim));
+        diff("pq")  = F_.block(block)("pq");
+        diff("pq") -= H0th_.block(block)("pq");
+        double value = diff.norm();
+        Foff.emplace_back(value);
         Foff_sum += value;
     }
     double threshold = 10.0 * options_.get_double("D_CONVERGENCE");
