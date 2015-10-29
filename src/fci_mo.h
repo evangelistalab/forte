@@ -36,7 +36,7 @@ public:
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
-     * @param semi_canoicalize_orbitals Avoid this if running CASSCF
+     * @param semi_canonicalize_orbitals Avoid this if running CASSCF
      */
     FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize = true);
 
