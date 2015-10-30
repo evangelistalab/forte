@@ -227,39 +227,41 @@ void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
-    temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];      //  aaaaaa from hole
-    temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];      //  aaaaaa from particle
-    E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
+        temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];      //  aaaaaa from hole
+        temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];      //  aaaaaa from particle
+        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
-    temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
-    temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
-    E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
+        temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
+        temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
+        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
-    temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] -= H2["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
+        temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] -= H2["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
 
-    temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-    E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
+        temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        E += 0.5 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
-    temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] -= H2["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
+        temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] -= H2["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
 
-    temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-    E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+        temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+    }
 
     // multiply prefactor and copy to C0
     E  *= alpha;
