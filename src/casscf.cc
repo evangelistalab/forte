@@ -15,7 +15,6 @@
 #include <libmints/mintshelper.h>
 #include <lib3index/cholesky.h>
 #include "fci_mo.h"
-#include "soscf.h"
 #include <libthce/lreri.h>
 namespace psi{ namespace forte{
 
@@ -838,98 +837,98 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 
 }
 
-boost::shared_ptr<Matrix> CASSCF::compute_so_hamiltonian()
-{
-
-    boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-    SharedMatrix T = mints->so_kinetic();
-    SharedMatrix V = mints->so_potential();
-
-    SharedMatrix H = T->clone();
-    H->add(V);
-
-    H->transform(Ca_sym_);
-    return H;
-
-}
-boost::shared_ptr<DFERI> CASSCF::set_df_object()
-{
-    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_SCF",options_.get_str("DF_BASIS_SCF"));
-    //int nao_ = primary->nbf();
-    //SharedMatrix aotoso = wfn_->aotoso();
-    //SharedMatrix AO_C = SharedMatrix(new Matrix("AO_C", nao_, nmo_));
-    //double** AO_Cp = AO_C->pointer();
-    //for (int h=0, offset=0, offset_act=0; h < nirrep_; h++){
-    //    int hnso = aotoso->colspi()[h];
-    //    if (hnso == 0) continue;
-    //    double** Up = aotoso->pointer(h);
-
-    //    // occupied
-    //    if (noccpi_[h]){
-    //        double** CSOp = matrices_["Cocc"]->pointer(h);
-    //        C_DGEMM('N','N',nao_,noccpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],noccpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
-    //        offset += noccpi_[h];
-    //    }
-    //    // active
-    //    if (nactpi_[h]){
-    //        double** CSOp = matrices_["Cact"]->pointer(h);
-    //        C_DGEMM('N','N',nao_,nactpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nactpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
-    //        offset += nactpi_[h];
-
-    //        C_DGEMM('N','N',nao_,nactpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nactpi_[h],0.0,&AO_Cp[0][offset_act + nmo_],aoc_rowdim);
-    //        offset_act += nactpi_[h];
-    //    }
-    //    // virtual
-    //    if (nvirpi_[h]){
-    //        double** CSOp = matrices_["Cvir"]->pointer(h);
-    //        C_DGEMM('N','N',nao_,nvirpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nvirpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
-    //        offset += nvirpi_[h];
-    //    }
-    //}
-    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
-    return df;
-}
-std::map<std::string, boost::shared_ptr<Matrix> > CASSCF::orbital_subset_helper()
-{
-    auto frozen_docc = mo_space_info_->get_dimension("FROZEN_DOCC");
-    auto restricted_docc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    auto active = mo_space_info_->get_dimension("ACTIVE");
-    auto restricted_uocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    auto all_orbital = mo_space_info_->get_dimension("CORRELATED");
-
-
-    SharedMatrix C_docc(new Matrix(nirrep_,all_orbital , restricted_docc));
-    SharedMatrix C_active(new Matrix(nirrep_,all_orbital ,active) );
-    SharedMatrix C_virt(new Matrix(nirrep_,all_orbital , restricted_uocc));
-    for(size_t h = 0; h < nirrep_; h++){
-        int target = 0;
-        for(int p = 0; p < all_orbital[h]; p++){
-            for(int q = 0; q < restricted_docc[h]; q++){
-                C_docc->set(h, p, q, Ca_sym_->get(h, p, target + q));
-            }
-            target += frozen_docc[h];
-            outfile->Printf("\n frozen_docc:%d", target);
-            for(int q = 0; q < active[h]; q++){
-                C_active->set(h, p, q, Ca_sym_->get(h, p, target + q));
-            }
-            target += restricted_docc[h];
-            outfile->Printf("\n restricted_docc:%d", target);
-            for(int q = 0; q < restricted_uocc[h]; q++){
-                C_virt->set(h, p, q, Ca_sym_->get(h, p, target + q));
-            }
-            target += active[h];
-            outfile->Printf("\n active:%d", target);
-        }
-    }
-    std::map<std::string, boost::shared_ptr<Matrix> > orb_subset;
-    orb_subset["RESTRICTED_DOCC"] = C_docc;
-    orb_subset["ACTIVE"] = C_active;
-    orb_subset["RESTRICTED_UOCC"] = C_virt;
-
-
-    return orb_subset;
-}
+//boost::shared_ptr<Matrix> CASSCF::compute_so_hamiltonian()
+//{
+//
+//    boost::shared_ptr<MintsHelper> mints(new MintsHelper());
+//    SharedMatrix T = mints->so_kinetic();
+//    SharedMatrix V = mints->so_potential();
+//
+//    SharedMatrix H = T->clone();
+//    H->add(V);
+//
+//    H->transform(Ca_sym_);
+//    return H;
+//
+//}
+//boost::shared_ptr<DFERI> CASSCF::set_df_object()
+//{
+//    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
+//    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_SCF",options_.get_str("DF_BASIS_SCF"));
+//    //int nao_ = primary->nbf();
+//    //SharedMatrix aotoso = wfn_->aotoso();
+//    //SharedMatrix AO_C = SharedMatrix(new Matrix("AO_C", nao_, nmo_));
+//    //double** AO_Cp = AO_C->pointer();
+//    //for (int h=0, offset=0, offset_act=0; h < nirrep_; h++){
+//    //    int hnso = aotoso->colspi()[h];
+//    //    if (hnso == 0) continue;
+//    //    double** Up = aotoso->pointer(h);
+//
+//    //    // occupied
+//    //    if (noccpi_[h]){
+//    //        double** CSOp = matrices_["Cocc"]->pointer(h);
+//    //        C_DGEMM('N','N',nao_,noccpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],noccpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
+//    //        offset += noccpi_[h];
+//    //    }
+//    //    // active
+//    //    if (nactpi_[h]){
+//    //        double** CSOp = matrices_["Cact"]->pointer(h);
+//    //        C_DGEMM('N','N',nao_,nactpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nactpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
+//    //        offset += nactpi_[h];
+//
+//    //        C_DGEMM('N','N',nao_,nactpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nactpi_[h],0.0,&AO_Cp[0][offset_act + nmo_],aoc_rowdim);
+//    //        offset_act += nactpi_[h];
+//    //    }
+//    //    // virtual
+//    //    if (nvirpi_[h]){
+//    //        double** CSOp = matrices_["Cvir"]->pointer(h);
+//    //        C_DGEMM('N','N',nao_,nvirpi_[h],hnso,1.0,Up[0],hnso,CSOp[0],nvirpi_[h],0.0,&AO_Cp[0][offset],aoc_rowdim);
+//    //        offset += nvirpi_[h];
+//    //    }
+//    //}
+//    boost::shared_ptr<DFERI> df = DFERI::build(primary,auxiliary,options_);
+//    return df;
+//}
+//std::map<std::string, boost::shared_ptr<Matrix> > CASSCF::orbital_subset_helper()
+//{
+//    auto frozen_docc = mo_space_info_->get_dimension("FROZEN_DOCC");
+//    auto restricted_docc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+//    auto active = mo_space_info_->get_dimension("ACTIVE");
+//    auto restricted_uocc = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+//    auto all_orbital = mo_space_info_->get_dimension("CORRELATED");
+//
+//
+//    SharedMatrix C_docc(new Matrix(nirrep_,all_orbital , restricted_docc));
+//    SharedMatrix C_active(new Matrix(nirrep_,all_orbital ,active) );
+//    SharedMatrix C_virt(new Matrix(nirrep_,all_orbital , restricted_uocc));
+//    for(size_t h = 0; h < nirrep_; h++){
+//        int target = 0;
+//        for(int p = 0; p < all_orbital[h]; p++){
+//            for(int q = 0; q < restricted_docc[h]; q++){
+//                C_docc->set(h, p, q, Ca_sym_->get(h, p, target + q));
+//            }
+//            target += frozen_docc[h];
+//            outfile->Printf("\n frozen_docc:%d", target);
+//            for(int q = 0; q < active[h]; q++){
+//                C_active->set(h, p, q, Ca_sym_->get(h, p, target + q));
+//            }
+//            target += restricted_docc[h];
+//            outfile->Printf("\n restricted_docc:%d", target);
+//            for(int q = 0; q < restricted_uocc[h]; q++){
+//                C_virt->set(h, p, q, Ca_sym_->get(h, p, target + q));
+//            }
+//            target += active[h];
+//            outfile->Printf("\n active:%d", target);
+//        }
+//    }
+//    std::map<std::string, boost::shared_ptr<Matrix> > orb_subset;
+//    orb_subset["RESTRICTED_DOCC"] = C_docc;
+//    orb_subset["ACTIVE"] = C_active;
+//    orb_subset["RESTRICTED_UOCC"] = C_virt;
+//
+//
+//    return orb_subset;
+//}
 /// Use Daniel's code to compute CASSCF using FCI from forte
 //void CASSCF::compute_casscf_soscf()
 //{
