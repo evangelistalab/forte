@@ -3,6 +3,8 @@
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
+#include <libthce/lreri.h>
+
 
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
@@ -27,7 +29,10 @@ public:
      */
     CASSCF(Options &options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
+    /// Use daniels code to compute Orbital optimization
+    //void compute_casscf_soscf();
     ///Return the Converged CMatrix
     SharedMatrix Call(){return Call_;}
     ///Return the final gamma1
@@ -42,6 +47,7 @@ private:
 
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
+    SharedMatrix gamma2M_;
     /// The reference object generated from Francesco's Full CI
     Reference cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
@@ -61,17 +67,27 @@ private:
 
     /// The dimension for number of molecular orbitals
     Dimension nmopi_;
-    /// The number of molecular orbitals (Frozen Core + Restricted Core + Active + Restricted_UOCC + Frozen_Virt
+    /// The number of correlated molecular orbitals (Restricted Core + Active + Restricted_UOCC + Frozen_Virt
     size_t nmo_;
     /// The number of active orbitals
     size_t na_;
     /// The number of irreps
     size_t nirrep_;
+    /// The number of SO (AO for C matrices)
+    Dimension nsopi_;
+    /// the number of restricted_docc
+    size_t nrdocc_;
+    /// The number of frozen_docc
+    size_t nfrozen_;
+    /// The number of virtual orbitals
+    size_t nvir_;
 
     /// These member variables are all summarized in Algorithm 1
-    /// The core Fock Matrix
     /// Equation 9
 
+    /// The Fock matrix due to Frozen core orbitals
+    SharedMatrix F_froze_;
+    /// The core Fock Matrix
     SharedMatrix F_core_;
     /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all active portion of the OPM
     /// Equation 10
@@ -84,6 +100,10 @@ private:
     SharedMatrix g_;
     /// The diagonal Hessian
     SharedMatrix d_;
+    /// The type of integrals
+    IntegralType int_type_;
+    /// Do a Complete SOSCF using Daniels' code
+    bool do_soscf_;
 
 
 
@@ -108,6 +128,14 @@ private:
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
+    /// Compute core Hamiltonian in SO basis
+    boost::shared_ptr<Matrix> compute_so_hamiltonian();
+    /// Set the dferi object
+    boost::shared_ptr<DFERI> set_df_object();
+    /// Get the Frozen Orbs in SO basis
+    std::map<std::string, boost::shared_ptr<Matrix> > orbital_subset_helper();
+    /// set frozen_core_orbitals
+    boost::shared_ptr<Matrix> set_frozen_core_orbitals();
 
 
 };
