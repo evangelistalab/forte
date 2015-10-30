@@ -252,6 +252,10 @@ read_options(std::string name, Options &options)
         options.add_int("MAXITER_DAVIDSON",100);
         /*- Number of iterations for FCI code -*/
         options.add_int("FCI_ITERATIONS", 30);
+        /*- Do a CASSCF with Kevin's code -*/
+        options.add_bool("CASSCF_DEBUG", false);
+        /*- A complete SOSCF ie Form full Hessian -*/
+        options.add_bool("CASSCF_SOSCF", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE
@@ -520,6 +524,7 @@ extern "C" PsiReturnType forte(Options &options)
     if(options.get_bool("CASSCF_REFERENCE") == true)
     {
         boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        //casscf->compute_casscf_soscf();
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")){
