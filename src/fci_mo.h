@@ -122,7 +122,9 @@ protected:
 
     /// Diagonalize the CASCI Hamiltonian
     vector<pair<SharedVector,double>> eigen_;
+    ///The algorithm for diagonalization
     std::string diag_algorithm_;
+
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     /// Store and Print the CI Vectors and Configurations
