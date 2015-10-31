@@ -1317,7 +1317,7 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
         nv += ncmopi_[h] - core_[h] - active_[h];
     }
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
-    timer_off("Block Diagonal Fock");
+    timer_off("Block Diagonal 2D Matrix");
 }
 
 
@@ -1409,8 +1409,8 @@ bool FCI_MO::CheckDensity(){
         maxes_sum += *it;
     }
 
-    double natural = false;
-    if(maxes_sum > 10.0 * dconv_){
+    bool natural = false;
+    if(fabs(maxes_sum) > 10.0 * dconv_){
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
         outfile->Printf("\n    Max off-diagonal values of core, active, virtual blocks of the density matrix");
