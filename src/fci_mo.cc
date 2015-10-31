@@ -18,7 +18,6 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
 {
     // basic preparation: form determinants
     startup(options);
-    semi_canonicalize_orbs_ = semi_canonicalize_orbs;
 
     // diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
@@ -61,9 +60,11 @@ FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::sha
         print_d2("Fb", Fb_);
     }
 
-    // Semi-Canonicalize Orbitals
-    if(count != 0 && options.get_bool("SEMI_CANONICAL") && semi_canonicalize_orbs_){
-        semi_canonicalize();
+    // Orbitals
+    if(options.get_bool("SEMI_CANONICAL") && semi_canonicalize_orbs){
+        semi_canonicalize(count);
+    }else{
+        nat_orbs();
     }
 
     // Form 2-PDC
@@ -422,58 +423,61 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     return String;
 }
 
-void FCI_MO::semi_canonicalize(){
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
+void FCI_MO::semi_canonicalize(const size_t& count){
     outfile->Printf("\n  Use semi-canonical orbitals.\n");
-    SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
-    SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-    BD_Fock(Fa_,Fb_,Ua,Ub);
-    SharedMatrix Ca = wfn->Ca();
-    SharedMatrix Cb = wfn->Cb();
-    SharedMatrix Ca_new(Ca->clone());
-    SharedMatrix Cb_new(Cb->clone());
-    Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-    Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
-    Ca->copy(Ca_new);
-    Cb->copy(Cb_new);
 
-    integral_->retransform_integrals();
-    fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
+    if(count != 0){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
-    // Form and Diagonalize the CASCI Hamiltonian
-    Diagonalize_H(determinant_, eigen_);
-    if(print_ > 2){
-        for(pair<SharedVector, double> x: eigen_){
-            outfile->Printf("\n\n  Spin selected CI vectors\n");
-            (x.first)->print();
-            outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
+        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
+        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock");
+        SharedMatrix Ca = wfn->Ca();
+        SharedMatrix Cb = wfn->Cb();
+        SharedMatrix Ca_new(Ca->clone());
+        SharedMatrix Cb_new(Cb->clone());
+        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+        Ca->copy(Ca_new);
+        Cb->copy(Cb_new);
+
+        integral_->retransform_integrals();
+        fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
+
+        // Form and Diagonalize the CASCI Hamiltonian
+        Diagonalize_H(determinant_, eigen_);
+        if(print_ > 2){
+            for(pair<SharedVector, double> x: eigen_){
+                outfile->Printf("\n\n  Spin selected CI vectors\n");
+                (x.first)->print();
+                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+            }
         }
-    }
 
-    // Store CI Vectors in eigen_
-    Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
+        // Store CI Vectors in eigen_
+        Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
 
-    // Form Density
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
-    L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
-    FormDensity(determinant_, root_, Da_, Db_);
-    if(print_ > 1){
-        print_d2("Da", Da_);
-        print_d2("Db", Db_);
-    }
+        // Form Density
+        Da_ = d2(ncmo_, d1(ncmo_));
+        Db_ = d2(ncmo_, d1(ncmo_));
+        L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
+        L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
+        FormDensity(determinant_, root_, Da_, Db_);
+        if(print_ > 1){
+            print_d2("Da", Da_);
+            print_d2("Db", Db_);
+        }
 
-    // Fock Matrix
-    size_t count = 0;
-    Fa_ = d2(ncmo_, d1(ncmo_));
-    Fb_ = d2(ncmo_, d1(ncmo_));
-    Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,dconv_,count);
-    if(print_ > 1){
-        print_d2("Fa", Fa_);
-        print_d2("Fb", Fb_);
+        // Fock Matrix
+        size_t count = 0;
+        Fa_ = d2(ncmo_, d1(ncmo_));
+        Fb_ = d2(ncmo_, d1(ncmo_));
+        Form_Fock(Fa_,Fb_);
+        Check_Fock(Fa_,Fb_,dconv_,count);
+        if(print_ > 1){
+            print_d2("Fa", Fa_);
+            print_d2("Fb", Fb_);
+        }
     }
 }
 
@@ -1203,10 +1207,10 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &
     outfile->Flush();
 }
 
-void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub){
-    timer_on("Block Diagonal Fock");
+void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name){
+    timer_on("Block Diagonal 2D Matrix");
     Timer tbdfock;
-    std::string str = "Block diagonalizing Fock matrices";
+    std::string str = "Block diagonalizing " + name + " matrices";
     outfile->Printf("\n  %-35s ...", str.c_str());
     size_t nc = 0, na = 0, nv = 0;
     for(int h=0; h<nirrep_; ++h){
@@ -1322,6 +1326,112 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
     }
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal Fock");
+}
+
+
+void FCI_MO::nat_orbs(){
+    outfile->Printf("\n  Use natural orbitals.");
+
+    bool natural = CheckDensity();
+    if(!natural){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
+        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
+        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density");
+        SharedMatrix Ca = wfn->Ca();
+        SharedMatrix Cb = wfn->Cb();
+        SharedMatrix Ca_new(Ca->clone());
+        SharedMatrix Cb_new(Cb->clone());
+        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+        Ca->copy(Ca_new);
+        Cb->copy(Cb_new);
+
+        integral_->retransform_integrals();
+        fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
+
+        // Form and Diagonalize the CASCI Hamiltonian
+        Diagonalize_H(determinant_, eigen_);
+        if(print_ > 2){
+            for(pair<SharedVector, double> x: eigen_){
+                outfile->Printf("\n\n  Spin selected CI vectors\n");
+                (x.first)->print();
+                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+            }
+        }
+
+        // Store CI Vectors in eigen_
+        Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
+
+        // Form Density
+        Da_ = d2(ncmo_, d1(ncmo_));
+        Db_ = d2(ncmo_, d1(ncmo_));
+        L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
+        L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
+        FormDensity(determinant_, root_, Da_, Db_);
+        CheckDensity();
+        if(print_ > 1){
+            print_d2("Da", Da_);
+            print_d2("Db", Db_);
+        }
+
+        // Fock Matrix
+        Fa_ = d2(ncmo_, d1(ncmo_));
+        Fb_ = d2(ncmo_, d1(ncmo_));
+        Form_Fock(Fa_,Fb_);
+        if(print_ > 1){
+            print_d2("Fa", Fa_);
+            print_d2("Fb", Fb_);
+        }
+    }
+}
+
+bool FCI_MO::CheckDensity(){
+    // check blocks
+    auto checkblocks = [&](const size_t& dim, const vector<size_t>& idx) -> vector<double> {
+        double maxa = 0.0, maxb = 0.0;
+        for(size_t p = 0; p < dim; ++p){
+            size_t np = idx[p];
+            for(size_t q = 0; q < dim; ++q){
+                size_t nq = idx[q];
+                if(np != nq){
+                    if(fabs(Da_[np][nq]) > maxa) maxa = Da_[np][nq];
+                    if(fabs(Db_[np][nq]) > maxb) maxb = Db_[np][nq];
+                }
+            }
+        }
+        return {maxa, maxb};
+    };
+
+    outfile->Printf("\n    Checking if orbitals are natural orbitals ...");
+    vector<double> maxes, temp;
+    temp = checkblocks(nc_, idx_c_);
+    maxes.insert(maxes.end(),temp.begin(),temp.end());
+    temp = checkblocks(na_, idx_a_);
+    maxes.insert(maxes.end(),temp.begin(),temp.end());
+    temp = checkblocks(nv_, idx_v_);
+    maxes.insert(maxes.end(),temp.begin(),temp.end());
+
+    double maxes_sum = 0.0;
+    for(auto it = maxes.begin(); it != maxes.end(); ++it){
+        maxes_sum += *it;
+    }
+
+    double natural = false;
+    if(maxes_sum > 10.0 * dconv_){
+        std::string sep(3 + 16 * 3, '-');
+        outfile->Printf("\n    Warning! Orbitals are not natural orbitals!");
+        outfile->Printf("\n    Max off-diagonal values of core, active, virtual blocks of the density matrix");
+        outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
+        outfile->Printf("\n    %s", sep.c_str());
+        outfile->Printf("\n    Da %15.10f %15.10f %15.10f", maxes[0], maxes[2], maxes[4]);
+        outfile->Printf("\n    Db %15.10f %15.10f %15.10f", maxes[1], maxes[3], maxes[5]);
+        outfile->Printf("\n    %s\n", sep.c_str());
+    }else{
+        outfile->Printf("     OK.");
+        natural = true;
+    }
+    return natural;
 }
 
 void FCI_MO::fill_density(){
