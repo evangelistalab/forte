@@ -497,7 +497,15 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     int nroot = det_size < 25 ? det_size : 25;
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
-    sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,multi_,DavidsonLiuList);
+    DiagonalizationMethod diag_method_;
+    if(diag_algorithm_ == "Full" or diag_algorithm_ == "FULL")
+    {
+        diag_method_ = Full;
+    }
+    else {
+        diag_method_ = DavidsonLiuList;
+    }
+    sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,multi_,diag_method_);
 
     // add doubly occupied energy
     double vdocc = fci_ints_->scalar_energy();
