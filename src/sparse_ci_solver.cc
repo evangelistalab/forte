@@ -1054,7 +1054,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     if (mult_list[multiplicity].size() < static_cast<size_t>(nroot)){
         size_t nfound = mult_list[multiplicity].size();
         outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
-        exit(1);
+        if(nfound== 0 ){exit(1);}
     }
 
     std::vector<int> mult_vals;
