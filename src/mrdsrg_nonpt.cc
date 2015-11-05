@@ -128,6 +128,9 @@ double MRDSRG::compute_energy_ldsrg2(){
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
+    if(options_.get_str("THREEPDC") == "ZERO"){
+        outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
+    }
     std::string indent(4, ' ');
     std::string dash(99, '-');
     std::string title;

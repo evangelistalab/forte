@@ -57,7 +57,7 @@ void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
     switch (sourcemap[source_]){
     case SOURCE::LABS:{
         T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (value != 0.0){
+            if (fabs(value) > 1.0e-15){
                 if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
                     value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
                     t2aa_norm_ += value * value;
@@ -75,7 +75,7 @@ void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
     }
     case SOURCE::DYSON:{
         T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (value != 0.0){
+            if (fabs(value) > 1.0e-15){
                 if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
                     value *= renormalized_denominator_dyson(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
                     t2aa_norm_ += value * value;
@@ -93,7 +93,7 @@ void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
     }
     default:{
         T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (value != 0.0){
+            if (fabs(value) > 1.0e-15){
                 if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
                     value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
                     t2aa_norm_ += value * value;
@@ -198,7 +198,7 @@ void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1
     switch (sourcemap[source_]){
     case SOURCE::LABS:{
         T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(value != 0.0){
+            if(fabs(value) > 1.0e-15){
                 if (spin[0]  == AlphaSpin){
                     value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
                     t1a_norm_ += value * value;
@@ -213,7 +213,7 @@ void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1
     }
     case SOURCE::DYSON:{
         T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(value != 0.0){
+            if(fabs(value) > 1.0e-15){
                 if (spin[0]  == AlphaSpin){
                     value *= renormalized_denominator_dyson(Fa_[i[0]] - Fa_[i[1]]);
                     t1a_norm_ += value * value;
@@ -228,7 +228,7 @@ void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1
     }
     default:{
         T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(value != 0.0){
+            if(fabs(value) > 1.0e-15){
                 if (spin[0]  == AlphaSpin){
                     value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
                     t1a_norm_ += value * value;
@@ -1095,7 +1095,7 @@ void MRDSRG::check_t2(BlockedTensor& T2)
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt2 = spin_to_lt2[spin];
 
         T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
-            if(fabs(value) != 0.0){
+            if(fabs(value) > 1.0e-15){
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
                 size_t idx2 = label_to_spacemo_[block[2]][i[2]];
@@ -1159,7 +1159,7 @@ void MRDSRG::check_t1(BlockedTensor& T1)
         std::vector<std::pair<std::vector<size_t>, double>>& temp_lt1 = spin_to_lt1[spin_alpha];
 
         T1.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
-            if(fabs(value) != 0.0){
+            if(fabs(value) > 1.0e-15){
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
                 size_t idx1 = label_to_spacemo_[block[1]][i[1]];
 
