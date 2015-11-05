@@ -353,6 +353,10 @@ protected:
                         const std::vector<std::pair<std::vector<size_t>, double>>& list);
     /// Print commutator timings
     void print_comm_time();
+    /// Check the max and norm of density
+    void check_density(BlockedTensor& D, const std::string& name);
+    /// Print the summary of 2- and 3-body density cumulant
+    void print_cumulant_summary();
 
 
     // => Useful Inline functions <= //

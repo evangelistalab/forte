@@ -203,6 +203,9 @@ void MRDSRG::build_density(){
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
     Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+
+    // check cumulants
+    print_cumulant_summary();
 }
 
 void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V){
@@ -871,6 +874,63 @@ void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Di
             tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
         }
     }
+}
+
+void MRDSRG::print_cumulant_summary(){
+    print_h2("Density Cumulant Summary");
+
+    check_density(Lambda2_, "2-body");
+    check_density(Lambda3_, "3-body");
+}
+
+void MRDSRG::check_density(BlockedTensor& D, const std::string& name){
+    int rank_half = D.rank() / 2;
+    std::vector<std::string> labels;
+    std::vector<double> maxes, norms;
+    std::vector<std::string> blocks = D.block_labels();
+    for(const auto& block: blocks){
+        std::string spin_label;
+        std::vector<int> idx;
+        for(int i = 0; i < rank_half; ++i){
+            idx.emplace_back(i);
+        }
+        for(const auto& i: idx){
+            if(islower(block[i])){
+                spin_label += "A";
+            }else{
+                spin_label += "B";
+            }
+        }
+        labels.emplace_back(spin_label);
+
+        double D_norm = 0.0, D_max = 0.0;
+        D.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
+            double abs_value = fabs(value);
+            if(abs_value > 1.0e-15){
+                if(abs_value > D_max) D_max = value;
+                D_norm += value * value;
+            }
+        });
+        maxes.emplace_back(D_max);
+        norms.emplace_back(std::sqrt(D_norm));
+    }
+
+    int n = labels.size();
+    std::string sep(10 + 13 * n, '-');
+    std::string indent = "\n    ";
+    std::string output = indent + str(boost::format("%-10s") % name);
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12s") % labels[i]);
+    output += indent + sep;
+
+    output += indent + str(boost::format("%-10s") % "max");
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12.6f") % maxes[i]);
+    output += indent + str(boost::format("%-10s") % "norm");
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12.6f") % norms[i]);
+    output += indent + sep;
+    outfile->Printf("%s", output.c_str());
 }
 
 }}
