@@ -121,8 +121,8 @@ void CASSCF::compute_casscf()
         offset += nmopi_[h];
         }
         auto na_vec = mo_space_info_->get_corr_abs_mo("ACTIVE");
-        for(int u = 0; u < na_; u++)
-            for(int v = 0; v < na_; v++)
+        for(size_t u = 0; u < na_; u++)
+            for(size_t v = 0; v < na_; v++)
                 S->set(na_vec[u], na_vec[v], 0.0);
 
         Matrix S_mat;
@@ -196,6 +196,7 @@ void CASSCF::compute_casscf()
     }
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
+
 
 
 }

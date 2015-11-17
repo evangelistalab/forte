@@ -77,6 +77,10 @@ void FCI::set_fci_iterations(int value)
 {
     fci_iterations_ = value;
 }
+void FCI::print_no(bool value)
+{
+    print_no_ = value;
+}
 
 void FCI::startup()
 {  
@@ -85,6 +89,7 @@ void FCI::startup()
 
     max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
     fci_iterations_ = options_.get_int("FCI_ITERATIONS");
+    print_no_       = options_.get_bool("PRINT_NO");
 }
 
 double FCI::compute_energy()
@@ -157,6 +162,8 @@ double FCI::compute_energy()
     fcisolver_->set_root(options_.get_int("ROOT"));
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+    fcisolver_->print_no(print_no_);
+
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -429,6 +436,9 @@ double FCISolver::compute_energy()
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
+
+        // Print the NO if energy converged
+        if(print_no_) {C_->print_natural_orbitals();}
     }
     else
     {

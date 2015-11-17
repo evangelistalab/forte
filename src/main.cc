@@ -246,16 +246,15 @@ read_options(std::string name, Options &options)
         options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
+        /*- Print the NO from the rdm of FCI -*/
+        options.add_bool("PRINT_NO", false);
+
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
         /*- Number of iterations for FCI code -*/
         options.add_int("FCI_ITERATIONS", 30);
-        /*- Do a CASSCF with Kevin's code -*/
-        options.add_bool("CASSCF_DEBUG", false);
-        /*- A complete SOSCF ie Form full Hessian -*/
-        options.add_bool("CASSCF_SOSCF", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE CASSCF CODE
@@ -268,6 +267,8 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_CONVERGENCE", 1e-6);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
+        /*- A complete SOSCF ie Form full Hessian -*/
+        options.add_bool("CASSCF_SOSCF", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
