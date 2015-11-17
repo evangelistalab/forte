@@ -521,6 +521,39 @@ double THREE_DSRG_MRPT2::compute_energy()
 
 
         outfile->Printf("\n\n\n    CD/DF-DSRG-MRPT2 took   %8.8f s.", ComputeEnergy.get());
+
+        if(options_.get_bool("PRINT_DENOM2"))
+        {
+            std::ofstream myfile;
+            myfile.open ("DENOM.txt");
+            ambit::BlockedTensor Delta2 = BTF_->build(tensor_type_,"Delta1_",{"cavv", "ccvv", "ccva"});
+            Delta2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+                if (spin[0]  == AlphaSpin){
+                    value = 1 / (Fa_[i[0]] + Fa_[i[1]]- Fa_[i[2]] - Fa_[i[3]]);
+                }
+            });
+            ambit::Tensor Delta2ccvv = Delta2.block("ccvv");
+            ambit::Tensor Delta2cavv = Delta2.block("cavv");
+            ambit::Tensor Delta2ccva = Delta2.block("ccva");
+            myfile << "ccvv DELTA2\n";
+            int count = 0;
+            Delta2ccvv.iterate([&](const std::vector<size_t>& i,double& value){
+            myfile << count << "  " << value << "\n";
+             });
+            myfile << "cavv DELTA2\n";
+
+            count = 0;
+            Delta2cavv.iterate([&](const std::vector<size_t>& i,double& value){
+            myfile << count << "  " << value << "\n";
+             });
+            myfile << "ccva DELTA2\n";
+
+            count = 0;
+            Delta2ccva.iterate([&](const std::vector<size_t>& i,double& value){
+            myfile << count << "  " << value << "\n";
+             });
+
+        }
         return Etotal;
 }
 
