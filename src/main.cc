@@ -32,6 +32,7 @@
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
 #include "casscf.h"
+#include "alternativescasscf.h"
 
 INIT_PLUGIN
 
@@ -237,6 +238,12 @@ read_options(std::string name, Options &options)
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
         options.add_int("NPOP",100);
+
+        //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR ALTERNATIVES FOR CASSCF ORBITALS
+        //////////////////////////////////////////////////////////////
+        /*- What type of alternative CASSCF Orbitals do you want -*/
+        options.add_str("ALTERNATIVE_CASSCF", "NONE", "IVO FTHF NONE");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI CODE
@@ -521,6 +528,13 @@ extern "C" PsiReturnType forte(Options &options)
     std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
+
+    if(options.get_str("ALTERNATIVE_CASSCF") == "FTHF")
+    {
+       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+       auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
+       FTHF->compute_energy();
+    }
 
     if(options.get_bool("CASSCF_REFERENCE") == true)
     {
