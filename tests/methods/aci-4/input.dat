@@ -4,13 +4,13 @@
 
 import forte 
 
-refscf = -14.839846512738 #TEST
-refaci = -14.884407984072 #TEST
-refacipt2 = -14.889672294670 #TEST
+refscf = -14.5754349839908386 #TEST
+refaci = -14.634961542869 #TEST
+refacipt2 = -14.640285520241 #TEST
 
 molecule li2{
    Li
-   Li 1 2.0000
+   Li 1 1.0000
 }
 
 set {
@@ -34,14 +34,11 @@ set forte {
   q_rel true
   q_reference adjacent
   pq_function average
-  TAUP 0.01000
-  TAUQ 0.01000
+  TAUP 0.01
+  TAUQ 0.01
   nroot 3
   charge 0
   enforce_spin_complete true
-  DIAG_ALGORITHM DAVIDSONLIST
-
-#  spin_projection 2
 }
 
 energy('scf')
