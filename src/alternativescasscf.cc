@@ -69,7 +69,7 @@ double FiniteTemperatureHF::compute_energy()
 
     form_G();
     scf_energy_ = 0.0;
-    //double scf_energy = RHF::compute_energy();
+    scf_energy_ = RHF::compute_energy();
     outfile->Printf("\n FT-HF orbitals converged");
     outfile->Printf("\n SCF_ENERGY = %8.8f", scf_energy_);
 
@@ -88,8 +88,10 @@ void FiniteTemperatureHF::frac_occupation()
     std::vector<double> ni(na_);
     ///The bisection root finding is to find the E_f value that satisfies
     /// the sum of occupations equal number of active orbitals
-    ef_ = bisection(ni, T);
-
+    if(na_ > 0)
+    {
+        ef_ = bisection(ni, T);
+    }
     auto active_vector = mo_space_info_->get_absolute_mo("ACTIVE");
     int count = 0;
     ///Fill the occupation for active with variable occupations
@@ -123,7 +125,6 @@ void FiniteTemperatureHF::frac_occupation()
     SharedMatrix C  = wfn_->Ca();
     SharedMatrix C_nochange = C->clone();
 
-    Dirac_sym->print();
 
     SharedMatrix C_rd_a(new Matrix("C_rdocc_active", nirrep_, doubly_occupied_sym + active_sym, doubly_occupied_sym + active_sym));
     SharedMatrix C_rd_a_2(new Matrix("C_nochange", nirrep_, doubly_occupied_sym + active_sym, doubly_occupied_sym + active_sym));
@@ -148,8 +149,6 @@ void FiniteTemperatureHF::frac_occupation()
     }
     C_occ_folded_ = C_rd_a;
     C_occ_a_ = C_rd_a_2;
-    C_occ_folded_->print();
-    C_occ_a_->print();
 }
 void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dirac)
 {
@@ -314,8 +313,8 @@ void FiniteTemperatureHF::form_G()
     if(na_ > 0)
     {
         active_orb_energy_ = get_active_orbital_energy();
-        frac_occupation();
     }
+    frac_occupation();
     form_D();
     boost::shared_ptr<JK> JK_core = JK::build_JK();
 
@@ -335,9 +334,6 @@ void FiniteTemperatureHF::form_G()
 
     Cr.clear();
     Cr.push_back(C_occ_a_);
-    C_occ_a_->print();
-    C_occ_folded_->print();
-
 
     JK_core->compute();
 
@@ -348,6 +344,8 @@ void FiniteTemperatureHF::form_G()
     SharedMatrix F_core = J_core->clone();
     F_core->subtract(K_core);
     G_->copy(F_core);
+    const std::vector<boost::shared_ptr<Matrix> >&D = JK_core->D();
+    D[0]->print();
 
 }
 void FiniteTemperatureHF::form_D()
@@ -366,7 +364,7 @@ void FiniteTemperatureHF::form_D()
         int nmo = nmopi[h];
         int na = doccpi[h];
 
-        if (nso == 0 || nmo == 0) continue;
+        if (nso == 0 || nmo == 0 || na == 0) continue;
 
         double** Ca_left = C_occ_folded_->pointer(h);
         double** Ca_right = C_occ_a_->pointer(h);
@@ -374,7 +372,6 @@ void FiniteTemperatureHF::form_D()
 
         if (na == 0)
             memset(static_cast<void*>(D[0]), '\0', sizeof(double)*nso*nso);
-
         C_DGEMM('N','T',nso,nso,na,1.0,Ca_left[0],nmo,Ca_right[0],nmo,0.0,D[0],nso);
 
     }
