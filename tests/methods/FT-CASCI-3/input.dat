@@ -1,0 +1,38 @@
+#! CASSCF/6-31G** energy point
+import forte
+
+molecule {
+O
+H 1 1.00
+H 1 1.00 2 103.1
+units angstrom
+}
+
+set {
+    scf_type        df
+    basis           3-21g
+    reference       rhf
+    #FROZEN_DOCC     [1, 0, 0, 0]
+    #active          [3, 0, 1, 2]
+    e_convergence   1e-10
+    d_convergence   1e-10
+    mcscf_type      conv
+}
+
+#casscf_energy = energy('casscf')
+energy('scf')
+set scf_type df
+set forte {
+    int_type        conventional
+    ALTERNATIVE_CASSCF     FTHF
+    TEMPERATURE            200000.0
+    print                  1
+    RESTRICTED_DOCC         [1, 0, 0, 0]
+    ACTIVE                  [3, 0, 1, 2]
+}
+
+
+mints()
+energy('forte')
+
+#compare_values(-76.07383398044661, casscf_energy, 6, 'CASSCF Energy')  #TEST
