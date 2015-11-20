@@ -1,0 +1,24 @@
+import forte 
+
+molecule {
+0 1
+H
+F 1 1.2
+units angstrom
+}
+
+
+set {
+  basis     3-21g
+  reference rhf
+  scf_type  direct
+}
+
+set forte {
+  print 1
+  ALTERNATIVE_CASSCF FTHF
+  TEMPERATURE        10.0
+}
+energy('scf')
+mints()
+energy('forte')
