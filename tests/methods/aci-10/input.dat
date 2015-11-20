@@ -1,5 +1,5 @@
 #! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne 
+#! Perform aci on benzyne 
 
 import forte
 
@@ -56,6 +56,6 @@ compare_values(refscf, scf,10,"SCF Energy")
 
 energy('forte')
 compare_values(refaci, get_variable("ACI ENERGY"),10,"ACI energy")
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10,"ACI+PT2 energy")
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
 
 
