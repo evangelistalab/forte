@@ -244,6 +244,7 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /*- What type of alternative CASSCF Orbitals do you want -*/
         options.add_str("ALTERNATIVE_CASSCF", "NONE", "IVO FTHF NONE");
+        options.add_double("TEMPERATURE", 50000);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI CODE
