@@ -287,6 +287,8 @@ read_options(std::string name, Options &options)
         options.add_double("TAUP",0.01);
         /*- The threshold for the selection of the Q space -*/
         options.add_double("TAUQ",0.000001);
+		/*- The SD-space prescreening threshold -*/
+		options.add_double("PRESCREENING_THRESHOLD", 1e-6);
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
         /*- The type of selection parameters to use*/
