@@ -148,8 +148,7 @@ void AdaptiveCI::startup()
     nroot_ = options_.get_int("NROOT");
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
-	screen_thresh_ = options.get_double("PRESCREEN_THRESHOlD");
-
+	screen_thresh_ = options_.get_double("PRESCREEN_THRESHOlD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
