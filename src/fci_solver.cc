@@ -119,6 +119,11 @@ double FCI::compute_energy()
     }
 
     int ms = multiplicity - 1;
+    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+            options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
+    {
+        ms   = 0;
+    }
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
