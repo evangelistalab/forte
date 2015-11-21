@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.37487863589541 
-refaci = -75.479410527618
-refacipt2 = -75.723333873985 
+refaci = -75.522945247792
+refacipt2 =-75.750318411025 
 
 molecule N2{
 C 
@@ -40,7 +40,9 @@ set forte {
   nroot 3
   mp2_nos true
   charge 0
-  spin_projection 1
+  enforce_spin_complete true
+  aci_add_aimed_degenerate true
+  project_out_spin_contaminants true
 }
 
 energy('scf')
