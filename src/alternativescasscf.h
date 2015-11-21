@@ -99,7 +99,7 @@ protected:
     /// This needs a algorithm that can handle assymetric densities
     virtual void form_G();
     /// This forms D from folded C and regular C.
-    virtual void form_D();
+    //virtual void form_D();
     /// Whether or not to print debug stuff
     int debug_ = 0;
 

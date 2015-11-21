@@ -39,7 +39,7 @@ set forte{
    print                0
    cas_type             FCI
    ALTERNATIVE_CASSCF   FTHF
-   TEMPERATURE          1000.0
+   TEMPERATURE          100.0
 }
 casscf = energy('forte')
 
