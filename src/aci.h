@@ -123,6 +123,8 @@ private:
     double tau_p_;
     /// The threshold applied to the secondary space
     double tau_q_;
+    /// The prescreening threshold
+	double screen_thresh_;
     /// The number of roots computed
     int nroot_;
 	/// Use threshold from perturbation theory?

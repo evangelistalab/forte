@@ -4,8 +4,8 @@
 import forte 
 
 refscf = -37.97186042031555  
-refaci = -38.893283747776 
-refacipt2 = -38.962172189030
+refaci = -38.903896578437 
+refacipt2 = -38.972785019691
 
 molecule CH2{
 0 1
@@ -36,10 +36,9 @@ set forte {
   TAUQ 0.07
   nroot 1
   charge 0
-  spin_projection 1
-  enforce_spin_complete false
-  aci_add_aimed_degenerate false
-  project_out_spin_contaminants false
+  enforce_spin_complete true
+  aci_add_aimed_degenerate true
+  project_out_spin_contaminants true
 }
 
 energy('scf')
