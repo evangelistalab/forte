@@ -16,21 +16,21 @@ units bohr
 
 set {
   basis sto-3g
+  df_basis_scf cc-pvdz
   reference rhf
-  scf_type direct
+  scf_type df
   e_convergence 12
+  damping_percentage 25
 }
 
 set forte {
   #job_type fci
-  print 1
-  #active [3,0,1,1]
-  restricted_docc [4,0,1,1]
-  #root_sym 2
-  #multiplicity 3
-  #ms 0
+  print 0
+  restricted_docc [1,0,0,0]
+  active          [2,0,0,0]
   alternative_casscf FTHF
-  TEMPERATURE        1.0
+  TEMPERATURE        5000.0
+  maxiter             200
 }
 
 

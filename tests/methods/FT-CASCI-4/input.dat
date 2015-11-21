@@ -17,7 +17,10 @@ set {
 set forte {
   print 1
   ALTERNATIVE_CASSCF FTHF
+  RESTRICTED_DOCC    [1, 0, 0, 0]
+  ACTIVE             [3, 0, 1, 1]
   TEMPERATURE        10.0
+  job_type           FCI
 }
 energy('scf')
 mints()

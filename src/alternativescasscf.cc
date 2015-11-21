@@ -53,7 +53,6 @@ void FiniteTemperatureHF::startup()
     outfile->Printf("\n There are %d active orbitals", na_);
     eps_ = wfn_->epsilon_a();
     nirrep_ = wfn_->nirrep();
-    SharedMatrix D = wfn_->Da();
 
     debug_ = options_.get_int("PRINT");
 }
@@ -126,8 +125,9 @@ void FiniteTemperatureHF::frac_occupation()
     SharedMatrix C_nochange = C->clone();
 
 
-    SharedMatrix C_rd_a(new Matrix("C_rdocc_active", nirrep_, doubly_occupied_sym + active_sym, doubly_occupied_sym + active_sym));
-    SharedMatrix C_rd_a_2(new Matrix("C_nochange", nirrep_, doubly_occupied_sym + active_sym, doubly_occupied_sym + active_sym));
+    Dimension nsopi = wfn_->nsopi();
+    SharedMatrix C_rd_a(new Matrix("C_rdocc_active", nirrep_, nsopi, doubly_occupied_sym + active_sym));
+    SharedMatrix C_rd_a_2(new Matrix("C_nochange", nirrep_, nsopi , doubly_occupied_sym + active_sym));
     Dimension rd_a = doubly_occupied_sym + active_sym;
     ///Scale the columns with the occupation.
     /// This C matrix will be passed to JK object for CLeft
@@ -137,7 +137,7 @@ void FiniteTemperatureHF::frac_occupation()
         {
             C->scale_column(h, mu, Dirac_sym->get(h, mu));
         }
-        for(int ra = 0; ra < rd_a[h]; ra++)
+        for(int ra = 0; ra < nsopi[h]; ra++)
         {
             for(int ra_b = 0; ra_b < rd_a[h]; ra_b++)
             {
@@ -187,6 +187,7 @@ std::vector<double> FiniteTemperatureHF::get_active_orbital_energy()
         }
 
     }
+    std::sort(na_vec.begin(), na_vec.end(), std::greater<double>());
     return na_vec;
 }
 double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
@@ -209,7 +210,6 @@ double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
     /// The number of iterations needed for bisection to converge
     /// (b - a) / 2^n <= tolerance
     double iterations = fabs(log(1e-10) / log(fabs(ef2 - ef1)));
-    outfile->Printf("\n %8.8f", std::ceil(iterations));
     int max_iter = std::ceil(iterations);
 
     if(debug_)
@@ -275,7 +275,6 @@ double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
         }
     }
 
-    outfile->Printf("\n ef = %6.5f sum = %6.5f \n", ef, sumef);
     return ef;
 }
 double FiniteTemperatureHF::occ_vec(std::vector<double>& nibisect, double ef, double T)
@@ -335,6 +334,7 @@ void FiniteTemperatureHF::form_G()
     Cr.clear();
     Cr.push_back(C_occ_a_);
 
+
     JK_core->compute();
 
     SharedMatrix J_core = JK_core->J()[0];
@@ -344,39 +344,38 @@ void FiniteTemperatureHF::form_G()
     SharedMatrix F_core = J_core->clone();
     F_core->subtract(K_core);
     G_->copy(F_core);
-    const std::vector<boost::shared_ptr<Matrix> >&D = JK_core->D();
-    D[0]->print();
-
 }
-void FiniteTemperatureHF::form_D()
-{
-    Dimension nsopi  = wfn_->nsopi();
-    Dimension nmopi  = wfn_->nmopi();
-    Dimension doccpi = rdocc_p_active_;
-    if(na_ < 1)
-    {
-        C_occ_a_ = wfn_->Ca();
-        C_occ_folded_ = C_occ_a_;
-    }
-
-    for (int h = 0; h < nirrep_; ++h) {
-        int nso = nsopi[h];
-        int nmo = nmopi[h];
-        int na = doccpi[h];
-
-        if (nso == 0 || nmo == 0 || na == 0) continue;
-
-        double** Ca_left = C_occ_folded_->pointer(h);
-        double** Ca_right = C_occ_a_->pointer(h);
-        double** D = D_->pointer(h);
-
-        if (na == 0)
-            memset(static_cast<void*>(D[0]), '\0', sizeof(double)*nso*nso);
-        C_DGEMM('N','T',nso,nso,na,1.0,Ca_left[0],nmo,Ca_right[0],nmo,0.0,D[0],nso);
-
-    }
-
-}
+//void FiniteTemperatureHF::form_D()
+//{
+//    Dimension nsopi  = wfn_->nsopi();
+//    Dimension nmopi  = wfn_->nmopi();
+//    Dimension doccpi = rdocc_p_active_;
+//    if(na_ < 1)
+//    {
+//        C_occ_a_ = wfn_->Ca();
+//        C_occ_folded_ = C_occ_a_;
+//    }
+//
+//    for (int h = 0; h < nirrep_; ++h) {
+//        int nso = nsopi[h];
+//        int nmo = nmopi[h];
+//        int na = doccpi[h];
+//
+//        if (nso == 0 || nmo == 0) continue;
+//
+//        double** Ca_left = C_occ_folded_->pointer(h);
+//        double** Ca_right = C_occ_a_->pointer(h);
+//        double** D = D_->pointer(h);
+//
+//        if (na == 0)
+//            memset(static_cast<void*>(D[0]), '\0', sizeof(double)*nso*nso);
+//        C_DGEMM('N','T',nso,nso,na,1.0,Ca_left[0],nmo,Ca_right[0],nmo,0.0,D[0],nso);
+//
+//    }
+//
+//    D_->print();
+//
+//}
 
 
 }}
