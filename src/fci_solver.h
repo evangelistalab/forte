@@ -82,9 +82,12 @@ public:
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
 
+
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
     void test_rdms(bool value) {test_rdms_ = value;}
+    /// Print the Natural Orbitals
+    void print_no(bool value){print_no_ = value;}
 private:
 
     // ==> Class Data <==
@@ -137,7 +140,9 @@ private:
     int fci_iterations_ = 30;
     /// Test the RDMs?
     bool test_rdms_ = false;
-    ///
+    /// Print the NO from the 1-RDM
+    bool print_no_ = false;
+    /// A variable to control printing information
     int print_ = 0;
 
     // ==> Class functions <==
@@ -188,6 +193,8 @@ public:
     void set_max_rdm_level(int value);
     /// FCI  iterations
     void set_fci_iterations(int value);
+    /// Print the NO from the 1RDM
+    void print_no(bool value);
 
 private:
 
@@ -210,6 +217,8 @@ private:
     int max_rdm_level_;
     /// The number of iterations for FCI
     int fci_iterations_;
+    /// Print the Natural Orbitals from the 1-RDM
+    bool print_no_;
 
     // ==> Class functions <==
 

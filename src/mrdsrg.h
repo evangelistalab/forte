@@ -43,10 +43,13 @@ protected:
 
     // => Class initialization and termination <= //
 
-    /// Called in the constructor
+    /// Start-up function called in the constructor
     void startup();
-    /// Called in the destructor
+    /// Clean-up function called in the destructor
     void cleanup();
+
+    /// Read options
+    void read_options();
 
     /// Print levels
     int print_;
@@ -65,6 +68,9 @@ protected:
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals>  ints_;
+
+    /// Are orbitals semi-canonicalized?
+    bool semi_canonical_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -158,6 +164,8 @@ protected:
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
     ambit::BlockedTensor DT2_;
+    /// Unitary matrix to block diagonal Fock
+    ambit::BlockedTensor U_;
 
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
@@ -286,6 +294,8 @@ protected:
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
+    /// Compute diagonal blocks labels
+    std::vector<std::string> diag_labels();
     /// Compute off-diagonal blocks labels of a one-body operator
     std::vector<std::string> od_one_labels();
     /// Compute off-diagonal blocks labels of a two-body operator
@@ -323,7 +333,7 @@ protected:
     /// Reset integrals to bare Hamiltonian
     void reset_ints(BlockedTensor& H, BlockedTensor& V);
     /// Diagonalize the diagonal blocks of the Fock matrix
-    void diagonalize_Fock_diagblocks(BlockedTensor& U);
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
     ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
@@ -343,6 +353,10 @@ protected:
                         const std::vector<std::pair<std::vector<size_t>, double>>& list);
     /// Print commutator timings
     void print_comm_time();
+    /// Check the max and norm of density
+    void check_density(BlockedTensor& D, const std::string& name);
+    /// Print the summary of 2- and 3-body density cumulant
+    void print_cumulant_summary();
 
 
     // => Useful Inline functions <= //

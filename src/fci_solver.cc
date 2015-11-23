@@ -77,6 +77,10 @@ void FCI::set_fci_iterations(int value)
 {
     fci_iterations_ = value;
 }
+void FCI::print_no(bool value)
+{
+    print_no_ = value;
+}
 
 void FCI::startup()
 {  
@@ -85,6 +89,7 @@ void FCI::startup()
 
     max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
     fci_iterations_ = options_.get_int("FCI_ITERATIONS");
+    print_no_       = options_.get_bool("PRINT_NO");
 }
 
 double FCI::compute_energy()
@@ -114,6 +119,11 @@ double FCI::compute_energy()
     }
 
     int ms = multiplicity - 1;
+    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
+            options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
+    {
+        ms   = 0;
+    }
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
@@ -157,6 +167,7 @@ double FCI::compute_energy()
     fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
     fcisolver_->set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
     fcisolver_->set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+    fcisolver_->print_no(print_no_);
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -444,6 +455,9 @@ double FCISolver::compute_energy()
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
+
+        // Print the NO if energy converged
+        if(print_no_) {C_->print_natural_orbitals();}
     }
     else
     {
@@ -632,7 +646,6 @@ Reference FCISolver::reference()
     g2aa.copy(L2aa);
     g2ab.copy(L2ab);
     g2bb.copy(L2bb);
-
 
     // Convert the 2-RDMs to 2-RCMs
     L2aa("pqrs") -= L1a("pr") * L1a("qs");

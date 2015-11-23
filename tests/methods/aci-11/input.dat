@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.0525898271660026 
-refaci = -75.335740411714 
-refacipt2 = -75.426488135461
+refaci = -75.394396759747 
+refacipt2 = -75.437282533483
 
 molecule N2{
 0 1
@@ -34,8 +34,8 @@ set forte {
   perturb_select false
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
-  TAUP 0.05
-  TAUQ 0.05
+  TAUP 0.01
+  TAUQ 0.01
   nroot 1
   charge 0
   enforce_spin_complete true

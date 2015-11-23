@@ -278,6 +278,83 @@ double AdaptivePathIntegralCI::compute_energy()
         }
     }
 
+//    Determinant detI(reference_determinant_);
+
+//    std::vector<int> aocc = detI.get_alfa_occ();
+//    std::vector<int> bocc = detI.get_beta_occ();
+//    std::vector<int> avir = detI.get_alfa_vir();
+//    std::vector<int> bvir = detI.get_beta_vir();
+//    std::vector<int> aocc_offset(nirrep_ + 1);
+//    std::vector<int> bocc_offset(nirrep_ + 1);
+//    std::vector<int> avir_offset(nirrep_ + 1);
+//    std::vector<int> bvir_offset(nirrep_ + 1);
+
+//    int noalpha = aocc.size();
+//    int nobeta  = bocc.size();
+//    int nvalpha = avir.size();
+//    int nvbeta  = bvir.size();
+
+//    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+//    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+//    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+//    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+//    for (int h = 1; h < nirrep_ + 1; ++h){
+//        aocc_offset[h] += aocc_offset[h-1];
+//        avir_offset[h] += avir_offset[h-1];
+//        bocc_offset[h] += bocc_offset[h-1];
+//        bvir_offset[h] += bvir_offset[h-1];
+//    }
+
+//    for (int h = 0; h < nirrep_; ++h){
+//        for (int i = aocc_offset[h], a = avir_offset[h + 1] - 1 ; i < aocc_offset[h + 1] && a >= avir_offset[h] ; ++i, --a){
+//            int ii = aocc[i];
+//            int aa = avir[a];
+//            detI.set_alfa_bit(ii,false);
+//            detI.set_alfa_bit(aa,true);
+//        }
+//        for (int i = bocc_offset[h], a = bvir_offset[h + 1] - 1 ; i < bocc_offset[h + 1] && a >= bvir_offset[h] ; ++i, --a){
+//            int ii = bocc[i];
+//            int aa = bvir[a];
+//            detI.set_beta_bit(ii,false);
+//            detI.set_beta_bit(aa,true);
+//        }
+//    }
+//    double ref_energy = reference_determinant_.energy();
+//    outfile->Printf("\nreference energy:%.12lf", ref_energy);
+//    reference_determinant_.print();
+//    detI.print();
+//    double max_energy = detI.energy();
+//    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
+//    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
+
+    double high_obt_energy = 0.0;
+    int ne = 0;
+    auto bits_ = reference_determinant_.bits_;
+    for (int i = 0; i < ncmo_; i++) {
+        if (bits_[i]) ++ne;
+        if (bits_[nmo_ +i]) ++ne;
+
+        double temp  = fci_ints_->oei_a(i,i);
+        for(int p = 0; p < ncmo_; ++p){
+            if(bits_[p]){
+                temp += fci_ints_->tei_aa(i,p,i,p);
+            }
+            if(bits_[nmo_ +p]){
+                temp += fci_ints_->tei_ab(i,p,i,p);
+            }
+        }
+        if (temp > high_obt_energy) high_obt_energy = temp;
+    }
+    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
+
+    double ref_energy = reference_determinant_.energy();
+    outfile->Printf("\nreference energy:%.12lf", ref_energy);
+    reference_determinant_.print();
+    double max_energy = high_obt_energy * ne;
+    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
+    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
+
+
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
     double var_energy = initial_guess(dets,C);
@@ -308,6 +385,10 @@ double AdaptivePathIntegralCI::compute_energy()
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
         double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
+
+        if (propagator_ == PowerPropagator) {
+            shift = power_shift;
+        }
 
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
@@ -481,7 +562,7 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }else if (propagator == QuarticPropagator){
         propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
     }else if (propagator == PowerPropagator){
-        propagate_power(dets,C,tau,spawning_threshold,0.0);
+        propagate_power(dets,C,tau,spawning_threshold,S);
     }else if (propagator == OlsenPropagator){
         propagate_Olsen(dets,C,tau,spawning_threshold,S);
     }else if (propagator == DavidsonLiuPropagator){

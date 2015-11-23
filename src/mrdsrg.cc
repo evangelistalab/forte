@@ -20,19 +20,22 @@ MRDSRG::MRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options
       mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)), tensor_type_(kCore)
 {
     print_method_banner({"Multireference Driven Similarity Renormalization Group","Chenyang Li"});
-    startup();
+    read_options();
     print_options();
+    startup();
 }
 
 MRDSRG::~MRDSRG(){
+    cleanup();
+}
+
+void MRDSRG::cleanup(){
     print_comm_time();
 }
 
-void MRDSRG::startup()
-{
-    print_ = options_.get_int("PRINT");
+void MRDSRG::read_options(){
 
-    frozen_core_energy_ = ints_->frozen_core_energy();
+    print_ = options_.get_int("PRINT");
 
     source_ = options_.get_str("SOURCE");
 
@@ -50,6 +53,15 @@ void MRDSRG::startup()
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
+}
+
+void MRDSRG::startup()
+{
+    // frozen-core energy
+    frozen_core_energy_ = ints_->frozen_core_energy();
+
+    // reference energy
+    Eref_ = reference_.get_Eref();
 
     // orbital spaces
     BlockedTensor::reset_mo_spaces();
@@ -90,9 +102,6 @@ void MRDSRG::startup()
     BTF_->add_composite_mo_space("g","pqrsto",{acore_label_,aactv_label_,avirt_label_});
     BTF_->add_composite_mo_space("G","PQRSTO",{bcore_label_,bactv_label_,bvirt_label_});
 
-    // get reference energy
-    Eref_ = reference_.get_Eref();
-
     // prepare integrals
     H_ = BTF_->build(tensor_type_,"H",spin_cases({"gg"}));
     V_ = BTF_->build(tensor_type_,"V",spin_cases({"gggg"}));
@@ -112,6 +121,35 @@ void MRDSRG::startup()
 
     // auto adjusted s_
     s_ = make_s_smart();
+
+    // test semi-canonical
+    print_h2("Checking Orbitals");
+    H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",diag_labels());
+    H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if(i[0] == i[1]){
+            if(spin[0] == AlphaSpin){
+                value = Fa_[i[0]];
+            }else{
+                value = Fb_[i[0]];
+            }
+        }
+    });
+    semi_canonical_ = check_semicanonical();
+    if(!semi_canonical_){
+        outfile->Printf("\n    MR-DSRG will be computed in an arbitrary basis. Orbital invariant formulasm is employed.");
+        outfile->Printf("\n    We recommend using semi-canonical for all denominator-based source operator.");
+        if(options_.get_str("RELAX_REF") != "NONE"){
+            outfile->Printf("\n\n    Currently, only RELAX_REF = NONE is available for orbital invariant formalism.");
+            throw PSIEXCEPTION("Orbital invariant formalism is not implemented for the RELAX_REF option.");
+        }else{
+            U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+            Fa_ = eigens[0];
+            Fb_ = eigens[1];
+        }
+    }else{
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    }
 }
 
 void MRDSRG::build_ints(){
@@ -165,6 +203,9 @@ void MRDSRG::build_density(){
     Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
     Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
     Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+
+    // check cumulants
+    print_cumulant_summary();
 }
 
 void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V){
@@ -356,16 +397,17 @@ double MRDSRG::compute_energy_relaxed(){
             transfer_integrals();
 
             // diagonalize the Hamiltonian
-            FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
-                                options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
+            FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_,mo_space_info_,options_);
             Etemp = Erelax;
+            fcisolver.set_max_rdm_level(3);
+            fcisolver.set_nroot(options_.get_int("NROOT"));
+            fcisolver.set_root(options_.get_int("ROOT"));
             Erelax = fcisolver.compute_energy();
             Erelax_vec.push_back(Erelax);
             double Edelta_relax = Erelax - Etemp;
             Edelta_relax_vec.push_back(Edelta_relax);
 
             // obtain new reference
-            fcisolver.set_max_rdm_level(3);
             reference_ = fcisolver.reference();
 
             // refill densities
@@ -375,7 +417,7 @@ double MRDSRG::compute_energy_relaxed(){
             build_fock(H_,V_);
 
             // diagonal blocks of Fock
-            H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",spin_cases({"gg"}));
+            H0th_.zero();
             H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
                 if(i[0] == i[1]){
                     if(spin[0] == AlphaSpin){
@@ -450,15 +492,16 @@ double MRDSRG::compute_energy_relaxed(){
                 timings.push_back(timer.get());
 
                 // diagonalize the Hamiltonian
-                FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
-                                      options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
+                FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_,mo_space_info_,options_);
+                fcisolver.set_max_rdm_level(3);
+                fcisolver.set_nroot(options_.get_int("NROOT"));
+                fcisolver.set_root(options_.get_int("ROOT"));
                 Erelax = fcisolver.compute_energy();
                 if(fabs(Erelax - Erelax_vec.back()) > 100.0 * e_conv){
                     throw PSIEXCEPTION("Semi-canonicalization failed.");
                 }
 
                 // obtain new reference
-                fcisolver.set_max_rdm_level(3);
                 reference_ = fcisolver.reference();
 
                 // refill densities
@@ -688,29 +731,56 @@ void MRDSRG::reset_ints(BlockedTensor& H, BlockedTensor& V){
 }
 
 
-void MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
-    // diagonal blocks identifiers
-    std::vector<std::string> blocks;
-    blocks.push_back(acore_label_ + acore_label_);
-    blocks.push_back(aactv_label_ + aactv_label_);
-    blocks.push_back(avirt_label_ + avirt_label_);
-    blocks.push_back(bcore_label_ + bcore_label_);
-    blocks.push_back(bactv_label_ + bactv_label_);
-    blocks.push_back(bvirt_label_ + bvirt_label_);
+std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
+    // diagonal blocks identifiers (C-A-V ordering)
+    std::vector<std::string> blocks = diag_labels();
 
-    // map MO space label to Dimension
+    // map MO space label to its Dimension
     std::map<std::string, Dimension> MOlabel_to_dimension;
     MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
     MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
+    // eigen values to be returned
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    std::vector<double> eigenvalues_a(ncmo, 0.0);
+    std::vector<double> eigenvalues_b(ncmo, 0.0);
+
+    // map MO space label to its offset Dimension
+    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    int nirrep = corr.n();
+    MOlabel_to_offset_dimension[acore_label_] = Dimension(std::vector<int> (nirrep, 0));
+    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+
+    // figure out index
+    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values){
+        int h = irrep;
+        size_t idx_begin = 0;
+        while((--h) >= 0) idx_begin += corr[h];
+
+        std::string label (1, tolower(block_label[0]));
+        idx_begin += MOlabel_to_offset_dimension[label][irrep];
+
+        bool spin_alpha = islower(block_label[0]);
+        size_t nvalues = values.size();
+        if(spin_alpha){
+            for(size_t i = 0; i < nvalues; ++i){
+                eigenvalues_a[i + idx_begin] = values[i];
+            }
+        }else{
+            for(size_t i = 0; i < nvalues; ++i){
+                eigenvalues_b[i + idx_begin] = values[i];
+            }
+        }
+    };
+
     // diagonalize diagonal blocks
-    for(auto block: blocks){
+    for(const auto& block: blocks){
         size_t dim = F_.block(block).dim(0);
         if(dim == 0){
             continue;
-        }else if(dim == 1){
-            U.block(block).data()[0] = 1.0;
         }else{
             std::string label (1, tolower(block[0]));
             Dimension space = MOlabel_to_dimension[label];
@@ -725,18 +795,23 @@ void MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
                 }else if(h_dim == 1){
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h.data()[0] = 1.0;
+                    ambit::Tensor F_block = F_.block(block);
+                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
+                    fill_eigen(block,h,T_h.data());
                 }else{
                     ambit::Tensor F_block = F_.block(block);
                     ambit::Tensor T_h = separate_tensor(F_block,space,h);
                     auto Feigen = T_h.syev(kAscending);
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h("pq") = Feigen["eigenvectors"]("pq");
+                    fill_eigen(block,h,Feigen["eigenvalues"].data());
                 }
                 ambit::Tensor U_out = U.block(block);
                 combine_tensor(U_out,U_h,space,h);
             }
         }
-    }    
+    }
+    return {eigenvalues_a, eigenvalues_b};
 }
 
 ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h){
@@ -799,6 +874,63 @@ void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Di
             tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
         }
     }
+}
+
+void MRDSRG::print_cumulant_summary(){
+    print_h2("Density Cumulant Summary");
+
+    check_density(Lambda2_, "2-body");
+    check_density(Lambda3_, "3-body");
+}
+
+void MRDSRG::check_density(BlockedTensor& D, const std::string& name){
+    int rank_half = D.rank() / 2;
+    std::vector<std::string> labels;
+    std::vector<double> maxes, norms;
+    std::vector<std::string> blocks = D.block_labels();
+    for(const auto& block: blocks){
+        std::string spin_label;
+        std::vector<int> idx;
+        for(int i = 0; i < rank_half; ++i){
+            idx.emplace_back(i);
+        }
+        for(const auto& i: idx){
+            if(islower(block[i])){
+                spin_label += "A";
+            }else{
+                spin_label += "B";
+            }
+        }
+        labels.emplace_back(spin_label);
+
+        double D_norm = 0.0, D_max = 0.0;
+        D.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
+            double abs_value = fabs(value);
+            if(abs_value > 1.0e-15){
+                if(abs_value > D_max) D_max = value;
+                D_norm += value * value;
+            }
+        });
+        maxes.emplace_back(D_max);
+        norms.emplace_back(std::sqrt(D_norm));
+    }
+
+    int n = labels.size();
+    std::string sep(10 + 13 * n, '-');
+    std::string indent = "\n    ";
+    std::string output = indent + str(boost::format("%-10s") % name);
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12s") % labels[i]);
+    output += indent + sep;
+
+    output += indent + str(boost::format("%-10s") % "max");
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12.6f") % maxes[i]);
+    output += indent + str(boost::format("%-10s") % "norm");
+    for(int i = 0; i < n; ++i)
+        output += str(boost::format(" %12.6f") % norms[i]);
+    output += indent + sep;
+    outfile->Printf("%s", output.c_str());
 }
 
 }}

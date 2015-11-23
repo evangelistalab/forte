@@ -759,7 +759,7 @@ void SparseCISolver::set_maxiter_davidson(int value)
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
-    if (space.size() <= 5){
+    if (space.size() <= 200){
         diagonalize_full(space,evals,evecs,nroot,multiplicity);
     }else{
         if (diag_method == Full){
@@ -1054,7 +1054,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     if (mult_list[multiplicity].size() < static_cast<size_t>(nroot)){
         size_t nfound = mult_list[multiplicity].size();
         outfile->Printf("\n  Error: %d guess vectors with 2S+1 = %d but only %d were found!",nguess,multiplicity,nfound);
-        exit(1);
+        if(nfound== 0 ){exit(1);}
     }
 
     std::vector<int> mult_vals;
