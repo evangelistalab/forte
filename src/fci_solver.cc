@@ -22,7 +22,7 @@
 #include "libmints/matrix.h"
 #include "libmints/vector.h"
 
-#include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 #include "integrals.h"
 #include "iterative_solvers.h"
 #include "fci_solver.h"
@@ -223,6 +223,16 @@ void FCISolver::set_fci_iterations(int value)
     fci_iterations_ = value;
 }
 
+void FCISolver::set_collapse_per_root(int value)
+{
+    collapse_per_root_ = value;
+}
+
+void FCISolver::set_subspace_per_root(int value)
+{
+    subspace_per_root_ = value;
+}
+
 void FCISolver::startup()
 {
     // Create the string lists
@@ -241,7 +251,8 @@ void FCISolver::startup()
             {"Symmetry",symmetry_},
             {"Multiplicity",multiplicity_},
             {"Number of roots",nroot_},
-            {"Target root",root_}};
+            {"Target root",root_},
+            {"Trial vectors per root",ntrial_per_root_}};
 
         // Print some information
         outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
@@ -308,8 +319,10 @@ double FCISolver::compute_energy()
 
     // Prepare a list of bad roots to project out and pass them to the solver
     std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    int gr = 0;
     for (auto& g : guess){
         if (g.first != multiplicity_){
+            outfile->Printf("\n  Projecting out root %d",gr);
             HC.set(g.second);
             HC.copy_to(sigma);
             std::vector<std::pair<size_t,double>> bad_root;
@@ -320,6 +333,7 @@ double FCISolver::compute_energy()
             }
             bad_roots.push_back(bad_root);
         }
+        gr += 1;
     }
     dls.set_project_out(bad_roots);
 
@@ -458,7 +472,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     size_t num_dets = dets.size();
 
-    std::vector<DynamicBitsetDeterminant> bsdets;
+    std::vector<STLBitsetDeterminant> bsdets;
 
     // Build the full determinants
     size_t nact = active_mo_.size();
@@ -479,9 +493,34 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             if (Ia_v[i]) Ia[i] = true;
             if (Ib_v[i]) Ib[i] = true;
         }
-        DynamicBitsetDeterminant bsdet(Ia,Ib);
+        STLBitsetDeterminant bsdet(Ia,Ib);
         bsdets.push_back(bsdet);
     }
+
+    // Make sure that the spin space is complete
+    STLBitsetDeterminant::enforce_spin_completeness(bsdets);
+    if (bsdets.size() > num_dets){
+        bool* Ia = new bool[nact];
+        bool* Ib = new bool[nact];
+        size_t nnew_dets = bsdets.size() - num_dets;
+        outfile->Printf("\n  Initial guess space is incomplete.\n  Adding %d determinant(s).",nnew_dets);
+        for (size_t i = 0; i < nnew_dets; ++i){
+            // Find the address of a determinant
+            size_t h, add_Ia, add_Ib;
+            for (size_t j = 0; j < nact; ++j){
+                Ia[j] = bsdets[num_dets + i].get_alfa_bit(j);
+                Ib[j] = bsdets[num_dets + i].get_beta_bit(j);
+            }
+            h = lists_->alfa_graph()->sym(Ia);
+            add_Ia = lists_->alfa_graph()->rel_add(Ia);
+            add_Ib = lists_->beta_graph()->rel_add(Ib);
+            std::tuple<double,size_t,size_t,size_t> d(0.0,h,add_Ia,add_Ib);
+            dets.push_back(d);
+        }
+        delete[] Ia;
+        delete[] Ib;
+    }
+    num_dets = dets.size();
 
     Matrix H("H",num_dets,num_dets);
     Matrix evecs("Evecs",num_dets,num_dets);

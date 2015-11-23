@@ -1,0 +1,35 @@
+import forte
+memory 2 gb
+
+ref_scf = -100.00987003232468
+ref_fci = -100.2228199204926
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.000
+}
+
+set {
+  basis                  cc-pvdz
+  scf_type               pk
+  reference              rhf
+  maxiter                300
+  e_convergence          10
+  d_convergence          10
+}
+
+set forte {
+  job_type           fci
+  frozen_docc        [1,0,0,0]
+  restricted_docc    [0,0,0,0]
+  active             [9,1,4,4]
+  ntrial_per_root    1
+}
+
+energy('scf')
+compare_values(ref_scf, get_variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(ref_fci, get_variable("CURRENT ENERGY"),9, "FCI energy") #TEST
