@@ -181,8 +181,11 @@ public:
     
     double energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints);
 
+
     void compute_rdms(int max_order = 2);
     void rdm_test();
+    /// Print the natural_orbitals from FCIWFN
+    void print_natural_orbitals();
 
     /// Return the elements with the smallest value
     /// This function returns the tuple (C_I,irrep,Ia,Ib)

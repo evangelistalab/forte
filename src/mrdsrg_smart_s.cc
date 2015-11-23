@@ -33,7 +33,7 @@ double MRDSRG::make_s_smart(){
 
     if (source_ == "LABS"){
         dsrg_s = 1.0 / Edelta;
-    } else{
+    }else{
         dsrg_s = 1.0 / (Edelta * Edelta);
     }
 

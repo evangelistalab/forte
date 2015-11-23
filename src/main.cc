@@ -32,6 +32,7 @@
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
 #include "casscf.h"
+#include "alternativescasscf.h"
 
 INIT_PLUGIN
 
@@ -239,6 +240,13 @@ read_options(std::string name, Options &options)
         options.add_int("NPOP",100);
 
         //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR ALTERNATIVES FOR CASSCF ORBITALS
+        //////////////////////////////////////////////////////////////
+        /*- What type of alternative CASSCF Orbitals do you want -*/
+        options.add_str("ALTERNATIVE_CASSCF", "NONE", "IVO FTHF NONE");
+        options.add_double("TEMPERATURE", 50000);
+
+        //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
@@ -248,6 +256,9 @@ read_options(std::string name, Options &options)
         options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
+        /*- Print the NO from the rdm of FCI -*/
+        options.add_bool("PRINT_NO", false);
+
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
         /*- The maximum number of iterations -*/
@@ -270,6 +281,8 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_CONVERGENCE", 1e-6);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
+        /*- A complete SOSCF ie Form full Hessian -*/
+        options.add_bool("CASSCF_SOSCF", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
@@ -281,6 +294,8 @@ read_options(std::string name, Options &options)
         options.add_double("TAUP",0.01);
         /*- The threshold for the selection of the Q space -*/
         options.add_double("TAUQ",0.000001);
+		/*- The SD-space prescreening threshold -*/
+		options.add_double("PRESCREEN_THRESHOLD", 0.0);
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
         /*- The type of selection parameters to use*/
@@ -523,9 +538,17 @@ extern "C" PsiReturnType forte(Options &options)
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
 
+    if(options.get_str("ALTERNATIVE_CASSCF") == "FTHF")
+    {
+       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+       auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
+       FTHF->compute_energy();
+    }
+
     if(options.get_bool("CASSCF_REFERENCE") == true)
     {
         boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        //casscf->compute_casscf_soscf();
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")){

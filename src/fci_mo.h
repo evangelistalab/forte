@@ -36,7 +36,7 @@ public:
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
-     * @param semi_canoicalize_orbitals Avoid this if running CASSCF
+     * @param semi_canonicalize_orbitals Avoid this if running CASSCF
      */
     FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize = true);
 
@@ -122,17 +122,19 @@ protected:
 
     /// Diagonalize the CASCI Hamiltonian
     vector<pair<SharedVector,double>> eigen_;
+    ///The algorithm for diagonalization
     std::string diag_algorithm_;
+
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     /// Store and Print the CI Vectors and Configurations
     double print_CI_threshold;
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
-    /// semi-canonicalize
-    void semi_canonicalize();
-    /// turn off semi-canonicalize for CASSCF computation
-    bool semi_canonicalize_orbs_ = true;
+    /// Semi-canonicalize orbitals
+    void semi_canonicalize(const size_t &count);
+    /// Use natural orbitals
+    void nat_orbs();
 
     /// Density Matrix
     d2 Da_;
@@ -172,6 +174,8 @@ protected:
 
     /// Form Density Matrix
     void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
+    /// Check Density Matrix
+    bool CheckDensity();
 
     /// Form 2-Particle Density Cumulant
     void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
@@ -195,7 +199,7 @@ protected:
     void Form_Fock(d2 &A, d2 &B);
     void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
-    void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub);
+    void BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string &name);
 
     /// Reference Energy
     double Eref_;

@@ -148,7 +148,7 @@ void AdaptiveCI::startup()
     nroot_ = options_.get_int("NROOT");
     tau_p_ = options_.get_double("TAUP");
     tau_q_ = options_.get_double("TAUQ");
-
+	screen_thresh_ = options_.get_double("PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
@@ -699,8 +699,11 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
         STLBitsetDeterminant& det = P_space_[I];
+       // generate_screened_excited_determinants(nroot,I,evecs,det,V_hash);
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
+	
+
     outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
     outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
     outfile->Flush();
@@ -737,6 +740,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	}else{
 		outfile->Printf("\n  Using non-perturbative energy estimates");
 	}
+	
 
     // Check the coupling between the reference and the SD space
     for (const auto& it : V_hash){
@@ -770,6 +774,8 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
             }
         }
     } // end loop over determinants 
+	//for figure
+
     if (aimed_selection_){
         // Sort the CI coefficients in ascending order
         std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
@@ -1056,6 +1062,7 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
     }
 }
 
+
 void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
@@ -1067,7 +1074,6 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
     int nobeta  = bocc.size();
     int nvalpha = avir.size();
     int nvbeta  = bvir.size();
-	size_t nscreened = 0;
 
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
@@ -1078,17 +1084,15 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
                 STLBitsetDeterminant new_det(det);
                 new_det.set_alfa_bit(ii,false);
                 new_det.set_alfa_bit(aa,true);
-                if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules_single_alpha(ii,aa);
-					if ( (HIJ * evecs->get_row(0,I)->norm() ) > tau_q_ ){
+                double HIJ = det.slater_rules_single_alpha(ii,aa);
+				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+					if( (V_hash.count(new_det) == 0)){
 						V_hash[new_det] = std::vector<double>(nroot);
-                    	for (int n = 0; n < nroot; ++n){
-                    	    V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                    	}
-					}else{
-						nscreened++;
 					}
-                }
+					for (int n = 0; n < nroot; ++n){
+						V_hash[new_det][n] += HIJ * evecs->get(I,n);
+					}
+				}
             }
         }
     }
@@ -1101,16 +1105,14 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
                 STLBitsetDeterminant new_det(det);
                 new_det.set_beta_bit(ii,false);
                 new_det.set_beta_bit(aa,true);
-                if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules_single_beta(ii,aa);
-					if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                double HIJ = det.slater_rules_single_beta(ii,aa);
+				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                    if (V_hash.count(new_det) == 0){
                         V_hash[new_det] = std::vector<double>(nroot);
-						for (int n = 0; n < nroot; ++n){
-							V_hash[new_det][n] += HIJ * evecs->get(I,n);
-						}
-					}else{
-						nscreened++;
-					}
+                    }
+                    for (int n = 0; n < nroot; ++n){
+                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                    }
                 }
             }
         }
@@ -1131,19 +1133,16 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
                         new_det.set_alfa_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_alfa_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
-
+                        double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
-							
-							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+
+                            if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
-								for (int n = 0; n < nroot; ++n){
-									V_hash[new_det][n] += HIJ * evecs->get(I,n);
-								}
-                            }else{
-								nscreened++;
-							}
+                            }
+                            for (int n = 0; n < nroot; ++n){
+                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                            }
                         }
                     }
                 }
@@ -1165,19 +1164,17 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
                         new_det.set_beta_bit(jj,false);
                         new_det.set_alfa_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+                        double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
 
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
 
-							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                            if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
-								for (int n = 0; n < nroot; ++n){
-									V_hash[new_det][n] += HIJ * evecs->get(I,n);
-								}
-                            }else{
-								nscreened++;
-							}
+                            }
+                            for (int n = 0; n < nroot; ++n){
+                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                            }
                         }
                     }
                 }
@@ -1198,26 +1195,24 @@ void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMa
                         new_det.set_beta_bit(jj,false);
                         new_det.set_beta_bit(aa,true);
                         new_det.set_beta_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+                        double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
 
                             HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
-							if ( (HIJ * evecs->get_row(0,I)->norm()) > tau_q_ ){
+                            if (V_hash.count(new_det) == 0){
                                 V_hash[new_det] = std::vector<double>(nroot);
-								for (int n = 0; n < nroot; ++n){
-                            	    V_hash[new_det][n] += HIJ * evecs->get(I,n);
-								}
-                            }else{
-								nscreened++;
-							}
+                            }
+                            for (int n = 0; n < nroot; ++n){
+                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                            }
                         }
                     }
                 }
             }
         }
     }
-	outfile->Printf("\n %zu determinants were removed from the SD space. ");
 }
+
 
 
 void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
@@ -1551,7 +1546,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 		int order = 0;
 		size_t det = 0;
 		for(auto& i : excitation_counter){
-			outfile->Printf("\n     %2d			%8zu		%.11f", order, i.first, i.second);
+			outfile->Printf("\n      %2d           %8zu           %.11f", order, i.first, i.second);
 			det += i.first;
 			if(det == det_space.size()) break;
 			++order;
@@ -1609,43 +1604,6 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 	
 }
 
-void AdaptiveCI::compute_1rdm( SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
-{
-	// Make a vector of indices for core and active orbitals
-	
-	size_t ncmopi = 0;
-	std::vector<size_t> idx_a;
-	std::vector<size_t> idx_c;
-
-	for(int h = 0; h < nirrep_; ++h){
-		for( int i = 0; i < ncmopi_[h]; ++i){
-			int idx = i + ncmopi;
-			if( i < frzcpi_[h] ){
-				idx_c.push_back(idx);
-			}else if( i >= frzcpi_[h] and i < (frzcpi_[h] + ncmopi_[h])){
-				idx_a.push_back(idx);
-			}
-		}
-		ncmopi += nmopi_[h];
-	}
-
-	//Occupy frozen core with 1.0
-	for(int p = 0; p < nfrzc_; ++p){
-		size_t np = idx_c[p];
-		A->set(np,np,1.0);
-		B->set(np,np,1.0);
-	}
-	
-	double trace = 0.0;
-	for(int p = 0; p < ncmo_; ++p){
-		//size_t np = idx_a[p];
-		for(int q = p; q < nmo_; ++q){
-			oRDM_->add(p,q, B->get(p,q));
-			if(p ==q) trace += oRDM_->get(p,p);
-		}
-	}
-	outfile->Printf("\n\n Trace of 1-RDM: %6.3f\n", trace); 
-}
 
 double AdaptiveCI::OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q)
 {
@@ -1760,6 +1718,7 @@ void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant > det_sp
 	SharedMatrix T(new Matrix("T", det_size, det_size)); 
 	SharedVector evals(new Vector("evals", det_size));
 	S2->diagonalize(T, evals);
+	S2->print_to_mathematica();
 
 	//evals->print();	
 

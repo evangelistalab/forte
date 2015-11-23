@@ -530,7 +530,6 @@ void CholeskyIntegrals::compute_frozen_one_body_operator()
             }
         }
     }
-    C_core->print();
 
     boost::shared_ptr<JK> JK_core = JK::build_JK();
 
