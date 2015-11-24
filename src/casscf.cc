@@ -169,6 +169,8 @@ void CASSCF::compute_casscf()
         Cb->copy(Cp);
         ///Right now, this retransforms all the integrals
         ///Think of ways of avoiding this
+        ///This is used as way to retransform our integrals so Francesco's FCI code can use the updated CI
+        ///Can redefi
         ints_->retransform_integrals();
 
         if(options_.get_bool("CASSCF_DEBUG_PRINTING"))
@@ -545,10 +547,10 @@ void CASSCF::form_fock_active()
     Dimension nmopi      = mo_space_info_->get_dimension("ALL");
     int offset_nofroze = 0;
     int offset_froze   = 0;
-    for(int h = 0; h < nirrep_; h++){
+    for(size_t h = 0; h < nirrep_; h++){
         int froze = frozen_dim[h];
-        for(size_t p = froze; p < nmopi[h]; p++){
-            for(size_t q = froze; q < nmopi[h]; q++){
+        for(int p = froze; p < nmopi[h]; p++){
+            for(int q = froze; q < nmopi[h]; q++){
                 F_act_no_frozen->set(p  - froze + offset_froze, q - froze + offset_froze, F_act->get(p + offset_nofroze, q + offset_nofroze));
             }
         }

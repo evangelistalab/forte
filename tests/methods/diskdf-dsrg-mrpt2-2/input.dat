@@ -4,7 +4,7 @@
 import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2    = -100.10221389064
+refdsrgpt2    = -100.10235757062
 
 memory 500 mb
 
@@ -19,7 +19,7 @@ set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
    reference               twocon
-   scf_type                DF
+   scf_type                df
    d_convergence           12
    e_convergence           15
 }

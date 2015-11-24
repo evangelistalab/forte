@@ -138,15 +138,14 @@ public:
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b) = 0;
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(bool* Ia, bool* Ib) = 0;
-
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib) = 0;
-
-    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals) = 0;
-    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals) = 0;
-    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals) = 0;
+    /// These are really slow and are really not used at all in these codes.
+    /// If you can get a density matrix, try using make_fock_matrix with gamma_a and gamma_b
+    /// This has been optimized for each and every integral type
+    void make_fock_matrix(bool* Ia, bool* Ib);
+    void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
+    void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
+    void make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vector<double>, std::vector<double> > &fock_diagonals);
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
@@ -178,6 +177,7 @@ public:
     double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
     double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
     IntegralType integral_type(){return integral_type_;}
+    SharedMatrix OneBody_symm(){return OneBody_symm_;}
 
 
 protected:
@@ -270,10 +270,10 @@ protected:
     virtual void freeze_core_orbitals() = 0;
 
     /// Compute the frozen core energy
-    virtual void compute_frozen_core_energy() = 0;
+    virtual void compute_frozen_core_energy();
 
     /// Compute the one-body operator modified by the frozen core orbitals
-    virtual void compute_frozen_one_body_operator() = 0;
+    virtual void compute_frozen_one_body_operator();
 
     /// Remove the doubly occupied and virtual orbitals and resort the rest so that
     /// we are left only with ncmo = nmo - nfzc - nfzv
@@ -299,6 +299,11 @@ protected:
     SharedMatrix Ca_;
     /// Control printing of timings
     int print_;
+    /// The One Electron Integrals (T + V) in SO Basis
+    SharedMatrix OneBody_symm_;
+    SharedMatrix OneInts_symmetryao_;
+
+    ///The Frozen One Body Operator
 };
 
 /**
@@ -355,16 +360,6 @@ public:
 
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
 
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(bool* Ia, bool* Ib);
-
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-
-    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual size_t nthree() const
 
     {
@@ -382,8 +377,6 @@ private:
     //Calculates the diagonal integrals from aptei
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
-    virtual void compute_frozen_core_energy();
-    virtual void compute_frozen_one_body_operator();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
@@ -448,16 +441,7 @@ public:
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(bool* Ia, bool* Ib);
 
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-
-    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual size_t nthree() const {return nthree_;}
 
 private:
@@ -468,8 +452,6 @@ private:
     virtual void deallocate();
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
-    virtual void compute_frozen_core_energy();
-    virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     ///This is not used in Cholesky, but I have to have implementations for
@@ -525,16 +507,6 @@ public:
 
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
 
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(bool* Ia, bool* Ib);
-
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-
-    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual size_t nthree() const {return nthree_;}
 private:
     virtual void gather_integrals();
@@ -543,8 +515,6 @@ private:
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
-    virtual void compute_frozen_core_energy();
-    virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}
@@ -598,15 +568,6 @@ public:
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
 
     /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(bool* Ia, bool* Ib);
-
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-
-    /// Make the diagonal matrix elements of the Fock operator for a given set of occupation numbers
-    virtual void make_fock_diagonal(bool* Ia, bool* Ib,std::pair<std::vector<double>,std::vector<double> >& fock_diagonals);
-    virtual void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    virtual void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
     virtual size_t nthree() const {return nthree_;}
 private:
     virtual void gather_integrals();
@@ -615,8 +576,6 @@ private:
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
     virtual void freeze_core_orbitals();
-    virtual void compute_frozen_core_energy();
-    virtual void compute_frozen_one_body_operator();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}

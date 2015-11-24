@@ -3,7 +3,7 @@
 import forte
 
 refmcscf    = -15.569761360884
-refdsrgpt2 = -15.618567168945663
+refdsrgpt2 =  -15.61860527962
 
 molecule {
   0 1
@@ -19,7 +19,7 @@ set globals{
    scf_type     pk
    d_convergence           12
    e_convergence           15
-   DF_BASIS_MP2         cc-pvdz-ri
+   df_basis_mp2            cc-pvdz-ri
 }
 
 set mcscf{
@@ -37,6 +37,8 @@ set forte{
    dsrgpt                true
    int_type              DF
    job_type              three-dsrg-mrpt2
+   print_no              false
+   print                 0
 
 }
 

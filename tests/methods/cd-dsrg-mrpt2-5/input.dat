@@ -25,7 +25,7 @@ molecule mbenzyne{
 set globals{
    basis                   sto-3g
    reference               twocon
-   scf_type                CD
+   scf_type                pk
    cholesky_tolerance      1e-14
    d_convergence           10
    e_convergence           12
@@ -49,6 +49,7 @@ set forte{
    dsrg_s                 0.5
    int_type               cholesky
    cholesky_tolerance     1e-11
+   PRINT_DENOM2           true
 }
 
 scf = energy('mcscf')

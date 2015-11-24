@@ -274,7 +274,7 @@ double FCISolver::compute_energy()
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
 
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_);
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_, mo_space_info_);
     DynamicBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);

@@ -47,7 +47,6 @@ set forte{
    cas_type                FCI
    CASSCF_REFERENCE        TRUE
    int_type                conventional
-   CASSCF_DEBUG_PRINTING      true
    CASSCF_ITERATIONS           20
 }
 

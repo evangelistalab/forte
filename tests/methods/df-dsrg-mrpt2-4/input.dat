@@ -3,7 +3,7 @@
 import forte
 
 refrhf     = -108.95379624015762 
-refdsrgpt2 = -109.251898130717123
+refdsrgpt2 = -109.25189866738
 
 memory 500 mb
 
@@ -33,6 +33,7 @@ set forte {
    int_type                df
    job_type                three-dsrg-mrpt2
    NTRIAL_PER_ROOT         100
+   cas_type                CAS
 }
 
 scf = energy('scf')
