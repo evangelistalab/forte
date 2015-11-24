@@ -22,7 +22,7 @@
 #include "libmints/matrix.h"
 #include "libmints/vector.h"
 
-#include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 #include "integrals.h"
 #include "iterative_solvers.h"
 #include "fci_solver.h"
@@ -139,6 +139,8 @@ double FCI::compute_energy()
         outfile->Printf("\n  Number of electrons: %d",nel);
         outfile->Printf("\n  Charge: %d",charge);
         outfile->Printf("\n  Multiplicity: %d",multiplicity);
+        outfile->Printf("\n  Davidson subspace max dim: %d",options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+        outfile->Printf("\n  Davidson subspace min dim: %d",options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         if (ms % 2 == 0){
             outfile->Printf("\n  M_s: %d",ms / 2);
         }else{
@@ -155,23 +157,19 @@ double FCI::compute_energy()
     size_t na = (nactel + ms) / 2;
     size_t nb =  nactel - na;
 
-    //    size_t na = doccpi_.sum() + soccpi_.sum() - nfdocc - rdocc.size();
-    //    size_t nb = doccpi_.sum() - nfdocc - rdocc.size();
-
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
-
-
+    // tweak some options
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("NROOT"));
     fcisolver_->set_root(options_.get_int("ROOT"));
     fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+    fcisolver_->set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+    fcisolver_->set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
     fcisolver_->print_no(print_no_);
 
-
     double fci_energy = fcisolver_->compute_energy();
-
 
     Process::environment.globals["CURRENT ENERGY"] = fci_energy;
     Process::environment.globals["FCI ENERGY"] = fci_energy;
@@ -236,6 +234,16 @@ void FCISolver::set_fci_iterations(int value)
     fci_iterations_ = value;
 }
 
+void FCISolver::set_collapse_per_root(int value)
+{
+    collapse_per_root_ = value;
+}
+
+void FCISolver::set_subspace_per_root(int value)
+{
+    subspace_per_root_ = value;
+}
+
 void FCISolver::startup()
 {
     // Create the string lists
@@ -254,7 +262,8 @@ void FCISolver::startup()
             {"Symmetry",symmetry_},
             {"Multiplicity",multiplicity_},
             {"Number of roots",nroot_},
-            {"Target root",root_}};
+            {"Target root",root_},
+            {"Trial vectors per root",ntrial_per_root_}};
 
         // Print some information
         outfile->Printf("\n\n  ==> FCI Solver <==\n\n");
@@ -294,6 +303,8 @@ double FCISolver::compute_energy()
     DavidsonLiuSolver dls(fci_size,nroot_);
     dls.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     dls.set_print_level(print_);
+    dls.set_collapse_per_root(collapse_per_root_);
+    dls.set_subspace_per_root(subspace_per_root_);
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
@@ -319,8 +330,10 @@ double FCISolver::compute_energy()
 
     // Prepare a list of bad roots to project out and pass them to the solver
     std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+    int gr = 0;
     for (auto& g : guess){
         if (g.first != multiplicity_){
+            outfile->Printf("\n  Projecting out root %d",gr);
             HC.set(g.second);
             HC.copy_to(sigma);
             std::vector<std::pair<size_t,double>> bad_root;
@@ -331,6 +344,7 @@ double FCISolver::compute_energy()
             }
             bad_roots.push_back(bad_root);
         }
+        gr += 1;
     }
     dls.set_project_out(bad_roots);
 
@@ -472,7 +486,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     size_t num_dets = dets.size();
 
-    std::vector<DynamicBitsetDeterminant> bsdets;
+    std::vector<STLBitsetDeterminant> bsdets;
 
     // Build the full determinants
     size_t nact = active_mo_.size();
@@ -493,9 +507,34 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
             if (Ia_v[i]) Ia[i] = true;
             if (Ib_v[i]) Ib[i] = true;
         }
-        DynamicBitsetDeterminant bsdet(Ia,Ib);
+        STLBitsetDeterminant bsdet(Ia,Ib);
         bsdets.push_back(bsdet);
     }
+
+    // Make sure that the spin space is complete
+    STLBitsetDeterminant::enforce_spin_completeness(bsdets);
+    if (bsdets.size() > num_dets){
+        bool* Ia = new bool[nact];
+        bool* Ib = new bool[nact];
+        size_t nnew_dets = bsdets.size() - num_dets;
+        outfile->Printf("\n  Initial guess space is incomplete.\n  Adding %d determinant(s).",nnew_dets);
+        for (size_t i = 0; i < nnew_dets; ++i){
+            // Find the address of a determinant
+            size_t h, add_Ia, add_Ib;
+            for (size_t j = 0; j < nact; ++j){
+                Ia[j] = bsdets[num_dets + i].get_alfa_bit(j);
+                Ib[j] = bsdets[num_dets + i].get_beta_bit(j);
+            }
+            h = lists_->alfa_graph()->sym(Ia);
+            add_Ia = lists_->alfa_graph()->rel_add(Ia);
+            add_Ib = lists_->beta_graph()->rel_add(Ib);
+            std::tuple<double,size_t,size_t,size_t> d(0.0,h,add_Ia,add_Ib);
+            dets.push_back(d);
+        }
+        delete[] Ia;
+        delete[] Ib;
+    }
+    num_dets = dets.size();
 
     Matrix H("H",num_dets,num_dets);
     Matrix evecs("Evecs",num_dets,num_dets);

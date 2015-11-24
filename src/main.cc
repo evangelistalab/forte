@@ -250,6 +250,8 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
+        /*- Options for state averaging -*/
+        options.add("STATE_AVERAGE",new ArrayType());
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
@@ -261,6 +263,10 @@ read_options(std::string name, Options &options)
         options.add_int("NTRIAL_PER_ROOT",10);
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER_DAVIDSON",100);
+        /*- The number of trial vector to retain after collapsing -*/
+        options.add_int("DAVIDSON_COLLAPSE_PER_ROOT",2);
+        /*- The maxim number of trial vectors -*/
+        options.add_int("DAVIDSON_SUBSPACE_PER_ROOT",8);
         /*- Number of iterations for FCI code -*/
         options.add_int("FCI_ITERATIONS", 30);
 
