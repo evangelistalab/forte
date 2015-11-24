@@ -20,7 +20,7 @@ set {
   e_convergence 12
 }
 set forte {
-  job_type fci
+  job_type FCI
 }
 
 energy('scf')

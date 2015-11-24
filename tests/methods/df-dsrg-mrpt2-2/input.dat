@@ -4,7 +4,7 @@
 import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2    = -100.10221389064
+refdsrgpt2    = -100.10235757062
 
 memory 500 mb
 
@@ -40,6 +40,7 @@ set forte {
    dsrg_s                  1.0
    int_type                df
    job_type                three-dsrg-mrpt2
+   cas_type                FCI
 }
 
 ref = energy('mcscf')

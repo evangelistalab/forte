@@ -37,6 +37,7 @@ set forte{
    dsrgpt               true
    int_type             cholesky
    cholesky_tolerance   1e-14
+   PRINT_DENOM2          true
 }
 
 basis {

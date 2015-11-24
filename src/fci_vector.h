@@ -46,10 +46,12 @@ public:
     // ==> Class Constructors <==
 
     /// Constructor based on StringLists
-    FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints);
+    FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mospace_info);
     /// Constructor based on MOInfoSpace
     FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
                  FCIIntegralsType type = Active);
+    /// Constructor based on JK builder
+    //FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, bool jk_builder);
 
     // ==> Class Interface <==
 
@@ -114,6 +116,9 @@ private:
     std::vector<double> diag_tei_ab_;
     /// The diagonal beta-beta antisymmetrized two-electron integrals in physicist notation
     std::vector<double> diag_tei_bb_;
+
+    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
+    void RestrictedOneBodyOperator(std::vector<double>&, std::vector<double>&, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Private Functions <==
 

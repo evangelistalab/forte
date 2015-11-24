@@ -46,8 +46,9 @@ set forte {
    multiplicity            1
    int_type                conventional
    cas_type                FCI
-   casscf_reference        true
-   CASSCF_ITERATIONS       25
+   #casscf_reference        true
+   #CASSCF_ITERATIONS       25
+   job_type                 FCI
 }
 
 #scf = energy('casscf')
