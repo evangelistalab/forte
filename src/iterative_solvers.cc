@@ -22,14 +22,20 @@ namespace psi{ namespace forte{
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size,size_t nroot)
     : size_(size), nroot_(nroot)
 {
-    collapse_size_ = std::min(collapse_per_root_ * nroot_,size);
-    subspace_size_ = std::min(subspace_per_root_ * nroot_,size);
-
     if (size_ == 0) throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
 }
 
 void DavidsonLiuSolver::startup(SharedVector diagonal)
 {
+    // set space size
+    collapse_size_ = std::min(collapse_per_root_ * nroot_,size_);
+    subspace_size_ = std::min(subspace_per_root_ * nroot_,size_);
+
+    basis_size_ = 0; // start with no vectors
+    sigma_size_ = 0; // start with no sigmas vectors
+    iter_ = 0;
+    converged_ = 0;
+
     b_ = SharedMatrix(new Matrix("b",subspace_size_,size_));
     b_->zero();
     bnew = SharedMatrix(new Matrix("bnew",subspace_size_,size_));
@@ -45,11 +51,6 @@ void DavidsonLiuSolver::startup(SharedVector diagonal)
     h_diag = SharedVector(new Vector("lambda",size_));
 
     h_diag->copy(*diagonal);
-
-    basis_size_ = 0; //collapse_size_; //collapse_size_;
-    sigma_size_ = 0; // at the beginning we do not have sigmas for the guess vectors
-    iter_ = 0;
-    converged_ = 0;
 }
 
 DavidsonLiuSolver::~DavidsonLiuSolver()
@@ -70,6 +71,16 @@ void DavidsonLiuSolver::set_e_convergence(double value)
 void DavidsonLiuSolver::set_r_convergence(double value)
 {
     r_convergence_ = value;
+}
+
+void DavidsonLiuSolver::set_collapse_per_root(int value)
+{
+    collapse_per_root_ = value;
+}
+
+void DavidsonLiuSolver::set_subspace_per_root(int value)
+{
+    subspace_per_root_ = value;
 }
 
 size_t DavidsonLiuSolver::collapse_size() const

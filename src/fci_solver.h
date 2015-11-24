@@ -77,6 +77,10 @@ public:
     void set_max_rdm_level(int value);
     /// Set the convergence for FCI
     void set_fci_iterations(int value);
+    /// Set the number of collapse vectors for each root
+    void set_collapse_per_root(int value);
+    /// Set the maximum subspace size for each root
+    void set_subspace_per_root(int value);
 
 
     /// When set to true before calling compute_energy(), it will test the
@@ -126,6 +130,10 @@ private:
     int root_ = 0;
     /// The number of trial guess vectors to generate per root
     size_t ntrial_per_root_; 
+    /// The number of collapse vectors for each root
+    size_t collapse_per_root_ = 2;
+    /// The maximum subspace size for each root
+    size_t subspace_per_root_ = 4;
     /// The maximum RDM computed (0 - 3)
     int max_rdm_level_;
     /// Iterations for FCI
