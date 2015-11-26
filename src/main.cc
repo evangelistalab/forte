@@ -89,7 +89,7 @@ read_options(std::string name, Options &options)
          *  - APICI Adaptive path-integral CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
-         *  - CASSCF     A AO based CASSCF code by Kevin Hannon
+         *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
@@ -283,6 +283,8 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
+        /*- Freeze core with CASSCF -*/
+        options.add_bool("CASSCF_FREEZE_CORE", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
@@ -547,9 +549,18 @@ extern "C" PsiReturnType forte(Options &options)
 
     if(options.get_bool("CASSCF_REFERENCE") == true)
     {
+        if(options.get_bool("CASSCF_FREEZE_CORE") == false
+                && mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
+        {
+            outfile->Printf("\n KEEP FROZEN YO!");
+            ints_->keep_frozen_core_integrals(KeepFrozenMOs);
+            ints_->retransform_integrals();
+        }
         boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
         //casscf->compute_casscf_soscf();
         casscf->compute_casscf();
+        ints_->keep_frozen_core_integrals(RemoveFrozenMOs);
+        ints_->retransform_integrals();
     }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();

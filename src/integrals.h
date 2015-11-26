@@ -166,18 +166,24 @@ public:
     /// Set the value of the two-electron integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2) = 0;
 
-    virtual void update_integrals(bool freeze_core = true) = 0;
+    void update_integrals(bool freeze_core = true);
 
     /// Update the integrals with a new set of MO coefficients
-    virtual void retransform_integrals() = 0;
+    void retransform_integrals();
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
     /// Get the fock matrix elements
     double get_fock_a(size_t p, size_t q){return fock_matrix_a[p * aptei_idx_ + q];}
     double get_fock_b(size_t p, size_t q){return fock_matrix_b[p * aptei_idx_ + q];}
+    /// Tell which integrals were used
     IntegralType integral_type(){return integral_type_;}
     SharedMatrix OneBody_symm(){return OneBody_symm_;}
+    ///Set to either delete frozen core integrals or keep them
+    void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core)
+    {resort_frozen_core_ = keep_frozen_core;
+    }
+    IntegralFrozenCore frozen_core_integrals(){return resort_frozen_core_;}
 
 
 protected:
@@ -267,10 +273,7 @@ protected:
     virtual void make_diagonal_integrals() = 0;
 
     /// This function manages freezing core and virtual orbitals
-    virtual void freeze_core_orbitals() = 0;
-
-    /// Compute the frozen core energy
-    virtual void compute_frozen_core_energy();
+    void freeze_core_orbitals();
 
     /// Compute the one-body operator modified by the frozen core orbitals
     virtual void compute_frozen_one_body_operator();
@@ -334,8 +337,6 @@ public:
     virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
     virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
     virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
-    virtual void retransform_integrals();
-    virtual void update_integrals(bool freeze_core = true);
     virtual double three_integral(size_t, size_t, size_t)
     {
         outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
@@ -376,7 +377,6 @@ private:
     virtual void deallocate();
     //Calculates the diagonal integrals from aptei
     virtual void make_diagonal_integrals();
-    virtual void freeze_core_orbitals();
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double*& tei, std::vector<size_t>& map);
     virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
@@ -435,8 +435,6 @@ public:
         outfile->Printf("\n Oh no! this isn't here");
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
-    virtual void retransform_integrals();
-    virtual void update_integrals(bool freeze_core = true);
     ///Do not use this if you are using CD/DF integrals
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
 
@@ -451,7 +449,6 @@ private:
     virtual void allocate();
     virtual void deallocate();
     virtual void make_diagonal_integrals();
-    virtual void freeze_core_orbitals();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     ///This is not used in Cholesky, but I have to have implementations for
@@ -500,8 +497,6 @@ public:
         throw PSIEXCEPTION("INT_TYPE=DISKDF");
     }
     virtual double** three_integral_pointer(){return ThreeIntegral_->pointer();}
-    virtual void retransform_integrals();
-    virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
     virtual ~DFIntegrals();
 
@@ -514,7 +509,6 @@ private:
     virtual void deallocate();
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void freeze_core_orbitals();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}
@@ -560,8 +554,6 @@ public:
     ///return ambit tensor of size A by q
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>&q);
 
-    virtual void retransform_integrals();
-    virtual void update_integrals(bool freeze_core = true);
     virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
     virtual ~DISKDFIntegrals();
 
@@ -575,7 +567,6 @@ private:
     virtual void deallocate();
     //Grabs DF integrals with new Ca coefficients
     virtual void make_diagonal_integrals();
-    virtual void freeze_core_orbitals();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
     virtual void resort_four(double *&, std::vector<size_t> &){}

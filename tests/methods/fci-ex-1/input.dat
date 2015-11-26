@@ -1,6 +1,6 @@
 import forte
 
-refgs = -190.903043269471823
+refgs = -190.903043353310
 refex = -190.460579057245468
  
 memory 1 gb
@@ -47,7 +47,6 @@ compare_values(refgs,gs_energy,11, "Ground state FCI energy") #TEST
 
 set forte nroot 2
 set forte root  1
-
 energy('scf')
 ex_energy = energy('forte')
 compare_values(refex,ex_energy,11, "Singlet Excited State FCI energy") #TEST

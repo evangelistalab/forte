@@ -18,16 +18,6 @@ timing_re = re.compile(r"Your calculation took (\d+.\d+) seconds")
 
 psi4command = ""
 
-if len(sys.argv) == 1:
-    cmd = ["which","psi4"]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    res = p.stdout.readlines()
-    if len(res) == 0:
-        print "Could not detect your PSI4 executable.  Please specify its location."
-        exit(1)
-    psi4command = res[0][:-1]
-elif len(sys.argv) == 2:
-    psi4command = sys.argv[1]
 
 print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
 
@@ -51,10 +41,26 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3"
                     "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5"]
-casscf_tests = ["casscf", "casscf-2", "casscf-4"]
+casscf_tests = ["casscf", "casscf-2", "casscf-4", "casscf-5", "casscf-6"]
 
-tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + fciqmc_tests + ct_tests + dsrg_tests
+#tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + fciqmc_tests + ct_tests + dsrg_tests
+tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests 
 maindir = os.getcwd()
+if len(sys.argv) == 1:
+    cmd = ["which","psi4"]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    res = p.stdout.readlines()
+    if len(res) == 0:
+        print "Could not detect your PSI4 executable.  Please specify its location."
+        exit(1)
+    psi4command = res[0][:-1]
+elif len(sys.argv) == 2:
+    psi4command = sys.argv[1]
+#elif len(sys.argv) == 3:
+#    tests = sys.argv[2]
+
+print "Running forte tests using the psi4 executable found in:\n  %s\n" % psi4command
+
 
 test_results = {}
 for d in tests:

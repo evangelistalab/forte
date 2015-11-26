@@ -51,7 +51,7 @@ public:
     FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
                  FCIIntegralsType type = Active);
     /// Constructor based on JK builder
-    //FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, bool jk_builder);
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, bool jk_builder);
 
     // ==> Class Interface <==
 

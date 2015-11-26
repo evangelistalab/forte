@@ -3,8 +3,8 @@
 
 import forte
 
-refrhf       = -2.17907771115918
-refdsrgpt2   = -2.238711801896253
+refrhf       = -2.17907250154
+refdsrgpt2   = -2.238709489537815
 
 memory 500 mb
 
@@ -19,8 +19,9 @@ molecule H4{
 set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
    reference               rhf
-   scf_type                pk
+   scf_type                df
    d_convergence           12
    e_convergence           15
    maxiter                 300

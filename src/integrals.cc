@@ -193,7 +193,6 @@ void ForteIntegrals::compute_frozen_one_body_operator()
 {
     Timer FrozenOneBody;
 
-    std::vector<size_t> frozen_dim_abs = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     Dimension nmopi      = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
@@ -232,7 +231,6 @@ void ForteIntegrals::compute_frozen_one_body_operator()
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
-    SharedMatrix F_core_ao(F_core);
     F_core->transform(Ca);
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){
@@ -255,28 +253,11 @@ void ForteIntegrals::compute_frozen_one_body_operator()
 
     OneBody_symm_ = F_core;
 
-    outfile->Printf("\n Maybe FrozenCore energy = %8.8f", E_frozen);
+    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
+
+    frozen_core_energy_ = E_frozen;
 
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
-}
-void ForteIntegrals::compute_frozen_core_energy()
-{
-    frozen_core_energy_ = 0.0;
-
-    for (int hi = 0, p = 0; hi < nirrep_; ++hi){
-        for (int i = 0; i < frzcpi_[hi]; ++i){
-            frozen_core_energy_ += oei_a(p + i,p + i) + oei_b(p + i,p + i);
-
-            for (int hj = 0, q = 0; hj < nirrep_; ++hj){
-                for (int j = 0; j < frzcpi_[hj]; ++j){
-                    frozen_core_energy_ += 0.5 * diag_aptei_aa(p + i,q + j) + 0.5 * diag_aptei_bb(p + i,q + j) + diag_aptei_ab(p + i,q + j);
-                }
-                q += nmopi_[hj]; // orbital offset for the irrep hj
-            }
-        }
-        p += nmopi_[hi]; // orbital offset for the irrep hi
-    }
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 }
 void ForteIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
 {
@@ -403,6 +384,36 @@ void ForteIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<dou
             }
         }
         }
+}
+void ForteIntegrals::update_integrals(bool freeze_core)
+{
+    Timer freezeOrbs;
+    make_diagonal_integrals();
+    if (freeze_core){
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            if(resort_frozen_core_ == RemoveFrozenMOs){aptei_idx_ = ncmo_;}
+        }
+    }
+    if(print_)
+    {
+        outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
+    }
+}
+
+void ForteIntegrals::retransform_integrals()
+{
+    aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
+    gather_integrals();
+    update_integrals();
+}
+void ForteIntegrals::freeze_core_orbitals()
+{
+    compute_frozen_one_body_operator();
+    if (resort_frozen_core_ == RemoveFrozenMOs){
+        resort_integrals_after_freezing();
+    }
 }
 
 }}

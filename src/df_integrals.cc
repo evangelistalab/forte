@@ -255,43 +255,8 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
     }
     outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
-}
-
-void DFIntegrals::update_integrals(bool freeze_core)
-{
-    make_diagonal_integrals();
-    if (freeze_core){
-        if (ncmo_ < nmo_){
-            freeze_core_orbitals();
-            aptei_idx_ = ncmo_;
-        }
-    }
-}
-
-void DFIntegrals::retransform_integrals()
-{
-    Timer retrans_ints;
-    print_ = options_.get_int("PRINT");
-    std::string str_read = "Retransforming integrals";
-    if(print_ > 0)
-    {
-        outfile->Printf("\n   %-36s . . .", str_read.c_str());
-    }
-    
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    //TODO:  Remove this function from retransform
-    //For DF, reread integrals and then transfrom to new basis
-    gather_integrals();
-    update_integrals();
-    if(print_ > 0)
-    {
-        outfile->Printf("...Done. Timing %15.6f s", retrans_ints.get());
-    }
-
 }
 
 void DFIntegrals::deallocate()
@@ -389,22 +354,6 @@ void DFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
     outfile->Printf("\n Done with resorting");
     threeint->copy(temp_threeint);
 }
-
-void DFIntegrals::freeze_core_orbitals()
-{
-    Timer freezeOrbs;
-    compute_frozen_core_energy();
-    compute_frozen_one_body_operator();
-    if (resort_frozen_core_ == RemoveFrozenMOs){
-        resort_integrals_after_freezing();
-    }
-    if(print_)
-    {
-        outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
-    }
-
-}
-
 
 void DFIntegrals::resort_integrals_after_freezing()
 {

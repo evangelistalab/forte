@@ -510,28 +510,6 @@ void DISKDFIntegrals::make_diagonal_integrals()
     if(print_){outfile->Printf("\n Make diagonal integrals in DISKDF took %6.6f s", MakeDiagonalIntegrals.get()); }
 }
 
-
-void DISKDFIntegrals::update_integrals(bool freeze_core)
-{
-    make_diagonal_integrals();
-    if (freeze_core){
-        if (ncmo_ < nmo_){
-            freeze_core_orbitals();
-            aptei_idx_ = ncmo_;
-        }
-    }
-}
-
-void DISKDFIntegrals::retransform_integrals()
-{
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    //TODO:  Remove this function from retransform
-    //For DF, reread integrals and then transfrom to new basis
-    gather_integrals();
-    update_integrals();
-}
-
 void DISKDFIntegrals::deallocate()
 {
 
@@ -697,17 +675,6 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
 void DISKDFIntegrals::resort_three(SharedMatrix&,std::vector<size_t>&)
 {
     outfile->Printf("No need to resort a file.  dummy!");
-}
-
-void DISKDFIntegrals::freeze_core_orbitals()
-{
-    Timer freezeOrbs;
-    compute_frozen_core_energy();
-    compute_frozen_one_body_operator();
-    if (resort_frozen_core_ == RemoveFrozenMOs){
-        resort_integrals_after_freezing();
-    }
-    outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
 }
 
 void DISKDFIntegrals::resort_integrals_after_freezing()

@@ -77,7 +77,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
     scalar_energy_ = ints->scalar();
-    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
     for (size_t i = 0; i < nfomo; ++i){
         size_t ii = fomo_to_mo[i];
         scalar_energy_ += ints->oei_a(ii,ii);
@@ -89,48 +88,28 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
             scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
-    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_ + frozen_core_energy_);
+    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
 
-    //jfor (size_t p = 0; p < nmo_; ++p){
-    //j    size_t pp = cmo_to_mo[p];
-    //j    for (size_t q = 0; q < nmo_; ++q){
-    //j        size_t qq = cmo_to_mo[q];
-    //j        size_t pq = nmo_ * p + q;
-    //j        oei_a_[pq] = ints->oei_a(pp,qq);
-    //j        oei_b_[pq] = ints->oei_b(pp,qq);
-    //j        // Compute the one-body contribution to the energy that comes from
-    //j        // the restricted occupied orbitals
-    //j        for (size_t f = 0; f < nfomo; ++f){
-    //j            size_t index  = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
-    //j            size_t index2 = nmo_ * nfomo * nmo_ * f + nmo_ * nfomo * p + nmo_ * f + q;
-    //j            oei_a_[pq] += tei_gh_aa[index];
-    //j            oei_a_[pq] += tei_gh_ab[index];
-    //j            oei_b_[pq] += tei_gh_bb[index];
-    //j            oei_b_[pq] += tei_gh2_ab[index2]; // TODO check these factors 0.5
-    //j            //oei_b_[pq] += tei_gh_ab[index2]; // TODO check these factors 0.5
-    //j        }
-    //j    }
-    //j}
     RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
 }
 void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b, std::shared_ptr<MOSpaceInfo> mospace_info)
 {
     ///Form JK builder use restricted_docc molecular orbital coefficients
-    Dimension Inactive_docc = mospace_info->get_dimension("INACTIVE_DOCC");
+    Dimension restricted_docc_dim = mospace_info->get_dimension("INACTIVE_DOCC");
     Dimension nsopi           = Process::environment.wavefunction()->nsopi();
     int nirrep               = Process::environment.wavefunction()->nirrep();
     Dimension nmopi = mospace_info->get_dimension("ALL");
 
 
-    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, Inactive_docc));
+    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
     SharedMatrix Ca = Process::environment.wavefunction()->Ca();
     for(int h = 0; h < nirrep; h++)
     {
         for(int mu = 0; mu < nsopi[h]; mu++)
         {
-            for(int i = 0; i < Inactive_docc[h]; i++)
+            for(int i = 0; i < restricted_docc_dim[h]; i++)
             {
-                Cdocc->set(h, mu, i, Ca->get(h, mu, i ));
+                Cdocc->set(h, mu, i, Ca->get(h, mu, i));
             }
         }
     }
@@ -193,7 +172,8 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
             E_restricted += H->get(h, rd, rd) + F_restricted->get(h, rd, rd);
         }
     }
-    outfile->Printf("\n Inactive Energy = %8.8f", E_restricted);
+    /// Since F^{INACTIVE} includes frozen_core in fock build, the energy contribution includes frozen_core_energy
+    //outfile->Printf("\n Inactive Energy = %8.8f", E_restricted - frozen_core_energy_);
 
 }
 
@@ -276,27 +256,78 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
             scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
+    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
 
     RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
-    //for (size_t p = 0; p < nmo_; ++p){
-    //    size_t pp = cmo_to_mo[p];
-    //    for (size_t q = 0; q < nmo_; ++q){
-    //        size_t qq = cmo_to_mo[q];
-    //        size_t idx = nmo_ * p + q;
-    //        oei_a_[idx] = ints->oei_a(pp,qq);
-    //        oei_b_[idx] = ints->oei_b(pp,qq);
-    //        // Compute the one-body contribution to the energy that comes from
-    //        // the restricted occupied orbitals
-    //        for (size_t f = 0; f < nfomo; ++f){
-                //size_t index  = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
-                //size_t index2 = nmo_ * nfomo * nmo_ * f + nmo_ * nfomo * p + nmo_ * f + q;
-    //            oei_a_[idx] += tei_gh_aa[index];
-    //            oei_a_[idx] += tei_gh_ab[index];
-    //            oei_b_[idx] += tei_gh_bb[index];
-    //            oei_b_[idx] += tei_gh_ab[index]; // TODO check these factors 0.5
-    //        }
-    //    }
-    //}
+}
+FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, bool jk_builder)
+{
+    std::vector<size_t> cmo_to_mo;
+    std::vector<size_t> fomo_to_mo;
+
+    nmo_ = mospace_info->size("ACTIVE");
+    cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
+    fomo_to_mo = mospace_info->get_corr_abs_mo("RESTRICTED_DOCC");
+    std::vector<size_t> ncmo_to_mo = mospace_info->get_absolute_mo("GENERALIZED HOLE");
+
+    nmo2_ = nmo_ * nmo_;
+    nmo3_ = nmo_ * nmo_ * nmo_;
+    nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
+
+    //size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
+    size_t nfomo = fomo_to_mo.size();
+
+    oei_a_.resize(nmo2_);
+    oei_b_.resize(nmo2_);
+    tei_aa_.resize(nmo4_);
+    tei_ab_.resize(nmo4_);
+    tei_bb_.resize(nmo4_);
+    diag_tei_aa_.resize(nmo2_);
+    diag_tei_ab_.resize(nmo2_);
+    diag_tei_bb_.resize(nmo2_);
+
+    frozen_core_energy_ = ints->frozen_core_energy();
+    //Initialize tei_rdocc vectors, but don't store them as global variable
+
+    std::vector<double> tei_rdocc_aa;
+    std::vector<double> tei_rdocc_ab;
+    std::vector<double> tei_rdocc_bb;
+
+    // Grab all integrals in blocks
+    ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
+    tei_aa_ = act_aa.data();
+    tei_ab_ = act_ab.data();
+    tei_bb_ = act_bb.data();
+    outfile->Printf("\n act_aa nomr = %8.8f", act_aa.norm(2));
+
+    ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
+    tei_rdocc_aa = rdocc_aa.data();
+    tei_rdocc_ab = rdocc_ab.data();
+    tei_rdocc_bb = rdocc_bb.data();
+
+
+
+    // Compute the scalar contribution to the energy that comes from
+    // the restricted occupied orbitals
+    scalar_energy_ = ints->scalar();
+    for (size_t i = 0; i < nfomo; ++i){
+        size_t ii = fomo_to_mo[i];
+        scalar_energy_ += ints->oei_a(ii,ii);
+        scalar_energy_ += ints->oei_b(ii,ii);
+        for (size_t j = 0; j < nfomo; ++j){
+            size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
+            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
+            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
+            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
+        }
+    }
+    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
+
+    RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
 }
 
 void FCIWfn::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_)
@@ -342,14 +373,6 @@ FCIWfn::~FCIWfn()
 // */
 void FCIWfn::startup()
 {
-    //  if((not Process::environment.options.get_bool("FASTALGRM")) and (moinfo->get_nfocc() > 0)){
-    //    printf("\n\nCapriccio execution terminated");
-    //    printf("\nThe Hamiltonian algorithm with FASTALGRM = FALSE does not support frozen core MOs\n");
-    //    outfile->Printf("\n\n  Capriccio execution terminated");
-    //    outfile->Printf("\n  The Hamiltonian algorithm with FASTALGRM = FALSE does not support frozen core MOs\n");
-    //    outfile->Flush();
-    //    exit(1);
-    //  }
 
     nirrep_ = lists_->nirrep();
     ncmo_ = lists_->ncmo();
