@@ -223,25 +223,6 @@ void CholeskyIntegrals::allocate()
 
 }
 
-void CholeskyIntegrals::update_integrals(bool freeze_core)
-{
-    make_diagonal_integrals();
-    if (freeze_core){
-        if (ncmo_ < nmo_){
-            freeze_core_orbitals();
-            aptei_idx_ = ncmo_;
-        }
-    }
-}
-
-void CholeskyIntegrals::retransform_integrals()
-{
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    gather_integrals();
-    update_integrals();
-}
-
 void CholeskyIntegrals::deallocate()
 {
 
@@ -355,12 +336,4 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
 
-void CholeskyIntegrals::freeze_core_orbitals()
-{
-    compute_frozen_core_energy();
-    compute_frozen_one_body_operator();
-    if (resort_frozen_core_ == RemoveFrozenMOs){
-        resort_integrals_after_freezing();
-    }
-}
 }}

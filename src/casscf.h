@@ -65,7 +65,7 @@ private:
     /// C matrix in the SO basis
     SharedMatrix Ca_sym_;
 
-    /// The dimension for number of molecular orbitals
+    /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     Dimension nmopi_;
     /// The number of correlated molecular orbitals (Restricted Core + Active + Restricted_UOCC + Frozen_Virt
     size_t nmo_;
@@ -81,6 +81,8 @@ private:
     size_t nfrozen_;
     /// The number of virtual orbitals
     size_t nvir_;
+    /// The number of NMO including frozen core
+    size_t all_nmo_;
 
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9
@@ -105,8 +107,6 @@ private:
     /// Do a Complete SOSCF using Daniels' code
     bool do_soscf_;
 
-
-
     /// private functions
 
     /// Perform a CAS-CI with the updated MO coefficients
@@ -128,6 +128,9 @@ private:
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
+    /// Freeze the core and leave them unchanged
+    /// Uses this to override MOSPACEINFO
+    bool casscf_freeze_core_;
     /// Compute core Hamiltonian in SO basis
     boost::shared_ptr<Matrix> compute_so_hamiltonian();
     /// Set the dferi object
@@ -136,6 +139,22 @@ private:
     std::map<std::string, boost::shared_ptr<Matrix> > orbital_subset_helper();
     /// set frozen_core_orbitals
     boost::shared_ptr<Matrix> set_frozen_core_orbitals();
+    /// The Dimensions for the major orbitals spaces involved in CASSCF
+    /// Trying to get these all in the startup, so I can use them repeatly
+    /// rather than create them in different places
+    Dimension frozen_docc_dim_;
+    Dimension restricted_docc_dim_;
+    Dimension active_dim_;
+    Dimension restricted_uocc_dim_;
+    Dimension inactive_docc_dim_;
+
+    std::vector<size_t> frozen_docc_abs_;
+    std::vector<size_t> restricted_docc_abs_;
+    std::vector<size_t> active_abs_;
+    std::vector<size_t> restricted_uocc_abs_;
+    std::vector<size_t> inactive_docc_abs_;
+    std::vector<size_t> nmo_abs_;
+
 
 
 };

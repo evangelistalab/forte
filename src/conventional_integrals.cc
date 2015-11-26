@@ -33,7 +33,6 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
     allocate();
-    transform_integrals();
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
@@ -168,28 +167,10 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double
     p_tei[index] = value;
 }
 
-void ConventionalIntegrals::update_integrals(bool freeze_core)
-{
-    make_diagonal_integrals();
-    if (freeze_core){
-        if (ncmo_ < nmo_){
-            freeze_core_orbitals();
-            aptei_idx_ = ncmo_;
-        }
-    }
-}
-
-void ConventionalIntegrals::retransform_integrals()
-{
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    transform_integrals();
-    gather_integrals();
-    update_integrals();
-}
-
 void ConventionalIntegrals::gather_integrals()
 {
+    transform_integrals();
+
     outfile->Printf("\n  Reading the two-electron integrals from disk");
     outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
     int_mem_ = sizeof(double) * 3 * 8 * num_aptei / 1073741824.0;
@@ -418,13 +399,5 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
 }
 
 
-void ConventionalIntegrals::freeze_core_orbitals()
-{
-    compute_frozen_core_energy();
-    compute_frozen_one_body_operator();
-    if (resort_frozen_core_ == RemoveFrozenMOs){
-        resort_integrals_after_freezing();
-    }
-}
 
 }} //End namespaces for psi and forte

@@ -282,8 +282,18 @@ double FCISolver::compute_energy()
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
+    std::shared_ptr<FCIIntegrals> fci_ints;
 
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_,ints_, mo_space_info_);
+    if(ints_->frozen_core_integrals() == KeepFrozenMOs)
+    {
+        fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
+    }
+    else{
+
+        outfile->Printf("Calling ints, mospace, Ative Contruct");
+        fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_, Active);
+        //fci_ints = std::make_shared<FCIIntegrals>(lists_, ints_, mo_space_info_);
+    }
     DynamicBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);

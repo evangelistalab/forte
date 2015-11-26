@@ -38,6 +38,8 @@ set globals{
 
 set scf_type  direct
 set forte {
+   job_type               CASSCF
+   CASSCF_DEBUG_PRINTING   true
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
@@ -46,9 +48,10 @@ set forte {
    multiplicity            1
    int_type                conventional
    cas_type                FCI
-   #casscf_reference        true
-   #CASSCF_ITERATIONS       25
+   casscf_reference        true
+   CASSCF_ITERATIONS       20
    job_type                 FCI
+   CASSCF_FREEZE_CORE       true
 }
 
 #scf = energy('casscf')

@@ -22,12 +22,12 @@ set globals{
    reference               ROHF
    d_convergence           12
    e_convergence           15
-   frozen_docc             [1,0,0,0]
-   restricted_docc         [1,0,1,1]
+   restricted_docc         [2,0,1,1]
    active                  [2,0,0,0]
    scf_type                out_of_core
    mcscf_type              conv
 }
+energy('casscf')
 
 set mcscf{
    docc                    [2,0,1,1]
@@ -35,7 +35,6 @@ set mcscf{
    maxiter                 1000
    level_shift             1.0
 }
-energy('scf')
 set scf_type direct
 set forte{
    frozen_docc             [1,0,0,0]
@@ -47,10 +46,12 @@ set forte{
    cas_type                FCI
    CASSCF_REFERENCE        TRUE
    int_type                conventional
-   CASSCF_ITERATIONS           20
+   cholesky_tolerance       1e-10
+   CASSCF_ITERATIONS         25
+   CASSCF_FREEZE_CORE       true
 }
 
-set reference twocon
+energy('scf')
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 casscf = energy('forte')

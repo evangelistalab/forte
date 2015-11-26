@@ -27,8 +27,6 @@ CASSCF::CASSCF(Options &options,
 {
     startup();
 }
-
-
 void CASSCF::compute_casscf()
 {
     if(na_ == 0)
@@ -50,7 +48,10 @@ void CASSCF::compute_casscf()
     std::vector<double> E_casscf_con;
     /// FrozenCore C Matrix is never rotated
     /// Can bring this out of loop
-    F_froze_ = set_frozen_core_orbitals();
+    if(nfrozen_ > 0)
+    {
+        F_froze_ = set_frozen_core_orbitals();
+    }
 
     ///Start the iteration
     for(int iter = 0; iter < maxiter; iter++)
@@ -131,25 +132,26 @@ void CASSCF::compute_casscf()
 
         SharedMatrix S_mat_s = S_mat.clone();
 
-        auto nfrozen_docc = mo_space_info_->get_dimension("FROZEN_DOCC");
         Dimension true_nmopi = wfn_->nmopi();
 
         SharedMatrix S_sym(new Matrix(nirrep_, true_nmopi, true_nmopi));
         offset = 0;
         int frozen = 0;
         for(size_t h = 0; h < nirrep_; h++){
-            frozen = nfrozen_docc[h];
+            frozen = frozen_docc_dim_[h];
             for(int p = 0; p < nmopi_[h]; p++){
                 for(int q = 0; q < nmopi_[h]; q++){
                     S_sym->set(h, p + frozen, q + frozen, S_mat_s->get(p + offset, q + offset));
                 }
             }
-            offset += nmopi_[h];
-        }
-        for(size_t h = 0; h < nirrep_; h++){
-            for(int p = 0; p < nfrozen_docc[h]; p++){
-                S_sym->set(h, p, p, 1.0);
+            if(casscf_freeze_core_)
+            {
+                for(int fr = 0; fr < frozen_docc_dim_[h]; fr++)
+                {
+                    S_sym->set(h, fr, fr, 1.0);
+                }
             }
+            offset += nmopi_[h];
         }
 
         Call_->set_name("symmetry aware C");
@@ -162,6 +164,7 @@ void CASSCF::compute_casscf()
         if(casscf_debug_print_)
         {
             Cp->print();
+            S_sym->set_name("OrbitalRotationMatrix");
             S_sym->print();
         }
 
@@ -202,36 +205,64 @@ void CASSCF::compute_casscf()
 
 
 }
-
 void CASSCF::startup()
 {
     print_method_banner({"Complete Active Space Self Consistent Field","Kevin Hannon"});
     na_  = mo_space_info_->size("ACTIVE");
-    nmo_ = mo_space_info_->size("CORRELATED");
     nsopi_ = wfn_->nsopi();
     Call_ = make_c_sym_aware();
-    auto nactive_array = mo_space_info_->get_absolute_mo("ACTIVE");
-    auto restricted_array = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
-    auto virtual_array    = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-    nrdocc_ = restricted_array.size();
-    nvir_  = virtual_array.size();
-    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
 
-    if(casscf_debug_print_)
-    {
-        outfile->Printf("\n ACTIVE: ");
-        for(auto active : nactive_array){outfile->Printf(" %d", active);}
-        outfile->Printf("\n RESTRICTED: ");
-        for(auto restricted : restricted_array){outfile->Printf(" %d", restricted);}
-        outfile->Printf("\n VIRTUAL: ");
-        for(auto virtual_index : virtual_array){outfile->Printf(" %d", virtual_index);}
-
-    }
     int_type_ = ints_->integral_type();
     do_soscf_ = options_.get_bool("CASSCF_SOSCF");
+    casscf_freeze_core_ = options_.get_bool("CASSCF_FREEZE_CORE");
 
+    frozen_docc_dim_     = mo_space_info_->get_dimension("FROZEN_DOCC");
+    restricted_docc_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    active_dim_          = mo_space_info_->get_dimension("ACTIVE");
+    restricted_uocc_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    inactive_docc_dim_   = mo_space_info_->get_dimension("INACTIVE_DOCC");
+
+    frozen_docc_abs_     = mo_space_info_->get_corr_abs_mo("FROZEN_DOCC");
+    restricted_docc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    active_abs_          = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    inactive_docc_abs_   = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
+    nmo_abs_             = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    nmo_ = mo_space_info_->size("CORRELATED");
+    all_nmo_ = mo_space_info_->size("ALL");
+    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    nrdocc_ = restricted_docc_abs_.size();
+    nvir_  = restricted_uocc_abs_.size();
+
+    nfrozen_ = frozen_docc_abs_.size();
+    ///If the user wants to freeze core after casscf, this section of code sets frozen_docc to zero
+    if(!casscf_freeze_core_)
+    {
+        restricted_docc_abs_ = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
+        restricted_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+        active_abs_          = mo_space_info_->get_absolute_mo("ACTIVE");
+        restricted_uocc_abs_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
+
+        for(size_t h = 0; h < nirrep_; h++){frozen_docc_dim_[h] = 0;}
+        for(size_t i = 0; i < frozen_docc_abs_.size(); i++){frozen_docc_abs_[i] = 0;}
+        nfrozen_ = 0;
+        nmo_ = mo_space_info_->size("ALL");
+        nmopi_ = mo_space_info_->get_dimension("ALL");
+        nmo_abs_ = mo_space_info_->get_absolute_mo("ALL");
+    }
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n Total Number of NMO: %d", nmo_);
+        outfile->Printf("\n ACTIVE: ");
+        for(auto active : active_abs_){outfile->Printf(" %d", active);}
+        outfile->Printf("\n RESTRICTED: ");
+        for(auto restricted : restricted_docc_abs_){outfile->Printf(" %d", restricted);}
+        outfile->Printf("\n VIRTUAL: ");
+        for(auto virtual_index : restricted_uocc_abs_){outfile->Printf(" %d", virtual_index);}
+
+    }
 
 }
 boost::shared_ptr<Matrix> CASSCF::make_c_sym_aware()
@@ -239,10 +270,10 @@ boost::shared_ptr<Matrix> CASSCF::make_c_sym_aware()
     ///Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     SharedMatrix Call_sym = wfn_->Ca();
     Ca_sym_ = Call_sym;
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     SharedMatrix aotoso = wfn_->aotoso();
 
@@ -357,7 +388,6 @@ void CASSCF::cas_ci()
     ambit::Tensor gamma1b = cas_ref_.L1b();
 
     gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
-    //gamma_no_spin("i,j") = 0.5 * (gamma1a("i,j") + gamma1b("i,j") + gamma1a("j,i") + gamma1b("j,i"));
 
     SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
     gamma_no_spin.iterate([&](const std::vector<size_t>& i,double& value){
@@ -371,14 +401,8 @@ void CASSCF::cas_ci()
 
 void CASSCF::form_fock_core()
 {
-
     /// Get the CoreHamiltonian in AO basis
-
-    //boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-
     boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-    //SharedMatrix T = mints->ao_kinetic();
-    //SharedMatrix V = mints->ao_potential();
     SharedMatrix T = mints->so_kinetic();
     SharedMatrix V = mints->so_potential();
 
@@ -395,23 +419,22 @@ void CASSCF::form_fock_core()
     ///Step 2: From Hamiltonian elements
     ///This will use JK builds (Equation 18 - 22)
     /// F_{pq}^{core} = C_{mu p}C_{nu q} [h_{uv} + 2J^{(D_c) - K^{(D_c)}]
-    Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension restricted_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     ///Have to go from the full C matrix to the C_core in the SO basis
     /// tricky...tricky
     //SharedMatrix C_core(new Matrix("C_core", nmo_, inactive_dim_abs.size()));
 
     // Need to get the inactive block of the C matrix
-    SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_dim));
+    SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
     SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
     F_core_c1->zero();
 
-    if(restricted_dim.sum() > 0)
+    ///If there is no restricted_docc, there is no C_core
+    if(restricted_docc_dim_.sum() > 0)
     {
         for(size_t h = 0; h < nirrep_; h++){
             for(int mu = 0; mu < nsopi_[h]; mu++){
-                for(int i = 0; i <  restricted_dim[h]; i++){
-                    C_core->set(h, mu, i, Ca_sym_->get(h, mu, i + frozen_dim[h]));
+                for(int i = 0; i <  restricted_docc_dim_[h]; i++){
+                    C_core->set(h, mu, i, Ca_sym_->get(h, mu, i + frozen_docc_dim_[h]));
                 }
             }
         }
@@ -445,7 +468,7 @@ void CASSCF::form_fock_core()
 
         /// If there are frozen orbitals, need to add
         /// FrozenCore Fock matrix to inactive block
-        if(frozen_dim.sum() > 0)
+        if(casscf_freeze_core_)
         {
             F_core->add(F_froze_);
         }
@@ -456,7 +479,7 @@ void CASSCF::form_fock_core()
         for(size_t h = 0; h < nirrep_; h++){
             for(int p = 0; p < nmopi_[h]; p++){
                 for(int q = 0; q < nmopi_[h]; q++){
-                    F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_dim[h], q + frozen_dim[h]));
+                    F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_docc_dim_[h], q + frozen_docc_dim_[h]));
                 }
             }
             offset += nmopi_[h];
@@ -476,14 +499,14 @@ void CASSCF::form_fock_active()
     ///Step 3:
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
-    std::vector<size_t> active_abs_mo = mo_space_info_->get_absolute_mo("ACTIVE");
 
     size_t nso = wfn_->nso();
     SharedMatrix C_active(new Matrix("C_active", nso,na_));
+    auto active_abs_corr = mo_space_info_->get_absolute_mo("ACTIVE");
 
     for(size_t mu = 0; mu < nso; mu++){
         for(size_t u = 0; u <  na_; u++){
-            C_active->set(mu, u, Call_->get(mu, active_abs_mo[u]));
+            C_active->set(mu, u, Call_->get(mu, active_abs_corr[u]));
         }
     }
 
@@ -523,10 +546,8 @@ void CASSCF::form_fock_active()
 
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_act->C_left();
 
-    auto active_dim = mo_space_info_->get_dimension("ACTIVE");
     Cl.clear();
     Cl.push_back(L_C_correct);
-
 
     JK_act->set_allow_desymmetrization(false);
     JK_act->compute();
@@ -538,30 +559,29 @@ void CASSCF::form_fock_active()
     K_core->scale(0.5);
     F_act->subtract(K_core);
     F_act->transform(Call_);
-    SharedMatrix F_act_no_frozen(new Matrix("F_act", nmo_, nmo_));
-    outfile->Printf("\n nmo_:%d", nmo_);
     F_act->set_name("FOCK_ACTIVE");
+    F_act->print();
 
-    auto nfrozen_abs = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
-    Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    Dimension nmopi      = mo_space_info_->get_dimension("ALL");
+    SharedMatrix F_act_no_frozen(new Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;
     int offset_froze   = 0;
+    Dimension no_frozen_dim = mo_space_info_->get_dimension("ALL");
+
     for(size_t h = 0; h < nirrep_; h++){
-        int froze = frozen_dim[h];
-        for(int p = froze; p < nmopi[h]; p++){
-            for(int q = froze; q < nmopi[h]; q++){
+        int froze = frozen_docc_dim_[h];
+        for(int p = froze; p < no_frozen_dim[h]; p++){
+            for(int q = froze; q < no_frozen_dim[h]; q++){
                 F_act_no_frozen->set(p  - froze + offset_froze, q - froze + offset_froze, F_act->get(p + offset_nofroze, q + offset_nofroze));
             }
         }
         offset_froze   += nmopi_[h];
-        offset_nofroze += nmopi[h];
+        offset_nofroze += no_frozen_dim[h];
     }
     if(casscf_debug_print_){
         F_act_no_frozen->print();
     }
 
-    if(nfrozen_abs.size() == 0)
+    if(nfrozen_ == 0)
     {
         F_act_ = F_act;
     }
@@ -572,22 +592,21 @@ void CASSCF::form_fock_active()
 }
 void CASSCF::orbital_gradient()
 {
-    std::vector<size_t> nmo_array = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    //std::vector<size_t> nmo_array = mo_space_info_->get_corr_abs_mo("CORRELATED");
     ///From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::kCore,"Y",{nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::kCore, "F_pu", {nmo_, na_});
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
     if(nrdocc_ > 0)
     {
         F_pu.iterate([&](const std::vector<size_t>& i,double& value){
-            value = F_core_->get(nmo_array[i[0]],active_mo[i[1]]);});
+            value = F_core_->get(nmo_abs_[i[0]],active_abs_[i[1]]);});
     }
     Y("p,t") = F_pu("p,u") * gamma1_("t, u");
 
     SharedMatrix Y_m(new Matrix("Y_m", nmo_, na_));
 
     Y.iterate([&](const std::vector<size_t>& i,double& value){
-        Y_m->set(nmo_array[i[0]],i[1], value);});
+        Y_m->set(nmo_abs_[i[0]],i[1], value);});
     Y_ = Y_m;
     Y_->set_name("F * gamma");
     if(casscf_debug_print_)
@@ -601,16 +620,19 @@ void CASSCF::orbital_gradient()
     //gamma2 = gamma2aa + gamma2ab + gamma2ba + gamma2bb
     /// lambda2 = gamma1*gamma1
 
+    //std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ///SInce the integrals class assumes that the indices are relative,
+    /// pass the relative indices to the integrals code.
     ambit::Tensor tei_puvy = ambit::Tensor::build(ambit::kCore, "puvy", {nmo_, na_, na_, na_});
-    std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    tei_puvy = ints_->aptei_ab_block(nmo_array, na_array, na_array, na_array);
+    tei_puvy = ints_->aptei_ab_block(nmo_abs_, active_abs_, active_abs_, active_abs_);
+    outfile->Printf("\n %8.8f", tei_puvy.norm(2));
     ambit::Tensor Z = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = tei_puvy("p,u,x,y") * gamma2_("t, u, x, y");
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
-        Zm->set(nmo_array[i[0]],i[1], value);});
+        Zm->set(nmo_abs_[i[0]],i[1], value);});
 
     Z_ = Zm;
     Z_->set_name("g * rdm2");
@@ -624,54 +646,57 @@ void CASSCF::orbital_gradient()
 
     //GOTCHA:  Z and T are of size nmo by na
     //The absolute MO should not be used to access elements of Z, Y, or Gamma since these are of 0....na_ arrays
-    auto occ_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto virt_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    auto active_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    //auto occ_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+    //auto virt_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    //auto active_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
 
     SharedMatrix Orb_grad(new Matrix("G_pq", nmo_, nmo_));
     Orb_grad->set_name("CASSCF Gradient");
 
-    for(size_t ii = 0; ii < occ_array.size(); ii++)
-        for(size_t ti = 0; ti < active_array.size(); ti++){
+    for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++)
+        for(size_t ti = 0; ti < active_abs_.size(); ti++){
             {
-                size_t i = occ_array[ii];
-                size_t t = active_array[ti];
+                size_t i = restricted_docc_abs_[ii];
+                size_t t = active_abs_[ti];
                 //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
                 double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
                 Orb_grad->set(i,t, value_it) ;
             }
     }
-    for(auto i : occ_array){
-        for(auto a : virt_array){
-            //double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 2.0;
+    if(casscf_debug_print_){outfile->Printf("\n i, t %8.8f", Orb_grad->rms());}
+    for(auto i : restricted_docc_abs_){
+        for(auto a : restricted_uocc_abs_){
             double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
             Orb_grad->set(i, a, value_ia);
         }
     }
-    for(size_t ai = 0; ai < virt_array.size(); ai++){
-        for(size_t ti = 0; ti < active_array.size(); ti++){
-            size_t t = active_array[ti];
-            size_t a = virt_array[ai];
+    if(casscf_debug_print_){outfile->Printf("\n i, a %8.8f", Orb_grad->rms());}
+
+    for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
+        for(size_t ti = 0; ti < active_abs_.size(); ti++){
+            size_t t = active_abs_[ti];
+            size_t a = restricted_uocc_abs_[ai];
             double value_ta = 2.0 * Y_->get(a, ti) + 2.0 * Z_->get(a, ti);
             Orb_grad->set(t,a, value_ta);
         }
     }
+    if(casscf_debug_print_){outfile->Printf("\n t, a %8.8f", Orb_grad->rms());}
 
+    std::vector<size_t> active_rel = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
+    for(size_t u = 0; u < na_; u++){
+        for(size_t v = 0; v < na_; v++){
+            Orb_grad->set(active_rel[u], active_rel[v], 0.0);
+        }
+    }
     if(casscf_debug_print_)
     {
         Orb_grad->print();
     }
-    for(size_t u = 0; u < na_; u++){
-        for(size_t v = 0; v < na_; v++){
-            Orb_grad->set(active_array[u], active_array[v], 0.0);
-        }
-    }
 
     g_ = Orb_grad;
-    if(casscf_debug_print_)
-    {
-        g_->print();
-    }
+    g_->set_name("CASSCF_GRADIENT");
 
 
 }
@@ -679,14 +704,10 @@ void CASSCF::diagonal_hessian()
 {
     SharedMatrix D(new Matrix("DH", nmo_, nmo_));
 
-    auto i_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto a_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    auto t_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
-
-    for(size_t ii = 0; ii < i_array.size(); ii++){
-        for(size_t ai = 0; ai < a_array.size(); ai++){
-            size_t a = a_array[ai];
-            size_t i = i_array[ii];
+    for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
+        for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
+            size_t a = restricted_uocc_abs_[ai];
+            size_t i = restricted_docc_abs_[ii];
             //double value_ia = F_core_->get(a,a) * 4.0 + 2 * F_act_->get(a,a);
             //value_ia -= 4.0 * F_core_->get(i,i)  - 2 * F_act_->get(i,i);
             double value_ia = (F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a));
@@ -694,10 +715,10 @@ void CASSCF::diagonal_hessian()
             D->set(i,a,value_ia);
         }
     }
-    for(size_t ai = 0; ai < a_array.size(); ai++){
-        for(size_t ti = 0; ti < t_array.size(); ti++){
-            size_t a = a_array[ai];
-            size_t t = t_array[ti];
+    for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
+        for(size_t ti = 0; ti < active_abs_.size(); ti++){
+            size_t a = restricted_uocc_abs_[ai];
+            size_t t = active_abs_[ti];
             //double value_ta = 2.0 * gamma1M_->get(ti,ti) * F_core_->get(a,a);
             //value_ta += gamma1M_->get(ti,ti) * F_act_->get(a,a);
             //value_ta -= 2*Y_->get(t,ti) + 4.0 *Z_->get(t,ti);
@@ -707,10 +728,10 @@ void CASSCF::diagonal_hessian()
             D->set(t,a, value_ta);
         }
     }
-    for(size_t ii = 0; ii < i_array.size(); ii++){
-        for(size_t ti = 0; ti < t_array.size(); ti++){
-            size_t i = i_array[ii];
-            size_t t = t_array[ti];
+    for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
+        for(size_t ti = 0; ti < active_abs_.size(); ti++){
+            size_t i = restricted_docc_abs_[ii];
+            size_t t = active_abs_[ti];
 
             double value_it = 4.0 * F_core_->get(t,t)
                     + 4.0 * F_act_->get(t,t)
@@ -721,10 +742,10 @@ void CASSCF::diagonal_hessian()
             D->set(i,t, value_it);
         }
     }
-    auto na_vec = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
     for(size_t u = 0; u < na_; u++){
         for(size_t v = 0; v < na_; v++){
-            D->set(na_vec[u], na_vec[v], 1.0);
+            D->set(active_abs_[u], active_abs_[v], 1.0);
         }
     }
     d_ = D;
@@ -781,10 +802,10 @@ double CASSCF::cas_check(Reference cas_ref)
 
     double E_casscf = 0.0;
 
-    std::vector<size_t> nmo_array = mo_space_info_->get_corr_abs_mo("CORRELATED");
     std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
 
     ambit::Tensor tei_ab = ints_->aptei_ab_block(na_array, na_array, na_array, na_array);
+
     for (size_t p = 0; p < na_array.size(); ++p){
         for (size_t q = 0; q < na_array.size(); ++q){
             E_casscf += gamma1.data()[na_ * p + q] * fci_ints->oei_a(p,q);
