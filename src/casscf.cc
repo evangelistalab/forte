@@ -560,7 +560,6 @@ void CASSCF::form_fock_active()
     F_act->subtract(K_core);
     F_act->transform(Call_);
     F_act->set_name("FOCK_ACTIVE");
-    F_act->print();
 
     SharedMatrix F_act_no_frozen(new Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;

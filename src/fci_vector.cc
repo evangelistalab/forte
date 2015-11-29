@@ -33,12 +33,10 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
     nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
 
     // This is a warning, but please do not delete it.  It is used in fci_vector.  
-    IntegralType integral_type_ = ints->integral_type();
 
     std::vector<size_t> cmo_to_mo = lists->cmo_to_mo();
 
     std::vector<size_t> fomo_to_mo = lists->fomo_to_mo();
-    size_t nfomo = fomo_to_mo.size();
 
     oei_a_.resize(nmo2_);
     oei_b_.resize(nmo2_);
@@ -54,11 +52,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
 	std::vector<double> tei_rdocc_ab;
 	std::vector<double> tei_rdocc_bb;
 
-	std::vector<double> tei_gh_aa;
-	std::vector<double> tei_gh_ab;
-	std::vector<double> tei_gh_bb;
-	std::vector<double> tei_gh2_ab;
-
 	// Grab all integrals in blocks
     ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
     ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
@@ -67,39 +60,20 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<F
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
 
-    ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    tei_rdocc_aa = rdocc_aa.data();
-    tei_rdocc_ab = rdocc_ab.data();
-    tei_rdocc_bb = rdocc_bb.data();
-
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
     scalar_energy_ = ints->scalar();
-    for (size_t i = 0; i < nfomo; ++i){
-        size_t ii = fomo_to_mo[i];
-        scalar_energy_ += ints->oei_a(ii,ii);
-        scalar_energy_ += ints->oei_b(ii,ii);
-        for (size_t j = 0; j < nfomo; ++j){
-            size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
-            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
-            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
-            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
-        }
-    }
-    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
 
     RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
 }
 void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b, std::shared_ptr<MOSpaceInfo> mospace_info)
 {
-    ///Form JK builder use restricted_docc molecular orbital coefficients
+    ///Form JK builder use inactive_docc molecular orbital coefficients
+    /// Forms the Fock Operator for frozen_core and restricted_docc
     Dimension restricted_docc_dim = mospace_info->get_dimension("INACTIVE_DOCC");
     Dimension nsopi           = Process::environment.wavefunction()->nsopi();
     int nirrep               = Process::environment.wavefunction()->nirrep();
     Dimension nmopi = mospace_info->get_dimension("ALL");
-
 
     SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
     SharedMatrix Ca = Process::environment.wavefunction()->Ca();
@@ -161,6 +135,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
     for(size_t u = 0; u < nmo_; u++){
         for(size_t v = 0; v < nmo_; v++){
             double value = F_restric_c1->get(absolute_active[u], absolute_active[v]);
+            //double h_value = H->get(absolute_active[u], absolute_active[v]);
             oei_a[u * nmo_ + v ] = value;
             oei_b[u * nmo_ + v ] = value;
         }
@@ -173,7 +148,11 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
         }
     }
     /// Since F^{INACTIVE} includes frozen_core in fock build, the energy contribution includes frozen_core_energy
-    //outfile->Printf("\n Inactive Energy = %8.8f", E_restricted - frozen_core_energy_);
+    if(print_)
+    {
+        outfile->Printf("\n Inactive Energy = %8.8f", E_restricted - frozen_core_energy_);
+    }
+    scalar_energy_ += E_restricted - frozen_core_energy_;
 
 }
 
@@ -207,15 +186,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     frozen_core_energy_ = ints->frozen_core_energy();
 	//Initialize tei_rdocc vectors, but don't store them as global variable
 
-	std::vector<double> tei_rdocc_aa;
-	std::vector<double> tei_rdocc_ab;
-	std::vector<double> tei_rdocc_bb;
-
-	std::vector<double> tei_gh_aa;
-	std::vector<double> tei_gh_ab;
-	std::vector<double> tei_gh_bb;
-	std::vector<double> tei_gh2_ab;
-	
 	// Grab all integrals in blocks
     ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
     ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
@@ -224,39 +194,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
 
-    ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    tei_rdocc_aa = rdocc_aa.data();
-    tei_rdocc_ab = rdocc_ab.data();
-    tei_rdocc_bb = rdocc_bb.data();
-	
-
-    ambit::Tensor gh_aa  = ints->aptei_aa_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
-	ambit::Tensor gh_ab  = ints->aptei_ab_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
-    ambit::Tensor gh_bb  = ints->aptei_bb_block(cmo_to_mo,fomo_to_mo,cmo_to_mo,fomo_to_mo);
-    ambit::Tensor gh2_ab = ints->aptei_ab_block(fomo_to_mo,cmo_to_mo,fomo_to_mo,cmo_to_mo);
-
-    tei_gh_aa  = gh_aa.data();
-    tei_gh_ab  = gh_ab.data();
-    tei_gh_bb  = gh_bb.data();
-    tei_gh2_ab = gh2_ab.data();
-
-    // Compute the scalar contribution to the energy that comes from
-    // the restricted occupied orbitals
     scalar_energy_ = ints->scalar();
-    for (size_t i = 0; i < nfomo; ++i){
-        size_t ii = fomo_to_mo[i];
-        scalar_energy_ += ints->oei_a(ii,ii);
-        scalar_energy_ += ints->oei_b(ii,ii);
-        for (size_t j = 0; j < nfomo; ++j){
-			size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
-            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
-            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
-            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
-        }
-    }
-    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
 
     RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
 }
@@ -274,9 +212,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     nmo3_ = nmo_ * nmo_ * nmo_;
     nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
 
-    //size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
-    size_t nfomo = fomo_to_mo.size();
-
     oei_a_.resize(nmo2_);
     oei_b_.resize(nmo2_);
     tei_aa_.resize(nmo4_);
@@ -287,45 +222,18 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     diag_tei_bb_.resize(nmo2_);
 
     frozen_core_energy_ = ints->frozen_core_energy();
-    //Initialize tei_rdocc vectors, but don't store them as global variable
 
-    std::vector<double> tei_rdocc_aa;
-    std::vector<double> tei_rdocc_ab;
-    std::vector<double> tei_rdocc_bb;
-
-    // Grab all integrals in blocks
+    // Grab active integrals in blocks
     ambit::Tensor act_aa = ints->aptei_aa_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
     ambit::Tensor act_ab = ints->aptei_ab_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
     ambit::Tensor act_bb = ints->aptei_bb_block(cmo_to_mo,cmo_to_mo,cmo_to_mo, cmo_to_mo);
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
-    outfile->Printf("\n act_aa nomr = %8.8f", act_aa.norm(2));
-
-    ambit::Tensor rdocc_aa = ints->aptei_aa_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_ab = ints->aptei_ab_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    ambit::Tensor rdocc_bb = ints->aptei_bb_block(fomo_to_mo,fomo_to_mo,fomo_to_mo,fomo_to_mo);
-    tei_rdocc_aa = rdocc_aa.data();
-    tei_rdocc_ab = rdocc_ab.data();
-    tei_rdocc_bb = rdocc_bb.data();
-
-
 
     // Compute the scalar contribution to the energy that comes from
     // the restricted occupied orbitals
     scalar_energy_ = ints->scalar();
-    for (size_t i = 0; i < nfomo; ++i){
-        size_t ii = fomo_to_mo[i];
-        scalar_energy_ += ints->oei_a(ii,ii);
-        scalar_energy_ += ints->oei_b(ii,ii);
-        for (size_t j = 0; j < nfomo; ++j){
-            size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
-            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
-            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
-            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
-        }
-    }
-    outfile->Printf("\n scalar_energy_ = %8.8f", scalar_energy_);
 
     RestrictedOneBodyOperator(oei_a_, oei_b_, mospace_info);
 }

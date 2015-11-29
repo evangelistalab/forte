@@ -276,7 +276,7 @@ protected:
     void freeze_core_orbitals();
 
     /// Compute the one-body operator modified by the frozen core orbitals
-    virtual void compute_frozen_one_body_operator();
+    void compute_frozen_one_body_operator();
 
     /// Remove the doubly occupied and virtual orbitals and resort the rest so that
     /// we are left only with ncmo = nmo - nfzc - nfzv

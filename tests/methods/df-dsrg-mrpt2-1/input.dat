@@ -3,7 +3,7 @@
 import forte
 
 refmcscf    = -15.569761360884
-refdsrgpt2 =  -15.61860527962
+refdsrgpt2 =  -15.618447695526415
 
 molecule {
   0 1
@@ -37,7 +37,6 @@ set forte{
    dsrgpt                true
    int_type              DF
    job_type              three-dsrg-mrpt2
-   print_no              false
    print                 0
 
 }
