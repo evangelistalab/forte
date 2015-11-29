@@ -116,6 +116,8 @@ private:
     std::vector<double> diag_tei_ab_;
     /// The diagonal beta-beta antisymmetrized two-electron integrals in physicist notation
     std::vector<double> diag_tei_bb_;
+    /// Printing information
+    int print_ = 0;
 
     /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
     void RestrictedOneBodyOperator(std::vector<double>&, std::vector<double>&, std::shared_ptr<MOSpaceInfo> mospace_info);

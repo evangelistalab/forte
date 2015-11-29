@@ -255,6 +255,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing routines
+        aptei_idx_ = ncmo_;
     }
     outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
 }

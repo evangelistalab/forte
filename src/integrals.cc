@@ -243,6 +243,8 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         offset += nmopi[h];
     }
     F_core->add(OneBody_symm_);
+
+    frozen_core_energy_ = 0.0;
     double E_frozen = 0.0;
     for(int h = 0; h < nirrep_; h++){
         for(int fr = 0; fr < frozen_dim[h]; fr++)
@@ -252,10 +254,10 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     }
 
     OneBody_symm_ = F_core;
+    frozen_core_energy_ = E_frozen;
 
     outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 
-    frozen_core_energy_ = E_frozen;
 
     outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
 }

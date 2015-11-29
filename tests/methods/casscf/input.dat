@@ -33,7 +33,6 @@ scf = energy('scf')
 set forte{
    CASSCF_REFERENCE      true
    CASSCF_ITERATIONS      25
-   CASSCF_DEBUG_PRINTING  true
    restricted_docc       [2]
    active                [2]
    int_type             conventional

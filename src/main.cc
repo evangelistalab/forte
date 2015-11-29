@@ -552,7 +552,6 @@ extern "C" PsiReturnType forte(Options &options)
         if(options.get_bool("CASSCF_FREEZE_CORE") == false
                 && mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
         {
-            outfile->Printf("\n KEEP FROZEN YO!");
             ints_->keep_frozen_core_integrals(KeepFrozenMOs);
             ints_->retransform_integrals();
         }
