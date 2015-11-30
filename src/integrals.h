@@ -541,9 +541,9 @@ public:
     virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r, 
         const std::vector<size_t>& s);
 
-    virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
-    virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
-    virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual double diag_aptei_aa(size_t p, size_t q);
+    virtual double diag_aptei_ab(size_t p, size_t q);
+    virtual double diag_aptei_bb(size_t p, size_t q);
     virtual double three_integral(size_t A, size_t p, size_t q);
     virtual double** three_integral_pointer()
     {
