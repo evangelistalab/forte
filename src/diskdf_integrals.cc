@@ -40,7 +40,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     cmotomo_ = cmo2mo;
 
     gather_integrals();
-    make_diagonal_integrals();
+    //make_diagonal_integrals();
     if (ncmo_ < nmo_){
         freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing routines
@@ -499,14 +499,19 @@ void DISKDFIntegrals::gather_integrals()
 
 void DISKDFIntegrals::make_diagonal_integrals()
 {
+    /// TODO:  Need to rewrite this to avoid using aptei_aa.
     Timer MakeDiagonalIntegrals;
-    for(size_t p = 0; p < nmo_; ++p){
-        for(size_t q = 0; q < nmo_; ++q){
-            diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
-            diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
-            diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
-        }
-    }
+    //for(size_t p = 0; p < nmo_; ++p){
+    //    for(size_t q = 0; q < nmo_; ++q){
+    //        //diagonal_aphys_tei_aa[p * nmo_ + q] = aptei_aa(p,q,p,q);
+    //        //diagonal_aphys_tei_ab[p * nmo_ + q] = aptei_ab(p,q,p,q);
+    //        //diagonal_aphys_tei_bb[p * nmo_ + q] = aptei_bb(p,q,p,q);
+    //        diagonal_aphys_tei_aa[p * nmo_ + q] = 0.0;
+    //        diagonal_aphys_tei_ab[p * nmo_ + q] = 0.0;
+    //        diagonal_aphys_tei_bb[p * nmo_ + q] = 0.0;
+
+    //    }
+    //}
     if(print_){outfile->Printf("\n Make diagonal integrals in DISKDF took %6.6f s", MakeDiagonalIntegrals.get()); }
 }
 
@@ -687,9 +692,9 @@ void DISKDFIntegrals::resort_integrals_after_freezing()
     // Resort the integrals
     resort_two(one_electron_integrals_a,cmotomo_);
     resort_two(one_electron_integrals_b,cmotomo_);
-    resort_two(diagonal_aphys_tei_aa,cmotomo_);
-    resort_two(diagonal_aphys_tei_ab,cmotomo_);
-    resort_two(diagonal_aphys_tei_bb,cmotomo_);
+    //resort_two(diagonal_aphys_tei_aa,cmotomo_);
+    //resort_two(diagonal_aphys_tei_ab,cmotomo_);
+    //resort_two(diagonal_aphys_tei_bb,cmotomo_);
 
     //resort_three(ThreeIntegral_,cmo2mo);
 
@@ -748,4 +753,21 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
     return ReturnTensor;
 
 }
+double DISKDFIntegrals::diag_aptei_aa(size_t, size_t){
+    outfile->Printf("\n Kevin seemed to find that nobody uses this function.  It is quite slow in DISKDF");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
+    throw PSIEXCEPTION("diag_aptei_aa is not implemented for DISKDF");
+}
+
+double DISKDFIntegrals::diag_aptei_ab(size_t, size_t){
+    outfile->Printf("\n Kevin seemed to find that nobody uses this function.  It is quite slow in DISKDF");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
+    throw PSIEXCEPTION("diag_aptei_ab is not implemented for DISKDF");
+}
+double DISKDFIntegrals::diag_aptei_bb(size_t, size_t){
+    outfile->Printf("\n Kevin seemed to find that nobody uses this function.  It is quite slow in DISKDF");
+    outfile->Printf("\n Bribe Kevin with things and he will implement it if it is needed");
+    throw PSIEXCEPTION("diag_aptei_bb is not implemented for DISKDF");
+}
+
 }}
