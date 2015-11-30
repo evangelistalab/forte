@@ -13,6 +13,7 @@
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
+#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;
@@ -655,6 +656,12 @@ double AdaptiveCI::compute_energy()
 		SharedMatrix Dalpha(new Matrix("Dalpha", nmo_, nmo_));
 		SharedMatrix Dbeta(new Matrix("Dbeta", nmo_, nmo_));
 
+		//std::vector<double> opdm_a;
+		//std::vector<double> opdm_b;
+
+		//CI_RDMS ci_rdms(options_,wfn_,ints_,mo_space_info_,PQ_space_,PQ_evecs);
+		//ci_rdms.compute_1rdm(opdm_a,0,0);
+	
 		compute_1rdm(Dalpha,Dbeta,PQ_space_,PQ_evecs,nroot_);
 		diagonalize_order nMatz = evals_only_descending;
 
@@ -699,7 +706,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
         STLBitsetDeterminant& det = P_space_[I];
-       // generate_screened_excited_determinants(nroot,I,evecs,det,V_hash);
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
 	
@@ -912,158 +918,6 @@ double AdaptiveCI::root_select( int nroot, std::vector<double> C1, std::vector<d
 }
 
 void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
-{
-    std::vector<int> aocc = det.get_alfa_occ();
-    std::vector<int> bocc = det.get_beta_occ();
-    std::vector<int> avir = det.get_alfa_vir();
-    std::vector<int> bvir = det.get_beta_vir();
-
-    int noalpha = aocc.size();
-    int nobeta  = bocc.size();
-    int nvalpha = avir.size();
-    int nvbeta  = bvir.size();
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int a = 0; a < nvalpha; ++a){
-            int aa = avir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_alfa_bit(ii,false);
-                new_det.set_alfa_bit(aa,true);
-                if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules_single_alpha(ii,aa);
-                    if (V_hash.count(new_det) == 0){
-                        V_hash[new_det] = std::vector<double>(nroot);
-                    }
-                    for (int n = 0; n < nroot; ++n){
-                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int a = 0; a < nvbeta; ++a){
-            int aa = bvir[a];
-            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_beta_bit(ii,false);
-                new_det.set_beta_bit(aa,true);
-                if(P_space_map_.find(new_det) == P_space_map_.end()){
-                    double HIJ = det.slater_rules_single_beta(ii,aa);
-                    if (V_hash.count(new_det) == 0){
-                        V_hash[new_det] = std::vector<double>(nroot);
-                    }
-                    for (int n = 0; n < nroot; ++n){
-                        V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                    }
-                }
-            }
-        }
-    }
-
-    // Generate aa excitations
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = i + 1; j < noalpha; ++j){
-            int jj = aocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = a + 1; b < nvalpha; ++b){
-                    int bb = avir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_alfa_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_alfa_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-							double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
-
-							HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
-
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot);
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for (int i = 0; i < noalpha; ++i){
-        int ii = aocc[i];
-        for (int j = 0; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvalpha; ++a){
-                int aa = avir[a];
-                for (int b = 0; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-							double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
-
-							HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
-
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot);
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    for (int i = 0; i < nobeta; ++i){
-        int ii = bocc[i];
-        for (int j = i + 1; j < nobeta; ++j){
-            int jj = bocc[j];
-            for (int a = 0; a < nvbeta; ++a){
-                int aa = bvir[a];
-                for (int b = a + 1; b < nvbeta; ++b){
-                    int bb = bvir[b];
-                    if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_beta_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_beta_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
-                        if(P_space_map_.find(new_det) == P_space_map_.end()){
-                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
-
-							HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
-                            if (V_hash.count(new_det) == 0){
-                                V_hash[new_det] = std::vector<double>(nroot);
-                            }
-                            for (int n = 0; n < nroot; ++n){
-                                V_hash[new_det][n] += HIJ * evecs->get(I,n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-void AdaptiveCI::generate_screened_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
     std::vector<int> bocc = det.get_beta_occ();
