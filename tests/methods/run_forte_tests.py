@@ -40,6 +40,7 @@ dsrg_mrpt2_tests = ["mr-dsrg-pt2-1","dsrg-mrpt2-1","dsrg-mrpt2-2","dsrg-mrpt2-3"
                     "cd-dsrg-mrpt2-1","cd-dsrg-mrpt2-2","cd-dsrg-mrpt2-3","cd-dsrg-mrpt2-4", "cd-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-1", "df-dsrg-mrpt2-2", "df-dsrg-mrpt2-3", "df-dsrg-mrpt2-4", "df-dsrg-mrpt2-5",
                     "df-dsrg-mrpt2-threading1", "df-dsrg-mrpt2-threading2", "df-dsrg-mrpt2-threading4",
+                    "diskdf-dsrg-mrpt2-threading1", "diskdf-dsrg-mrpt2-threading4",
                     "diskdf-dsrg-mrpt2-1", "diskdf-dsrg-mrpt2-2", "diskdf-dsrg-mrpt2-3", "diskdf-dsrg-mrpt2-4", "diskdf-dsrg-mrpt2-5"]
 casscf_tests = ["casscf", "casscf-2", "casscf-4", "casscf-5", "casscf-6"]
 
