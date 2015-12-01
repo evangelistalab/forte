@@ -233,12 +233,6 @@ private:
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
 
     /// Generate excited determinants
-    void generate_excited_determinants_single_root(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
-													std::unordered_map<STLBitsetDeterminant, double,STLBitsetDeterminant::Hash> &V_hash);
-    void generate_screened_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,
-                                                det_hash<std::vector<double>>& V_hash);
-
-    /// Generate excited determinants
     void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
 										std::unordered_map<STLBitsetDeterminant,std::vector<double>, STLBitsetDeterminant::Hash>& V_hash);
 
