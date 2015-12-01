@@ -13,7 +13,7 @@
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
-#include "ci_rdms.h"
+//#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;
