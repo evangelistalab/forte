@@ -547,7 +547,7 @@ extern "C" PsiReturnType forte(Options &options)
        FTHF->compute_energy();
     }
 
-    if(options.get_bool("CASSCF_REFERENCE") == true)
+    if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
     {
         if(options.get_bool("CASSCF_FREEZE_CORE") == false
                 && mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
