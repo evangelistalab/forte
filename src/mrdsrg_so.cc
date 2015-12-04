@@ -193,6 +193,7 @@ void MRDSRG_SO::startup()
             (Lambda2.block("aaaa")).data()[index] = -value;
         }
     });
+    outfile->Printf("\n    Norm of L2: %12.8f.", Lambda2.norm());
 
     // prepare three-body density cumulant
     Lambda3 = BTF->build(tensor_type_,"Lambda3",{"aaaaaa"});
@@ -272,6 +273,7 @@ void MRDSRG_SO::startup()
             }
         }
     });
+    outfile->Printf("\n    Norm of L3: %12.8f.", Lambda3.norm());
 
     // build Fock matrix (initial guess of one-body Hamiltonian)
     F = BTF->build(tensor_type_,"Fock",{"gg"});
