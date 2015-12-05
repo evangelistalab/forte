@@ -570,7 +570,6 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
     }
     H.diagonalize(evecs, evals);
 
-
     std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>> guess;
 
     std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et"});
