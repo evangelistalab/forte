@@ -184,11 +184,18 @@ Reference FCI::reference()
 }
 
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(Dimension active_dim,
+                     std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
-                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     size_t ntrial_per_root, int print, Options& options)
+                     size_t na,
+                     size_t nb,
+                     size_t multiplicity,
+                     size_t symmetry,
+                     std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     size_t ntrial_per_root,
+                     int print,
+                     Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
@@ -200,10 +207,16 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     startup();
 }
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(Dimension active_dim,
+                     std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
-                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
+                     size_t na,
+                     size_t nb,
+                     size_t multiplicity,
+                     size_t symmetry,
+                     std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
@@ -242,6 +255,10 @@ void FCISolver::set_collapse_per_root(int value)
 void FCISolver::set_subspace_per_root(int value)
 {
     subspace_per_root_ = value;
+}
+void FCISolver::set_use_jk_builder(bool jk_build)
+{
+    use_jk_ = jk_build;
 }
 
 void FCISolver::startup()
@@ -282,14 +299,11 @@ double FCISolver::compute_energy()
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
-
     //if(ints_->frozen_core_integrals() == KeepFrozenMOs)
     //{
     //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
     //}
-
-        //fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_, Active);
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_, ints_, mo_space_info_);
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
     DynamicBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);

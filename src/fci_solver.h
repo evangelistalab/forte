@@ -81,6 +81,10 @@ public:
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+    /// Use a JK builder for the restricted_docc
+    /// If you actually change the integrals in your code, you should set this to false.
+    void set_use_jk_builder(bool jk_build);
+
 
 
     /// When set to true before calling compute_energy(), it will test the
@@ -144,6 +148,7 @@ private:
     bool print_no_ = false;
     /// A variable to control printing information
     int print_ = 0;
+    bool use_jk_ = true;
 
     // ==> Class functions <==
 

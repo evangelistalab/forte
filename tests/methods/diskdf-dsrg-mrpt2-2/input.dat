@@ -4,7 +4,8 @@
 import forte
 
 refmcscf     = -99.939316381644 #cc-pvdz
-refdsrgpt2    = -100.100881710221117
+refdsrgpt2    = -100.100881710221159
+refdsrgpt2_jk_rd = -100.10068472277
 
 memory 500 mb
 
@@ -18,8 +19,9 @@ molecule HF{
 set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
    reference               twocon
-   scf_type                df
+   scf_type                DF
    d_convergence           12
    e_convergence           15
 }
@@ -40,10 +42,11 @@ set forte {
    dsrg_s                  1.0
    int_type                diskdf
    job_type                three-dsrg-mrpt2
+   cas_type                FCI
 }
 
 ref = energy('mcscf')
 energy('forte')
 
 compare_values(refmcscf, ref,10,"SCF energy")
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DF-DSRG-MRPT2 energy")
