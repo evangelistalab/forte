@@ -4,6 +4,7 @@ import forte
 
 refrhf     = -108.95379624015762 
 refdsrgpt2 = -109.25189866738
+refdsrgpt2_jk_rd = -109.25189813072
 
 memory 500 mb
 
@@ -17,6 +18,7 @@ molecule N2{
 set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                pk
    d_convergence           12
@@ -40,5 +42,5 @@ scf = energy('scf')
 compare_values(refrhf, scf,10,"SCF energy")
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
