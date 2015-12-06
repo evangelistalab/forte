@@ -379,7 +379,7 @@ double MRDSRG::compute_energy_relaxed(){
     else if(relax_algorithm == "ITERATE"){
         // iteration variables
         int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-        double e_conv = 5.0e-8;
+        double e_conv = options_.get_double("E_CONVERGENCE");
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
