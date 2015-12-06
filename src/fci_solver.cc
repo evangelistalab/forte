@@ -303,7 +303,15 @@ double FCISolver::compute_energy()
     //{
     //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
     //}
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    //std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    outfile->Printf("\n active_mo size = %d", active_mo_.size());
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints->compute_restricted_one_body_operator();
+
     DynamicBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);
