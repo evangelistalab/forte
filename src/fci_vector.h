@@ -83,6 +83,12 @@ public:
     IntegralType get_integral_type(){return integral_type_;}
     ///Set the active integrals
     void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab, const ambit::Tensor& tei_bb);
+    ///Compute the restricted_docc operator
+    void compute_restricted_one_body_operator();
+    /// Streamline the process of setting up active integrals and restricted_docc
+    /// Sets active integrals based on active space and restricted_docc
+    /// If you want more control, don't use this function.
+    void set_active_integrals_and_restricted_docc();
     ///Use JK Builder for Restricted Docc
     void use_jk_builder(bool jk_build);
 
@@ -135,7 +141,7 @@ private:
 
     inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
     /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>&, std::vector<double>&, std::shared_ptr<MOSpaceInfo> mospace_info, bool use_jk = true);
+    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };
 

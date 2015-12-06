@@ -535,8 +535,9 @@ extern "C" PsiReturnType forte(Options &options)
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
-    // Link the integrals to the DynamicBitsetDeterminant class
-    std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info);
+    //Link the integrals to the DynamicBitsetDeterminant class
+    std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints_->set_active_integrals_and_restricted_docc();
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
 

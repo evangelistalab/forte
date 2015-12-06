@@ -113,7 +113,13 @@ void FCI_MO::startup(Options &options){
     read_info(options);
 
     // setup integrals
-    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_);
+    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
 
     // form determinants
     form_det();
@@ -442,7 +448,13 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         Cb->copy(Cb_new);
 
         integral_->retransform_integrals();
-        fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
+        fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
 
         // Form and Diagonalize the CASCI Hamiltonian
         Diagonalize_H(determinant_, eigen_);

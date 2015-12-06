@@ -755,7 +755,8 @@ double CASSCF::cas_check(Reference cas_ref)
 {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::kCore, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
     ambit::Tensor L1b = cas_ref.L1b();
