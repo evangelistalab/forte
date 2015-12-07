@@ -43,6 +43,7 @@ set forte{
    dsrg_s                  1.0
    relax_ref               iterate
    maxiter                 100
+   e_convergence           8
 }
 
 energy('mcscf')
