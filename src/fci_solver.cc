@@ -313,6 +313,7 @@ double FCISolver::compute_energy()
     fci_ints->compute_restricted_one_body_operator();
 
     DynamicBitsetDeterminant::set_ints(fci_ints);
+    STLBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);
 
