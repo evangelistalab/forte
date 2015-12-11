@@ -184,11 +184,18 @@ Reference FCI::reference()
 }
 
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(Dimension active_dim,
+                     std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
-                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                     size_t ntrial_per_root, int print, Options& options)
+                     size_t na,
+                     size_t nb,
+                     size_t multiplicity,
+                     size_t symmetry,
+                     std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     size_t ntrial_per_root,
+                     int print,
+                     Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
@@ -200,10 +207,16 @@ FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
     startup();
 }
 
-FCISolver::FCISolver(Dimension active_dim, std::vector<size_t> core_mo,
+FCISolver::FCISolver(Dimension active_dim,
+                     std::vector<size_t> core_mo,
                      std::vector<size_t> active_mo,
-                     size_t na, size_t nb, size_t multiplicity, size_t symmetry,
-                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, Options& options)
+                     size_t na,
+                     size_t nb,
+                     size_t multiplicity,
+                     size_t symmetry,
+                     std::shared_ptr<ForteIntegrals> ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     Options& options)
     : active_dim_(active_dim), core_mo_(core_mo), active_mo_(active_mo),
       ints_(ints), nirrep_(active_dim.n()), symmetry_(symmetry),
       na_(na), nb_(nb), multiplicity_(multiplicity), nroot_(0),
@@ -242,6 +255,10 @@ void FCISolver::set_collapse_per_root(int value)
 void FCISolver::set_subspace_per_root(int value)
 {
     subspace_per_root_ = value;
+}
+void FCISolver::set_use_jk_builder(bool jk_build)
+{
+    use_jk_ = jk_build;
 }
 
 void FCISolver::startup()
@@ -282,15 +299,21 @@ double FCISolver::compute_energy()
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
-
     //if(ints_->frozen_core_integrals() == KeepFrozenMOs)
     //{
     //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
     //}
+    //std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    outfile->Printf("\n active_mo size = %d", active_mo_.size());
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints->compute_restricted_one_body_operator();
 
-        //fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_, Active);
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(lists_, ints_, mo_space_info_);
     DynamicBitsetDeterminant::set_ints(fci_ints);
+    STLBitsetDeterminant::set_ints(fci_ints);
 
     FCIWfn::allocate_temp_space(lists_,print_);
 
@@ -555,7 +578,6 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         }
     }
     H.diagonalize(evecs, evals);
-
 
     std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>> guess;
 

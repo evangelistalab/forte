@@ -8,6 +8,7 @@ memory 500 mb
 
 refmcscf   =  -225.76764656871
 refdsrgpt2 =  -226.85233132278
+refdsrgpt2_jk_rd = -226.85228622918
 
 molecule mbenzyne{
   0 3
@@ -56,6 +57,6 @@ compare_values(refmcscf, scf,10,"SCF Energy")
 set_num_threads(1)
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 

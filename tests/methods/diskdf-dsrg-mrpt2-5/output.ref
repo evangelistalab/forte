@@ -16,9 +16,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: 11-25-2015  07:29:42 PM EST
+    Psi4 started on: 12-05-2015  03:26:48 PM EST
 
-    Process ID:  86786
+    Process ID:  98991
     PSI4DATADIR: /Users/kevinhannon/Programs/psi4cmake/psi4/lib
     Memory level set to 256.000 MB
 
@@ -34,7 +34,8 @@ import forte
 memory 500 mb
 
 refmcscf   =  -225.76764656871
-refdsrgpt2 =  -226.852296398598583
+refdsrgpt2 =  -226.852903772295662
+refdsrgpt2_jk_rd = -226.85229847492
 
 molecule mbenzyne{
   0 3
@@ -56,7 +57,7 @@ set globals{
    basis                   sto-3g
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-jkfit
-   scf_type                DF
+   scf_type                pk
    d_convergence           10
    e_convergence           12
    docc                   [5, 3, 1, 1, 0, 1, 4, 4]
@@ -82,7 +83,7 @@ scf = energy('mcscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
 
 energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 
 --------------------------------------------------------------------------
@@ -209,15 +210,15 @@ compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy"
   MCSCF Execution Completed.
 
 
-*** tstop() called on Kevins-MacBook-Pro-2.local at Wed Nov 25 19:29:42 2015
+*** tstop() called on Kevins-MacBook-Pro-2.local at Sat Dec  5 15:26:50 2015
 Module time:
-	user time   =       0.62 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  = 1448497782 seconds = 24141629.70 minutes
+	user time   =       2.32 seconds =       0.04 minutes
+	system time =       0.19 seconds =       0.00 minutes
+	total time  = 1449347210 seconds = 24155786.83 minutes
 Total time:
-	user time   =       0.62 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
-	total time  = 1448497782 seconds = 24141629.70 minutes
+	user time   =       2.32 seconds =       0.04 minutes
+	system time =       0.19 seconds =       0.00 minutes
+	total time  = 1449347210 seconds = 24155786.83 minutes
 Reading options from the FORTE block
 Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
 
@@ -258,15 +259,37 @@ Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-    Computing DF Integrals               ......Done. Timing        0.450153 s
- Make diagonal integrals in DISKDF took 0.081002 s
-  Frozen-core energy              0.000000000000 a.u.
+    Computing DF Integrals               ......Done. Timing        1.662005 s MINTS: Wrapper to libmints.
+   by Justin Turney
 
- FrozenOneBody Operator takes  0.68965300 s
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              22
+      Number of SO shells:               7
+      Number of primitives:             66
+      Number of atomic orbitals:        34
+      Number of basis functions:        34
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   8    6    1    2    1    2    8    6 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 26788 non-zero two-electron integrals.
+        Stored in file 33.
+
+	Batch   1 pq = [       0,     122] index = [             0,7503]
+
+  Frozen-core energy           -287.156258219481 a.u.
+
+ FrozenOneBody Operator takes  1.74037100 s
   Resorting integrals after freezing core.
- Resorting integrals takes   0.00005800s
-  DISKDFIntegrals take      1.33414800 s
- scalar_energy_ = -124.63349385
+ Resorting integrals takes   0.00007700s
+  DISKDFIntegrals take      3.81773800 s
+ Not using JK builder
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -306,8 +329,8 @@ Calling plugin /Users/kevinhannon/Programs/forte/forte.so.
     Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
-Calling ints, mospace, Ative Contruct
- scalar_energy_ = -124.63349385
+
+ Not using JK builder
   Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
 
   Determinant space is spin complete.
@@ -317,27 +340,27 @@ Calling ints, mospace, Ative Contruct
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0     -226.448925801974  0.000  singlet
-      1     -226.039152461361  0.000  singlet
+      0     -226.448927337018  0.000  singlet
+      1     -226.039150669583  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.000 s
+  Timing for initial guess  =      0.001 s
 
   ==> Diagonalizing Hamiltonian <==
 
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -226.448925801974  -2.264e+02
-      2     -226.448925801974  +0.000e+00
+      1     -226.448927337018  -2.264e+02
+      2     -226.448927337018  +0.000e+00
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2     -0.77097638
-    2 0      0.63686373
+    0 2     -0.77098983
+    2 0      0.63684746
 
-    Total Energy:      -226.448925801974127
+    Total Energy:      -226.448927337017693
 
   ==> RDMs for Root No. 0 <==
 
@@ -360,14 +383,37 @@ Calling ints, mospace, Ative Contruct
  Number of auxiliary basis functions:  392
  Need 0.003376 GB to store DF integrals
 
-    Computing DF Integrals               ......Done. Timing        0.445105 s
- Make diagonal integrals in DISKDF took 0.083090 s
-  Frozen-core energy           -287.156267807164 a.u.
+    Computing DF Integrals               ......Done. Timing        1.628291 s
+ Make diagonal integrals in DISKDF took 0.000001 s MINTS: Wrapper to libmints.
+   by Justin Turney
 
- FrozenOneBody Operator takes  0.69679100 s
+   Calculation information:
+      Number of atoms:                  10
+      Number of AO shells:              22
+      Number of SO shells:               7
+      Number of primitives:             66
+      Number of atomic orbitals:        34
+      Number of basis functions:        34
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   8    6    1    2    1    2    8    6 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 26788 non-zero two-electron integrals.
+        Stored in file 33.
+
+	Batch   1 pq = [       0,     122] index = [             0,7503]
+
+  Frozen-core energy           -287.156258219481 a.u.
+
+ FrozenOneBody Operator takes  1.77359500 s
   Resorting integrals after freezing core.
- Resorting integrals takes   0.00005900s
- Frozen Orbitals takes 0.78053800 s
+ Resorting integrals takes   0.00007100s
+ Frozen Orbitals takes 1.77379200 s
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -407,8 +453,8 @@ Calling ints, mospace, Ative Contruct
     Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
-Calling ints, mospace, Ative Contruct
- scalar_energy_ = -124.63349385
+
+ Not using JK builder
   Allocating memory for the Hamiltonian algorithm. Size: 2 x 1 x 1.   Memory: 0.000000 GB
 
   Determinant space is spin complete.
@@ -418,8 +464,8 @@ Calling ints, mospace, Ative Contruct
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0     -226.448925801977  0.000  singlet
-      1     -226.039152461364  0.000  singlet
+      0     -226.448927337017  0.000  singlet
+      1     -226.039150669583  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -428,17 +474,17 @@ Calling ints, mospace, Ative Contruct
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -226.448925801977  -2.264e+02
-      2     -226.448925801977  +0.000e+00
+      1     -226.448927337017  -2.264e+02
+      2     -226.448927337017  -1.137e-13
   ----------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2     -0.77097638
-    2 0      0.63686373
+    0 2      0.77098983
+    2 0     -0.63684746
 
-    Total Energy:      -226.448925801977424
+    Total Energy:      -226.448927337016897
 
   ==> RDMs for Root No. 0 <==
 
@@ -448,7 +494,7 @@ Calling ints, mospace, Ative Contruct
 	                       1 thread(s) 
 	  ---------------------------------------------------------
  Reference = RHF
-  Reference Energy = -226.448925801977424
+  Reference Energy = -226.448927337016897
  Making a fock matrix 
 
 ---------Blocking Information-------
@@ -464,44 +510,46 @@ Calling ints, mospace, Ative Contruct
     int_type                                    DISKDF
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                         ......Done. Timing        0.023534 s
-    Computing V and Renormalizing        ......Done. Timing        0.022485 s
-    Computing T1                         ......Done. Timing        0.001585 s
-    Renormalizing F                      ......Done. Timing        0.001806 s
-    Computing <[F, T1]>                  ......Done. Timing        0.002675 s
-    Computing <[F, T2]>                  ......Done. Timing        0.001429 s
-    Computing <[V, T1]>                  ......Done. Timing        0.001314 s
+    Computing T2                         ......Done. Timing        0.086860 s
+    Computing V and Renormalizing        ......Done. Timing        0.082234 s
+    Computing T1                         ......Done. Timing        0.005444 s
+    Renormalizing F                      ......Done. Timing        0.006833 s
+    Computing <[F, T1]>                  ......Done. Timing        0.009947 s
+    Computing <[F, T2]>                  ......Done. Timing        0.005020 s
+    Computing <[V, T1]>                  ......Done. Timing        0.004631 s
     Computing <[V, T2]> (C_2)^4 (no ccvv) ...
 
- CAVV computation takes 0.01446500
+ CAVV computation takes 0.05063300
 
- CCVA takes 0.10391000...Done. Timing        0.125957 s
-    Computing <[V, T2]> (C_2)^4 ccvv     ......Done. Timing        0.195221 s
-    Computing <[V, T2]> 4HH              ......Done. Timing        0.007135 s
-    Computing <V, T2]> 4PP               ...  Done. Timing        0.006973 s
-    Computing [V, T2] 4PH                ...  Done. Timing        0.025475 s
-    Computing [V, T2] λ3                ......Done. Timing        0.005429 s
+ Eacvv   =  -0.02499099
+
+ CCVA takes 0.41383600...Done. Timing        0.492581 s
+    Computing <[V, T2]> (C_2)^4 ccvv     ......Done. Timing        0.670972 s
+    Computing <[V, T2]> 4HH              ......Done. Timing        0.025134 s
+    Computing <V, T2]> 4PP               ...  Done. Timing        0.025030 s
+    Computing [V, T2] 4PH                ...  Done. Timing        0.090730 s
+    Computing [V, T2] λ3                ......Done. Timing        0.019885 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -226.448925801977424
-    <[F, T1]>                      =     -0.078777687664505
-    <[F, T2]>                      =      0.000641573283509
-    <[V, T1]>                      =      0.000121356880217
-    <[V, T2]> (C_2)^4              =     -0.371428631323576
-    <[V, T2]> C_4 (C_2)^2 HH       =      0.005673680689219
-    <[V, T2]> C_4 (C_2)^2 PP       =      0.004114103087878
-    <[V, T2]> C_4 (C_2)^2 PH       =      0.037342554250965
-    <[V, T2]> C_6 C_2              =     -0.001057545824865
-    <[V, T2]>                      =     -0.325355839120380
-    DSRG-MRPT2 correlation energy  =     -0.403370596621158
-    DSRG-MRPT2 total energy        =   -226.852296398598583
-    max(T1)                        =      0.041978894178750
-    ||T1||                         =      0.151273743983667
+    E0 (reference)                 =   -226.448927337016897
+    <[F, T1]>                      =     -0.078777617937553
+    <[F, T2]>                      =      0.000641600079353
+    <[V, T1]>                      =      0.000121345153581
+    <[V, T2]> (C_2)^4              =     -0.371429056603176
+    <[V, T2]> C_4 (C_2)^2 HH       =      0.005673673389340
+    <[V, T2]> C_4 (C_2)^2 PP       =      0.004114080453710
+    <[V, T2]> C_4 (C_2)^2 PH       =      0.037342594067910
+    <[V, T2]> C_6 C_2              =     -0.001057756502847
+    <[V, T2]>                      =     -0.325356465195063
+    DSRG-MRPT2 correlation energy  =     -0.403371137899683
+    DSRG-MRPT2 total energy        =   -226.852298474916580
+    max(T1)                        =      0.041978982893293
+    ||T1||                         =      0.151273653336980
 
 
-    CD/DF-DSRG-MRPT2 took   0.42147300 s.
+    CD/DF-DSRG-MRPT2 took   1.52687900 s.
 
-  Your calculation took 6.12417300 seconds
+  Your calculation took 11.50190800 seconds
 
 *** PSI4 exiting successfully. Buy a developer a beer!

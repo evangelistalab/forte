@@ -45,13 +45,13 @@ public:
 
     // ==> Class Constructors <==
 
-    /// Constructor based on StringLists
-    FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mospace_info);
-    /// Constructor based on MOInfoSpace
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,
-                 FCIIntegralsType type = Active);
-    /// Constructor based on JK builder
-    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, bool jk_builder);
+    ///Generating a contructor to create the active integrals
+    ///
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo, std::vector<size_t> rdocc_mo);
+
+    ///Constructor that needs to be deleted
+    FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info, FCIIntegralsType type = Active);
+
 
     // ==> Class Interface <==
 
@@ -81,6 +81,17 @@ public:
     /// Return the beta-beta antisymmetrized two-electron integral <pq||rs>
     double diag_tei_bb(size_t p,size_t q) const {return tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];}
     IntegralType get_integral_type(){return integral_type_;}
+    ///Set the active integrals
+    void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab, const ambit::Tensor& tei_bb);
+    ///Compute the restricted_docc operator
+    void compute_restricted_one_body_operator();
+    /// Streamline the process of setting up active integrals and restricted_docc
+    /// Sets active integrals based on active space and restricted_docc
+    /// If you want more control, don't use this function.
+    void set_active_integrals_and_restricted_docc();
+    ///Use JK Builder for Restricted Docc
+    void use_jk_builder(bool jk_build);
+
 
 private:
 
@@ -96,6 +107,8 @@ private:
     size_t nmo4_;
     /// The integral type
     IntegralType integral_type_;
+    /// The integrals object
+    std::shared_ptr<ForteIntegrals> ints_;
     /// The frozen core energy
     double frozen_core_energy_;
     /// The scalar contribution to the energy
@@ -118,13 +131,18 @@ private:
     std::vector<double> diag_tei_bb_;
     /// Printing information
     int print_ = 0;
+    /// A vector of indices for the active molecular orbitals
+    std::vector<size_t> active_mo_;
+    /// A Vector of indices for the restricted_docc molecular orbitals
+    std::vector<size_t> restricted_docc_mo_;
 
-    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
-    void RestrictedOneBodyOperator(std::vector<double>&, std::vector<double>&, std::shared_ptr<MOSpaceInfo> mospace_info);
 
     // ==> Class Private Functions <==
 
     inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {return nmo3_ * p + nmo2_ * q + nmo_ * r + s;}
+    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv | ii) - (ui|vi)
+    void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
+    void startup();
 };
 
 

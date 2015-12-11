@@ -163,8 +163,6 @@ void DSRG_MRPT2::startup()
 
     // prepare density cumulants
     Lambda2 = BTF->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
-
     ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
     ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
     ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
@@ -172,14 +170,17 @@ void DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-    ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-    ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-    ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
-    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3 = BTF->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    }
 
     // Form the Fock matrix
     F = BTF->build(tensor_type_,"Fock",spin_cases({"gg"}));
@@ -1213,37 +1214,39 @@ double DSRG_MRPT2::E_VT2_6()
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     double E = 0.0;
-    BlockedTensor temp;
-    temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        BlockedTensor temp;
+        temp = BTF->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
-    temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
-    temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
-    temp["UVWXYZ"] += V["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
-    temp["UVWXYZ"] += V["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
-    E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
-    E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
+        temp["uvwxyz"] += V["uviz"] * T2["iwxy"];      //  aaaaaa from hole
+        temp["uvwxyz"] += V["waxy"] * T2["uvaz"];      //  aaaaaa from particle
+        temp["UVWXYZ"] += V["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
+        temp["UVWXYZ"] += V["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
+        E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
+        E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
-    temp["uvWxyZ"] -= V["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] -= V["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] -= V["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] -= V["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
 
-    temp["uvWxyZ"] += V["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-    E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
+        temp["uvWxyZ"] += V["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
-    temp["uVWxYZ"] -= V["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] -= V["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] -= V["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] -= V["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
 
-    temp["uVWxYZ"] += V["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-    E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
+        temp["uVWxYZ"] += V["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
+    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return E;

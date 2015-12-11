@@ -2,12 +2,17 @@
 #define _fci_mo_h_
 
 #include <libqt/qt.h>
+#include <libpsio/psio.hpp>
+#include <libpsio/psio.h>
 #include <liboptions/liboptions.h>
 #include <libmints/vector.h>
 #include <libmints/matrix.h>
+#include <libmints/wavefunction.h>
+#include <libmints/molecule.h>
 #include <vector>
 #include <tuple>
 #include <string>
+
 #include "integrals.h"
 #include "dynamic_bitset_determinant.h"
 #include "stl_bitset_determinant.h"
@@ -27,31 +32,45 @@ using d6 = vector<d5>;
 using vecdet = vector<psi::forte::STLBitsetDeterminant>;
 
 namespace psi{ namespace forte{
-class FCI_MO
+class FCI_MO : public Wavefunction
 {
 public:
 
     /**
      * @brief FCI_MO Constructor
+     * @param wfn The main wavefunction object
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
-     * @param semi_canonicalize_orbitals Avoid this if running CASSCF
      */
-    FCI_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize = true);
+    FCI_MO(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FCI_MO();
 
+    /// Compute CASCI energy
+    double compute_energy();
+
     /// Returns the reference object
     Reference reference();
 
+    /// Set symmetry of the root
+    void set_root_sym(const int& root_sym) {root_sym_ = root_sym;}
+
+    /// Set number of roots
+    void set_nroots(const int& nroot) {nroot_ = nroot;}
+
+    /// Set which root is preferred
+    void set_root(const int& root) {root_ = root;}
 
 protected:
     /// Basic Preparation
-    void startup(Options &options);
-    void read_info(Options &options);
+    void startup();
+    void read_options();
     void cleanup();
+
+    /// The wavefunction pointer
+    boost::shared_ptr<Wavefunction> wfn_;
 
     /// Integrals
     std::shared_ptr<ForteIntegrals>  integral_;
@@ -113,12 +132,19 @@ protected:
 
     /// Determinants
     void form_det();
+    void form_det_cis();
     vecdet determinant_;
+
+    /// Orbital Strings
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
+    vector<bool> Form_String_Ref(const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_Singles(const vector<bool> &ref_string, const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_Doubles(const vector<bool> &ref_string, const bool &print = false);
 
     /// Choice of Roots
     int nroot_;  // number of roots
     int root_;   // which root in nroot
+    Dimension nrootspi_; // number of roots per irrep
 
     /// Diagonalize the CASCI Hamiltonian
     vector<pair<SharedVector,double>> eigen_;
@@ -128,7 +154,6 @@ protected:
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
     /// Store and Print the CI Vectors and Configurations
-    double print_CI_threshold;
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
     /// Semi-canonicalize orbitals
