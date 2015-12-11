@@ -30,7 +30,8 @@ public:
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MCSRGPT2_MO(boost::shared_ptr<Wavefunction> wfn, Options &options,
+                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~MCSRGPT2_MO();
@@ -108,7 +109,7 @@ protected:
     void PrintDelta();
 
     /// Computes the DSRG-MRPT2 energy
-    double compute_energy();
+    double compute_energy_dsrg();
 
     /// Energy Components
     void E_FT1(double &E);

@@ -144,8 +144,6 @@ void THREE_DSRG_MRPT2::startup()
 
     Gamma1_ = BTF_->build(tensor_type_,"Gamma1_",spin_cases({"hh"}));
     Eta1_ = BTF_->build(tensor_type_,"Eta1_",spin_cases({"pp"}));
-    Lambda2_ = BTF_->build(tensor_type_,"Lambda2_",spin_cases({"aaaa"}));
-    Lambda3_ = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
     F_ = BTF_->build(tensor_type_,"Fock",spin_cases({"gg"}));
     Delta1_ = BTF_->build(tensor_type_,"Delta1_",spin_cases({"aa"}));
 
@@ -282,6 +280,7 @@ void THREE_DSRG_MRPT2::startup()
     });
 
     // Fill out Lambda2_ and Lambda3_
+    Lambda2_ = BTF_->build(tensor_type_,"Lambda2_",spin_cases({"aaaa"}));
     ambit::Tensor Lambda2_aa = Lambda2_.block("aaaa");
     ambit::Tensor Lambda2_aA = Lambda2_.block("aAaA");
     ambit::Tensor Lambda2_AA = Lambda2_.block("AAAA");
@@ -289,14 +288,17 @@ void THREE_DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
-    ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
-    ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
-    ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
-    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3_ = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
+        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    }
 
     // Prepare exponential tensors for effective Fock matrix and integrals
 
@@ -1213,39 +1215,42 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     std::string str = "Computing [V, T2] λ3";
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
-    BlockedTensor temp;
-    temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
-    
-    temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
-    temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
-    temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
-    temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
-    E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
-    E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
 
-    temp["uvWxyZ"] -= V_["uviy"] * T2_["iWxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] -= V_["uWiZ"] * T2_["ivxy"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V_["uWyI"] * T2_["vIxZ"];      //  aaAaaA from hole
-    temp["uvWxyZ"] += V_["uWyI"] * T2_["vIxZ"];      //  aaAaaA from hole
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        BlockedTensor temp;
+        temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaaaa"}));
 
-    temp["uvWxyZ"] += V_["aWxZ"] * T2_["uvay"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V_["vaxy"] * T2_["uWaZ"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
-    temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
+        temp["uvwxyz"] += V_["uviz"] * T2_["iwxy"];
+        temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
+        temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
+        temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
+        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
+        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
 
-    E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
+        temp["uvWxyZ"] -= V_["uviy"] * T2_["iWxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] -= V_["uWiZ"] * T2_["ivxy"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += V_["uWyI"] * T2_["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += V_["uWyI"] * T2_["vIxZ"];      //  aaAaaA from hole
 
-    temp["uVWxYZ"] -= V_["VWIZ"] * T2_["uIxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] -= V_["uVxI"] * T2_["IWYZ"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V_["uViZ"] * T2_["iWxY"];      //  aAAaAA from hole
-    temp["uVWxYZ"] += V_["uViZ"] * T2_["iWxY"];      //  aAAaAA from hole
+        temp["uvWxyZ"] += V_["aWxZ"] * T2_["uvay"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V_["vaxy"] * T2_["uWaZ"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
 
-    temp["uVWxYZ"] += V_["uAxY"] * T2_["VWAZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V_["WAYZ"] * T2_["uVxA"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
-    temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
+        E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
 
-    E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+        temp["uVWxYZ"] -= V_["VWIZ"] * T2_["uIxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] -= V_["uVxI"] * T2_["IWYZ"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += V_["uViZ"] * T2_["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += V_["uViZ"] * T2_["iWxY"];      //  aAAaAA from hole
+
+        temp["uVWxYZ"] += V_["uAxY"] * T2_["VWAZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V_["WAYZ"] * T2_["uVxA"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
+
+        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return E;
