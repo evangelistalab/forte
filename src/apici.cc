@@ -68,7 +68,15 @@ std::shared_ptr<FCIIntegrals> AdaptivePathIntegralCI::fci_ints_ = 0;
 void AdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
     Determinant::set_ints(fci_ints_);
  //   DynamicBitsetDeterminant::set_ints(fci_ints_);
 

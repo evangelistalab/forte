@@ -1,9 +1,10 @@
 #! Generated using commit GITCOMMIT
-#! DF-DSRG-MRPT2 on N2 without storing DF integrals
+#! Perform a DF-DSRG-MRPT2 on N2
 import forte
 
 refrhf     = -108.95379624015762 
 refdsrgpt2 = -109.25189866738
+refdsrgpt2_jk_rd = -109.25189813072
 
 memory 500 mb
 
@@ -17,6 +18,7 @@ molecule N2{
 set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                pk
    d_convergence           12
@@ -24,21 +26,21 @@ set globals{
 }
 
 set forte {
-   restricted_docc        [2,0,0,0,0,2,0,0]
-   active                 [1,0,1,1,0,1,1,1]
+   restricted_docc         [2,0,0,0,0,2,0,0]
+   active                  [1,0,1,1,0,1,1,1]
    root_sym                0
    nroot                   1
    dsrg_s                  1.0
    semi_canonical          true
-   int_type               diskdf
-   job_type               three-dsrg-mrpt2
-   NTRIAL_PER_ROOT        100
-   cas_type               CAS
-   diag_algorithm         full
+   int_type                diskdf
+   job_type                three-dsrg-mrpt2
+   NTRIAL_PER_ROOT         100
+   cas_type                CAS
 }
 
 scf = energy('scf')
-energy('forte')
-
 compare_values(refrhf, scf,10,"SCF energy")
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+
+energy('forte')
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+

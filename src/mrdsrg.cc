@@ -112,7 +112,9 @@ void MRDSRG::startup()
     Eta1_ = BTF_->build(tensor_type_,"Eta1",spin_cases({"pp"}));
     Gamma1_ = BTF_->build(tensor_type_,"Gamma1",spin_cases({"hh"}));
     Lambda2_ = BTF_->build(tensor_type_,"Lambda2",spin_cases({"aaaa"}));
-    Lambda3_ = BTF_->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3_ = BTF_->build(tensor_type_,"Lambda3",spin_cases({"aaaaaa"}));
+    }
     build_density();
 
     // build Fock matrix
@@ -195,14 +197,16 @@ void MRDSRG::build_density(){
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
     // prepare three-body density cumulants
-    ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
-    ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
-    ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
-    ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
-    Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-    Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-    Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-    Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    }
 
     // check cumulants
     print_cumulant_summary();
@@ -379,7 +383,7 @@ double MRDSRG::compute_energy_relaxed(){
     else if(relax_algorithm == "ITERATE"){
         // iteration variables
         int cycle = 0, maxiter = options_.get_int("MAXITER_RELAX_REF");
-        double e_conv = 5.0e-8;
+        double e_conv = options_.get_double("E_CONVERGENCE");
         std::vector<double> Edsrg_vec, Erelax_vec;
         std::vector<double> Edelta_dsrg_vec, Edelta_relax_vec;
         bool converged = false, failed = false;
@@ -880,7 +884,9 @@ void MRDSRG::print_cumulant_summary(){
     print_h2("Density Cumulant Summary");
 
     check_density(Lambda2_, "2-body");
-    check_density(Lambda3_, "3-body");
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        check_density(Lambda3_, "3-body");
+    }
 }
 
 void MRDSRG::check_density(BlockedTensor& D, const std::string& name){
