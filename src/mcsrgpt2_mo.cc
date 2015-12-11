@@ -15,11 +15,14 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-MCSRGPT2_MO::MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : FCI_MO(options, ints, mo_space_info)
+MCSRGPT2_MO::MCSRGPT2_MO(boost::shared_ptr<Wavefunction> wfn, Options &options,
+                         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : FCI_MO(wfn, options, ints, mo_space_info)
 {
-    print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});
+    compute_energy();
+    reference();
 
+    print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});
     startup(options);
 
 //    vector<double> vec_V (2001);
@@ -54,7 +57,7 @@ MCSRGPT2_MO::MCSRGPT2_MO(Options &options, std::shared_ptr<ForteIntegrals> ints,
 //    }
 //    out_D.close();
 
-    Process::environment.globals["CURRENT ENERGY"] = compute_energy();
+    Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
 
 }
 
@@ -870,7 +873,7 @@ void MCSRGPT2_MO::PrintDelta(){
     out_delta.close();
 }
 
-double MCSRGPT2_MO::compute_energy(){
+double MCSRGPT2_MO::compute_energy_dsrg(){
     timer_on("E_MCDSRGPT2");
     double T1max = T1Maxa_, T2max = T2Maxaa_;
     if(fabs(T1max) < fabs(T1Maxb_)) T1max = T1Maxb_;
@@ -918,11 +921,16 @@ double MCSRGPT2_MO::compute_energy(){
     outfile->Printf("\t\t\t\tDone.");
     outfile->Flush();
 
-    outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
-    outfile->Flush();
-    E_VT2_6(E10_1,E10_2);
-    outfile->Printf("\t\t\t\tDone.");
-    outfile->Flush();
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        outfile->Printf("\n  Computing energy of [V, T2] C_2 * C_6 ...");
+        outfile->Flush();
+        E_VT2_6(E10_1,E10_2);
+        outfile->Printf("\t\t\t\tDone.");
+        outfile->Flush();
+    }else{
+        E10_1 = 0.0;
+        E10_2 = 0.0;
+    }
 
     double E5 = E5_1 + E5_2;
     double E6 = E6_1 + E6_2;
