@@ -39,6 +39,8 @@ void FCI_MO::startup(){
     ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
+    STLBitsetDeterminant::set_ints(fci_ints_);
+    DynamicBitsetDeterminant::set_ints(fci_ints_);
 }
 
 void FCI_MO::read_options(){
