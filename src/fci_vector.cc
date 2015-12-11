@@ -25,6 +25,7 @@ double FCIWfn::h2_aaaa_timer = 0.0;
 double FCIWfn::h2_aabb_timer = 0.0;
 double FCIWfn::h2_bbbb_timer = 0.0;
 
+
 FCIIntegrals::FCIIntegrals(std::shared_ptr<StringLists> lists, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mospace_info)
 {
     nmo_ = lists->ncmo();
@@ -156,11 +157,11 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
 
 }
 
-
 FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,FCIIntegralsType type)
 {
     std::vector<size_t> cmo_to_mo;
     std::vector<size_t> fomo_to_mo;
+
 
     nmo_ = mospace_info->size("ACTIVE");
     cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
