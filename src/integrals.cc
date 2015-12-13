@@ -428,6 +428,7 @@ void ForteIntegrals::freeze_core_orbitals()
 void ForteIntegrals::rotate_mos()
 {
     int size_mo_rotate = options_["ROTATE_MOS"].size();
+    outfile->Printf("\n\n\n ROTATING MOS");
     if(size_mo_rotate % 3 != 0)
     {
         outfile->Printf("\n Check ROTATE_MOS array");
@@ -437,12 +438,12 @@ void ForteIntegrals::rotate_mos()
     }
     int orbital_rotate_group = (size_mo_rotate / 3);
     std::vector<std::vector<int> > rotate_mo_list;
+    outfile->Printf("\n\n ROTATION:  IRREP  MO_1  MO_2\n");
     for(int a = 0; a < orbital_rotate_group; a++)
     {
         std::vector<int> rotate_mo_group(3);
         int offset_a = 3 * a;
-        outfile->Printf("\n orbital_rotate_group:%d a:%d offset_a%d", orbital_rotate_group, a, offset_a);
-        rotate_mo_group[0] = (nirrep_ - options_["ROTATE_MOS"][offset_a].to_integer());
+        rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
         if(rotate_mo_group[0] > nirrep_)
         {
             outfile->Printf("\n Irrep:%d does not match wfn symmetry:%d", rotate_mo_group[0], nirrep_);
@@ -450,18 +451,16 @@ void ForteIntegrals::rotate_mos()
         }
         rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
         rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
-        for(auto rotate : rotate_mo_group){outfile->Printf("\n %d", rotate);}
         rotate_mo_list.push_back(rotate_mo_group);
+
+        outfile->Printf(" %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1], rotate_mo_group[2]);
     }
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    Dimension nsopi = wfn->nsopi();
     SharedMatrix C_old = wfn->Ca();
     SharedMatrix C_new(C_old->clone());
-    C_old->print();
 
     for(auto mo_group : rotate_mo_list)
     {
-        outfile->Printf("\n mo_group[0]:%d mo_group[1]:%d mo_group[2]:%d", mo_group[0], mo_group[1], mo_group[2]);
         SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
         SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
         C_new->set_column(mo_group[0], mo_group[2], C_mo1);
