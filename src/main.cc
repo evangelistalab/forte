@@ -132,6 +132,11 @@ read_options(std::string name, Options &options)
 
         /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
         options.add("FROZEN_UOCC",new ArrayType());
+        /*- Molecular orbitals to swap -
+         *  Swap mo_1 with mo_2 in irrep symmetry
+         *  Swap mo_3 with mo_4 in irrep symmetry
+         *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4] -*/
+        options.add("ROTATE_MOS", new ArrayType());
 
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
@@ -546,6 +551,7 @@ extern "C" PsiReturnType forte(Options &options)
        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
        auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
        FTHF->compute_energy();
+       ints_->retransform_integrals();
     }
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
