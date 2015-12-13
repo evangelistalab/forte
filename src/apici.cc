@@ -153,6 +153,9 @@ void AdaptivePathIntegralCI::startup()
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
         propagator_description_ = "Linear";
+    }else if (options_.get_str("PROPAGATOR") == "TROTTER"){
+        propagator_ = TrotterLinear;
+        propagator_description_ = "Quadratic";
     }else if (options_.get_str("PROPAGATOR") == "QUADRATIC"){
         propagator_ = QuadraticPropagator;
         propagator_description_ = "Quadratic";
@@ -563,6 +566,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     // Evaluate (1-beta H) |C>
     if (propagator == LinearPropagator){
         propagate_first_order(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == TrotterLinear){
+        propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
     }else if (propagator == QuadraticPropagator){
         propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
     }else if (propagator == CubicPropagator){
@@ -643,6 +648,31 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
     det_hash<> dets_C_hash;
 
     apply_tau_H(1.0,spawning_threshold,dets,C,dets_C_hash,S);
+
+    // Overwrite the input vectors with the updated wave function
+    copy_hash_to_vec(dets_C_hash,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+
+    // Term 1. |n>
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_C_hash[dets[I]] = C[I];
+    }
+    // Term 2. -tau (H - S)|n>
+    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S);
+
+    // Correct the diagonals
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        double det_energy = dets[I].energy();
+        double CI = dets_C_hash[dets[I]];
+        dets_C_hash[dets[I]] += tau * (det_energy - S) * CI;
+        dets_C_hash[dets[I]] += exp(-tau * (det_energy - S)) * CI;
+
+    }
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);

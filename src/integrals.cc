@@ -1,3 +1,4 @@
+//[forte-public]
 #include <cmath>
 
 #include <psifiles.h>

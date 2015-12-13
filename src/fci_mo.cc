@@ -1,6 +1,4 @@
 #include <cmath>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
 #include <numeric>
 #include <algorithm>
 #include <boost/algorithm/string/predicate.hpp>
@@ -11,90 +9,14 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-
-
-FCI_MO::FCI_MO(Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info, bool semi_canonicalize_orbs)
-    : integral_(ints), mo_space_info_(mo_space_info)
+FCI_MO::FCI_MO(boost::shared_ptr<Wavefunction> wfn, Options& options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options,_default_psio_lib_), wfn_(wfn), integral_(ints), mo_space_info_(mo_space_info)
 {
-    // basic preparation: form determinants
-    startup(options);
-
-    // diagonalize the CASCI Hamiltonian
-    diag_algorithm_ = options.get_str("DIAG_ALGORITHM");
-    Diagonalize_H(determinant_, eigen_);
-    if(print_ > 2){
-        for(pair<SharedVector, double> x: eigen_){
-            outfile->Printf("\n\n  Spin selected CI vectors\n");
-            (x.first)->print();
-            outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-        }
-    }
-
-    // store CI vectors in eigen_
-    print_CI_threshold = options.get_double("PRINT_CI_VECTOR");
-    if(nroot_ > eigen_.size()){
-        outfile->Printf("\n  Too many roots of interest!");
-        if(eigen_.size() > 1)
-            outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
-        else
-            outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
-        outfile->Printf("\n  Check root_sym, multi, etc.");
-        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
-        throw PSIEXCEPTION("Too many roots of interest.");
-    }
-    Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
-
-    // form density
-    FormDensity(determinant_, root_, Da_, Db_);
-    if(print_ > 1){
-        print_d2("Da", Da_);
-        print_d2("Db", Db_);
-    }
-
-    // Fock Matrix
-    size_t count = 0;
-    Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,dconv_,count);
-    if(print_ > 1){
-        print_d2("Fa", Fa_);
-        print_d2("Fb", Fb_);
-    }
-
-    // Orbitals
-    if(options.get_bool("SEMI_CANONICAL") && semi_canonicalize_orbs){
-        semi_canonicalize(count);
-    }else{
-        nat_orbs();
-    }
-
-    // Form 2-PDC
-    FormCumulant2(determinant_, root_, L2aa_, L2ab_, L2bb_);
-    if(print_ > 2){
-        print2PDC("L2aa", L2aa_, print_);
-        print2PDC("L2ab", L2ab_, print_);
-        print2PDC("L2bb", L2bb_, print_);
-    }
-
-    // Form 3-PDC
-    string threepdc = options.get_str("THREEPDC");
-    string t_algorithm = options.get_str("T_ALGORITHM");
-    if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-        FormCumulant3(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
-    }
-    else if (threepdc == "DIAG"){
-        FormCumulant3_DIAG(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
-    }
-    if(print_ > 3){
-        print3PDC("L3aaa", L3aaa_, print_);
-        print3PDC("L3aab", L3aab_, print_);
-        print3PDC("L3abb", L3abb_, print_);
-        print3PDC("L3bbb", L3bbb_, print_);
-    }
-
-    // Reference Energy
-    compute_ref();
+    copy(wfn);
+    print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});
+    startup();
 }
-
 
 FCI_MO::~FCI_MO()
 {
@@ -104,13 +26,10 @@ FCI_MO::~FCI_MO()
 void FCI_MO::cleanup(){
 }
 
-void FCI_MO::startup(Options &options){
-
-    // print title
-    print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});
+void FCI_MO::startup(){
 
     // read options
-    read_info(options);
+    read_options();
 
     // setup integrals
     fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -122,66 +41,34 @@ void FCI_MO::startup(Options &options){
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
-
-    // form determinants
-    form_det();
-
-    // allocate density
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::kCore,"L1a",{na_, na_});
-    L1b = ambit::Tensor::build(ambit::kCore,"L1b",{na_, na_});
-
-    // allocate Fock matrix
-    Fa_ = d2(ncmo_, d1(ncmo_));
-    Fb_ = d2(ncmo_, d1(ncmo_));
-
-    // allocate cumulants
-    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{na_, na_, na_, na_});
-    L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{na_, na_, na_, na_});
-    L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{na_, na_, na_, na_});
-
-    L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-    L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{na_, na_, na_, na_, na_, na_});
-    L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{na_, na_, na_, na_, na_, na_});
-    L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{na_, na_, na_, na_, na_, na_});
-    L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{na_, na_, na_, na_, na_, na_});
 }
 
-void FCI_MO::read_info(Options &options){
-
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+void FCI_MO::read_options(){
 
     // test reference type
-    ref_type_ = options.get_str("REFERENCE");
+    ref_type_ = options_.get_str("REFERENCE");
     if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
         outfile->Printf("\n  Unrestricted reference is detected.");
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
     // print level
-    print_ = options.get_int("PRINT");
+    print_ = options_.get_int("PRINT");
 
     // energy convergence
-    econv_ = options.get_double("E_CONVERGENCE");
-    dconv_ = options.get_double("D_CONVERGENCE");
+    econv_ = options_.get_double("E_CONVERGENCE");
+    dconv_ = options_.get_double("D_CONVERGENCE");
 
     // nuclear repulsion
+    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
     e_nuc_ = molecule->nuclear_repulsion_energy();
 
     // number of Irrep
-    nirrep_ = wfn->nirrep();
+    nirrep_ = wfn_->nirrep();
 
     // obtain MOs
-    nmo_ = wfn->nmo();
-    nmopi_ = wfn->nmopi();
+    nmo_ = wfn_->nmo();
+    nmopi_ = wfn_->nmopi();
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
@@ -192,7 +79,7 @@ void FCI_MO::read_info(Options &options){
     nfrzv_ = mo_space_info_->size("FROZEN_UOCC");
 
     // obtain active orbitals
-    if(options["ACTIVE"].size() == 0){
+    if(options_["ACTIVE"].size() == 0){
         outfile->Printf("\n  Please specify the ACTIVE occupations.");
         outfile->Printf("\n  Single-reference computations should set ACTIVE to zeros.");
         outfile->Printf("\n  For example, ACTIVE [0,0,0,0] depending on the symmetry. \n");
@@ -214,13 +101,13 @@ void FCI_MO::read_info(Options &options){
         nelec += molecule->fZ(i);
     }
     int charge = molecule->molecular_charge();
-    if(options["CHARGE"].has_changed()){
-        charge = options.get_int("CHARGE");
+    if(options_["CHARGE"].has_changed()){
+        charge = options_.get_int("CHARGE");
     }
     nelec -= charge;
     multi_ = molecule->multiplicity();
-    if(options["MULTIPLICITY"].has_changed()){
-        multi_ = options.get_int("MULTIPLICITY");
+    if(options_["MULTIPLICITY"].has_changed()){
+        multi_ = options_.get_int("MULTIPLICITY");
     }
     if(multi_ < 1){
         outfile->Printf("\n  MULTIPLICITY must be no less than 1.");
@@ -228,7 +115,7 @@ void FCI_MO::read_info(Options &options){
         outfile->Printf("\n  Check (specify) Multiplicity! \n");
         throw PSIEXCEPTION("MULTIPLICITY must be no less than 1. Check output for details.");
     }
-    ms_ = options.get_int("MS");
+    ms_ = options_.get_int("MS");
     if(ms_ < 0){
         outfile->Printf("\n  Ms must be no less than 0.");
         outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms_, multi_);
@@ -254,11 +141,11 @@ void FCI_MO::read_info(Options &options){
     }
 
     // obtain root symmetry
-    root_sym_ = options.get_int("ROOT_SYM");
+    root_sym_ = options_.get_int("ROOT_SYM");
 
     // obtain number of roots and roots of interest
-    nroot_ = options.get_int("NROOT");
-    root_ = options.get_int("ROOT");
+    nroot_ = options_.get_int("NROOT");
+    root_ = options_.get_int("ROOT");
     if(root_ >= nroot_){
         outfile->Printf("\n  NROOT = %3d, ROOT = %3d", nroot_, root_);
         outfile->Printf("\n  ROOT must be smaller than NROOT.");
@@ -329,6 +216,83 @@ void FCI_MO::read_info(Options &options){
     outfile->Flush();
 }
 
+double FCI_MO::compute_energy(){
+
+    // allocate density
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = ambit::Tensor::build(ambit::kCore,"L1a",{na_, na_});
+    L1b = ambit::Tensor::build(ambit::kCore,"L1b",{na_, na_});
+
+    // allocate Fock matrix
+    Fa_ = d2(ncmo_, d1(ncmo_));
+    Fb_ = d2(ncmo_, d1(ncmo_));
+
+    // clean previous determinants
+    determinant_.clear();
+
+    // form determinants
+    string active_space_type = options_.get_str("ACTIVE_SPACE_TYPE");
+    if(active_space_type == "COMPLETE"){
+        form_det();
+    }else if(active_space_type == "CIS"){
+        form_det_cis();
+    }else if(active_space_type == "CISD"){
+        throw PSIEXCEPTION("Active-CISD is not implemented.");
+    }
+
+    // diagonalize the CASCI Hamiltonian
+    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
+    Diagonalize_H(determinant_, eigen_);
+    if(print_ > 2){
+        for(pair<SharedVector, double> x: eigen_){
+            outfile->Printf("\n\n  Spin selected CI vectors\n");
+            (x.first)->print();
+            outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+        }
+    }
+
+    // store CI vectors in eigen_
+    if(nroot_ > eigen_.size()){
+        outfile->Printf("\n  Too many roots of interest!");
+        if(eigen_.size() > 1)
+            outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
+        else
+            outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
+        outfile->Printf("\n  Check root_sym, multi, etc.");
+        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
+        throw PSIEXCEPTION("Too many roots of interest.");
+    }
+    Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+    // form density
+    FormDensity(determinant_, root_, Da_, Db_);
+    if(print_ > 1){
+        print_d2("Da", Da_);
+        print_d2("Db", Db_);
+    }
+
+    // Fock Matrix
+    size_t count = 0;
+    Form_Fock(Fa_,Fb_);
+    Check_Fock(Fa_,Fb_,dconv_,count);
+    if(print_ > 1){
+        print_d2("Fa", Fa_);
+        print_d2("Fb", Fb_);
+    }
+
+    // Orbitals
+    if(options_.get_bool("SEMI_CANONICAL")){
+        semi_canonicalize(count);
+    }else{
+        nat_orbs();
+    }
+
+    Eref_ = eigen_[root_].second;
+    Process::environment.globals["CURRENT ENERGY"] = Eref_;
+    return Eref_;
+}
+
 void FCI_MO::form_det(){
 
     // Number of alpha and beta electrons in active
@@ -370,7 +334,7 @@ void FCI_MO::form_det(){
     for (auto& str_dim: info){
         outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
     }
-    if(print_ > 2)  print_det(determinant_);
+    if(print_ > 2) print_det(determinant_);
     outfile->Printf("\n");
     outfile->Flush();
 
@@ -431,17 +395,158 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     return String;
 }
 
+void FCI_MO::form_det_cis(){
+    // add close-shell ref
+    vector<bool> string_ref = Form_String_Ref(true);
+    if(root_sym_ == 0){
+        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+    }
+
+    // singles string
+    vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref,true);
+
+    // symmetry of ref
+    int symmetry = 0;
+    for(int h = 0; h < nirrep_; ++h){
+        for(int i = 0; i < core_[h]; ++i){
+            symmetry ^= h;
+        }
+    }
+    for(int i = 0; i < na_; ++i){
+        if(string_ref[i]){
+            symmetry ^= sym_active_[i];
+        }
+    }
+
+    // singles
+    Timer tdet;
+    string str = "Forming determinants";
+    outfile->Printf("\n  %-35s ...", str.c_str());
+
+    int i = symmetry ^ root_sym_;
+    size_t single_size = string_singles[i].size();
+    for(size_t x = 0; x < single_size; ++x){
+        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+    }
+
+    outfile->Printf("  Done. Timing %15.6f s", tdet.get());
+
+    // Number of alpha and beta electrons in active
+    int na_a = nalfa_ - nc_ - nfrzc_;
+    int nb_a = nbeta_ - nc_ - nfrzc_;
+
+    // printing
+    std::vector<std::pair<std::string,size_t>> info;
+    info.push_back({"number of alpha active electrons", na_a});
+    info.push_back({"number of beta active electrons", nb_a});
+    info.push_back({"root symmetry (zero based)", root_sym_});
+    info.push_back({"number of determinants", determinant_.size()});
+
+    print_h2("Determinants Summary");
+    for (auto& str_dim: info){
+        outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+    }
+    print_det(determinant_);
+    outfile->Printf("\n");
+    outfile->Flush();
+
+    if(determinant_.size() == 0){
+        outfile->Printf("\n  There is no determinant matching the conditions!");
+        outfile->Printf("\n  Check the wavefunction symmetry and multiplicity.");
+        throw PSIEXCEPTION("No determinant matching the conditions!");
+    }
+}
+
+vector<bool> FCI_MO::Form_String_Ref(const bool &print){
+    timer_on("FORM String Ref");
+
+    vector<bool> String;
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    Dimension doccpi(wfn->doccpi());
+    for(int h = 0; h < nirrep_; ++h){
+        int act_docc = doccpi[h] - frzcpi_[h] - core_[h];
+        int act = active_[h];
+        for(int i = 0; i < act; ++i){
+            String.push_back(i < act_docc);
+        }
+    }
+
+    if(print == true){
+        print_h2("Reference String");
+        outfile->Printf("    ");
+        for(bool b: String){
+            outfile->Printf("%d ", b);
+        }
+        outfile->Printf("\n");
+    }
+
+    timer_off("FORM String Ref");
+    return String;
+}
+
+vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref_string, const bool &print){
+    timer_on("FORM String Singles");
+    vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
+
+    // symmetry of core
+    int symmetry = 0;
+    for(int h = 0; h < nirrep_; ++h){
+        for(int i = 0; i < core_[h]; ++i){
+            symmetry ^= h;
+        }
+    }
+
+    // occupied and unoccupied indices
+    vector<int> uocc, occ;
+    for(int i = 0; i < na_; ++i){
+        if(ref_string[i]){
+            occ.push_back(i);
+            symmetry ^= sym_active_[i];
+        }
+        else uocc.push_back(i);
+    }
+
+    // singles
+    for(const int& a: uocc){
+        vector<bool> string_local(ref_string);
+        string_local[a] = true;
+        int sym = symmetry ^ sym_active_[a];
+        for(const int& i: occ){
+            string_local[i] = false;
+            sym ^= sym_active_[i];
+            String[sym].push_back(string_local);
+            string_local[i] = true;
+        }
+    }
+
+    if(print == true){
+        print_h2("Singles String");
+        for(size_t i = 0; i != String.size(); ++i){
+            outfile->Printf("\n  symmetry = %lu \n", i);
+            for(size_t j = 0; j != String[i].size(); ++j){
+                outfile->Printf("    ");
+                for(bool b: String[i][j]){
+                    outfile->Printf("%d ", b);
+                }
+                outfile->Printf("\n");
+            }
+        }
+    }
+
+    timer_off("FORM String Singles");
+    return String;
+}
+
 void FCI_MO::semi_canonicalize(const size_t& count){
     outfile->Printf("\n  Use semi-canonical orbitals.\n");
 
     if(count != 0){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
         BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock");
-        SharedMatrix Ca = wfn->Ca();
-        SharedMatrix Cb = wfn->Cb();
+        SharedMatrix Ca = wfn_->Ca();
+        SharedMatrix Cb = wfn_->Cb();
         SharedMatrix Ca_new(Ca->clone());
         SharedMatrix Cb_new(Cb->clone());
         Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
@@ -469,7 +574,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         }
 
         // Store CI Vectors in eigen_
-        Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
+        Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
@@ -1371,7 +1476,7 @@ void FCI_MO::nat_orbs(){
         }
 
         // Store CI Vectors in eigen_
-        Store_CI(nroot_, print_CI_threshold, eigen_, determinant_);
+        Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
@@ -1486,40 +1591,90 @@ void FCI_MO::fill_cumulant3(){
 
 void FCI_MO::compute_ref(){
     timer_on("Compute Ref");
-    Eref_ = 0.0;
-    for(size_t p=0; p<nh_; ++p){
-        size_t np = idx_h_[p];
-        for(size_t q=0; q<nh_; ++q){
-            size_t nq = idx_h_[q];
-            Eref_ += (integral_->oei_a(nq,np) + Fa_[nq][np]) * Da_[np][nq];
-            Eref_ += (integral_->oei_b(nq,np) + Fb_[nq][np]) * Db_[np][nq];
-        }
-    }
-    Eref_ *= 0.5;
-    for(size_t p=0; p<na_; ++p){
-        size_t np = idx_a_[p];
-        for(size_t q=0; q<na_; ++q){
-            size_t nq = idx_a_[q];
-            for(size_t r=0; r<na_; ++r){
-                size_t nr = idx_a_[r];
-                for(size_t s=0; s<na_; ++s){
-                    size_t ns = idx_a_[s];
-                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns) * L2aa_[p][q][r][s];
-                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns) * L2bb_[p][q][r][s];
-                    Eref_ += integral_->aptei_ab(np,nq,nr,ns) * L2ab_[p][q][r][s];
-                }
-            }
-        }
-    }
-    Eref_ += e_nuc_ + integral_->frozen_core_energy() + integral_->scalar();
+//    Eref_ = 0.0;
+//    for(size_t p=0; p<nh_; ++p){
+//        size_t np = idx_h_[p];
+//        for(size_t q=0; q<nh_; ++q){
+//            size_t nq = idx_h_[q];
+//            Eref_ += (integral_->oei_a(nq,np) + Fa_[nq][np]) * Da_[np][nq];
+//            Eref_ += (integral_->oei_b(nq,np) + Fb_[nq][np]) * Db_[np][nq];
+//        }
+//    }
+//    Eref_ *= 0.5;
+//    for(size_t p=0; p<na_; ++p){
+//        size_t np = idx_a_[p];
+//        for(size_t q=0; q<na_; ++q){
+//            size_t nq = idx_a_[q];
+//            for(size_t r=0; r<na_; ++r){
+//                size_t nr = idx_a_[r];
+//                for(size_t s=0; s<na_; ++s){
+//                    size_t ns = idx_a_[s];
+//                    Eref_ += 0.25 * integral_->aptei_aa(np,nq,nr,ns) * L2aa_[p][q][r][s];
+//                    Eref_ += 0.25 * integral_->aptei_bb(np,nq,nr,ns) * L2bb_[p][q][r][s];
+//                    Eref_ += integral_->aptei_ab(np,nq,nr,ns) * L2ab_[p][q][r][s];
+//                }
+//            }
+//        }
+//    }
+//    Eref_ += e_nuc_ + integral_->frozen_core_energy() + integral_->scalar();
 //    outfile->Printf("\n  Energy = %.15f",Eref_);
+
+    // 2-PDC
+    L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
+    L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{na_, na_, na_, na_});
+    L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{na_, na_, na_, na_});
+    L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{na_, na_, na_, na_});
+
+    FormCumulant2(determinant_, root_, L2aa_, L2ab_, L2bb_);
+    if(print_ > 2){
+        print2PDC("L2aa", L2aa_, print_);
+        print2PDC("L2ab", L2ab_, print_);
+        print2PDC("L2bb", L2bb_, print_);
+    }
+
+    // 3-PDC
+    string threepdc = options_.get_str("THREEPDC");
+    string t_algorithm = options_.get_str("T_ALGORITHM");
+    if(threepdc != "ZERO"){
+        L3aaa_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+        L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+        L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+        L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
+        L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{na_, na_, na_, na_, na_, na_});
+        L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{na_, na_, na_, na_, na_, na_});
+        L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{na_, na_, na_, na_, na_, na_});
+        L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{na_, na_, na_, na_, na_, na_});
+
+        if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
+            FormCumulant3(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+        }
+        else if (threepdc == "DIAG"){
+            FormCumulant3_DIAG(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+        }
+        if(print_ > 3){
+            print3PDC("L3aaa", L3aaa_, print_);
+            print3PDC("L3aab", L3aab_, print_);
+            print3PDC("L3abb", L3abb_, print_);
+            print3PDC("L3bbb", L3bbb_, print_);
+        }
+    }
+
     timer_off("Compute Ref");
 }
 
 Reference FCI_MO::reference()
 {
-    Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
-    return ref;
+    compute_ref();
+
+    if(options_.get_str("THREEPDC") == "ZERO"){
+        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb);
+        return ref;
+    }else{
+        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
+        return ref;
+    }
 }
 
 }}

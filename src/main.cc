@@ -1,3 +1,4 @@
+//[forte-public]
 #include <cmath>
 #include <memory>
 
@@ -94,7 +95,8 @@ read_options(std::string name, Options &options)
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
-                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF");
+                                              " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
+                                              " ACTIVE-DSRGPT2");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -457,14 +459,20 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         /*- 2 * <Sz> -*/
         options.add_int("MS", 0);
-        /*- Threshold for Printing CI Vectors -*/
+        /*- Threshold for printing CI vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
-        /*- Semicanonicalize Orbitals -*/
+        /*- Active space type -*/
+        options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD");
+        /*- Semicanonicalize orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
-        /*- Two-Particle Density Cumulant -*/
+        /*- Two-particle density cumulant -*/
         options.add_str("TWOPDC", "MK", "MK ZERO");
-        /*- Three-Particle Density Cumulant -*/
+        /*- Three-particle density cumulant -*/
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
+        /*- Number of roots per irrep (in Cotton order) -*/
+        options.add("NROOTPI", new ArrayType());
+        /*- The density convergence criterion -*/
+        options.add_double("D_CONVERGENCE",1.0e-8);
 
         //////////////////////////////////////////////////////////////
         ///              OPTIONS FOR THE MR-DSRG MODULE
@@ -574,7 +582,8 @@ extern "C" PsiReturnType forte(Options &options)
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
-        MCSRGPT2_MO mcsrgpt2_mo(options, ints_, mo_space_info);
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        MCSRGPT2_MO mcsrgpt2_mo(wfn, options, ints_, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "FCIQMC"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -600,14 +609,17 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if(options.get_str("JOB_TYPE")=="CAS")
     {
-        FCI_MO fci_mo(options,ints_,mo_space_info);
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+        fci_mo.compute_energy();
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
-            FCI_MO fci_mo(options,ints_,mo_space_info);
+            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+            fci_mo.compute_energy();
             Reference reference = fci_mo.reference();
 
             std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,wfn,options,ints_,mo_space_info));
@@ -645,18 +657,67 @@ extern "C" PsiReturnType forte(Options &options)
 
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
-        FCI_MO fci_mo(options,ints_,mo_space_info);
-        Reference reference = fci_mo.reference();
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+        fci_mo.compute_energy();
+        Reference reference = fci_mo.reference();
         boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,wfn,options,ints_,mo_space_info));
         mrdsrg->compute_energy();
+    }
+    if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        if(options["NROOTPI"].size() == 0){
+            throw PSIEXCEPTION("Please specify NROOTPI.");
+        }else{
+            int nirrep = wfn->nirrep(), total_nroots = 0;
+            vector<vector<double>> energies(nirrep,vector<double>());
+            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+            for(int h = 0; h < nirrep; ++h){
+                int nroots = options["NROOTPI"][h].to_integer();
+                total_nroots += nroots;
+                if(nroots == 0) {
+                    continue;
+                }else{
+                    fci_mo.set_root_sym(h);
+                    for(int i = 0; i < nroots; ++i){
+                        fci_mo.set_nroots(i+1);
+                        fci_mo.set_root(i);
+                        fci_mo.compute_energy();
+                        Reference reference = fci_mo.reference();
+                        double pt2 = 0.0;
+                        if(options.get_str("INT_TYPE") == "CONVENTIONAL"){
+                            auto dsrg = std::make_shared<DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
+                            pt2 = dsrg->compute_energy();
+                        }else{
+                            auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
+                            pt2 = dsrg->compute_energy();
+                        }
+                        energies[h].push_back(pt2);
+                    }
+                }
+            }
+            if(total_nroots == 0){
+                outfile->Printf("\n  NROOTPI is zero. Did nothing.");
+            }else{
+                print_h2("ACTIVE-DSRGPT2 Summary");
+                for(int h = 0; h < nirrep; ++h){
+                    outfile->Printf("\n  symmetry = %lu \n", h);
+                    for(int i = 0; i < energies[h].size(); ++i){
+                        outfile->Printf("    %20.12f\n", energies[h][i]);
+                    }
+                }
+            }
+        }
+
+
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CAS_TYPE")=="CAS")
         {
-            FCI_MO fci_mo(options,ints_,mo_space_info);
-            Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(wfn,options,ints_,mo_space_info));
+            fci_mo->compute_energy();
+            Reference reference = fci_mo->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
             if(options.get_str("RELAX_REF") == "ONCE"){
@@ -706,9 +767,10 @@ extern "C" PsiReturnType forte(Options &options)
 
        if(options.get_str("CAS_TYPE")=="CAS")
        {
-           FCI_MO fci_mo(options,ints_,mo_space_info);
-           Reference reference = fci_mo.reference();
            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+           FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+           fci_mo.compute_energy();
+           Reference reference = fci_mo.reference();
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
            three_dsrg_mrpt2->compute_energy();
        }
@@ -774,9 +836,10 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SOMRDSRG"){
         if(options.get_str("CAS_TYPE")=="CAS")
         {
-            FCI_MO fci_mo(options,ints_,mo_space_info);
-            Reference reference = fci_mo.reference();
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.reference();
             boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
             somrdsrg->compute_energy();
         }

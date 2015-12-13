@@ -1,3 +1,4 @@
+//[forte-public]
 #ifndef _integrals_h_
 #define _integrals_h_
 
