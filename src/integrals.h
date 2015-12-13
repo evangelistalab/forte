@@ -285,6 +285,8 @@ protected:
 
     virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>& map) = 0;
     virtual void resort_four(double*& tei, std::vector<size_t>& map) = 0;
+    /// Function used to rotate MOs during contructor
+    void rotate_mos();
 
     /// Look at CD/DF/Conventional to see implementation
     /// computes/reads integrals
