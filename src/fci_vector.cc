@@ -196,12 +196,12 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
 
 }
 
-
 FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mospace_info,FCIIntegralsType type)
     : ints_(ints)
 {
     std::vector<size_t> cmo_to_mo;
     std::vector<size_t> fomo_to_mo;
+
 
     nmo_ = mospace_info->size("ACTIVE");
     cmo_to_mo = mospace_info->get_corr_abs_mo("ACTIVE");
