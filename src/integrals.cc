@@ -92,6 +92,13 @@ void ForteIntegrals::startup()
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
     print_       = options_.get_int("PRINT");
+    /// If MO_ROTATE is set in option, call rotate_mos.
+    /// Wasn't really sure where to put this function, but since, integrals is always called,
+    /// this seems like a good spot.
+    if(options_["ROTATE_MOS"].size() > 0)
+    {
+        rotate_mos();
+    }
 }
 
 void ForteIntegrals::ForteIntegrals::allocate()
@@ -293,5 +300,50 @@ void ForteIntegrals::freeze_core_orbitals()
         resort_integrals_after_freezing();
     }
 }
+void ForteIntegrals::rotate_mos()
+{
+    int size_mo_rotate = options_["ROTATE_MOS"].size();
+    outfile->Printf("\n\n\n ROTATING MOS");
+    if(size_mo_rotate % 3 != 0)
+    {
+        outfile->Printf("\n Check ROTATE_MOS array");
+        outfile->Printf("\nFormat should be in group of 3s");
+        outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
+        throw PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
+    }
+    int orbital_rotate_group = (size_mo_rotate / 3);
+    std::vector<std::vector<int> > rotate_mo_list;
+    outfile->Printf("\n\n ROTATION:  IRREP  MO_1  MO_2\n");
+    for(int a = 0; a < orbital_rotate_group; a++)
+    {
+        std::vector<int> rotate_mo_group(3);
+        int offset_a = 3 * a;
+        rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
+        if(rotate_mo_group[0] > nirrep_)
+        {
+            outfile->Printf("\n Irrep:%d does not match wfn symmetry:%d", rotate_mo_group[0], nirrep_);
+            throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
+        }
+        rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
+        rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
+        rotate_mo_list.push_back(rotate_mo_group);
 
+        outfile->Printf(" %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1], rotate_mo_group[2]);
+    }
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    SharedMatrix C_old = wfn->Ca();
+    SharedMatrix C_new(C_old->clone());
+
+    for(auto mo_group : rotate_mo_list)
+    {
+        SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        C_new->set_column(mo_group[0], mo_group[2], C_mo1);
+        C_new->set_column(mo_group[0], mo_group[1], C_mo2);
+    }
+    C_old->copy(C_new);
+
+
+
+}
 }}
