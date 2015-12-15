@@ -210,7 +210,8 @@ public:
     void compute_rdms(int max_order = 2);
     void rdm_test();
     /// Print the natural_orbitals from FCIWFN
-    void print_natural_orbitals();
+    /// Assume user specifed active space
+    void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
 
     /// Return the elements with the smallest value
     /// This function returns the tuple (C_I,irrep,Ia,Ib)

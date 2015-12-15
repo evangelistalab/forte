@@ -222,7 +222,6 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
-    /////TODO: Make this an option in my code
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();

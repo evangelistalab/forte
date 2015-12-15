@@ -486,7 +486,7 @@ double FCISolver::compute_energy()
         if (test_rdms_) C_->rdm_test();
 
         // Print the NO if energy converged
-        if(print_no_) {C_->print_natural_orbitals();}
+        if(print_no_ or print_) {C_->print_natural_orbitals(mo_space_info_);}
     }
     else
     {
