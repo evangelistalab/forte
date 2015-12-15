@@ -1,3 +1,4 @@
+//[forte-public]
 #include "integrals.h"
 #include <cmath>
 
