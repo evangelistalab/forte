@@ -131,7 +131,6 @@ public:
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>& q) = 0;
 
     /// The diagonal antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||pq>
-
     virtual double diag_aptei_aa(size_t p,size_t q) = 0;
 
     /// The diagonal antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq||pq>
@@ -142,16 +141,6 @@ public:
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b) = 0;
-
-    /// Make a Fock matrix computed with respect to a given determinant
-    /// These are really slow and are really not used at all in these codes.
-    /// If you can get a density matrix, try using make_fock_matrix with gamma_a and gamma_b
-    /// This has been optimized for each and every integral type
-    void make_fock_matrix(bool* Ia, bool* Ib);
-    void make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib);
-    void make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    void make_beta_fock_diagonal(bool* Ia, bool* Ib,std::vector<double>& fock_diagonals);
-    void make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vector<double>, std::vector<double> > &fock_diagonals);
 
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
