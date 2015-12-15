@@ -2,8 +2,6 @@
 #include <libmoinfo/libmoinfo.h>
 #include <libmints/matrix.h>
 
-#include <boost/lexical_cast.hpp>
-
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
@@ -263,11 +261,11 @@ std::string DynamicBitsetDeterminant::str() const
     std::string s;
     s += "|";
     for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(alfa_bits_[p]);
+        s += alfa_bits_[p] ? "1" : "0";
     }
     s += "|";
     for(int p = 0; p < nmo_; ++p){
-        s += boost::lexical_cast<std::string>(beta_bits_[p]);
+        s += beta_bits_[p] ? "1" : "0";
     }
     s += ">";
     return s;

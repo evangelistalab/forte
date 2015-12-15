@@ -27,7 +27,7 @@ namespace forte{
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
-enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF};
+enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF,Effective};
 //The integrals implementation is in a cc file for each class.  
 //DFIntegrals->df_integrals.cc
 
@@ -364,6 +364,94 @@ private:
     void transform_integrals();
 
     virtual void gather_integrals();
+    // Allocates memory for a antisymmetrized tei (nmo_^4)
+    virtual void allocate();
+    virtual void deallocate();
+    // Calculates the diagonal integrals from aptei
+    virtual void make_diagonal_integrals();
+    virtual void resort_integrals_after_freezing();
+    virtual void resort_four(double*& tei, std::vector<size_t>& map);
+    virtual void resort_three(boost::shared_ptr<Matrix>&, std::vector<size_t>&){}
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2);
+
+    /// An addressing function to retrieve the two-electron integrals
+    size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
+
+    /// The IntegralTransform object used by this class
+    IntegralTransform* ints_;
+
+    double* aphys_tei_aa;
+    double* aphys_tei_ab;
+    double* aphys_tei_bb;
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
+};
+
+
+/**
+ * @brief The EffectiveIntegrals class is an interface to calculate the conventional integrals
+ * Assumes storage of all tei and stores in core.
+ */
+class EffectiveIntegrals: public ForteIntegrals{
+public:
+    ///Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints constructor
+    EffectiveIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
+                          IntegralFrozenCore resort_frozen_core,
+                          std::shared_ptr<MOSpaceInfo> mo_space_info);
+    virtual ~EffectiveIntegrals();
+
+    /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s);
+
+    /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s);
+
+    virtual double diag_aptei_aa(size_t p, size_t q){return diagonal_aphys_tei_aa[p * aptei_idx_ + q];}
+    virtual double diag_aptei_ab(size_t p, size_t q){return diagonal_aphys_tei_ab[p * aptei_idx_ + q];}
+    virtual double diag_aptei_bb(size_t p, size_t q){return diagonal_aphys_tei_bb[p * aptei_idx_ + q];}
+    virtual double three_integral(size_t, size_t, size_t)
+    {
+        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    }
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&, const std::vector<size_t>&)
+    {
+        outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this is not there!!");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
+    }
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t, const std::vector<size_t>&)
+    {
+        outfile->Printf("\n Oh no! this isn't here");
+        throw PSIEXCEPTION("INT_TYPE=DISKDF");
+    }
+
+    virtual double** three_integral_pointer()
+    {
+        outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
+        throw PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
+    }
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
+
+    virtual size_t nthree() const
+
+    {
+        throw PSIEXCEPTION("Wrong Int_Type");
+    }
+
+private:
+    /// Transform the integrals
+    void transform_integrals();
+
+    virtual void gather_integrals();
     //Allocates memory for a antisymmetriced tei (nmo_^4)
     virtual void allocate();
     virtual void deallocate();
@@ -376,7 +464,6 @@ private:
 
     /// An addressing function to retrieve the two-electron integrals
     size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
-    /// Function to get three index integral
 
     /// The IntegralTransform object used by this class
     IntegralTransform* ints_;

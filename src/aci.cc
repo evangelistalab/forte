@@ -65,10 +65,10 @@ inline double smootherstep(double edge0, double edge1, double x)
 AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
-		options_(options), 
+        wfn_(wfn),
+        options_(options),
 		ints_(ints), 
-		mo_space_info_(mo_space_info),
-		wfn_(wfn)
+        mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);

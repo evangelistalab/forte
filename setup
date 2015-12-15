@@ -81,6 +81,11 @@ def generate_makefile(args):
         re_addons = re.compile(r"DEPENDINCLUDE")
         makefile = re_addons.sub(addons + "\nDEPENDINCLUDE",makefile)
 
+        # Add to CXXFLAGS "-Wno-unused-local-typedefs"
+        cxxaddons = "-Wno-unknown-pragmas -Wno-unused-local-typedefs"
+        re_cxxaddons = re.compile(r"-Wno-unknown-pragmas")
+        makefile = re_cxxaddons.sub(cxxaddons,makefile)
+
         with open('Makefile','w+') as f:
             f.write(makefile)
     else:
