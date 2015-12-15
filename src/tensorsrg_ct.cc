@@ -1,7 +1,6 @@
 #include <cmath>
 
-#include <boost/numeric/odeint.hpp>
-
+#include <boost/shared_ptr.hpp>
 #include "libdiis/diismanager.h"
 
 #include "tensorsrg.h"
@@ -158,11 +157,11 @@ double TensorSRG::compute_ct_energy()
 
         double max_S1 = 0.0;
         double max_S2 = 0.0;
-        S1.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        S1.citerate([&](const std::vector<size_t>&,const std::vector<SpinType>&,const double& value){
             if (std::fabs(value) > std::fabs(max_S1)) max_S1 = value;
         });
 
-        S2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        S2.citerate([&](const std::vector<size_t>&,const std::vector<SpinType>&,const double& value){
             if (std::fabs(value) > std::fabs(max_S2)) max_S2= value;
         });
 

@@ -1,4 +1,3 @@
-//[forte-public]
 #include <cmath>
 #include <memory>
 
@@ -530,6 +529,8 @@ extern "C" PsiReturnType forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
+//[forte-public]
+
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
@@ -542,11 +543,15 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
+        ints_ = std::make_shared<EffectiveIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
+
+//[forte-private]
 
     //Link the integrals to the DynamicBitsetDeterminant class
     //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
