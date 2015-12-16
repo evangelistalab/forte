@@ -319,7 +319,7 @@ read_options(std::string name, Options &options)
         /*Threshold value for defining multiplicity from S^2*/
         options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
-        options.add_bool("1_RDM", false);
+        options.add_bool("COMPUTE_RDMS", false);
         /*- Form initial space with based on energy */
         options.add_bool("LAMBDA_GUESS", false);
 		/*- Type of spin projection
