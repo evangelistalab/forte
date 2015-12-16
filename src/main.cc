@@ -871,8 +871,8 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SQ"){
         SqTest sqtest;
     }
-
-    // Delete ints_;
+    DynamicBitsetDeterminant::reset_ints();
+    STLBitsetDeterminant::reset_ints();
 
     ambit::finalize();
 
