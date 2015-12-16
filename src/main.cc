@@ -867,7 +867,6 @@ extern "C" PsiReturnType forte(Options &options)
         SqTest sqtest;
     }
 
-    // Delete ints_;
 
     ambit::finalize();
 

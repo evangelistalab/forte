@@ -72,7 +72,6 @@ void CASSCF::compute_casscf()
         ///^I F_{pq} = h_{pq} + 2.0 * (pq | ii) - (pi | iq)
         /// This is done via JK build
         /// First gets C_core and then builds fock matrix
-        /// Everything is done in C1 BASIS
         form_fock_core();
 
         ///^A F_{pq} = gamma_{uv} * [(pq | uv) - (pv | uq) * 1/2]
