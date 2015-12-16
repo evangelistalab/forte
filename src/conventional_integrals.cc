@@ -1,20 +1,21 @@
+//[forte-public]
 #include "integrals.h"
 #include <cmath>
 
 #include <psifiles.h>
 #include <libiwl/iwl.h>
-#include <libtrans/integraltransform.h>
-#include <libpsio/psio.hpp>
-#include <libmints/matrix.h>
-#include <libmints/basisset.h>
-#include <libthce/thce.h>
-#include <libthce/thcew.h>
-#include <libthce/lreri.h>
-#include <lib3index/cholesky.h>
-#include <libqt/qt.h>
-#include <libfock/jk.h>
-#include <algorithm>
-#include <numeric>
+//#include <libtrans/integraltransform.h>
+//#include <libpsio/psio.hpp>
+//#include <libmints/matrix.h>
+//#include <libmints/basisset.h>
+//#include <libthce/thce.h>
+//#include <libthce/thcew.h>
+//#include <libthce/lreri.h>
+//#include <lib3index/cholesky.h>
+//#include <libqt/qt.h>
+//#include <libfock/jk.h>
+//#include <algorithm>
+//#include <numeric>
 #include "blockedtensorfactory.h"
 
 namespace psi{ namespace forte{
@@ -108,8 +109,6 @@ void ConventionalIntegrals::transform_integrals()
 
     outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
-
-
 }
 
 double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
@@ -370,8 +369,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
     }
     double zero = 1e-8;
     ///TODO: Either use ambit or use structure of gamma.
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_a_rs = gamma_a->get(r,s);
             if (std::fabs(gamma_a_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
@@ -383,8 +382,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
             }
         }
     }
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_b_rs = gamma_b->get(r,s);
             if (std::fabs(gamma_b_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){

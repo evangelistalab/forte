@@ -68,7 +68,15 @@ std::shared_ptr<FCIIntegrals> AdaptivePathIntegralCI::fci_ints_ = 0;
 void AdaptivePathIntegralCI::startup()
 {
     // Connect the integrals to the determinant class
-    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
     Determinant::set_ints(fci_ints_);
  //   DynamicBitsetDeterminant::set_ints(fci_ints_);
 
@@ -145,6 +153,9 @@ void AdaptivePathIntegralCI::startup()
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
         propagator_description_ = "Linear";
+    }else if (options_.get_str("PROPAGATOR") == "TROTTER"){
+        propagator_ = TrotterLinear;
+        propagator_description_ = "Quadratic";
     }else if (options_.get_str("PROPAGATOR") == "QUADRATIC"){
         propagator_ = QuadraticPropagator;
         propagator_description_ = "Quadratic";
@@ -258,9 +269,9 @@ double AdaptivePathIntegralCI::compute_energy()
     pqpq_ab_ = new double[ncmo_*ncmo_];
     pqpq_bb_ = new double[ncmo_*ncmo_];
 
-    for (size_t i=0; i < ncmo_; ++i) {
+    for (size_t i=0; i < (size_t)ncmo_; ++i) {
 ////        pqpq_row_max_.push_back(0.0);
-        for (size_t j=0; j < ncmo_; ++j) {
+        for (size_t j=0; j < (size_t)ncmo_; ++j) {
             double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i,j,i,j)));
             pqpq_aa_[i*ncmo_+j] = temp_aa;
             if (temp_aa > pqpq_max_aa_)
@@ -555,6 +566,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     // Evaluate (1-beta H) |C>
     if (propagator == LinearPropagator){
         propagate_first_order(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == TrotterLinear){
+        propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
     }else if (propagator == QuadraticPropagator){
         propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
     }else if (propagator == CubicPropagator){
@@ -562,11 +575,11 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }else if (propagator == QuarticPropagator){
         propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
     }else if (propagator == PowerPropagator){
-        propagate_power(dets,C,tau,spawning_threshold,S);
+        propagate_power(dets,C,spawning_threshold,S);
     }else if (propagator == OlsenPropagator){
-        propagate_Olsen(dets,C,tau,spawning_threshold,S);
+        propagate_Olsen(dets,C,spawning_threshold,S);
     }else if (propagator == DavidsonLiuPropagator){
-        propagate_DavidsonLiu(dets,C,tau,spawning_threshold);
+        propagate_DavidsonLiu(dets,C,spawning_threshold);
     }
 
     // Update prescreening boundary
@@ -629,7 +642,7 @@ void AdaptivePathIntegralCI::propagate_Taylor(int order,det_vec& dets,std::vecto
     copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -640,7 +653,32 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
     copy_hash_to_vec(dets_C_hash,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Olsen(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void AdaptivePathIntegralCI::propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+
+    // Term 1. |n>
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_C_hash[dets[I]] = C[I];
+    }
+    // Term 2. -tau (H - S)|n>
+    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S);
+
+    // Correct the diagonals
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        double det_energy = dets[I].energy();
+        double CI = dets_C_hash[dets[I]];
+        dets_C_hash[dets[I]] += tau * (det_energy - S) * CI;
+        dets_C_hash[dets[I]] += exp(-tau * (det_energy - S)) * CI;
+
+    }
+
+    // Overwrite the input vectors with the updated wave function
+    copy_hash_to_vec(dets_C_hash,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Olsen(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
@@ -700,7 +738,7 @@ void AdaptivePathIntegralCI::propagate_Olsen(det_vec& dets,std::vector<double>& 
     copy_hash_to_vec(dets_C_hash,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_DavidsonLiu(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold)
+void AdaptivePathIntegralCI::propagate_DavidsonLiu(det_vec& dets,std::vector<double>& C,double spawning_threshold)
 {
     throw PSIEXCEPTION("\n\n  propagate_DavidsonLiu is not implemented yet.\n\n");
 
@@ -1019,7 +1057,6 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             std::pair<double,double> zero_pair(0.0,0.0);
-            int thread_id = omp_get_thread_num();
             // Update the list of couplings
             std::pair<double,double> max_coupling;
             #pragma omp critical
@@ -1056,7 +1093,6 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             size_t max_I = dets.size();
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I){
-                int thread_id = omp_get_thread_num();
                 if (fabs(C[I]) >= initiator_approx_factor_*spawning_threshold) {
                     std::vector<std::pair<Determinant, double>> thread_det_C_vec;
                     apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
@@ -1080,7 +1116,6 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             size_t max_I = dets.size();
 #pragma omp parallel for
             for (size_t I = 0; I < max_I; ++I){
-                int thread_id = omp_get_thread_num();
                 std::vector<std::pair<Determinant, double>> thread_det_C_vec;
                 apply_tau_H_det_schwarz(tau,spawning_threshold,dets[I],C[I],thread_det_C_vec,S);
                 #pragma omp critical
@@ -1119,7 +1154,7 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             }
         }
         // Combine the bounds on the couplings
-        for (size_t t = 0; t < num_threads_; ++t){
+        for (int t = 0; t < num_threads_; ++t){
             new_max_one_HJI_ = std::max(thread_max_HJI[t].first,new_max_one_HJI_);
             new_max_two_HJI_ = std::max(thread_max_HJI[t].second,new_max_two_HJI_);
         }
@@ -1141,7 +1176,7 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             thread_max_HJI[thread_id].second = std::max(thread_max_HJI[thread_id].second,max_HJI.second); // to avoid race condition
         }
         // Combine the bounds on the couplings
-        for (size_t t = 0; t < num_threads_; ++t){
+        for (int t = 0; t < num_threads_; ++t){
             new_max_one_HJI_ = std::max(thread_max_HJI[t].first,new_max_one_HJI_);
             new_max_two_HJI_ = std::max(thread_max_HJI[t].second,new_max_two_HJI_);
         }
@@ -1780,10 +1815,10 @@ double AdaptivePathIntegralCI::estimate_var_energy(det_vec &dets, std::vector<do
     size_t size = dets.size();
     double variational_energy_estimator = 0.0;
 #pragma omp parallel for reduction(+:variational_energy_estimator)
-    for (int I = 0; I < size; ++I){
+    for (size_t I = 0; I < size; ++I){
         const Determinant& detI = dets[I];
         variational_energy_estimator += C[I] * C[I] * detI.energy();
-        for (int J = I + 1; J < size; ++J){
+        for (size_t J = I + 1; J < size; ++J){
             if (std::fabs(C[I] * C[J]) > tollerance){
                 double HIJ = dets[I].slater_rules(dets[J]);
                 variational_energy_estimator += 2.0 * C[I] * HIJ * C[J];
@@ -1876,9 +1911,9 @@ void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C)
 
     double norm = 0.0;
     double S2 = 0.0;
-    for (int sI = 0; sI < max_I; ++sI){
+    for (size_t sI = 0; sI < max_I; ++sI){
         size_t I = det_weight[sI].second;
-        for (int sJ = 0; sJ < max_I; ++sJ){
+        for (size_t sJ = 0; sJ < max_I; ++sJ){
             size_t J = det_weight[sJ].second;
             if (std::fabs(C[I] * C[J]) > 1.0e-12){
                 const double S2IJ = space[I].spin2(space[J]);

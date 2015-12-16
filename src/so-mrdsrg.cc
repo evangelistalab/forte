@@ -115,7 +115,9 @@ void SOMRDSRG::startup()
     Gamma1 = BTF->build(tensor_type_,"Gamma1",{"hh"});
     Eta1 = BTF->build(tensor_type_,"Eta1",{"pp"});
     Lambda2 = BTF->build(tensor_type_,"Lambda2",{"aaaa"});
-    Lambda3 = BTF->build(tensor_type_,"Lambda3",{"aaaaaa"});
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3 = BTF->build(tensor_type_,"Lambda3",{"aaaaaa"});
+    }
     F = BTF->build(tensor_type_,"Fock",{"gg"});
     Delta1 = BTF->build(tensor_type_,"Delta1",{"hp"});
     Delta2 = BTF->build(tensor_type_,"Delta2",{"hhpp"});
@@ -264,164 +266,166 @@ void SOMRDSRG::startup()
         }
     });
 
-    ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
 
-    Matrix lambda3_aaa("Lambda3_aaa",nactv * nactv * nactv,nactv * nactv * nactv);
-    Matrix lambda3_aaA("Lambda3_aaA",nactv * nactv * nactv,nactv * nactv * nactv);
-    Matrix lambda3_aAA("Lambda3_aAA",nactv * nactv * nactv,nactv * nactv * nactv);
-    Matrix lambda3_AAA("Lambda3_AAA",nactv * nactv * nactv,nactv * nactv * nactv);
+        Matrix lambda3_aaa("Lambda3_aaa",nactv * nactv * nactv,nactv * nactv * nactv);
+        Matrix lambda3_aaA("Lambda3_aaA",nactv * nactv * nactv,nactv * nactv * nactv);
+        Matrix lambda3_aAA("Lambda3_aAA",nactv * nactv * nactv,nactv * nactv * nactv);
+        Matrix lambda3_AAA("Lambda3_AAA",nactv * nactv * nactv,nactv * nactv * nactv);
 
-    reference_.L3aaa().iterate([&](const std::vector<size_t>& i,double& value){
-        size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-        size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-        lambda3_aaa.set(I,J,value);
-    });
-    reference_.L3aab().iterate([&](const std::vector<size_t>& i,double& value){
-        size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-        size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-        lambda3_aaA.set(I,J,value);
-    });
-    reference_.L3abb().iterate([&](const std::vector<size_t>& i,double& value){
-        size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-        size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-        lambda3_aAA.set(I,J,value);
-    });
-    reference_.L3bbb().iterate([&](const std::vector<size_t>& i,double& value){
-        size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
-        size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
-        lambda3_AAA.set(I,J,value);
-    });
+        reference_.L3aaa().iterate([&](const std::vector<size_t>& i,double& value){
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aaa.set(I,J,value);
+        });
+        reference_.L3aab().iterate([&](const std::vector<size_t>& i,double& value){
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aaA.set(I,J,value);
+        });
+        reference_.L3abb().iterate([&](const std::vector<size_t>& i,double& value){
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_aAA.set(I,J,value);
+        });
+        reference_.L3bbb().iterate([&](const std::vector<size_t>& i,double& value){
+            size_t I = nactv * nactv * i[0] + nactv * i[1] + i[2];
+            size_t J = nactv * nactv * i[3] + nactv * i[4] + i[5];
+            lambda3_AAA.set(I,J,value);
+        });
 
 
-    // Fill up the active part of Lamba3
-    Lambda3_aaa.iterate([&](const std::vector<size_t>& i,double& value){
-        // aaa|aaa
-        if (ISA(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_aaa.get(I,J);
-        }
-        // aab|aab
-        if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_aaA.get(I,J);
-        }
-        // aab|aba
-        if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
-            value = -lambda3_aaA.get(I,J);
-        }
-        // aab|baa
-        if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
-            value = lambda3_aaA.get(I,J);
-        }
+        // Fill up the active part of Lamba3
+        Lambda3_aaa.iterate([&](const std::vector<size_t>& i,double& value){
+            // aaa|aaa
+            if (ISA(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_aaa.get(I,J);
+            }
+            // aab|aab
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_aaA.get(I,J);
+            }
+            // aab|aba
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+                value = -lambda3_aaA.get(I,J);
+            }
+            // aab|baa
+            if (ISA(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+                value = lambda3_aaA.get(I,J);
+            }
 
-        // aba|aab
-        if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = -lambda3_aaA.get(I,J);
-        }
-        // aba|aba
-        if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
-            value = lambda3_aaA.get(I,J);
-        }
-        // aba|baa
-        if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
-            value = -lambda3_aaA.get(I,J);
-        }
+            // aba|aab
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = -lambda3_aaA.get(I,J);
+            }
+            // aba|aba
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+                value = lambda3_aaA.get(I,J);
+            }
+            // aba|baa
+            if (ISA(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[2]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+                value = -lambda3_aaA.get(I,J);
+            }
 
-        // baa|aab
-        if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_aaA.get(I,J);
-        }
-        // baa|aba
-        if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
-            value = -lambda3_aaA.get(I,J);
-        }
-        // baa|baa
-        if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
-            value = lambda3_aaA.get(I,J);
-        }
+            // baa|aab
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_aaA.get(I,J);
+            }
+            // baa|aba
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[5]) + OFF(i[4]);
+                value = -lambda3_aaA.get(I,J);
+            }
+            // baa|baa
+            if (ISB(i[0]) and ISA(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[2]) + OFF(i[0]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[5]) + OFF(i[3]);
+                value = lambda3_aaA.get(I,J);
+            }
 
-        // abb|abb
-        if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_aAA.get(I,J);
-        }
-        // abb|bab
-        if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
-            value = -lambda3_aAA.get(I,J);
-        }
-        // abb|bba
-        if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
-            value = lambda3_aAA.get(I,J);
-        }
+            // abb|abb
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_aAA.get(I,J);
+            }
+            // abb|bab
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+                value = -lambda3_aAA.get(I,J);
+            }
+            // abb|bba
+            if (ISA(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+                value = lambda3_aAA.get(I,J);
+            }
 
-        // bab|abb
-        if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = -lambda3_aAA.get(I,J);
-        }
-        // bab|bab
-        if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
-            value = lambda3_aAA.get(I,J);
-        }
-        // bab|bba
-        if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
-            value = -lambda3_aAA.get(I,J);
-        }
+            // bab|abb
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = -lambda3_aAA.get(I,J);
+            }
+            // bab|bab
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+                value = lambda3_aAA.get(I,J);
+            }
+            // bab|bba
+            if (ISB(i[0]) and ISA(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[1]) + nactv * OFF(i[0]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+                value = -lambda3_aAA.get(I,J);
+            }
 
-        // bba|abb
-        if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_aAA.get(I,J);
-        }
-        // bba|bab
-        if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
-            value = -lambda3_aAA.get(I,J);
-        }
-        // bba|bba
-        if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
-            size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
-            size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
-            value = lambda3_aAA.get(I,J);
-        }
+            // bba|abb
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISA(i[3]) and ISB(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_aAA.get(I,J);
+            }
+            // bba|bab
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISA(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[4]) + nactv * OFF(i[3]) + OFF(i[5]);
+                value = -lambda3_aAA.get(I,J);
+            }
+            // bba|bba
+            if (ISB(i[0]) and ISB(i[1]) and ISA(i[2]) and ISB(i[3]) and ISB(i[4]) and ISA(i[5])){
+                size_t I = nactv * nactv * OFF(i[2]) + nactv * OFF(i[0]) + OFF(i[1]);
+                size_t J = nactv * nactv * OFF(i[5]) + nactv * OFF(i[3]) + OFF(i[4]);
+                value = lambda3_aAA.get(I,J);
+            }
 
-        // bbb|bbb
-        if (ISB(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISB(i[5])){
-            size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
-            size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
-            value = lambda3_AAA.get(I,J);
-        }
-    });
+            // bbb|bbb
+            if (ISB(i[0]) and ISB(i[1]) and ISB(i[2]) and ISB(i[3]) and ISB(i[4]) and ISB(i[5])){
+                size_t I = nactv * nactv * OFF(i[0]) + nactv * OFF(i[1]) + OFF(i[2]);
+                size_t J = nactv * nactv * OFF(i[3]) + nactv * OFF(i[4]) + OFF(i[5]);
+                value = lambda3_AAA.get(I,J);
+            }
+        });
+    }
 
     // Form the Fock matrix
     F["pq"]  = H["pq"];
@@ -805,8 +809,10 @@ void SOMRDSRG::H_eq_commutator_C_T(double factor,
     H0 += 0.125000 * Eta1["p2,p0"] * Eta1["p3,p1"] * Lambda2["a0,a1,a2,a3"] * T2["a2,a3,p2,p3"] * V["p0,p1,a0,a1"];
     H0 += 0.125000 * Gamma1["h0,h2"] * Gamma1["h1,h3"] * Lambda2["a2,a3,a0,a1"] * T2["h2,h3,a2,a3"] * V["a0,a1,h0,h1"];
     H0 += 1.000000 * Eta1["p1,p0"] * Gamma1["h0,h1"] * Lambda2["a0,a2,a3,a1"] * T2["h1,a3,p1,a2"] * V["a1,p0,h0,a0"];
-    H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] * V["a1,a2,h0,a0"];
-    H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] * V["a2,p0,a0,a1"];
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        H0 += 0.250000 * Lambda3["a3,a4,a0,a1,a2,a5"] * T2["h0,a5,a3,a4"] * V["a1,a2,h0,a0"];
+        H0 += 0.250000 * Lambda3["a0,a1,a3,a4,a5,a2"] * T2["a4,a5,p0,a3"] * V["a2,p0,a0,a1"];
+    }
     H1["h0,g0"] += 1.000000 * F["p0,g0"] * T1["h0,p0"];
     H1["g0,p0"] += -1.000000 * F["g0,h0"] * T1["h0,p0"];
     H1["h0,p0"] += 1.000000 * F["p1,h2"] * Gamma1["h2,h1"] * T2["h0,h1,p0,p1"];
