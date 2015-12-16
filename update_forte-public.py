@@ -50,9 +50,9 @@ def copy_files():
                 process_file(dir,file)
 
 def remove_old_content():
-    if os.path.isdir(public_source_dir):
-        shutil.rmtree(public_source_dir)
-    os.mkdir(public_source_dir)
+#   if os.path.isdir(public_source_dir):
+#       shutil.rmtree(public_source_dir)
+#   os.mkdir(public_source_dir)
 
 def main(argv):
     remove_old_content()

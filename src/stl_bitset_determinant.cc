@@ -25,6 +25,11 @@ void STLBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
     nmo_ = ints->nmo();
 }
 
+void STLBitsetDeterminant::reset_ints()
+{
+    fci_ints_ = nullptr;
+}
+
 STLBitsetDeterminant::STLBitsetDeterminant() {}
 
 STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<int>& occupation)
