@@ -36,6 +36,11 @@ void DynamicBitsetDeterminant::set_ints(std::shared_ptr<FCIIntegrals> ints)
     }
 }
 
+void DynamicBitsetDeterminant::reset_ints()
+{
+    fci_ints_ = nullptr;
+}
+
 DynamicBitsetDeterminant::DynamicBitsetDeterminant() : nmo_(0)
 {
 }

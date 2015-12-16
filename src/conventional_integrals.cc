@@ -369,8 +369,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
     }
     double zero = 1e-8;
     ///TODO: Either use ambit or use structure of gamma.
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_a_rs = gamma_a->get(r,s);
             if (std::fabs(gamma_a_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
@@ -382,8 +382,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
             }
         }
     }
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_b_rs = gamma_b->get(r,s);
             if (std::fabs(gamma_b_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
