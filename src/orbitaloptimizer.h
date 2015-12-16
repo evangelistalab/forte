@@ -45,7 +45,7 @@ public:
     /// The workhouse of the program:  Computes gradient, hessian, and rotates orbitals
     SharedMatrix orbital_rotation_casscf();
     /// The norm of the orbital gradient
-    double orbital_gradient_norm(return g_->rms(););
+    double orbital_gradient_norm(){return (g_->rms());}
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
 protected:
     ///The 1-RDM (usually of size na_^2)
