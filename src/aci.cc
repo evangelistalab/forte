@@ -13,7 +13,7 @@
 #include "sparse_ci_solver.h"
 #include "stl_bitset_determinant.h"
 #include "fci_vector.h"
-#include "ci_rdms.h"
+//#include "ci_rdms.h"
 
 using namespace std;
 using namespace psi;
@@ -65,10 +65,10 @@ inline double smootherstep(double edge0, double edge1, double x)
 AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
-		wfn_(wfn),
-		options_(options), 
+        wfn_(wfn),
+        options_(options),
 		ints_(ints), 
-		mo_space_info_(mo_space_info)
+        mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -83,7 +83,16 @@ AdaptiveCI::~AdaptiveCI()
 
 void AdaptiveCI::startup()
 {
-	fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
+    fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+
+    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
+
     STLBitsetDeterminant::set_ints(fci_ints_);
 
     nuclear_repulsion_energy_ = molecule_->nuclear_repulsion_energy();

@@ -1,5 +1,5 @@
 #! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on benzyne with a cc-pvdz basis set
+#! Perform a DF-DSRG-MRPT2 on benzyne with a aug-cc-pvdz basis set
 #! Used as a performance test
 
 import forte
@@ -7,8 +7,8 @@ import forte
 
 memory 500 mb
 
-refmcscf   =  -228.52004239
-refdsrgpt2 =  -230.13927634
+refrohf   =  -229.41829880360117
+refdsrgpt2 =  -230.159459991573641
 
 molecule mbenzyne{
   0 3
@@ -27,15 +27,16 @@ molecule mbenzyne{
 }
 
 set globals{
-   basis                   cc-pvdz
-   df_basis_mp2            cc-pvdz-ri
-   df_basis_scf            cc-pvdz-jkfit
+   basis                   aug-cc-pvdz
+   df_basis_mp2            aug-cc-pvdz-ri
+   df_basis_scf            aug-cc-pvdz-jkfit
    scf_type                DF
    d_convergence           10
    e_convergence           12
    docc                   [5, 3, 1, 1, 0, 1, 4, 4]
    socc                   [1, 0, 0, 0, 0, 0, 1, 0]
    maxiter                 500
+   reference               ROHF
 }
 
 set forte {
@@ -52,10 +53,12 @@ set forte {
    cas_type                FCI
    FCI_ITERATIONS          50
    e_convergence           10
+   ms                      0
+   print                   0
 }
 
-scf = energy('mcscf')
-compare_values(refmcscf, scf,8,"SCF Energy")
+scf = energy('scf')
+compare_values(refrohf, scf,8,"SCF Energy")
 
 energy('forte')
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

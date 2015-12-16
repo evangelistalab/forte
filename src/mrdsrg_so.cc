@@ -193,85 +193,89 @@ void MRDSRG_SO::startup()
             (Lambda2.block("aaaa")).data()[index] = -value;
         }
     });
+    outfile->Printf("\n    Norm of L2: %12.8f.", Lambda2.norm());
 
     // prepare three-body density cumulant
-    Lambda3 = BTF->build(tensor_type_,"Lambda3",{"aaaaaa"});
-    (reference_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value){
-        if(std::fabs(value) > 1.0e-15){
-            size_t index = 0;
-            for(int m = 0; m < 6; ++m){
-                index += i[m] * myPow(na_, 5 - m);
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3 = BTF->build(tensor_type_,"Lambda3",{"aaaaaa"});
+        (reference_.L3aaa()).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(std::fabs(value) > 1.0e-15){
+                size_t index = 0;
+                for(int m = 0; m < 6; ++m){
+                    index += i[m] * myPow(na_, 5 - m);
+                }
+                (Lambda3.block("aaaaaa")).data()[index] = value;
             }
-            (Lambda3.block("aaaaaa")).data()[index] = value;
-        }
-    });
-    (reference_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value){
-        if(std::fabs(value) > 1.0e-15){
-            size_t index = 0;
-            for(int m = 0; m < 6; ++m){
-                index += (i[m] + na_mo) * myPow(na_, 5 - m);
+        });
+        (reference_.L3bbb()).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(std::fabs(value) > 1.0e-15){
+                size_t index = 0;
+                for(int m = 0; m < 6; ++m){
+                    index += (i[m] + na_mo) * myPow(na_, 5 - m);
+                }
+                (Lambda3.block("aaaaaa")).data()[index] = value;
             }
-            (Lambda3.block("aaaaaa")).data()[index] = value;
-        }
-    });
-    (reference_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value){
-        if(std::fabs(value) > 1.0e-15){
-            // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1), b[2]a[0]a[1] (+1)
-            std::vector<size_t> upper(3);
-            std::vector<std::vector<size_t>> uppers;
-            upper[0] = i[0]; upper[1] = i[1]; upper[2] = i[2] + na_mo; uppers.push_back(upper);
-            upper[0] = i[0]; upper[2] = i[1]; upper[1] = i[2] + na_mo; uppers.push_back(upper);
-            upper[1] = i[0]; upper[2] = i[1]; upper[0] = i[2] + na_mo; uppers.push_back(upper);
-            std::vector<size_t> lower(3);
-            std::vector<std::vector<size_t>> lowers;
-            lower[0] = i[3]; lower[1] = i[4]; lower[2] = i[5] + na_mo; lowers.push_back(lower);
-            lower[0] = i[3]; lower[2] = i[4]; lower[1] = i[5] + na_mo; lowers.push_back(lower);
-            lower[1] = i[3]; lower[2] = i[4]; lower[0] = i[5] + na_mo; lowers.push_back(lower);
+        });
+        (reference_.L3aab()).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(std::fabs(value) > 1.0e-15){
+                // original: a[0]a[1]b[2]; permutation: a[0]b[2]a[1] (-1), b[2]a[0]a[1] (+1)
+                std::vector<size_t> upper(3);
+                std::vector<std::vector<size_t>> uppers;
+                upper[0] = i[0]; upper[1] = i[1]; upper[2] = i[2] + na_mo; uppers.push_back(upper);
+                upper[0] = i[0]; upper[2] = i[1]; upper[1] = i[2] + na_mo; uppers.push_back(upper);
+                upper[1] = i[0]; upper[2] = i[1]; upper[0] = i[2] + na_mo; uppers.push_back(upper);
+                std::vector<size_t> lower(3);
+                std::vector<std::vector<size_t>> lowers;
+                lower[0] = i[3]; lower[1] = i[4]; lower[2] = i[5] + na_mo; lowers.push_back(lower);
+                lower[0] = i[3]; lower[2] = i[4]; lower[1] = i[5] + na_mo; lowers.push_back(lower);
+                lower[1] = i[3]; lower[2] = i[4]; lower[0] = i[5] + na_mo; lowers.push_back(lower);
 
-            for(int m = 0; m < 3; ++m){
-                std::vector<size_t> u = uppers[m];
-                size_t iu = 0;
-                for(int mi = 0; mi < 3; ++mi)
-                    iu += u[mi] * myPow(na_, 5 - mi);
-                for(int n = 0; n < 3; ++n){
-                    std::vector<size_t> l = lowers[n];
-                    size_t index = iu;
-                    for(int ni = 0; ni < 3; ++ni)
-                        index += l[ni] * myPow(na_, 2 - ni);
-                    (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
+                for(int m = 0; m < 3; ++m){
+                    std::vector<size_t> u = uppers[m];
+                    size_t iu = 0;
+                    for(int mi = 0; mi < 3; ++mi)
+                        iu += u[mi] * myPow(na_, 5 - mi);
+                    for(int n = 0; n < 3; ++n){
+                        std::vector<size_t> l = lowers[n];
+                        size_t index = iu;
+                        for(int ni = 0; ni < 3; ++ni)
+                            index += l[ni] * myPow(na_, 2 - ni);
+                        (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
+                    }
                 }
             }
-        }
-    });
-    (reference_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value){
-        if(std::fabs(value) > 1.0e-15){
-            // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1), b[1]b[2]a[0] (+1)
-            std::vector<size_t> upper(3);
-            std::vector<std::vector<size_t>> uppers;
-            upper[0] = i[0]; upper[1] = i[1] + na_mo; upper[2] = i[2] + na_mo; uppers.push_back(upper);
-            upper[1] = i[0]; upper[0] = i[1] + na_mo; upper[2] = i[2] + na_mo; uppers.push_back(upper);
-            upper[2] = i[0]; upper[0] = i[1] + na_mo; upper[1] = i[2] + na_mo; uppers.push_back(upper);
-            std::vector<size_t> lower(3);
-            std::vector<std::vector<size_t>> lowers;
-            lower[0] = i[3]; lower[1] = i[4] + na_mo; lower[2] = i[5] + na_mo; lowers.push_back(lower);
-            lower[1] = i[3]; lower[0] = i[4] + na_mo; lower[2] = i[5] + na_mo; lowers.push_back(lower);
-            lower[2] = i[3]; lower[0] = i[4] + na_mo; lower[1] = i[5] + na_mo; lowers.push_back(lower);
+        });
+        (reference_.L3abb()).citerate([&](const std::vector<size_t>& i, const double& value){
+            if(std::fabs(value) > 1.0e-15){
+                // original: a[0]b[1]b[2]; permutation: b[1]a[0]b[2] (-1), b[1]b[2]a[0] (+1)
+                std::vector<size_t> upper(3);
+                std::vector<std::vector<size_t>> uppers;
+                upper[0] = i[0]; upper[1] = i[1] + na_mo; upper[2] = i[2] + na_mo; uppers.push_back(upper);
+                upper[1] = i[0]; upper[0] = i[1] + na_mo; upper[2] = i[2] + na_mo; uppers.push_back(upper);
+                upper[2] = i[0]; upper[0] = i[1] + na_mo; upper[1] = i[2] + na_mo; uppers.push_back(upper);
+                std::vector<size_t> lower(3);
+                std::vector<std::vector<size_t>> lowers;
+                lower[0] = i[3]; lower[1] = i[4] + na_mo; lower[2] = i[5] + na_mo; lowers.push_back(lower);
+                lower[1] = i[3]; lower[0] = i[4] + na_mo; lower[2] = i[5] + na_mo; lowers.push_back(lower);
+                lower[2] = i[3]; lower[0] = i[4] + na_mo; lower[1] = i[5] + na_mo; lowers.push_back(lower);
 
-            for(int m = 0; m < 3; ++m){
-                std::vector<size_t> u = uppers[m];
-                size_t iu = 0;
-                for(int mi = 0; mi < 3; ++mi)
-                    iu += u[mi] * myPow(na_, 5 - mi);
-                for(int n = 0; n < 3; ++n){
-                    std::vector<size_t> l = lowers[n];
-                    size_t index = iu;
-                    for(int ni = 0; ni < 3; ++ni)
-                        index += l[ni] * myPow(na_, 2 - ni);
-                    (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
+                for(int m = 0; m < 3; ++m){
+                    std::vector<size_t> u = uppers[m];
+                    size_t iu = 0;
+                    for(int mi = 0; mi < 3; ++mi)
+                        iu += u[mi] * myPow(na_, 5 - mi);
+                    for(int n = 0; n < 3; ++n){
+                        std::vector<size_t> l = lowers[n];
+                        size_t index = iu;
+                        for(int ni = 0; ni < 3; ++ni)
+                            index += l[ni] * myPow(na_, 2 - ni);
+                        (Lambda3.block("aaaaaa")).data()[index] = value * pow(-1.0, m + n);
+                    }
                 }
             }
-        }
-    });
+        });
+        outfile->Printf("\n    Norm of L3: %12.8f.", Lambda3.norm());
+    }
 
     // build Fock matrix (initial guess of one-body Hamiltonian)
     F = BTF->build(tensor_type_,"Fock",{"gg"});
@@ -816,10 +820,12 @@ void MRDSRG_SO::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alp
     E += temp2["uvxy"] * Lambda2["xyuv"];
 
     // <[Hbar2, T2]> C_6 C_2
-    temp1 = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
-    temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
-    temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];
-    E += 0.25 * temp1["uvwxyz"] * Lambda3["xyzuvw"];
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        temp1 = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
+        temp1["uvwxyz"] += H2["uviz"] * T2["iwxy"];
+        temp1["uvwxyz"] += H2["waxy"] * T2["uvaz"];
+        E += 0.25 * temp1["uvwxyz"] * Lambda3["xyzuvw"];
+    }
 
     E  *= alpha;
     C0 += E;
