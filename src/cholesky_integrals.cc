@@ -2,22 +2,10 @@
 #include "integrals.h"
 #include <cmath>
 
-#include <psifiles.h>
-#include <libiwl/iwl.h>
-#include <libmints/matrix.h>
-#include <libmints/basisset.h>
-#include <libmints/twobody.h>
-#include <libthce/thce.h>
-#include <libmints/typedefs.h>
-#include <libmints/eri.h>
 #include <libmints/integral.h>
-#include <libmints/wavefunction.h>
 #include <lib3index/cholesky.h>
+#include <libmints/basisset.h>
 #include <libqt/qt.h>
-#include <algorithm>
-#include <numeric>
-#include "blockedtensorfactory.h"
-#include <libfock/jk.h>
 
 using namespace ambit;
 

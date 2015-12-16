@@ -1,20 +1,12 @@
 //[forte-public]
 #include <cmath>
 
-#include <psifiles.h>
-#include <libiwl/iwl.h>
-#include <libtrans/integraltransform.h>
-#include <libpsio/psio.hpp>
-#include <libmints/matrix.h>
 #include <libmints/basisset.h>
 #include <libthce/thce.h>
-#include <libthce/thcew.h>
 #include <libthce/lreri.h>
 #include <libqt/qt.h>
-#include <algorithm>
 #include <numeric>
 #include "blockedtensorfactory.h"
-#include <libfock/jk.h>
 
 using namespace ambit;
 namespace psi{ namespace forte{
