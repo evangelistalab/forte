@@ -4,6 +4,7 @@
 #include <libmints/molecule.h>
 #include <libmints/wavefunction.h>
 
+#include "reference.h"
 #include "helpers.h"
 #include "stl_bitset_determinant.h"
 #include "ci_rdms.h"
@@ -283,6 +284,46 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
 
 				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
+
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
+
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_aaa[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
 
 			}
 		}
@@ -305,6 +346,9 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
 
 				tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_aab[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_aab[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
 
 			}
 		}
@@ -352,6 +396,47 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
 
 				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
+
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
+
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ q*ncmo5 + r*ncmo4_ + p*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] -= rdm_element; 
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ r*ncmo5 + p*ncmo4_ + q*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] += rdm_element; 
+
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + u*ncmo2_ + t*ncmo_ + s ] += rdm_element; 
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + u*ncmo2_ + s*ncmo_ + t ] -= rdm_element; 
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+				tprdm_bbb[ r*ncmo5 + q*ncmo4_ + p*ncmo3_ + t*ncmo2_ + u*ncmo_ + s ] -= rdm_element; 
+
 
 			}
 		}
@@ -803,8 +888,46 @@ void CI_RDMS::get_three_map()
 }
 
 
-Reference CI_RDMS::reference()
+Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
+							  std::vector<double>& oprdm_b,  
+							  std::vector<double>& tprdm_aa, 
+							  std::vector<double>& tprdm_bb, 
+							  std::vector<double>& tprdm_ab, 
+							  std::vector<double>& tprdm_aaa,
+							  std::vector<double>& tprdm_aab,
+							  std::vector<double>& tprdm_abb,
+							  std::vector<double>& tprdm_bbb)
+
 {
+
+	// Form OPCM from 1-RDM
+	ambit::Tensor L1a = ambit::Tensor::build(ambit::kCore,"L1a", {ncmo_,ncmo_});
+	ambit::Tensor L1b = ambit::Tensor::build(ambit::kCore,"L1b", {ncmo_,ncmo_});
+	
+	if( na_ >= 1 ){
+		L1a.iterate([&](const std::vector<size_t>& i, double& value){
+			value = oprdm_a[ i[0] * ncmo_ + i[1]];});
+	}
+	if( nb_ >= 1 ){
+		L1b.iterate([&](const std::vector<size_t>& i, double& value){
+			value = oprdm_b[ i[0] * ncmo_ + i[1]];});
+	}
+
+	// Form TPCMs from 2-RDMs
+
+	ambit::Tensor L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
+
+	ambit::Tensor g2aa = ambit::Tensor::build(ambit::kCore,"g2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor g2ab = ambit::Tensor::build(ambit::kCore,"g2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor g2bb = ambit::Tensor::build(ambit::kCore,"g2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
+
+//	if( na_ >= 2 ){
+//		L2aa.iterate([&]const std::vector
+//	}	
+
+
 }
 
 
@@ -907,11 +1030,11 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         double error_3rdm_aaa = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
         //for (size_t p = 0; p < 1; ++p){
-            for (size_t q = p + 1; q < ncmo_; ++q){
-                for (size_t r = q + 1; r < ncmo_; ++r){
+            for (size_t q =  0; q < ncmo_; ++q){
+                for (size_t r = 0; r < ncmo_; ++r){
                     for (size_t s = 0; s < ncmo_; ++s){
-                        for (size_t t = s + 1; t < ncmo_; ++t){
-                            for (size_t a = t + 1; a < ncmo_; ++a){
+                        for (size_t t = 0; t < ncmo_; ++t){
+                            for (size_t a = 0; a < ncmo_; ++a){
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dim_space_; ++i){
                                     STLBitsetDeterminant I(det_space_[i]);
@@ -930,8 +1053,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_aaa[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                                                        outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                   //                                     outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_aaa += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -947,10 +1070,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         double error_3rdm_aab = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
         //for (size_t p = 0; p < 1; ++p){
-            for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t q = 0; q < ncmo_; ++q){
                 for (size_t r = 0; r < ncmo_; ++r){
                     for (size_t s = 0; s < ncmo_; ++s){
-                        for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t t = 0; t < ncmo_; ++t){
                             for (size_t a = 0; a < ncmo_; ++a){
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dim_space_; ++i){
@@ -970,8 +1093,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_aab[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                                                        outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                   //                                     outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_aab += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -987,10 +1110,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         double error_3rdm_abb = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
         //for (size_t p = 0; p < 1; ++p){
-            for (size_t q = p + 1; q < ncmo_; ++q){
+            for (size_t q = 0; q < ncmo_; ++q){
                 for (size_t r = 0; r < ncmo_; ++r){
                     for (size_t s = 0; s < ncmo_; ++s){
-                        for (size_t t = s + 1; t < ncmo_; ++t){
+                        for (size_t t = 0; t < ncmo_; ++t){
                             for (size_t a = 0; a < ncmo_; ++a){
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dim_space_; ++i){
@@ -1010,8 +1133,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_abb[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                                                        outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                   //                                     outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_abb += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -1027,11 +1150,11 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         double error_3rdm_bbb = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
         //for (size_t p = 0; p < 1; ++p){
-            for (size_t q = p + 1; q < ncmo_; ++q){
-                for (size_t r = q + 1; r < ncmo_; ++r){
+            for (size_t q = 0; q < ncmo_; ++q){
+                for (size_t r = 0; r < ncmo_; ++r){
                     for (size_t s = 0; s < ncmo_; ++s){
-                        for (size_t t = s + 1; t < ncmo_; ++t){
-                            for (size_t a = t + 1; a < ncmo_; ++a){
+                        for (size_t t = 0; t < ncmo_; ++t){
+                            for (size_t a = 0; a < ncmo_; ++a){
                                 double rdm = 0.0;
                                 for (size_t i = 0; i < dim_space_; ++i){
                                     STLBitsetDeterminant I(det_space_[i]);
@@ -1050,8 +1173,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_bbb[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                                                        outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                 //                                       outfile->Printf("\n  D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                 //                                                       p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_bbb += std::fabs(rdm-rdm_comp);
                                 }
                             }
