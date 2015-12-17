@@ -35,6 +35,7 @@
 #include "stl_bitset_determinant.h"
 #include "sparse_ci_solver.h"
 #include "fci_vector.h"
+#include "ci_rdms.h"
 
 namespace psi{ namespace forte{
 
@@ -185,8 +186,6 @@ private:
 
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
-	/// 1-RDM
-	SharedMatrix oRDM_;
 	/// Form initial guess space with correct spin? ****OBSOLETE?*****
 	bool do_guess_;
 	///Spin-symmetrized evecs

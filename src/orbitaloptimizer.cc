@@ -31,7 +31,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
                                    ambit::Tensor two_body_ab,
                                    Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), options_(options), mo_space_info_(mo_space_info)
+    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info), options_(options)
 {
     startup();
 
@@ -107,12 +107,6 @@ void OrbitalOptimizer::startup()
 void OrbitalOptimizer::form_fock_core()
 {
     /// Get the CoreHamiltonian in AO basis
-    boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-    SharedMatrix T = mints->so_kinetic();
-    SharedMatrix V = mints->so_potential();
-
-    SharedMatrix H = T->clone();
-    H->add(V);
 
     //H->transform(Call_);
     if(Ca_sym_ == nullptr)
@@ -120,10 +114,15 @@ void OrbitalOptimizer::form_fock_core()
         outfile->Printf("\n\n Please give your OrbitalOptimize an Orbital");
         throw PSIEXCEPTION("Please set CMatrix before you call orbital rotation casscf");
     }
-    H->transform(Ca_sym_);
+    if(H_ == nullptr)
+    {
+        outfile->Printf("\n\n Please set the OneBody operator");
+        throw PSIEXCEPTION("Please set H before you call orbital rotation casscf");
+    }
+    H_->transform(Ca_sym_);
     if(casscf_debug_print_){
-        H->set_name("CORR_HAMIL");
-        H->print();
+        H_->set_name("CORR_HAMIL");
+        H_->print();
     }
 
     ///Step 2: From Hamiltonian elements
@@ -183,7 +182,7 @@ void OrbitalOptimizer::form_fock_core()
             F_core->add(F_froze_);
         }
         F_core->transform(Ca_sym_);
-        F_core->add(H);
+        F_core->add(H_);
 
         int offset = 0;
         for(size_t h = 0; h < nirrep_; h++){
