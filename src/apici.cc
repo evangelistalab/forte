@@ -18,7 +18,7 @@
 #include "helpers.h"
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
-
+#include <boost/math/special_functions/bessel.hpp>
 
 using namespace std;
 using namespace psi;
@@ -45,6 +45,7 @@ void scale(std::vector<double>& A,double alpha);
 void scale(det_hash<>& A,double alpha);
 double normalize(std::vector<double>& C);
 double normalize(det_hash<>& dets_C);
+double norm(det_hash<>& dets_C);
 double dot(det_hash<>& A,det_hash<>& B);
 void add(det_hash<>& A,double beta,det_hash<>& B);
 
@@ -176,6 +177,11 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "DAVIDSON"){
         propagator_ = DavidsonLiuPropagator;
         propagator_description_ = "Davidson-Liu";
+        // Make sure that do_shift_ is set to true
+        do_shift_ = true;
+    }else if (options_.get_str("PROPAGATOR") == "CHEBYSHEV"){
+        propagator_ = ChebyshevPropagator;
+        propagator_description_ = "Chebyshev";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
     }
@@ -364,6 +370,7 @@ double AdaptivePathIntegralCI::compute_energy()
     double max_energy = high_obt_energy * ne;
     outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
     double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
+    range_ = max_energy - power_shift;
 
 
     // Compute the initial guess
@@ -568,6 +575,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         propagate_first_order(dets,C,tau,spawning_threshold,S);
     }else if (propagator == TrotterLinear){
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
+    }else if (propagator == ChebyshevPropagator){
+        propagate_Chebyshev(dets,C,tau,spawning_threshold,S);
     }else if (propagator == QuadraticPropagator){
         propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
     }else if (propagator == CubicPropagator){
@@ -651,6 +660,51 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+{
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_C_hash[dets[I]] = C[I];
+    }
+    det_hash<> T_p2;
+    combine_hashes(dets_C_hash, T_p2);
+    det_hash<> C0;
+    combine_hashes(T_p2, C0);
+    scale(C0,2.0 * boost::math::cyl_bessel_i(0, range_*tau));
+
+    det_vec sub_dets;
+    std::vector<double> sub_C;
+    copy_hash_to_vec(T_p2,sub_dets,sub_C);
+    det_hash<> T_p1;
+    apply_tau_H(tau/range_,spawning_threshold,sub_dets,sub_C,T_p1,S);
+    det_hash<> C1;
+    combine_hashes(T_p1, C1);
+    scale(C1, boost::math::cyl_bessel_i(1, range_*tau));
+    det_hash<> spawned;
+    combine_hashes(C0, spawned);
+    combine_hashes(C1, spawned);
+    det_hash<> Ck;
+    combine_hashes(C1, Ck);
+    for (int i = 2; i<=3; i++){
+        det_hash<> HT_p1;
+        copy_hash_to_vec(T_p1, sub_dets,sub_C);
+        apply_tau_H(tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
+        scale(HT_p1, 2.0);
+        det_hash<> Tk;
+        combine_hashes(HT_p1, Tk);
+        det_hash<> Ck;
+        scale(Ck, boost::math::cyl_bessel_i(i, range_*tau));
+        combine_hashes(Ck, spawned);
+        add(Tk, -1.0, T_p2);
+        T_p2 = T_p1;
+        T_p1 = Tk;
+    }
+    normalize(spawned);
+
+    copy_hash_to_vec(spawned,dets,C);
 }
 
 void AdaptivePathIntegralCI::propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
@@ -2026,6 +2080,16 @@ double normalize(det_hash<>& dets_C)
     for (auto& det_C : dets_C){
         det_C.second /= norm;
     }
+    return norm;
+}
+
+double norm(det_hash<>& dets_C)
+{
+    double norm = 0.0;
+    for (auto& det_C : dets_C){
+        norm += det_C.second * det_C.second;
+    }
+    norm = std::sqrt(norm);
     return norm;
 }
 
