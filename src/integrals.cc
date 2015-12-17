@@ -2,7 +2,6 @@
 #include <cmath>
 
 #include <psifiles.h>
-#include <libiwl/iwl.h>
 #include <libtrans/integraltransform.h>
 #include <libpsio/psio.hpp>
 #include <libmints/factory.h>

@@ -77,6 +77,12 @@ read_options(std::string name, Options &options)
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
         options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL EFFECTIVE");
 
+        /*- The damping factor in the erf(x omega)/x integrals -*/
+        options.add_double("EFFECTIVE_COULOMB_OMEGA",1.0);
+        /*- The coefficient of the effective Coulomb interaction -*/
+        options.add_double("EFFECTIVE_COULOMB_FACTOR",1.0);
+        options.add_double("EFFECTIVE_COULOMB_EXPONENT",1.0);
+
         /*- The screening for JK builds and DF libraries -*/
         options.add_double("INTEGRAL_SCREENING", 1e-12);
         

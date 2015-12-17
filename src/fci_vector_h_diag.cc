@@ -82,9 +82,13 @@ FCIWfn::min_elements(size_t num_dets)
 {
     num_dets = std::min(num_dets,ndet_);
 
-    std::vector<std::tuple<double,size_t,size_t,size_t>> dets(num_dets);
+    double emax = std::numeric_limits<double>::max();
+    size_t added = 0;
 
-    double emax = 1.0e100;
+    std::vector<std::tuple<double,size_t,size_t,size_t>> dets(num_dets);
+    for (auto& det : dets){
+        std::get<0>(det) = emax;
+    }
 
     for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym){
         int beta_sym = alfa_sym ^ symmetry_;
@@ -94,12 +98,13 @@ FCIWfn::min_elements(size_t num_dets)
         for(size_t Ia = 0; Ia < maxIa; ++Ia){
             for(size_t Ib = 0; Ib < maxIb; ++Ib){
                 double e = C_ha[Ia][Ib];
-                if (e < emax){
+                if ((e < emax) or (added < num_dets)){
                     // Find where to inser this determinant
                     dets.pop_back();
                     auto it = std::find_if(dets.begin(),dets.end(),[&e](const std::tuple<double,size_t,size_t,size_t>& t){return e < std::get<0>(t);});
                     dets.insert(it,std::make_tuple(e,alfa_sym,Ia,Ib));
                     emax = std::get<0>(dets.back());
+                    added++;
                 }
             }
         }
