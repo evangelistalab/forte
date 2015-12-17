@@ -1,3 +1,4 @@
+//[forte-public]
 #include <cmath>
 
 #include <psifiles.h>
@@ -91,6 +92,13 @@ void ForteIntegrals::startup()
     num_aptei = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
     print_       = options_.get_int("PRINT");
+    /// If MO_ROTATE is set in option, call rotate_mos.
+    /// Wasn't really sure where to put this function, but since, integrals is always called,
+    /// this seems like a good spot.
+    if(options_["ROTATE_MOS"].size() > 0)
+    {
+        rotate_mos();
+    }
 }
 
 void ForteIntegrals::ForteIntegrals::allocate()
@@ -214,7 +222,6 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
-    /////TODO: Make this an option in my code
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
@@ -256,137 +263,15 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     OneBody_symm_ = F_core;
     frozen_core_energy_ = E_frozen;
 
-    outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
+    if(print_ > 0)
+    {
+        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 
 
-    outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
-}
-void ForteIntegrals::make_fock_matrix(bool* Ia, bool* Ib)
-{
-    for(size_t p = 0; p < ncmo_; ++p){
-        for(size_t q = 0; q < ncmo_; ++q){
-            // Builf Fock Diagonal alpha-alpha
-            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
-            // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
-                if (Ia[k]) {
-                    fock_matrix_a[p * ncmo_ + q] += aptei_aa(p,k,q,k);
-                }
-                if (Ib[k]) {
-                    fock_matrix_a[p * ncmo_ + q] += aptei_ab(p,k,q,k);
-                }
-            }
-            fock_matrix_b[p * ncmo_ + q] = oei_b(p,q);
-            // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
-                if (Ib[k]) {
-                    fock_matrix_b[p * ncmo_ + q] += aptei_bb(p,k,q,k);
-                }
-                if (Ia[k]) {
-                    fock_matrix_b[p * ncmo_ + q] += aptei_ab(p,k,q,k);
-                }
-            }
-        }
+        outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
     }
 }
 
-void ForteIntegrals::make_fock_matrix(const boost::dynamic_bitset<>& Ia,const boost::dynamic_bitset<>& Ib)
-{
-    for(size_t p = 0; p < ncmo_; ++p){
-        for(size_t q = p; q < ncmo_; ++q){
-            // Builf Fock Diagonal alpha-alpha
-            double fock_a_pq = oei_a(p,q);
-            //            fock_matrix_a[p * ncmo_ + q] = oei_a(p,q);
-            // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
-                if (Ia[k]) {
-                    fock_a_pq += aptei_aa(p,k,q,k);
-                }
-                if (Ib[k]) {
-                    fock_a_pq += aptei_ab(p,k,q,k);
-                }
-            }
-            fock_matrix_a[p * ncmo_ + q] = fock_matrix_a[q * ncmo_ + p] = fock_a_pq;
-            double fock_b_pq = oei_b(p,q);
-            // Add the non-frozen alfa part, the forzen core part is already included in oei
-            for (int k = 0; k < ncmo_; ++k) {
-                if (Ib[k]) {
-                    fock_b_pq += aptei_bb(p,k,q,k);
-                }
-                if (Ia[k]) {
-                    fock_b_pq += aptei_ab(p,k,q,k);
-                }
-            }
-            fock_matrix_b[p * ncmo_ + q] = fock_matrix_b[q * ncmo_ + p] = fock_b_pq;
-        }
-    }
-}
-
-void ForteIntegrals::make_fock_diagonal(bool* Ia, bool* Ib, std::pair<std::vector<double>, std::vector<double> > &fock_diagonals)
-{
-    std::vector<double>& fock_diagonal_alpha = fock_diagonals.first;
-    std::vector<double>& fock_diagonal_beta = fock_diagonals.second;
-    for(size_t p = 0; p < ncmo_; ++p){
-        // Builf Fock Diagonal alpha-alpha
-        fock_diagonal_alpha[p] =  oei_a(p,p);// roei(p,p);
-        // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
-            if (Ia[k]) {
-                //                fock_diagonal_alpha[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-                fock_diagonal_alpha[p] += diag_aptei_aa(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-            }
-            if (Ib[k]) {
-                //                fock_diagonal_alpha[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
-                fock_diagonal_alpha[p] += diag_aptei_ab(p,k); //rtei(p,p,k,k);
-            }
-        }
-        fock_diagonal_beta[p] =  oei_b(p,p);
-        // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
-            if (Ib[k]) {
-                //                fock_diagonal_beta[p] += diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-                fock_diagonal_beta[p] += diag_aptei_bb(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-            }
-            if (Ia[k]) {
-                //                fock_diagonal_beta[p] += diag_c_rtei(p,k); //rtei(p,p,k,k);
-                fock_diagonal_beta[p] += diag_aptei_ab(p,k); //rtei(p,p,k,k);
-            }
-        }
-    }
-}
-
-void ForteIntegrals::make_alpha_fock_diagonal(bool* Ia, bool* Ib,std::vector<double> &fock_diagonal)
-{
-    for(size_t p = 0; p < ncmo_; ++p){
-        // Builf Fock Diagonal alpha-alpha
-        fock_diagonal[p] = oei_a(p,p);
-        // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
-            if (Ia[k]) {
-                fock_diagonal[p] += diag_aptei_aa(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-            }
-            if (Ib[k]) {
-                fock_diagonal[p] += diag_aptei_ab(p,k); // diag_c_rtei(p,k); //rtei(p,p,k,k);
-            }
-        }
-    }
-}
-
-void ForteIntegrals::make_beta_fock_diagonal(bool* Ia, bool* Ib, std::vector<double> &fock_diagonals)
-{
-    for(size_t p = 0; p < ncmo_; ++p){
-        fock_diagonals[p] = oei_b(p,p);
-        // Add the non-frozen alfa part, the forzen core part is already included in oei
-        for (int k = 0; k < ncmo_; ++k) {
-            if (Ia[k]) {
-                fock_diagonals[p] += diag_aptei_ab(p,k);  //diag_c_rtei(p,k); //rtei(p,p,k,k);
-            }
-            if (Ib[k]) {
-                fock_diagonals[p] += diag_aptei_bb(p,k);  //diag_ce_rtei(p,k); //rtei(p,p,k,k) - rtei(p,k,p,k);
-            }
-        }
-        }
-}
 void ForteIntegrals::update_integrals(bool freeze_core)
 {
     Timer freezeOrbs;
@@ -417,5 +302,50 @@ void ForteIntegrals::freeze_core_orbitals()
         resort_integrals_after_freezing();
     }
 }
+void ForteIntegrals::rotate_mos()
+{
+    int size_mo_rotate = options_["ROTATE_MOS"].size();
+    outfile->Printf("\n\n\n ROTATING MOS");
+    if(size_mo_rotate % 3 != 0)
+    {
+        outfile->Printf("\n Check ROTATE_MOS array");
+        outfile->Printf("\nFormat should be in group of 3s");
+        outfile->Printf("\n Irrep, rotate_1, rotate_2, irrep, rotate_3, rotate_4");
+        throw PSIEXCEPTION("User specifed ROTATE_MOS incorrectly.  Check output for notes");
+    }
+    int orbital_rotate_group = (size_mo_rotate / 3);
+    std::vector<std::vector<int> > rotate_mo_list;
+    outfile->Printf("\n\n ROTATION:  IRREP  MO_1  MO_2\n");
+    for(int a = 0; a < orbital_rotate_group; a++)
+    {
+        std::vector<int> rotate_mo_group(3);
+        int offset_a = 3 * a;
+        rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
+        if(rotate_mo_group[0] > nirrep_)
+        {
+            outfile->Printf("\n Irrep:%d does not match wfn symmetry:%d", rotate_mo_group[0], nirrep_);
+            throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
+        }
+        rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
+        rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
+        rotate_mo_list.push_back(rotate_mo_group);
 
+        outfile->Printf(" %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1], rotate_mo_group[2]);
+    }
+    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    SharedMatrix C_old = wfn->Ca();
+    SharedMatrix C_new(C_old->clone());
+
+    for(auto mo_group : rotate_mo_list)
+    {
+        SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        C_new->set_column(mo_group[0], mo_group[2], C_mo1);
+        C_new->set_column(mo_group[0], mo_group[1], C_mo2);
+    }
+    C_old->copy(C_new);
+
+
+
+}
 }}

@@ -4,29 +4,17 @@
 
 #include <psifiles.h>
 #include <libiwl/iwl.h>
-//#include <libtrans/integraltransform.h>
-//#include <libpsio/psio.hpp>
-//#include <libmints/matrix.h>
-//#include <libmints/basisset.h>
-//#include <libthce/thce.h>
-//#include <libthce/thcew.h>
-//#include <libthce/lreri.h>
-//#include <lib3index/cholesky.h>
-//#include <libqt/qt.h>
-//#include <libfock/jk.h>
-//#include <algorithm>
-//#include <numeric>
 #include "blockedtensorfactory.h"
 
 namespace psi{ namespace forte{
 
 /**
-     * @brief ConventionalIntegrals::ConventionalIntegrals
+     * @brief EffectiveIntegrals::EffectiveIntegrals
      * @param options - psi options class
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+EffectiveIntegrals::EffectiveIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
     integral_type_ = ConventionalInts;
@@ -44,12 +32,12 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
 }
 
-ConventionalIntegrals::~ConventionalIntegrals()
+EffectiveIntegrals::~EffectiveIntegrals()
 {
     deallocate();
 }
 
-void ConventionalIntegrals::allocate()
+void EffectiveIntegrals::allocate()
 {
     // Allocate the memory required to store the one-electron integrals
 
@@ -64,7 +52,7 @@ void ConventionalIntegrals::allocate()
 
 }
 
-void ConventionalIntegrals::deallocate()
+void EffectiveIntegrals::deallocate()
 {
     // Deallocate the integral transform object if needed
     if (ints_ != nullptr) delete ints_;
@@ -81,7 +69,7 @@ void ConventionalIntegrals::deallocate()
     //delete[] qt_pitzer_;
 }
 
-void ConventionalIntegrals::transform_integrals()
+void EffectiveIntegrals::transform_integrals()
 {
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -107,29 +95,26 @@ void ConventionalIntegrals::transform_integrals()
     Timer int_timer;
     ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
 
-    if(print_ > 0)
-    {
-        outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
-    }
+    outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
 }
 
-double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
+double EffectiveIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_aa[aptei_index(p,q,r,s)];
 }
 
-double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
+double EffectiveIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_ab[aptei_index(p,q,r,s)];
 }
 
-double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
+double EffectiveIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
 {
     return aphys_tei_bb[aptei_index(p,q,r,s)];
 }
 
-ambit::Tensor ConventionalIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+ambit::Tensor EffectiveIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
@@ -139,7 +124,7 @@ ambit::Tensor ConventionalIntegrals::aptei_aa_block(const std::vector<size_t>& p
     return ReturnTensor;
 }
 
-ambit::Tensor ConventionalIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+ambit::Tensor EffectiveIntegrals::aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
@@ -149,7 +134,7 @@ ambit::Tensor ConventionalIntegrals::aptei_ab_block(const std::vector<size_t>& p
     return ReturnTensor;
 }
 
-ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+ambit::Tensor EffectiveIntegrals::aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
     const std::vector<size_t> & s)
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_,"Return",{p.size(),q.size(), r.size(), s.size()});
@@ -159,7 +144,7 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
     return ReturnTensor;
 }
 
-void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
+void EffectiveIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
 {
     double* p_tei;
     if (alpha1 == true and alpha2 == true) p_tei = aphys_tei_aa;
@@ -169,15 +154,12 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double
     p_tei[index] = value;
 }
 
-void ConventionalIntegrals::gather_integrals()
+void EffectiveIntegrals::gather_integrals()
 {
     transform_integrals();
 
-    if(print_ > 0)
-    {
-        outfile->Printf("\n  Reading the two-electron integrals from disk");
-        outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
-    }
+    outfile->Printf("\n  Reading the two-electron integrals from disk");
+    outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
     int_mem_ = sizeof(double) * 3 * 8 * num_aptei / 1073741824.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
@@ -303,12 +285,9 @@ void ConventionalIntegrals::gather_integrals()
     delete[] myioff;
 }
 
-void ConventionalIntegrals::resort_integrals_after_freezing()
+void EffectiveIntegrals::resort_integrals_after_freezing()
 {
-    if(print_ > 0)
-    {
-        outfile->Printf("\n  Resorting integrals after freezing core.");
-    }
+    outfile->Printf("\n  Resorting integrals after freezing core.");
 
     // Create an array that maps the CMOs to the MOs (cmo2mo).
     std::vector<size_t> cmo2mo;
@@ -334,7 +313,7 @@ void ConventionalIntegrals::resort_integrals_after_freezing()
     resort_four(aphys_tei_bb,cmo2mo);
 }
 
-void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map)
+void EffectiveIntegrals::resort_four(double*& tei, std::vector<size_t>& map)
 {
     // Store the integrals in a temporary array
     double* temp_ints = new double[num_aptei];
@@ -357,7 +336,7 @@ void ConventionalIntegrals::resort_four(double*& tei, std::vector<size_t>& map)
     tei = temp_ints;
 }
 
-void ConventionalIntegrals::make_diagonal_integrals()
+void EffectiveIntegrals::make_diagonal_integrals()
 {
     for(size_t p = 0; p < aptei_idx_; ++p){
         for(size_t q = 0; q < aptei_idx_; ++q){
@@ -368,7 +347,7 @@ void ConventionalIntegrals::make_diagonal_integrals()
     }
 }
 
-void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
+void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b)
 {
     for(size_t p = 0; p < ncmo_; ++p){
         for(size_t q = 0; q < ncmo_; ++q){
@@ -378,8 +357,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
     }
     double zero = 1e-8;
     ///TODO: Either use ambit or use structure of gamma.
-    for (size_t r = 0; r < ncmo_; ++r) {
-        for (size_t s = 0; s < ncmo_; ++s) {
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
             double gamma_a_rs = gamma_a->get(r,s);
             if (std::fabs(gamma_a_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
@@ -391,8 +370,8 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
             }
         }
     }
-    for (size_t r = 0; r < ncmo_; ++r) {
-        for (size_t s = 0; s < ncmo_; ++s) {
+    for (int r = 0; r < ncmo_; ++r) {
+        for (int s = 0; s < ncmo_; ++s) {
             double gamma_b_rs = gamma_b->get(r,s);
             if (std::fabs(gamma_b_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
@@ -409,3 +388,4 @@ void ConventionalIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix g
 
 
 }} //End namespaces for psi and forte
+

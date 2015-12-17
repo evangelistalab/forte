@@ -1,0 +1,65 @@
+dsrg_mrpt2_energy = -380.704212919242991
+import forte
+
+molecule mol{
+0 3
+ C    1.44369768    -4.66305528   0.0000
+ C   -1.44369768    -4.66305528   0.0000
+ C   -2.58365462    -2.43626592   0.0000
+ C   -1.46531074    -0.09358884   0.0000
+ C    1.46531074    -0.09358884   0.0000
+ C    2.58365462    -2.43626592   0.0000
+ C    2.65860246     2.30113350   0.0000
+ C    1.33027358     4.54730911   0.0000
+ C   -1.33027358     4.54730911   0.0000
+ C   -2.65860246     2.30113350   0.0000
+ H    2.27824793    -6.54344554   0.0000
+ H   -2.27824793    -6.54344554   0.0000
+ H    4.71751615     2.31586259   0.0000
+ H    2.35947164     6.33428253   0.0000
+ H   -2.35947164     6.33428253   0.0000
+ H   -4.71751615     2.31586259   0.0000
+ symmetry c1
+units bohr
+}
+
+set globals{
+   reference               ROHF
+   basis                   3-21g
+   scf_type                DF
+   df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
+   d_convergence           12
+   e_convergence           12
+   maxiter                 1000
+   #docc                     [15, 2, 12, 3]
+   #socc                     [1, 0,  1,  0]
+   docc                     [32]
+   socc                     [2]
+
+}
+energy('scf')
+set forte {
+   #frozen_docc             [5, 0, 5, 0]
+   #restricted_docc         [10, 2, 7, 0]
+   #active                  [1, 0, 1, 5]
+   frozen_docc              [10]
+   restricted_docc          [19]
+   active                   [7]
+   root_sym                0
+   nroot                   1
+   root                    0
+   dsrg_s                  0.5
+   int_type                DF
+   multiplicity            1
+   ccvv_algorithm          fly_ambit
+   job_type                three-dsrg-mrpt2
+   FCI_ITERATIONS          50
+   ROTATE_MOS              [1, 26, 30, 1, 29, 32, 1, 36, 37]
+
+}
+
+set_num_threads(1)
+no_symmetry = energy('forte')
+compare_values(no_symmetry, dsrg_mrpt2_energy, 6, "TESTED ROTATION")
+
