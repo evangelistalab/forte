@@ -1,3 +1,4 @@
+//[forte-public]
 /*
  *@BEGIN LICENSE
  *

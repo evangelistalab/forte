@@ -304,7 +304,6 @@ double FCISolver::compute_energy()
     //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
     //}
     //std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    outfile->Printf("\n active_mo size = %d", active_mo_.size());
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
@@ -362,7 +361,7 @@ double FCISolver::compute_energy()
     int gr = 0;
     for (auto& g : guess){
         if (g.first != multiplicity_){
-            outfile->Printf("\n  Projecting out root %d",gr);
+            if(print_ > 0) {outfile->Printf("\n  Projecting out root %d",gr);}
             HC.set(g.second);
             HC.copy_to(sigma);
             std::vector<std::pair<size_t,double>> bad_root;
@@ -486,7 +485,7 @@ double FCISolver::compute_energy()
         if (test_rdms_) C_->rdm_test();
 
         // Print the NO if energy converged
-        if(print_no_) {C_->print_natural_orbitals();}
+        if(print_no_ or print_) {C_->print_natural_orbitals(mo_space_info_);}
     }
     else
     {
@@ -546,7 +545,10 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
         bool* Ia = new bool[nact];
         bool* Ib = new bool[nact];
         size_t nnew_dets = bsdets.size() - num_dets;
-        outfile->Printf("\n  Initial guess space is incomplete.\n  Adding %d determinant(s).",nnew_dets);
+        if(print_ > 0)
+        {
+            outfile->Printf("\n  Initial guess space is incomplete.\n  Adding %d determinant(s).",nnew_dets);
+        }
         for (size_t i = 0; i < nnew_dets; ++i){
             // Find the address of a determinant
             size_t h, add_Ia, add_Ib;

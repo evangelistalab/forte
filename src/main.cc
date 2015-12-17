@@ -134,6 +134,11 @@ read_options(std::string name, Options &options)
 
         /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
         options.add("FROZEN_UOCC",new ArrayType());
+        /*- Molecular orbitals to swap -
+         *  Swap mo_1 with mo_2 in irrep symmetry
+         *  Swap mo_3 with mo_4 in irrep symmetry
+         *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4] -*/
+        options.add("ROTATE_MOS", new ArrayType());
 
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
@@ -525,6 +530,8 @@ extern "C" PsiReturnType forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
+//[forte-public]
+
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
@@ -537,11 +544,15 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
+        ints_ = std::make_shared<EffectiveIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
+
+//[forte-private]
 
     //Link the integrals to the DynamicBitsetDeterminant class
     //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -554,6 +565,7 @@ extern "C" PsiReturnType forte(Options &options)
        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
        auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
        FTHF->compute_energy();
+       ints_->retransform_integrals();
     }
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
@@ -818,8 +830,8 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SQ"){
         SqTest sqtest;
     }
-
-    // Delete ints_;
+    DynamicBitsetDeterminant::reset_ints();
+    STLBitsetDeterminant::reset_ints();
 
     ambit::finalize();
 
