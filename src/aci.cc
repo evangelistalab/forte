@@ -687,12 +687,20 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 		ci_rdms.compute_2rdm( trdm_aa, trdm_ab, trdm_bb, 0);
 		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 
+		Timer three;
+		std::vector<double> trdm_aaa;
+		std::vector<double> trdm_aab;
+		std::vector<double> trdm_abb;
+		std::vector<double> trdm_bbb;
+		ci_rdms.compute_3rdm(trdm_aaa, trdm_aab, trdm_abb, trdm_bbb, 0); 
+		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
+
 		Timer energy;
 		double rdm_energy = ci_rdms.get_energy(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab); 
 		outfile->Printf("\n  Energy took %2.6f s", energy.get());
 		outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 		
-		ci_rdms.rdm_test(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab); 
+		//ci_rdms.rdm_test(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab, trdm_aaa, trdm_aab, trdm_abb, trdm_bbb); 
 
 
 	}
