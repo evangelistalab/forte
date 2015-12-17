@@ -14,9 +14,23 @@ namespace psi{ namespace forte{
 * @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2, and the integrals
 * Forms an orbital gradient:  g_{pq} =[ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq || rs> - A(p->q)]
 * Right now, Only forms a diagonal hessian of orbitals:  Look at  Hohenstein J.Chem.Phys, 142, 224103.
+* Diagonal Hessian only requires (p u | x y) integrals (many are built in JK library)
 * Daniel Smith's CASSCF code in PSI4 was integral in debugging.
 *
-* Usage of this class:  Contructor will just allocate the
+* Usage of this class:  Contructor will just set_up the basic values
+* I learn best from examples:  Here is how I use it in the CASSCF code.
+* Note:  If you are not freezing core, you do not need F_froze
+*         OrbitalOptimizer orbital_optimizer(gamma1_,
+                                           gamma2_,
+                                           ints_->aptei_ab_block(nmo_abs_, active_abs_, active_abs_, active_abs_) ,
+                                           options_,
+                                           mo_space_info_);
+        orbital_optimizer.set_frozen_one_body(F_froze_);
+        orbital_optimizer.set_no_symmetry_mo(Call_);
+        orbital_optimizer.set_symmmetry_mo(Ca);
+        SharedMatrix S_sym = orbital_optimizer.orbital_rotation_casscf();
+        double g_norm = orbital_optimizer.orbital_gradient_norm();
+
 */
 class OrbitalOptimizer
 {
@@ -49,6 +63,8 @@ public:
     /// The norm of the orbital gradient
     double orbital_gradient_norm(){return (g_->rms());}
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
+    /// Give the AO one electron integrals (H = T + V)
+    SharedMatrix one_body(SharedMatrix H){return H_ = H;}
 protected:
     ///The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
@@ -94,6 +110,8 @@ protected:
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9
 
+    /// H = T + V
+    SharedMatrix H_;
     /// The Fock matrix due to Frozen core orbitals
     SharedMatrix F_froze_;
     /// The core Fock Matrix
