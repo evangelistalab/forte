@@ -74,7 +74,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL EFFECTIVE");
 
         /*- The screening for JK builds and DF libraries -*/
         options.add_double("INTEGRAL_SCREENING", 1e-12);

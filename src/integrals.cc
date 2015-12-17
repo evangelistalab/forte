@@ -68,6 +68,7 @@ void ForteIntegrals::startup()
     nirrep_ = wfn->nirrep();
     nso_ = wfn->nso();
     nmo_ = wfn->nmo();
+    nsopi_ = wfn->nsopi();
     nmopi_ = wfn->nmopi();
     frzcpi_ = wfn->frzcpi();
     frzvpi_ = wfn->frzvpi();

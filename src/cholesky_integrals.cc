@@ -1,11 +1,12 @@
 //[forte-public]
-#include "integrals.h"
 #include <cmath>
 
 #include <libmints/integral.h>
 #include <lib3index/cholesky.h>
 #include <libmints/basisset.h>
 #include <libqt/qt.h>
+
+#include "integrals.h"
 
 using namespace ambit;
 
@@ -178,7 +179,7 @@ void CholeskyIntegrals::gather_integrals()
         }
 
     }
-    Ca_ = Ca_ao;
+//    Ca_ = Ca_ao;
 
     ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
     ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
