@@ -65,10 +65,10 @@ inline double smootherstep(double edge0, double edge1, double x)
 AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
-		options_(options), 
+        wfn_(wfn),
+        options_(options),
 		ints_(ints), 
-		mo_space_info_(mo_space_info),
-		wfn_(wfn)
+        mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);
@@ -183,7 +183,7 @@ void AdaptiveCI::startup()
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
-    form_1_RDM_ = options_.get_bool("1_RDM");
+    form_1_RDM_ = options_.get_bool("COMPUTE_RDMS");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 
@@ -482,13 +482,13 @@ double AdaptiveCI::compute_energy()
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+	
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
 	if( det_save_) det_list_.open("det_list.txt");
     int maxcycle = 20;
     for (int cycle = 0; cycle < maxcycle; ++cycle){
-
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
@@ -635,7 +635,7 @@ double AdaptiveCI::compute_energy()
 		outfile->Printf("\n Davidson corr: %1.9f", i);
 	}
 
-
+double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -662,34 +662,47 @@ double AdaptiveCI::compute_energy()
 	}
 	if( form_1_RDM_ ){
 	//Compute and print 1-RDM
-		SharedMatrix Dalpha(new Matrix("Dalpha", nmo_, nmo_));
-		SharedMatrix Dbeta(new Matrix("Dbeta", nmo_, nmo_));
+		Timer one_rdm;
+		
+		std::vector<double> ordma;		
+		std::vector<double> ordmb;		
 
-		//std::vector<double> opdm_a;
-		//std::vector<double> opdm_b;
-
-		//CI_RDMS ci_rdms(options_,wfn_,ints_,mo_space_info_,PQ_space_,PQ_evecs);
-		//ci_rdms.compute_1rdm(opdm_a,0,0);
-	
-		compute_1rdm(Dalpha,Dbeta,PQ_space_,PQ_evecs,nroot_);
-		diagonalize_order nMatz = evals_only_descending;
-
-		SharedVector no_occnum(new Vector("NO occ num", nmo_));
-		SharedMatrix NO_evecs(new Matrix("NO Evecs", nmo_,nmo_));
-		oRDM_->diagonalize(NO_evecs, no_occnum, nMatz);
-		no_occnum->print();
-
-		std::vector<int> active_space(nirrep_, 0);
-		for(size_t p = 0, maxp = oRDM_->nrow(); p < maxp; ++p){
-			if( (oRDM_->get(p,p) >= 0.02) and (oRDM_->get(p,p) <= 1.98) ){
-				active_space[mo_symmetry_[p]] += 1;
-			}else{
-				continue;
+		CI_RDMS ci_rdms(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+		ci_rdms.compute_1rdm(ordma,ordmb,0);
+		outfile->Printf("\n  1-RDM took %2.6f s", one_rdm.get());
+		SharedMatrix D1(new Matrix("D1", nact_,nact_));
+	   
+		for( int i = 0; i < nact_; ++i){
+			for( int j = 0; j < nact_; ++j){
+				D1->set(i,j, ordma[nact_*i + j] + ordmb[nact_*i + j]);
 			}
 		}
-		outfile->Printf("\n Suggested active space from ACI:  \n  [");
-		for(int i = 0; i < nirrep_; ++i) outfile->Printf(" %d", active_space[i]);
-		outfile->Printf(" ]");
+
+		outfile->Printf("\n  Trace of D1: %5.10f", D1->trace());
+
+		Timer two_rdm;
+		std::vector<double> trdm_aa;
+		std::vector<double> trdm_bb;
+		std::vector<double> trdm_ab;
+		ci_rdms.compute_2rdm( trdm_aa, trdm_ab, trdm_bb, 0);
+		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
+
+		Timer three;
+		std::vector<double> trdm_aaa;
+		std::vector<double> trdm_aab;
+		std::vector<double> trdm_abb;
+		std::vector<double> trdm_bbb;
+		ci_rdms.compute_3rdm(trdm_aaa, trdm_aab, trdm_abb, trdm_bbb, 0); 
+		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
+
+		Timer energy;
+		double rdm_energy = ci_rdms.get_energy(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab); 
+		outfile->Printf("\n  Energy took %2.6f s", energy.get());
+		outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
+		
+		//ci_rdms.rdm_test(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab, trdm_aaa, trdm_aab, trdm_abb, trdm_bbb); 
+
+
 	}
 
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());

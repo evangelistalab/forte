@@ -1,4 +1,3 @@
-//[forte-public]
 #include <cmath>
 #include <memory>
 
@@ -34,6 +33,7 @@
 #include "dsrg_wick.h"
 #include "casscf.h"
 #include "alternativescasscf.h"
+#include "active_dsrgpt2.h"
 
 INIT_PLUGIN
 
@@ -75,7 +75,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL"); 
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL EFFECTIVE");
 
         /*- The screening for JK builds and DF libraries -*/
         options.add_double("INTEGRAL_SCREENING", 1e-12);
@@ -134,6 +134,11 @@ read_options(std::string name, Options &options)
 
         /*- Number of frozen unoccupied orbitals per irrep (in Cotton order) -*/
         options.add("FROZEN_UOCC",new ArrayType());
+        /*- Molecular orbitals to swap -
+         *  Swap mo_1 with mo_2 in irrep symmetry
+         *  Swap mo_3 with mo_4 in irrep symmetry
+         *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4] -*/
+        options.add("ROTATE_MOS", new ArrayType());
 
         /*- The algorithm used to screen the determinant
          *  - DENOMINATORS uses the MP denominators to screen strings
@@ -287,6 +292,17 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_SOSCF", false);
         /*- Freeze core with CASSCF -*/
         options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- CASSCF MAXIMUM VALUE HESSIAN -*/
+        options.add_double("CASSCF_MAX_HESSIAN", 0.5);
+
+        /*- DIIS Options -*/
+        options.add_bool("CASSCF_DO_DIIS", true);
+        /// The number of Rotation parameters to extrapolate with
+        options.add_int("CASSCF_DIIS_MAX_VEC", 4);
+        /// When to start the DIIS iterations (will make this automatic)
+        options.add_int("CASSCF_DIIS_START", 3);
+        /// How often to do DIIS extrapolation
+        options.add_int("CASSCF_DIIS_FREQ", 1);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
@@ -321,7 +337,7 @@ read_options(std::string name, Options &options)
         /*Threshold value for defining multiplicity from S^2*/
         options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
-        options.add_bool("1_RDM", false);
+        options.add_bool("COMPUTE_RDMS", false);
         /*- Form initial space with based on energy */
         options.add_bool("LAMBDA_GUESS", false);
 		/*- Type of spin projection
@@ -525,6 +541,8 @@ extern "C" PsiReturnType forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
+//[forte-public]
+
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
 
@@ -537,11 +555,15 @@ extern "C" PsiReturnType forte(Options &options)
         ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
         ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
+        ints_ = std::make_shared<EffectiveIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
+
+//[forte-private]
 
     //Link the integrals to the DynamicBitsetDeterminant class
     //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -554,6 +576,7 @@ extern "C" PsiReturnType forte(Options &options)
        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
        auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
        FTHF->compute_energy();
+       ints_->retransform_integrals();
     }
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
@@ -660,50 +683,8 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        if(options["NROOTPI"].size() == 0){
-            throw PSIEXCEPTION("Please specify NROOTPI.");
-        }else{
-            int nirrep = wfn->nirrep(), total_nroots = 0;
-            vector<vector<double>> energies(nirrep,vector<double>());
-            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
-            for(int h = 0; h < nirrep; ++h){
-                int nroots = options["NROOTPI"][h].to_integer();
-                total_nroots += nroots;
-                if(nroots == 0) {
-                    continue;
-                }else{
-                    fci_mo.set_root_sym(h);
-                    for(int i = 0; i < nroots; ++i){
-                        fci_mo.set_nroots(i+1);
-                        fci_mo.set_root(i);
-                        fci_mo.compute_energy();
-                        Reference reference = fci_mo.reference();
-                        double pt2 = 0.0;
-                        if(options.get_str("INT_TYPE") == "CONVENTIONAL"){
-                            auto dsrg = std::make_shared<DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
-                            pt2 = dsrg->compute_energy();
-                        }else{
-                            auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
-                            pt2 = dsrg->compute_energy();
-                        }
-                        energies[h].push_back(pt2);
-                    }
-                }
-            }
-            if(total_nroots == 0){
-                outfile->Printf("\n  NROOTPI is zero. Did nothing.");
-            }else{
-                print_h2("ACTIVE-DSRGPT2 Summary");
-                for(int h = 0; h < nirrep; ++h){
-                    outfile->Printf("\n  symmetry = %lu \n", h);
-                    for(int i = 0; i < energies[h].size(); ++i){
-                        outfile->Printf("    %20.12f\n", energies[h][i]);
-                    }
-                }
-            }
-        }
-
-
+        ACTIVE_DSRGPT2 pt(wfn,options,ints_,mo_space_info);
+        pt.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CAS_TYPE")=="CAS")
@@ -860,8 +841,8 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SQ"){
         SqTest sqtest;
     }
-
-    // Delete ints_;
+    DynamicBitsetDeterminant::reset_ints();
+    STLBitsetDeterminant::reset_ints();
 
     ambit::finalize();
 
