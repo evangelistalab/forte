@@ -42,12 +42,10 @@ public:
     double E_casscf(){return E_casscf_;}
 private:
     /// The active one RDM in the MO basis
-    SharedMatrix gamma1M_;
     ambit::Tensor gamma1_;
 
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
-    SharedMatrix gamma2M_;
     /// The reference object generated from Francesco's Full CI
     Reference cas_ref_;
     /// The energy computed in FCI with updates from CASSCF and CI
@@ -89,36 +87,8 @@ private:
 
     /// The Fock matrix due to Frozen core orbitals
     SharedMatrix F_froze_;
-    /// The core Fock Matrix
-    SharedMatrix F_core_;
-    /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all active portion of the OPM
-    /// Equation 10
-    SharedMatrix F_act_;
-    /// Intermediate in forming orbital gradient matrix
-    SharedMatrix Y_;
-    /// Z intermediate
-    SharedMatrix Z_;
-    /// The Orbital gradient
-    SharedMatrix g_;
-    /// The diagonal Hessian
-    SharedMatrix d_;
-    /// The type of integrals
-    IntegralType int_type_;
-    /// Do a Complete SOSCF using Daniels' code
-    bool do_soscf_;
-
-    /// private functions
-
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
-    /// This function will implement steps 4 and 9 of algorithm
-    void form_fock_core();
-    ///Implement step 9 of algoritm
-    void form_fock_active();
-    /// Assemble the orbital gradient (10-15)
-    void orbital_gradient();
-    /// Assemble the diagonal Hessian (20-22)
-    void diagonal_hessian();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
     /// Make C_matrix symmetry aware from SO C

@@ -1,21 +1,15 @@
 //[forte-public]
 #include <cmath>
+#include <numeric>
 
-#include <psifiles.h>
-#include <libiwl/iwl.h>
-#include <libtrans/integraltransform.h>
-#include <libpsio/psio.hpp>
 #include <libmints/matrix.h>
+#include <libthce/lreri.h>
 #include <libmints/basisset.h>
 #include <libthce/thce.h>
-#include <libthce/thcew.h>
-#include <libthce/lreri.h>
-#include <lib3index/cholesky.h>
 #include <libqt/qt.h>
-#include <libfock/jk.h>
-#include <algorithm>
-#include <numeric>
+
 #include "blockedtensorfactory.h"
+
 using namespace ambit;
 namespace psi{ namespace forte{
 
@@ -473,7 +467,7 @@ void DISKDFIntegrals::gather_integrals()
 //    df->set_C(C_ord);
     df->set_C(Ca_ao);
 
-    Ca_ = Ca_ao;
+//    Ca_ = Ca_ao;
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
@@ -525,7 +519,6 @@ void DISKDFIntegrals::deallocate()
     delete[] diagonal_aphys_tei_aa;
     delete[] diagonal_aphys_tei_ab;
     delete[] diagonal_aphys_tei_bb;
-    //delete[] qt_pitzer_;
 }
 void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 {

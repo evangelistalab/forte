@@ -707,12 +707,12 @@ void STLBitsetDeterminant::enforce_spin_completeness(std::vector<STLBitsetDeterm
             }
         } while (std::next_permutation(open_bits.begin(),open_bits.begin() + naopen + nbopen));
     }
-    if( ndet_added > 0 ){
-        outfile->Printf("\n\n  Determinant space is spin incomplete!");
-        outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
-    }else{
-        outfile->Printf("\n\n  Determinant space is spin complete.");
-    }
+    //if( ndet_added > 0 ){
+    //    outfile->Printf("\n\n  Determinant space is spin incomplete!");
+    //    outfile->Printf("\n  %zu more determinants were needed.", ndet_added);
+    //}else{
+    //    outfile->Printf("\n\n  Determinant space is spin complete.");
+    //}
 }
 
 }} // end namespace
