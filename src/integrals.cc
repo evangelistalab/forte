@@ -175,13 +175,13 @@ void ForteIntegrals::transform_one_electron_integrals()
 
     T->add(V);
     V->copy(T);
-    SharedMatrix OneIntAO = V;
+    SharedMatrix OneIntAO(V->clone());
+    OneIntsAO_ = OneIntAO;
 
     T->transform(Ca);
     V->transform(Cb);
     OneInt = T;
     OneBody_symm_ = OneInt;
-    OneInts_symmetryao_ = OneIntAO;
 
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_a[pq] = 0.0;
     for (size_t pq = 0; pq < nmo_ * nmo_; ++pq) one_electron_integrals_b[pq] = 0.0;

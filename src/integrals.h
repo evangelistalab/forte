@@ -174,6 +174,7 @@ public:
     /// Tell which integrals were used
     IntegralType integral_type(){return integral_type_;}
     SharedMatrix OneBody_symm(){return OneBody_symm_;}
+    SharedMatrix OneBodyAO(){return OneIntsAO_;}
     ///Set to either delete frozen core integrals or keep them
     void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core)
     {resort_frozen_core_ = keep_frozen_core;
@@ -303,7 +304,7 @@ protected:
     int print_;
     /// The One Electron Integrals (T + V) in SO Basis
     SharedMatrix OneBody_symm_;
-    SharedMatrix OneInts_symmetryao_;
+    SharedMatrix OneIntsAO_;
 
     ///The Frozen One Body Operator
 };

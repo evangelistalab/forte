@@ -101,12 +101,6 @@ private:
     /// Freeze the core and leave them unchanged
     /// Uses this to override MOSPACEINFO
     bool casscf_freeze_core_;
-    /// Compute core Hamiltonian in SO basis
-    boost::shared_ptr<Matrix> compute_so_hamiltonian();
-    /// Set the dferi object
-    boost::shared_ptr<DFERI> set_df_object();
-    /// Get the Frozen Orbs in SO basis
-    std::map<std::string, boost::shared_ptr<Matrix> > orbital_subset_helper();
     /// set frozen_core_orbitals
     boost::shared_ptr<Matrix> set_frozen_core_orbitals();
     /// The Dimensions for the major orbitals spaces involved in CASSCF
@@ -124,6 +118,9 @@ private:
     std::vector<size_t> restricted_uocc_abs_;
     std::vector<size_t> inactive_docc_abs_;
     std::vector<size_t> nmo_abs_;
+
+    ///Transform the active integrals
+    ambit::Tensor transform_active();
 
 
 
