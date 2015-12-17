@@ -1,10 +1,11 @@
-#include "integrals.h"
 #include <cmath>
 
 #include <psifiles.h>
-#include <libiwl/iwl.h>
-#include "blockedtensorfactory.h"
 #include <libmints/sointegral_twobody.h>
+#include <libmints/integralparameters.h>
+
+#include "integrals.h"
+#include "blockedtensorfactory.h"
 
 namespace psi{ namespace forte{
 
@@ -79,22 +80,82 @@ void EffectiveIntegrals::transform_integrals()
     boost::shared_ptr<IntegralFactory> integral = wfn->integral();
 
     boost::shared_ptr<SOBasisSet> sobasisset = wfn->sobasisset();
-    boost::shared_ptr<TwoBodyAOInt> tb(integral->eri());
-    boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+//    boost::shared_ptr<TwoBodyAOInt> tb(integral->eri());
+//    boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
-    ERISaver eri_saver(aptei_idx_,num_aptei);
-    SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
-    for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
-        eri->compute_shell(shellIter,eri_saver);
-    }
+//    ERISaver eri_saver(aptei_idx_,num_aptei);
+//    SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+//    for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
+//        eri->compute_shell(shellIter,eri_saver);
+//    }
 
     ambit::Tensor Vmo = ambit::Tensor::build(ambit::kCore,"Vmo",{nmo_,nmo_,nmo_,nmo_});
     ambit::Tensor Vso = ambit::Tensor::build(ambit::kCore,"Vso",{nso_,nso_,nso_,nso_});
     ambit::Tensor C = ambit::Tensor::build(ambit::kCore,"C",{nso_,nmo_});
 
-    Vso.iterate([&](const std::vector<size_t>& i,double& value){
-        value = eri_saver.get(i[0],i[1],i[2],i[3]);
-    });
+    double eff_coulomb_omega = options_.get_double("EFFECTIVE_COULOMB_OMEGA");
+    double eff_coulomb_factor = options_.get_double("EFFECTIVE_COULOMB_FACTOR");
+    double eff_coulomb_exp = options_.get_double("EFFECTIVE_COULOMB_EXPONENT");
+    outfile->Printf("  Effective Coulomb Omega:              %6f\n",eff_coulomb_omega);
+    outfile->Printf("  Effective Coulomb Gaussian Factor:    %6f\n",eff_coulomb_factor);
+    outfile->Printf("  Effective Coulomb Gaussian Exponent:  %6f\n",eff_coulomb_exp);
+
+    // Erf(x)/x integrals (long range)
+    {
+        boost::shared_ptr<TwoBodyAOInt> tb(integral->erf_eri(eff_coulomb_omega));
+        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+
+        ERISaver erf_eri_saver(aptei_idx_,num_aptei);
+        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+        for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
+            eri->compute_shell(shellIter,erf_eri_saver);
+        }
+
+        Vso.iterate([&](const std::vector<size_t>& i,double& value){
+            value += erf_eri_saver.get(i[0],i[1],i[2],i[3]);
+        });
+
+    }
+
+//    // Erfc(x)/x integrals (short range)
+//    {
+//        boost::shared_ptr<TwoBodyAOInt> tb(integral->erf_complement_eri(eff_coulomb_omega));
+//        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+
+//        ERISaver erf_complement_eri_saver(aptei_idx_,num_aptei);
+//        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+//        for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
+//            eri->compute_shell(shellIter,erf_complement_eri_saver);
+//        }
+
+//        Vso.iterate([&](const std::vector<size_t>& i,double& value){
+//            value += erf_complement_eri_saver.get(i[0],i[1],i[2],i[3]);
+//        });
+//    }
+
+    // Gaussian(gamma,c) integrals (short range)
+    {
+        boost::shared_ptr<Vector> coeff = boost::shared_ptr<Vector>(new Vector(1));
+        boost::shared_ptr<Vector> exponent = boost::shared_ptr<Vector>(new Vector(1));
+        coeff->set(0,eff_coulomb_factor);
+        exponent->set(0,eff_coulomb_exp);
+
+        boost::shared_ptr<CorrelationFactor> cf = boost::shared_ptr<CorrelationFactor>(new CorrelationFactor(1));
+        cf->set_params(coeff,exponent);
+        boost::shared_ptr<TwoBodyAOInt> tb(integral->f12(cf));
+        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+
+        ERISaver f12_eri_saver(aptei_idx_,num_aptei);
+        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+        for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
+            eri->compute_shell(shellIter,f12_eri_saver);
+        }
+
+        Vso.iterate([&](const std::vector<size_t>& i,double& value){
+            value += f12_eri_saver.get(i[0],i[1],i[2],i[3]);
+        });
+
+    }
 
     SharedMatrix Ca = wfn->Ca();
     // Remove symmetry from Ca
@@ -123,7 +184,6 @@ void EffectiveIntegrals::transform_integrals()
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
 
     double* two_electron_integrals = new double[num_aptei];
-    // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
     for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
 
     Vmo.iterate([&](const std::vector<size_t>& i,double& value){
