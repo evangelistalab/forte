@@ -29,12 +29,14 @@ public:
      * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma2_b
      * @param Gamma2 The SYMMETRIZTED 2-RDM: 1/4 * (gamma2_aa + gamma2_ab + gamma_2_ba + gamma2_bb)
      * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are doing an orbital optimization at the level of CASSCF
-     * @param mo_space_info
+     * @param options The options object
+     * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
      */
 
     OrbitalOptimizer( ambit::Tensor Gamma1,
                       ambit::Tensor Gamma2,
                       ambit::Tensor two_body_ab,
+                      Options& options,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ///You have to set these at the start of the computation
@@ -107,6 +109,8 @@ protected:
     SharedMatrix g_;
     ///The Orbital Hessian
     SharedMatrix d_;
+    ///Solution of g + HS = 0
+    SharedMatrix S_;
 
     /// private functions
 
@@ -119,6 +123,7 @@ protected:
     /// Assemble the diagonal Hessian (20-22)
     void diagonal_hessian();
     /// check the cas_ci energy with spin-free RDM
+    void orbital_rotation_parameter();
 
     ///form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for non contractions)
     void fill_shared_density_matrices();

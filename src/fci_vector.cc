@@ -571,7 +571,6 @@ void FCIWfn::zero()
 void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
 {
     outfile->Printf("\n====>PRINT NATURAL ORBITALS====>\n");
-    outfile->Printf("\n There are %d active orbitals\n", ncmo_);
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
     Dimension nmopi = mo_space_info->get_dimension("CORRELATED");
 
