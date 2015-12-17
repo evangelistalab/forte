@@ -298,6 +298,17 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_SOSCF", false);
         /*- Freeze core with CASSCF -*/
         options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- CASSCF MAXIMUM VALUE HESSIAN -*/
+        options.add_double("CASSCF_MAX_HESSIAN", 0.5);
+
+        /*- DIIS Options -*/
+        options.add_bool("CASSCF_DO_DIIS", true);
+        /// The number of Rotation parameters to extrapolate with
+        options.add_int("CASSCF_DIIS_MAX_VEC", 4);
+        /// When to start the DIIS iterations (will make this automatic)
+        options.add_int("CASSCF_DIIS_START", 3);
+        /// How often to do DIIS extrapolation
+        options.add_int("CASSCF_DIIS_FREQ", 1);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
@@ -332,7 +343,7 @@ read_options(std::string name, Options &options)
         /*Threshold value for defining multiplicity from S^2*/
         options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
-        options.add_bool("1_RDM", false);
+        options.add_bool("COMPUTE_RDMS", false);
         /*- Form initial space with based on energy */
         options.add_bool("LAMBDA_GUESS", false);
 		/*- Type of spin projection
@@ -363,7 +374,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV CHEBYSHEV");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
