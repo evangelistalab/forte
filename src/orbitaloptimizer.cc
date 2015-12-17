@@ -29,8 +29,9 @@ OrbitalOptimizer::OrbitalOptimizer()
 OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
                                    ambit::Tensor Gamma2,
                                    ambit::Tensor two_body_ab,
+                                   Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info)
+    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), options_(options), mo_space_info_(mo_space_info)
 {
     startup();
 
@@ -52,6 +53,10 @@ SharedMatrix OrbitalOptimizer::orbital_rotation_casscf()
 
     diagonal_hessian();
 
+    orbital_rotation_parameter();
+
+    return S_;
+
 }
 
 void OrbitalOptimizer::startup()
@@ -61,6 +66,7 @@ void OrbitalOptimizer::startup()
     active_dim_          = mo_space_info_->get_dimension("ACTIVE");
     restricted_uocc_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
     inactive_docc_dim_   = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     frozen_docc_abs_     = mo_space_info_->get_corr_abs_mo("FROZEN_DOCC");
     restricted_docc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -68,11 +74,33 @@ void OrbitalOptimizer::startup()
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_   = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_             = mo_space_info_->get_corr_abs_mo("CORRELATED");
+
+    casscf_freeze_core_  = options_.get_bool("CASSCF_FREEZE_CORE");
+
     nmo_ = mo_space_info_->size("CORRELATED");
     all_nmo_ = mo_space_info_->size("ALL");
-    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
+
     nrdocc_ = restricted_docc_abs_.size();
+    na_     = active_abs_.size();
     nvir_  = restricted_uocc_abs_.size();
+    wfn_ = Process::environment.wavefunction();
+    casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
+    nirrep_ = wfn_->nirrep();
+    nsopi_  = wfn_->nsopi();
+    if(!casscf_freeze_core_)
+    {
+        restricted_docc_abs_ = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
+        restricted_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+        active_abs_          = mo_space_info_->get_absolute_mo("ACTIVE");
+        restricted_uocc_abs_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
+
+        for(size_t h = 0; h < nirrep_; h++){frozen_docc_dim_[h] = 0;}
+        for(size_t i = 0; i < frozen_docc_abs_.size(); i++){frozen_docc_abs_[i] = 0;}
+        nfrozen_ = 0;
+        nmo_ = mo_space_info_->size("ALL");
+        nmopi_ = mo_space_info_->get_dimension("ALL");
+        nmo_abs_ = mo_space_info_->get_absolute_mo("ALL");
+    }
 
 }
 
@@ -87,6 +115,11 @@ void OrbitalOptimizer::form_fock_core()
     H->add(V);
 
     //H->transform(Call_);
+    if(Ca_sym_ == nullptr)
+    {
+        outfile->Printf("\n\n Please give your OrbitalOptimize an Orbital");
+        throw PSIEXCEPTION("Please set CMatrix before you call orbital rotation casscf");
+    }
     H->transform(Ca_sym_);
     if(casscf_debug_print_){
         H->set_name("CORR_HAMIL");
@@ -207,7 +240,7 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix L_C_correct(new Matrix("L_C_order", nso, Ch->Q()));
 
     for(size_t mu = 0; mu < nso; mu++){
-        for(int Q = 0; Q < Ch->Q(); Q++){
+        for(size_t Q = 0; Q < Ch->Q(); Q++){
             L_C_correct->set(mu, Q, L_C->get(Q, mu));
         }
     }
@@ -299,12 +332,11 @@ void OrbitalOptimizer::orbital_gradient()
     //std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
     ///SInce the integrals class assumes that the indices are relative,
     /// pass the relative indices to the integrals code.
-    ambit::Tensor tei_puvy = ambit::Tensor::build(ambit::kCore, "puvy", {nmo_, na_, na_, na_});
-    outfile->Printf("\n %8.8f", tei_puvy.norm(2));
     ambit::Tensor Z = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
+
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
         Zm->set(nmo_abs_[i[0]],i[1], value);});
@@ -428,6 +460,67 @@ void OrbitalOptimizer::diagonal_hessian()
 
 
 }
+void OrbitalOptimizer::orbital_rotation_parameter()
+{
+    SharedMatrix S(new Matrix("S", nmo_, nmo_));
+
+    int offset = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi_[h]; p++){
+            int poff = p + offset;
+            for(int q = 0; q < nmopi_[h]; q++){
+                int qoff = q + offset;
+                if(poff < qoff)
+                {
+                    if(d_->get(poff,qoff) > 1e-8)
+                        S->set(poff,qoff, g_->get(poff,qoff) / d_->get(poff,qoff));
+                }
+                else if(poff > qoff)
+                {
+                    if(d_->get(qoff,poff) > 1e-8)
+                        S->set(poff,qoff,-1.0 * g_->get(qoff,poff) / d_->get(qoff,poff));
+                }
+
+            }
+        }
+    offset += nmopi_[h];
+    }
+    auto na_vec = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    for(size_t u = 0; u < na_; u++)
+        for(size_t v = 0; v < na_; v++)
+            S->set(na_vec[u], na_vec[v], 0.0);
+
+    Matrix S_mat;
+    S_mat.copy(S);
+    S_mat.expm();
+
+    SharedMatrix S_mat_s = S_mat.clone();
+
+    Dimension true_nmopi = wfn_->nmopi();
+
+    SharedMatrix S_sym(new Matrix(nirrep_, true_nmopi, true_nmopi));
+    offset = 0;
+    int frozen = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        frozen = frozen_docc_dim_[h];
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+                S_sym->set(h, p + frozen, q + frozen, S_mat_s->get(p + offset, q + offset));
+            }
+        }
+        if(casscf_freeze_core_)
+        {
+            for(int fr = 0; fr < frozen_docc_dim_[h]; fr++)
+            {
+                S_sym->set(h, fr, fr, 1.0);
+            }
+        }
+        offset += nmopi_[h];
+    }
+    S_ = S_sym;
+
+}
+
 void OrbitalOptimizer::fill_shared_density_matrices()
 {
     SharedMatrix gamma_spin_free(new Matrix("Gamma", na_, na_));
