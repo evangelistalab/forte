@@ -44,6 +44,7 @@ void CI_RDMS::startup()
 	ncmo2_ = ncmo_ * ncmo_;
 	ncmo3_ = ncmo2_ * ncmo_;
 	ncmo4_ = ncmo3_ * ncmo_;
+	ncmo5_ = ncmo3_ * ncmo2_;
 	
 
 	// The number of irreps
@@ -923,10 +924,140 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 	ambit::Tensor g2ab = ambit::Tensor::build(ambit::kCore,"g2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
 	ambit::Tensor g2bb = ambit::Tensor::build(ambit::kCore,"g2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
 
-//	if( na_ >= 2 ){
-//		L2aa.iterate([&]const std::vector
-//	}	
+	// First copy the 2-RDMs
+	if( na_ >= 2 ){
+		L2aa.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_aa[i[0] * ncmo3_ + i[1] * ncmo2_ + i[2] * ncmo_ + i[3]];
+		});
+	}	
+	if( (na_ >= 1) and (nb_ >=1 ) ){
+		L2ab.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_ab[i[0] * ncmo3_ + i[1] * ncmo2_ + i[2] * ncmo_ + i[3]];
+		});
+	}	
+	if( nb_ >= 2 ){
+		L2bb.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_bb[i[0] * ncmo3_ + i[1] * ncmo2_ + i[2] * ncmo_ + i[3]];
+		});
+	}	
+	
+	g2aa.copy(L2aa);
+	g2ab.copy(L2ab);
+	g2bb.copy(L2bb);
 
+	// Now build the cumulants
+	L2aa("pqrs") -= L1a("pr") * L1a("qs");
+	L2aa("pqrs") += L1a("ps") * L1a("qr");
+
+	L2ab("pqrs") -= L1a("pr") * L1b("qs");
+
+	L2bb("pqrs") -= L1b("pr") * L1b("qs");
+	L2bb("pqrs") += L1b("ps") * L1b("qr");
+
+	// Form the 3-RCMs
+	ambit::Tensor L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+
+	// First copy the RDMs
+	if( na_ >= 3){
+		L3aaa.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_aaa[i[0]*ncmo5_ + i[1]*ncmo4_ + i[2]*ncmo3_ + i[3]*ncmo2_ + i[4]*ncmo_ + i[5] ];
+		});
+	}
+	if( (na_ >= 2) and (nb_ >= 1) ){
+		L3aab.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_aab[i[0]*ncmo5_ + i[1]*ncmo4_ + i[2]*ncmo3_ + i[3]*ncmo2_ + i[4]*ncmo_ + i[5] ];
+		});
+	}
+	if( (na_ >= 1) and (nb_ >= 2) ){
+		L3abb.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_abb[i[0]*ncmo5_ + i[1]*ncmo4_ + i[2]*ncmo3_ + i[3]*ncmo2_ + i[4]*ncmo_ + i[5] ];
+		});
+	}
+	if( nb_ >= 3){
+		L3bbb.iterate([&](const std::vector<size_t>& i, double& value){
+			value = tprdm_bbb[i[0]*ncmo5_ + i[1]*ncmo4_ + i[2]*ncmo3_ + i[3]*ncmo2_ + i[4]*ncmo_ + i[5] ];
+		});
+	}
+
+	// Now form the cumulants
+	L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+    L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+    L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+    L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+    L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+    L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+    L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+    L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+    L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+    L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+    L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+    L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+    L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+    L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+    L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+
+    L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+    L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+    L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+    L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+    L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+    L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+    L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+
+    L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+    L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+    L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+    L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+    L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+    L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+    L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+
+    L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
+    L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
+    L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
+
+    L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
+    L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
+    L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
+
+    L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
+    L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
+    L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
+
+    L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
+    L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
+    L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
+
+    L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
+    L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
+    L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+
+	// Update the reference object
+
+	double energy = get_energy( oprdm_a, oprdm_b, tprdm_aa, tprdm_ab, tprdm_bb );
+
+	Reference ci_ref( energy, L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
+	ci_ref.set_g2aa(g2aa);
+	ci_ref.set_g2ab(g2ab);
+	ci_ref.set_g2bb(g2bb);
+
+	return ci_ref;
 
 }
 

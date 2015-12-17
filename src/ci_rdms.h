@@ -75,6 +75,7 @@ private:
 	size_t ncmo2_;
 	size_t ncmo3_;
 	size_t ncmo4_;
+	size_t ncmo5_;
  
 	// The correlated mos per irrep
 	Dimension active_dim_;	
