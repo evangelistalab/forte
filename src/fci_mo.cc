@@ -217,7 +217,6 @@ void FCI_MO::read_options(){
 }
 
 double FCI_MO::compute_energy(){
-
     // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
@@ -282,10 +281,15 @@ double FCI_MO::compute_energy(){
     }
 
     // Orbitals
-    if(options_.get_bool("SEMI_CANONICAL")){
-        semi_canonicalize(count);
-    }else{
-        nat_orbs();
+
+    ///If running casscf computation, do not change orbitals
+    if(!casscf_orbitals_)
+    {
+        if(options_.get_bool("SEMI_CANONICAL")){
+            semi_canonicalize(count);
+        }else{
+            nat_orbs();
+        }
     }
 
     Eref_ = eigen_[root_].second;
@@ -350,15 +354,8 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
     timer_on("FORM String");
     vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-    // symmetry of core
-    int symmetry = 0;
-    for(int h = 0; h < nirrep_; ++h){
-        for(int i = 0; i < core_[h]; ++i){
-            symmetry ^= h;
-        }
-    }
-
     // initalize the string (only active)
+    int symmetry = 0;
     bool *I_init = new bool[na_];
     for(size_t i = 0; i < na_; ++i) I_init[i] = 0;
     for(size_t i = na_ - active_elec; i < na_; ++i)  I_init[i] = 1;
@@ -405,13 +402,8 @@ void FCI_MO::form_det_cis(){
     // singles string
     vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref,true);
 
-    // symmetry of ref
+    // symmetry of ref (just active)
     int symmetry = 0;
-    for(int h = 0; h < nirrep_; ++h){
-        for(int i = 0; i < core_[h]; ++i){
-            symmetry ^= h;
-        }
-    }
     for(int i = 0; i < na_; ++i){
         if(string_ref[i]){
             symmetry ^= sym_active_[i];
@@ -478,7 +470,6 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
         for(bool b: String){
             outfile->Printf("%d ", b);
         }
-        outfile->Printf("\n");
     }
 
     timer_off("FORM String Ref");
@@ -489,15 +480,8 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     timer_on("FORM String Singles");
     vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-    // symmetry of core
+    // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
-    for(int h = 0; h < nirrep_; ++h){
-        for(int i = 0; i < core_[h]; ++i){
-            symmetry ^= h;
-        }
-    }
-
-    // occupied and unoccupied indices
     vector<int> uocc, occ;
     for(int i = 0; i < na_; ++i){
         if(ref_string[i]){
@@ -516,7 +500,9 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
             string_local[i] = false;
             sym ^= sym_active_[i];
             String[sym].push_back(string_local);
+            // need to reset
             string_local[i] = true;
+            sym ^= sym_active_[i];
         }
     }
 
@@ -1240,16 +1226,16 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     //    }
     //}
     for (size_t m = 0; m < nc_; m++) {
+        size_t nm = idx_c_[m];
         for( size_t n = 0; n < nc_; n++){
-            size_t nm = idx_c_[m];
             size_t nn = idx_c_[n];
             DaM->set(nm,nn,Da_[nm][nn]);
             DbM->set(nm,nn,Db_[nm][nn]);
         }
     }
     for (size_t u = 0; u < na_; u++){
+        size_t nu = idx_a_[u];
         for(size_t v = 0; v < na_; v++){
-            size_t nu = idx_a_[u];
             size_t nv = idx_a_[v];
             DaM->set(nu,nv, Da_[nu][nv]);
             DbM->set(nu,nv, Db_[nu][nv]);

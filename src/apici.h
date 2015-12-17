@@ -221,13 +221,13 @@ private:
     /// An experimental arbitrary-order Taylor series propagator
     void propagate_Taylor(int order,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The power propagator
-    void propagate_power(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_power(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
     /// The power propagator
     void propagate_power_quadratic_extrapolation(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Olsen propagator
-    void propagate_Olsen(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Olsen(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
     /// The Davidson-Liu propagator
-    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double tau, double spawning_threshold);
+    void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev propagator
     void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 

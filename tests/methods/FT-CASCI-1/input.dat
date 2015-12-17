@@ -1,9 +1,10 @@
 #! Generated using commit GITCOMMIT
+# FT-CAS-CI on LiH
 
 import forte
 
 refscf = -7.862246310410
-reffci = -7.716243788616362
+reffci = -7.859364418988
 
 molecule {
 0 1
@@ -20,17 +21,21 @@ set {
   reference rhf
   scf_type df
   e_convergence 12
+  d_convergence  6
   damping_percentage 25
+  mcscf_type          conv
 }
+energy('scf')
 
 set forte {
-  #job_type fci
-  print 0
-  restricted_docc [1,0,0,0]
-  active          [2,0,0,0]
-  alternative_casscf FTHF
-  TEMPERATURE        5000.0
-  maxiter             200
+  job_type               fci
+  print                   1
+  restricted_docc     [1,0,0,0]
+  active              [2,0,0,0]
+  alternative_casscf    FTHF
+  TEMPERATURE          50000.0
+  maxiter               200
+  print_no              true
 }
 
 

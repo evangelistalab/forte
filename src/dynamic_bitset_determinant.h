@@ -229,6 +229,8 @@ public:
 
     /// Sets the pointer to the integral object
     static void set_ints(std::shared_ptr<FCIIntegrals> ints);
+    /// Resets the pointer to the integral object
+    static void reset_ints();
 
 public:
     // Data
