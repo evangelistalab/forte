@@ -210,6 +210,8 @@ protected:
     /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;
 
+    /// The number of symmetrized AOs per irrep.
+    Dimension nsopi_;
     /// The number of MOs per irrep.
     Dimension nmopi_;
     /// The number of frozen core MOs per irrep.
@@ -295,8 +297,8 @@ protected:
     ambit::TensorType tensor_type_ = ambit::kCore;
     /// How much memory each integral takes up
     double int_mem_;
-    /// The Cmatrix in a symmetry aware basis
-    SharedMatrix Ca_;
+//    / The Cmatrix in a symmetry aware basis
+//    SharedMatrix Ca_;
     /// Control printing of timings
     int print_;
     /// The One Electron Integrals (T + V) in SO Basis
@@ -400,6 +402,40 @@ private:
  */
 class EffectiveIntegrals: public ForteIntegrals{
 public:
+
+    class ERISaver{
+    public:
+        ERISaver(size_t aptei_idx,size_t num_aptei) {
+            aptei_idx_ = aptei_idx;
+            ints_.resize(num_aptei);
+        }
+        size_t aptei_index(size_t p,size_t q,size_t r,size_t s) {return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q + aptei_idx_ * r + s;}
+
+        double get(size_t p,size_t q,size_t r,size_t s) {return ints_[aptei_index(p,q,r,s)];}
+
+        void operator() (int pabs, int qabs, int rabs, int sabs,
+                         int, int,
+                         int, int,
+                         int, int,
+                         int, int,
+                         double value
+                         )
+        {
+            ints_[aptei_index(pabs,qabs,rabs,sabs)] = value;
+            ints_[aptei_index(qabs,pabs,rabs,sabs)] = value;
+            ints_[aptei_index(pabs,qabs,sabs,rabs)] = value;
+            ints_[aptei_index(qabs,pabs,sabs,rabs)] = value;
+            ints_[aptei_index(rabs,sabs,pabs,qabs)] = value;
+            ints_[aptei_index(rabs,sabs,qabs,pabs)] = value;
+            ints_[aptei_index(sabs,rabs,pabs,qabs)] = value;
+            ints_[aptei_index(sabs,rabs,qabs,pabs)] = value;
+        }
+
+        const std::vector<double>& ints() {return ints_;}
+        size_t aptei_idx_;
+        std::vector<double> ints_;
+    };
+
     ///Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints constructor
     EffectiveIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
                           IntegralFrozenCore resort_frozen_core,

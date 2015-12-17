@@ -1,11 +1,12 @@
 //[forte-public]
 #include <cmath>
+#include <numeric>
 
 #include <libmints/basisset.h>
 #include <libthce/thce.h>
 #include <libthce/lreri.h>
 #include <libqt/qt.h>
-#include <numeric>
+
 #include "blockedtensorfactory.h"
 
 using namespace ambit;
@@ -169,7 +170,7 @@ void DFIntegrals::gather_integrals()
     //into the C_matrix object
 //    df->set_C(C_ord);
     df->set_C(Ca_ao);
-    Ca_ = Ca_ao;
+//    Ca_ = Ca_ao;
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
