@@ -282,7 +282,8 @@ double FCI_MO::compute_energy(){
 
     // Orbitals
 
-    if(casscf_orbitals_)
+    ///If running casscf computation, do not change orbitals
+    if(!casscf_orbitals_)
     {
         if(options_.get_bool("SEMI_CANONICAL")){
             semi_canonicalize(count);
