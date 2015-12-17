@@ -162,7 +162,7 @@ protected:
     /// Semi-canonicalize orbitals
     void semi_canonicalize(const size_t &count);
     /// If you are running Kevin's CASSCF code, do not change orbitals in wavefunction
-    bool casscf_orbitals_;
+    bool casscf_orbitals_ = false;
     /// Use natural orbitals
     void nat_orbs();
 
