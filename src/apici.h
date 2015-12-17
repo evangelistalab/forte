@@ -46,7 +46,8 @@ enum PropagatorType {LinearPropagator,
                      QuarticPropagator,
                      PowerPropagator,
                      OlsenPropagator,
-                     DavidsonLiuPropagator};
+                     DavidsonLiuPropagator,
+                     ChebyshevPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -178,6 +179,9 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
+    // * Range of Hamiltonian
+    double range_;
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -224,6 +228,8 @@ private:
     void propagate_Olsen(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
     /// The Davidson-Liu propagator
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+    /// The Chebyshev propagator
+    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
