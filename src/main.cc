@@ -33,6 +33,7 @@
 #include "dsrg_wick.h"
 #include "casscf.h"
 #include "alternativescasscf.h"
+#include "active_dsrgpt2.h"
 
 INIT_PLUGIN
 
@@ -659,50 +660,8 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        if(options["NROOTPI"].size() == 0){
-            throw PSIEXCEPTION("Please specify NROOTPI.");
-        }else{
-            int nirrep = wfn->nirrep(), total_nroots = 0;
-            vector<vector<double>> energies(nirrep,vector<double>());
-            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
-            for(int h = 0; h < nirrep; ++h){
-                int nroots = options["NROOTPI"][h].to_integer();
-                total_nroots += nroots;
-                if(nroots == 0) {
-                    continue;
-                }else{
-                    fci_mo.set_root_sym(h);
-                    for(int i = 0; i < nroots; ++i){
-                        fci_mo.set_nroots(i+1);
-                        fci_mo.set_root(i);
-                        fci_mo.compute_energy();
-                        Reference reference = fci_mo.reference();
-                        double pt2 = 0.0;
-                        if(options.get_str("INT_TYPE") == "CONVENTIONAL"){
-                            auto dsrg = std::make_shared<DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
-                            pt2 = dsrg->compute_energy();
-                        }else{
-                            auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,wfn,options,ints_,mo_space_info);
-                            pt2 = dsrg->compute_energy();
-                        }
-                        energies[h].push_back(pt2);
-                    }
-                }
-            }
-            if(total_nroots == 0){
-                outfile->Printf("\n  NROOTPI is zero. Did nothing.");
-            }else{
-                print_h2("ACTIVE-DSRGPT2 Summary");
-                for(int h = 0; h < nirrep; ++h){
-                    outfile->Printf("\n  symmetry = %lu \n", h);
-                    for(int i = 0; i < energies[h].size(); ++i){
-                        outfile->Printf("    %20.12f\n", energies[h][i]);
-                    }
-                }
-            }
-        }
-
-
+        ACTIVE_DSRGPT2 pt(wfn,options,ints_,mo_space_info);
+        pt.compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CAS_TYPE")=="CAS")
