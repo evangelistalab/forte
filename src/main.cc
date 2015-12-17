@@ -291,6 +291,14 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_SOSCF", false);
         /*- Freeze core with CASSCF -*/
         options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- DIIS Options -*/
+        options.add_bool("CASSCF_DO_DIIS", true);
+        /// The number of Rotation parameters to extrapolate with
+        options.add_int("CASSCF_DIIS_MAX_VEC", 4);
+        /// When to start the DIIS iterations (will make this automatic)
+        options.add_int("CASSCF_DIIS_START", 3);
+        /// How often to do DIIS extrapolation
+        options.add_int("CASSCF_DIIS_FREQ", 1);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI

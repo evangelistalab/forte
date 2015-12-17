@@ -126,7 +126,7 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t> 
 
 void CholeskyIntegrals::gather_integrals()
 {
-    outfile->Printf("\n Computing the Cholesky Vectors \n");
+    if(print_){outfile->Printf("\n Computing the Cholesky Vectors \n");}
 
 
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -142,21 +142,21 @@ void CholeskyIntegrals::gather_integrals()
     //This is creates the cholesky decomposed AO integrals
     Timer timer;
     std::string str= "Computing CD Integrals";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
     boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
     //Computes the cholesky integrals
     Ch->choleskify();
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
     //The number of vectors required to do cholesky factorization
     size_t nL = Ch->Q();
     nthree_ = nL;
-    outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );
+    if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );}
     int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
 
     TensorType tensor_type = kCore;
 
-    outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);
+    if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);}
     SharedMatrix Lao = Ch->L();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));

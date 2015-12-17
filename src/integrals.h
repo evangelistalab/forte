@@ -174,6 +174,7 @@ public:
     /// Tell which integrals were used
     IntegralType integral_type(){return integral_type_;}
     SharedMatrix OneBody_symm(){return OneBody_symm_;}
+    SharedMatrix OneBodyAo(){return OneInts_symmetryao_;}
     ///Set to either delete frozen core integrals or keep them
     void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core)
     {resort_frozen_core_ = keep_frozen_core;
