@@ -1,10 +1,10 @@
-//[forte-public]
 #include "integrals.h"
 #include <cmath>
 
 #include <psifiles.h>
 #include <libiwl/iwl.h>
 #include "blockedtensorfactory.h"
+#include <libmints/sointegral_twobody.h>
 
 namespace psi{ namespace forte{
 
@@ -17,9 +17,9 @@ namespace psi{ namespace forte{
 EffectiveIntegrals::EffectiveIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
-    integral_type_ = ConventionalInts;
+    integral_type_ = Effective;
 
-    outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
+    outfile->Printf("\n  Overall Effective Integrals timings\n\n");
     Timer ConvTime;
     allocate();
     gather_integrals();
@@ -29,7 +29,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
-    outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
+    outfile->Printf("\n  Effective integrals take %8.8f s", ConvTime.get());
 }
 
 EffectiveIntegrals::~EffectiveIntegrals()
@@ -69,31 +69,86 @@ void EffectiveIntegrals::deallocate()
     //delete[] qt_pitzer_;
 }
 
+
 void EffectiveIntegrals::transform_integrals()
 {
+    Timer int_timer;
+
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+    boost::shared_ptr<IntegralFactory> integral = wfn->integral();
 
-    // For now, we'll just transform for closed shells and generate all integrals.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
+    boost::shared_ptr<SOBasisSet> sobasisset = wfn->sobasisset();
+    boost::shared_ptr<TwoBodyAOInt> tb(integral->eri());
+    boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
-    // TODO: transform only the orbitals within an energy range to save time on this step.
-    spaces.push_back(MOSpace::all);
-
-    // If the integral
-    if (ints_ != nullptr) delete ints_;
-
-    // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
-    if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
-    }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::IWLOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+    ERISaver eri_saver(aptei_idx_,num_aptei);
+    SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
+    for (shellIter.first(); shellIter.is_done() == false; shellIter.next()){
+        eri->compute_shell(shellIter,eri_saver);
     }
 
-    // Keep the SO integrals on disk in case we want to retransform them
-    ints_->set_keep_iwl_so_ints(true);
-    Timer int_timer;
-    ints_->transform_tei(MOSpace::all, MOSpace::all, MOSpace::all, MOSpace::all);
+    ambit::Tensor Vmo = ambit::Tensor::build(ambit::kCore,"Vmo",{nmo_,nmo_,nmo_,nmo_});
+    ambit::Tensor Vso = ambit::Tensor::build(ambit::kCore,"Vso",{nso_,nso_,nso_,nso_});
+    ambit::Tensor C = ambit::Tensor::build(ambit::kCore,"C",{nso_,nmo_});
+
+    Vso.iterate([&](const std::vector<size_t>& i,double& value){
+        value = eri_saver.get(i[0],i[1],i[2],i[3]);
+    });
+
+    SharedMatrix Ca = wfn->Ca();
+    // Remove symmetry from Ca
+    Matrix Ca_nosym(nso_,nmo_);
+    for (int h = 0, so_offset = 0, mo_offset = 0; h < nirrep_; ++h){
+        for (int mu = 0; mu < nsopi_[h]; ++mu){
+            for (int p = 0; p < nmopi_[h]; ++p){
+                Ca_nosym.set(mu + so_offset,p + mo_offset,Ca->get(h,mu,p));
+            }
+        }
+        so_offset += nsopi_[h];
+        mo_offset += nmopi_[h];
+    }
+
+    C.iterate([&](const std::vector<size_t>& i,double& value){
+        value = Ca_nosym.get(i[0],i[1]);
+    });
+
+    Vmo("pqrs") = Vso("abcd") * C("ap") * C("bq") * C("cr") * C("ds");
+
+    outfile->Printf("\n  Reading the two-electron integrals from disk");
+    outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
+    int_mem_ = sizeof(double) * 3 * 8 * num_aptei / 1073741824.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
+
+    double* two_electron_integrals = new double[num_aptei];
+    // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
+    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
+
+    Vmo.iterate([&](const std::vector<size_t>& i,double& value){
+        two_electron_integrals[aptei_index(i[0],i[1],i[2],i[3])] = value;
+    });
+
+    // Store the integrals
+    for (size_t p = 0; p < nmo_; ++p){
+        for (size_t q = 0; q < nmo_; ++q){
+            for (size_t r = 0; r < nmo_; ++r){
+                for (size_t s = 0; s < nmo_; ++s){
+                    // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
+                    double direct   = two_electron_integrals[aptei_index(p,r,q,s)];
+                    double exchange = two_electron_integrals[aptei_index(p,s,q,r)];
+                    size_t index = aptei_index(p,q,r,s);
+                    aphys_tei_aa[index] = direct - exchange;
+                    aphys_tei_ab[index] = direct;
+                    aphys_tei_bb[index] = direct - exchange;
+                }
+            }
+        }
+    }
+
+    // Deallocate temp memory
+    delete[] two_electron_integrals;
 
     outfile->Printf("\n  Integral transformation done. %8.8f s", int_timer.get());
     outfile->Flush();
@@ -157,132 +212,6 @@ void EffectiveIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double va
 void EffectiveIntegrals::gather_integrals()
 {
     transform_integrals();
-
-    outfile->Printf("\n  Reading the two-electron integrals from disk");
-    outfile->Printf("\n  Size of two-electron integrals: %10.6f GB", double(3 * 8 * num_aptei) / 1073741824.0);
-    int_mem_ = sizeof(double) * 3 * 8 * num_aptei / 1073741824.0;
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_aa[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_ab[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei; ++pqrs) aphys_tei_bb[pqrs] = 0.0;
-
-    int ioffmax = 30000;
-    int* myioff = new int[ioffmax];
-    myioff[0] = 0;
-    for(int i = 1; i < ioffmax; ++i)
-        myioff[i] = myioff[i-1] + i;
-
-    if (restricted_){
-        double* two_electron_integrals = new double[num_tei];
-        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
-        for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
-
-        // Read the integrals
-        struct iwlbuf V_AAAA;
-        iwl_buf_init(&V_AAAA,PSIF_MO_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
-        iwl_buf_close(&V_AAAA, 1);
-
-        // Store the integrals
-        for (size_t p = 0; p < nmo_; ++p){
-            for (size_t q = 0; q < nmo_; ++q){
-                for (size_t r = 0; r < nmo_; ++r){
-                    for (size_t s = 0; s < nmo_; ++s){
-                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                        double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
-                        double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
-                        size_t index = aptei_index(p,q,r,s);
-                        aphys_tei_aa[index] = direct - exchange;
-                        aphys_tei_ab[index] = direct;
-                        aphys_tei_bb[index] = direct - exchange;
-                    }
-                }
-            }
-        }
-
-        // Deallocate temp memory
-        delete[] two_electron_integrals;
-    }else{
-        double* two_electron_integrals = new double[num_tei];
-        // Alpha-alpha integrals
-        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
-        for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
-
-        // Read the integrals
-        struct iwlbuf V_AAAA;
-        iwl_buf_init(&V_AAAA,PSIF_MO_AA_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_AAAA, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
-        iwl_buf_close(&V_AAAA, 1);
-
-        for (size_t p = 0; p < nmo_; ++p){
-            for (size_t q = 0; q < nmo_; ++q){
-                for (size_t r = 0; r < nmo_; ++r){
-                    for (size_t s = 0; s < nmo_; ++s){
-                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                        double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
-                        double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
-                        size_t index = aptei_index(p,q,r,s);
-                        aphys_tei_aa[index] = direct - exchange;
-                    }
-                }
-            }
-        }
-
-        // Beta-beta integrals
-        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
-        for (size_t pqrs = 0; pqrs < num_tei; ++pqrs) two_electron_integrals[pqrs] = 0.0;
-
-        // Read the integrals
-        struct iwlbuf V_BBBB;
-        iwl_buf_init(&V_BBBB,PSIF_MO_BB_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all(&V_BBBB, two_electron_integrals, myioff, myioff, 0, myioff, 0, "outfile");
-        iwl_buf_close(&V_BBBB, 1);
-
-        for (size_t p = 0; p < nmo_; ++p){
-            for (size_t q = 0; q < nmo_; ++q){
-                for (size_t r = 0; r < nmo_; ++r){
-                    for (size_t s = 0; s < nmo_; ++s){
-                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                        double direct   = two_electron_integrals[INDEX4(p,r,q,s)];
-                        double exchange = two_electron_integrals[INDEX4(p,s,q,r)];
-                        size_t index = aptei_index(p,q,r,s);
-                        aphys_tei_bb[index] = direct - exchange;
-                    }
-                }
-            }
-        }
-        // Deallocate temp memory
-        delete[] two_electron_integrals;
-
-        // Alpha-beta integrals
-        Matrix Tei(num_oei,num_oei);
-        double** two_electron_integrals_ab = Tei.pointer();
-        // Zero the memory, because iwl_buf_rd_all copies only the nonzero entries
-        for (size_t pq = 0; pq < num_oei; ++pq){
-            for (size_t rs = 0; rs < num_oei; ++rs){
-                two_electron_integrals_ab[pq][rs] = 0.0;
-            }
-        }
-
-        // Read the integrals
-        struct iwlbuf V_AABB;
-        iwl_buf_init(&V_AABB,PSIF_MO_AB_TEI, 0.0, 1, 1);
-        iwl_buf_rd_all2(&V_AABB, two_electron_integrals_ab, myioff, myioff, 0, myioff, 0, "outfile");
-        iwl_buf_close(&V_AABB, 1);
-
-        for (size_t p = 0; p < nmo_; ++p){
-            for (size_t q = 0; q < nmo_; ++q){
-                for (size_t r = 0; r < nmo_; ++r){
-                    for (size_t s = 0; s < nmo_; ++s){
-                        // <pq||rs> = <pq|rs> - <pq|sr> = (pr|qs) - (ps|qr)
-                        double direct = two_electron_integrals_ab[INDEX2(p,r)][INDEX2(q,s)];
-                        size_t index = aptei_index(p,q,r,s);
-                        aphys_tei_ab[index] = direct;
-                    }
-                }
-            }
-        }
-    }
-    delete[] myioff;
 }
 
 void EffectiveIntegrals::resort_integrals_after_freezing()
@@ -357,8 +286,8 @@ void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamm
     }
     double zero = 1e-8;
     ///TODO: Either use ambit or use structure of gamma.
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_a_rs = gamma_a->get(r,s);
             if (std::fabs(gamma_a_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
@@ -370,8 +299,8 @@ void EffectiveIntegrals::make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamm
             }
         }
     }
-    for (int r = 0; r < ncmo_; ++r) {
-        for (int s = 0; s < ncmo_; ++s) {
+    for (size_t r = 0; r < ncmo_; ++r) {
+        for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_b_rs = gamma_b->get(r,s);
             if (std::fabs(gamma_b_rs) > zero){
                 for(size_t p = 0; p < ncmo_; ++p){
