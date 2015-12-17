@@ -34,13 +34,12 @@ public:
 	// Compute rdms
 	void compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root);
 	void compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
-	void compute_3rdm_aaa();
-	void compute_3rdm_aab();
-	void compute_3rdm_abb();
+	void compute_3rdm( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
 	
 	double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
 	
-	void rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
+	void rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab,
+				  std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb); 
 private:
    /* Class Variables*/  
 	
@@ -100,10 +99,24 @@ private:
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list_;
 	
-	// The list of a_q a_p|N>
+	// The list of a_q^(+) a_p^(+)|N-1>
 	std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list_;
+
+	// The list of a_r a_q a_p |N>
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_ann_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aab_ann_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_ann_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_ann_list_;
+	
+	// The list of a^(+)_r a^(+)_q a^(+)_p |N-1>
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_cre_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aab_cre_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_cre_list_;
+	std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_cre_list_;
+
+
 
 	/* Class functions*/ 
 
@@ -116,6 +129,8 @@ private:
 	// Generate two-particle map
 	void get_two_map();
 
+	// Generate three-particle map
+	void get_three_map();
 };
 
 }} // End namepaces

@@ -249,18 +249,114 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 }
 
 
-void CI_RDMS::compute_3rdm_aaa()
+void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
+							std::vector<double>& tprdm_aab,
+							std::vector<double>& tprdm_abb, 
+							std::vector<double>& tprdm_bbb, int root)
 {
-}
+	size_t ncmo5 = ncmo4_ * ncmo_;
+	size_t ncmo6 = ncmo3_ * ncmo3_;
 
+	tprdm_aaa.resize(ncmo6, 0.0);
+	tprdm_aab.resize(ncmo6, 0.0);
+	tprdm_abb.resize(ncmo6, 0.0);
+	tprdm_bbb.resize(ncmo6, 0.0);
+	get_three_map();
+	
+	for( size_t J = 0; J < dim_space_; ++J){
+		// aaa aaa
+		for( auto& aaaJ_mo_sign : aaa_ann_list_[J] ){
+			const size_t aaaJ_add = std::get<0>(aaaJ_mo_sign);
 
-void CI_RDMS::compute_3rdm_aab()
-{
-}
+			const size_t p = std::abs(std::get<1>(aaaJ_mo_sign)) - 1;
+			const size_t q = std::get<2>(aaaJ_mo_sign);
+			const size_t r = std::get<3>(aaaJ_mo_sign);
+			const double sign_pqr = std::get<1>(aaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;			
+			
+			for( auto& a6J : aaa_cre_list_[aaaJ_add] ){
+				const size_t s = std::abs(std::get<1>(a6J)) - 1;
+				const size_t t = std::get<2>(a6J);
+				const size_t u = std::get<3>(a6J);
+				const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
+				const size_t I = std::get<0>(a6J);
 
+				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
 
-void CI_RDMS::compute_3rdm_abb()
-{
+				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+
+			}
+		}
+		// aab aab
+		for( auto& aabJ_mo_sign : aab_ann_list_[J] ){
+			const size_t aabJ_add = std::get<0>(aabJ_mo_sign);
+
+			const size_t p = std::abs(std::get<1>(aabJ_mo_sign)) - 1;
+			const size_t q = std::get<2>(aabJ_mo_sign);
+			const size_t r = std::get<3>(aabJ_mo_sign);
+			const double sign_pqr = std::get<1>(aabJ_mo_sign) > 0.0 ? 1.0 : -1.0;			
+			
+			for( auto& aabJ : aab_cre_list_[aabJ_add] ){
+				const size_t s = std::abs(std::get<1>(aabJ)) - 1;
+				const size_t t = std::get<2>(aabJ);
+				const size_t u = std::get<3>(aabJ);
+				const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
+				const size_t I = std::get<0>(aabJ);
+
+				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+
+				tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+
+			}
+		}
+		// abb abb
+		for( auto& abbJ_mo_sign : abb_ann_list_[J] ){
+			const size_t abbJ_add = std::get<0>(abbJ_mo_sign);
+
+			const size_t p = std::abs(std::get<1>(abbJ_mo_sign)) - 1;
+			const size_t q = std::get<2>(abbJ_mo_sign);
+			const size_t r = std::get<3>(abbJ_mo_sign);
+			const double sign_pqr = std::get<1>(abbJ_mo_sign) > 0.0 ? 1.0 : -1.0;			
+			
+			for( auto& abbJ : abb_cre_list_[abbJ_add] ){
+				const size_t s = std::abs(std::get<1>(abbJ)) - 1;
+				const size_t t = std::get<2>(abbJ);
+				const size_t u = std::get<3>(abbJ);
+				const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
+				const size_t I = std::get<0>(abbJ);
+
+				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+
+				tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				tprdm_abb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				tprdm_abb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+
+			}
+		}
+		// bbb bbb
+		for( auto& bbbJ_mo_sign : bbb_ann_list_[J] ){
+			const size_t bbbJ_add = std::get<0>(bbbJ_mo_sign);
+
+			const size_t p = std::abs(std::get<1>(bbbJ_mo_sign)) - 1;
+			const size_t q = std::get<2>(bbbJ_mo_sign);
+			const size_t r = std::get<3>(bbbJ_mo_sign);
+			const double sign_pqr = std::get<1>(bbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;			
+			
+			for( auto& b6J : bbb_cre_list_[bbbJ_add] ){
+				const size_t s = std::abs(std::get<1>(b6J)) - 1;
+				const size_t t = std::get<2>(b6J);
+				const size_t u = std::get<3>(b6J);
+				const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
+				const size_t I = std::get<0>(b6J);
+
+				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+
+				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+
+			}
+		}
+	}
+
 }
 
 void CI_RDMS::get_one_map()
@@ -499,6 +595,213 @@ void CI_RDMS::get_two_map()
 
 }
 
+void CI_RDMS::get_three_map()
+{
+	aaa_ann_list_.resize(dim_space_);
+	aab_ann_list_.resize(dim_space_);
+	abb_ann_list_.resize(dim_space_);
+	bbb_ann_list_.resize(dim_space_);
+	
+	det_hash aaa_ann_map;
+	det_hash aab_ann_map;
+	det_hash abb_ann_map;
+	det_hash bbb_ann_map;
+
+	size_t naaa_ann = 0;
+	size_t naab_ann = 0;
+	size_t nabb_ann = 0;
+	size_t nbbb_ann = 0;
+
+	outfile->Printf("\n  Generating three-particle maps.");
+
+	for( size_t I = 0; I < dim_space_; ++I){
+		STLBitsetDeterminant detI = det_space_[I];
+
+		std::vector<int> aocc = detI.get_alfa_occ();	
+		std::vector<int> bocc = detI.get_beta_occ();	
+
+		size_t noalfa = aocc.size();
+		size_t nobeta = bocc.size();
+
+		std::vector<std::tuple<size_t, short, short, short>> aaa_ann( noalfa * (noalfa - 1) * (noalfa - 2) / 6 );
+		std::vector<std::tuple<size_t, short, short, short>> aab_ann( noalfa * (noalfa - 1) * nobeta / 2  );
+		std::vector<std::tuple<size_t, short, short, short>> abb_ann( noalfa * nobeta * (nobeta - 1) / 2  );
+		std::vector<std::tuple<size_t, short, short, short>> bbb_ann( nobeta * (nobeta - 1) * (nobeta- 2) / 6  );
+
+		// aaa
+		for( int i = 0, ijk = 0; i < noalfa; ++i){
+			for( int j = i + 1; j < noalfa;  ++j){
+				for( int k = j + 1; k < noalfa; ++k, ++ijk){
+					
+					int ii = aocc[i];
+					int jj = aocc[j];
+					int kk = aocc[k];
+			
+					STLBitsetDeterminant detJ(detI);
+					detJ.set_alfa_bit(ii, false);
+					detJ.set_alfa_bit(jj, false);
+					detJ.set_alfa_bit(kk, false);
+
+					double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) * detI.slater_sign_alpha(kk);
+
+					det_hash_it hash_it = aaa_ann_map.find(detJ);
+					size_t detJ_add;
+					
+					if( hash_it == aaa_ann_map.end()) {
+						detJ_add = naaa_ann;
+						aaa_ann_map[detJ] = naaa_ann;
+						naaa_ann++;
+					}else{
+						detJ_add = hash_it->second;
+					}
+					aaa_ann[ijk] = std::make_tuple(detJ_add, (sign > 0.5) ? (ii+1) : (-ii - 1), jj, kk);
+				}
+			}	
+		}
+		aaa_ann_list_[I] = aaa_ann;
+
+		// aab
+		for( int i = 0, ijk = 0; i < noalfa; ++i){
+			for( int j = i + 1; j < noalfa; ++j){
+				for( int k = 0; k < nobeta; ++k, ++ijk){
+					
+					int ii = aocc[i];
+					int jj = aocc[j];
+					int kk = bocc[k];
+			
+					STLBitsetDeterminant detJ(detI);
+					detJ.set_alfa_bit(ii, false);
+					detJ.set_alfa_bit(jj, false);
+					detJ.set_beta_bit(kk, false);
+
+					double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj) * detI.slater_sign_beta(kk);
+
+					det_hash_it hash_it = aab_ann_map.find(detJ);
+					size_t detJ_add;
+					
+					if( hash_it == aab_ann_map.end()) {
+						detJ_add = naab_ann;
+						aab_ann_map[detJ] = naab_ann;
+						naab_ann++;
+					}else{
+						detJ_add = hash_it->second;
+					}
+					aab_ann[ijk] = std::make_tuple(detJ_add, (sign > 0.5) ? (ii+1) : (-ii - 1), jj, kk);
+				}
+			}	
+		}
+		aab_ann_list_[I] = aab_ann;
+
+		// abb
+		for( int i = 0, ijk = 0; i < noalfa; ++i){
+			for( int j = 0; j < nobeta; ++j){
+				for( int k = j + 1;k < nobeta; ++k, ++ijk){
+					
+					int ii = aocc[i];
+					int jj = bocc[j];
+					int kk = bocc[k];
+			
+					STLBitsetDeterminant detJ(detI);
+					detJ.set_alfa_bit(ii, false);
+					detJ.set_beta_bit(jj, false);
+					detJ.set_beta_bit(kk, false);
+
+					double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj) * detI.slater_sign_beta(kk);
+
+					det_hash_it hash_it = abb_ann_map.find(detJ);
+					size_t detJ_add;
+					
+					if( hash_it == abb_ann_map.end()) {
+						detJ_add = nabb_ann;
+						abb_ann_map[detJ] = nabb_ann;
+						nabb_ann++;
+					}else{
+						detJ_add = hash_it->second;
+					}
+					abb_ann[ijk] = std::make_tuple(detJ_add, (sign > 0.5) ? (ii+1) : (-ii - 1), jj, kk);
+				}
+			}	
+		}
+		abb_ann_list_[I] = abb_ann;
+
+		// bbb
+		for( int i = 0, ijk = 0; i < nobeta; ++i){
+			for( int j = i + 1; j < nobeta; ++j){
+				for( int k = j + 1; k < nobeta; ++k, ++ijk){
+					
+					int ii = bocc[i];
+					int jj = bocc[j];
+					int kk = bocc[k];
+			
+					STLBitsetDeterminant detJ(detI);
+					detJ.set_beta_bit(ii, false);
+					detJ.set_beta_bit(jj, false);
+					detJ.set_beta_bit(kk, false);
+
+					double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj) * detI.slater_sign_beta(kk);
+
+					det_hash_it hash_it = bbb_ann_map.find(detJ);
+					size_t detJ_add;
+					
+					if( hash_it == bbb_ann_map.end()) {
+						detJ_add = nbbb_ann;
+						bbb_ann_map[detJ] = nbbb_ann;
+						nbbb_ann++;
+					}else{
+						detJ_add = hash_it->second;
+					}
+					bbb_ann[ijk] = std::make_tuple(detJ_add, (sign > 0.5) ? (ii+1) : (-ii - 1), jj, kk);
+				}
+			}	
+		}
+		bbb_ann_list_[I] = bbb_ann;
+	} // End loop over determinants
+
+	aaa_cre_list_.resize(aaa_ann_map.size());
+	aab_cre_list_.resize(aab_ann_map.size());
+	abb_cre_list_.resize(abb_ann_map.size());
+	bbb_cre_list_.resize(bbb_ann_map.size());
+
+	for( size_t I = 0; I < dim_space_; ++I){
+		// aaa
+		const std::vector<std::tuple<size_t,short,short,short>>& aaa_ann = aaa_ann_list_[I];
+		for( const std::tuple<size_t,short,short,short>& Jsign : aaa_ann){
+			size_t J = std::get<0>(Jsign);
+			short i = std::get<1>(Jsign);
+			short j = std::get<2>(Jsign);
+			short k = std::get<3>(Jsign);
+			aaa_cre_list_[J].push_back(std::make_tuple(I, i,j,k));
+		}
+		// aab
+		const std::vector<std::tuple<size_t,short,short,short>>& aab_ann = aab_ann_list_[I];
+		for( const std::tuple<size_t,short,short,short>& Jsign : aab_ann){
+			size_t J = std::get<0>(Jsign);
+			short i = std::get<1>(Jsign);
+			short j = std::get<2>(Jsign);
+			short k = std::get<3>(Jsign);
+			aab_cre_list_[J].push_back(std::make_tuple(I, i,j,k));
+		}
+		// abb
+		const std::vector<std::tuple<size_t,short,short,short>>& abb_ann = abb_ann_list_[I];
+		for( const std::tuple<size_t,short,short,short>& Jsign : abb_ann){
+			size_t J = std::get<0>(Jsign);
+			short i = std::get<1>(Jsign);
+			short j = std::get<2>(Jsign);
+			short k = std::get<3>(Jsign);
+			abb_cre_list_[J].push_back(std::make_tuple(I, i,j,k));
+		}
+		// bbb
+		const std::vector<std::tuple<size_t,short,short,short>>& bbb_ann = bbb_ann_list_[I];
+		for( const std::tuple<size_t,short,short,short>& Jsign : bbb_ann){
+			size_t J = std::get<0>(Jsign);
+			short i = std::get<1>(Jsign);
+			short j = std::get<2>(Jsign);
+			short k = std::get<3>(Jsign);
+			bbb_cre_list_[J].push_back(std::make_tuple(I, i,j,k));
+		}
+	}
+}
+
 
 Reference CI_RDMS::reference()
 {
@@ -509,7 +812,11 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                        std::vector<double>& oprdm_b,
                        std::vector<double>& tprdm_aa,
                        std::vector<double>& tprdm_bb,
-                       std::vector<double>& tprdm_ab)
+                       std::vector<double>& tprdm_ab,
+					   std::vector<double>& tprdm_aaa,
+					   std::vector<double>& tprdm_aab,
+					   std::vector<double>& tprdm_abb,
+					   std::vector<double>& tprdm_bbb)
 {
 
         double error_2rdm_aa = 0.0;
@@ -595,6 +902,167 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
             }
         }
         outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f",error_2rdm_ab);
+
+// aaa aaa
+        double error_3rdm_aaa = 0.0;
+                for (size_t p = 0; p < ncmo_; ++p){
+        //for (size_t p = 0; p < 1; ++p){
+            for (size_t q = p + 1; q < ncmo_; ++q){
+                for (size_t r = q + 1; r < ncmo_; ++r){
+                    for (size_t s = 0; s < ncmo_; ++s){
+                        for (size_t t = s + 1; t < ncmo_; ++t){
+                            for (size_t a = t + 1; a < ncmo_; ++a){
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < dim_space_; ++i){
+                                    STLBitsetDeterminant I(det_space_[i]);
+                                    double sign = 1.0;
+                                    sign *= I.destroy_alfa_bit(s);
+                                    sign *= I.destroy_alfa_bit(t);
+                                    sign *= I.destroy_alfa_bit(a);
+                                    sign *= I.create_alfa_bit(r);
+                                    sign *= I.create_alfa_bit(q);
+                                    sign *= I.create_alfa_bit(p);
+                                    for( size_t j = 0; j < dim_space_; ++j){
+                                        if (I == det_space_[j]){
+                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12){
+                                    double rdm_comp = tprdm_aaa[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
+                                                                        outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    error_3rdm_aaa += std::fabs(rdm-rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Process::environment.globals["AAAAAA 3-RDM ERROR"] = error_3rdm_aaa;
+        outfile->Printf("\n    AAAAAA 3-RDM Error : %+e",error_3rdm_aaa);
+
+// aab aab
+        double error_3rdm_aab = 0.0;
+                for (size_t p = 0; p < ncmo_; ++p){
+        //for (size_t p = 0; p < 1; ++p){
+            for (size_t q = p + 1; q < ncmo_; ++q){
+                for (size_t r = 0; r < ncmo_; ++r){
+                    for (size_t s = 0; s < ncmo_; ++s){
+                        for (size_t t = s + 1; t < ncmo_; ++t){
+                            for (size_t a = 0; a < ncmo_; ++a){
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < dim_space_; ++i){
+                                    STLBitsetDeterminant I(det_space_[i]);
+                                    double sign = 1.0;
+                                    sign *= I.destroy_alfa_bit(s);
+                                    sign *= I.destroy_alfa_bit(t);
+                                    sign *= I.destroy_beta_bit(a);
+                                    sign *= I.create_beta_bit(r);
+                                    sign *= I.create_alfa_bit(q);
+                                    sign *= I.create_alfa_bit(p);
+                                    for( size_t j = 0; j < dim_space_; ++j){
+                                        if (I == det_space_[j]){
+                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12){
+                                    double rdm_comp = tprdm_aab[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
+                                                                        outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    error_3rdm_aab += std::fabs(rdm-rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Process::environment.globals["AABAAB 3-RDM ERROR"] = error_3rdm_aab;
+        outfile->Printf("\n    AABAAB 3-RDM Error : %+e",error_3rdm_aab);
+
+// abb abb
+        double error_3rdm_abb = 0.0;
+                for (size_t p = 0; p < ncmo_; ++p){
+        //for (size_t p = 0; p < 1; ++p){
+            for (size_t q = p + 1; q < ncmo_; ++q){
+                for (size_t r = 0; r < ncmo_; ++r){
+                    for (size_t s = 0; s < ncmo_; ++s){
+                        for (size_t t = s + 1; t < ncmo_; ++t){
+                            for (size_t a = 0; a < ncmo_; ++a){
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < dim_space_; ++i){
+                                    STLBitsetDeterminant I(det_space_[i]);
+                                    double sign = 1.0;
+                                    sign *= I.destroy_alfa_bit(s);
+                                    sign *= I.destroy_beta_bit(t);
+                                    sign *= I.destroy_beta_bit(a);
+                                    sign *= I.create_beta_bit(r);
+                                    sign *= I.create_beta_bit(q);
+                                    sign *= I.create_alfa_bit(p);
+                                    for( size_t j = 0; j < dim_space_; ++j){
+                                        if (I == det_space_[j]){
+                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12){
+                                    double rdm_comp = tprdm_abb[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
+                                                                        outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    error_3rdm_abb += std::fabs(rdm-rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Process::environment.globals["ABBABB 3-RDM ERROR"] = error_3rdm_abb;
+        outfile->Printf("\n    ABBABB 3-RDM Error : %+e",error_3rdm_abb);
+
+// bbb bbb
+        double error_3rdm_bbb = 0.0;
+                for (size_t p = 0; p < ncmo_; ++p){
+        //for (size_t p = 0; p < 1; ++p){
+            for (size_t q = p + 1; q < ncmo_; ++q){
+                for (size_t r = q + 1; r < ncmo_; ++r){
+                    for (size_t s = 0; s < ncmo_; ++s){
+                        for (size_t t = s + 1; t < ncmo_; ++t){
+                            for (size_t a = t + 1; a < ncmo_; ++a){
+                                double rdm = 0.0;
+                                for (size_t i = 0; i < dim_space_; ++i){
+                                    STLBitsetDeterminant I(det_space_[i]);
+                                    double sign = 1.0;
+                                    sign *= I.destroy_beta_bit(s);
+                                    sign *= I.destroy_beta_bit(t);
+                                    sign *= I.destroy_beta_bit(a);
+                                    sign *= I.create_beta_bit(r);
+                                    sign *= I.create_beta_bit(q);
+                                    sign *= I.create_beta_bit(p);
+                                    for( size_t j = 0; j < dim_space_; ++j){
+                                        if (I == det_space_[j]){
+                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                        }
+                                    }
+                                }
+                                if (std::fabs(rdm) > 1.0e-12){
+                                    double rdm_comp = tprdm_bbb[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
+                                                                        outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    error_3rdm_bbb += std::fabs(rdm-rdm_comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
+        outfile->Printf("\n    BBBBBB 3-RDM Error : %+e",error_3rdm_bbb);
+
 }
 
 
