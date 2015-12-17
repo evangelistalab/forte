@@ -281,10 +281,14 @@ double FCI_MO::compute_energy(){
     }
 
     // Orbitals
-    if(options_.get_bool("SEMI_CANONICAL")){
-        semi_canonicalize(count);
-    }else{
-        nat_orbs();
+
+    if(casscf_orbitals_)
+    {
+        if(options_.get_bool("SEMI_CANONICAL")){
+            semi_canonicalize(count);
+        }else{
+            nat_orbs();
+        }
     }
 
     Eref_ = eigen_[root_].second;

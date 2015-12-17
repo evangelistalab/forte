@@ -64,7 +64,7 @@ public:
     double orbital_gradient_norm(){return (g_->rms());}
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
     /// Give the AO one electron integrals (H = T + V)
-    SharedMatrix one_body(SharedMatrix H){return H_ = H;}
+    void one_body(SharedMatrix H){H_ = H;}
 protected:
     ///The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
@@ -74,8 +74,8 @@ protected:
     ambit::Tensor gamma2_;
     ///The 2-RDM SharedMatrix
     SharedMatrix gamma2M_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     ambit::Tensor integral_;
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
 
     Options options_;

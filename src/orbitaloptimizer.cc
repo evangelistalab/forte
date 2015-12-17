@@ -31,7 +31,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
                                    ambit::Tensor two_body_ab,
                                    Options& options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), options_(options), mo_space_info_(mo_space_info)
+    : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info), options_(options)
 {
     startup();
 

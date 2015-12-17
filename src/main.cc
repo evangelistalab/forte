@@ -292,6 +292,9 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_SOSCF", false);
         /*- Freeze core with CASSCF -*/
         options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- CASSCF MAXIMUM VALUE HESSIAN -*/
+        options.add_double("CASSCF_MAX_HESSIAN", 0.5);
+
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
         /// The number of Rotation parameters to extrapolate with

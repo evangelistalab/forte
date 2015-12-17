@@ -57,10 +57,12 @@ void CASSCF::compute_casscf()
     int diis_freq = options_.get_int("CASSCF_DIIS_FREQ");
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
+    double hessian_scale = options_.get_double("CASSCF_MAX_HESSIAN");
 
     Dimension all_nmopi = wfn_->nmopi();
     SharedMatrix S(new Matrix("Orbital Rotation", nirrep_, all_nmopi, all_nmopi));
     SharedMatrix Sstep(new Matrix("Orbital Rotation", nirrep_, all_nmopi, all_nmopi));
+
     std::shared_ptr<DIISManager> diis_manager(new DIISManager(diis_max_vec, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore));
     diis_manager->set_error_vector_size(1, DIISEntry::Matrix, S.get());
     diis_manager->set_vector_size(1, DIISEntry::Matrix, S.get());
@@ -68,16 +70,15 @@ void CASSCF::compute_casscf()
     int diis_count = 0;
 
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+
+    print_h2("CASSCF Iteration");
+    outfile->Printf("\n iter    g_norm      E_CASSCF  CONV_TYPE");
+
     ///Start the iteration
     ///
-    outfile->Printf("\n iter    g_norm      E_CASSCF  CONV_TYPE");
     for(int iter = 0; iter < maxiter; iter++)
     {
        iter_con.push_back(iter);
-        if(iter==0)
-        {
-            print_h2("CASSCF Iteration");
-        }
 
         /// Perform a CAS-CI using either York's code or Francesco's
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
@@ -94,37 +95,37 @@ void CASSCF::compute_casscf()
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_no_symmetry_mo(Call_);
         orbital_optimizer.set_symmmetry_mo(Ca);
-        orbital_optimizer.one_body(ints_->OneBodyAo());
+        orbital_optimizer.one_body(ints_->OneBodyAO());
 
         Sstep = orbital_optimizer.orbital_rotation_casscf();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
         ///"Borrowed"(Stolen) from Daniel Smith's code.
-        //double maxS = 0.0;
-        //for (int h = 0; h < Sstep->nirrep(); h++){
-        //    for(int i = 0; i < Sstep->rowspi()[h]; i++){
-        //        for(int j = 0; j < Sstep->colspi()[h]; j++){
-        //            if( fabs(Sstep->get(h, i, j)) > maxS) maxS = fabs(Sstep->get(h, i, j));
-        //        }
-        //    }
-        //}
-        //if(maxS > 1.0){
-        //    Sstep->scale(1.0 / maxS);
-        //}
+        double maxS = 0.0;
+        for (int h = 0; h < Sstep->nirrep(); h++){
+            for(int i = 0; i < Sstep->rowspi()[h]; i++){
+                for(int j = 0; j < Sstep->colspi()[h]; j++){
+                    if( fabs(Sstep->get(h, i, j)) > maxS) maxS = fabs(Sstep->get(h, i, j));
+                }
+            }
+        }
+        if(maxS > hessian_scale){
+            Sstep->scale(1.0 / maxS);
+        }
 
         // Add step to overall rotation
-        S->copy(Sstep);
+        S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
         if(do_diis && (iter > diis_start or g_norm < 1e-4))
         {
-        //    diis_manager->add_entry(2, Sstep.get(), S.get());
-        //    diis_count++;
+            diis_manager->add_entry(2, Sstep.get(), S.get());
+            diis_count++;
         }
 
         if(do_diis && (!(diis_count % diis_freq) && iter > diis_start))
         {
-        //    diis_manager->extrapolate(1, S.get());
+            diis_manager->extrapolate(1, S.get());
         }
 
 
@@ -137,7 +138,7 @@ void CASSCF::compute_casscf()
         Call_->set_name("symmetry aware C");
 
 
-        SharedMatrix Cp = Matrix::doublet(Ca, S);
+        SharedMatrix Cp = Matrix::doublet(Ca, Sstep);
         Cp->set_name("Updated C");
         if(casscf_debug_print_)
         {
@@ -166,10 +167,12 @@ void CASSCF::compute_casscf()
         //ambit::Tensor active = transform_active();
         //active.print(stdout);
 
-        outfile->Printf("\n %d %10.12f   %10.12f", iter, g_norm, E_casscf_);
+        std::string diis_start_label = "";
+        if(iter >= diis_start and do_diis==true){diis_start_label = "DIIS";}
+        outfile->Printf("\n %4d  %10.12f   %10.12f   %4s", iter, g_norm, E_casscf_, diis_start_label.c_str());
     }
-    //diis_manager->delete_diis_file();
-    //diis_manager.reset();
+    diis_manager->delete_diis_file();
+    diis_manager.reset();
 
     if(iter_con.size() == size_t(maxiter))
     {
@@ -313,6 +316,7 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "CAS")
     {
         FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
+        cas.use_casscf_orbitals(true);
         cas.compute_energy();
         cas_ref_ = cas.reference();
         E_casscf_ = cas_ref_.get_Eref();
