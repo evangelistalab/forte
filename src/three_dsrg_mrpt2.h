@@ -11,7 +11,7 @@
 #include "reference.h"
 #include <string>
 #include <vector>
-#include <libthce/thce.h>
+//#include <libthce/thce.h>
 #include "blockedtensorfactory.h"
 
 namespace psi{
