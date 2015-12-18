@@ -118,12 +118,9 @@ double FCI::compute_energy()
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
-    int ms = multiplicity - 1;
-    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
-            options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
-    {
-        ms   = 0;
-    }
+    // Default: lowest spin solution
+    int ms = (multiplicity + 1) % 2;
+
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
@@ -179,7 +176,6 @@ double FCI::compute_energy()
 
 Reference FCI::reference()
 {
-    fcisolver_->set_max_rdm_level(3);
     return fcisolver_->reference();
 }
 
@@ -636,181 +632,202 @@ Reference FCISolver::reference()
     size_t nact4 = nact3 * nact;
     size_t nact5 = nact4 * nact;
 
-    // One-particle density matrices in the active space
-    std::vector<double>& opdm_a = C_->opdm_a();
-    std::vector<double>& opdm_b = C_->opdm_b();
-    ambit::Tensor L1a = ambit::Tensor::build(ambit::kCore,"L1a",{nact,nact});
-    ambit::Tensor L1b = ambit::Tensor::build(ambit::kCore,"L1b",{nact,nact});
-    if (na_ >= 1){
-        L1a.iterate([&](const::vector<size_t>& i,double& value){
-            value = opdm_a[i[0] * nact + i[1]]; });
-    }
-    if (nb_ >= 1){
-        L1b.iterate([&](const::vector<size_t>& i,double& value){
-            value = opdm_b[i[0] * nact + i[1]]; });
-    }
+    Reference fci_ref;
+    fci_ref.set_Eref(energy_);
 
-    // Two-particle density matrices in the active space
-    ambit::Tensor L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{nact,nact,nact,nact});
-    ambit::Tensor L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{nact,nact,nact,nact});
-    ambit::Tensor L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{nact,nact,nact,nact});
-    ambit::Tensor g2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{nact,nact,nact,nact});
-    ambit::Tensor g2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{nact,nact,nact,nact});
-    ambit::Tensor g2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{nact,nact,nact,nact});
-
-    if (na_ >= 2){
-        std::vector<double>& tpdm_aa = C_->tpdm_aa();
-        L2aa.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
-    }
-    if ((na_ >= 1) and (nb_ >= 1)){
-        std::vector<double>& tpdm_ab = C_->tpdm_ab();
-        L2ab.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
-    }
-    if (nb_ >= 2){
-        std::vector<double>& tpdm_bb = C_->tpdm_bb();
-        L2bb.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
-    }
-    g2aa.copy(L2aa);
-    g2ab.copy(L2ab);
-    g2bb.copy(L2bb);
-
-    // Convert the 2-RDMs to 2-RCMs
-    L2aa("pqrs") -= L1a("pr") * L1a("qs");
-    L2aa("pqrs") += L1a("ps") * L1a("qr");
-
-    L2ab("pqrs") -= L1a("pr") * L1b("qs");
-
-    L2bb("pqrs") -= L1b("pr") * L1b("qs");
-    L2bb("pqrs") += L1b("ps") * L1b("qr");
-
-    // Three-particle density matrices in the active space
-    ambit::Tensor L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{nact,nact,nact,nact,nact,nact});
-    ambit::Tensor L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{nact,nact,nact,nact,nact,nact});
-    ambit::Tensor L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{nact,nact,nact,nact,nact,nact});
-    ambit::Tensor L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{nact,nact,nact,nact,nact,nact});
-    if (na_ >= 3){
-        std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
-        L3aaa.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
-    }
-    if ((na_ >= 2) and (nb_ >= 1)){
-        std::vector<double>& tpdm_aab = C_->tpdm_aab();
-        L3aab.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
-    }
-    if ((na_ >= 1) and (nb_ >= 2)){
-        std::vector<double>& tpdm_abb = C_->tpdm_abb();
-        L3abb.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
-    }
-    if (nb_ >= 3){
-        std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
-        L3bbb.iterate([&](const::vector<size_t>& i,double& value){
-            value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
-    }
-
-    // Convert the 3-RDMs to 3-RCMs
-    L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
-    L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
-    L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
-
-    L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
-    L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
-    L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
-
-    L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
-    L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
-    L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
-
-    L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
-    L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
-    L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
-
-    L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
-    L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
-    L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
-
-
-    L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
-    L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
-
-    L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
-    L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
-
-    L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
-
-    L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
-    L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
-
-
-    L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
-
-    L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-    L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-    L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-    L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-    L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-    L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-
-
-    L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
-    L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
-    L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
-
-    L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
-    L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
-    L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
-
-    L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
-    L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
-    L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
-
-    L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
-    L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
-    L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
-
-    L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
-    L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
-    L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
-
-    if (print_ > 1)
-        for (auto L1 : {L1a,L1b}){
-            outfile->Printf("\n\n** %s **",L1.name().c_str());
-            L1.iterate([&](const::vector<size_t>& i,double& value){
-                if (std::fabs(value) > 1.0e-15)
-                    outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1], value);
-            });
-
+    if (max_rdm_level_ >= 1){
+        // One-particle density matrices in the active space
+        std::vector<double>& opdm_a = C_->opdm_a();
+        std::vector<double>& opdm_b = C_->opdm_b();
+        ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a",{nact,nact});
+        ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b",{nact,nact});
+        if (na_ >= 1){
+            L1a.iterate([&](const::vector<size_t>& i,double& value){
+                value = opdm_a[i[0] * nact + i[1]]; });
         }
-
-    if (print_ > 2)
-        for (auto L2 : {L2aa,L2ab,L2bb}){
-            outfile->Printf("\n\n** %s **",L2.name().c_str());
-            L2.iterate([&](const::vector<size_t>& i,double& value){
-                if (std::fabs(value) > 1.0e-15)
-                    outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
-            });
-
+        if (nb_ >= 1){
+            L1b.iterate([&](const::vector<size_t>& i,double& value){
+                value = opdm_b[i[0] * nact + i[1]]; });
         }
+        fci_ref.set_L1a(L1a);
+        fci_ref.set_L1b(L1b);
 
-    if (print_ > 3)
-        for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
-            outfile->Printf("\n\n** %s **",L3.name().c_str());
-            L3.iterate([&](const::vector<size_t>& i,double& value){
-                if (std::fabs(value) > 1.0e-15)
-                    outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
-            });
+        if (max_rdm_level_ >= 2){
+            // Two-particle density matrices in the active space
+            ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor,"L2aa",{nact,nact,nact,nact});
+            ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{nact,nact,nact,nact});
+            ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{nact,nact,nact,nact});
+            ambit::Tensor g2aa = ambit::Tensor::build(ambit::CoreTensor,"L2aa",{nact,nact,nact,nact});
+            ambit::Tensor g2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{nact,nact,nact,nact});
+            ambit::Tensor g2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{nact,nact,nact,nact});
+
+            if (na_ >= 2){
+                std::vector<double>& tpdm_aa = C_->tpdm_aa();
+                L2aa.iterate([&](const::vector<size_t>& i,double& value){
+                    value = tpdm_aa[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+            }
+            if ((na_ >= 1) and (nb_ >= 1)){
+                std::vector<double>& tpdm_ab = C_->tpdm_ab();
+                L2ab.iterate([&](const::vector<size_t>& i,double& value){
+                    value = tpdm_ab[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+            }
+            if (nb_ >= 2){
+                std::vector<double>& tpdm_bb = C_->tpdm_bb();
+                L2bb.iterate([&](const::vector<size_t>& i,double& value){
+                    value = tpdm_bb[i[0] * nact3 + i[1] * nact2 + i[2] * nact + i[3]]; });
+            }
+            g2aa.copy(L2aa);
+            g2ab.copy(L2ab);
+            g2bb.copy(L2bb);
+
+            fci_ref.set_g2aa(g2aa);
+            fci_ref.set_g2ab(g2ab);
+            fci_ref.set_g2bb(g2bb);
+
+            // Convert the 2-RDMs to 2-RCMs
+            L2aa("pqrs") -= L1a("pr") * L1a("qs");
+            L2aa("pqrs") += L1a("ps") * L1a("qr");
+
+            L2ab("pqrs") -= L1a("pr") * L1b("qs");
+
+            L2bb("pqrs") -= L1b("pr") * L1b("qs");
+            L2bb("pqrs") += L1b("ps") * L1b("qr");
+
+            fci_ref.set_L2aa(L2aa);
+            fci_ref.set_L2ab(L2ab);
+            fci_ref.set_L2bb(L2bb);
+
+            if (max_rdm_level_ >= 3){
+                // Three-particle density matrices in the active space
+                ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor,"L3aaa",{nact,nact,nact,nact,nact,nact});
+                ambit::Tensor L3aab = ambit::Tensor::build(ambit::CoreTensor,"L3aab",{nact,nact,nact,nact,nact,nact});
+                ambit::Tensor L3abb = ambit::Tensor::build(ambit::CoreTensor,"L3abb",{nact,nact,nact,nact,nact,nact});
+                ambit::Tensor L3bbb = ambit::Tensor::build(ambit::CoreTensor,"L3bbb",{nact,nact,nact,nact,nact,nact});
+                if (na_ >= 3){
+                    std::vector<double>& tpdm_aaa = C_->tpdm_aaa();
+                    L3aaa.iterate([&](const::vector<size_t>& i,double& value){
+                        value = tpdm_aaa[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+                }
+                if ((na_ >= 2) and (nb_ >= 1)){
+                    std::vector<double>& tpdm_aab = C_->tpdm_aab();
+                    L3aab.iterate([&](const::vector<size_t>& i,double& value){
+                        value = tpdm_aab[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+                }
+                if ((na_ >= 1) and (nb_ >= 2)){
+                    std::vector<double>& tpdm_abb = C_->tpdm_abb();
+                    L3abb.iterate([&](const::vector<size_t>& i,double& value){
+                        value = tpdm_abb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+                }
+                if (nb_ >= 3){
+                    std::vector<double>& tpdm_bbb = C_->tpdm_bbb();
+                    L3bbb.iterate([&](const::vector<size_t>& i,double& value){
+                        value = tpdm_bbb[i[0] * nact5 + i[1] * nact4 + i[2] * nact3 + i[3] * nact2 + i[4] * nact + i[5]]; });
+                }
+
+                // Convert the 3-RDMs to 3-RCMs
+                L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+                L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+                L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+                L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+                L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+                L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+                L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+                L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+                L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+                L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+                L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+                L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+                L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+                L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+                L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+
+                L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+                L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+                L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+                L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+                L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+                L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+                L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+
+                L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+                L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+                L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+                L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+                L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+                L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+                L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+
+                L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
+                L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
+                L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
+
+                L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
+                L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
+                L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
+
+                L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
+                L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
+                L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
+
+                L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
+                L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
+                L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
+
+                L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
+                L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
+                L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
+
+                fci_ref.set_L3aaa(L3aaa);
+                fci_ref.set_L3aab(L3aab);
+                fci_ref.set_L3abb(L3abb);
+                fci_ref.set_L3bbb(L3bbb);
+
+                if (print_ > 1)
+                    for (auto L1 : {L1a,L1b}){
+                        outfile->Printf("\n\n** %s **",L1.name().c_str());
+                        L1.iterate([&](const::vector<size_t>& i,double& value){
+                            if (std::fabs(value) > 1.0e-15)
+                                outfile->Printf("\n  Lambda [%3lu][%3lu] = %18.15lf", i[0], i[1], value);
+                        });
+
+                    }
+
+                if (print_ > 2)
+                    for (auto L2 : {L2aa,L2ab,L2bb}){
+                        outfile->Printf("\n\n** %s **",L2.name().c_str());
+                        L2.iterate([&](const::vector<size_t>& i,double& value){
+                            if (std::fabs(value) > 1.0e-15)
+                                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], value);
+                        });
+
+                    }
+
+                if (print_ > 3)
+                    for (auto L3 : {L3aaa,L3aab,L3abb,L3bbb}){
+                        outfile->Printf("\n\n** %s **",L3.name().c_str());
+                        L3.iterate([&](const::vector<size_t>& i,double& value){
+                            if (std::fabs(value) > 1.0e-15)
+                                outfile->Printf("\n  Lambda [%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.15lf", i[0], i[1], i[2], i[3], i[4], i[5], value);
+                        });
+                    }
+            }
         }
+    }
 
-    Reference fci_ref(energy_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
-    fci_ref.set_g2aa(g2aa);
-    fci_ref.set_g2ab(g2ab);
-    fci_ref.set_g2bb(g2bb);
+
     return fci_ref;
 }
 

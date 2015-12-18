@@ -15,7 +15,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Opt
       reference_(reference),
       ints_(ints),
       mo_space_info_(mo_space_info),
-      tensor_type_(kCore),
+      tensor_type_(CoreTensor),
       BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
