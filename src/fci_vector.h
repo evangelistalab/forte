@@ -223,6 +223,7 @@ public:
     // Temporary memory allocation
     static void allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_);
     static void release_temp_space();
+    void set_print(int print){print_ = print;}
 private:
 
     // ==> Class Data <==

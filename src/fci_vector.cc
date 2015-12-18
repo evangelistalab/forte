@@ -1,4 +1,5 @@
 #include <cmath>
+#include <algorithm>
 
 #include "libmints/vector.h"
 #include "libmints/matrix.h"
@@ -6,6 +7,7 @@
 #include <libmints/mints.h>
 #include <libmints/mintshelper.h>
 #include <libmints/wavefunction.h>
+
 
 #include "helpers.h"
 #include "fci_vector.h"
@@ -213,7 +215,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     nmo4_ = nmo_ * nmo_ * nmo_ * nmo_;
 
     //size_t nfomo =  mospace_info->size("RESTRICTED_DOCC");
-	size_t nfomo = fomo_to_mo.size();
 
     oei_a_.resize(nmo2_);
     oei_b_.resize(nmo2_);
@@ -570,9 +571,8 @@ void FCIWfn::zero()
 
 void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
 {
-    outfile->Printf("\n====>PRINT NATURAL ORBITALS====>\n");
+    print_h2("NATURAL ORBITALS");
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
-    Dimension nmopi = mo_space_info->get_dimension("CORRELATED");
 
     boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_,active_dim, active_dim));
     boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, active_dim, active_dim));
@@ -594,8 +594,27 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
-    OCC_A->print();
-    OCC_B->print();
+    std::vector< std::pair<double, std::pair< int, int > > >vec_irrep_occupation;
+    for(int h = 0; h < nirrep_; h++)
+    {
+        for(int u = 0; u < active_dim[h]; u++){
+            auto irrep_occ = std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+        }
+    }
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(), std::greater<std::pair<double, std::pair<int, int> > >());
+
+    int count = 0;
+    outfile->Printf( "\n    ");
+    for(auto vec : vec_irrep_occupation)
+    {
+        outfile->Printf( " %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(), vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            outfile->Printf( "\n    ");
+    }
+    outfile->Printf( "\n\n");
+
 
 }
 
