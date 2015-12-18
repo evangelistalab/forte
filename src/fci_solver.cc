@@ -315,6 +315,7 @@ double FCISolver::compute_energy()
     FCIWfn Hdiag(lists_,symmetry_);
     C_ = std::make_shared<FCIWfn>(lists_,symmetry_);
     FCIWfn HC(lists_,symmetry_);
+    C_->set_print(print_);
 
     size_t fci_size = Hdiag.size();
     Hdiag.form_H_diagonal(fci_ints);

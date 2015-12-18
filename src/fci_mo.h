@@ -63,8 +63,10 @@ public:
     /// Set which root is preferred
     void set_root(const int& root) {root_ = root;}
 
-    /// Do the SemiCanocalization
+    /// Does not modify your orbitals
     void use_casscf_orbitals(const bool& casscf_orbitals){casscf_orbitals_ = casscf_orbitals;}
+    /// Do the SemiCanocalization
+    void set_semicanonical(bool semi){semi_canonicalize_ = semi;}
 
 protected:
     /// Basic Preparation
@@ -163,6 +165,8 @@ protected:
     void semi_canonicalize(const size_t &count);
     /// If you are running Kevin's CASSCF code, do not change orbitals in wavefunction
     bool casscf_orbitals_ = false;
+    /// Do semi_canonicalize your orbitals
+    bool semi_canonicalize_;
     /// Use natural orbitals
     void nat_orbs();
 
