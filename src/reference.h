@@ -80,7 +80,7 @@ public:
     ambit::Tensor g2bb() {return g2bb_;}
 
     /// Set functions
-    void set_energy(double energy) {energy_ = energy;}
+    void set_Eref(double value) {Eref_ = value;}
     void set_L1a(ambit::Tensor L1a) {L1a_ = L1a;}
     void set_L1b(ambit::Tensor L1b) {L1b_ = L1b;}
     void set_L2aa(ambit::Tensor L2aa) {L2aa_ = L2aa;}
