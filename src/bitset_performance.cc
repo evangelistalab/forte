@@ -101,9 +101,6 @@ double test_bitset_determinant2_copy_constructor(int nmo,int nset,int repeat)
     STLBitsetDeterminant I = random_bitset_determinant2(nmo,nset);
     I.print();
     auto start = chrono::steady_clock::now();
-    for (int n = 0; n < repeat; ++n){
-        STLBitsetDeterminant J(I);
-    }
     auto end = chrono::steady_clock::now();
     auto diff = end - start;
     return chrono::duration <double, nano> (diff).count();

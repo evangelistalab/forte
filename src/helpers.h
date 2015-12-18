@@ -45,14 +45,15 @@ using SpaceInfo = std::pair<Dimension,std::vector<MOInfo>>;
  *
  * This class reads and holds information about orbital spaces
  *
- * Irrep:                 A1         A2        B1      B2
- * ALL:             | 0 1 2 3 4 | 5 6 7 8 9 |10 11 | 12 13 |
- * CORRELATED:      | - 0 1 2 3 | - 4 5 6 7 | 8  - |  9 10 |
+ * Irrep:                A1(0)       A2(1)    B1(2)   B2(3)
+ * ALL:             | 0 1 2 3 4 | 5 6 7 8 9 | 10 11 | 12 13 |
+ * CORRELATED:      | - 0 1 2 3 | - 4 5 6 7 |  8  - |  9 10 |
+ * RELATIVE:        | 0 1 2 3 4 | 0 1 2 3 4 |  0  1 |  0  1 |
  * FROZEN_DOCC        *           *
- * RESTRICTED_DOCC      *           * *       *       *
+ * RESTRICTED_DOCC      *           * *        *       *
  * ACTIVE                 * *           *
- * RESTRICED_UOCC             *           *              *
- * FROZEN_UOCC                                   *
+ * RESTRICED_UOCC             *           *               *
+ * FROZEN_UOCC                                    *
  *
  * This returns:
  *
@@ -80,6 +81,12 @@ using SpaceInfo = std::pair<Dimension,std::vector<MOInfo>>;
  * corr_abs_mo("RESTRICTED_UOCC") -> [3,7,10]
  * corr_abs_mo("FROZEN_UOCC")     -> []
  *
+ * get_relative_mo("FROZEN_DOCC")     -> [(0,0),(1,0)]
+ * get_relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,1),(3,1)]
+ * get_relative_mo("ACTIVE")          -> [(0,2),(0,3),(1,3)]
+ * get_relative_mo("RESTRICTED_UOCC") -> [(0,4),(1,4),(3,1)]
+ * get_relative_mo("FROZEN_UOCC")     -> [(2,1)]
+
  */
 class MOSpaceInfo
 {
