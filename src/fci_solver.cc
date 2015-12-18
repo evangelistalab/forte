@@ -118,12 +118,9 @@ double FCI::compute_energy()
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
-    int ms = multiplicity - 1;
-    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or
-            options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
-    {
-        ms   = 0;
-    }
+    // Default: lowest spin solution
+    int ms = (multiplicity + 1) % 2;
+
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
@@ -179,7 +176,6 @@ double FCI::compute_energy()
 
 Reference FCI::reference()
 {
-    fcisolver_->set_max_rdm_level(3);
     return fcisolver_->reference();
 }
 
