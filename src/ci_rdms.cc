@@ -1087,6 +1087,51 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
 					   std::vector<double>& tprdm_bbb)
 {
 
+		double error_1rdm_a = 0.0;
+		for (size_t p = 0; p < ncmo_; ++p){
+			for(size_t q = 0; q < ncmo_; ++q){
+				double rdm = 0.0;
+				for(size_t i = 0; i < dim_space_; ++i){
+					STLBitsetDeterminant I(det_space_[i]);
+					double sign = 1.0;
+					sign *= I.destroy_alfa_bit(q);	
+					sign *= I.create_alfa_bit(p);
+					for(size_t j = 0; j < dim_space_; ++j){
+						if( I == det_space_[j] ){
+							rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+						}
+					}	
+				}	
+				if (std::fabs(rdm) > 1.0e-12 ){
+					error_1rdm_a += std::fabs(rdm - oprdm_a[q*ncmo_ + p]);
+				}
+			}
+		}
+		outfile->Printf("\n    A 1-RDM Error :   %2.15f", error_1rdm_a);
+
+		double error_1rdm_b = 0.0;
+		for (size_t p = 0; p < ncmo_; ++p){
+			for(size_t q = 0; q < ncmo_; ++q){
+				double rdm = 0.0;
+				for(size_t i = 0; i < dim_space_; ++i){
+					STLBitsetDeterminant I(det_space_[i]);
+					double sign = 1.0;
+					sign *= I.destroy_beta_bit(q);	
+					sign *= I.create_beta_bit(p);
+					for(size_t j = 0; j < dim_space_; ++j){
+						if( I == det_space_[j] ){
+							rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+						}
+					}	
+				}	
+				if (std::fabs(rdm) > 1.0e-12 ){
+					error_1rdm_b += std::fabs(rdm - oprdm_b[p*ncmo_ + q]);
+				}
+			}
+		}
+		outfile->Printf("\n    B 1-RDM Error :   %2.15f", error_1rdm_b);
+
+
         double error_2rdm_aa = 0.0;
         for (size_t p = 0; p < ncmo_; ++p){
             for (size_t q = 0; q < ncmo_; ++q){
