@@ -31,7 +31,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_),
       reference_(reference),
       ints_(ints),
-      tensor_type_(kCore),
+      tensor_type_(ambit::CoreTensor),
       BTF_(new BlockedTensorFactory(options)),
       mo_space_info_(mo_space_info)
 {

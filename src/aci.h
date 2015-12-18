@@ -65,6 +65,10 @@ public:
     /// Compute the energy
     double compute_energy();
 
+	/// Update the reference file
+    Reference reference();
+
+
 private:
 
     // ==> Class data <==
@@ -177,6 +181,9 @@ private:
     std::vector<STLBitsetDeterminant> P_space_;
     /// A vector of determinants in the P + Q space
     std::vector<STLBitsetDeterminant> PQ_space_;
+	/// The CI coeffiecients
+	SharedMatrix evecs_;
+
     /// A map of determinants in the P space
     std::unordered_map<STLBitsetDeterminant,int, STLBitsetDeterminant::Hash> P_space_map_;
 	/// A History of Determinants
@@ -197,6 +204,17 @@ private:
 	double build_space_;
 	double screen_space_;	
 	double spin_trans_;
+
+	// The RMDS
+	std::vector<double> ordm_a_;
+	std::vector<double> ordm_b_;
+	std::vector<double> trdm_aa_;
+	std::vector<double> trdm_ab_;
+	std::vector<double> trdm_bb_;
+	std::vector<double> trdm_aaa_;
+	std::vector<double> trdm_aab_;
+	std::vector<double> trdm_abb_;
+	std::vector<double> trdm_bbb_;
 
 
     // ==> Class functions <==

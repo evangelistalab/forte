@@ -220,8 +220,8 @@ double FCI_MO::compute_energy(){
     // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::kCore,"L1a",{na_, na_});
-    L1b = ambit::Tensor::build(ambit::kCore,"L1b",{na_, na_});
+    L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a",{na_, na_});
+    L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b",{na_, na_});
 
     // allocate Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
@@ -565,8 +565,8 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
-        L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
+        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
+        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
         FormDensity(determinant_, root_, Da_, Db_);
         if(print_ > 1){
             print_d2("Da", Da_);
@@ -1467,8 +1467,8 @@ void FCI_MO::nat_orbs(){
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = ambit::Tensor::build(ambit::kCore,"L1a", {na_, na_});
-        L1b = ambit::Tensor::build(ambit::kCore,"L1b", {na_, na_});
+        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
+        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
         FormDensity(determinant_, root_, Da_, Db_);
         CheckDensity();
         if(print_ > 1){
@@ -1609,9 +1609,9 @@ void FCI_MO::compute_ref(){
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2ab_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
-    L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{na_, na_, na_, na_});
-    L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{na_, na_, na_, na_});
-    L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{na_, na_, na_, na_});
+    L2aa = ambit::Tensor::build(ambit::CoreTensor,"L2aa",{na_, na_, na_, na_});
+    L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{na_, na_, na_, na_});
+    L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{na_, na_, na_, na_});
 
     FormCumulant2(determinant_, root_, L2aa_, L2ab_, L2bb_);
     if(print_ > 2){
@@ -1628,10 +1628,10 @@ void FCI_MO::compute_ref(){
         L3aab_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
         L3abb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
         L3bbb_ = d6(na_, d5(na_, d4(na_, d3(na_, d2(na_, d1(na_))))));
-        L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{na_, na_, na_, na_, na_, na_});
-        L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{na_, na_, na_, na_, na_, na_});
-        L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{na_, na_, na_, na_, na_, na_});
-        L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{na_, na_, na_, na_, na_, na_});
+        L3aaa = ambit::Tensor::build(ambit::CoreTensor,"L3aaa",{na_, na_, na_, na_, na_, na_});
+        L3aab = ambit::Tensor::build(ambit::CoreTensor,"L3aab",{na_, na_, na_, na_, na_, na_});
+        L3abb = ambit::Tensor::build(ambit::CoreTensor,"L3abb",{na_, na_, na_, na_, na_, na_});
+        L3bbb = ambit::Tensor::build(ambit::CoreTensor,"L3bbb",{na_, na_, na_, na_, na_, na_});
 
         if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
             FormCumulant3(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
@@ -1653,14 +1653,20 @@ void FCI_MO::compute_ref(){
 Reference FCI_MO::reference()
 {
     compute_ref();
-
-    if(options_.get_str("THREEPDC") == "ZERO"){
-        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb);
-        return ref;
-    }else{
-        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
-        return ref;
+    Reference ref;
+    ref.set_Eref(Eref_);
+    ref.set_L1a(L1a);
+    ref.set_L1b(L1b);
+    ref.set_L2aa(L2aa);
+    ref.set_L2ab(L2ab);
+    ref.set_L2bb(L2bb);
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        ref.set_L3aaa(L3aaa);
+        ref.set_L3aab(L3aab);
+        ref.set_L3abb(L3abb);
+        ref.set_L3bbb(L3bbb);
     }
+    return ref;
 }
 
 }}
