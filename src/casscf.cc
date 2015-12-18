@@ -316,7 +316,7 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "CAS")
     {
         FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
-        cas.use_casscf_orbitals(true);
+        cas.use_default_orbitals(true);
         cas.compute_energy();
         cas_ref_ = cas.reference();
         E_casscf_ = cas_ref_.get_Eref();

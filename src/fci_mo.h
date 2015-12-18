@@ -63,8 +63,8 @@ public:
     /// Set which root is preferred
     void set_root(const int& root) {root_ = root;}
 
-    /// Do the SemiCanocalization
-    void use_casscf_orbitals(const bool& casscf_orbitals){casscf_orbitals_ = casscf_orbitals;}
+    /// Do not change the orbitals
+    void use_default_orbitals(const bool& default_orbitals){default_orbitals_ = default_orbitals;}
 
 protected:
     /// Basic Preparation
@@ -128,6 +128,10 @@ protected:
     vector<size_t> idx_h_;
     size_t npt_;             // particle MOs
     vector<size_t> idx_p_;
+    Dimension active_o_;  // active occupied for incomplete active space
+    vector<size_t> ao_;
+    Dimension active_v_;  // active virtual for incomplete active space
+    vector<size_t> av_;
 
     /// Number of Alpha and Beta Electrons
     long int nalfa_;
@@ -161,8 +165,8 @@ protected:
 
     /// Semi-canonicalize orbitals
     void semi_canonicalize(const size_t &count);
-    /// If you are running Kevin's CASSCF code, do not change orbitals in wavefunction
-    bool casscf_orbitals_ = false;
+    /// Use whatever orbitals passed to this code
+    bool default_orbitals_ = false;
     /// Use natural orbitals
     void nat_orbs();
 
@@ -229,7 +233,7 @@ protected:
     void Form_Fock(d2 &A, d2 &B);
     void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
-    void BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string &name);
+    void BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string &name, const string &block);
 
     /// Reference Energy
     double Eref_;
