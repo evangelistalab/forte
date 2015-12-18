@@ -155,7 +155,7 @@ void CholeskyIntegrals::gather_integrals()
     if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );}
     int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
 
-    TensorType tensor_type = kCore;
+    TensorType tensor_type = CoreTensor;
 
     if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);}
     SharedMatrix Lao = Ch->L();
@@ -227,7 +227,7 @@ void CholeskyIntegrals::deallocate()
 
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 {
-    TensorType tensor_type = kCore;
+    TensorType tensor_type = CoreTensor;
     ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});

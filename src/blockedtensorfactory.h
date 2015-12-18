@@ -16,9 +16,9 @@ namespace psi{ namespace forte{
 class BlockedTensorFactory
 {
 protected:
-    // Whether the tensor is kCore, kDisk, Agnostic
+    // Whether the tensor is CoreTensor, kDisk, Agnostic
     // TODO:  Make this more generic -
-    ambit::TensorType tensor_type_ = ambit::kCore;
+    ambit::TensorType tensor_type_ = ambit::CoreTensor;
     // Overall memory that tensors are taking up
     double memory_;
     //Number of BlockedTensors used
