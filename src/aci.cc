@@ -660,31 +660,27 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 			++counter;
 		}
 	}
+	evecs_->copy(PQ_evecs);
+
 	if( form_1_RDM_ ){
 	//Compute and print 1-RDM
 		Timer one_rdm;
 		
-		std::vector<double> ordma;		
-		std::vector<double> ordmb;		
-
-		CI_RDMS ci_rdms(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
-		ci_rdms.compute_1rdm(ordma,ordmb,0);
+		CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
 		outfile->Printf("\n  1-RDM took %2.6f s", one_rdm.get());
 		SharedMatrix D1(new Matrix("D1", nact_,nact_));
 	   
 		for( int i = 0; i < nact_; ++i){
 			for( int j = 0; j < nact_; ++j){
-				D1->set(i,j, ordma[nact_*i + j] + ordmb[nact_*i + j]);
+				D1->set(i,j, ordm_a_[nact_*i + j] + ordm_b_[nact_*i + j]);
 			}
 		}
 
 		outfile->Printf("\n  Trace of D1: %5.10f", D1->trace());
 
 		Timer two_rdm;
-		std::vector<double> trdm_aa;
-		std::vector<double> trdm_bb;
-		std::vector<double> trdm_ab;
-		ci_rdms.compute_2rdm( trdm_aa, trdm_ab, trdm_bb, 0);
+		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
 		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 
 		Timer three;
@@ -692,15 +688,15 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 		std::vector<double> trdm_aab;
 		std::vector<double> trdm_abb;
 		std::vector<double> trdm_bbb;
-		ci_rdms.compute_3rdm(trdm_aaa, trdm_aab, trdm_abb, trdm_bbb, 0); 
+		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
 		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
 		Timer energy;
-		double rdm_energy = ci_rdms.get_energy(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab); 
+		double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
 		outfile->Printf("\n  Energy took %2.6f s", energy.get());
 		outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 		
-		//ci_rdms.rdm_test(ordma,ordmb,trdm_aa,trdm_bb,trdm_ab, trdm_aaa, trdm_aab, trdm_abb, trdm_bbb); 
+		//ci_rdms.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 
 
 	}
@@ -1691,6 +1687,13 @@ std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterm
 		dc[n] = c_sum * (PQ_evals->get(n) - P_evals->get(n));
 	}	
 	return dc;
+}
+
+Reference AdaptiveCI::reference()
+{
+	CI_RDMS ci_rdms(options_, wfn_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
+	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
+	return aci_ref;
 }
 
 }} // EndNamespaces

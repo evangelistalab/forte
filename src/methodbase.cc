@@ -8,7 +8,7 @@ namespace psi{ namespace forte{
 using namespace ambit;
 
 MethodBase::MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(kCore), mo_space_info_(mo_space_info)
+    : Wavefunction(options,_default_psio_lib_), ints_(ints), tensor_type_(CoreTensor), mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
     copy(wfn);

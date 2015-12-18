@@ -56,13 +56,6 @@ protected:
 public:
     /// Default constructor
     Reference();
-    /// Constructor with one- and two-body cumulant
-    Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb);
-    /// Constructor with one-, two- and three-body cumulant
-    Reference(double Eref,ambit::Tensor L1a,ambit::Tensor L1b,ambit::Tensor L2aa,ambit::Tensor L2ab,ambit::Tensor L2bb,
-              ambit::Tensor L3aaa,ambit::Tensor L3aab,ambit::Tensor L3abb,ambit::Tensor L3bbb);
-    //Constructor for DMRG based reference.
-//    Reference(std::string);
 
     /// Destructor
     ~Reference();
@@ -86,7 +79,8 @@ public:
     ambit::Tensor g2ab() {return g2ab_;}
     ambit::Tensor g2bb() {return g2bb_;}
 
-    /// Set density cumulants
+    /// Set functions
+    void set_Eref(double value) {Eref_ = value;}
     void set_L1a(ambit::Tensor L1a) {L1a_ = L1a;}
     void set_L1b(ambit::Tensor L1b) {L1b_ = L1b;}
     void set_L2aa(ambit::Tensor L2aa) {L2aa_ = L2aa;}
