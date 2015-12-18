@@ -301,11 +301,11 @@ void CASSCF::cas_ci()
         ambit::Tensor L2ab = cas_ref_.g2ab();
         ambit::Tensor L2bb = cas_ref_.g2bb();
 
-        ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+        ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
         //// This may or may not be correct.  Really need to find a way to check this code
         gamma2("u, v, x, y") = L2aa("u, v, x, y") + L2ab("u, v, x, y") + L2ab("v, u, y, x") + L2bb("u, v, x, y");
-        gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+        gamma2_ = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
         gamma2_("u, v, x, y") = gamma2("u, v, x, y") + gamma2("v, u, x, y") + gamma2("u, v, y, x") + gamma2("v, u, y, x");
         gamma2_.scale(0.25);
         gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
@@ -336,7 +336,7 @@ void CASSCF::cas_ci()
         L2bb("pqrs") += L1b("pr") * L1b("qs");
         L2bb("pqrs") -= L1b("ps") * L1b("qr");
 
-        ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+        ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
         // This may or may not be correct.  Really need to find a way to check this code
         gamma2("u,v,x,y") +=  L2aa("u,v,x, y");
@@ -346,7 +346,7 @@ void CASSCF::cas_ci()
 
         //gamma2_("u,v,x,y") = gamma2_("x,y,u,v");
         //gamma2_("u,v,x,y") = gamma2_("")
-        gamma2_ = ambit::Tensor::build(ambit::kCore, "gamma2", {na_, na_, na_, na_});
+        gamma2_ = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
         gamma2_.copy(gamma2);
         gamma2_.scale(2.0);
         gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
@@ -362,8 +362,8 @@ void CASSCF::cas_ci()
 
     }
     /// Compute the 1RDM
-    ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::kCore,"Return",{na_, na_});
-    gamma1_ = ambit::Tensor::build(ambit::kCore,"Return",{na_, na_});
+    ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::CoreTensor,"Return",{na_, na_});
+    gamma1_ = ambit::Tensor::build(ambit::CoreTensor,"Return",{na_, na_});
     ambit::Tensor gamma1a = cas_ref_.L1a();
     ambit::Tensor gamma1b = cas_ref_.L1b();
 
@@ -375,8 +375,8 @@ void CASSCF::cas_ci()
 
 double CASSCF::cas_check(Reference cas_ref)
 {
-    ambit::Tensor gamma1 = ambit::Tensor::build(ambit::kCore, "Gamma1", {na_, na_});
-    ambit::Tensor gamma2 = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
+    ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
+    ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals_and_restricted_docc();
 
@@ -497,7 +497,7 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 //        }
 //    }
 //
-//    ambit::Tensor active_int = ambit::Tensor::build(ambit::kCore, "Gamma2", {na_, na_, na_, na_});
+//    ambit::Tensor active_int = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
 //    SharedMatrix TEI_MO(new Matrix("TEI_MO", na_ * na_, na_ * na_));
 //    for(int i = 0; i < na_; i++){
 //        SharedVector C_i = CAct->get_column(0, i);

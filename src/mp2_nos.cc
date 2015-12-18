@@ -84,13 +84,13 @@ MP2_NOS::MP2_NOS(boost::shared_ptr<Wavefunction> wfn, Options &options, std::sha
     BlockedTensor::add_composite_mo_space("i","pqrstuvwxyz",{"o","v"});
     BlockedTensor::add_composite_mo_space("I","PQRSTUVWXYZ",{"O","V"});
 
-    BlockedTensor G1 = BlockedTensor::build(kCore,"G1",spin_cases({"oo"}));
-    BlockedTensor D1 = BlockedTensor::build(kCore,"D1",spin_cases({"oo","vv"}));
-    BlockedTensor H = BlockedTensor::build(kCore,"H",spin_cases({"ii"}));
-    BlockedTensor F = BlockedTensor::build(kCore,"F",spin_cases({"ii"}));
-    BlockedTensor V = BlockedTensor::build(kCore,"V",spin_cases({"iiii"}));
-    BlockedTensor T2 = BlockedTensor::build(kCore,"T2",spin_cases({"oovv"}));
-    BlockedTensor InvD2 = BlockedTensor::build(kCore,"Inverse D2",spin_cases({"oovv"}));
+    BlockedTensor G1 = BlockedTensor::build(CoreTensor,"G1",spin_cases({"oo"}));
+    BlockedTensor D1 = BlockedTensor::build(CoreTensor,"D1",spin_cases({"oo","vv"}));
+    BlockedTensor H = BlockedTensor::build(CoreTensor,"H",spin_cases({"ii"}));
+    BlockedTensor F = BlockedTensor::build(CoreTensor,"F",spin_cases({"ii"}));
+    BlockedTensor V = BlockedTensor::build(CoreTensor,"V",spin_cases({"iiii"}));
+    BlockedTensor T2 = BlockedTensor::build(CoreTensor,"T2",spin_cases({"oovv"}));
+    BlockedTensor InvD2 = BlockedTensor::build(CoreTensor,"Inverse D2",spin_cases({"oovv"}));
 
     // Fill in the one-electron operator (H)
     H.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
