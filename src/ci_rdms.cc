@@ -902,8 +902,8 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 {
 
 	// Form OPCM from 1-RDM
-	ambit::Tensor L1a = ambit::Tensor::build(ambit::kCore,"L1a", {ncmo_,ncmo_});
-	ambit::Tensor L1b = ambit::Tensor::build(ambit::kCore,"L1b", {ncmo_,ncmo_});
+	ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {ncmo_,ncmo_});
+	ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {ncmo_,ncmo_});
 	
 	if( na_ >= 1 ){
 		L1a.iterate([&](const std::vector<size_t>& i, double& value){
@@ -916,13 +916,13 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 
 	// Form TPCMs from 2-RDMs
 
-	ambit::Tensor L2aa = ambit::Tensor::build(ambit::kCore,"L2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
-	ambit::Tensor L2ab = ambit::Tensor::build(ambit::kCore,"L2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
-	ambit::Tensor L2bb = ambit::Tensor::build(ambit::kCore,"L2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor L2aa = ambit::Tensor::build(ambit::CoreTensor,"L2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
 
-	ambit::Tensor g2aa = ambit::Tensor::build(ambit::kCore,"g2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
-	ambit::Tensor g2ab = ambit::Tensor::build(ambit::kCore,"g2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
-	ambit::Tensor g2bb = ambit::Tensor::build(ambit::kCore,"g2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor g2aa = ambit::Tensor::build(ambit::CoreTensor,"g2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor g2ab = ambit::Tensor::build(ambit::CoreTensor,"g2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
+	ambit::Tensor g2bb = ambit::Tensor::build(ambit::CoreTensor,"g2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
 
 	// First copy the 2-RDMs
 	if( na_ >= 2 ){
@@ -955,10 +955,10 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 	L2bb("pqrs") += L1b("ps") * L1b("qr");
 
 	// Form the 3-RCMs
-	ambit::Tensor L3aaa = ambit::Tensor::build(ambit::kCore,"L3aaa",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
-	ambit::Tensor L3aab = ambit::Tensor::build(ambit::kCore,"L3aab",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
-	ambit::Tensor L3abb = ambit::Tensor::build(ambit::kCore,"L3abb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
-	ambit::Tensor L3bbb = ambit::Tensor::build(ambit::kCore,"L3bbb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor,"L3aaa",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3aab = ambit::Tensor::build(ambit::CoreTensor,"L3aab",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3abb = ambit::Tensor::build(ambit::CoreTensor,"L3abb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
+	ambit::Tensor L3bbb = ambit::Tensor::build(ambit::CoreTensor,"L3bbb",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
 
 	// First copy the RDMs
 	if( na_ >= 3){

@@ -218,8 +218,8 @@ void OrbitalOptimizer::form_fock_active()
         }
     }
 
-    ambit::Tensor Cact = ambit::Tensor::build(ambit::kCore, "Cact", {nso, na_});
-    ambit::Tensor OPDM_aoT = ambit::Tensor::build(ambit::kCore, "OPDM_aoT", {nso, nso});
+    ambit::Tensor Cact = ambit::Tensor::build(ambit::CoreTensor, "Cact", {nso, na_});
+    ambit::Tensor OPDM_aoT = ambit::Tensor::build(ambit::CoreTensor, "OPDM_aoT", {nso, nso});
 
     Cact.iterate([&](const std::vector<size_t>& i,double& value){
         value = C_active->get(i[0], i[1]);});
@@ -302,8 +302,8 @@ void OrbitalOptimizer::orbital_gradient()
 {
     //std::vector<size_t> nmo_array = mo_space_info_->get_corr_abs_mo("CORRELATED");
     ///From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
-    ambit::Tensor Y = ambit::Tensor::build(ambit::kCore,"Y",{nmo_, na_});
-    ambit::Tensor F_pu = ambit::Tensor::build(ambit::kCore, "F_pu", {nmo_, na_});
+    ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor,"Y",{nmo_, na_});
+    ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
     if(nrdocc_ > 0)
     {
         F_pu.iterate([&](const std::vector<size_t>& i,double& value){
@@ -331,7 +331,7 @@ void OrbitalOptimizer::orbital_gradient()
     //std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
     ///SInce the integrals class assumes that the indices are relative,
     /// pass the relative indices to the integrals code.
-    ambit::Tensor Z = ambit::Tensor::build(ambit::kCore, "Z", {nmo_, na_});
+    ambit::Tensor Z = ambit::Tensor::build(ambit::CoreTensor, "Z", {nmo_, na_});
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
