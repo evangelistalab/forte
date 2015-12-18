@@ -562,8 +562,8 @@ void CI_RDMS::get_two_map()
 		std::vector<int> aocc = detI.get_alfa_occ();
 		std::vector<int> bocc = detI.get_beta_occ();
 
-		size_t noalfa = aocc.size();
-		size_t nobeta = bocc.size();
+		int noalfa = aocc.size();
+		int  nobeta = bocc.size();
 
 		std::vector<std::tuple<size_t, short, short>> aa_ann(noalfa * (noalfa -1) / 2);	
 		std::vector<std::tuple<size_t, short, short>> ab_ann(noalfa * nobeta);	
@@ -706,8 +706,8 @@ void CI_RDMS::get_three_map()
 		std::vector<int> aocc = detI.get_alfa_occ();	
 		std::vector<int> bocc = detI.get_beta_occ();	
 
-		size_t noalfa = aocc.size();
-		size_t nobeta = bocc.size();
+		int noalfa = aocc.size();
+		int nobeta = bocc.size();
 
 		std::vector<std::tuple<size_t, short, short, short>> aaa_ann( noalfa * (noalfa - 1) * (noalfa - 2) / 6 );
 		std::vector<std::tuple<size_t, short, short, short>> aab_ann( noalfa * (noalfa - 1) * nobeta / 2  );
