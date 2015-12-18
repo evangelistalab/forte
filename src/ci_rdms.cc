@@ -1052,7 +1052,21 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 
 	double energy = get_energy( oprdm_a, oprdm_b, tprdm_aa, tprdm_ab, tprdm_bb );
 
-	Reference ci_ref( energy, L1a, L1b, L2aa, L2ab, L2bb, L3aaa, L3aab, L3abb, L3bbb);
+	Reference ci_ref;	
+
+	ci_ref.set_Eref(energy);
+	ci_ref.set_L1a(L1a);
+	ci_ref.set_L1b(L1b);
+
+	ci_ref.set_L2aa(L2aa);
+	ci_ref.set_L2ab(L2ab);
+	ci_ref.set_L2bb(L2bb);
+
+	ci_ref.set_L3aaa(L3aaa);
+	ci_ref.set_L3aab(L3aab);
+	ci_ref.set_L3abb(L3abb);
+	ci_ref.set_L3bbb(L3bbb);
+
 	ci_ref.set_g2aa(g2aa);
 	ci_ref.set_g2ab(g2ab);
 	ci_ref.set_g2bb(g2bb);
