@@ -527,7 +527,7 @@ void DISKDFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_
     //Only nonzero contributions are on diagonal elements
     //Grab the nonzero elements and put to a vector
 
-    TensorType tensor_type = kCore;
+    TensorType tensor_type = ambit::CoreTensor;
     outfile->Printf("\n Making a fock matrix \n");
 
     //Create the fock_a and fock_b globally

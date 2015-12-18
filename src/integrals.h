@@ -294,8 +294,8 @@ protected:
     /// The mapping from correlated to actual MO
     /// Basically gives the original ordering back
     std::vector<size_t> cmotomo_;
-    /// The type of tensor that ambit uses -> kCore
-    ambit::TensorType tensor_type_ = ambit::kCore;
+    /// The type of tensor that ambit uses -> CoreTensor
+    ambit::TensorType tensor_type_ = ambit::CoreTensor;
     /// How much memory each integral takes up
     double int_mem_;
 //    / The Cmatrix in a symmetry aware basis

@@ -17,7 +17,7 @@ namespace psi{ namespace forte{
 MRDSRG::MRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options,_default_psio_lib_), wfn_(wfn), reference_(reference), ints_(ints),
-      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)), tensor_type_(kCore)
+      mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor)
 {
     print_method_banner({"Multireference Driven Similarity Renormalization Group","Chenyang Li"});
     read_options();
@@ -805,7 +805,7 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
                 }else{
                     ambit::Tensor F_block = F_.block(block);
                     ambit::Tensor T_h = separate_tensor(F_block,space,h);
-                    auto Feigen = T_h.syev(kAscending);
+                    auto Feigen = T_h.syev(AscendingEigenvalue);
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h("pq") = Feigen["eigenvectors"]("pq");
                     fill_eigen(block,h,Feigen["eigenvalues"].data());

@@ -89,9 +89,9 @@ void EffectiveIntegrals::transform_integrals()
 //        eri->compute_shell(shellIter,eri_saver);
 //    }
 
-    ambit::Tensor Vmo = ambit::Tensor::build(ambit::kCore,"Vmo",{nmo_,nmo_,nmo_,nmo_});
-    ambit::Tensor Vso = ambit::Tensor::build(ambit::kCore,"Vso",{nso_,nso_,nso_,nso_});
-    ambit::Tensor C = ambit::Tensor::build(ambit::kCore,"C",{nso_,nmo_});
+    ambit::Tensor Vmo = ambit::Tensor::build(ambit::CoreTensor,"Vmo",{nmo_,nmo_,nmo_,nmo_});
+    ambit::Tensor Vso = ambit::Tensor::build(ambit::CoreTensor,"Vso",{nso_,nso_,nso_,nso_});
+    ambit::Tensor C = ambit::Tensor::build(ambit::CoreTensor,"C",{nso_,nmo_});
 
     double eff_coulomb_omega = options_.get_double("EFFECTIVE_COULOMB_OMEGA");
     double eff_coulomb_factor = options_.get_double("EFFECTIVE_COULOMB_FACTOR");
