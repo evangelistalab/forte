@@ -621,7 +621,7 @@ void MRDSRG::transfer_integrals(){
     O1_["pq"] += Hbar1_["pq"];
     O1_["PQ"] += Hbar1_["PQ"];
     BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"cc"}));
-    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
         if (i[0] == i[1]) value = 1.0;
     });
     O1_["pq"] -= Hbar2_["pmqn"] * temp["nm"];
@@ -820,7 +820,7 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
 
 ambit::Tensor MRDSRG::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h){
     // test tens and irrep
-    size_t tens_dim = tens.dim(0);
+    int tens_dim = static_cast<int>(tens.dim(0));
     if(tens_dim != irrep.sum() || tens_dim != tens.dim(1)){
         throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
     }
@@ -910,7 +910,7 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name){
         labels.emplace_back(spin_label);
 
         double D_norm = 0.0, D_max = 0.0;
-        D.block(block).citerate([&](const std::vector<size_t>& i, const double& value){
+        D.block(block).citerate([&](const std::vector<size_t>&, const double& value){
             double abs_value = fabs(value);
             if(abs_value > 1.0e-15){
                 if(abs_value > D_max) D_max = value;
