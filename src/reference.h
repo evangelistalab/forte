@@ -96,6 +96,8 @@ public:
     void set_L3aab(ambit::Tensor L3aab) {L3aab_ = L3aab;}
     void set_L3abb(ambit::Tensor L3abb) {L3abb_ = L3abb;}
     void set_L3bbb(ambit::Tensor L3bbb) {L3bbb_ = L3bbb;}
+
+    /// Set the 2-RDMs
     void set_g2aa(ambit::Tensor g2aa) {g2aa_ = g2aa;}
     void set_g2ab(ambit::Tensor g2ab) {g2ab_ = g2ab;}
     void set_g2bb(ambit::Tensor g2bb) {g2bb_ = g2bb;}
