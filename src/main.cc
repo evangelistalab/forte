@@ -591,17 +591,24 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (task == "FCI_SEMI_CANONICAL"){
                 boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-                if (options.get_bool("SEMI_CANONICAL")){
+                {
                     boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                     fci->set_max_rdm_level(1);
                     fci->compute_energy();
                     reference = fci->reference();
-                    SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
                 }
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(3);
                 fci->compute_energy();
                 reference = fci->reference();
+            }
+
+            if (task == "YORKCI"){
+                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+                boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(wfn,options,ints_,mo_space_info));
+                fci_mo->set_semicanonical(true);
+                fci_mo->compute_energy();
             }
 
             if (task == "DSRG-MRPT2"){
