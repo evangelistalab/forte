@@ -102,7 +102,7 @@ read_options(std::string name, Options &options)
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
-                                              " ACTIVE-DSRGPT2");
+                                              " ACTIVE-DSRGPT2 TASKS");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -576,6 +576,41 @@ extern "C" PsiReturnType forte(Options &options)
     //fci_ints_->set_active_integrals_and_restricted_docc();
     //STLBitsetDeterminant::set_ints(fci_ints_);
     //DynamicBitsetDeterminant::set_ints(fci_ints_);
+
+
+    if (options.get_str("JOB_TYPE") == "TASKS"){
+        std::vector<std::string> tasks{"FCI_SEMI_CANONICAL","DSRG-MRPT2"};
+        Reference reference;
+
+        for (std::string& task : tasks){
+            if (task == "FCI"){
+                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+                auto fci = std::make_shared<FCI>(wfn,options,ints_,mo_space_info);
+                fci->compute_energy();
+            }
+
+            if (task == "FCI_SEMI_CANONICAL"){
+                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+                if (options.get_bool("SEMI_CANONICAL")){
+                    boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                    fci->set_max_rdm_level(1);
+                    fci->compute_energy();
+                    reference = fci->reference();
+                    SemiCanonical semi(wfn,options,ints_,mo_space_info,reference);
+                }
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                reference = fci->reference();
+            }
+
+            if (task == "DSRG-MRPT2"){
+                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+                boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
+                three_dsrg_mrpt2->compute_energy();
+            }
+        }
+    }
 
     if(options.get_str("ALTERNATIVE_CASSCF") == "FTHF")
     {

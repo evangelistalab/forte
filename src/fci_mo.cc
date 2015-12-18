@@ -1653,14 +1653,20 @@ void FCI_MO::compute_ref(){
 Reference FCI_MO::reference()
 {
     compute_ref();
-
-    if(options_.get_str("THREEPDC") == "ZERO"){
-        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb);
-        return ref;
-    }else{
-        Reference ref(Eref_,L1a,L1b,L2aa,L2ab,L2bb,L3aaa,L3aab,L3abb,L3bbb);
-        return ref;
+    Reference ref;
+    ref.set_Eref(Eref_);
+    ref.set_L1a(L1a);
+    ref.set_L1b(L1b);
+    ref.set_L2aa(L2aa);
+    ref.set_L2ab(L2ab);
+    ref.set_L2bb(L2bb);
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        ref.set_L3aaa(L3aaa);
+        ref.set_L3aab(L3aab);
+        ref.set_L3abb(L3abb);
+        ref.set_L3bbb(L3bbb);
     }
+    return ref;
 }
 
 }}
