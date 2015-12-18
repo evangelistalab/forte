@@ -539,19 +539,19 @@ double THREE_DSRG_MRPT2::compute_energy()
             ambit::Tensor Delta2ccva = Delta2.block("ccva");
             myfile << "ccvv DELTA2\n";
             int count = 0;
-            Delta2ccvv.iterate([&](const std::vector<size_t>& i,double& value){
+            Delta2ccvv.iterate([&](const std::vector<size_t>&,double& value){
             myfile << count << "  " << value << "\n";
              });
             myfile << "cavv DELTA2\n";
 
             count = 0;
-            Delta2cavv.iterate([&](const std::vector<size_t>& i,double& value){
+            Delta2cavv.iterate([&](const std::vector<size_t>&,double& value){
             myfile << count << "  " << value << "\n";
              });
             myfile << "ccva DELTA2\n";
 
             count = 0;
-            Delta2ccva.iterate([&](const std::vector<size_t>& i,double& value){
+            Delta2ccva.iterate([&](const std::vector<size_t>&,double& value){
             myfile << count << "  " << value << "\n";
              });
 
@@ -1352,7 +1352,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
     double Ebeta  = 0.0;
     double Emixed = 0.0;
     int nthread = 1;
-    int thread  = 0;
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
@@ -1610,11 +1609,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     double Eccva = 0;
     double Eacvv = 0;
     int nthread = 1;
-    int thread  = 0;
-    #ifdef _OPENMP
-        nthread = omp_get_max_threads();
-        thread  = omp_get_thread_num();
-    #endif
 /// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
@@ -1633,14 +1627,14 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     Timer ccvaTimer;
     for(int thread = 0; thread < nthread; thread++)
     {
-    Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, virtual_}));
-    Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, virtual_}));
+        Bm_Qe.push_back(ambit::Tensor::build(tensor_type_, "BemQ", {nthree_, virtual_}));
+        Bm_Qf.push_back(ambit::Tensor::build(tensor_type_, "Bmq", {nthree_, virtual_}));
 
-    Vefu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {virtual_, virtual_,active_}));
-    Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {virtual_, virtual_, active_}));
+        Vefu.push_back(ambit::Tensor::build(tensor_type_, "muJK", {virtual_, virtual_,active_}));
+        Tefv.push_back(ambit::Tensor::build(tensor_type_, "T2", {virtual_, virtual_, active_}));
 
-    tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
-    tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
+        tempTaa.push_back(ambit::Tensor::build(tensor_type_, "TEMPaa", {active_, active_}));
+        tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
 
     }
     //ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_, avirt_mos_);
@@ -1651,19 +1645,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     ambit::Tensor BeuQ = ints_->three_integral_block(naux, avirt_mos_, aactv_mos_);
 
     //std::vector<double>& BemQ_data = BemQ.data();
-    std::vector<double>& BeuQ_data = BeuQ.data();
 
     ///I think this loop is typically too small to allow efficient use of
     ///OpenMP.  Should probably test this assumption.
     #pragma omp parallel for num_threads(num_threads_) if (core_ > 1000)
-    for(int m = 0; m < core_; m++)
+    for(size_t m = 0; m < core_; m++)
     {
         int thread = 0;
         #ifdef _OPENMP
             thread = omp_get_thread_num();
         #endif
         size_t ma = acore_mos_[m];
-        size_t mb = bcore_mos_[m];
 
         //V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
         //V[efu]_m = V[efmu] + V[efmu] * exp[efmu]

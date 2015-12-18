@@ -56,7 +56,7 @@ void FCIWfn::compute_rdms(int max_order)
     }
 
     // Print RDM timings
-    if (print_){
+    if (print_ > 0){
         for (size_t n = 0; n < rdm_timing.size();++n){
             outfile->Printf("\n    Timing for %d-RDM: %.3f s",n + 1,rdm_timing[n]);
         }
