@@ -157,14 +157,14 @@ void FCI_MO::read_options(){
 
     // setup symmetry index of active orbitals
     for(int h = 0; h < nirrep_; ++h){
-        for(size_t i = 0; i < active_[h]; ++i){
+        for(size_t i = 0; i < size_t(active_[h]); ++i){
             sym_active_.push_back(h);
         }
     }
 
     // setup symmetry index of correlated orbitals
     for(int h = 0; h < nirrep_; ++h){
-        for(size_t i = 0; i < ncmopi_[h]; ++i){
+        for(size_t i = 0; i < size_t(ncmopi_[h]); ++i){
             sym_ncmo_.push_back(h);
         }
     }
