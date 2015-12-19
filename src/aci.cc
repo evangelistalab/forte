@@ -660,7 +660,7 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 			++counter;
 		}
 	}
-	evecs_->copy(PQ_evecs);
+	evecs_ = PQ_evecs;
 
 	if( form_1_RDM_ ){
 	//Compute and print 1-RDM
