@@ -28,8 +28,9 @@ namespace psi{ namespace forte{
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_no_symmetry_mo(Call_);
         orbital_optimizer.set_symmmetry_mo(Ca);
-        SharedMatrix S_sym = orbital_optimizer.orbital_rotation_casscf();
-        double g_norm = orbital_optimizer.orbital_gradient_norm();
+        orbital_optimizer.update()
+        S = orbital_optimizer.approx_solve()
+        orbital_optimizer.rotate(Ca, S)
 
 */
 class OrbitalOptimizer
@@ -58,8 +59,12 @@ public:
     void set_symmmetry_mo(SharedMatrix C)  {Ca_sym_ = C;}
     /// The MO Coefficient in pitzer ordering (symmetry-aware)
     void set_no_symmetry_mo(SharedMatrix C){Call_ = C;}
-    /// The workhouse of the program:  Computes gradient, hessian, and rotates orbitals
-    SharedMatrix orbital_rotation_casscf();
+    /// The workhouse of the program:  Computes gradient, hessian.
+    void update();
+    /// Solution of gx + H = 0 (with diagonal H), so x = - h / g
+    SharedMatrix approx_solve();
+    /// Exponentiate the orbital rotation parameter and use this to update your MOCoefficient
+    SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
     /// The norm of the orbital gradient
     double orbital_gradient_norm(){return (g_->rms());}
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}

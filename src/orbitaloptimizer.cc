@@ -36,7 +36,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
     startup();
 
 }
-SharedMatrix OrbitalOptimizer::orbital_rotation_casscf()
+void OrbitalOptimizer::update()
 {
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C
@@ -48,14 +48,9 @@ SharedMatrix OrbitalOptimizer::orbital_rotation_casscf()
     /// Use JK builder: J(\gamma_{uv} - 1/2 K(\gamma_{uv})
     form_fock_active();
 
-    ///
     orbital_gradient();
 
     diagonal_hessian();
-
-    orbital_rotation_parameter();
-
-    return S_;
 
 }
 
@@ -459,9 +454,12 @@ void OrbitalOptimizer::diagonal_hessian()
 
 
 }
-void OrbitalOptimizer::orbital_rotation_parameter()
+SharedMatrix OrbitalOptimizer::approx_solve()
 {
+    ///Create an orbital rotation matrix of size (NMO - frozen)
     SharedMatrix S(new Matrix("S", nmo_, nmo_));
+    Dimension true_nmopi = wfn_->nmopi();
+    SharedMatrix S_sym(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
 
     int offset = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -484,27 +482,20 @@ void OrbitalOptimizer::orbital_rotation_parameter()
         }
     offset += nmopi_[h];
     }
+    ///Since this is CASSCF, the active rotations are reduntant.  Zero those!
     auto na_vec = mo_space_info_->get_corr_abs_mo("ACTIVE");
     for(size_t u = 0; u < na_; u++)
         for(size_t v = 0; v < na_; v++)
             S->set(na_vec[u], na_vec[v], 0.0);
 
-    Matrix S_mat;
-    S_mat.copy(S);
-    S_mat.expm();
-
-    SharedMatrix S_mat_s = S_mat.clone();
-
-    Dimension true_nmopi = wfn_->nmopi();
-
-    SharedMatrix S_sym(new Matrix(nirrep_, true_nmopi, true_nmopi));
+    ///Convert to a symmetry matrix
     offset = 0;
     int frozen = 0;
     for(size_t h = 0; h < nirrep_; h++){
         frozen = frozen_docc_dim_[h];
         for(int p = 0; p < nmopi_[h]; p++){
             for(int q = 0; q < nmopi_[h]; q++){
-                S_sym->set(h, p + frozen, q + frozen, S_mat_s->get(p + offset, q + offset));
+                S_sym->set(h, p + frozen, q + frozen, S->get(p + offset, q + offset));
             }
         }
         if(casscf_freeze_core_)
@@ -516,7 +507,26 @@ void OrbitalOptimizer::orbital_rotation_parameter()
         }
         offset += nmopi_[h];
     }
-    S_ = S_sym;
+
+    return S_sym;
+}
+SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
+{
+    ///Clone the C matrix
+    SharedMatrix C_rot(C->clone());
+    SharedMatrix S_mat(S->clone());
+
+    S_mat->expm();
+    for(size_t h = 0; h < nirrep_; h++)
+    {
+        for(int fr = 0; fr < frozen_docc_dim_[h]; fr++){
+            S_mat->set(h, fr, fr, 1.0);
+        }
+    }
+
+    C_rot = Matrix::doublet(C, S_mat);
+    return C_rot;
+
 
 }
 
