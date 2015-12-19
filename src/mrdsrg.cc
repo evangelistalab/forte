@@ -882,7 +882,6 @@ void MRDSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Di
 
 void MRDSRG::print_cumulant_summary(){
     print_h2("Density Cumulant Summary");
-
     check_density(Lambda2_, "2-body");
     if(options_.get_str("THREEPDC") != "ZERO"){
         check_density(Lambda3_, "3-body");
