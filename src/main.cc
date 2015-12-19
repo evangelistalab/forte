@@ -604,11 +604,12 @@ extern "C" PsiReturnType forte(Options &options)
                 reference = fci->reference();
             }
 
-            if (task == "YORKCI"){
+            if (task == "PILOTCI"){
                 boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
                 boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(wfn,options,ints_,mo_space_info));
                 fci_mo->set_semicanonical(true);
                 fci_mo->compute_energy();
+                reference = fci_mo->reference();
             }
 
             if (task == "DSRG-MRPT2"){
