@@ -63,8 +63,11 @@ public:
     /// Set which root is preferred
     void set_root(const int& root) {root_ = root;}
 
-    /// Do not change the orbitals
-    void use_default_orbitals(const bool& default_orbitals){default_orbitals_ = default_orbitals;}
+    /// Use whatever orbitals passed to this code
+    void use_default_orbitals(const bool& default_orbitals) {default_orbitals_ = default_orbitals;}
+
+    /// Set to use semicanonical
+    void set_semicanonical(const bool& semi) {semi_ = semi;}
 
 protected:
     /// Basic Preparation
@@ -163,10 +166,11 @@ protected:
     /// Store and Print the CI Vectors and Configurations
     void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
-    /// Semi-canonicalize orbitals
-    void semi_canonicalize(const size_t &count);
     /// Use whatever orbitals passed to this code
     bool default_orbitals_ = false;
+    /// Semi-canonicalize orbitals
+    bool semi_;
+    void semi_canonicalize(const size_t &count);
     /// Use natural orbitals
     void nat_orbs();
 

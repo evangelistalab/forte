@@ -52,6 +52,9 @@ void FCI_MO::read_options(){
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
+    // set orbitals
+    semi_ = options_.get_bool("SEMI_CANONICAL");
+
     // print level
     print_ = options_.get_int("PRINT");
 
@@ -280,12 +283,10 @@ double FCI_MO::compute_energy(){
         print_d2("Fb", Fb_);
     }
 
-    // Orbitals
-
-    ///If running casscf computation, do not change orbitals
+    // Orbitals. If use Kevin's CASSCF, this part is ignored.
     if(!default_orbitals_)
     {
-        if(options_.get_bool("SEMI_CANONICAL")){
+        if(semi_){
             semi_canonicalize(count);
         }else{
             nat_orbs();
