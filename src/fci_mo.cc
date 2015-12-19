@@ -41,8 +41,6 @@ void FCI_MO::startup(){
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
-    semi_canonicalize_ = options_.get_bool("SEMI_CANONICAL");
-
 }
 
 void FCI_MO::read_options(){
@@ -53,6 +51,9 @@ void FCI_MO::read_options(){
         outfile->Printf("\n  Unrestricted reference is detected.");
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
+
+    // set orbitals
+    semi_ = options_.get_bool("SEMI_CANONICAL");
 
     // print level
     print_ = options_.get_int("PRINT");
@@ -282,12 +283,10 @@ double FCI_MO::compute_energy(){
         print_d2("Fb", Fb_);
     }
 
-    // Orbitals
-
-    ///If running casscf computation, do not change orbitals
-    if(!casscf_orbitals_)
+    // Orbitals. If use Kevin's CASSCF, this part is ignored.
+    if(!default_orbitals_)
     {
-        if(options_.get_bool("SEMI_CANONICAL")){
+        if(semi_){
             semi_canonicalize(count);
         }else{
             nat_orbs();
@@ -465,6 +464,8 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
             String.push_back(i < act_docc);
         }
     }
+    active_o_ = doccpi - frzcpi_ - core_;
+    active_v_ = active_ - active_o_;
 
     if(print == true){
         print_h2("Reference String");
@@ -485,12 +486,16 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
     vector<int> uocc, occ;
+    ao_.clear();av_.clear();
     for(int i = 0; i < na_; ++i){
         if(ref_string[i]){
             occ.push_back(i);
             symmetry ^= sym_active_[i];
+            ao_.push_back(i);
+        }else{
+            uocc.push_back(i);
+            av_.push_back(i);
         }
-        else uocc.push_back(i);
     }
 
     // singles
@@ -532,7 +537,14 @@ void FCI_MO::semi_canonicalize(const size_t& count){
     if(count != 0){
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock");
+        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","C");
+        if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE"){
+            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","A");
+        }else{
+            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","AO");
+            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","AV");
+        }
+        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
         SharedMatrix Ca = wfn_->Ca();
         SharedMatrix Cb = wfn_->Cb();
         SharedMatrix Ca_new(Ca->clone());
@@ -541,6 +553,16 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
+
+        // test Ua (frozen orbitals should be zero)
+//        SharedMatrix Fa (new Matrix("Fa", Fa_.size(), Fa_[0].size()));
+//        for(size_t i = 0; i != Fa_.size(); ++i){
+//            for(size_t j = 0; j != Fa_[i].size(); ++j){
+//                Fa->pointer()[i][j] = Fa_[i][j];
+//            }
+//        }
+//        SharedMatrix X = Matrix::triplet(Ua,Fa,Ua,true);
+//        X->print();
 
         integral_->retransform_integrals();
         fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -1203,30 +1225,6 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
     boost::shared_ptr<Matrix> DaM(new Matrix("DaM", ncmo_, ncmo_));
     boost::shared_ptr<Matrix> DbM(new Matrix("DbM", ncmo_, ncmo_));
-    //for(size_t p=0; p<ncmo_; ++p){
-    //    for(size_t q=0; q<ncmo_; ++q){
-    //        double vaa = 0.0, vab = 0.0, vba = 0.0, vbb = 0.0;
-    //        for(size_t r=0; r<na_; ++r){
-    //            size_t nr = idx_a_[r];
-    //            for(size_t s=0; s<na_; ++s){
-    //                size_t ns = idx_a_[s];
-    //                vaa += integral_->aptei_aa(q,nr,p,ns) * Da_[nr][ns];
-    //                vab += integral_->aptei_ab(q,nr,p,ns) * Db_[nr][ns];
-    //                vba += integral_->aptei_ab(nr,q,ns,p) * Da_[nr][ns];
-    //                vbb += integral_->aptei_bb(q,nr,p,ns) * Db_[nr][ns];
-    //            }
-    //        }
-    //        for(size_t r=0; r<nc_; ++r){
-    //            size_t nr = idx_c_[r];
-    //            vaa += integral_->aptei_aa(q,nr,p,nr);
-    //            vab += integral_->aptei_ab(q,nr,p,nr);
-    //            vba += integral_->aptei_ab(nr,q,nr,p);
-    //            vbb += integral_->aptei_bb(q,nr,p,nr);
-    //        }
-    //        A[p][q] = integral_->oei_a(p,q) + vaa + vab;
-    //        B[p][q] = integral_->oei_b(p,q) + vba + vbb;
-    //    }
-    //}
     for (size_t m = 0; m < nc_; m++) {
         size_t nm = idx_c_[m];
         for( size_t n = 0; n < nc_; n++){
@@ -1265,7 +1263,19 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count
     outfile->Printf("\n  %-35s ...", str.c_str());
     outfile->Printf("\n  Nonzero criteria: > %.2E", E);
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
-    Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
+    if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE"){
+        Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
+    }else{
+        vector<size_t> idx_a_o, idx_a_v;
+        for(int i = 0; i < ao_.size(); ++i){
+            idx_a_o.push_back(idx_a_[ao_[i]]);
+        }
+        for(int i = 0; i < av_.size(); ++i){
+            idx_a_v.push_back(idx_a_[av_[i]]);
+        }
+        Check_FockBlock(A, B, E, count, ao_.size(), idx_a_o, "ACT_O");
+        Check_FockBlock(A, B, E, count, av_.size(), idx_a_v, "ACT_V");
+    }
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "VIRTUAL");
     str = "Done checking Fock matrices.";
     outfile->Printf("\n  %-47s", str.c_str());
@@ -1310,10 +1320,10 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &
     outfile->Flush();
 }
 
-void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name){
+void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name, const string& block){
     timer_on("Block Diagonal 2D Matrix");
     Timer tbdfock;
-    std::string str = "Block diagonalizing " + name + " matrices";
+    std::string str = "Diagonalizing " + name + " matrix block " + block;
     outfile->Printf("\n  %-35s ...", str.c_str());
     size_t nc = 0, na = 0, nv = 0;
     for(int h=0; h<nirrep_; ++h){
@@ -1330,6 +1340,7 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
         }
 
         // Core
+        if(block == "C"){
         SharedMatrix CoreA (new Matrix("Core A", core_[h], core_[h]));
         SharedMatrix CoreB (new Matrix("Core B", core_[h], core_[h]));
         SharedMatrix EvecCA (new Matrix("Evec Core A", core_[h], core_[h]));
@@ -1359,8 +1370,10 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
                 Ub->set(h,i+shift,j+shift,ub);
             }
         }
+        }
 
         // Active
+        if(block == "A"){
         SharedMatrix ActiveA (new Matrix("Active A", active_[h], active_[h]));
         SharedMatrix ActiveB (new Matrix("Active B", active_[h], active_[h]));
         SharedMatrix EvecAA (new Matrix("Evec Active A", active_[h], active_[h]));
@@ -1375,11 +1388,8 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
                 ActiveB->set(i,j,fb);
             }
         }
-        // direct diagonalization (unlikely to have millions of orbitals)
         ActiveA->diagonalize(EvecAA,EvalAA);
         ActiveB->diagonalize(EvecAB,EvalAB);
-//        EvecAA->eivprint(EvalAA);
-//        EvecAB->eivprint(EvalAB);
 
         for(size_t i=0; i<active_[h]; ++i){
             for(size_t j=0; j<active_[h]; ++j){
@@ -1390,8 +1400,78 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
                 Ub->set(h,i+shift,j+shift,ub);
             }
         }
+        }
+
+        // Active occupied
+        if(block == "AO"){
+        SharedMatrix ActiveA (new Matrix("Active A", active_o_[h], active_o_[h]));
+        SharedMatrix ActiveB (new Matrix("Active B", active_o_[h], active_o_[h]));
+        SharedMatrix EvecAA (new Matrix("Evec Active A", active_o_[h], active_o_[h]));
+        SharedMatrix EvecAB (new Matrix("Evec Active B", active_o_[h], active_o_[h]));
+        SharedVector EvalAA (new Vector("Eval Active A", active_o_[h]));
+        SharedVector EvalAB (new Vector("Eval Active B", active_o_[h]));
+        for(int i = 0; i < active_o_[h]; ++i){
+            size_t ai = ao_[i];
+            for(int j=0; j < active_o_[h]; ++j){
+                size_t aj = ao_[j];
+                double fa = Fa[idx_a_[ai+na]][idx_a_[aj+na]];
+                double fb = Fb[idx_a_[ai+na]][idx_a_[aj+na]];
+                ActiveA->set(i,j,fa);
+                ActiveB->set(i,j,fb);
+            }
+        }
+        ActiveA->diagonalize(EvecAA,EvalAA);
+        ActiveB->diagonalize(EvecAB,EvalAB);
+
+        for(int i = 0; i < active_o_[h]; ++i){
+            size_t ai = ao_[i];
+            for(int j = 0; j < active_o_[h]; ++j){
+                size_t aj = ao_[j];
+                double ua = EvecAA->get(i,j);
+                double ub = EvecAB->get(i,j);
+                size_t shift = frzcpi_[h] + core_[h];
+                Ua->set(h,ai+shift,aj+shift,ua);
+                Ub->set(h,ai+shift,aj+shift,ub);
+            }
+        }
+        }
+
+        // Active virtual
+        if(block == "AV"){
+        SharedMatrix ActiveA (new Matrix("Active A", active_v_[h], active_v_[h]));
+        SharedMatrix ActiveB (new Matrix("Active B", active_v_[h], active_v_[h]));
+        SharedMatrix EvecAA (new Matrix("Evec Active A", active_v_[h], active_v_[h]));
+        SharedMatrix EvecAB (new Matrix("Evec Active B", active_v_[h], active_v_[h]));
+        SharedVector EvalAA (new Vector("Eval Active A", active_v_[h]));
+        SharedVector EvalAB (new Vector("Eval Active B", active_v_[h]));
+        for(int i = 0; i < active_v_[h]; ++i){
+            size_t ai = av_[i];
+            for(int j=0; j < active_v_[h]; ++j){
+                size_t aj = av_[j];
+                double fa = Fa[idx_a_[ai+na]][idx_a_[aj+na]];
+                double fb = Fb[idx_a_[ai+na]][idx_a_[aj+na]];
+                ActiveA->set(i,j,fa);
+                ActiveB->set(i,j,fb);
+            }
+        }
+        ActiveA->diagonalize(EvecAA,EvalAA);
+        ActiveB->diagonalize(EvecAB,EvalAB);
+
+        for(int i = 0; i < active_v_[h]; ++i){
+            size_t ai = av_[i];
+            for(int j = 0; j < active_v_[h]; ++j){
+                size_t aj = av_[j];
+                double ua = EvecAA->get(i,j);
+                double ub = EvecAB->get(i,j);
+                size_t shift = frzcpi_[h] + core_[h];
+                Ua->set(h,ai+shift,aj+shift,ua);
+                Ub->set(h,ai+shift,aj+shift,ub);
+            }
+        }
+        }
 
         // Virtual
+        if(block == "V"){
         size_t nvh = ncmopi_[h] - core_[h] - active_[h];
         SharedMatrix VirA (new Matrix("Virtual A", nvh, nvh));
         SharedMatrix VirB (new Matrix("Virtual B", nvh, nvh));
@@ -1407,11 +1487,8 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
                 VirB->set(i,j,fb);
             }
         }
-        // direct diagonalization (unlikely to have millions of orbitals)
         VirA->diagonalize(EvecVA,EvalVA);
         VirB->diagonalize(EvecVB,EvalVB);
-//        EvecVA->eivprint(EvalVA);
-//        EvecVB->eivprint(EvalVB);
 
         for(size_t i=0; i<nvh; ++i){
             for(size_t j=0; j<nvh; ++j){
@@ -1421,6 +1498,7 @@ void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMa
                 Ua->set(h,i+shift,j+shift,ua);
                 Ub->set(h,i+shift,j+shift,ub);
             }
+        }
         }
 
         nc += core_[h];
@@ -1440,7 +1518,9 @@ void FCI_MO::nat_orbs(){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density");
+        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","C");
+        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","A");
+        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
         SharedMatrix Ca = wfn->Ca();
         SharedMatrix Cb = wfn->Cb();
         SharedMatrix Ca_new(Ca->clone());
@@ -1451,7 +1531,13 @@ void FCI_MO::nat_orbs(){
         Cb->copy(Cb_new);
 
         integral_->retransform_integrals();
-        fci_ints_ = std::make_shared<FCIIntegrals>(integral_,mo_space_info_);
+        fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
 
         // Form and Diagonalize the CASCI Hamiltonian
         Diagonalize_H(determinant_, eigen_);
