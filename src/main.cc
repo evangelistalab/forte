@@ -300,6 +300,8 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_FREEZE_CORE", false);
         /*- CASSCF MAXIMUM VALUE HESSIAN -*/
         options.add_double("CASSCF_MAX_HESSIAN", 0.5);
+        /*- DO SCALE THE HESSIAN -*/
+        options.add_bool("CASSCF_SCALE_HESSIAN", true);
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
