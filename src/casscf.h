@@ -33,8 +33,6 @@ public:
     void compute_casscf();
     /// Use daniels code to compute Orbital optimization
     //void compute_casscf_soscf();
-    ///Return the Converged CMatrix
-    SharedMatrix Call(){return Call_;}
     ///Return the final gamma1
     ambit::Tensor gamma1(){return gamma1_;}
     ///Return the final gamma2;
@@ -52,16 +50,10 @@ private:
     double E_casscf_;
     /// The OPtions object
     Options options_;
-    /// The ForteIntegrals pointer
     boost::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
-    /// this matrix is ao by nmo
-    SharedMatrix Call_;
-    /// C matrix in the SO basis
-    SharedMatrix Ca_sym_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
     Dimension nmopi_;
@@ -91,8 +83,6 @@ private:
     void cas_ci();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
-    /// Make C_matrix symmetry aware from SO C
-    boost::shared_ptr<Matrix> make_c_sym_aware();
 
     void startup();
 
