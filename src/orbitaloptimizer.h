@@ -25,12 +25,13 @@ namespace psi{ namespace forte{
                                            ints_->aptei_ab_block(nmo_abs_, active_abs_, active_abs_, active_abs_) ,
                                            options_,
                                            mo_space_info_);
+        orbital_optimizer.set_one_body(OneBody)
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_no_symmetry_mo(Call_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.update()
         S = orbital_optimizer.approx_solve()
-        orbital_optimizer.rotate(Ca, S)
+        C_new = orbital_optimizer.rotate(Ca, S)
 
 */
 class OrbitalOptimizer
@@ -67,6 +68,7 @@ public:
     SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
     /// The norm of the orbital gradient
     double orbital_gradient_norm(){return (g_->rms());}
+    /// Must compute the frozen_one_body fock matrix
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
     /// Give the AO one electron integrals (H = T + V)
     void one_body(SharedMatrix H){H_ = H;}
@@ -150,6 +152,8 @@ protected:
 
     ///form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for non contractions)
     void fill_shared_density_matrices();
+
+    SharedMatrix make_c_sym_aware();
 
     void startup();
 

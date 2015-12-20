@@ -1,20 +1,14 @@
 #include "casscf.h"
 #include "reference.h"
 #include "integrals.h"
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
 #include <libmints/molecule.h>
 #include <libqt/qt.h>
 #include <libmints/matrix.h>
 #include "helpers.h"
 #include <libfock/jk.h>
-#include <libmints/mints.h>
 #include "fci_solver.h"
 #include <psifiles.h>
-#include <libmints/factory.h>
-#include <lib3index/cholesky.h>
 #include "fci_mo.h"
-#include <libthce/lreri.h>
 #include "orbitaloptimizer.h"
 #include <libdiis/diismanager.h>
 #include <libdiis/diisentry.h>
@@ -59,6 +53,7 @@ void CASSCF::compute_casscf()
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     double hessian_scale_value = options_.get_double("CASSCF_MAX_HESSIAN");
     bool   scale_hessian       = options_.get_bool("CASSCF_SCALE_HESSIAN");
+    bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
 
     Dimension all_nmopi = wfn_->nmopi();
     SharedMatrix S(new Matrix("Orbital Rotation", nirrep_, all_nmopi, all_nmopi));
@@ -70,10 +65,8 @@ void CASSCF::compute_casscf()
 
     int diis_count = 0;
 
-    bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
-
     print_h2("CASSCF Iteration");
-    outfile->Printf("\n iter    g_norm      E_CASSCF  CONV_TYPE");
+    outfile->Printf("\n iter    g_norm      E_CASSCF      CONV_TYPE");
 
     ///Start the iteration
     ///
@@ -93,8 +86,8 @@ void CASSCF::compute_casscf()
                                            ints_->aptei_ab_block(nmo_abs_, active_abs_, active_abs_, active_abs_) ,
                                            options_,
                                            mo_space_info_);
+
         orbital_optimizer.set_frozen_one_body(F_froze_);
-        orbital_optimizer.set_no_symmetry_mo(Call_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.one_body(ints_->OneBodyAO());
 
@@ -123,10 +116,11 @@ void CASSCF::compute_casscf()
         }
         //Sstep->print();
         // Add step to overall rotation
+        S->copy(Sstep);
         SharedMatrix Cp = orbital_optimizer.rotate_orbitals(Ca, Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if(do_diis && (iter > diis_start or g_norm < 1e-4))
+        if(do_diis && (iter > diis_start && g_norm < 1e-4))
         {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
@@ -137,7 +131,6 @@ void CASSCF::compute_casscf()
             diis_manager->extrapolate(1, S.get());
         }
 
-        Call_->set_name("symmetry aware C");
 
         Cp->set_name("Updated C");
         if(casscf_debug_print_)
@@ -147,16 +140,13 @@ void CASSCF::compute_casscf()
             Sstep->print();
         }
 
+        ///ENFORCE Ca = Cb
         Ca->copy(Cp);
         Cb->copy(Cp);
         ///Right now, this retransforms all the integrals
         ///Think of ways of avoiding this
         ///This is used as way to retransform our integrals so Francesco's FCI code can use the updated CI
         ///Can redefi
-
-        /// Use the newly transformed MO to create a CMatrix that is aware of symmetry
-        Call_->zero();
-        Call_ = make_c_sym_aware();
 
         //Timer transform_integrals;
         ints_->retransform_integrals();
@@ -168,7 +158,7 @@ void CASSCF::compute_casscf()
         //active.print(stdout);
 
         std::string diis_start_label = "";
-        if(iter >= diis_start and do_diis==true){diis_start_label = "DIIS";}
+        if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d  %10.12f   %10.12f   %4s", iter, g_norm, E_casscf_, diis_start_label.c_str());
     }
     diis_manager->delete_diis_file();
@@ -190,7 +180,7 @@ void CASSCF::startup()
     print_method_banner({"Complete Active Space Self Consistent Field","Kevin Hannon"});
     na_  = mo_space_info_->size("ACTIVE");
     nsopi_ = wfn_->nsopi();
-    Call_ = make_c_sym_aware();
+    nirrep_ = wfn_->nirrep();
 
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
 
@@ -242,41 +232,6 @@ void CASSCF::startup()
 
     }
 
-}
-boost::shared_ptr<Matrix> CASSCF::make_c_sym_aware()
-{
-    ///Step 1: Obtain guess MO coefficients C_{mup}
-    /// Since I want to use these in a symmetry aware basis,
-    /// I will move the C matrix into a Pfitzer ordering
-
-    SharedMatrix Call_sym = wfn_->Ca();
-    Ca_sym_ = Call_sym;
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
-
-    SharedMatrix aotoso = wfn_->aotoso();
-
-    /// I want a C matrix in the C1 basis but symmetry aware
-    size_t nso = wfn_->nso();
-    nirrep_ = wfn_->nirrep();
-    SharedMatrix Call(new Matrix(nso, nmopi.sum()));
-
-    // Transform from the SO to the AO basis for the C matrix.  
-    // just transfroms the C_{mu_ao i} -> C_{mu_so i}
-    for (size_t h = 0, index = 0; h < nirrep_; ++h){
-        for (int i = 0; i < nmopi[h]; ++i){
-            size_t nao = nso;
-            size_t nso = nsopi_[h];
-
-            if (!nso) continue;
-
-            C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Call_sym->pointer(h)[0][i],nmopi[h],0.0,&Call->pointer()[0][index],nmopi.sum());
-
-            index += 1;
-        }
-
-    }
-
-    return Call;
 }
 void CASSCF::cas_ci()
 {
@@ -443,6 +398,7 @@ double CASSCF::cas_check(Reference cas_ref)
 }
 boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 {
+    SharedMatrix Ca = wfn_->Ca();
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi, frozen_dim));
@@ -450,7 +406,7 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
     for(size_t h = 0; h < nirrep_; h++){
         for(int mu = 0; mu < nmopi[h]; mu++){
             for(int i = 0; i < frozen_dim[h]; i++){
-                C_core->set(h, mu, i, Ca_sym_->get(h, mu, i));
+                C_core->set(h, mu, i, Ca->get(h, mu, i));
             }
         }
     }
@@ -482,63 +438,63 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
     return F_core;
 
 }
-ambit::Tensor CASSCF::transform_active()
-{
-    ///This function will do an integral transformation using the JK builder
-    /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
-    SharedMatrix Identity(new Matrix("I",nmo_ ,nmo_));
-    Identity->identity();
-    SharedMatrix CAct(new Matrix("CAct", nsopi_.sum(), na_));
-    auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
-
-    for(int mu = 0; mu < nsopi_.sum(); mu++){
-        for(size_t v = 0; v < na_;v++){
-            CAct->set(mu, v, Call_->get(mu, active_abs[v]));
-        }
-    }
-
-    ambit::Tensor active_int = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
-    SharedMatrix TEI_MO(new Matrix("TEI_MO", na_ * na_, na_ * na_));
-    for(size_t i = 0; i < na_; i++){
-        SharedVector C_i = CAct->get_column(0, i);
-        for(size_t j = 0; j < na_; j++){
-            SharedMatrix D(new Matrix("D", nmo_, nmo_));
-            SharedVector C_j = CAct->get_column(0, j);
-            C_DGER(nmo_, nmo_, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nmo_);
-            ///Form D = C_rC_s'
-            ///Use this to compute J matrix
-            /// (pq | rs) = C J C'
-
-            boost::shared_ptr<JK> JK_trans = JK::build_JK();
-            JK_trans->set_memory(Process::environment.get_memory() * 0.8);
-            JK_trans->initialize();
-
-            std::vector<boost::shared_ptr<Matrix> > &Cl = JK_trans->C_left();
-            std::vector<boost::shared_ptr<Matrix> > &Cr = JK_trans->C_right();
-            Cl.clear();
-            Cr.clear();
-            Cl.push_back(D);
-            Cr.push_back(Identity);
-            JK_trans->set_allow_desymmetrization(false);
-            JK_trans->set_do_K(false);
-            JK_trans->compute();
-
-            SharedMatrix J = JK_trans->J()[0];
-            J->print();
-            J->transform(CAct);
-            J->print();
-            for(size_t p = 0; p < na_; p++){
-                for(size_t q = 0; q < na_; q++){
-                    TEI_MO->set(p * na_ + q, i * na_+ j, J->get(p, q));
-                }
-            }
-        }
-    }
-    TEI_MO->print();
-        active_int.iterate([&](const std::vector<size_t>& i,double& value){
-            value=TEI_MO->get(i[0] * na_ + i[1], i[2] * na_ + i[3]);});
-        return active_int;
-
-}
+//ambit::Tensor CASSCF::transform_active()
+//{
+//    ///This function will do an integral transformation using the JK builder
+//    /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
+//    SharedMatrix Identity(new Matrix("I",nmo_ ,nmo_));
+//    Identity->identity();
+//    SharedMatrix CAct(new Matrix("CAct", nsopi_.sum(), na_));
+//    auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
+//
+//    for(int mu = 0; mu < nsopi_.sum(); mu++){
+//        for(size_t v = 0; v < na_;v++){
+//            CAct->set(mu, v, Call_->get(mu, active_abs[v]));
+//        }
+//    }
+//
+//    ambit::Tensor active_int = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
+//    SharedMatrix TEI_MO(new Matrix("TEI_MO", na_ * na_, na_ * na_));
+//    for(size_t i = 0; i < na_; i++){
+//        SharedVector C_i = CAct->get_column(0, i);
+//        for(size_t j = 0; j < na_; j++){
+//            SharedMatrix D(new Matrix("D", nmo_, nmo_));
+//            SharedVector C_j = CAct->get_column(0, j);
+//            C_DGER(nmo_, nmo_, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nmo_);
+//            ///Form D = C_rC_s'
+//            ///Use this to compute J matrix
+//            /// (pq | rs) = C J C'
+//
+//            boost::shared_ptr<JK> JK_trans = JK::build_JK();
+//            JK_trans->set_memory(Process::environment.get_memory() * 0.8);
+//            JK_trans->initialize();
+//
+//            std::vector<boost::shared_ptr<Matrix> > &Cl = JK_trans->C_left();
+//            std::vector<boost::shared_ptr<Matrix> > &Cr = JK_trans->C_right();
+//            Cl.clear();
+//            Cr.clear();
+//            Cl.push_back(D);
+//            Cr.push_back(Identity);
+//            JK_trans->set_allow_desymmetrization(false);
+//            JK_trans->set_do_K(false);
+//            JK_trans->compute();
+//
+//            SharedMatrix J = JK_trans->J()[0];
+//            J->print();
+//            J->transform(CAct);
+//            J->print();
+//            for(size_t p = 0; p < na_; p++){
+//                for(size_t q = 0; q < na_; q++){
+//                    TEI_MO->set(p * na_ + q, i * na_+ j, J->get(p, q));
+//                }
+//            }
+//        }
+//    }
+//    TEI_MO->print();
+//        active_int.iterate([&](const std::vector<size_t>& i,double& value){
+//            value=TEI_MO->get(i[0] * na_ + i[1], i[2] * na_ + i[3]);});
+//        return active_int;
+//
+//}
 
 }}

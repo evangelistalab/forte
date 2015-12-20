@@ -1,22 +1,15 @@
 #include "orbitaloptimizer.h"
 #include "helpers.h"
 #include "ambit/blocked_tensor.h"
-#include <libmints/mints.h>
 #include <libfock/jk.h>
 #include "reference.h"
 #include "integrals.h"
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
 #include <libmints/molecule.h>
 #include <libqt/qt.h>
 #include <libmints/matrix.h>
 #include "helpers.h"
-#include <libfock/jk.h>
-#include <libmints/mints.h>
 #include "fci_solver.h"
 #include <psifiles.h>
-#include <libmints/factory.h>
-#include <libmints/mintshelper.h>
 #include <lib3index/cholesky.h>
 using namespace psi;
 
@@ -103,7 +96,6 @@ void OrbitalOptimizer::form_fock_core()
 {
     /// Get the CoreHamiltonian in AO basis
 
-    //H->transform(Call_);
     if(Ca_sym_ == nullptr)
     {
         outfile->Printf("\n\n Please give your OrbitalOptimize an Orbital");
@@ -199,6 +191,7 @@ void OrbitalOptimizer::form_fock_core()
 }
 void OrbitalOptimizer::form_fock_active()
 {
+    Call_ = make_c_sym_aware();
     ///Step 3:
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
@@ -541,6 +534,39 @@ void OrbitalOptimizer::fill_shared_density_matrices()
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
     gamma2M_ = gamma2_matrix;
+}
+boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
+{
+    ///Step 1: Obtain guess MO coefficients C_{mup}
+    /// Since I want to use these in a symmetry aware basis,
+    /// I will move the C matrix into a Pfitzer ordering
+
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+
+    SharedMatrix aotoso = wfn_->aotoso();
+
+    /// I want a C matrix in the C1 basis but symmetry aware
+    size_t nso = wfn_->nso();
+    nirrep_ = wfn_->nirrep();
+    SharedMatrix Call(new Matrix(nso, nmopi.sum()));
+
+    // Transform from the SO to the AO basis for the C matrix.
+    // just transfroms the C_{mu_ao i} -> C_{mu_so i}
+    for (size_t h = 0, index = 0; h < nirrep_; ++h){
+        for (int i = 0; i < nmopi[h]; ++i){
+            size_t nao = nso;
+            size_t nso = nsopi_[h];
+
+            if (!nso) continue;
+
+            C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Ca_sym_->pointer(h)[0][i],nmopi[h],0.0,&Call->pointer()[0][index],nmopi.sum());
+
+            index += 1;
+        }
+
+    }
+
+    return Call;
 }
 
 }}
