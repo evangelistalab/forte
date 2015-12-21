@@ -464,10 +464,7 @@ void DISKDFIntegrals::gather_integrals()
 
     //Pushes a C matrix that is ordered in pitzer ordering
     //into the C_matrix object
-//    df->set_C(C_ord);
     df->set_C(Ca_ao);
-
-//    Ca_ = Ca_ao;
     //set_C clears all the orbital spaces, so this creates the space
     //This space creates the total nmo_.
     //This assumes that everything is correlated.
