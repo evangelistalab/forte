@@ -290,8 +290,10 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_REFERENCE", false);
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 10);
-        /* - The convergence for the energy for casscf -*/
-        options.add_double("CASSCF_CONVERGENCE", 1e-6);
+        /* - The convergence for the gradient for casscf -*/
+        options.add_double("CASSCF_G_CONVERGENCE", 1e-6);
+        /* - The convergence of the energy for CASSCF -*/
+        options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /*- A complete SOSCF ie Form full Hessian -*/

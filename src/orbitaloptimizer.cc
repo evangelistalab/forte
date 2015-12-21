@@ -4,7 +4,6 @@
 #include <libfock/jk.h>
 #include "reference.h"
 #include "integrals.h"
-#include <libmints/molecule.h>
 #include <libqt/qt.h>
 #include <libmints/matrix.h>
 #include "helpers.h"
@@ -75,20 +74,6 @@ void OrbitalOptimizer::startup()
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = wfn_->nirrep();
     nsopi_  = wfn_->nsopi();
-    if(!casscf_freeze_core_)
-    {
-        restricted_docc_abs_ = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
-        restricted_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-        active_abs_          = mo_space_info_->get_absolute_mo("ACTIVE");
-        restricted_uocc_abs_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-
-        for(size_t h = 0; h < nirrep_; h++){frozen_docc_dim_[h] = 0;}
-        for(size_t i = 0; i < frozen_docc_abs_.size(); i++){frozen_docc_abs_[i] = 0;}
-        nfrozen_ = 0;
-        nmo_ = mo_space_info_->size("ALL");
-        nmopi_ = mo_space_info_->get_dimension("ALL");
-        nmo_abs_ = mo_space_info_->get_absolute_mo("ALL");
-    }
 
 }
 

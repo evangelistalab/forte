@@ -62,7 +62,7 @@ public:
     void set_no_symmetry_mo(SharedMatrix C){Call_ = C;}
     /// The workhouse of the program:  Computes gradient, hessian.
     void update();
-    /// Solution of gx + H = 0 (with diagonal H), so x = - h / g
+    /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     SharedMatrix approx_solve();
     /// Exponentiate the orbital rotation parameter and use this to update your MOCoefficient
     SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);

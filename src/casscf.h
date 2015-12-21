@@ -81,6 +81,8 @@ private:
     SharedMatrix F_froze_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
+    /// Sets up the FCISolver
+    void set_up_fci();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
 
@@ -93,6 +95,11 @@ private:
     bool casscf_freeze_core_;
     /// set frozen_core_orbitals
     boost::shared_ptr<Matrix> set_frozen_core_orbitals();
+    /// Compute the restricted_one_body operator for FCI(done also in OrbitalOptimizer)
+
+    std::vector<std::vector<double>  > compute_restricted_docc_operator();
+
+    double scalar_energy_ = 0.0;
     /// The Dimensions for the major orbitals spaces involved in CASSCF
     /// Trying to get these all in the startup, so I can use them repeatly
     /// rather than create them in different places
@@ -110,7 +117,10 @@ private:
     std::vector<size_t> nmo_abs_;
 
     ///Transform the active integrals
-    ambit::Tensor transform_active();
+    ambit::Tensor transform_integrals();
+
+    /// The transform integrals computed from transform_integrals
+    ambit::Tensor tei_paaa_;
 
 
 

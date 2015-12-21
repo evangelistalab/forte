@@ -81,11 +81,15 @@ public:
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
-    /// Use a JK builder for the restricted_docc
     /// If you actually change the integrals in your code, you should set this to false.
-    void set_use_jk_builder(bool jk_build);
-
-
+    void use_user_integrals_and_restricted_docc(bool user_provide_integrals)
+        { provide_integrals_and_restricted_docc_ = user_provide_integrals; }
+    /// If you want to use your own integrals need to set FCIIntegrals
+    /// This is normally not set.
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints)
+    {
+        fci_ints_ = fci_ints;
+    }
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
@@ -110,6 +114,8 @@ private:
 
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals>  ints_;
+
+    std::shared_ptr<FCIIntegrals> fci_ints_;
 
     /// The FCI energy
     double energy_;
@@ -148,7 +154,8 @@ private:
     bool print_no_ = false;
     /// A variable to control printing information
     int print_ = 0;
-    bool use_jk_ = true;
+    /// Use the user specified integrals and restricted_docc_operator
+    bool provide_integrals_and_restricted_docc_ = false;
 
     // ==> Class functions <==
 

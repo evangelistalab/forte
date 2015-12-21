@@ -29,6 +29,7 @@ set globals{
    reference            RHF
 }
 scf = energy('scf')
+compare_values(refscf, scf, 6, "SCF ENERGY")
 
 set forte{
    CASSCF_REFERENCE      true
@@ -38,10 +39,10 @@ set forte{
    int_type             conventional
    cas_type              FCI
    job_type              CASSCF
-   CASSCF_CONVERGENCE    1e-6
+   print                  0
+   CASSCF_DO_DIIS         true
 }
 e_casscf = energy('forte')
 
-compare_values(refscf, scf, 6, "SCF ENERGY")
 compare_values(refcasscf, e_casscf, 6, "CASSCF ENERGY")
 

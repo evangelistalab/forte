@@ -61,6 +61,8 @@ public:
     double frozen_core_energy() const {return frozen_core_energy_;}
     /// Return the scalar_energy energy (contribution from RESTRICTED_DOCC)
     double scalar_energy() const {return scalar_energy_;}
+    /// Set scalar_energy();
+    void set_scalar_energy(double scalar_energy){scalar_energy_ = scalar_energy;}
 
     /// Return the alpha effective one-electron integral
     double oei_a(size_t p,size_t q) const {return oei_a_[p * nmo_ + q];}
@@ -85,12 +87,17 @@ public:
     void set_active_integrals(const ambit::Tensor& tei_aa, const ambit::Tensor& tei_ab, const ambit::Tensor& tei_bb);
     ///Compute the restricted_docc operator
     void compute_restricted_one_body_operator();
+    ///Set the restricted_one_body_operator
+    void set_restricted_one_body_operator(const std::vector<double>& oei_a, const std::vector<double>& oei_b)
+    {
+        oei_a_ = oei_a;
+        oei_b_ = oei_b;
+    }
+
     /// Streamline the process of setting up active integrals and restricted_docc
     /// Sets active integrals based on active space and restricted_docc
     /// If you want more control, don't use this function.
     void set_active_integrals_and_restricted_docc();
-    ///Use JK Builder for Restricted Docc
-    void use_jk_builder(bool jk_build);
 
 
 private:
