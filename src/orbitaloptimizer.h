@@ -64,6 +64,8 @@ public:
     void update();
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     SharedMatrix approx_solve();
+    /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
+    SharedMatrix AugmentedHessianSolve();
     /// Exponentiate the orbital rotation parameter and use this to update your MOCoefficient
     SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
     /// The norm of the orbital gradient
