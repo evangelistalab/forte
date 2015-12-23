@@ -393,6 +393,7 @@ void OrbitalOptimizer::diagonal_hessian()
             double value_ia = (F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a));
             value_ia -= (4.0 * F_core_->get(i,i)  + 4.0 * F_act_->get(i,i));
             D->set(i,a,value_ia);
+            D->set(a, i, value_ia);
         }
     }
     for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
@@ -406,6 +407,7 @@ void OrbitalOptimizer::diagonal_hessian()
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
             value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
             D->set(t,a, value_ta);
+            D->set(a,t, value_ta);
         }
     }
     for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
@@ -420,6 +422,7 @@ void OrbitalOptimizer::diagonal_hessian()
             value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
             value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(i,t, value_it);
+            D->set(t,i, value_it);
         }
     }
 
@@ -438,6 +441,7 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     SharedMatrix S(new Matrix("S", nmo_, nmo_));
     Dimension true_nmopi = wfn_->nmopi();
     SharedMatrix S_sym(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
+    SharedMatrix S_sym_AH(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
 
     int offset = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -469,6 +473,7 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     ///Convert to a symmetry matrix
     offset = 0;
     int frozen = 0;
+    //SharedMatrix S_diag = AugmentedHessianSolve();
     for(size_t h = 0; h < nirrep_; h++){
         frozen = frozen_docc_dim_[h];
         for(int p = 0; p < nmopi_[h]; p++){
@@ -485,9 +490,37 @@ SharedMatrix OrbitalOptimizer::approx_solve()
         }
         offset += nmopi_[h];
     }
+    S->print();
+    S_diag->print();
 
     return S_sym;
 }
+SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
+{
+    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", 2 * nmo_ + 1, 2 * nmo_ + 1));
+
+    for(size_t p = 0; p < nmo_; p++){
+
+        for(size_t q = 0; q < nmo_; q++){
+            AugmentedHessian->set(p, q, d_->get(p, q));
+        }
+        for(size_t q = 0; q < nmo_; q++){
+            AugmentedHessian->set(p + nmo_, q, g_->get(p, q));
+            AugmentedHessian->set(q, p + nmo_, g_->get(q, p));
+        }
+    }
+    AugmentedHessian->set(2*nmo_, 2*nmo_, 0.0);
+    g_->print();
+    d_->print();
+    AugmentedHessian->print();
+    SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
+    SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
+    AugmentedHessian->diagonalize(HessianEvec, HessianEval);
+    HessianEval->print();
+    return HessianEvec;
+
+}
+
 SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
 {
     ///Clone the C matrix
