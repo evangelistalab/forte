@@ -490,8 +490,6 @@ SharedMatrix OrbitalOptimizer::approx_solve()
         }
         offset += nmopi_[h];
     }
-    S->print();
-    S_diag->print();
 
     return S_sym;
 }
@@ -510,13 +508,16 @@ SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
         }
     }
     AugmentedHessian->set(2*nmo_, 2*nmo_, 0.0);
-    g_->print();
-    d_->print();
-    AugmentedHessian->print();
     SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
     SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
-    HessianEval->print();
+    if(casscf_debug_print_)
+    {
+        g_->print();
+        d_->print();
+        AugmentedHessian->print();
+        HessianEval->print();
+    }
     return HessianEvec;
 
 }
