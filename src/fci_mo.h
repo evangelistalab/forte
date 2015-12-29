@@ -237,7 +237,7 @@ protected:
     void Form_Fock(d2 &A, d2 &B);
     void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
-    void BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string &name, const string &block);
+    void BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string &name);
 
     /// Reference Energy
     double Eref_;

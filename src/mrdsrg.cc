@@ -217,9 +217,18 @@ void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V){
     F_["pq"]  = H["pq"];
     F_["pq"] += V["pjqi"] * Gamma1_["ij"];
     F_["pq"] += V["pJqI"] * Gamma1_["IJ"];
-    F_["PQ"]  = H["PQ"];
-    F_["PQ"] += V["jPiQ"] * Gamma1_["ij"];
-    F_["PQ"] += V["PJQI"] * Gamma1_["IJ"];
+    // symmetrize beta spin
+    outfile->Printf("\n  Warning: I am forcing Fb = Fa to avoid spin symmetry breaking.");
+    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc around line 220.");
+    std::vector<std::string> bs {"cc","ca","cv","ac","aa","av","vc","va","vv"};
+    for(std::string& b: bs){
+        std::string b_beta (1, toupper(b[0]));
+        b_beta += std::string (1, toupper(b[1]));
+        F_.block(b_beta).data() = F_.block(b).data();
+    }
+//    F_["PQ"]  = H["PQ"];
+//    F_["PQ"] += V["jPiQ"] * Gamma1_["ij"];
+//    F_["PQ"] += V["PJQI"] * Gamma1_["IJ"];
 
     // obtain diagonal elements of Fock matrix
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
