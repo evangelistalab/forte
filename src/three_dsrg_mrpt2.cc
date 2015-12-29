@@ -1609,6 +1609,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     double Eccva = 0;
     double Eacvv = 0;
     int nthread = 1;
+    int thread  = 0;
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+        thread  = omp_get_thread_num();
+    #endif
 /// This block of code assumes that ThreeIntegral are not stored as a member variable.  Requires the reading from aptei_block which makes code
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
