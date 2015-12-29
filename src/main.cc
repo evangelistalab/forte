@@ -640,7 +640,7 @@ extern "C" PsiReturnType forte(Options &options)
             ints_->keep_frozen_core_integrals(KeepFrozenMOs);
             ints_->retransform_integrals();
         }
-        boost::shared_ptr<CASSCF> casscf(new CASSCF(options,ints_,mo_space_info));
+        auto casscf = std::make_shared<CASSCF>(options,ints_,mo_space_info);
         //casscf->compute_casscf_soscf();
         casscf->compute_casscf();
         ints_->keep_frozen_core_integrals(RemoveFrozenMOs);

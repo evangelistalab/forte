@@ -185,10 +185,8 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix C_active(new Matrix("C_active", nso,na_));
     auto active_abs_corr = mo_space_info_->get_absolute_mo("ACTIVE");
 
-    for(size_t mu = 0; mu < nso; mu++){
-        for(size_t u = 0; u <  na_; u++){
-            C_active->set(mu, u, Call_->get(mu, active_abs_corr[u]));
-        }
+    for(size_t u = 0; u <  na_; u++){
+            C_active->set_column(0, u, Call_->get_column(0, active_abs_corr[u]));
     }
 
     ambit::Tensor Cact = ambit::Tensor::build(ambit::CoreTensor, "Cact", {nso, na_});
@@ -311,7 +309,7 @@ void OrbitalOptimizer::orbital_gradient()
 
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
-        Zm->set(nmo_abs_[i[0]],i[1], value);});
+        Zm->set(i[0],i[1], value);});
 
     Z_ = Zm;
     Z_->set_name("g * rdm2");

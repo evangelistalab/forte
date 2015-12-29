@@ -79,6 +79,8 @@ private:
 
     /// The Fock matrix due to Frozen core orbitals
     SharedMatrix F_froze_;
+    /// The One Electron integrals (H = T + V)  (in AO basis)
+    SharedMatrix Hcore_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
     /// Sets up the FCISolver

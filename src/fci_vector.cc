@@ -281,7 +281,6 @@ void FCIIntegrals::set_active_integrals_and_restricted_docc()
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
-
     RestrictedOneBodyOperator(oei_a_, oei_b_);
 }
 
