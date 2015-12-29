@@ -252,10 +252,6 @@ void FCISolver::set_subspace_per_root(int value)
 {
     subspace_per_root_ = value;
 }
-void FCISolver::set_use_jk_builder(bool jk_build)
-{
-    use_jk_ = jk_build;
-}
 
 void FCISolver::startup()
 {
@@ -299,13 +295,26 @@ double FCISolver::compute_energy()
     //{
     //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
     //}
-    //std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_);
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
-    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
-    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
-    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
-    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints->compute_restricted_one_body_operator();
+    std::shared_ptr<FCIIntegrals> fci_ints;
+    if(!provide_integrals_and_restricted_docc_)
+    {
+        fci_ints = std::make_shared<FCIIntegrals>(ints_, active_mo_, core_mo_);
+        ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
+        ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
+        ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+        fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints->compute_restricted_one_body_operator();
+    }
+    else{
+        if(fci_ints_==nullptr)
+        {
+            outfile->Printf("\n You said you would specify integrals and restricted_docc");
+            throw PSIEXCEPTION("Need to set the fci_ints in your code");
+        }
+        else{
+            fci_ints = fci_ints_;
+        }
+    }
 
     DynamicBitsetDeterminant::set_ints(fci_ints);
     STLBitsetDeterminant::set_ints(fci_ints);

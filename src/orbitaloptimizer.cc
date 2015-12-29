@@ -1,22 +1,14 @@
 #include "orbitaloptimizer.h"
 #include "helpers.h"
 #include "ambit/blocked_tensor.h"
-#include <libmints/mints.h>
 #include <libfock/jk.h>
 #include "reference.h"
 #include "integrals.h"
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
 #include <libqt/qt.h>
 #include <libmints/matrix.h>
 #include "helpers.h"
-#include <libfock/jk.h>
-#include <libmints/mints.h>
 #include "fci_solver.h"
 #include <psifiles.h>
-#include <libmints/factory.h>
-#include <libmints/mintshelper.h>
 #include <lib3index/cholesky.h>
 using namespace psi;
 
@@ -36,7 +28,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
     startup();
 
 }
-SharedMatrix OrbitalOptimizer::orbital_rotation_casscf()
+void OrbitalOptimizer::update()
 {
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C
@@ -48,14 +40,9 @@ SharedMatrix OrbitalOptimizer::orbital_rotation_casscf()
     /// Use JK builder: J(\gamma_{uv} - 1/2 K(\gamma_{uv})
     form_fock_active();
 
-    ///
     orbital_gradient();
 
     diagonal_hessian();
-
-    orbital_rotation_parameter();
-
-    return S_;
 
 }
 
@@ -87,20 +74,6 @@ void OrbitalOptimizer::startup()
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = wfn_->nirrep();
     nsopi_  = wfn_->nsopi();
-    if(!casscf_freeze_core_)
-    {
-        restricted_docc_abs_ = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
-        restricted_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-        active_abs_          = mo_space_info_->get_absolute_mo("ACTIVE");
-        restricted_uocc_abs_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-
-        for(size_t h = 0; h < nirrep_; h++){frozen_docc_dim_[h] = 0;}
-        for(size_t i = 0; i < frozen_docc_abs_.size(); i++){frozen_docc_abs_[i] = 0;}
-        nfrozen_ = 0;
-        nmo_ = mo_space_info_->size("ALL");
-        nmopi_ = mo_space_info_->get_dimension("ALL");
-        nmo_abs_ = mo_space_info_->get_absolute_mo("ALL");
-    }
 
 }
 
@@ -108,7 +81,6 @@ void OrbitalOptimizer::form_fock_core()
 {
     /// Get the CoreHamiltonian in AO basis
 
-    //H->transform(Call_);
     if(Ca_sym_ == nullptr)
     {
         outfile->Printf("\n\n Please give your OrbitalOptimize an Orbital");
@@ -204,6 +176,7 @@ void OrbitalOptimizer::form_fock_core()
 }
 void OrbitalOptimizer::form_fock_active()
 {
+    Call_ = make_c_sym_aware();
     ///Step 3:
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
@@ -420,6 +393,7 @@ void OrbitalOptimizer::diagonal_hessian()
             double value_ia = (F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a));
             value_ia -= (4.0 * F_core_->get(i,i)  + 4.0 * F_act_->get(i,i));
             D->set(i,a,value_ia);
+            D->set(a, i, value_ia);
         }
     }
     for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
@@ -433,6 +407,7 @@ void OrbitalOptimizer::diagonal_hessian()
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
             value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
             D->set(t,a, value_ta);
+            D->set(a,t, value_ta);
         }
     }
     for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
@@ -447,6 +422,7 @@ void OrbitalOptimizer::diagonal_hessian()
             value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
             value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(i,t, value_it);
+            D->set(t,i, value_it);
         }
     }
 
@@ -459,9 +435,13 @@ void OrbitalOptimizer::diagonal_hessian()
 
 
 }
-void OrbitalOptimizer::orbital_rotation_parameter()
+SharedMatrix OrbitalOptimizer::approx_solve()
 {
+    ///Create an orbital rotation matrix of size (NMO - frozen)
     SharedMatrix S(new Matrix("S", nmo_, nmo_));
+    Dimension true_nmopi = wfn_->nmopi();
+    SharedMatrix S_sym(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
+    SharedMatrix S_sym_AH(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
 
     int offset = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -484,27 +464,21 @@ void OrbitalOptimizer::orbital_rotation_parameter()
         }
     offset += nmopi_[h];
     }
+    ///Since this is CASSCF, the active rotations are reduntant.  Zero those!
     auto na_vec = mo_space_info_->get_corr_abs_mo("ACTIVE");
     for(size_t u = 0; u < na_; u++)
         for(size_t v = 0; v < na_; v++)
             S->set(na_vec[u], na_vec[v], 0.0);
 
-    Matrix S_mat;
-    S_mat.copy(S);
-    S_mat.expm();
-
-    SharedMatrix S_mat_s = S_mat.clone();
-
-    Dimension true_nmopi = wfn_->nmopi();
-
-    SharedMatrix S_sym(new Matrix(nirrep_, true_nmopi, true_nmopi));
+    ///Convert to a symmetry matrix
     offset = 0;
     int frozen = 0;
+    //SharedMatrix S_diag = AugmentedHessianSolve();
     for(size_t h = 0; h < nirrep_; h++){
         frozen = frozen_docc_dim_[h];
         for(int p = 0; p < nmopi_[h]; p++){
             for(int q = 0; q < nmopi_[h]; q++){
-                S_sym->set(h, p + frozen, q + frozen, S_mat_s->get(p + offset, q + offset));
+                S_sym->set(h, p + frozen, q + frozen, S->get(p + offset, q + offset));
             }
         }
         if(casscf_freeze_core_)
@@ -516,7 +490,55 @@ void OrbitalOptimizer::orbital_rotation_parameter()
         }
         offset += nmopi_[h];
     }
-    S_ = S_sym;
+
+    return S_sym;
+}
+SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
+{
+    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", 2 * nmo_ + 1, 2 * nmo_ + 1));
+
+    for(size_t p = 0; p < nmo_; p++){
+
+        for(size_t q = 0; q < nmo_; q++){
+            AugmentedHessian->set(p, q, d_->get(p, q));
+        }
+        for(size_t q = 0; q < nmo_; q++){
+            AugmentedHessian->set(p + nmo_, q, g_->get(p, q));
+            AugmentedHessian->set(q, p + nmo_, g_->get(q, p));
+        }
+    }
+    AugmentedHessian->set(2*nmo_, 2*nmo_, 0.0);
+    SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
+    SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
+    AugmentedHessian->diagonalize(HessianEvec, HessianEval);
+    if(casscf_debug_print_)
+    {
+        g_->print();
+        d_->print();
+        AugmentedHessian->print();
+        HessianEval->print();
+    }
+    return HessianEvec;
+
+}
+
+SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
+{
+    ///Clone the C matrix
+    SharedMatrix C_rot(C->clone());
+    SharedMatrix S_mat(S->clone());
+
+    S_mat->expm();
+    for(size_t h = 0; h < nirrep_; h++)
+    {
+        for(int fr = 0; fr < frozen_docc_dim_[h]; fr++){
+            S_mat->set(h, fr, fr, 1.0);
+        }
+    }
+
+    C_rot = Matrix::doublet(C, S_mat);
+    return C_rot;
+
 
 }
 
@@ -531,6 +553,39 @@ void OrbitalOptimizer::fill_shared_density_matrices()
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
     gamma2M_ = gamma2_matrix;
+}
+boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
+{
+    ///Step 1: Obtain guess MO coefficients C_{mup}
+    /// Since I want to use these in a symmetry aware basis,
+    /// I will move the C matrix into a Pfitzer ordering
+
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+
+    SharedMatrix aotoso = wfn_->aotoso();
+
+    /// I want a C matrix in the C1 basis but symmetry aware
+    size_t nso = wfn_->nso();
+    nirrep_ = wfn_->nirrep();
+    SharedMatrix Call(new Matrix(nso, nmopi.sum()));
+
+    // Transform from the SO to the AO basis for the C matrix.
+    // just transfroms the C_{mu_ao i} -> C_{mu_so i}
+    for (size_t h = 0, index = 0; h < nirrep_; ++h){
+        for (int i = 0; i < nmopi[h]; ++i){
+            size_t nao = nso;
+            size_t nso = nsopi_[h];
+
+            if (!nso) continue;
+
+            C_DGEMV('N',nao,nso,1.0,aotoso->pointer(h)[0],nso,&Ca_sym_->pointer(h)[0][i],nmopi[h],0.0,&Call->pointer()[0][index],nmopi.sum());
+
+            index += 1;
+        }
+
+    }
+
+    return Call;
 }
 
 }}
