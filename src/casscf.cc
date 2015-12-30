@@ -160,9 +160,6 @@ void CASSCF::compute_casscf()
         tei_paaa_ = transform_integrals();
         if(casscf_debug_print_){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
 
-        //ambit::Tensor active_trans_int = ints_->aptei_ab_block(active_abs_, active_abs_, active_abs_, active_abs_);
-        //active_trans_int.print(stdout);
-
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
@@ -460,7 +457,6 @@ ambit::Tensor CASSCF::transform_integrals()
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
     size_t nmo_no_froze =  mo_space_info_->size("ALL");
     size_t nmo_with_froze = mo_space_info_->size("CORRELATED");
-    auto abs_corr = mo_space_info_->get_absolute_mo("CORRELATED");
     SharedMatrix Identity(new Matrix("I", nmo_no_froze,nmo_no_froze));
     Identity->identity();
     SharedMatrix CAct(new Matrix("CAct", nsopi_.sum(), na_));
@@ -477,7 +473,7 @@ ambit::Tensor CASSCF::transform_integrals()
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = wfn_->nso();
     nirrep_ = wfn_->nirrep();
-    SharedMatrix Call(new Matrix(nso, nmo_with_froze));
+    SharedMatrix Call(new Matrix(nso, nmo_no_froze));
     SharedMatrix Ca_sym = wfn_->Ca();
 
     // Transform from the SO to the AO basis for the C matrix.
@@ -512,12 +508,12 @@ ambit::Tensor CASSCF::transform_integrals()
     for(size_t i = 0; i < na_; i++){
         SharedVector C_i = CAct->get_column(0, i);
         for(size_t j = 0; j < na_; j++){
-            SharedMatrix D(new Matrix("D", nmo_no_froze, nmo_no_froze));
+            SharedMatrix D(new Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
             ij[1] = j;
             SharedVector C_j = CAct->get_column(0, j);
-            C_DGER(nmo_no_froze, nmo_no_froze, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nmo_no_froze);
+            C_DGER(nso, nso, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nso);
 
             D_vec.push_back(std::make_pair(D, ij));
         }
@@ -538,9 +534,10 @@ ambit::Tensor CASSCF::transform_integrals()
     }
     JK_trans->compute();
 
-    SharedMatrix half_trans(new Matrix("Trans", nmo_with_froze, na_));
+    SharedMatrix half_trans(new Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
-    auto corr_abs = mo_space_info_->get_absolute_mo("CORRELATED");
+    auto absolute_all = mo_space_info_->get_absolute_mo("CORRELATED");
+    auto corr_abs     = mo_space_info_->get_corr_abs_mo("CORRELATED");
     for(auto d : D_vec)
     {
         int i = d.second[0];
@@ -551,7 +548,7 @@ ambit::Tensor CASSCF::transform_integrals()
         count++;
         for(size_t p = 0; p < nmo_with_froze; p++){
             for(size_t q = 0; q < na_; q++){
-                active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(corr_abs[p], q);
+                active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(absolute_all[p], q);
             }
         }
     }
@@ -637,21 +634,18 @@ void CASSCF::set_up_fci()
 
     auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
     ambit::Tensor tei_ab = ints_->aptei_ab_block(na_array, na_array, na_array, na_array);
-    outfile->Printf("\n\n tei_ab.norm: %8.8f", tei_ab.norm(2));
 
     ambit::Tensor active_aa = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
     ambit::Tensor active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
     ambit::Tensor active_bb = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
     const std::vector<double>& tei_paaa_data = tei_paaa_.data();
 
-    auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
     active_ab.iterate([&](const std::vector<size_t>& i,double& value){
         value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
     active_aa.copy(active_ab);
     active_bb.copy(active_ab);
     active_aa("u,v,x,y") -= active_ab("u, v, y, x");
     active_bb.copy(active_aa);
-    outfile->Printf("\n\n tei_ab.norm: %8.8f", active_ab.norm(2));
 
     fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
     std::vector<std::vector<double> > oei_vector = compute_restricted_docc_operator();
