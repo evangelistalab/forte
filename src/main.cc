@@ -347,7 +347,7 @@ read_options(std::string name, Options &options)
         /*Threshold value for defining multiplicity from S^2*/
         options.add_double("SPIN_TOL", 0.01);
         /*- Compute 1-RDM? -*/
-        options.add_bool("COMPUTE_RDMS", false);
+        options.add_int("ACI_MAX_RDM", 1);
         /*- Form initial space with based on energy */
         options.add_bool("LAMBDA_GUESS", false);
 		/*- Type of spin projection
@@ -782,13 +782,13 @@ extern "C" PsiReturnType forte(Options &options)
 			boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 			if(options.get_bool("SEMI_CANONICAL")){
 				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-				aci->set_rdms(true);
+				aci->set_max_rdm(3);
 		    	aci->compute_energy();
 				Reference aci_reference = aci->reference();
 				SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
 			}
 				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-				aci->set_rdms(true);
+				aci->set_max_rdm(3);
 		    	aci->compute_energy();
 				Reference aci_reference = aci->reference();
 		    	boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
@@ -824,13 +824,13 @@ extern "C" PsiReturnType forte(Options &options)
 	       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 	   	   if(options.get_bool("SEMI_CANONICAL")){
 		       auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-			   aci->set_rdms(true);
+			   aci->set_max_rdm(3);
 			   aci->compute_energy();
 	   		   Reference aci_reference = aci->reference();
 	   		   SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
 		   }
 		   auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-		   aci->set_rdms(true);
+		   aci->set_max_rdm(3);
 	       aci->compute_energy();
 	   	   Reference aci_reference = aci->reference();
 	       boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
