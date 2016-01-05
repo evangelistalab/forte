@@ -154,11 +154,17 @@ void CASSCF::compute_casscf()
         ///Can redefi
 
         //Timer retrans;
-        ints_->retransform_integrals();
+        //ints_->retransform_integrals();
+
         //outfile->Printf("\n\n Retrans: %8.8f", retrans.get());
         Timer my_trans;
         tei_paaa_ = transform_integrals();
+        //outfile->Printf("\n\n TransformIntegrals: %8.8f", my_trans.get());
+        //ambit::Tensor active_trans_int = ints_->aptei_ab_block(active_abs_, active_abs_, active_abs_, active_abs_);
+        //active_trans_int.print(stdout);
+
         if(casscf_debug_print_){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
+
 
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}

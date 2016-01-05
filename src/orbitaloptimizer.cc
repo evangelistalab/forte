@@ -391,7 +391,6 @@ void OrbitalOptimizer::diagonal_hessian()
             double value_ia = (F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a));
             value_ia -= (4.0 * F_core_->get(i,i)  + 4.0 * F_act_->get(i,i));
             D->set(i,a,value_ia);
-            D->set(a, i, value_ia);
         }
     }
     for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
@@ -405,7 +404,6 @@ void OrbitalOptimizer::diagonal_hessian()
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
             value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
             D->set(t,a, value_ta);
-            D->set(a,t, value_ta);
         }
     }
     for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
@@ -420,7 +418,6 @@ void OrbitalOptimizer::diagonal_hessian()
             value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
             value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(i,t, value_it);
-            D->set(t,i, value_it);
         }
     }
 

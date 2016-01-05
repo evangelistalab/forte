@@ -3,7 +3,7 @@ import forte
 
 memory 500 mb
 
-refmcscf   =   -226.280722918556
+refmcscf   =  -226.575016947333239
 refdsrgpt2 =  -226.575016871111
 
 molecule mbenzyne{
@@ -35,11 +35,12 @@ set globals{
    maxiter                 500
    reference               RHF
 }
+scf = energy('casscf')
 
 set scf_type  direct
 set forte {
    job_type               CASSCF
-   CASSCF_DEBUG_PRINTING   true
+   CASSCF_DEBUG_PRINTING   false
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
@@ -49,14 +50,14 @@ set forte {
    int_type                conventional
    cas_type                FCI
    casscf_reference        true
-   CASSCF_ITERATIONS       20
+   CASSCF_ITERATIONS       50
    job_type                 FCI
    CASSCF_FREEZE_CORE       true
+   print                    0
 }
 
-#scf = energy('casscf')
 
-scf = energy('mcscf')
+#scf = energy('mcscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
 energy('forte')
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),6,"CASSCF energy")
