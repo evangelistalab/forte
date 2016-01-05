@@ -530,7 +530,7 @@ read_options(std::string name, Options &options)
          *  - CAS York's code
          *  - FCI Francesco's string based FCI code
          *  - DMRG DMRG code (not yet available) -*/
-        options.add_str("CAS_TYPE", "FCI", "CAS FCI DMRG");
+        options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Defintion for source operator for ccvv term -*/
@@ -777,6 +777,24 @@ extern "C" PsiReturnType forte(Options &options)
                 boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
                 dsrg_mrpt2->compute_energy();
         }
+
+		if(options.get_str("CAS_TYPE")=="ACI"){
+			boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+			if(options.get_bool("SEMI_CANONICAL")){
+				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+				aci->set_rdms(true);
+		    	aci->compute_energy();
+				Reference aci_reference = aci->reference();
+				SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
+			}
+				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+				aci->set_rdms(true);
+		    	aci->compute_energy();
+				Reference aci_reference = aci->reference();
+		    	boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
+				dsrg_mrpt2->compute_energy();
+			
+		}
         else if(options.get_str("CAS_TYPE")=="DMRG")
         {
             outfile->Printf("\n Buy Kevin a beer and he will maybe implement DMRG into libadaptive\n");
@@ -802,6 +820,22 @@ extern "C" PsiReturnType forte(Options &options)
            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
            three_dsrg_mrpt2->compute_energy();
        }
+	   if(options.get_str("CAS_TYPE")=="ACI"){
+	       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+	   	   if(options.get_bool("SEMI_CANONICAL")){
+		       auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+			   aci->set_rdms(true);
+			   aci->compute_energy();
+	   		   Reference aci_reference = aci->reference();
+	   		   SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
+		   }
+		   auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+		   aci->set_rdms(true);
+	       aci->compute_energy();
+	   	   Reference aci_reference = aci->reference();
+	       boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
+	   	   dsrg_mrpt2->compute_energy();
+	   }
 
        else if(options.get_str("CAS_TYPE")=="FCI")
        {

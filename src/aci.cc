@@ -183,7 +183,7 @@ void AdaptiveCI::startup()
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
-    form_1_RDM_ = options_.get_bool("COMPUTE_RDMS");
+    compute_rdms_ = options_.get_bool("COMPUTE_RDMS");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 
@@ -635,7 +635,6 @@ double AdaptiveCI::compute_energy()
 		outfile->Printf("\n Davidson corr: %1.9f", i);
 	}
 
-double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -662,42 +661,31 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 	}
 	evecs_ = PQ_evecs;
 
-	if( form_1_RDM_ ){
+	if( compute_rdms_ ){
 	//Compute and print 1-RDM
 		Timer one_rdm;
 		
 		CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
 		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
-		outfile->Printf("\n  1-RDM took %2.6f s", one_rdm.get());
-		SharedMatrix D1(new Matrix("D1", nact_,nact_));
-	   
-		for( int i = 0; i < nact_; ++i){
-			for( int j = 0; j < nact_; ++j){
-				D1->set(i,j, ordm_a_[nact_*i + j] + ordm_b_[nact_*i + j]);
-			}
-		}
-
-		outfile->Printf("\n  Trace of D1: %5.10f", D1->trace());
+		outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
 
 		Timer two_rdm;
 		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
 		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 
 		Timer three;
-		std::vector<double> trdm_aaa;
-		std::vector<double> trdm_aab;
-		std::vector<double> trdm_abb;
-		std::vector<double> trdm_bbb;
 		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
 		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
-		Timer energy;
-		double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
-		outfile->Printf("\n  Energy took %2.6f s", energy.get());
-		outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
+		//Timer energy;
+	    //double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+		//double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
+		//outfile->Printf("\n  Energy took %2.6f s", energy.get());
+		//outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 		
-		//ci_rdms.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
-
+		if(options_.get_bool("TEST_RDMS")){
+			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
+		}
 
 	}
 
@@ -1687,6 +1675,11 @@ std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterm
 		dc[n] = c_sum * (PQ_evals->get(n) - P_evals->get(n));
 	}	
 	return dc;
+}
+
+void AdaptiveCI::set_rdms( bool rdm )
+{
+	compute_rdms_ = rdm;
 }
 
 Reference AdaptiveCI::reference()
