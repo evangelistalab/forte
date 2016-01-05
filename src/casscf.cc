@@ -151,8 +151,13 @@ void CASSCF::compute_casscf()
         ///This is used as way to retransform our integrals so Francesco's FCI code can use the updated CI
         ///Can redefi
 
-        ints_->retransform_integrals();
-        //tei_paaa_ = transform_integrals();
+        //Timer retrans;
+        //ints_->retransform_integrals();
+
+        //outfile->Printf("\n\n Retrans: %8.8f", retrans.get());
+        //Timer my_trans;
+        tei_paaa_ = transform_integrals();
+        //outfile->Printf("\n\n TransformIntegrals: %8.8f", my_trans.get());
         //ambit::Tensor active_trans_int = ints_->aptei_ab_block(active_abs_, active_abs_, active_abs_, active_abs_);
         //active_trans_int.print(stdout);
 

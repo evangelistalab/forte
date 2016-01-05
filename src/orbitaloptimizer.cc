@@ -490,8 +490,6 @@ SharedMatrix OrbitalOptimizer::approx_solve()
         }
         offset += nmopi_[h];
     }
-    S->print();
-    S_diag->print();
 
     return S_sym;
 }
