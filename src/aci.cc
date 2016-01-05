@@ -7,6 +7,7 @@
 #include <boost/timer.hpp>
 
 #include <libpsio/psio.hpp>
+#include <libmints/pointgrp.h>
 #include <libmints/molecule.h>
 
 #include "aci.h"
@@ -162,6 +163,7 @@ void AdaptiveCI::startup()
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
+	rdm_level_ = options_.get_int("ACI_MAX_RDM"); 
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
@@ -183,7 +185,6 @@ void AdaptiveCI::startup()
     ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     post_root_ = max( nroot_, options_.get_int("POST_ROOT") );
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
-    form_1_RDM_ = options_.get_bool("COMPUTE_RDMS");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 
@@ -635,7 +636,6 @@ double AdaptiveCI::compute_energy()
 		outfile->Printf("\n Davidson corr: %1.9f", i);
 	}
 
-double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -662,44 +662,36 @@ double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->
 	}
 	evecs_ = PQ_evecs;
 
-	if( form_1_RDM_ ){
-	//Compute and print 1-RDM
-		Timer one_rdm;
-		
-		CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+	CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+	if( rdm_level_ >= 1 ){
+		Timer one_rdm;	
 		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
-		outfile->Printf("\n  1-RDM took %2.6f s", one_rdm.get());
-		SharedMatrix D1(new Matrix("D1", nact_,nact_));
-	   
-		for( int i = 0; i < nact_; ++i){
-			for( int j = 0; j < nact_; ++j){
-				D1->set(i,j, ordm_a_[nact_*i + j] + ordm_b_[nact_*i + j]);
-			}
+		outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
+		
+		if( options_.get_bool("PRINT_NO") ){
+			print_nos();	
 		}
 
-		outfile->Printf("\n  Trace of D1: %5.10f", D1->trace());
-
+	}
+	if( rdm_level_ >= 2 ){
 		Timer two_rdm;
 		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
 		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
-
+	}
+	if( rdm_level_ >= 3 ){
 		Timer three;
-		std::vector<double> trdm_aaa;
-		std::vector<double> trdm_aab;
-		std::vector<double> trdm_abb;
-		std::vector<double> trdm_bbb;
 		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
 		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
-		Timer energy;
-		double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
-		outfile->Printf("\n  Energy took %2.6f s", energy.get());
-		outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
-		
-		//ci_rdms.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
-
-
+		if(options_.get_bool("TEST_RDMS")){
+			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
+		}
 	}
+		//Timer energy;
+	    //double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+		//double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
+		//outfile->Printf("\n  Energy took %2.6f s", energy.get());
+		//outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
@@ -1689,11 +1681,64 @@ std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterm
 	return dc;
 }
 
+void AdaptiveCI::set_max_rdm( int rdm )
+{
+	rdm_level_ = rdm;
+}
+
 Reference AdaptiveCI::reference()
 {
 	CI_RDMS ci_rdms(options_, wfn_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
+}
+
+void AdaptiveCI::print_nos()
+{
+	print_h2("NATURAL ORBITALS");
+
+    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
+    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, nactpi_, nactpi_));
+
+    int offset = 0;
+    for(int h = 0; h < nirrep_; h++){
+        for(int u = 0; u < nactpi_[h]; u++){
+            for(int v = 0; v < nactpi_[h]; v++){
+                opdm_a->set(h, u, v, ordm_a_[(u + offset) * ncmo_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_[(u + offset) * ncmo_ + v + offset]);
+            }
+        }
+        offset += nactpi_[h];
+    }
+    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep_, nactpi_));
+    SharedVector OCC_B(new Vector("BETA OCCUPATION",  nirrep_, nactpi_));
+    SharedMatrix NO_A(new Matrix (nirrep_, nactpi_, nactpi_));
+    SharedMatrix NO_B(new Matrix (nirrep_, nactpi_, nactpi_));
+
+    opdm_a->diagonalize(NO_A, OCC_A, descending);
+    opdm_b->diagonalize(NO_B, OCC_B, descending);
+    std::vector< std::pair<double, std::pair< int, int > > >vec_irrep_occupation;
+    for(int h = 0; h < nirrep_; h++)
+    {
+        for(int u = 0; u < nactpi_[h]; u++){
+            auto irrep_occ = std::make_pair(OCC_A->get(h, u) + OCC_B->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+        }
+    }
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(), std::greater<std::pair<double, std::pair<int, int> > >());
+
+    int count = 0;
+    outfile->Printf( "\n    ");
+    for(auto vec : vec_irrep_occupation)
+    {
+        outfile->Printf( " %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(), vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            outfile->Printf( "\n    ");
+    }
+    outfile->Printf( "\n\n");
+
+
 }
 
 }} // EndNamespaces

@@ -459,7 +459,7 @@ void CI_RDMS::get_one_map()
 	size_t na_ann = 0;
 	size_t nb_ann = 0;
 
-	outfile->Printf("\n Generating one-particle maps.\n");
+	outfile->Printf("\n\n  Generating one-particle maps.");
 
 	for( size_t I = 0; I < dim_space_; ++I){
 		STLBitsetDeterminant detI = det_space_[I];
@@ -892,8 +892,8 @@ void CI_RDMS::get_three_map()
 Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 							  std::vector<double>& oprdm_b,  
 							  std::vector<double>& tprdm_aa, 
-							  std::vector<double>& tprdm_bb, 
 							  std::vector<double>& tprdm_ab, 
+							  std::vector<double>& tprdm_bb, 
 							  std::vector<double>& tprdm_aaa,
 							  std::vector<double>& tprdm_aab,
 							  std::vector<double>& tprdm_abb,
@@ -1050,7 +1050,7 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 
 	// Update the reference object
 
-	double energy = get_energy( oprdm_a, oprdm_b, tprdm_aa, tprdm_ab, tprdm_bb );
+	double energy = get_energy( oprdm_a, oprdm_b, tprdm_aa, tprdm_bb, tprdm_ab );
 
 	Reference ci_ref;	
 

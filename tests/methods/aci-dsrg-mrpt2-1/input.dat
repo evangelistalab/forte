@@ -1,0 +1,44 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refrhf     = -108.95379624015762 # cc-pVDZ
+refdsrgpt2 = -109.25041672286461 # cc-pVDZ
+
+memory 500 mb
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.1
+}
+
+set globals{
+   basis                   cc-pvdz
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           13
+}
+
+set forte{
+   job_type               dsrg-mrpt2
+   frozen_docc            [0,0,0,0,0,0,0,0]
+   restricted_docc        [2,0,0,0,0,2,0,0]
+   active                 [1,0,1,1,0,1,1,1]
+   multiplicity           1
+   root_sym               0
+   nroot                  1
+   dsrg_s                 1.0
+   taup					  0.0
+   tauq					  0.0
+   ntrial_per_root        100
+   CAS_TYPE				  ACI
+}
+
+energy('scf')
+compare_values(refrhf,get_variable("CURRENT ENERGY"),10,"SCF energy")
+
+energy('forte')
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"DSRG-MRPT2 energy")

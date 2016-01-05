@@ -289,7 +289,7 @@ double FCI_MO::compute_energy(){
         if(semi_){
             semi_canonicalize(count);
         }else{
-            nat_orbs();
+//            nat_orbs();
         }
     }
 
@@ -516,7 +516,9 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     if(print == true){
         print_h2("Singles String");
         for(size_t i = 0; i != String.size(); ++i){
-            outfile->Printf("\n  symmetry = %lu \n", i);
+            if(String[i].size() != 0){
+                outfile->Printf("\n  symmetry = %lu \n", i);
+            }
             for(size_t j = 0; j != String[i].size(); ++j){
                 outfile->Printf("    ");
                 for(bool b: String[i][j]){
@@ -537,14 +539,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
     if(count != 0){
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","C");
-        if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE"){
-            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","A");
-        }else{
-            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","AO");
-            BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","AV");
-        }
-        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
+        BD_Fock(Fa_,Fb_,Ua,Ub,"Fock");
         SharedMatrix Ca = wfn_->Ca();
         SharedMatrix Cb = wfn_->Cb();
         SharedMatrix Ca_new(Ca->clone());
@@ -1320,260 +1315,232 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &
     outfile->Flush();
 }
 
-void FCI_MO::BD_2D_Matrix(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name, const string& block){
+void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name){
     timer_on("Block Diagonal 2D Matrix");
     Timer tbdfock;
-    std::string str = "Diagonalizing " + name + " matrix block " + block;
+    std::string str = "Diagonalizing " + name;
     outfile->Printf("\n  %-35s ...", str.c_str());
-    size_t nc = 0, na = 0, nv = 0;
-    for(int h=0; h<nirrep_; ++h){
 
-        // No rotations for frozen orbitals
-        for(size_t i=0; i<frzcpi_[h]; ++i){
+    // separate Fock to core, active, virtual blocks
+    SharedMatrix Fc_a(new Matrix("Fock core alpha",core_,core_));
+    SharedMatrix Fc_b(new Matrix("Fock core beta",core_,core_));
+    SharedMatrix Fv_a(new Matrix("Fock virtual alpha",virtual_,virtual_));
+    SharedMatrix Fv_b(new Matrix("Fock virtual beta",virtual_,virtual_));
+    // core and virtual
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h){
+        h = static_cast<int> (h);
+        for (size_t i = 0; i < core_[h]; ++i){
+            for (size_t j = 0; j < core_[h]; ++j){
+                Fc_a->set(h,i,j,Fa[offset + i][offset + j]);
+                Fc_b->set(h,i,j,Fb[offset + i][offset + j]);
+            }
+        }
+        offset += core_[h] + active_[h];
+
+        for (size_t a = 0; a < virtual_[h]; ++a){
+            for (size_t b = 0; b < virtual_[h]; ++b){
+                Fv_a->set(h,a,b,Fa[offset + a][offset + b]);
+                Fv_b->set(h,a,b,Fb[offset + a][offset + b]);
+            }
+        }
+        offset += virtual_[h];
+    }
+    // active
+    SharedMatrix Fa_a, Fa_b, Fao_a, Fao_b, Fav_a, Fav_b;
+    bool cas = options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE";
+    if(cas){
+        Fa_a = SharedMatrix(new Matrix("Fock active alpha",active_,active_));
+        Fa_b = SharedMatrix(new Matrix("Fock active beta",active_,active_));
+        for (size_t h = 0, offset = 0; h < nirrep_; ++h){
+            h = static_cast<int> (h);
+            offset += core_[h];
+            for (int u = 0; u < active_[h]; ++u){
+                for (int v = 0; v < active_[h]; ++v){
+                    Fa_a->set(h,u,v,Fa[offset + u][offset + v]);
+                    Fa_b->set(h,u,v,Fb[offset + u][offset + v]);
+                }
+            }
+            offset += active_[h] + virtual_[h];
+        }
+    }else{
+        Fao_a = SharedMatrix(new Matrix("Fock active occupied alpha",active_o_,active_o_));
+        Fao_b = SharedMatrix(new Matrix("Fock active occupied beta",active_o_,active_o_));
+        Fav_a = SharedMatrix(new Matrix("Fock active virtual alpha",active_v_,active_v_));
+        Fav_b = SharedMatrix(new Matrix("Fock active virtual beta",active_v_,active_v_));
+        for (size_t h = 0, offset = 0; h < nirrep_; ++h){
+            h = static_cast<int> (h);
+            offset += core_[h];
+            // active occupied
+            for (int u = 0; u < active_o_[h]; ++u){
+                for (int v = 0; v < active_o_[h]; ++v){
+                    Fao_a->set(h,u,v,Fa[offset + u][offset + v]);
+                    Fao_b->set(h,u,v,Fb[offset + u][offset + v]);
+                }
+            }
+            // active virtual
+            for (int u = active_o_[h]; u < active_[h]; ++u){
+                int nu = u - active_o_[h];
+                for (int v = active_o_[h]; v < active_[h]; ++v){
+                    int nv = v - active_o_[h];
+                    Fav_a->set(h,nu,nv,Fa[offset + u][offset + v]);
+                    Fav_b->set(h,nu,nv,Fb[offset + u][offset + v]);
+                }
+            }
+            offset += active_[h] + virtual_[h];
+        }
+    }
+
+    // diagonalize Fock blocks
+    std::vector<SharedMatrix> blocks;
+    std::vector<SharedMatrix> evecs;
+    std::vector<SharedVector> evals;
+    if(cas){
+        blocks = {Fc_a,Fc_b,Fv_a,Fv_b,Fa_a,Fa_b};
+    }else{
+        blocks = {Fc_a,Fc_b,Fv_a,Fv_b,Fao_a,Fao_b,Fav_a,Fav_b};
+    }
+    for(auto F: blocks){
+        SharedMatrix U(new Matrix("U",F->rowspi(),F->colspi()));
+        SharedVector lambda(new Vector("lambda",F->rowspi()));
+        F->diagonalize(U,lambda);
+        evecs.push_back(U);
+        evals.push_back(lambda);
+//        U->eivprint(lambda);
+    }
+
+    // fill in the unitary rotation
+    for (int h = 0; h < nirrep_; ++h){
+        size_t offset = 0;
+
+        // frozen core
+        for(size_t i = 0; i < frzcpi_[h]; ++i){
             Ua->set(h,i,i,1.0);
             Ub->set(h,i,i,1.0);
         }
-        for(size_t i=0; i<frzvpi_[h]; ++i){
-            size_t shift = frzcpi_[h] + ncmopi_[h];
-            Ua->set(h,i+shift,i+shift,1.0);
-            Ub->set(h,i+shift,i+shift,1.0);
-        }
+        offset += frzcpi_[h];
 
-        // Core
-        if(block == "C"){
-        SharedMatrix CoreA (new Matrix("Core A", core_[h], core_[h]));
-        SharedMatrix CoreB (new Matrix("Core B", core_[h], core_[h]));
-        SharedMatrix EvecCA (new Matrix("Evec Core A", core_[h], core_[h]));
-        SharedMatrix EvecCB (new Matrix("Evec Core B", core_[h], core_[h]));
-        SharedVector EvalCA (new Vector("Eval Core A", core_[h]));
-        SharedVector EvalCB (new Vector("Eval Core B", core_[h]));
-        for(size_t i=0; i<core_[h]; ++i){
-            for(size_t j=0; j<core_[h]; ++j){
-                double fa = Fa[idx_c_[i+nc]][idx_c_[j+nc]];
-                double fb = Fb[idx_c_[i+nc]][idx_c_[j+nc]];
-                CoreA->set(i,j,fa);
-                CoreB->set(i,j,fb);
+        // core
+        for (size_t i = 0; i < core_[h]; ++i){
+            for (size_t j = 0; j < core_[h]; ++j){
+                Ua->set(h,offset + i,offset + j,evecs[0]->get(h,i,j));
+                Ub->set(h,offset + i,offset + j,evecs[1]->get(h,i,j));
             }
         }
-        // direct diagonalization (unlikely to have millions of orbitals)
-        CoreA->diagonalize(EvecCA,EvalCA);
-        CoreB->diagonalize(EvecCB,EvalCB);
-//        EvecCA->eivprint(EvalCA);
-//        EvecCB->eivprint(EvalCB);
+        offset += core_[h];
 
-        for(size_t i=0; i<core_[h]; ++i){
-            for(size_t j=0; j<core_[h]; ++j){
-                double ua = EvecCA->pointer()[i][j];
-                double ub = EvecCB->pointer()[i][j];
-                size_t shift = frzcpi_[h];
-                Ua->set(h,i+shift,j+shift,ua);
-                Ub->set(h,i+shift,j+shift,ub);
+        // active
+        if(cas){
+            for (int u = 0; u < active_[h]; ++u){
+                for (int v = 0; v < active_[h]; ++v){
+                    Ua->set(h,offset + u, offset + v,evecs[4]->get(h,u,v));
+                    Ub->set(h,offset + u, offset + v,evecs[5]->get(h,u,v));
+                }
+            }
+        }else{
+            for (int u = 0; u < active_o_[h]; ++u){
+                for (int v = 0; v < active_o_[h]; ++v){
+                    Ua->set(h,offset + u, offset + v,evecs[4]->get(h,u,v));
+                    Ub->set(h,offset + u, offset + v,evecs[5]->get(h,u,v));
+                }
+            }
+            for (int u = active_o_[h]; u < active_[h]; ++u){
+                int nu = u - active_o_[h];
+                for (int v = active_o_[h]; v < active_[h]; ++v){
+                    int nv = v - active_o_[h];
+                    Ua->set(h,offset + u, offset + v,evecs[6]->get(h,nu,nv));
+                    Ub->set(h,offset + u, offset + v,evecs[7]->get(h,nu,nv));
+                }
             }
         }
-        }
+        offset += active_[h];
 
-        // Active
-        if(block == "A"){
-        SharedMatrix ActiveA (new Matrix("Active A", active_[h], active_[h]));
-        SharedMatrix ActiveB (new Matrix("Active B", active_[h], active_[h]));
-        SharedMatrix EvecAA (new Matrix("Evec Active A", active_[h], active_[h]));
-        SharedMatrix EvecAB (new Matrix("Evec Active B", active_[h], active_[h]));
-        SharedVector EvalAA (new Vector("Eval Active A", active_[h]));
-        SharedVector EvalAB (new Vector("Eval Active B", active_[h]));
-        for(size_t i=0; i<active_[h]; ++i){
-            for(size_t j=0; j<active_[h]; ++j){
-                double fa = Fa[idx_a_[i+na]][idx_a_[j+na]];
-                double fb = Fb[idx_a_[i+na]][idx_a_[j+na]];
-                ActiveA->set(i,j,fa);
-                ActiveB->set(i,j,fb);
+        // virtual
+        for (size_t a = 0; a < virtual_[h]; ++a){
+            for (size_t b = 0; b < virtual_[h]; ++b){
+                Ua->set(h,offset + a,offset + b,evecs[2]->get(h,a,b));
+                Ub->set(h,offset + a,offset + b,evecs[3]->get(h,a,b));
             }
         }
-        ActiveA->diagonalize(EvecAA,EvalAA);
-        ActiveB->diagonalize(EvecAB,EvalAB);
+        offset += virtual_[h];
 
-        for(size_t i=0; i<active_[h]; ++i){
-            for(size_t j=0; j<active_[h]; ++j){
-                double ua = EvecAA->get(i,j);
-                double ub = EvecAB->get(i,j);
-                size_t shift = frzcpi_[h] + core_[h];
-                Ua->set(h,i+shift,j+shift,ua);
-                Ub->set(h,i+shift,j+shift,ub);
-            }
+        // frozen virtual
+        for(size_t i = 0; i < frzvpi_[h]; ++i){
+            size_t j = i + offset;
+            Ua->set(h,j,j,1.0);
+            Ub->set(h,j,j,1.0);
         }
-        }
-
-        // Active occupied
-        if(block == "AO"){
-        SharedMatrix ActiveA (new Matrix("Active A", active_o_[h], active_o_[h]));
-        SharedMatrix ActiveB (new Matrix("Active B", active_o_[h], active_o_[h]));
-        SharedMatrix EvecAA (new Matrix("Evec Active A", active_o_[h], active_o_[h]));
-        SharedMatrix EvecAB (new Matrix("Evec Active B", active_o_[h], active_o_[h]));
-        SharedVector EvalAA (new Vector("Eval Active A", active_o_[h]));
-        SharedVector EvalAB (new Vector("Eval Active B", active_o_[h]));
-        for(int i = 0; i < active_o_[h]; ++i){
-            size_t ai = ao_[i];
-            for(int j=0; j < active_o_[h]; ++j){
-                size_t aj = ao_[j];
-                double fa = Fa[idx_a_[ai+na]][idx_a_[aj+na]];
-                double fb = Fb[idx_a_[ai+na]][idx_a_[aj+na]];
-                ActiveA->set(i,j,fa);
-                ActiveB->set(i,j,fb);
-            }
-        }
-        ActiveA->diagonalize(EvecAA,EvalAA);
-        ActiveB->diagonalize(EvecAB,EvalAB);
-
-        for(int i = 0; i < active_o_[h]; ++i){
-            size_t ai = ao_[i];
-            for(int j = 0; j < active_o_[h]; ++j){
-                size_t aj = ao_[j];
-                double ua = EvecAA->get(i,j);
-                double ub = EvecAB->get(i,j);
-                size_t shift = frzcpi_[h] + core_[h];
-                Ua->set(h,ai+shift,aj+shift,ua);
-                Ub->set(h,ai+shift,aj+shift,ub);
-            }
-        }
-        }
-
-        // Active virtual
-        if(block == "AV"){
-        SharedMatrix ActiveA (new Matrix("Active A", active_v_[h], active_v_[h]));
-        SharedMatrix ActiveB (new Matrix("Active B", active_v_[h], active_v_[h]));
-        SharedMatrix EvecAA (new Matrix("Evec Active A", active_v_[h], active_v_[h]));
-        SharedMatrix EvecAB (new Matrix("Evec Active B", active_v_[h], active_v_[h]));
-        SharedVector EvalAA (new Vector("Eval Active A", active_v_[h]));
-        SharedVector EvalAB (new Vector("Eval Active B", active_v_[h]));
-        for(int i = 0; i < active_v_[h]; ++i){
-            size_t ai = av_[i];
-            for(int j=0; j < active_v_[h]; ++j){
-                size_t aj = av_[j];
-                double fa = Fa[idx_a_[ai+na]][idx_a_[aj+na]];
-                double fb = Fb[idx_a_[ai+na]][idx_a_[aj+na]];
-                ActiveA->set(i,j,fa);
-                ActiveB->set(i,j,fb);
-            }
-        }
-        ActiveA->diagonalize(EvecAA,EvalAA);
-        ActiveB->diagonalize(EvecAB,EvalAB);
-
-        for(int i = 0; i < active_v_[h]; ++i){
-            size_t ai = av_[i];
-            for(int j = 0; j < active_v_[h]; ++j){
-                size_t aj = av_[j];
-                double ua = EvecAA->get(i,j);
-                double ub = EvecAB->get(i,j);
-                size_t shift = frzcpi_[h] + core_[h];
-                Ua->set(h,ai+shift,aj+shift,ua);
-                Ub->set(h,ai+shift,aj+shift,ub);
-            }
-        }
-        }
-
-        // Virtual
-        if(block == "V"){
-        size_t nvh = ncmopi_[h] - core_[h] - active_[h];
-        SharedMatrix VirA (new Matrix("Virtual A", nvh, nvh));
-        SharedMatrix VirB (new Matrix("Virtual B", nvh, nvh));
-        SharedMatrix EvecVA (new Matrix("Evec Virtual A", nvh, nvh));
-        SharedMatrix EvecVB (new Matrix("Evec Virtual B", nvh, nvh));
-        SharedVector EvalVA (new Vector("Eval Virtual A", nvh));
-        SharedVector EvalVB (new Vector("Eval Virtual B", nvh));
-        for(size_t i=0; i<nvh; ++i){
-            for(size_t j=0; j<nvh; ++j){
-                double fa = Fa[idx_v_[i+nv]][idx_v_[j+nv]];
-                double fb = Fb[idx_v_[i+nv]][idx_v_[j+nv]];
-                VirA->set(i,j,fa);
-                VirB->set(i,j,fb);
-            }
-        }
-        VirA->diagonalize(EvecVA,EvalVA);
-        VirB->diagonalize(EvecVB,EvalVB);
-
-        for(size_t i=0; i<nvh; ++i){
-            for(size_t j=0; j<nvh; ++j){
-                double ua = EvecVA->get(i,j);
-                double ub = EvecVB->get(i,j);
-                size_t shift = frzcpi_[h] + core_[h] + active_[h];
-                Ua->set(h,i+shift,j+shift,ua);
-                Ub->set(h,i+shift,j+shift,ub);
-            }
-        }
-        }
-
-        nc += core_[h];
-        na += active_[h];
-        nv += ncmopi_[h] - core_[h] - active_[h];
+        offset += frzvpi_[h];
     }
+
     outfile->Printf("  Done. Timing %15.6f s\n", tbdfock.get());
     timer_off("Block Diagonal 2D Matrix");
 }
 
 
-void FCI_MO::nat_orbs(){
-    outfile->Printf("\n  Use natural orbitals.");
+//void FCI_MO::nat_orbs(){
+//    outfile->Printf("\n  Use natural orbitals.");
 
-    bool natural = CheckDensity();
-    if(!natural){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
-        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","C");
-        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","A");
-        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
-        SharedMatrix Ca = wfn->Ca();
-        SharedMatrix Cb = wfn->Cb();
-        SharedMatrix Ca_new(Ca->clone());
-        SharedMatrix Cb_new(Cb->clone());
-        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
-        Ca->copy(Ca_new);
-        Cb->copy(Cb_new);
+//    bool natural = CheckDensity();
+//    if(!natural){
+//        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+//        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
+//        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
+//        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","C");
+//        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","A");
+//        BD_2D_Matrix(Fa_,Fb_,Ua,Ub,"Fock","V");
+//        SharedMatrix Ca = wfn->Ca();
+//        SharedMatrix Cb = wfn->Cb();
+//        SharedMatrix Ca_new(Ca->clone());
+//        SharedMatrix Cb_new(Cb->clone());
+//        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+//        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+//        Ca->copy(Ca_new);
+//        Cb->copy(Cb_new);
 
-        integral_->retransform_integrals();
-        fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
+//        integral_->retransform_integrals();
+//        fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+//        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+//        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+//        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+//        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+//        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+//        fci_ints_->compute_restricted_one_body_operator();
 
-        // Form and Diagonalize the CASCI Hamiltonian
-        Diagonalize_H(determinant_, eigen_);
-        if(print_ > 2){
-            for(pair<SharedVector, double> x: eigen_){
-                outfile->Printf("\n\n  Spin selected CI vectors\n");
-                (x.first)->print();
-                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-            }
-        }
+//        // Form and Diagonalize the CASCI Hamiltonian
+//        Diagonalize_H(determinant_, eigen_);
+//        if(print_ > 2){
+//            for(pair<SharedVector, double> x: eigen_){
+//                outfile->Printf("\n\n  Spin selected CI vectors\n");
+//                (x.first)->print();
+//                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+//            }
+//        }
 
-        // Store CI Vectors in eigen_
-        Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+//        // Store CI Vectors in eigen_
+//        Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
-        // Form Density
-        Da_ = d2(ncmo_, d1(ncmo_));
-        Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
-        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
-        FormDensity(determinant_, root_, Da_, Db_);
-        CheckDensity();
-        if(print_ > 1){
-            print_d2("Da", Da_);
-            print_d2("Db", Db_);
-        }
+//        // Form Density
+//        Da_ = d2(ncmo_, d1(ncmo_));
+//        Db_ = d2(ncmo_, d1(ncmo_));
+//        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
+//        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
+//        FormDensity(determinant_, root_, Da_, Db_);
+//        CheckDensity();
+//        if(print_ > 1){
+//            print_d2("Da", Da_);
+//            print_d2("Db", Db_);
+//        }
 
-        // Fock Matrix
-        Fa_ = d2(ncmo_, d1(ncmo_));
-        Fb_ = d2(ncmo_, d1(ncmo_));
-        Form_Fock(Fa_,Fb_);
-        if(print_ > 1){
-            print_d2("Fa", Fa_);
-            print_d2("Fb", Fb_);
-        }
-    }
-}
+//        // Fock Matrix
+//        Fa_ = d2(ncmo_, d1(ncmo_));
+//        Fb_ = d2(ncmo_, d1(ncmo_));
+//        Form_Fock(Fa_,Fb_);
+//        if(print_ > 1){
+//            print_d2("Fa", Fa_);
+//            print_d2("Fb", Fb_);
+//        }
+//    }
+//}
 
 bool FCI_MO::CheckDensity(){
     // check blocks

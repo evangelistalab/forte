@@ -185,10 +185,8 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix C_active(new Matrix("C_active", nso,na_));
     auto active_abs_corr = mo_space_info_->get_absolute_mo("ACTIVE");
 
-    for(size_t mu = 0; mu < nso; mu++){
-        for(size_t u = 0; u <  na_; u++){
-            C_active->set(mu, u, Call_->get(mu, active_abs_corr[u]));
-        }
+    for(size_t u = 0; u <  na_; u++){
+            C_active->set_column(0, u, Call_->get_column(0, active_abs_corr[u]));
     }
 
     ambit::Tensor Cact = ambit::Tensor::build(ambit::CoreTensor, "Cact", {nso, na_});
@@ -311,7 +309,7 @@ void OrbitalOptimizer::orbital_gradient()
 
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
-        Zm->set(nmo_abs_[i[0]],i[1], value);});
+        Zm->set(i[0],i[1], value);});
 
     Z_ = Zm;
     Z_->set_name("g * rdm2");
@@ -393,7 +391,6 @@ void OrbitalOptimizer::diagonal_hessian()
             double value_ia = (F_core_->get(a,a) * 4.0 + 4.0 * F_act_->get(a,a));
             value_ia -= (4.0 * F_core_->get(i,i)  + 4.0 * F_act_->get(i,i));
             D->set(i,a,value_ia);
-            D->set(a, i, value_ia);
         }
     }
     for(size_t ai = 0; ai < restricted_uocc_abs_.size(); ai++){
@@ -407,7 +404,6 @@ void OrbitalOptimizer::diagonal_hessian()
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
             value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
             D->set(t,a, value_ta);
-            D->set(a,t, value_ta);
         }
     }
     for(size_t ii = 0; ii < restricted_docc_abs_.size(); ii++){
@@ -422,7 +418,6 @@ void OrbitalOptimizer::diagonal_hessian()
             value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
             value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(i,t, value_it);
-            D->set(t,i, value_it);
         }
     }
 
@@ -508,13 +503,16 @@ SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
         }
     }
     AugmentedHessian->set(2*nmo_, 2*nmo_, 0.0);
-    g_->print();
-    d_->print();
-    AugmentedHessian->print();
     SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
     SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
-    HessianEval->print();
+    if(casscf_debug_print_)
+    {
+        g_->print();
+        d_->print();
+        AugmentedHessian->print();
+        HessianEval->print();
+    }
     return HessianEvec;
 
 }
