@@ -35,9 +35,7 @@ set forte{
    cas_type				   aci
    taup                    0.0
    tauq					   0.0
-   compute_rdms            true
    multiplicity            1
-   test_rdms true
 }
 
 energy('scf')

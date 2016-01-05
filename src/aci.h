@@ -69,7 +69,7 @@ public:
     Reference reference();
 
 	/// Set the RDM
-	void set_rdms( bool rdm );
+	void set_max_rdm( int rdm );
 
 private:
 
@@ -178,6 +178,8 @@ private:
 	bool det_hist_;
 	/// Save dets to file?
 	bool det_save_;
+	/// Order of RDM to compute
+	int rdm_level_;
 
     /// A vector of determinants in the P space
     std::vector<STLBitsetDeterminant> P_space_;
@@ -299,6 +301,9 @@ private:
 	void save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs );
 	/// Compute the Davidson correction
 	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant> P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals );   
+
+	/// Print natural orbitals
+	void print_nos();
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
