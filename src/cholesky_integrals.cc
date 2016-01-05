@@ -1,4 +1,4 @@
-/[forte-public]
+//[forte-public]
 #include <cmath>
 
 #include <libmints/integral.h>
