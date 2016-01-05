@@ -68,6 +68,8 @@ public:
 	/// Update the reference file
     Reference reference();
 
+	/// Set the RDM
+	void set_rdms( bool rdm );
 
 private:
 
@@ -169,7 +171,7 @@ private:
 	/// Spin tolerance
 	double spin_tol_;
 	/// Compute 1-RDM?
-	bool form_1_RDM_;
+	bool compute_rdms_;
 	/// Enforce spin completeness?
 	bool spin_complete_;
 	/// Print a determinant analysis?
