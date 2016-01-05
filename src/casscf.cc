@@ -157,7 +157,7 @@ void CASSCF::compute_casscf()
         //ints_->retransform_integrals();
 
         //outfile->Printf("\n\n Retrans: %8.8f", retrans.get());
-        //Timer my_trans;
+        Timer my_trans;
         tei_paaa_ = transform_integrals();
         //outfile->Printf("\n\n TransformIntegrals: %8.8f", my_trans.get());
         //ambit::Tensor active_trans_int = ints_->aptei_ab_block(active_abs_, active_abs_, active_abs_, active_abs_);
