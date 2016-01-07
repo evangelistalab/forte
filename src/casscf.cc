@@ -37,6 +37,7 @@ void CASSCF::compute_casscf()
     }
 
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
+    int print   = options_.get_int("PRINT");
 
     /// Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
@@ -71,6 +72,7 @@ void CASSCF::compute_casscf()
     E_casscf_ =  Process::environment.globals["SCF ENERGY"];
     outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
     double E_casscf_old = 0.0;
+    SharedMatrix S_step(new Matrix("OrbitalRotation", nmopi_, nmopi_));
     for(int iter = 0; iter < maxiter; iter++)
     {
        iter_con.push_back(iter);
@@ -94,6 +96,10 @@ void CASSCF::compute_casscf()
         //orbital_optimizer.one_body(Hcore_);
         SharedMatrix Hcore(Hcore_->clone());
         orbital_optimizer.one_body(Hcore);
+        if(options_.get_int("PRINT") > 0)
+        {
+            orbital_optimizer.set_print_timings(true);
+        }
 
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
@@ -107,6 +113,7 @@ void CASSCF::compute_casscf()
         }
 
         Sstep = orbital_optimizer.approx_solve();
+        S_step->add(Sstep);
         ///"Borrowed"(Stolen) from Daniel Smith's code.
         double maxS = 0.0;
         for (int h = 0; h < Sstep->nirrep(); h++){
@@ -121,7 +128,7 @@ void CASSCF::compute_casscf()
         }
         //Sstep->print();
         // Add step to overall rotation
-        S->copy(Sstep);
+        S->copy(S_step);
         SharedMatrix Cp = orbital_optimizer.rotate_orbitals(Ca, Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
@@ -154,11 +161,12 @@ void CASSCF::compute_casscf()
         ///Can redefi
 
         //Timer retrans;
-        ints_->retransform_integrals();
+        //ints_->retransform_integrals();
         //outfile->Printf("\n\n Retrans: %8.8f", retrans.get());
         Timer my_trans;
         tei_paaa_ = transform_integrals();
-        if(casscf_debug_print_){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
+        if(casscf_debug_print_ or print > 0){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
+
 
 
         std::string diis_start_label = "";

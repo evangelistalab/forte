@@ -74,6 +74,8 @@ public:
     void set_frozen_one_body(SharedMatrix F_froze){F_froze_ = F_froze;}
     /// Give the AO one electron integrals (H = T + V)
     void one_body(SharedMatrix H){H_ = H;}
+    /// Print a summary of timings
+    void set_print_timings(bool timing){timings_ = timing;}
 protected:
     ///The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
@@ -164,6 +166,8 @@ protected:
     /// Freeze the core and leave them unchanged
     /// Uses this to override MOSPACEINFO
     bool casscf_freeze_core_;
+    /// Print timings
+    bool timings_ = false;
 
     /// The Dimensions for the major orbitals spaces involved in CASSCF
     /// Trying to get these all in the startup, so I can use them repeatly
@@ -180,6 +184,10 @@ protected:
     std::vector<size_t> restricted_uocc_abs_;
     std::vector<size_t> inactive_docc_abs_;
     std::vector<size_t> nmo_abs_;
+
+    /// Allows for easy acess of unitary parameter
+    std::map<size_t, size_t> nhole_map_;
+    std::map<size_t, size_t> npart_map_;
 
 
 };
