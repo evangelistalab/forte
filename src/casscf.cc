@@ -168,7 +168,6 @@ void CASSCF::compute_casscf()
         if(casscf_debug_print_ or print > 0){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
 
 
-
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());

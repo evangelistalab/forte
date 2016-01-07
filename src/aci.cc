@@ -1698,14 +1698,14 @@ void AdaptiveCI::print_nos()
 	print_h2("NATURAL ORBITALS");
 
     boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
-    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, nactpi_, nactpi_));
+    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B",nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){
         for(int u = 0; u < nactpi_[h]; u++){
             for(int v = 0; v < nactpi_[h]; v++){
-                opdm_a->set(h, u, v, ordm_a_[(u + offset) * ncmo_ + v + offset]);
-                opdm_b->set(h, u, v, ordm_b_[(u + offset) * ncmo_ + v + offset]);
+                opdm_a->set(h, u, v, ordm_a_[(u + offset) * nact_ + v + offset]);
+                opdm_b->set(h, u, v, ordm_b_[(u + offset) * nact_ + v + offset]);
             }
         }
         offset += nactpi_[h];
@@ -1717,6 +1717,7 @@ void AdaptiveCI::print_nos()
 
     opdm_a->diagonalize(NO_A, OCC_A, descending);
     opdm_b->diagonalize(NO_B, OCC_B, descending);
+
     std::vector< std::pair<double, std::pair< int, int > > >vec_irrep_occupation;
     for(int h = 0; h < nirrep_; h++)
     {
