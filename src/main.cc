@@ -291,7 +291,7 @@ read_options(std::string name, Options &options)
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 10);
         /* - The convergence for the gradient for casscf -*/
-        options.add_double("CASSCF_G_CONVERGENCE", 1e-6);
+        options.add_double("CASSCF_G_CONVERGENCE", 1e-5);
         /* - The convergence of the energy for CASSCF -*/
         options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
@@ -301,14 +301,14 @@ read_options(std::string name, Options &options)
         /*- Freeze core with CASSCF -*/
         options.add_bool("CASSCF_FREEZE_CORE", false);
         /*- CASSCF MAXIMUM VALUE HESSIAN -*/
-        options.add_double("CASSCF_MAX_HESSIAN", 0.5);
+        options.add_double("CASSCF_MAX_ROTATION", 0.5);
         /*- DO SCALE THE HESSIAN -*/
-        options.add_bool("CASSCF_SCALE_HESSIAN", true);
+        options.add_bool("CASSCF_SCALE_ROTATION", true);
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
         /// The number of Rotation parameters to extrapolate with
-        options.add_int("CASSCF_DIIS_MAX_VEC", 4);
+        options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
         options.add_int("CASSCF_DIIS_START", 3);
         /// How often to do DIIS extrapolation
