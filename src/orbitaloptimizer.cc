@@ -345,31 +345,81 @@ void OrbitalOptimizer::orbital_gradient()
     SharedMatrix Orb_grad(new Matrix("G_pq", nhole, npart));
     Orb_grad->set_name("CASSCF Gradient");
 
+    auto generalized_hole_abs = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    auto generalized_part_abs = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    Dimension general_hole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
+    Dimension general_part_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     auto generalized_hole_rel = mo_space_info_->get_relative_mo("GENERALIZED HOLE");
     auto generalized_part_rel = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
-    auto generalized_hole_abs = mo_space_info_->get_absolute_mo("GENERALIZED HOLE");
-    auto generalized_part_abs = mo_space_info_->get_absolute_mo("GENERALIZED PARTICLE");
-    Dimension generalized_hole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
-    Dimension generalized_part_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("Generalized_hole_abs\n");
+        for(auto gha : generalized_hole_abs)
+        {
+            outfile->Printf(" %d", gha);
+        }
+        outfile->Printf("\n Generalized_part_abs\n");
+        for(auto gpa : generalized_part_abs)
+        {
+            outfile->Printf(" %d", gpa);
+        }
+        outfile->Printf("Generalized_hole_rel\n");
+        for(auto ghr : generalized_hole_rel)
+        {
+            outfile->Printf(" (%d, %d) ", ghr.first, ghr.second);
+        }
+        outfile->Printf("Generalized_part_rel\n");
+        for(auto gpr : generalized_part_rel)
+        {
+            outfile->Printf(" (%d, %d) ", gpr.first, gpr.second);
+        }
+    }
+    int offset_hole = 0;
+    int offset_part = 0;
+    std::vector<size_t> hole_offset_vector(nirrep_);
+    std::vector<size_t> particle_offset_vector(nirrep_);
+    for(size_t h = 0; h < nirrep_; h++){
+            hole_offset_vector[h] = offset_hole;
+            particle_offset_vector[h] = offset_part;
+            offset_hole += general_hole_dim[h];
+            offset_part += general_part_dim[h];
+    }
 
     /// Create a map that takes absolute index (in nmo indexing) and returns a value that corresponds to either hole or particle
+    /// IE: 0, 1, 2, 9 for hole where 2 and 9 are active
+    /// This map returns 0, 1, 2, 3
     for(size_t i = 0; i < nhole; i++)
     {
-        nhole_map_[generalized_hole_abs[i]] = i;
-
+        int sym_irrep = generalized_hole_rel[i].first;
+        //nhole_map_[generalized_hole_abs[i]] = (generalized_hole_rel[i].second + restricted_docc_dim_[generalized_hole_rel[i].first]);
+        /// generalized_hole_rel[i].second tells where the entry is in with respect to the irrep
+        /// hole_offset is an offset that accounts for the previous irreps
+        nhole_map_[generalized_hole_abs[i]] = generalized_hole_rel[i].second
+                + hole_offset_vector[sym_irrep]
+                - frozen_docc_dim_[sym_irrep];
     }
     for(size_t a = 0; a < npart; a++)
     {
-        npart_map_[generalized_part_abs[a]] = generalized_part_abs[a] - nrdocc_;
+        int sym_irrep = generalized_part_rel[a].first;
+        /// generalized_part_rel[a].second tells where the entry is in with respect to the irrep
+        /// part_offset_vector is an offset that accounts for the previous irreps
+        npart_map_[generalized_part_abs[a]] = (generalized_part_rel[a].second
+                                               + particle_offset_vector[sym_irrep]
+                                               - restricted_docc_dim_[sym_irrep])
+                                               - frozen_docc_dim_[sym_irrep];
     }
-    //for(auto hole : nhole_map)
-    //{
-    //    outfile->Printf("\n nhole_map[%d] = %d", hole.first, hole.second);
-    //}
-    //for(auto part : npart_map)
-    //{
-    //    outfile->Printf("\n npart_map[%d] = %d", part.first, part.second);
-    //}
+
+    if(casscf_debug_print_)
+    {
+        for(auto hole : nhole_map_)
+        {
+            outfile->Printf("\n nhole_map[%d] = %d", hole.first, hole.second);
+        }
+        for(auto part : npart_map_)
+        {
+            outfile->Printf("\n npart_map[%d] = %d", part.first, part.second);
+        }
+    }
 
 
     ///Some wierdness going on
@@ -388,7 +438,11 @@ void OrbitalOptimizer::orbital_gradient()
                 Orb_grad->set(nhole_map_[i] ,npart_map_[t], value_it) ;
             }
     }
-    if(casscf_debug_print_){outfile->Printf("\n i, t %8.8f", Orb_grad->rms());}
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n i, t %8.8f", Orb_grad->rms());
+        Orb_grad->print();
+    }
     for(size_t ii = 0; ii < nrdocc_; ii++){
         for(size_t aa = 0; aa < nvir_; aa++){
             size_t i = restricted_docc_abs_[ii];
@@ -398,7 +452,11 @@ void OrbitalOptimizer::orbital_gradient()
             Orb_grad->set(nhole_map_[i],npart_map_[a], value_ia);
         }
     }
-    if(casscf_debug_print_){outfile->Printf("\n i, a %8.8f", Orb_grad->rms());}
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n i, a %8.8f", Orb_grad->rms());
+        Orb_grad->print();
+    }
 
     for(size_t ai = 0; ai < nvir_; ai++){
         for(size_t ti = 0; ti < na_; ti++){
@@ -409,7 +467,11 @@ void OrbitalOptimizer::orbital_gradient()
             Orb_grad->set(nhole_map_[t],npart_map_[a], value_ta);
         }
     }
-    if(casscf_debug_print_){outfile->Printf("\n t, a %8.8f", Orb_grad->rms());}
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n t, a %8.8f", Orb_grad->rms());
+        Orb_grad->print();
+    }
 
 
     for(size_t ui = 0; ui < na_; ui++){
@@ -484,30 +546,15 @@ void OrbitalOptimizer::diagonal_hessian()
         }
     }
     d_ = D;
+    if(casscf_debug_print_)
+    {
+        d_->print();
+    }
 
 
 }
 SharedMatrix OrbitalOptimizer::approx_solve()
 {
-    ///Create an orbital rotation matrix of size (NMO - frozen)
-    SharedMatrix S_small = g_->clone();
-    S_small->apply_denominator(d_);
-    for(size_t u = 0; u < na_; u++){
-        for(size_t v = 0; v < na_; v++)
-        {
-            S_small->set(nhole_map_[active_abs_[u]], npart_map_[active_abs_[v]], 0.0);
-        }
-    }
-
-    S_small->set_name("Orbital Rotation Parameter");
-    if(casscf_debug_print_)
-    {
-        S_small->print();
-    }
-
-    Dimension true_nmopi = wfn_->nmopi();
-    SharedMatrix S_sym(new Matrix("S_sym", nirrep_, true_nmopi, true_nmopi));
-
     Dimension nhole_dim = restricted_docc_dim_ + active_dim_;
     Dimension nvirt_dim = restricted_uocc_dim_ + active_dim_;
 
@@ -521,7 +568,6 @@ SharedMatrix OrbitalOptimizer::approx_solve()
             int ioff = i + offset_hole;
             for(int a = 0; a < nvirt_dim[h]; a++){
                 int aoff = a + offset_part;
-                //outfile->Printf("\n i: %d ioff: %d  a: %d aoff: %d ", i, ioff, a, aoff);
                 G_grad->set(h, i, a, g_->get(ioff, aoff));
                 D_grad->set(h, i, a, d_->get(ioff, aoff));
             }
@@ -542,28 +588,14 @@ SharedMatrix OrbitalOptimizer::approx_solve()
         }
     }
 
-    offset_hole = 0;
-    offset_part = 0;
-    for(size_t h = 0; h < nirrep_; h++){
-        for(int i = 0; i < frozen_docc_dim_[h]; i++)
-        {
-            S_sym->set(h, i, i, 1.0);
-        }
-        for(int i = 0; i < nhole_dim[h]; i++){
-            for(int a = std::max(restricted_docc_dim_[h], i); a < nmopi_[h]; a++){
-                S_sym->set(h, i, a, S_tmp->get(h, i, a - restricted_docc_dim_[h]));
-                S_sym->set(h, a, i, -1.0 * S_tmp->get(h, i, a - restricted_docc_dim_[h]));
-            }
-        }
-    offset_hole += nhole_dim[h];
-    offset_part += nvirt_dim[h];
-    }
     if(casscf_debug_print_)
     {
-        S_sym->print();
+        G_grad->print();
+        D_grad->print();
+        S_tmp->set_name("g / d");
+        S_tmp->print();
     }
-
-    return S_sym;
+    return S_tmp;
 }
 SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
 {
@@ -596,20 +628,49 @@ SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
 
 SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
 {
+    Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
+    Dimension nvirt_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     ///Clone the C matrix
     SharedMatrix C_rot(C->clone());
     SharedMatrix S_mat(S->clone());
-
-    S_mat->expm();
+    SharedMatrix S_sym(new Matrix("Exp(K)", wfn_->nirrep(), wfn_->nmopi(), wfn_->nmopi()));
+    SharedMatrix U = S_sym->clone();
+    int offset_hole = 0;
+    int offset_part = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int i = 0; i < frozen_docc_dim_[h]; i++)
+        {
+            S_sym->set(h, i, i, 1.0);
+        }
+        for(int i = 0; i < nhole_dim[h]; i++){
+            for(int a = std::max(restricted_docc_dim_[h], i); a < nmopi_[h]; a++){
+                int ioff = i + frozen_docc_dim_[h];
+                int aoff = a + frozen_docc_dim_[h];
+                S_sym->set(h, ioff, aoff, S_mat->get(h, i, a - restricted_docc_dim_[h]));
+                S_sym->set(h, aoff, ioff, -1.0 * S_mat->get(h, i, a - restricted_docc_dim_[h]));
+            }
+        }
+    offset_hole += nhole_dim[h];
+    offset_part += nvirt_dim[h];
+    }
+    S_sym->expm();
     for(size_t h = 0; h < nirrep_; h++)
     {
-        for(int fr = 0; fr < frozen_docc_dim_[h]; fr++){
-            S_mat->set(h, fr, fr, 1.0);
+        for(int f = 0; f < frozen_docc_dim_[h]; f++)
+        {
+            S_sym->set(h, f, f, 1.0);
         }
     }
 
-    C_rot = Matrix::doublet(C, S_mat);
+
+    C_rot = Matrix::doublet(C, S_sym);
     C_rot->set_name("ROTATED_ORBITAL");
+    S_sym->set_name("Orbital Rotation (S = exp(x))");
+    if(casscf_debug_print_)
+    {
+        C_rot->print();
+        S_sym->print();
+    }
     return C_rot;
 
 

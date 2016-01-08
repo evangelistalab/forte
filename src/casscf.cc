@@ -52,12 +52,13 @@ void CASSCF::compute_casscf()
     int diis_freq = options_.get_int("CASSCF_DIIS_FREQ");
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
-    double hessian_scale_value = options_.get_double("CASSCF_MAX_HESSIAN");
-    bool   scale_hessian       = options_.get_bool("CASSCF_SCALE_HESSIAN");
+    double hessian_scale_value = options_.get_double("CASSCF_MAX_ROTATION");
+    bool   scale_hessian       = options_.get_bool("CASSCF_SCALE_ROTATION");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
 
-    Dimension all_nmopi = wfn_->nmopi();
-    SharedMatrix S(new Matrix("Orbital Rotation", nirrep_, all_nmopi, all_nmopi));
+    Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
+    Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    SharedMatrix S(new Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
     SharedMatrix Sstep;
 
     std::shared_ptr<DIISManager> diis_manager(new DIISManager(diis_max_vec, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore));
@@ -72,7 +73,6 @@ void CASSCF::compute_casscf()
     E_casscf_ =  Process::environment.globals["SCF ENERGY"];
     outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
     double E_casscf_old = 0.0;
-    SharedMatrix S_step(new Matrix("OrbitalRotation", nmopi_, nmopi_));
     for(int iter = 0; iter < maxiter; iter++)
     {
        iter_con.push_back(iter);
@@ -104,7 +104,7 @@ void CASSCF::compute_casscf()
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
-        if(g_norm < options_.get_double("CASSCF_G_CONVERGENCE") && fabs(E_casscf_old - E_casscf_)  < options_.get_double("CASSCF_E_CONVERGENCE")&& iter > 1)
+        if(g_norm < options_.get_double("CASSCF_G_CONVERGENCE") or fabs(E_casscf_old - E_casscf_)  < options_.get_double("CASSCF_E_CONVERGENCE")&& iter > 1)
         {
             outfile->Printf("\n\n @E_CASSCF: = %12.12f \n\n",E_casscf_ );
             outfile->Printf("\n Norm of orbital_gradient is %8.8f", g_norm);
@@ -113,7 +113,7 @@ void CASSCF::compute_casscf()
         }
 
         Sstep = orbital_optimizer.approx_solve();
-        S_step->add(Sstep);
+
         ///"Borrowed"(Stolen) from Daniel Smith's code.
         double maxS = 0.0;
         for (int h = 0; h < Sstep->nirrep(); h++){
@@ -126,13 +126,12 @@ void CASSCF::compute_casscf()
         if(maxS > hessian_scale_value && scale_hessian){
             Sstep->scale(hessian_scale_value / maxS);
         }
-        //Sstep->print();
+
         // Add step to overall rotation
-        S->copy(S_step);
-        SharedMatrix Cp = orbital_optimizer.rotate_orbitals(Ca, Sstep);
+        S->copy(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if(do_diis && (iter > diis_start && g_norm < options_.get_double("CASSCF_G_CONVERGENCE")))
+        if(do_diis && (iter > diis_start && g_norm < 1e-4))
         {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
@@ -142,15 +141,9 @@ void CASSCF::compute_casscf()
         {
             diis_manager->extrapolate(1, S.get());
         }
-
+        SharedMatrix Cp = orbital_optimizer.rotate_orbitals(Ca, S);
 
         Cp->set_name("Updated C");
-        if(casscf_debug_print_)
-        {
-            Cp->print();
-            Sstep->set_name("OrbitalRotationMatrix");
-            Sstep->print();
-        }
 
         ///ENFORCE Ca = Cb
         Ca->copy(Cp);
