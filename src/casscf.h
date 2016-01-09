@@ -87,7 +87,6 @@ private:
     void set_up_fci();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
-
     void startup();
 
     /// DEBUG PRINTING

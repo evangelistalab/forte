@@ -1,0 +1,44 @@
+#! CASSCF/6-31G** energy point
+import forte
+
+molecule {
+O
+H 1 1.00
+H 1 1.00 2 103.1
+}
+
+set {
+    scf_type        out_of_core
+    df_basis_guess   false
+    basis           3-21g
+    reference       rhf
+    frozen_docc [1, 0, 0, 0]
+    active          [3, 0, 1, 2]
+    e_convergence   1e-10
+    d_convergence   1e-10
+}
+
+
+energy('scf')
+#energy('casscf')
+set scf_type direct
+set forte {
+#    casscf_reference true
+    frozen_docc     [1, 0, 0, 0]
+    active          [3, 0, 1, 2]
+    int_type        conventional
+    FCI_ITERATIONS        40
+    e_convergence         1e-6
+    CAS_TYPE             FCI
+    #CASSCF_FREEZE_CORE   true
+    CASSCF_DEBUG_PRINTING true
+    job_type              FCI
+    print                 2
+    FCI_MAX_RDM          3
+}
+
+
+#mints()
+energy('forte')
+
+#compare_values(-76.07383398044661, casscf_energy, 6, 'CASSCF Energy')  #TEST
