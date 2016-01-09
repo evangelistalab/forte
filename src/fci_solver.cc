@@ -291,10 +291,6 @@ double FCISolver::compute_energy()
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
-    //if(ints_->frozen_core_integrals() == KeepFrozenMOs)
-    //{
-    //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
-    //}
     std::shared_ptr<FCIIntegrals> fci_ints;
     if(!provide_integrals_and_restricted_docc_)
     {

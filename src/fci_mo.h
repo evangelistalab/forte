@@ -68,6 +68,8 @@ public:
 
     /// Set to use semicanonical
     void set_semicanonical(const bool& semi) {semi_ = semi;}
+    /// Quiet mode (no printing, for use with CASSCF)
+    void set_quite_mode(const bool& quiet) {quiet_ = quiet;}
 
 protected:
     /// Basic Preparation
@@ -91,6 +93,8 @@ protected:
 
     /// Print Levels
     int print_;
+    /// Quiet mode (Do not print anything in FCI)
+    bool quiet_ = false;
 
     /// Nucear Repulsion Energy
     double e_nuc_;
