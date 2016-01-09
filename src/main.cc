@@ -504,6 +504,8 @@ read_options(std::string name, Options &options)
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- T1 Amplitudes -*/
+        options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
         options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
         /*- Max Iteration for Reference Relaxation -*/
@@ -520,8 +522,6 @@ read_options(std::string name, Options &options)
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
-        /*- Zero T1 Amplitudes -*/
-        options.add_bool("T1_ZERO", false);
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/

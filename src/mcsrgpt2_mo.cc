@@ -137,7 +137,8 @@ void MCSRGPT2_MO::startup(Options &options){
     T1b_ = d2(nh_, d1(npt_));
 
     string t_algorithm = options.get_str("T_ALGORITHM");
-    bool t1_zero = options.get_bool("T1_ZERO");
+    t1_amp_ = options.get_str("T1_AMP");
+    bool t1_zero = t1_amp_ == "ZERO";
     outfile->Printf("\n");
     outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
     outfile->Flush();
@@ -471,6 +472,9 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
         for(size_t a=0; a<npt_; ++a){
             size_t na = idx_p_[a];
 
+            double Da = Fa_[ni][ni] - Fa_[na][na];
+            double Db = Fb_[ni][ni] - Fb_[na][na];
+
             double RFa = Fa_[ni][na];
             double RFb = Fb_[ni][na];
 
@@ -479,15 +483,35 @@ void MCSRGPT2_MO::Form_T1_DSRG(d2 &A, d2 &B){
                 for(size_t x=0; x<na_; ++x){
                     size_t nx = idx_a_[x];
 
-                    RFa += (Fa_[nx][nx] - Fa_[nu][nu]) * T2aa_[i][u][a][x] * Da_[nx][nu];
-                    RFa += (Fb_[nx][nx] - Fb_[nu][nu]) * T2ab_[i][u][a][x] * Db_[nx][nu];
-                    RFb += (Fa_[nx][nx] - Fa_[nu][nu]) * T2ab_[u][i][x][a] * Da_[nx][nu];
-                    RFb += (Fb_[nx][nx] - Fb_[nu][nu]) * T2bb_[i][u][a][x] * Db_[nx][nu];
+                    double A_Da = Fa_[nx][nx] - Fa_[nu][nu];
+                    double A_Db = Fb_[nx][nx] - Fb_[nu][nu];
+
+                    if(t1_amp_ == "SRG"){
+                        double Vaa = integral_->aptei_aa(na,nx,ni,nu);
+                        double Vbb = integral_->aptei_bb(na,nx,ni,nu);
+                        double Vab_aa = integral_->aptei_ab(nx,na,nu,ni);
+                        double Vab_ab = integral_->aptei_ab(na,nx,ni,nu);
+
+                        double factor = 0.0;
+                        factor = 1.0 - exp(s_ * (2 * Da - A_Da) * A_Da);
+                        RFa -= Vaa * Da_[nx][nu] * factor;
+
+                        factor = 1.0 - exp(s_ * (2 * Da - A_Db) * A_Db);
+                        RFa -= Vab_ab * Db_[nx][nu] * factor;
+
+                        factor = 1.0 - exp(s_ * (2 * Db - A_Da) * A_Da);
+                        RFb -= Vab_aa * Da_[nx][nu] * factor;
+
+                        factor = 1.0 - exp(s_ * (2 * Db - A_Db) * A_Db);
+                        RFb -= Vbb * Db_[nx][nu] * factor;
+                    }else{
+                        RFa += A_Da * T2aa_[i][u][a][x] * Da_[nx][nu];
+                        RFa += A_Db * T2ab_[i][u][a][x] * Db_[nx][nu];
+                        RFb += A_Da * T2ab_[u][i][x][a] * Da_[nx][nu];
+                        RFb += A_Db * T2bb_[i][u][a][x] * Db_[nx][nu];
+                    }
                 }
             }
-
-            double Da = Fa_[ni][ni] - Fa_[na][na];
-            double Db = Fb_[ni][ni] - Fb_[na][na];
 
             A[i][a] = ElementT(source_, Da, RFa);
             B[i][a] = ElementT(source_, Db, RFb);
