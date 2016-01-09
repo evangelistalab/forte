@@ -14,7 +14,6 @@ FCI_MO::FCI_MO(boost::shared_ptr<Wavefunction> wfn, Options& options,
     : Wavefunction(options,_default_psio_lib_), wfn_(wfn), integral_(ints), mo_space_info_(mo_space_info)
 {
     copy(wfn);
-    print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});
     startup();
 }
 
@@ -193,33 +192,43 @@ void FCI_MO::read_options(){
     info.push_back({"ms (2 * Sz)", ms_});
     info.push_back({"number of molecular orbitals", nmo_});
 
-    print_h2("Input Summary");
-    for (auto& str_dim: info){
-        outfile->Printf("\n    %-30s = %5zu",str_dim.first.c_str(),str_dim.second);
+    if(print_ > 0){print_h2("Input Summary");}
+    if(print_ > 0)
+    {
+        for (auto& str_dim: info){
+            outfile->Printf("\n    %-30s = %5zu",str_dim.first.c_str(),str_dim.second);
+        }
     }
 
     // print orbital spaces
-    print_h2("Orbital Spaces");
-    print_irrep("TOTAL MO", nmopi_);
-    print_irrep("FROZEN CORE", frzcpi_);
-    print_irrep("FROZEN VIRTUAL", frzvpi_);
-    print_irrep("CORRELATED MO", ncmopi_);
-    print_irrep("CORE", core_);
-    print_irrep("ACTIVE", active_);
-    print_irrep("VIRTUAL", virtual_);
+    if(print_ > 0)
+    {
+        print_h2("Orbital Spaces");
+        print_irrep("TOTAL MO", nmopi_);
+        print_irrep("FROZEN CORE", frzcpi_);
+        print_irrep("FROZEN VIRTUAL", frzvpi_);
+        print_irrep("CORRELATED MO", ncmopi_);
+        print_irrep("CORE", core_);
+        print_irrep("ACTIVE", active_);
+        print_irrep("VIRTUAL", virtual_);
+    }
 
     // print orbital indices
-    print_h2("Correlated Subspace Indices");
-    print_idx("CORE", idx_c_);
-    print_idx("ACTIVE", idx_a_);
-    print_idx("HOLE", idx_h_);
-    print_idx("VIRTUAL", idx_v_);
-    print_idx("PARTICLE", idx_p_);
-    outfile->Printf("\n");
-    outfile->Flush();
+    if(print_ > 0)
+    {
+        print_h2("Correlated Subspace Indices");
+        print_idx("CORE", idx_c_);
+        print_idx("ACTIVE", idx_a_);
+        print_idx("HOLE", idx_h_);
+        print_idx("VIRTUAL", idx_v_);
+        print_idx("PARTICLE", idx_p_);
+        outfile->Printf("\n");
+        outfile->Flush();
+    }
 }
 
 double FCI_MO::compute_energy(){
+    if(!quiet_){print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});}
     // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
@@ -246,7 +255,7 @@ double FCI_MO::compute_energy(){
     // diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
     Diagonalize_H(determinant_, eigen_);
-    if(print_ > 2){
+    if(print_ > 2 && !quiet_){
         for(pair<SharedVector, double> x: eigen_){
             outfile->Printf("\n\n  Spin selected CI vectors\n");
             (x.first)->print();
@@ -289,7 +298,7 @@ double FCI_MO::compute_energy(){
         if(semi_){
             semi_canonicalize(count);
         }else{
-//            nat_orbs();
+            nat_orbs();
         }
     }
 
@@ -307,15 +316,15 @@ void FCI_MO::form_det(){
     // Alpha and Beta Strings
     Timer tstrings;
     std::string str = "Forming alpha and beta strings";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     vector<vector<vector<bool>>> a_string = Form_String(na_a);
     vector<vector<vector<bool>>> b_string = Form_String(nb_a);
-    outfile->Printf("  Done. Timing %15.6f s", tstrings.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tstrings.get());}
 
     // Form Determinant
     Timer tdet;
     str = "Forming determinants";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     for(int i = 0; i != nirrep_; ++i){
         int j = i ^ root_sym_;
         size_t sa = a_string[i].size();
@@ -326,7 +335,7 @@ void FCI_MO::form_det(){
             }
         }
     }
-    outfile->Printf("  Done. Timing %15.6f s", tdet.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
 
     // printing
     std::vector<std::pair<std::string,size_t>> info;
@@ -335,12 +344,15 @@ void FCI_MO::form_det(){
     info.push_back({"root symmetry (zero based)", root_sym_});
     info.push_back({"number of determinants", determinant_.size()});
 
-    print_h2("Determinants Summary");
-    for (auto& str_dim: info){
-        outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+    if(!quiet_)
+    {
+        print_h2("Determinants Summary");
+        for (auto& str_dim: info){
+            outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+        }
     }
     if(print_ > 2) print_det(determinant_);
-    outfile->Printf("\n");
+    if(!quiet_){outfile->Printf("\n");}
     outfile->Flush();
 
     if(determinant_.size() == 0){
@@ -374,7 +386,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
         String[sym].push_back(string_a);
     }while(next_permutation(I_init, I_init + na_));
 
-    if(print == true){
+    if(print == true && !quiet_){
         print_h2("Possible String");
         for(size_t i = 0; i != String.size(); ++i){
             outfile->Printf("\n  symmetry = %lu \n", i);
@@ -436,13 +448,16 @@ void FCI_MO::form_det_cis(){
     info.push_back({"root symmetry (zero based)", root_sym_});
     info.push_back({"number of determinants", determinant_.size()});
 
-    print_h2("Determinants Summary");
-    for (auto& str_dim: info){
-        outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+    if(!quiet_)
+    {
+        print_h2("Determinants Summary");
+        for (auto& str_dim: info){
+            outfile->Printf("\n    %-35s = %5zu",str_dim.first.c_str(),str_dim.second);
+        }
+        print_det(determinant_);
+        outfile->Printf("\n");
+        outfile->Flush();
     }
-    print_det(determinant_);
-    outfile->Printf("\n");
-    outfile->Flush();
 
     if(determinant_.size() == 0){
         outfile->Printf("\n  There is no determinant matching the conditions!");
@@ -467,7 +482,7 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
     active_o_ = doccpi - frzcpi_ - core_;
     active_v_ = active_ - active_o_;
 
-    if(print == true){
+    if(print == true && !quiet_){
         print_h2("Reference String");
         outfile->Printf("    ");
         for(bool b: String){
@@ -513,7 +528,7 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
         }
     }
 
-    if(print == true){
+    if(print == true && !quiet_){
         print_h2("Singles String");
         for(size_t i = 0; i != String.size(); ++i){
             if(String[i].size() != 0){
@@ -609,7 +624,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     timer_on("Diagonalize H");
     Timer tdiagH;
     std::string str = "Diagonalizing Hamiltonian";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     size_t det_size = det.size();
     eigen.clear();
 
@@ -640,12 +655,12 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
 
     // check spin
     int count = 0;
-    outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());
+    if(!quiet_){outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());}
     double threshold = 1.0e-4;
     if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
         threshold = 0.10 * multi_;    // 10% off from the multiplicity of the spin eigen state
     }
-    outfile->Printf("\n  Threshold for spin check: %.4f", threshold);
+    if(!quiet_){outfile->Printf("\n  Threshold for spin check: %.4f", threshold);}
 
     for(int i = 0; i != nroot; ++i){
         double S2 = 0.0;
@@ -659,19 +674,19 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
         double multi_real = 2.0 * S + 1;
 
         if(std::fabs(multi_ - multi_real) > threshold){
-            outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, continue searching...", 0.25 * (multi_ * multi_ - 1.0), S2);
+            if(!quiet_){outfile->Printf("\n\n  Ask for S^2 = %.4f, this S^2 = %.4f, continue searching...", 0.25 * (multi_ * multi_ - 1.0), S2);}
             continue;
         }
         else{
             std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet"});
             std::string state_label = s2_labels[std::round(S * 2.0)];
-            outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),det_size);
+            if(!quiet_){outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants)",S2,S,state_label.c_str(),det_size);}
             ++count;
             eigen.push_back(make_pair(vec_tmp->get_column(0,i), val_tmp->get(i) + e_nuc_));
         }
         if(count == nroot_) break;
     }
-    outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());}
     timer_off("Diagonalize H");
 }
 
@@ -682,11 +697,13 @@ inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, in
 void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector, double>> &eigen, const vecdet &det){
 
     timer_on("STORE CI Vectors");
-    outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
-    outfile->Printf("\n  *  CI Vectors & Configurations  *");
-    outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
-    outfile->Printf("\n");
-    outfile->Flush();
+    if(!quiet_){
+        outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
+        outfile->Printf("\n  *  CI Vectors & Configurations  *");
+        outfile->Printf("\n  * * * * * * * * * * * * * * * * *");
+        outfile->Printf("\n");
+        outfile->Flush();
+    }
 
     for(int i = 0; i != nroot; ++i){
         vector<tuple<double, int>> ci_selec;
@@ -698,9 +715,9 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
         }
         sort(ci_selec.begin(), ci_selec.end(), ReverseAbsSort);
 
-        outfile->Printf("\n  ==> Root No. %d <==\n", i+1);
+        if(!quiet_){outfile->Printf("\n  ==> Root No. %d <==\n", i+1);}
         for(size_t j = 0; j < ci_selec.size(); ++j){
-            outfile->Printf("\n    ");
+            if(!quiet_){outfile->Printf("\n    ");}
             double ci = get<0>(ci_selec[j]);
             size_t index = get<1>(ci_selec[j]);
             size_t ncmopi = 0;
@@ -709,18 +726,21 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
                     size_t x = k + ncmopi;
                     bool a = det[index].get_alfa_bit(x);
                     bool b = det[index].get_beta_bit(x);
-                    if(a == b)
-                        outfile->Printf("%d", a==1 ? 2 : 0);
+                    if(a == b){
+                        if(!quiet_){outfile->Printf("%d", a==1 ? 2 : 0);}
+                    }
                     else
-                        outfile->Printf("%c", a==1 ? 'a' : 'b');
+                    {
+                            if(!quiet_){outfile->Printf("%c", a==1 ? 'a' : 'b');}
+                    }
                 }
                 if(active_[h] != 0)
-                    outfile->Printf(" ");
+                    if(!quiet_){outfile->Printf(" ");}
                 ncmopi += active_[h];
             }
-            outfile->Printf(" %20.8f", ci);
+            if(!quiet_){outfile->Printf(" %20.8f", ci);}
         }
-        outfile->Printf("\n\n    Total Energy:   %.15lf\n\n", eigen[i].second);
+        if(!quiet_){outfile->Printf("\n\n    Total Energy:   %.15lf\n\n", eigen[i].second);}
         outfile->Flush();
     }
 
@@ -731,7 +751,7 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
     timer_on("FORM Density");
     Timer tdensity;
     std::string str = "Forming one-particle density";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
 
     for(size_t p = 0; p < nc_; ++p){
         size_t np = idx_c_[p];
@@ -768,7 +788,7 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
 
     }
     fill_density();
-    outfile->Printf("  Done. Timing %15.6f s", tdensity.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdensity.get());}
     timer_off("FORM Density");
 }
 
@@ -810,7 +830,7 @@ void FCI_MO::FormCumulant2(const vecdet &dets, const int &root, d4 &AA, d4 &AB, 
     timer_on("FORM 2-Cumulant");
     Timer tL2;
     std::string str = "Forming Lambda2";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     FormCumulant2AA(dets, root, AA, BB);
     FormCumulant2AB(dets, root, AB);
     fill_cumulant2();
@@ -1238,9 +1258,9 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     }
     Timer tfock;
     std::string str = "Forming generalized Fock matrix";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     integral_->make_fock_matrix(DaM, DbM);
-    outfile->Printf("  Done. Timing %15.6f s", tfock.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tfock.get());}
 
     for(size_t p = 0; p < ncmo_; ++p){
         for(size_t q = 0; q < ncmo_; ++q){
@@ -1255,8 +1275,8 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count
     timer_on("Check Fock");
     Timer tfock;
     std::string str = "Checking Fock matrices (Fa, Fb)";
-    outfile->Printf("\n  %-35s ...", str.c_str());
-    outfile->Printf("\n  Nonzero criteria: > %.2E", E);
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
+    if(!quiet_){outfile->Printf("\n  Nonzero criteria: > %.2E", E);}
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
     if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE"){
         Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
@@ -1273,10 +1293,12 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count
     }
     Check_FockBlock(A, B, E, count, nv_, idx_v_, "VIRTUAL");
     str = "Done checking Fock matrices.";
-    outfile->Printf("\n  %-47s", str.c_str());
-    outfile->Printf("Timing %15.6f s", tfock.get());
-    outfile->Printf("\n");
-    outfile->Flush();
+    if(!quiet_){
+        outfile->Printf("\n  %-47s", str.c_str());
+        outfile->Printf("Timing %15.6f s", tfock.get());
+        outfile->Printf("\n");
+        outfile->Flush();
+    }
     timer_off("Check Fock");
 }
 
@@ -1300,19 +1322,22 @@ void FCI_MO::Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &
         }
     }
     count += a+b;
-    if(a == 0){
-        outfile->Printf("\n  Fa_%-7s block is diagonal.", str.c_str());
-    }else{
-        outfile->Printf("\n  Warning: Fa_%-7s NOT diagonal!", str.c_str());
-        outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", a, maxa);
+    if(!quiet_)
+    {
+        if(a == 0){
+            outfile->Printf("\n  Fa_%-7s block is diagonal.", str.c_str());
+        }else{
+            outfile->Printf("\n  Warning: Fa_%-7s NOT diagonal!", str.c_str());
+            outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", a, maxa);
+        }
+        if(b == 0){
+            outfile->Printf("\n  Fb_%-7s block is diagonal.", str.c_str());
+        }else{
+            outfile->Printf("\n  Warning: Fb_%-7s NOT diagonal!", str.c_str());
+            outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b, maxb);
+        }
+        outfile->Flush();
     }
-    if(b == 0){
-        outfile->Printf("\n  Fb_%-7s block is diagonal.", str.c_str());
-    }else{
-        outfile->Printf("\n  Warning: Fb_%-7s NOT diagonal!", str.c_str());
-        outfile->Printf("\n  Nonzero off-diagonal: %5zu. Largest value: %18.15lf", b, maxb);
-    }
-    outfile->Flush();
 }
 
 void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix &Ub, const string& name){

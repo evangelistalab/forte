@@ -119,18 +119,18 @@ void OrbitalOptimizer::form_fock_core()
     // Need to get the inactive block of the C matrix
     SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
     SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
+    SharedMatrix F_core(new Matrix("InactiveTemp", nirrep_, nmopi_, nmopi_));
     F_core_c1->zero();
 
     ///If there is no restricted_docc, there is no C_core
     if(restricted_docc_dim_.sum() > 0)
     {
         for(size_t h = 0; h < nirrep_; h++){
-            for(int mu = 0; mu < nsopi_[h]; mu++){
-                for(int i = 0; i <  restricted_docc_dim_[h]; i++){
-                    C_core->set(h, mu, i, Ca_sym_->get(h, mu, i + frozen_docc_dim_[h]));
-                }
+            for(int i = 0; i <  restricted_docc_dim_[h]; i++){
+                C_core->set_column(h,i, Ca_sym_->get_column(h, i + frozen_docc_dim_[h]));
             }
         }
+
         if(casscf_debug_print_){
             C_core->print();
         }
@@ -156,27 +156,27 @@ void OrbitalOptimizer::form_fock_core()
         SharedMatrix K_core = JK_core->K()[0];
 
         J_core->scale(2.0);
-        SharedMatrix F_core = J_core->clone();
+        F_core = J_core->clone();
         F_core->subtract(K_core);
+    }
 
-        /// If there are frozen orbitals, need to add
-        /// FrozenCore Fock matrix to inactive block
-        if(casscf_freeze_core_)
-        {
-            F_core->add(F_froze_);
-        }
-        F_core->transform(Ca_sym_);
-        F_core->add(H_);
+    /// If there are frozen orbitals, need to add
+    /// FrozenCore Fock matrix to inactive block
+    if(casscf_freeze_core_)
+    {
+        F_core->add(F_froze_);
+    }
+    F_core->transform(Ca_sym_);
+    F_core->add(H_);
 
-        int offset = 0;
-        for(size_t h = 0; h < nirrep_; h++){
-            for(int p = 0; p < nmopi_[h]; p++){
-                for(int q = 0; q < nmopi_[h]; q++){
-                    F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_docc_dim_[h], q + frozen_docc_dim_[h]));
-                }
+    int offset = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+                F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_docc_dim_[h], q + frozen_docc_dim_[h]));
             }
-            offset += nmopi_[h];
         }
+        offset += nmopi_[h];
     }
     F_core_   = F_core_c1;
     if(casscf_debug_print_)
@@ -222,9 +222,7 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix L_C_correct(new Matrix("L_C_order", nso, Ch->Q()));
 
     for(size_t mu = 0; mu < nso; mu++){
-        for(size_t Q = 0; Q < Ch->Q(); Q++){
-            L_C_correct->set(mu, Q, L_C->get(Q, mu));
-        }
+            L_C_correct->set_row(0, mu, L_C->get_column(0, mu));
     }
 
     boost::shared_ptr<JK> JK_act = JK::build_JK();
@@ -287,7 +285,7 @@ void OrbitalOptimizer::orbital_gradient()
     ///From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor,"Y",{nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
-    if(nrdocc_ > 0)
+    if(nrdocc_ > 0 or nfrozen_ > 0)
     {
         F_pu.iterate([&](const std::vector<size_t>& i,double& value){
             value = F_core_->get(nmo_abs_[i[0]],active_abs_[i[1]]);});
@@ -318,6 +316,7 @@ void OrbitalOptimizer::orbital_gradient()
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
+    outfile->Printf("\n\n integral_: %8.8f gamma2_: %8.8f", integral_.norm(2), gamma2_.norm(2));
 
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
@@ -427,29 +426,36 @@ void OrbitalOptimizer::orbital_gradient()
     /// I need to make sure that the matrix is ordered in pitzer ordering
     /// The offset allows me to place the correct values with pitzer ordering
 
-    for(size_t ii = 0; ii < nrdocc_; ii++)
-        for(size_t ti = 0; ti < na_; ti++){
-            {
-                size_t i = restricted_docc_abs_[ii];
-                size_t t = active_abs_[ti];
-                //size_t ti_offset = generalized_part_rel[ti].second + gen_part[generalized_part_rel[ti].first];
-                //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
-                double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
-                Orb_grad->set(nhole_map_[i] ,npart_map_[t], value_it) ;
+    if(nrdocc_ > 0)
+    {
+        for(size_t ii = 0; ii < nrdocc_; ii++){
+            for(size_t ti = 0; ti < na_; ti++){
+                {
+                    size_t i = restricted_docc_abs_[ii];
+                    size_t t = active_abs_[ti];
+                    //size_t ti_offset = generalized_part_rel[ti].second + gen_part[generalized_part_rel[ti].first];
+                    //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
+                    double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
+                    Orb_grad->set(nhole_map_[i] ,npart_map_[t], value_it) ;
+                }
             }
+        }
     }
     if(casscf_debug_print_)
     {
         outfile->Printf("\n i, t %8.8f", Orb_grad->rms());
         Orb_grad->print();
     }
-    for(size_t ii = 0; ii < nrdocc_; ii++){
-        for(size_t aa = 0; aa < nvir_; aa++){
-            size_t i = restricted_docc_abs_[ii];
-            size_t a = restricted_uocc_abs_[aa];
-            //size_t a_offset = generalized_part_rel[aa + na_].second + gen_part[generalized_part_rel[aa + na_].first];
-            double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
-            Orb_grad->set(nhole_map_[i],npart_map_[a], value_ia);
+    if(nrdocc_ > 0)
+    {
+        for(size_t ii = 0; ii < nrdocc_; ii++){
+            for(size_t aa = 0; aa < nvir_; aa++){
+                size_t i = restricted_docc_abs_[ii];
+                size_t a = restricted_uocc_abs_[aa];
+                //size_t a_offset = generalized_part_rel[aa + na_].second + gen_part[generalized_part_rel[aa + na_].first];
+                double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
+                Orb_grad->set(nhole_map_[i],npart_map_[a], value_ia);
+            }
         }
     }
     if(casscf_debug_print_)
