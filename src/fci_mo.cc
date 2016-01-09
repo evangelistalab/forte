@@ -435,7 +435,7 @@ void FCI_MO::form_det_cis(){
         determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
     }
 
-    outfile->Printf("  Done. Timing %15.6f s", tdet.get());
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
 
     // Number of alpha and beta electrons in active
     int na_a = nalfa_ - nc_ - nfrzc_;

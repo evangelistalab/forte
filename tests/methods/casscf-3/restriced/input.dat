@@ -1,0 +1,44 @@
+#! CASSCF/6-31G** energy point
+import forte
+
+molecule {
+O
+H 1 1.00
+H 1 1.00 2 103.1
+}
+
+set {
+    scf_type        out_of_core
+    basis           sto-3g
+    reference       rhf
+    RESTRICTED_DOCC     [1, 0, 0, 0]
+    active          [3, 0, 1, 2]
+    e_convergence   1e-10
+    d_convergence   1e-10
+    mcscf_type      conv
+}
+
+casscf_energy = energy('casscf')
+print casscf_energy
+
+set scf_type direct
+set forte {
+    casscf_reference true
+    restricted_docc     [1, 0, 0, 0]
+    active              [3, 0, 1, 2]
+    int_type        conventional
+    FCI_ITERATIONS    40
+    CASSCF_DEBUG_PRINTING  true
+    e_convergence         1e-7
+    CASSCF_E_CONVERGENCE  1e-8
+    CAS_TYPE             FCI
+    CASSCF_ITERATIONS    1
+    print                0
+}
+
+
+#mints()
+my_casscf = energy('forte')
+
+compare_values(-75.0205439681, my_casscf, 6, 'CASSCF Energy')  #TEST
+

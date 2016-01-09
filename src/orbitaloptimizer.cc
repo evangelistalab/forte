@@ -316,7 +316,10 @@ void OrbitalOptimizer::orbital_gradient()
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
-    outfile->Printf("\n\n integral_: %8.8f gamma2_: %8.8f", integral_.norm(2), gamma2_.norm(2));
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n\n integral_: %8.8f  gamma2_: %8.8f", integral_.norm(2), gamma2_.norm(2));
+    }
 
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
