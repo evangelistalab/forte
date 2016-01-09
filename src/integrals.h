@@ -177,7 +177,8 @@ public:
     SharedMatrix OneBodyAO(){return OneIntsAO_;}
     ///Set to either delete frozen core integrals or keep them
     void keep_frozen_core_integrals(IntegralFrozenCore keep_frozen_core)
-    {resort_frozen_core_ = keep_frozen_core;
+    {
+        resort_frozen_core_ = keep_frozen_core;
     }
     IntegralFrozenCore frozen_core_integrals(){return resort_frozen_core_;}
 

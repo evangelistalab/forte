@@ -79,6 +79,8 @@ double FCIWfn::energy_from_rdms(std::shared_ptr<FCIIntegrals> fci_ints)
         for (size_t q = 0; q < ncmo_; ++q){
             energy_1rdm += opdm_a_[ncmo_ * p + q] * fci_ints->oei_a(p,q);
             energy_1rdm += opdm_b_[ncmo_ * p + q] * fci_ints->oei_b(p,q);
+            outfile->Printf("\n fci_ints (%d, %d) = %8.8f", p, q, fci_ints->oei_a(p, q));
+
         }
     }
 
