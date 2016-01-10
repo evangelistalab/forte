@@ -304,6 +304,8 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_MAX_ROTATION", 0.5);
         /*- DO SCALE THE HESSIAN -*/
         options.add_bool("CASSCF_SCALE_ROTATION", true);
+        /*- Use JK builder for restricted docc (EXPERT) -*/
+        options.add_bool("RESTRICTED_DOCC_JK", true);
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
