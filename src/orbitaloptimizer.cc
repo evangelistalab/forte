@@ -80,6 +80,7 @@ void OrbitalOptimizer::startup()
     all_nmo_ = mo_space_info_->size("ALL");
 
     nrdocc_ = restricted_docc_abs_.size();
+    nfrozen_ = frozen_docc_abs_.size();
     na_     = active_abs_.size();
     nvir_  = restricted_uocc_abs_.size();
     wfn_ = Process::environment.wavefunction();
@@ -119,7 +120,8 @@ void OrbitalOptimizer::form_fock_core()
     // Need to get the inactive block of the C matrix
     SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
     SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
-    SharedMatrix F_core(new Matrix("InactiveTemp", nirrep_, nmopi_, nmopi_));
+    SharedMatrix F_core(new Matrix("InactiveTemp1", nirrep_, nsopi_, nsopi_));
+    SharedMatrix F_core_tmp(new Matrix("InactiveTemp2", nirrep_, nsopi_, nsopi_));
     F_core_c1->zero();
 
     ///If there is no restricted_docc, there is no C_core
@@ -146,8 +148,10 @@ void OrbitalOptimizer::form_fock_core()
         JK_core->initialize();
 
         std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+        std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
 
         Cl.clear();
+        Cr.clear();
         Cl.push_back(C_core);
 
         JK_core->compute();
@@ -166,7 +170,13 @@ void OrbitalOptimizer::form_fock_core()
     {
         F_core->add(F_froze_);
     }
+
     F_core->transform(Ca_sym_);
+    //F_core->set_name("TRANSFORM BUG?");
+    //F_core->print();
+    //SharedMatrix F_core_triplet = Matrix::triplet(Ca_sym_, F_core_tmp, Ca_sym_, true, false, false);
+    //F_core_triplet->set_name("TripletTransform");
+    //F_core_triplet->print();
     F_core->add(H_);
 
     int offset = 0;

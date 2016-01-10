@@ -6,6 +6,7 @@
 #include "helpers.h"
 #include <libfock/jk.h>
 #include "fci_solver.h"
+#include "aci.h"
 #include <psifiles.h>
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
@@ -211,20 +212,6 @@ void CASSCF::startup()
 
     nfrozen_ = frozen_docc_abs_.size();
     ///If the user wants to freeze core after casscf, this section of code sets frozen_docc to zero
-    if(!casscf_freeze_core_)
-    {
-        restricted_docc_abs_ = mo_space_info_->get_absolute_mo("INACTIVE_DOCC");
-        restricted_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-        active_abs_          = mo_space_info_->get_absolute_mo("ACTIVE");
-        restricted_uocc_abs_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
-
-        for(size_t h = 0; h < nirrep_; h++){frozen_docc_dim_[h] = 0;}
-        for(size_t i = 0; i < frozen_docc_abs_.size(); i++){frozen_docc_abs_[i] = 0;}
-        nfrozen_ = 0;
-        nmo_ = mo_space_info_->size("ALL");
-        nmopi_ = mo_space_info_->get_dimension("ALL");
-        nmo_abs_ = mo_space_info_->get_absolute_mo("ALL");
-    }
     if(casscf_debug_print_)
     {
         outfile->Printf("\n Total Number of NMO: %d", nmo_);
@@ -272,6 +259,15 @@ void CASSCF::cas_ci()
         cas_ref_ = cas.reference();
         E_casscf_ = cas_ref_.get_Eref();
     }
+    else if(options_.get_str("CAS_TYPE") == "ACI")
+    {
+        ints_->retransform_integrals();
+        AdaptiveCI aci(wfn_, options_, ints_, mo_space_info_);
+        aci.set_max_rdm(2);
+        aci.compute_energy();
+        cas_ref_ = aci.reference();
+        E_casscf_ = cas_ref_.get_Eref();
+    }
 
     ambit::Tensor L2aa = cas_ref_.L2aa();
     ambit::Tensor L2ab = cas_ref_.L2ab();
@@ -303,12 +299,12 @@ void CASSCF::cas_ci()
     gamma2_.scale(2.0);
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
-    if(options_.get_bool("CASSCF_DEBUG_PRINTING"))
-    {
-        double E_casscf_check = cas_check(cas_ref_);
-        outfile->Printf("\n E_casscf_check - E_casscf_ = difference\n");
-        outfile->Printf("\n %8.8f - %8.8f = %8.8f", E_casscf_check, E_casscf_, E_casscf_check - E_casscf_);
-    }
+    //if(options_.get_bool("CASSCF_DEBUG_PRINTING"))
+    //{
+    //    double E_casscf_check = cas_check(cas_ref_);
+    //    outfile->Printf("\n E_casscf_check - E_casscf_ = difference\n");
+    //    outfile->Printf("\n %8.8f - %8.8f = %8.8f", E_casscf_check, E_casscf_, E_casscf_check - E_casscf_);
+    //}
 
     /// Compute the 1RDM
     ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::CoreTensor,"Return",{na_, na_});
@@ -371,7 +367,6 @@ double CASSCF::cas_check(Reference cas_ref)
     for (size_t p = 0; p < na_array.size(); ++p){
         for (size_t q = 0; q < na_array.size(); ++q){
             E_casscf += gamma1.data()[na_ * p + q] * fci_ints->oei_a(p,q);
-            outfile->Printf("\n\n fci_ints(%d, %d): %8.8f", p, q, fci_ints->oei_a(p, q));
 
         }
     }
@@ -393,9 +388,9 @@ double CASSCF::cas_check(Reference cas_ref)
 boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 {
     SharedMatrix Ca = wfn_->Ca();
-    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    Dimension nsopi = wfn_->nsopi();
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
-    SharedMatrix C_core(new Matrix("C_core",nirrep_, nmopi, frozen_dim));
+    SharedMatrix C_core(new Matrix("C_core",nirrep_, nsopi, frozen_dim));
     // Need to get the frozen block of the C matrix
     for(size_t h = 0; h < nirrep_; h++){
         for(int i = 0; i < frozen_dim[h]; i++){
@@ -436,8 +431,6 @@ ambit::Tensor CASSCF::transform_integrals()
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
     size_t nmo_no_froze =  mo_space_info_->size("ALL");
     size_t nmo_with_froze = mo_space_info_->size("CORRELATED");
-    SharedMatrix Identity(new Matrix("I", nmo_no_froze,nmo_no_froze));
-    Identity->identity();
     SharedMatrix CAct(new Matrix("CAct", nsopi_.sum(), na_));
     auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
 
@@ -454,6 +447,8 @@ ambit::Tensor CASSCF::transform_integrals()
     nirrep_ = wfn_->nirrep();
     SharedMatrix Call(new Matrix(nso, nmo_no_froze));
     SharedMatrix Ca_sym = wfn_->Ca();
+    SharedMatrix Identity(new Matrix("I", nso,nso));
+    Identity->identity();
 
     // Transform from the SO to the AO basis for the C matrix.
     // just transfroms the C_{mu_ao i} -> C_{mu_so i}
@@ -492,6 +487,7 @@ ambit::Tensor CASSCF::transform_integrals()
             ij[0] = i;
             ij[1] = j;
             SharedVector C_j = CAct->get_column(0, j);
+            /// D_{uv}^{ij} = C_i C_j^T
             C_DGER(nso, nso, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nso);
 
             D_vec.push_back(std::make_pair(D, ij));
@@ -608,28 +604,62 @@ void CASSCF::set_up_fci()
     fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
     fcisolver.print_no(false);
 
-    fcisolver.use_user_integrals_and_restricted_docc(true);
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
-    auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    if(!(options_.get_bool("RESTRICTED_DOCC_JK")))
+    {
+        ints_->retransform_integrals();
+        fci_ints->set_active_integrals_and_restricted_docc();
+    }
+    else
+    {
+        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        fcisolver.use_user_integrals_and_restricted_docc(true);
 
-    ambit::Tensor active_aa = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
-    ambit::Tensor active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
-    ambit::Tensor active_bb = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
-    const std::vector<double>& tei_paaa_data = tei_paaa_.data();
 
-    active_ab.iterate([&](const std::vector<size_t>& i,double& value){
-        value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
-    active_aa.copy(active_ab);
-    active_bb.copy(active_ab);
-    active_aa("u,v,x,y") -= active_ab("u, v, y, x");
-    active_bb.copy(active_aa);
+        ambit::Tensor active_aa = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
+        ambit::Tensor active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
+        ambit::Tensor active_bb = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
+        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
 
-    fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
+        active_ab.iterate([&](const std::vector<size_t>& i,double& value){
+            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
+        active_aa.copy(active_ab);
+        active_bb.copy(active_ab);
+        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
+        active_bb.copy(active_aa);
 
-    std::vector<std::vector<double> > oei_vector = compute_restricted_docc_operator();
-    fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-    fci_ints->set_scalar_energy(scalar_energy_);
-    fcisolver.set_integral_pointer(fci_ints);
+        fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
+        if(casscf_debug_print_)
+        {
+            outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2), active_ab.norm(2));
+        }
+
+        std::vector<std::vector<double> > oei_vector;
+        if(nrdocc_ > 0)
+        {
+            oei_vector = compute_restricted_docc_operator();
+        }
+        else{
+            std::vector<double> oei_a(na_ * na_);
+            std::vector<double> oei_b(na_ * na_);
+
+            for (size_t p = 0; p < na_; ++p){
+                size_t pp = active[p];
+                for (size_t q = 0; q < na_; ++q){
+                    size_t qq = active[q];
+                    size_t idx = na_ * p + q;
+                    oei_a[idx] = ints_->oei_a(pp,qq);
+                    oei_b[idx] = ints_->oei_b(pp,qq);
+                }
+            }
+            oei_vector.push_back(oei_a);
+            oei_vector.push_back(oei_b);
+            scalar_energy_ = 0.00;
+        }
+        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+        fci_ints->set_scalar_energy(scalar_energy_);
+        fcisolver.set_integral_pointer(fci_ints);
+    }
 
 
     E_casscf_ = fcisolver.compute_energy();
@@ -640,7 +670,7 @@ void CASSCF::set_up_fci()
 std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
 {
     ///
-    Dimension restricted_docc_dim = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
     Dimension nsopi           = Process::environment.wavefunction()->nsopi();
     int nirrep               = Process::environment.wavefunction()->nirrep();
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
@@ -651,7 +681,7 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     {
         for(int i = 0; i < restricted_docc_dim[h]; i++)
         {
-                Cdocc->set_column(h, i, Ca->get_column(h,i + frozen_docc_dim_[h]));
+                Cdocc->set_column(h, i, Ca->get_column(h,i));
         }
     }
     ///F_frozen = D_{uv}^{frozen} * (2<uv|rs> - <ur | vs>)
@@ -683,10 +713,6 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     F_restricted->add(Hcore);
     F_restricted->transform(Ca);
     Hcore->transform(Ca);
-    if(nfrozen_)
-    {
-        F_restricted->add(F_froze_);
-    }
 
     size_t all_nmo = mo_space_info_->size("ALL");
     SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
@@ -712,21 +738,22 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
             oei_b[u * na_ + v ] = value;
         }
     }
-    Dimension restricted_docc = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
     double E_restricted = 0.0;
     for(int h = 0; h < nirrep; h++){
         for(int rd = 0; rd < restricted_docc[h]; rd++){
-            E_restricted += Hcore->get(h, rd + frozen_docc_dim_[h], rd + frozen_docc_dim_[h]) + F_restricted->get(h, rd + frozen_docc_dim_[h], rd + frozen_docc_dim_[h]);
+            E_restricted += Hcore->get(h, rd,rd) + F_restricted->get(h, rd, rd);
         }
     }
     /// Since F^{INACTIVE} includes frozen_core in fock build, the energy contribution includes frozen_core_energy
     if(casscf_debug_print_)
     {
         outfile->Printf("\n Frozen Core Energy = %8.8f",ints_->frozen_core_energy());
-        outfile->Printf("\n Restricted Energy = %8.8f", E_restricted);
+        outfile->Printf("\n Restricted Energy = %8.8f", E_restricted - ints_->frozen_core_energy());
+        outfile->Printf("\n Scalar Energy = %8.8f", ints_->scalar() + E_restricted - ints_->frozen_core_energy());
     }
     scalar_energy_ = ints_->scalar();
-    scalar_energy_ += (E_restricted + ints_->frozen_core_energy());
+    scalar_energy_ += (E_restricted - ints_->frozen_core_energy());
     std::vector<std::vector<double> > oei_container;
     oei_container.push_back(oei_a);
     oei_container.push_back(oei_b);
