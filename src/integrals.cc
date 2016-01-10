@@ -284,7 +284,7 @@ void ForteIntegrals::update_integrals(bool freeze_core)
     }
     if(print_)
     {
-        outfile->Printf("\n Frozen Orbitals takes %8.8f s", freezeOrbs.get());
+        outfile->Printf("\n  Frozen Orbitals takes %9.3f s.", freezeOrbs.get());
     }
 }
 
