@@ -187,6 +187,11 @@ void CASSCF::startup()
     na_  = mo_space_info_->size("ACTIVE");
     nsopi_ = wfn_->nsopi();
     nirrep_ = wfn_->nirrep();
+    if(options_.get_str("SCF_TYPE") == "PK")
+    {
+        outfile->Printf("\n\n CASSCF algorithm can not use PK");
+        throw PSIEXCEPTION("PK should not be used for CASSCF");
+    }
 
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
 
@@ -254,7 +259,9 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
         cas.use_default_orbitals(true);
-        cas.set_quite_mode(true);
+        bool quiet = true;
+        if(options_.get_int("PRINT") > 0){quiet = false;}
+        cas.set_quite_mode(quiet);
         cas.compute_energy();
         cas_ref_ = cas.reference();
         E_casscf_ = cas_ref_.get_Eref();
