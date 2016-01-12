@@ -188,6 +188,7 @@ protected:
     /// Allows for easy acess of unitary parameter
     std::map<size_t, size_t> nhole_map_;
     std::map<size_t, size_t> npart_map_;
+    bool cas_;
 
 
 };
