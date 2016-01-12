@@ -26,6 +26,7 @@ set globals{
 }
 e_casscf = energy('casscf')
 compare_values(e_casscf_psi4, e_casscf, 6, "CASSCF ENERGY PSI4")
+energy('scf')
 
 set scf_type direct
 set forte {

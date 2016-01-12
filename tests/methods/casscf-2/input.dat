@@ -29,8 +29,8 @@ set globals {
     active          [2]
 }
 casscf = energy('casscf')
-print casscf
-#scf = energy('scf')
+#print casscf
+scf = energy('scf')
 #compare_values(refscf, scf, 8, "SCF ENERGY")
 
 set forte{

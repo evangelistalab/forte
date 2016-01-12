@@ -27,7 +27,9 @@ set globals{
    active                  [2,0,0,0]
    scf_type                out_of_core
 }
-energy('casscf')
+refmcscf = energy('casscf')
+energy('scf')
+
 
 set scf_type direct
 set forte{
@@ -36,19 +38,15 @@ set forte{
    active                  [2,0,0,0]
    root_sym                0
    nroot                   1
-   dsrg_s                  1.0
    cas_type                FCI
    CASSCF_REFERENCE        TRUE
    int_type                conventional
-   cholesky_tolerance       1e-10
-   CASSCF_ITERATIONS         25
+   CASSCF_ITERATIONS        25
    CASSCF_FREEZE_CORE       true
    print                    0
-   CASSCF_SCALE_HESSIAN     false
 }
 
-energy('scf')
-compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
+#compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 casscf = energy('forte')
 compare_values(refcasscf,get_variable("CURRENT ENERGY"),6,"CASSCF energy")
