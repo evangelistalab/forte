@@ -34,10 +34,8 @@ set forte {
     CASSCF_G_CONVERGENCE  1e-6
     CAS_TYPE             FCI
     CASSCF_ITERATIONS    25
-    print                1
+    print                0
     CASSCF_FREEZE_CORE   true
-    CASSCF_DEBUG_PRINTING false
-    RESTRICTED_DOCC_JK    false
 }
 
 
