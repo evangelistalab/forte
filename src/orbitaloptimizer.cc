@@ -30,6 +30,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
 }
 void OrbitalOptimizer::update()
 {
+    fill_shared_density_matrices();
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C
     /// Built in the AO basis for efficiency
@@ -88,6 +89,35 @@ void OrbitalOptimizer::startup()
     nirrep_ = wfn_->nirrep();
     nsopi_  = wfn_->nsopi();
 
+    if(options_.get_str("CAS_TYPE") == "FCI")
+    {
+        cas_ = true;
+    }
+    else if(options_.get_str("CAS_TYPE") == "CAS")
+    {
+        if(options_.get_str("ACTIVE_SPACE_TYPE") != "COMPLETE")
+        {
+            cas_ = false;
+        }
+        else{
+            cas_ = true;
+        }
+    }
+    else if(options_.get_str("CAS_TYPE") == "ACI")
+    {
+        if(options_.get_double("TAUP") == 0.0 && options_.get_double("TAUQ") == 0.0)
+        {
+            cas_ = true;
+        }
+        else{
+            cas_ = false;
+        }
+    }
+    else {
+        outfile->Printf("\n\n Please set your CAS_TYPE to either FCI, CAS, or ACI");
+        outfile->Printf("\n\n You set your CAS_TYPE to %s.", options_.get_str("CAS_TYPE").c_str());
+        throw PSIEXCEPTION("You did not specify your CAS_TYPE correctly.");
+    }
 }
 
 void OrbitalOptimizer::form_fock_core()
@@ -148,10 +178,8 @@ void OrbitalOptimizer::form_fock_core()
         JK_core->initialize();
 
         std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
-        std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
 
         Cl.clear();
-        Cr.clear();
         Cl.push_back(C_core);
 
         JK_core->compute();
@@ -203,39 +231,34 @@ void OrbitalOptimizer::form_fock_active()
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
 
-    size_t nso = wfn_->nso();
-    SharedMatrix C_active(new Matrix("C_active", nso,na_));
-    auto active_abs_corr = mo_space_info_->get_absolute_mo("ACTIVE");
+    SharedMatrix C_active(new Matrix("C_active", nirrep_,nsopi_, active_dim_));
 
-    for(size_t u = 0; u <  na_; u++){
-            C_active->set_column(0, u, Call_->get_column(0, active_abs_corr[u]));
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int i = 0; i <  active_dim_[h]; i++){
+            C_active->set_column(h,i, Ca_sym_->get_column(h, i + frozen_docc_dim_[h] + restricted_docc_dim_[h]));
+        }
+    }
+    SharedMatrix C_active_ao(new Matrix("C_active", nirrep_, nsopi_, nsopi_));
+    SharedMatrix gamma1_sym(new Matrix("gamma1_sym", nirrep_, active_dim_, active_dim_));
+    size_t offset_active = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int u = 0; u < active_dim_[h]; u++){
+            size_t uoff = u + offset_active;
+            for(int v = 0; v < active_dim_[h]; v++){
+                size_t voff = v + offset_active;
+                gamma1_sym->set(h, u, v, gamma1M_->get(uoff, voff));
+            }
+        }
+        offset_active += active_dim_[h];
     }
 
-    ambit::Tensor Cact = ambit::Tensor::build(ambit::CoreTensor, "Cact", {nso, na_});
-    ambit::Tensor OPDM_aoT = ambit::Tensor::build(ambit::CoreTensor, "OPDM_aoT", {nso, nso});
+    C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
 
-    Cact.iterate([&](const std::vector<size_t>& i,double& value){
-        value = C_active->get(i[0], i[1]);});
-
-    ///Transfrom the all active OPDM to the AO basis
-    OPDM_aoT("mu,nu") = gamma1_("u,v")*Cact("mu, u") * Cact("nu, v");
-    SharedMatrix OPDM_ao(new Matrix("OPDM_AO", nso, nso));
-
-    OPDM_aoT.iterate([&](const std::vector<size_t>& i,double& value){
-        OPDM_ao->set(i[0], i[1], value);});
-
-    ///In order to use JK builder for active part, need a Cmatrix like matrix
-    /// AO OPDM looks to be semi positive definite so perform CholeskyDecomp and feed this to JK builder
-    boost::shared_ptr<CholeskyMatrix> Ch (new CholeskyMatrix(OPDM_ao, 1e-12, Process::environment.get_memory()));
-    Ch->choleskify();
-    SharedMatrix L_C = Ch->L();
-    SharedMatrix L_C_correct(new Matrix("L_C_order", nso, Ch->Q()));
-
-    for(size_t mu = 0; mu < nso; mu++){
-            L_C_correct->set_row(0, mu, L_C->get_column(0, mu));
-    }
+    /////In order to use JK builder for active part, need a Cmatrix like matrix
+    ///// AO OPDM looks to be semi positive definite so perform CholeskyDecomp and feed this to JK builder
 
     boost::shared_ptr<JK> JK_act = JK::build_JK();
+
 
     JK_act->set_memory(Process::environment.get_memory() * 0.8);
 
@@ -244,11 +267,15 @@ void OrbitalOptimizer::form_fock_active()
     JK_act->initialize();
 
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_act->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_act->C_right();
 
+    SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));
+    Identity->identity();
     Cl.clear();
-    Cl.push_back(L_C_correct);
+    Cr.clear();
+    Cl.push_back(C_active_ao);
+    Cr.push_back(Identity);
 
-    JK_act->set_allow_desymmetrization(false);
     JK_act->compute();
 
     SharedMatrix J_core = JK_act->J()[0];
@@ -257,35 +284,30 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix F_act = J_core->clone();
     K_core->scale(0.5);
     F_act->subtract(K_core);
-    F_act->transform(Call_);
+    F_act->transform(Ca_sym_);
     F_act->set_name("FOCK_ACTIVE");
 
-    SharedMatrix F_act_no_frozen(new Matrix("F_act", nmo_, nmo_));
+    SharedMatrix F_active_c1(new Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;
     int offset_froze   = 0;
     Dimension no_frozen_dim = mo_space_info_->get_dimension("ALL");
 
     for(size_t h = 0; h < nirrep_; h++){
         int froze = frozen_docc_dim_[h];
-        for(int p = froze; p < no_frozen_dim[h]; p++){
-            for(int q = froze; q < no_frozen_dim[h]; q++){
-                F_act_no_frozen->set(p  - froze + offset_froze, q - froze + offset_froze, F_act->get(p + offset_nofroze, q + offset_nofroze));
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+                F_active_c1->set(p + offset_froze, q + offset_froze,
+                                     F_act->get(h, p + froze,
+                                                q + froze));
             }
         }
         offset_froze   += nmopi_[h];
         offset_nofroze += no_frozen_dim[h];
     }
     if(casscf_debug_print_){
-        F_act_no_frozen->print();
+        F_active_c1->print();
     }
-
-    if(nfrozen_ == 0)
-    {
-        F_act_ = F_act;
-    }
-    else{
-        F_act_ = F_act_no_frozen;
-    }
+    F_act_ = F_active_c1;
 
 }
 
@@ -493,6 +515,7 @@ void OrbitalOptimizer::orbital_gradient()
     }
 
 
+
     for(size_t ui = 0; ui < na_; ui++){
         for(size_t v = 0; v < na_; v++){
             size_t u = active_abs_[ui];
@@ -513,7 +536,6 @@ void OrbitalOptimizer::orbital_gradient()
 }
 void OrbitalOptimizer::diagonal_hessian()
 {
-    fill_shared_density_matrices();
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
     SharedMatrix D(new Matrix("D_pq", nhole, npart));
@@ -706,6 +728,13 @@ void OrbitalOptimizer::fill_shared_density_matrices()
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
     gamma2M_ = gamma2_matrix;
+    if(casscf_debug_print_)
+    {
+        gamma1M_->set_name("Spin-free 1 RDM");
+        gamma1M_->print();
+        gamma2M_->set_name("Spin-free 2 RDM");
+        gamma2M_->print();
+    }
 }
 boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
 {

@@ -82,6 +82,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
             scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
+    outfile->Printf("\n\n Scalar Energy: %8.8f", scalar_energy_);
 
 
     for (size_t p = 0; p < nmo_; ++p){
@@ -100,6 +101,11 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
                 oei_b[idx] += tei_gh_bb[index];
                 oei_b[idx] += tei_gh_ab[index]; // TODO check these factors 0.5
             }
+        }
+    }
+    for(size_t p = 0; p < nmo_; p++){
+        for(size_t q = 0; q < nmo_; q++){
+            outfile->Printf("\n\n oei_a(%d, %d) = %8.8f", p, q, oei_a[nmo_ * p + q]);
         }
     }
 

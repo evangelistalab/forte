@@ -239,7 +239,6 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     integral_type_ = DF;
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
-    print_         =  1;
 
     outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
@@ -346,14 +345,14 @@ void DFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)
 
     //This copies the resorted integrals and the data is changed to the sorted
     //matrix
-    outfile->Printf("\n Done with resorting");
+    if(print_ > 0){outfile->Printf("\n Done with resorting");}
     threeint->copy(temp_threeint);
 }
 
 void DFIntegrals::resort_integrals_after_freezing()
 {
     Timer resort_integrals;
-    if(print_)
+    if(print_ > 0)
     {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
@@ -379,7 +378,7 @@ void DFIntegrals::resort_integrals_after_freezing()
 
     resort_three(ThreeIntegral_,cmo2mo);
 
-    if(print_)
+    if(print_ > 0)
     {
         outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
     }

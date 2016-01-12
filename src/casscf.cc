@@ -74,9 +74,17 @@ void CASSCF::compute_casscf()
     E_casscf_ =  Process::environment.globals["SCF ENERGY"];
     outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
     double E_casscf_old = 0.0;
+    SharedMatrix C_start = wfn_->Ca();
+    SharedMatrix C_old_iter(C_start->clone());
+    SharedMatrix C_final_iter(C_start->clone());
+    C_final_iter->zero();
     for(int iter = 0; iter < maxiter; iter++)
     {
-       iter_con.push_back(iter);
+
+        Timer transform_integrals_timer;
+        tei_paaa_ = transform_integrals();
+        if(casscf_debug_print_ || print > 0){outfile->Printf("\n\n Transform Integrals takes %8.8f s.", transform_integrals_timer.get());}
+        iter_con.push_back(iter);
 
         /// Perform a CAS-CI using either York's code or Francesco's
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
@@ -97,7 +105,7 @@ void CASSCF::compute_casscf()
         //orbital_optimizer.one_body(Hcore_);
         SharedMatrix Hcore(Hcore_->clone());
         orbital_optimizer.one_body(Hcore);
-        if(options_.get_int("PRINT") > 0)
+        if(print > 0)
         {
             orbital_optimizer.set_print_timings(true);
         }
@@ -149,22 +157,14 @@ void CASSCF::compute_casscf()
         ///ENFORCE Ca = Cb
         Ca->copy(Cp);
         Cb->copy(Cp);
-        ///Right now, this retransforms all the integrals
-        ///Think of ways of avoiding this
-        ///This is used as way to retransform our integrals so Francesco's FCI code can use the updated CI
-        ///Can redefi
-
-        //Timer retrans;
-        //ints_->retransform_integrals();
-        //outfile->Printf("\n\n Retrans: %8.8f", retrans.get());
-        Timer my_trans;
-        tei_paaa_ = transform_integrals();
-        if(casscf_debug_print_ or print > 0){outfile->Printf("\n\n TransInts: %8.8f", my_trans.get());}
-
 
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
+    }
+    if(casscf_debug_print_)
+    {
+        overlap_orbitals(wfn_->Ca(), C_start);
     }
     diis_manager->delete_diis_file();
     diis_manager.reset();
@@ -246,7 +246,7 @@ void CASSCF::startup()
 void CASSCF::cas_ci()
 {
     ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
-    tei_paaa_ = transform_integrals();
+    //tei_paaa_ = transform_integrals();
     SharedMatrix gamma2_matrix(new Matrix("gamma2", na_*na_, na_*na_));
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
@@ -642,9 +642,12 @@ void CASSCF::set_up_fci()
         }
 
         std::vector<std::vector<double> > oei_vector;
-        if(nrdocc_ > 0)
+        if((nrdocc_  + nfrozen_) > 0)
         {
             oei_vector = compute_restricted_docc_operator();
+            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+            fci_ints->set_scalar_energy(scalar_energy_);
+            fcisolver.set_integral_pointer(fci_ints);
         }
         else{
             std::vector<double> oei_a(na_ * na_);
@@ -662,10 +665,11 @@ void CASSCF::set_up_fci()
             oei_vector.push_back(oei_a);
             oei_vector.push_back(oei_b);
             scalar_energy_ = 0.00;
+            fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
+            fci_ints->set_scalar_energy(scalar_energy_);
+            fcisolver.set_integral_pointer(fci_ints);
         }
-        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-        fci_ints->set_scalar_energy(scalar_energy_);
-        fcisolver.set_integral_pointer(fci_ints);
+
     }
 
 
@@ -765,6 +769,26 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     oei_container.push_back(oei_a);
     oei_container.push_back(oei_b);
     return oei_container;
+
+}
+void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new)
+{
+    SharedMatrix S_orbitals(new Matrix("Overlap", wfn_->nsopi(), wfn_->nsopi()));
+    SharedMatrix S_basis = wfn_->S();
+    S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
+    S_orbitals->set_name("C^T S C (Overlap)");
+    S_orbitals->print();
+    for(int h = 0; h < nirrep_; h++)
+    {
+        for(int i = 0; i < S_basis->rowspi(h); i++)
+        {
+            if( std::fabs(S_basis->get(h, i, i) - 1.0000000) > 1e-6)
+            {
+            //    S_basis->get_row(h, i)->print();
+            }
+
+        }
+    }
 
 }
 
