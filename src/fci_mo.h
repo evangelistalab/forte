@@ -20,6 +20,7 @@
 #include "ambit/tensor.h"
 #include "reference.h"
 #include "helpers.h"
+#include "ci_rdms.h"
 
 using namespace std;
 
@@ -147,6 +148,7 @@ protected:
     /// Determinants
     void form_det();
     void form_det_cis();
+    void form_det_cisd();
     vecdet determinant_;
 
     /// Orbital Strings
@@ -192,10 +194,6 @@ protected:
     ambit::Tensor L2aa;
     ambit::Tensor L2ab;
     ambit::Tensor L2bb;
-    /// 2-Body density matrix
-    ambit::Tensor ga2aa_;
-    ambit::Tensor g2bb_;
-    ambit::Tensor g2ab_;
     void fill_cumulant2();
 
     /// 3-Body Density Cumulant
@@ -220,15 +218,21 @@ protected:
     bool CheckDensity();
 
     /// Form 2-Particle Density Cumulant
-    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
-    void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
-    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
+    void FormCumulant2(CI_RDMS &ci_rdms, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2AA(const vector<double> &tpdm_aa, const vector<double> &tpdm_bb, d4 &AA, d4 &BB);
+    void FormCumulant2AB(const vector<double> &tpdm_ab, d4 &AB);
+//    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
+//    void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
+//    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
     /// Form 3-Particle Density Cumulant
-    void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3(CI_RDMS &ci_rdms, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3AAA(const vector<double> &tpdm_aaa, const vector<double> &tpdm_bbb, d6 &AAA, d6 &BBB, string &DC);
+    void FormCumulant3AAB(const vector<double> &tpdm_aab, const vector<double> &tpdm_abb, d6 &AAB, d6 &ABB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
-    void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
-    void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
+//    void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+//    void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
+//    void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
 
     /// N-Particle Operator
     double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);

@@ -704,7 +704,7 @@ extern "C" PsiReturnType forte(Options &options)
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
@@ -765,7 +765,7 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
