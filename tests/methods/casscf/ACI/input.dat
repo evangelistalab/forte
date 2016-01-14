@@ -33,7 +33,6 @@ set globals{
 refscf = energy('casscf')
 #compare_values(refscf, scf, 6, "SCF ENERGY")
 
-energy('scf')
 set scf_type direct
 set forte{
    CASSCF_REFERENCE      true
@@ -43,10 +42,18 @@ set forte{
    restricted_docc       [2]
    active                [2]
    int_type             conventional
-   cas_type              FCI
+   cas_type               ACI
    print                  0
    CASSCF_DO_DIIS         true
-   CASSCF_DEBUG_PRINTING  true
+   CASSCF_DEBUG_PRINTING  false
+   THREEPDC               ZERO
+   RESTRICTED_DOCC_JK     true
+   taup                   0.0
+   tauq                   0.0
+   root_sym               0
+   nroot                  1
+   multiplicity           1
+
 }
 e_casscf = energy('forte')
 

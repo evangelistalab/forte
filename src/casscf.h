@@ -87,7 +87,10 @@ private:
     void set_up_fci();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
+    /// Read all the mospace info and assign correct dimensions
     void startup();
+    /// Compute overlap between old_c and new_c
+    void overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new);
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
