@@ -703,7 +703,6 @@ SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
     SharedMatrix C_rot(C->clone());
     SharedMatrix S_mat(S->clone());
     SharedMatrix S_sym(new Matrix("Exp(K)", wfn_->nirrep(), wfn_->nmopi(), wfn_->nmopi()));
-    SharedMatrix U = S_sym->clone();
     int offset_hole = 0;
     int offset_part = 0;
     for(size_t h = 0; h < nirrep_; h++){
