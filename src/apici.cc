@@ -133,6 +133,7 @@ void AdaptivePathIntegralCI::startup()
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
     initial_guess_spawning_threshold_ = options_.get_double("GUESS_SPAWNING_THRESHOLD");
+    if (initial_guess_spawning_threshold_ < 0.0) initial_guess_spawning_threshold_ = 10.0*spawning_threshold_;
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXBETA") / time_step_;
     e_convergence_ = options_.get_double("E_CONVERGENCE");
@@ -512,7 +513,7 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
     Determinant bs_det(alfa_bits,beta_bits);
     det_vec guess_dets{bs_det};
 
-    apply_tau_H(time_step_,spawning_threshold_ * 10.0,guess_dets,{1.0},dets_C,0.0);
+    apply_tau_H(time_step_,initial_guess_spawning_threshold_,guess_dets,{1.0},dets_C,0.0);
 
     // Save the list of determinants
     copy_hash_to_vec(dets_C,dets,C);
