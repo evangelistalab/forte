@@ -304,6 +304,8 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_MAX_ROTATION", 0.5);
         /*- DO SCALE THE HESSIAN -*/
         options.add_bool("CASSCF_SCALE_ROTATION", true);
+        /*- Use JK builder for restricted docc (EXPERT) -*/
+        options.add_bool("RESTRICTED_DOCC_JK", true);
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
@@ -384,7 +386,7 @@ read_options(std::string name, Options &options)
         /*- The maximum number of determinants used to form the guess wave function -*/
         options.add_double("MAX_GUESS_SIZE",10000);
         /*- The determinant importance threshold -*/
-        options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
+        options.add_double("GUESS_SPAWNING_THRESHOLD",-1);
         /*- The threshold with which we estimate the variational energy.
             Note that the final energy is always estimated exactly. -*/
         options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);

@@ -10,44 +10,42 @@ refcasscf       = -99.939316381644
 
 memory 500 mb
 
-molecule HF{
-  0 1
-  F
-  H  1 R
-  R = 1.50
-  symmetry c1
+molecule He{
+0   1
+    He
 }
 
 set globals {
-    basis   cc-pvdz
-    scf_type  out_of_core
-    reference RHF
-    e_convergence 1e-10
-    d_convergence 1e-10
-    frozen_docc     [0]
-    restricted_docc [4]
-    active          [2]
+    basis          cc-pvdz
+    scf_type       out_of_core
+    mcscf_type     conv
+    reference      ROHF
+    e_convergence   1e-10
+    d_convergence   1e-10
+    active          [2, 0, 0, 0, 0, 0, 0, 0]
+    S               1.0
 }
+energy('scf')
 casscf = energy('casscf')
-#print casscf
-scf = energy('scf')
+#scf = energy('scf')
 #compare_values(refscf, scf, 8, "SCF ENERGY")
 
+set scf_type  direct
 set forte{
    CASSCF_REFERENCE        true
    int_type                conventional
    CASSCF_ITERATIONS       36
-   frozen_docc             [0]
-   restricted_docc         [4]
-   active                  [2]
-   multiplicity             1
-   cas_type                 FCI
+   active                  [2, 0, 0, 0, 0, 0, 0, 0]
+   cas_type                 CAS
+   multiplicity             3
+   ms                       0
    CASSCF_G_CONVERGENCE     1e-6
    CASSCF_E_CONVERGENCE     1e-8
    CASSCF_DO_DIIS           true
-   print                    0
+   print                    1
+   ACTIVE_SPACE_TYPE        CIS
 }
 e_casscf = energy('forte')
-
-compare_values(refcasscf, e_casscf, 4, "CASSCF_ENERGY")
+#
+compare_values(casscf, e_casscf, 8, "CISSCF_ENERGY")
 
