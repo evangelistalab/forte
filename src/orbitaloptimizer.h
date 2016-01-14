@@ -153,7 +153,8 @@ protected:
     void diagonal_hessian();
     /// check the cas_ci energy with spin-free RDM
     void orbital_rotation_parameter();
-
+    /// Perform the exponential of x
+    SharedMatrix matrix_exp(const SharedMatrix&);
     ///form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for non contractions)
     void fill_shared_density_matrices();
 
@@ -189,6 +190,7 @@ protected:
     std::map<size_t, size_t> nhole_map_;
     std::map<size_t, size_t> npart_map_;
     bool cas_;
+    enum MATRIX_EXP {PSI4, TAYLOR};
 
 
 };
