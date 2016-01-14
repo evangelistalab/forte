@@ -119,10 +119,10 @@ private:
     // * Calculation info
     /// The threshold applied to the primary space
     double spawning_threshold_;
+    /// The threshold applied for initial guess
+    double initial_guess_spawning_threshold_;
     /// The maximum size of the guess wave function
     size_t max_guess_size_;
-    /// The threshold applied during the initial guess
-    double initial_guess_spawning_threshold_;
     /// The size of the time step (TAU)
     double time_step_;
     /// Use an adaptive time step?
