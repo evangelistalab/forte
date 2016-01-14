@@ -45,8 +45,8 @@ set forte{
    int_type             conventional
    cas_type              FCI
    print                  0
-   CASSCF_DO_DIIS         true
-   CASSCF_DEBUG_PRINTING  true
+   CASSCF_DO_DIIS         false
+   CASSCF_DEBUG_PRINTING  false
 }
 e_casscf = energy('forte')
 
