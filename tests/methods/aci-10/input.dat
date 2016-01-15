@@ -49,6 +49,8 @@ set forte {
   enforce_spin_complete  true
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
+  diag_algorithm davidson
+  quiet_mode true
 }
 
 scf = energy('scf')
