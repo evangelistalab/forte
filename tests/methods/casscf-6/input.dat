@@ -42,8 +42,8 @@ set forte{
    CASSCF_REFERENCE        TRUE
    int_type                conventional
    CASSCF_ITERATIONS        25
-   CASSCF_FREEZE_CORE       true
    print                    0
+   CASSCF_DO_DIIS           false
 }
 
 #compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")

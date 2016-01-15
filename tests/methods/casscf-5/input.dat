@@ -37,7 +37,6 @@ set globals{
 }
 scf = energy('casscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
-energy('scf')
 
 set scf_type  direct
 set forte {
@@ -53,7 +52,6 @@ set forte {
    cas_type                FCI
    casscf_reference        true
    CASSCF_ITERATIONS       50
-   CASSCF_FREEZE_CORE       true
    print                    0
 }
 
