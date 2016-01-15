@@ -196,7 +196,6 @@ void CASSCF::startup()
 
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
 
-    casscf_freeze_core_ = options_.get_bool("CASSCF_FREEZE_CORE");
 
     frozen_docc_dim_     = mo_space_info_->get_dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
