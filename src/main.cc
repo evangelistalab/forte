@@ -289,7 +289,7 @@ read_options(std::string name, Options &options)
         /* - Run a FCI followed by CASSCF computation -*/
         options.add_bool("CASSCF_REFERENCE", false);
         /* - The number of iterations for CASSCF -*/
-        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_int("CASSCF_ITERATIONS", 30);
         /* - The convergence for the gradient for casscf -*/
         options.add_double("CASSCF_G_CONVERGENCE", 1e-5);
         /* - The convergence of the energy for CASSCF -*/
