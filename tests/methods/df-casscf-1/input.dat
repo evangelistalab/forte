@@ -45,7 +45,6 @@ set forte{
    CASSCF_REFERENCE        TRUE
    int_type                df
    CASSCF_ITERATIONS        25
-   CASSCF_FREEZE_CORE       true
    print                    0
 }
 
