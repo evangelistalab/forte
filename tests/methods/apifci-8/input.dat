@@ -1,0 +1,38 @@
+#! This tests the Adaptive Path-Integral FCI procedure with initiator approximation
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.6097447388741113 #TEST
+refapifci = -14.646160455942 #TEST
+
+molecule li2{
+   Li
+   Li 1 2.0000
+}
+
+set {
+  basis sto-3g
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  job_type apici
+  nroot 1
+  charge 0
+  tau 1.0
+  spawning_threshold 0.0001
+  GUESS_SPAWNING_THRESHOLD 1.
+  ENERGY_ESTIMATE_FREQ 25
+  FAST_EVAR true
+  ENERGY_ESTIMATE_THRESHOLD 0.001
+  PROPAGATOR POWER
+  maxbeta 100000.00
+}
+
+energy('scf')
+compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refapifci, get_variable("APIFCI ENERGY"), 11, "APIFCI energy") #TEST

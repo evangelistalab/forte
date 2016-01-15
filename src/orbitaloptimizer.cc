@@ -30,6 +30,7 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
 }
 void OrbitalOptimizer::update()
 {
+    fill_shared_density_matrices();
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C
     /// Built in the AO basis for efficiency
@@ -73,13 +74,23 @@ void OrbitalOptimizer::startup()
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_   = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_             = mo_space_info_->get_corr_abs_mo("CORRELATED");
-
-    casscf_freeze_core_  = options_.get_bool("CASSCF_FREEZE_CORE");
+    if(frozen_docc_abs_.size() && !(options_.get_bool("OPTIMIZE_FROZEN_CORE")))
+    {
+        casscf_freeze_core_ = true;
+    }
+    else{
+        casscf_freeze_core_ = false;
+    }
+    if(options_.get_bool("OPTIMIZE_FROZEN_CORE"))
+    {
+        throw PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
+    }
 
     nmo_ = mo_space_info_->size("CORRELATED");
     all_nmo_ = mo_space_info_->size("ALL");
 
     nrdocc_ = restricted_docc_abs_.size();
+    nfrozen_ = frozen_docc_abs_.size();
     na_     = active_abs_.size();
     nvir_  = restricted_uocc_abs_.size();
     wfn_ = Process::environment.wavefunction();
@@ -87,6 +98,35 @@ void OrbitalOptimizer::startup()
     nirrep_ = wfn_->nirrep();
     nsopi_  = wfn_->nsopi();
 
+    if(options_.get_str("CAS_TYPE") == "FCI")
+    {
+        cas_ = true;
+    }
+    else if(options_.get_str("CAS_TYPE") == "CAS")
+    {
+        if(options_.get_str("ACTIVE_SPACE_TYPE") != "COMPLETE")
+        {
+            cas_ = false;
+        }
+        else{
+            cas_ = true;
+        }
+    }
+    else if(options_.get_str("CAS_TYPE") == "ACI")
+    {
+        if(options_.get_double("TAUP") == 0.0 && options_.get_double("TAUQ") == 0.0)
+        {
+            cas_ = true;
+        }
+        else{
+            cas_ = false;
+        }
+    }
+    else {
+        outfile->Printf("\n\n Please set your CAS_TYPE to either FCI, CAS, or ACI");
+        outfile->Printf("\n\n You set your CAS_TYPE to %s.", options_.get_str("CAS_TYPE").c_str());
+        throw PSIEXCEPTION("You did not specify your CAS_TYPE correctly.");
+    }
 }
 
 void OrbitalOptimizer::form_fock_core()
@@ -119,18 +159,19 @@ void OrbitalOptimizer::form_fock_core()
     // Need to get the inactive block of the C matrix
     SharedMatrix C_core(new Matrix("C_core", nirrep_, nsopi_, restricted_docc_dim_));
     SharedMatrix F_core_c1(new Matrix("F_core_no_sym", nmo_, nmo_));
+    SharedMatrix F_core(new Matrix("InactiveTemp1", nirrep_, nsopi_, nsopi_));
+    SharedMatrix F_core_tmp(new Matrix("InactiveTemp2", nirrep_, nsopi_, nsopi_));
     F_core_c1->zero();
 
     ///If there is no restricted_docc, there is no C_core
     if(restricted_docc_dim_.sum() > 0)
     {
         for(size_t h = 0; h < nirrep_; h++){
-            for(int mu = 0; mu < nsopi_[h]; mu++){
-                for(int i = 0; i <  restricted_docc_dim_[h]; i++){
-                    C_core->set(h, mu, i, Ca_sym_->get(h, mu, i + frozen_docc_dim_[h]));
-                }
+            for(int i = 0; i <  restricted_docc_dim_[h]; i++){
+                C_core->set_column(h,i, Ca_sym_->get_column(h, i + frozen_docc_dim_[h]));
             }
         }
+
         if(casscf_debug_print_){
             C_core->print();
         }
@@ -156,27 +197,33 @@ void OrbitalOptimizer::form_fock_core()
         SharedMatrix K_core = JK_core->K()[0];
 
         J_core->scale(2.0);
-        SharedMatrix F_core = J_core->clone();
+        F_core = J_core->clone();
         F_core->subtract(K_core);
+    }
 
-        /// If there are frozen orbitals, need to add
-        /// FrozenCore Fock matrix to inactive block
-        if(casscf_freeze_core_)
-        {
-            F_core->add(F_froze_);
-        }
-        F_core->transform(Ca_sym_);
-        F_core->add(H_);
+    /// If there are frozen orbitals, need to add
+    /// FrozenCore Fock matrix to inactive block
+    if(casscf_freeze_core_)
+    {
+        F_core->add(F_froze_);
+    }
 
-        int offset = 0;
-        for(size_t h = 0; h < nirrep_; h++){
-            for(int p = 0; p < nmopi_[h]; p++){
-                for(int q = 0; q < nmopi_[h]; q++){
-                    F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_docc_dim_[h], q + frozen_docc_dim_[h]));
-                }
+    F_core->transform(Ca_sym_);
+    //F_core->set_name("TRANSFORM BUG?");
+    //F_core->print();
+    //SharedMatrix F_core_triplet = Matrix::triplet(Ca_sym_, F_core_tmp, Ca_sym_, true, false, false);
+    //F_core_triplet->set_name("TripletTransform");
+    //F_core_triplet->print();
+    F_core->add(H_);
+
+    int offset = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+                F_core_c1->set(p + offset, q + offset, F_core->get(h, p + frozen_docc_dim_[h], q + frozen_docc_dim_[h]));
             }
-            offset += nmopi_[h];
         }
+        offset += nmopi_[h];
     }
     F_core_   = F_core_c1;
     if(casscf_debug_print_)
@@ -188,46 +235,38 @@ void OrbitalOptimizer::form_fock_core()
 }
 void OrbitalOptimizer::form_fock_active()
 {
-    Call_ = make_c_sym_aware();
     ///Step 3:
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
 
-    size_t nso = wfn_->nso();
-    SharedMatrix C_active(new Matrix("C_active", nso,na_));
-    auto active_abs_corr = mo_space_info_->get_absolute_mo("ACTIVE");
+    SharedMatrix C_active(new Matrix("C_active", nirrep_,nsopi_, active_dim_));
 
-    for(size_t u = 0; u <  na_; u++){
-            C_active->set_column(0, u, Call_->get_column(0, active_abs_corr[u]));
-    }
-
-    ambit::Tensor Cact = ambit::Tensor::build(ambit::CoreTensor, "Cact", {nso, na_});
-    ambit::Tensor OPDM_aoT = ambit::Tensor::build(ambit::CoreTensor, "OPDM_aoT", {nso, nso});
-
-    Cact.iterate([&](const std::vector<size_t>& i,double& value){
-        value = C_active->get(i[0], i[1]);});
-
-    ///Transfrom the all active OPDM to the AO basis
-    OPDM_aoT("mu,nu") = gamma1_("u,v")*Cact("mu, u") * Cact("nu, v");
-    SharedMatrix OPDM_ao(new Matrix("OPDM_AO", nso, nso));
-
-    OPDM_aoT.iterate([&](const std::vector<size_t>& i,double& value){
-        OPDM_ao->set(i[0], i[1], value);});
-
-    ///In order to use JK builder for active part, need a Cmatrix like matrix
-    /// AO OPDM looks to be semi positive definite so perform CholeskyDecomp and feed this to JK builder
-    boost::shared_ptr<CholeskyMatrix> Ch (new CholeskyMatrix(OPDM_ao, 1e-12, Process::environment.get_memory()));
-    Ch->choleskify();
-    SharedMatrix L_C = Ch->L();
-    SharedMatrix L_C_correct(new Matrix("L_C_order", nso, Ch->Q()));
-
-    for(size_t mu = 0; mu < nso; mu++){
-        for(size_t Q = 0; Q < Ch->Q(); Q++){
-            L_C_correct->set(mu, Q, L_C->get(Q, mu));
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int i = 0; i <  active_dim_[h]; i++){
+            C_active->set_column(h,i, Ca_sym_->get_column(h, i + frozen_docc_dim_[h] + restricted_docc_dim_[h]));
         }
     }
+    SharedMatrix C_active_ao(new Matrix("C_active", nirrep_, nsopi_, nsopi_));
+    SharedMatrix gamma1_sym(new Matrix("gamma1_sym", nirrep_, active_dim_, active_dim_));
+    size_t offset_active = 0;
+    for(size_t h = 0; h < nirrep_; h++){
+        for(int u = 0; u < active_dim_[h]; u++){
+            size_t uoff = u + offset_active;
+            for(int v = 0; v < active_dim_[h]; v++){
+                size_t voff = v + offset_active;
+                gamma1_sym->set(h, u, v, gamma1M_->get(uoff, voff));
+            }
+        }
+        offset_active += active_dim_[h];
+    }
+
+    C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
+
+    /////In order to use JK builder for active part, need a Cmatrix like matrix
+    ///// AO OPDM looks to be semi positive definite so perform CholeskyDecomp and feed this to JK builder
 
     boost::shared_ptr<JK> JK_act = JK::build_JK();
+
 
     JK_act->set_memory(Process::environment.get_memory() * 0.8);
 
@@ -236,11 +275,15 @@ void OrbitalOptimizer::form_fock_active()
     JK_act->initialize();
 
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_act->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_act->C_right();
 
+    SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));
+    Identity->identity();
     Cl.clear();
-    Cl.push_back(L_C_correct);
+    Cr.clear();
+    Cl.push_back(C_active_ao);
+    Cr.push_back(Identity);
 
-    JK_act->set_allow_desymmetrization(false);
     JK_act->compute();
 
     SharedMatrix J_core = JK_act->J()[0];
@@ -249,35 +292,30 @@ void OrbitalOptimizer::form_fock_active()
     SharedMatrix F_act = J_core->clone();
     K_core->scale(0.5);
     F_act->subtract(K_core);
-    F_act->transform(Call_);
+    F_act->transform(Ca_sym_);
     F_act->set_name("FOCK_ACTIVE");
 
-    SharedMatrix F_act_no_frozen(new Matrix("F_act", nmo_, nmo_));
+    SharedMatrix F_active_c1(new Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;
     int offset_froze   = 0;
     Dimension no_frozen_dim = mo_space_info_->get_dimension("ALL");
 
     for(size_t h = 0; h < nirrep_; h++){
         int froze = frozen_docc_dim_[h];
-        for(int p = froze; p < no_frozen_dim[h]; p++){
-            for(int q = froze; q < no_frozen_dim[h]; q++){
-                F_act_no_frozen->set(p  - froze + offset_froze, q - froze + offset_froze, F_act->get(p + offset_nofroze, q + offset_nofroze));
+        for(int p = 0; p < nmopi_[h]; p++){
+            for(int q = 0; q < nmopi_[h]; q++){
+                F_active_c1->set(p + offset_froze, q + offset_froze,
+                                     F_act->get(h, p + froze,
+                                                q + froze));
             }
         }
         offset_froze   += nmopi_[h];
         offset_nofroze += no_frozen_dim[h];
     }
     if(casscf_debug_print_){
-        F_act_no_frozen->print();
+        F_active_c1->print();
     }
-
-    if(nfrozen_ == 0)
-    {
-        F_act_ = F_act;
-    }
-    else{
-        F_act_ = F_act_no_frozen;
-    }
+    F_act_ = F_active_c1;
 
 }
 
@@ -287,7 +325,7 @@ void OrbitalOptimizer::orbital_gradient()
     ///From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor,"Y",{nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
-    if(nrdocc_ > 0)
+    if(nrdocc_ > 0 or nfrozen_ > 0)
     {
         F_pu.iterate([&](const std::vector<size_t>& i,double& value){
             value = F_core_->get(nmo_abs_[i[0]],active_abs_[i[1]]);});
@@ -318,6 +356,10 @@ void OrbitalOptimizer::orbital_gradient()
 
     //(pu | x y) -> <px | uy> * gamma2_{"t, u, x, y"
     Z("p, t") = integral_("p,u,x,y") * gamma2_("t, u, x, y");
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n\n integral_: %8.8f  gamma2_: %8.8f", integral_.norm(2), gamma2_.norm(2));
+    }
 
     SharedMatrix Zm(new Matrix("Zm", nmo_, na_));
     Z.iterate([&](const std::vector<size_t>& i,double& value){
@@ -421,80 +463,126 @@ void OrbitalOptimizer::orbital_gradient()
         }
     }
 
-
     ///Some wierdness going on
     /// Since G is nhole by npart
     /// I need to make sure that the matrix is ordered in pitzer ordering
+
     /// The offset allows me to place the correct values with pitzer ordering
 
-    for(size_t ii = 0; ii < nrdocc_; ii++)
-        for(size_t ti = 0; ti < na_; ti++){
-            {
-                size_t i = restricted_docc_abs_[ii];
-                size_t t = active_abs_[ti];
-                //size_t ti_offset = generalized_part_rel[ti].second + gen_part[generalized_part_rel[ti].first];
-                //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
-                double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
-                Orb_grad->set(nhole_map_[i] ,npart_map_[t], value_it) ;
-            }
-    }
-    if(casscf_debug_print_)
-    {
-        outfile->Printf("\n i, t %8.8f", Orb_grad->rms());
-        Orb_grad->print();
-    }
-    for(size_t ii = 0; ii < nrdocc_; ii++){
-        for(size_t aa = 0; aa < nvir_; aa++){
-            size_t i = restricted_docc_abs_[ii];
-            size_t a = restricted_uocc_abs_[aa];
-            //size_t a_offset = generalized_part_rel[aa + na_].second + gen_part[generalized_part_rel[aa + na_].first];
-            double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
-            Orb_grad->set(nhole_map_[i],npart_map_[a], value_ia);
+    /// The Fock matrix is computed as stated in Pg. 622 of Helgaker book
+    SharedMatrix Fock(new Matrix("Generalized Fock", nmo_, nmo_));
+    for(size_t q = 0; q < nmo_; q++){
+        int q_o = nmo_abs_[q];
+        for(size_t i = 0; i < nrdocc_; i++){
+            int i_iq = restricted_docc_abs_[i];
+            double value = 2.0  * (F_core_->get(q_o, i_iq) + F_act_->get(q_o, i_iq));
+            Fock->set(i_iq, q_o, value);
+        }
+        for(size_t v = 0; v < na_; v++){
+            int act_o = active_abs_[v];
+            double value_vn = Y_->get(q_o, v) + Z_->get(q_o, v);
+            Fock->set(act_o, q_o, value_vn);
+        }
+        for(size_t a = 0; a < nvir_; a++){
+            int a_o = restricted_uocc_abs_[a];
+            Fock->set(a_o, q_o, 0.0);
         }
     }
-    if(casscf_debug_print_)
-    {
-        outfile->Printf("\n i, a %8.8f", Orb_grad->rms());
-        Orb_grad->print();
-    }
-
-    for(size_t ai = 0; ai < nvir_; ai++){
-        for(size_t ti = 0; ti < na_; ti++){
-            size_t t = active_abs_[ti];
-            size_t a = restricted_uocc_abs_[ai];
-            //size_t a_offset = generalized_part_rel[ti + na_].second + gen_part[generalized_part_rel[ti + na_].first];
-            double value_ta = 2.0 * Y_->get(a, ti) + 2.0 * Z_->get(a, ti);
-            Orb_grad->set(nhole_map_[t],npart_map_[a], value_ta);
+    if(casscf_debug_print_){Fock->print();}
+    SharedMatrix Orb_grad_Fock(new Matrix("G_pq", nhole, npart));
+    for(size_t h = 0; h < nhole; h++){
+        for(size_t p = 0; p < npart; p++){
+            size_t h_act = generalized_hole_abs[h];
+            size_t p_act = generalized_part_abs[p];
+            double fock_value = Fock->get(h_act, p_act) - Fock->get(p_act, h_act);
+            Orb_grad_Fock->set(nhole_map_[h_act], npart_map_[p_act], 2.0 * fock_value);
         }
     }
-    if(casscf_debug_print_)
-    {
-        outfile->Printf("\n t, a %8.8f", Orb_grad->rms());
-        Orb_grad->print();
-    }
 
 
+
+//    if(nrdocc_ > 0)
+//    {
+//        for(size_t ii = 0; ii < nrdocc_; ii++){
+//            for(size_t ti = 0; ti < na_; ti++){
+//                {
+//                    size_t i = restricted_docc_abs_[ii];
+//                    size_t t = active_abs_[ti];
+//                    //size_t ti_offset = generalized_part_rel[ti].second + gen_part[generalized_part_rel[ti].first];
+//                    //double value_it = 4 * F_core_->get(i, t) + 2 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 4 * Z_->get(i, ti);
+//                    double value_it = 4 * F_core_->get(i, t) + 4 * F_act_->get(i,t) - 2 * Y_->get(i,ti) - 2 * Z_->get(i, ti);
+//                    Orb_grad->set(nhole_map_[i] ,npart_map_[t], value_it) ;
+//                }
+//            }
+//        }
+//    }
+//    if(casscf_debug_print_)
+//    {
+//        outfile->Printf("\n i, t %8.8f", Orb_grad->rms());
+//        Orb_grad->print();
+//    }
+//    if(nrdocc_ > 0)
+//    {
+//        for(size_t ii = 0; ii < nrdocc_; ii++){
+//            for(size_t aa = 0; aa < nvir_; aa++){
+//                size_t i = restricted_docc_abs_[ii];
+//                size_t a = restricted_uocc_abs_[aa];
+//                //size_t a_offset = generalized_part_rel[aa + na_].second + gen_part[generalized_part_rel[aa + na_].first];
+//                double value_ia = F_core_->get(i, a) * 4.0 + F_act_->get(i, a) * 4.0;
+//                Orb_grad->set(nhole_map_[i],npart_map_[a], value_ia);
+//            }
+//        }
+//    }
+//    if(casscf_debug_print_)
+//    {
+//        outfile->Printf("\n i, a %8.8f", Orb_grad->rms());
+//        Orb_grad->print();
+//    }
+//
+//    for(size_t ai = 0; ai < nvir_; ai++){
+//        for(size_t ti = 0; ti < na_; ti++){
+//            size_t t = active_abs_[ti];
+//            size_t a = restricted_uocc_abs_[ai];
+//            //size_t a_offset = generalized_part_rel[ti + na_].second + gen_part[generalized_part_rel[ti + na_].first];
+//            double value_ta = 2.0 * Y_->get(a, ti) + 2.0 * Z_->get(a, ti);
+//            Orb_grad->set(nhole_map_[t],npart_map_[a], value_ta);
+//        }
+//    }
+//    if(casscf_debug_print_)
+//    {
+//        outfile->Printf("\n t, a %8.8f", Orb_grad->rms());
+//        Orb_grad->print();
+//    }
+//
+//
+//
     for(size_t ui = 0; ui < na_; ui++){
         for(size_t v = 0; v < na_; v++){
             size_t u = active_abs_[ui];
             size_t vo = active_abs_[v];
-            Orb_grad->set(nhole_map_[u],npart_map_[vo] , 0.0);
+            if(vo == u)
+            {
+                Orb_grad_Fock->set(nhole_map_[vo],npart_map_[u],0.0);
+            }
         }
+    }
+    if(cas_)
+    {
+        zero_redunant(Orb_grad_Fock);
     }
 
     if(casscf_debug_print_)
     {
-        Orb_grad->print();
+        Orb_grad_Fock->print();
     }
 
-    g_ = Orb_grad;
+    g_ = Orb_grad_Fock;
     g_->set_name("CASSCF_GRADIENT");
 
 
 }
 void OrbitalOptimizer::diagonal_hessian()
 {
-    fill_shared_density_matrices();
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
     SharedMatrix D(new Matrix("D_pq", nhole, npart));
@@ -520,7 +608,7 @@ void OrbitalOptimizer::diagonal_hessian()
             //value_ta -= 2*Y_->get(t,ti) + 4.0 *Z_->get(t,ti);
             double value_ta = 2.0 * gamma1M_->get(ti,ti) * F_core_->get(a,a);
             value_ta += 2.0 * gamma1M_->get(ti,ti) * F_act_->get(a,a);
-            value_ta -= (2*Y_->get(t,ti) + 2.0 *Z_->get(t,ti));
+            value_ta -= (2.0 * Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
             D->set(nhole_map_[t],npart_map_[a], value_ta);
         }
     }
@@ -528,9 +616,9 @@ void OrbitalOptimizer::diagonal_hessian()
         for(size_t ti = 0; ti < na_; ti++){
             size_t i = restricted_docc_abs_[ii];
             size_t t = active_abs_[ti];
-            double value_it = 4.0 * F_core_->get(t,t)
-                    + 4.0 * F_act_->get(t,t)
-                    + 2.0 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
+            double  value_it = 4.0 * F_core_->get(t,t);
+                    value_it+= 4.0 * F_act_->get(t,t);
+                    value_it+= 2.0 * gamma1M_->get(ti,ti) * F_core_->get(i,i);
             value_it+=2.0 * gamma1M_->get(ti,ti) * F_act_->get(i,i);
             value_it-=(4.0 * F_core_->get(i,i) + 4.0 * F_act_->get(i,i));
             value_it-=(2.0*Y_->get(t,ti) + 2.0 * Z_->get(t,ti));
@@ -577,6 +665,7 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     }
     SharedMatrix S_tmp = G_grad->clone();
     S_tmp->apply_denominator(D_grad);
+    //SharedMatrix S_tmp_AH = AugmentedHessianSolve();
     for(size_t h = 0; h < nirrep_; h++)
     {
         for(int u = 0; u < active_dim_[h]; u++)
@@ -599,29 +688,47 @@ SharedMatrix OrbitalOptimizer::approx_solve()
 }
 SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
 {
-    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", 2 * nmo_ + 1, 2 * nmo_ + 1));
+    size_t nhole = mo_space_info_->size("GENERALIZED HOLE");
+    size_t npart = mo_space_info_->size("GENERALIZED PARTICLE");
 
-    for(size_t p = 0; p < nmo_; p++){
-
-        for(size_t q = 0; q < nmo_; q++){
-            AugmentedHessian->set(p, q, d_->get(p, q));
-        }
-        for(size_t q = 0; q < nmo_; q++){
-            AugmentedHessian->set(p + nmo_, q, g_->get(p, q));
-            AugmentedHessian->set(q, p + nmo_, g_->get(q, p));
+    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", nhole + npart + 1, nhole + npart + 1));
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(hol, part, d_->get(hol, part));
         }
     }
-    AugmentedHessian->set(2*nmo_, 2*nmo_, 0.0);
-    SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
-    SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
+    SharedMatrix g_transpose = g_->transpose();
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(part,hol + npart, g_transpose->get(part, hol));
+        }
+    }
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(part + nhole,hol, g_->get(hol, part) );
+        }
+    }
+    //for(int hol = 0; hol < nhole; hol++){
+    //    for(int part = nhole; part < (nhole + npart + 1); part++){
+    //        AugmentedHessian->set(hol, part, g_->transpose()->get(npart - part , hol));
+    //    }
+    //}
+    //AugmentedHessian->print();
+    //C_DCOPY(nhole * npart, g_->pointer()[0], 1, &(AugmentedHessian->pointer()[0][nhole * npart]), 1);
+    //C_DCOPY(nhole * npart, g_->transpose()->pointer()[0], 1, &(AugmentedHessian->pointer()[nhole * npart][0]), 1);
+
+    //AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
+    //AugmentedHessian->print();
+    SharedMatrix HessianEvec(new Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
+    SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
     AugmentedHessian->diagonalize(HessianEvec, HessianEval);
-    if(casscf_debug_print_)
-    {
-        g_->print();
-        d_->print();
-        AugmentedHessian->print();
-        HessianEval->print();
-    }
+    HessianEvec->print();
+    //SharedMatrix S_AH(new Matrix("AugmentedHessianLowestEigenvalue", nhole, npart));
+    //if(casscf_debug_print_)
+    //{
+    //    AugmentedHessian->print();
+    //    HessianEval->print();
+    //}
     return HessianEvec;
 
 }
@@ -634,7 +741,6 @@ SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
     SharedMatrix C_rot(C->clone());
     SharedMatrix S_mat(S->clone());
     SharedMatrix S_sym(new Matrix("Exp(K)", wfn_->nirrep(), wfn_->nmopi(), wfn_->nmopi()));
-    SharedMatrix U = S_sym->clone();
     int offset_hole = 0;
     int offset_part = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -653,23 +759,23 @@ SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
     offset_hole += nhole_dim[h];
     offset_part += nvirt_dim[h];
     }
-    S_sym->expm();
+    SharedMatrix S_exp = matrix_exp(S_sym);
     for(size_t h = 0; h < nirrep_; h++)
     {
         for(int f = 0; f < frozen_docc_dim_[h]; f++)
         {
-            S_sym->set(h, f, f, 1.0);
+            S_exp->set(h, f, f, 1.0);
         }
     }
 
 
-    C_rot = Matrix::doublet(C, S_sym);
+    C_rot = Matrix::doublet(C, S_exp);
     C_rot->set_name("ROTATED_ORBITAL");
     S_sym->set_name("Orbital Rotation (S = exp(x))");
     if(casscf_debug_print_)
     {
         C_rot->print();
-        S_sym->print();
+        S_exp->print();
     }
     return C_rot;
 
@@ -687,6 +793,13 @@ void OrbitalOptimizer::fill_shared_density_matrices()
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
     gamma2M_ = gamma2_matrix;
+    if(casscf_debug_print_)
+    {
+        gamma1M_->set_name("Spin-free 1 RDM");
+        gamma1M_->print();
+        gamma2M_->set_name("Spin-free 2 RDM");
+        gamma2M_->print();
+    }
 }
 boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
 {
@@ -720,6 +833,46 @@ boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
     }
 
     return Call;
+}
+SharedMatrix OrbitalOptimizer::matrix_exp(const SharedMatrix& unitary)
+{
+    SharedMatrix U(unitary->clone());
+    if(false)
+    {
+        U->expm();
+    }
+    else {
+        // Build exp(U) = 1 + U + 1/2 U U + 1/6 U U U
+
+        for (size_t h=0; h<nirrep_; h++){
+            if (!U->rowspi()[h]) continue;
+            double** Up = U->pointer(h);
+            for (int i=0; i<(U->colspi()[h]); i++){
+                Up[i][i] += 1.0;
+            }
+        }
+        U->gemm(false, false, 0.5, unitary, unitary, 1.0);
+
+        SharedMatrix tmp_third = Matrix::triplet(unitary, unitary, unitary);
+        tmp_third->scale(1.0/6.0);
+        U->add(tmp_third);
+        tmp_third.reset();
+
+        // We did not fully exponentiate the matrix, need to orthogonalize
+        U->schmidt();
+
+    }
+    return U;
+}
+void OrbitalOptimizer::zero_redunant(SharedMatrix& matrix)
+{
+    for(size_t u = 0; u < na_; u++){
+        for(size_t v = 0; v < na_; v++){
+            size_t uo = active_abs_[u];
+            size_t vo = active_abs_[v];
+            matrix->set(nhole_map_[uo],npart_map_[vo], 0.0);
+        }
+    }
 }
 
 }}

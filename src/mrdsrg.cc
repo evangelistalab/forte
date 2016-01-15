@@ -183,10 +183,23 @@ void MRDSRG::build_density(){
         value = i[0] == i[1] ? 1.0 : 0.0;});
     (Eta1_.block("VV")).iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
+    // symmetrize beta spin
+    outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.");
+    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc around line 190.");
     Gamma1_.block("aa")("pq") = reference_.L1a()("pq");
-    Gamma1_.block("AA")("pq") = reference_.L1b()("pq");
+    Gamma1_.block("AA")("pq") = reference_.L1a()("pq");
     Eta1_.block("aa")("pq") -= reference_.L1a()("pq");
-    Eta1_.block("AA")("pq") -= reference_.L1b()("pq");
+    Eta1_.block("AA")("pq") -= reference_.L1a()("pq");
+
+//    ambit::Tensor Diff = ambit::Tensor::build(tensor_type_,"Diff",reference_.L1a().dims());
+//    Diff.data() = reference_.L1a().data();
+//    Diff("pq") -= reference_.L1b()("pq");
+//    outfile->Printf("\n  L1a diff Here !!!!");
+//    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
+//        if(value != 0.0){
+//            outfile->Printf("\n  [%zu][%zu] = %20.15f",i[0],i[1],value);
+//        }
+//    });
 
     // prepare two-body density cumulants
     ambit::Tensor Lambda2_aa = Lambda2_.block("aaaa");
@@ -195,6 +208,16 @@ void MRDSRG::build_density(){
     Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
+
+//    Diff = ambit::Tensor::build(tensor_type_,"Diff",reference_.L2aa().dims());
+//    Diff.data() = reference_.L2aa().data();
+//    Diff("pqrs") -= reference_.L2bb()("pqrs");
+//    outfile->Printf("\n  L2aa diff Here !!!!");
+//    Diff.citerate([&](const std::vector<size_t>& i,const double& value){
+//        if(value != 0.0){
+//            outfile->Printf("\n  [%zu][%zu][%zu][%zu] = %20.15f",i[0],i[1],i[2],i[3],value);
+//        }
+//    });
 
     // prepare three-body density cumulants
     if(options_.get_str("THREEPDC") != "ZERO"){
@@ -217,18 +240,9 @@ void MRDSRG::build_fock(BlockedTensor& H, BlockedTensor& V){
     F_["pq"]  = H["pq"];
     F_["pq"] += V["pjqi"] * Gamma1_["ij"];
     F_["pq"] += V["pJqI"] * Gamma1_["IJ"];
-    // symmetrize beta spin
-    outfile->Printf("\n  Warning: I am forcing Fb = Fa to avoid spin symmetry breaking.");
-    outfile->Printf("\n  If this is not desired, go to mrdsrg.cc around line 220.");
-    std::vector<std::string> bs {"cc","ca","cv","ac","aa","av","vc","va","vv"};
-    for(std::string& b: bs){
-        std::string b_beta (1, toupper(b[0]));
-        b_beta += std::string (1, toupper(b[1]));
-        F_.block(b_beta).data() = F_.block(b).data();
-    }
-//    F_["PQ"]  = H["PQ"];
-//    F_["PQ"] += V["jPiQ"] * Gamma1_["ij"];
-//    F_["PQ"] += V["PJQI"] * Gamma1_["IJ"];
+    F_["PQ"]  = H["PQ"];
+    F_["PQ"] += V["jPiQ"] * Gamma1_["ij"];
+    F_["PQ"] += V["PJQI"] * Gamma1_["IJ"];
 
     // obtain diagonal elements of Fock matrix
     size_t ncmo_ = mo_space_info_->size("CORRELATED");
@@ -277,6 +291,7 @@ void MRDSRG::print_options()
     for (auto& str_dim : calculation_info_string){
         outfile->Printf("\n    %-35s %15s",str_dim.first.c_str(),str_dim.second.c_str());
     }
+    outfile->Printf("\n");
     outfile->Flush();
 }
 
@@ -450,15 +465,15 @@ double MRDSRG::compute_energy_relaxed(){
                 Timer timer;
 
                 // diagonalize blocks of Fock matrix
-                BlockedTensor U = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
-                diagonalize_Fock_diagblocks(U);
+                U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+                diagonalize_Fock_diagblocks(U_);
                 outfile->Printf("\n    %-47s %8.3f", "Timing for block-diagonalizing Fock matrix:", timer.get() - timings.back());
                 timings.push_back(timer.get());
 
                 // transform O1 to new basis and copy to ints_
                 BlockedTensor O = ambit::BlockedTensor::build(tensor_type_,"Temp One",spin_cases({"gg"}));
-                O["rs"] = U["rp"] * O1_["pq"] * U["sq"];
-                O["RS"] = U["RP"] * O1_["PQ"] * U["SQ"];
+                O["rs"] = U_["rp"] * O1_["pq"] * U_["sq"];
+                O["RS"] = U_["RP"] * O1_["PQ"] * U_["SQ"];
                 O.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
                     if (spin[0] == AlphaSpin){
                         ints_->set_oei(i[0],i[1],value,true);
@@ -468,8 +483,8 @@ double MRDSRG::compute_energy_relaxed(){
                 });
 
                 // transform bare one-body Hamiltonian
-                O["rs"] = U["rp"] * H_["pq"] * U["sq"];
-                O["RS"] = U["RP"] * H_["PQ"] * U["SQ"];
+                O["rs"] = U_["rp"] * H_["pq"] * U_["sq"];
+                O["RS"] = U_["RP"] * H_["PQ"] * U_["SQ"];
                 H_["pq"] = O["pq"];
                 H_["PQ"] = O["PQ"];
                 outfile->Printf("\n    %-47s %8.3f", "Timing for transforming one-electron integral:", timer.get() - timings.back());
@@ -477,12 +492,12 @@ double MRDSRG::compute_energy_relaxed(){
 
                 // transform Hbar2 to new basis and copy to ints_
                 O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",spin_cases({"gggg"}));
-                O["tors"] = U["tp"] * U["oq"] * Hbar2_["pqrs"];
-                O["tOrS"] = U["tp"] * U["OQ"] * Hbar2_["pQrS"];
-                O["TORS"] = U["TP"] * U["OQ"] * Hbar2_["PQRS"];
-                Hbar2_["pqot"] = O["pqrs"] * U["ts"] * U["or"];
-                Hbar2_["pQoT"] = O["pQrS"] * U["TS"] * U["or"];
-                Hbar2_["PQOT"] = O["PQRS"] * U["TS"] * U["OR"];
+                O["tors"] = U_["tp"] * U_["oq"] * Hbar2_["pqrs"];
+                O["tOrS"] = U_["tp"] * U_["OQ"] * Hbar2_["pQrS"];
+                O["TORS"] = U_["TP"] * U_["OQ"] * Hbar2_["PQRS"];
+                Hbar2_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
+                Hbar2_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
+                Hbar2_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
                 Hbar2_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
                     if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
                         ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
@@ -495,12 +510,12 @@ double MRDSRG::compute_energy_relaxed(){
                 ints_->update_integrals(false);
 
                 // transform bare two-body Hamiltonian
-                O["tors"] = U["tp"] * U["oq"] * V_["pqrs"];
-                O["tOrS"] = U["tp"] * U["OQ"] * V_["pQrS"];
-                O["TORS"] = U["TP"] * U["OQ"] * V_["PQRS"];
-                V_["pqot"] = O["pqrs"] * U["ts"] * U["or"];
-                V_["pQoT"] = O["pQrS"] * U["TS"] * U["or"];
-                V_["PQOT"] = O["PQRS"] * U["TS"] * U["OR"];
+                O["tors"] = U_["tp"] * U_["oq"] * V_["pqrs"];
+                O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
+                O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
+                V_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
+                V_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
+                V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
                 outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron integral:", timer.get() - timings.back());
                 timings.push_back(timer.get());
 
@@ -808,11 +823,13 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
                 }else if(h_dim == 1){
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
                     U_h.data()[0] = 1.0;
-                    ambit::Tensor F_block = F_.block(block);
+                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+                    F_block.data() = F_.block(block).data();
                     ambit::Tensor T_h = separate_tensor(F_block,space,h);
                     fill_eigen(block,h,T_h.data());
                 }else{
-                    ambit::Tensor F_block = F_.block(block);
+                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+                    F_block.data() = F_.block(block).data();
                     ambit::Tensor T_h = separate_tensor(F_block,space,h);
                     auto Feigen = T_h.syev(AscendingEigenvalue);
                     U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));

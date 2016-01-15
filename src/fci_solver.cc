@@ -291,10 +291,6 @@ double FCISolver::compute_energy()
     boost::timer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
-    //if(ints_->frozen_core_integrals() == KeepFrozenMOs)
-    //{
-    //    fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_,true);
-    //}
     std::shared_ptr<FCIIntegrals> fci_ints;
     if(!provide_integrals_and_restricted_docc_)
     {
@@ -302,6 +298,7 @@ double FCISolver::compute_energy()
         ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
         ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
         ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
+        outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", tei_active_aa.norm(2), tei_active_ab.norm(2));
         fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
         fci_ints->compute_restricted_one_body_operator();
     }
