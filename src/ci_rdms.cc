@@ -147,7 +147,11 @@ double CI_RDMS::get_energy( std::vector<double>& oprdm_a,
 
 void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root )
 {
+	Timer one;
 	get_one_map();
+	outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
+
+	Timer build;
 	oprdm_a.resize(ncmo2_, 0.0);
 	oprdm_b.resize(ncmo2_, 0.0);
 	for (size_t J = 0; J < dim_space_; ++J){
@@ -174,6 +178,7 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
     	    }
     	}
 	}
+	outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
 void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root )
@@ -181,8 +186,12 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 	tprdm_aa.resize(ncmo4_, 0.0);	
 	tprdm_ab.resize(ncmo4_, 0.0);	
 	tprdm_bb.resize(ncmo4_, 0.0);	
-	get_two_map();
 
+    Timer two;
+	get_two_map();
+	outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.get());
+
+	Timer build;
 	for( size_t J = 0; J < dim_space_; ++J){
 		// aaaa
 		for( auto& aaJ_mo_sign : aa_ann_list_[J]){
@@ -248,6 +257,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 		}
 
 	}	
+	outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
 
@@ -263,8 +273,13 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 	tprdm_aab.resize(ncmo6, 0.0);
 	tprdm_abb.resize(ncmo6, 0.0);
 	tprdm_bbb.resize(ncmo6, 0.0);
+
+	Timer three;
 	get_three_map();
+	outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.get());
 	
+
+	Timer build;
 	for( size_t J = 0; J < dim_space_; ++J){
 		// aaa aaa
 		for( auto& aaaJ_mo_sign : aaa_ann_list_[J] ){
@@ -443,6 +458,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 		}
 	}
 
+	outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
 void CI_RDMS::get_one_map()
