@@ -39,6 +39,7 @@ set forte {
   nroot 1
   charge 0
   enforce_spin_complete true
+  prescreen_threshold 0.0
 }
 
 energy('scf')
