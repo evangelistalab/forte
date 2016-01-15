@@ -112,7 +112,7 @@ protected:
 class SigmaVectorList : public SigmaVector
 {
 public:
-    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space);
+    SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_detail);
 
     void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
@@ -138,6 +138,8 @@ protected:
     std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list;
     std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list;
     std::vector<double> diag_;
+
+	bool print_details_ = true;
 };
 
 
@@ -245,7 +247,7 @@ private:
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
-    bool print_details_ = false;
+    bool print_details_ = true;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
     /// The energy convergence threshold

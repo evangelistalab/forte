@@ -21,6 +21,8 @@ set globals{
    d_convergence        10
    e_convergence        8
    r_convergence        6
+   MCSCF_E_CONVERGENCE  8
+   MCSCF_R_CONVERGENCE  5
    basis                3-21g
 #   docc                 [2,0,0,0]
 #   socc                 [1,0,0,1]
@@ -38,15 +40,14 @@ set scf_type direct
 set forte{
    CASSCF_REFERENCE      true
    CASSCF_ITERATIONS      25
-   CASSCF_G_CONVERGENCE   1e-5
+   CASSCF_G_CONVERGENCE   1e-6
    CASSCF_E_CONVERGENCE   1e-8
    restricted_docc       [2]
    active                [2]
    int_type             conventional
    cas_type              FCI
-   print                  0
-   CASSCF_DO_DIIS         false
-   CASSCF_DEBUG_PRINTING  false
+   print                 0
+   CASSCF_DO_DIIS        false
 }
 e_casscf = energy('forte')
 

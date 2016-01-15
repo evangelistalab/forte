@@ -42,8 +42,8 @@ set forte{
    active                  [2]
    multiplicity             1
    cas_type                 FCI
-   CASSCF_G_CONVERGENCE     1e-6
-   CASSCF_E_CONVERGENCE     1e-8
+   CASSCF_G_CONVERGENCE     1e-5
+   CASSCF_E_CONVERGENCE     1e-6
    CASSCF_DO_DIIS           false
    print                    0
 }
