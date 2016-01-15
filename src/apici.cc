@@ -118,8 +118,8 @@ void AdaptivePathIntegralCI::startup()
     }
     reference_determinant_ = Determinant(occupation);
 
-    outfile->Printf("\n  The reference determinant is:\n");
-    reference_determinant_.print();
+//    outfile->Printf("\n  The reference determinant is:\n");
+//    reference_determinant_.print();
 
     // Read options
     wavefunction_multiplicity_ = 1;
@@ -363,16 +363,16 @@ double AdaptivePathIntegralCI::compute_energy()
         }
         if (temp > high_obt_energy) high_obt_energy = temp;
     }
-    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
+//    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
 
     double ref_energy = reference_determinant_.energy();
-    outfile->Printf("\nreference energy:%.12lf", ref_energy);
-    reference_determinant_.print();
+//    outfile->Printf("\nreference energy:%.12lf", ref_energy);
+//    reference_determinant_.print();
     double max_energy = high_obt_energy * ne;
-    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
+//    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
     double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
-    range_ = max_energy - power_shift;
-
+    range_ = (power_shift-ref_energy)*1.2*time_step_;
+//    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -674,30 +674,30 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
     combine_hashes(dets_C_hash, T_p2);
     det_hash<> C0;
     combine_hashes(T_p2, C0);
-    scale(C0,2.0 * boost::math::cyl_bessel_i(0, range_*tau));
+    scale(C0,boost::math::cyl_bessel_i(0, range_));
 
     det_vec sub_dets;
     std::vector<double> sub_C;
     copy_hash_to_vec(T_p2,sub_dets,sub_C);
     det_hash<> T_p1;
-    apply_tau_H(tau/range_,spawning_threshold,sub_dets,sub_C,T_p1,S);
+    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,T_p1,S);
     det_hash<> C1;
     combine_hashes(T_p1, C1);
-    scale(C1, boost::math::cyl_bessel_i(1, range_*tau));
+    scale(C1, 2.0 * boost::math::cyl_bessel_i(1, range_));
     det_hash<> spawned;
     combine_hashes(C0, spawned);
     combine_hashes(C1, spawned);
     det_hash<> Ck;
     combine_hashes(C1, Ck);
-    for (int i = 2; i<=3; i++){
+    for (int i = 2; i<=10; i++){
         det_hash<> HT_p1;
         copy_hash_to_vec(T_p1, sub_dets,sub_C);
-        apply_tau_H(tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
+        apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
         scale(HT_p1, 2.0);
         det_hash<> Tk;
         combine_hashes(HT_p1, Tk);
         det_hash<> Ck;
-        scale(Ck, boost::math::cyl_bessel_i(i, range_*tau));
+        scale(Ck, 2.0 * boost::math::cyl_bessel_i(i, range_));
         combine_hashes(Ck, spawned);
         add(Tk, -1.0, T_p2);
         T_p2 = T_p1;
