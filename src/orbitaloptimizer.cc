@@ -74,8 +74,17 @@ void OrbitalOptimizer::startup()
     restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     inactive_docc_abs_   = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
     nmo_abs_             = mo_space_info_->get_corr_abs_mo("CORRELATED");
-
-    casscf_freeze_core_  = options_.get_bool("CASSCF_FREEZE_CORE");
+    if(frozen_docc_abs_.size() && !(options_.get_bool("OPTIMIZE_FROZEN_CORE")))
+    {
+        casscf_freeze_core_ = true;
+    }
+    else{
+        casscf_freeze_core_ = false;
+    }
+    if(options_.get_bool("OPTIMIZE_FROZEN_CORE"))
+    {
+        throw PSIEXCEPTION("CASSCF can not handle optimization of frozen core, yet.");
+    }
 
     nmo_ = mo_space_info_->size("CORRELATED");
     all_nmo_ = mo_space_info_->size("ALL");
@@ -226,7 +235,6 @@ void OrbitalOptimizer::form_fock_core()
 }
 void OrbitalOptimizer::form_fock_active()
 {
-    Call_ = make_c_sym_aware();
     ///Step 3:
     ///Compute equation 10:
     /// The active OPM is defined by gamma = gamma_{alpha} + gamma_{beta}
@@ -480,6 +488,7 @@ void OrbitalOptimizer::orbital_gradient()
             Fock->set(a_o, q_o, 0.0);
         }
     }
+    if(casscf_debug_print_){Fock->print();}
     SharedMatrix Orb_grad_Fock(new Matrix("G_pq", nhole, npart));
     for(size_t h = 0; h < nhole; h++){
         for(size_t p = 0; p < npart; p++){
@@ -551,8 +560,15 @@ void OrbitalOptimizer::orbital_gradient()
         for(size_t v = 0; v < na_; v++){
             size_t u = active_abs_[ui];
             size_t vo = active_abs_[v];
-            Orb_grad_Fock->set(nhole_map_[vo],npart_map_[u] ,0.0);
+            if(vo == u)
+            {
+                Orb_grad_Fock->set(nhole_map_[vo],npart_map_[u],0.0);
+            }
         }
+    }
+    if(cas_)
+    {
+        zero_redunant(Orb_grad_Fock);
     }
 
     if(casscf_debug_print_)
@@ -649,6 +665,7 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     }
     SharedMatrix S_tmp = G_grad->clone();
     S_tmp->apply_denominator(D_grad);
+    //SharedMatrix S_tmp_AH = AugmentedHessianSolve();
     for(size_t h = 0; h < nirrep_; h++)
     {
         for(int u = 0; u < active_dim_[h]; u++)
@@ -672,25 +689,46 @@ SharedMatrix OrbitalOptimizer::approx_solve()
 SharedMatrix OrbitalOptimizer::AugmentedHessianSolve()
 {
     size_t nhole = mo_space_info_->size("GENERALIZED HOLE");
-    size_t npart = mo_space_info_->size("GENERALIZED PART");
+    size_t npart = mo_space_info_->size("GENERALIZED PARTICLE");
 
-    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", nhole * npart + 1, nhole * npart + 1));
-    C_DCOPY(nhole * npart, d_->pointer()[0], 1, &(AugmentedHessian->pointer()[0][0]), 1);
-    C_DCOPY(nhole * npart, g_->pointer()[0], 1, &(AugmentedHessian->pointer()[0][nhole * npart]), 1);
-    C_DCOPY(nhole * npart, g_->transpose()->pointer()[0], 1, &(AugmentedHessian->pointer()[nhole * npart][0]), 1);
-
-
-    AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
-    SharedMatrix HessianEvec(new Matrix("HessianEvec",  2*nmo_ + 1, 2*nmo_ + 1));
-    SharedVector HessianEval(new Vector("HessianEval", 2*nmo_ + 1));
-    AugmentedHessian->diagonalize(HessianEvec, HessianEval);
-    if(casscf_debug_print_)
-    {
-        g_->print();
-        d_->print();
-        AugmentedHessian->print();
-        HessianEval->print();
+    SharedMatrix AugmentedHessian(new Matrix("Augmented Hessian", nhole + npart + 1, nhole + npart + 1));
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(hol, part, d_->get(hol, part));
+        }
     }
+    SharedMatrix g_transpose = g_->transpose();
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(part,hol + npart, g_transpose->get(part, hol));
+        }
+    }
+    for(size_t hol = 0; hol < nhole; hol++){
+        for(size_t part = 0; part < npart; part++){
+            AugmentedHessian->set(part + nhole,hol, g_->get(hol, part) );
+        }
+    }
+    //for(int hol = 0; hol < nhole; hol++){
+    //    for(int part = nhole; part < (nhole + npart + 1); part++){
+    //        AugmentedHessian->set(hol, part, g_->transpose()->get(npart - part , hol));
+    //    }
+    //}
+    //AugmentedHessian->print();
+    //C_DCOPY(nhole * npart, g_->pointer()[0], 1, &(AugmentedHessian->pointer()[0][nhole * npart]), 1);
+    //C_DCOPY(nhole * npart, g_->transpose()->pointer()[0], 1, &(AugmentedHessian->pointer()[nhole * npart][0]), 1);
+
+    //AugmentedHessian->set(nhole * npart, nhole * npart, 0.0);
+    //AugmentedHessian->print();
+    SharedMatrix HessianEvec(new Matrix("HessianEvec", nhole + npart + 1, nhole + npart + 1));
+    SharedVector HessianEval(new Vector("HessianEval", nhole + npart + 1));
+    AugmentedHessian->diagonalize(HessianEvec, HessianEval);
+    HessianEvec->print();
+    //SharedMatrix S_AH(new Matrix("AugmentedHessianLowestEigenvalue", nhole, npart));
+    //if(casscf_debug_print_)
+    //{
+    //    AugmentedHessian->print();
+    //    HessianEval->print();
+    //}
     return HessianEvec;
 
 }
@@ -825,6 +863,16 @@ SharedMatrix OrbitalOptimizer::matrix_exp(const SharedMatrix& unitary)
 
     }
     return U;
+}
+void OrbitalOptimizer::zero_redunant(SharedMatrix& matrix)
+{
+    for(size_t u = 0; u < na_; u++){
+        for(size_t v = 0; v < na_; v++){
+            size_t uo = active_abs_[u];
+            size_t vo = active_abs_[v];
+            matrix->set(nhole_map_[uo],npart_map_[vo], 0.0);
+        }
+    }
 }
 
 }}

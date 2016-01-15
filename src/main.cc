@@ -298,14 +298,16 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
-        /*- Freeze core with CASSCF -*/
-        options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- Ignore frozen core option and optimize orbitals -*/
+        options.add_bool("OPTIMIZE_FROZEN_CORE", false);
         /*- CASSCF MAXIMUM VALUE HESSIAN -*/
         options.add_double("CASSCF_MAX_ROTATION", 0.5);
         /*- DO SCALE THE HESSIAN -*/
         options.add_bool("CASSCF_SCALE_ROTATION", true);
         /*- Use JK builder for restricted docc (EXPERT) -*/
         options.add_bool("RESTRICTED_DOCC_JK", true);
+        /*- Orbital rotation algorithm -*/
+        options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL", "DIAGONAL AUGMENTED_HESSIAN");
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", false);
@@ -636,8 +638,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
     {
-        if(options.get_bool("CASSCF_FREEZE_CORE") == false
-                && mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
+        if(mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
         {
             ints_->keep_frozen_core_integrals(KeepFrozenMOs);
             ints_->retransform_integrals();
