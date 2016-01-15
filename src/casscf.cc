@@ -54,7 +54,6 @@ void CASSCF::compute_casscf()
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     double hessian_scale_value = options_.get_double("CASSCF_MAX_ROTATION");
-    bool   scale_hessian       = options_.get_bool("CASSCF_SCALE_ROTATION");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
@@ -113,12 +112,13 @@ void CASSCF::compute_casscf()
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
-        if((g_norm < options_.get_double("CASSCF_G_CONVERGENCE") or fabs(E_casscf_old - E_casscf_)  < options_.get_double("CASSCF_E_CONVERGENCE") )&& (iter > 1))
+        if((fabs(E_casscf_old - E_casscf_) < options_.get_double("CASSCF_E_CONVERGENCE") ) && (g_norm < options_.get_double("CASSCF_G_CONVERGENCE")) && (iter > 1))
         {
-            outfile->Printf("\n\n @E_CASSCF: = %12.12f \n\n",E_casscf_ );
-            outfile->Printf("\n Norm of orbital_gradient is %8.8f", g_norm);
-            outfile->Printf("\n\n Energy difference: %12.12f", fabs(E_casscf_old - E_casscf_));
-            break;
+
+                outfile->Printf("\n\n @E_CASSCF: = %12.12f \n\n",E_casscf_ );
+                outfile->Printf("\n Norm of orbital_gradient is %8.8f", g_norm);
+                outfile->Printf("\n\n Energy difference: %12.12f", fabs(E_casscf_old - E_casscf_));
+                break;
         }
 
         Sstep = orbital_optimizer.approx_solve();
@@ -132,11 +132,12 @@ void CASSCF::compute_casscf()
                 }
             }
         }
-        if(maxS > hessian_scale_value && scale_hessian){
-            Sstep->scale(hessian_scale_value / maxS);
-        }
+        //if(maxS > hessian_scale_value){
+        //    Sstep->scale(hessian_scale_value / maxS);
+        //}
 
         // Add step to overall rotation
+
         S->copy(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
@@ -778,7 +779,7 @@ void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_n
     S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
     S_orbitals->print();
-    for(int h = 0; h < nirrep_; h++)
+    for(size_t h = 0; h < nirrep_; h++)
     {
         for(int i = 0; i < S_basis->rowspi(h); i++)
         {

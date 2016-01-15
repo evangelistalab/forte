@@ -142,7 +142,6 @@ private:
     std::vector<std::string> space_names_;
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
-    void sanity_check();
 };
 
 /**

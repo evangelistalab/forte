@@ -40,7 +40,8 @@ public:
 	double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
 	
 	void rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab,
-				  std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb); 
+                  std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+
 private:
    /* Class Variables*/  
 	

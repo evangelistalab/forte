@@ -308,7 +308,7 @@ read_options(std::string name, Options &options)
         options.add_bool("RESTRICTED_DOCC_JK", true);
 
         /*- DIIS Options -*/
-        options.add_bool("CASSCF_DO_DIIS", true);
+        options.add_bool("CASSCF_DO_DIIS", false);
         /// The number of Rotation parameters to extrapolate with
         options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
@@ -706,7 +706,7 @@ extern "C" PsiReturnType forte(Options &options)
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
@@ -767,7 +767,7 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
