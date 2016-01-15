@@ -667,41 +667,44 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
 {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
+    det_hash<> spawned;
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         dets_C_hash[dets[I]] = C[I];
     }
     det_hash<> T_p2;
-    combine_hashes(dets_C_hash, T_p2);
-    det_hash<> C0;
-    combine_hashes(T_p2, C0);
-    scale(C0,boost::math::cyl_bessel_i(0, range_));
+    det_hash<> T_p1;
+    combine_hashes(dets_C_hash, T_p1);
+    det_hash<> Ck;
+    combine_hashes(T_p1, Ck);
+    scale(Ck,boost::math::cyl_bessel_i(0, range_));
+    combine_hashes(Ck, spawned);
+    Ck.clear();
 
+    det_hash<> Tk;
     det_vec sub_dets;
     std::vector<double> sub_C;
-    copy_hash_to_vec(T_p2,sub_dets,sub_C);
-    det_hash<> T_p1;
-    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,T_p1,S);
-    det_hash<> C1;
-    combine_hashes(T_p1, C1);
-    scale(C1, 2.0 * boost::math::cyl_bessel_i(1, range_));
-    det_hash<> spawned;
-    combine_hashes(C0, spawned);
-    combine_hashes(C1, spawned);
-    det_hash<> Ck;
-    combine_hashes(C1, Ck);
+    copy_hash_to_vec(T_p1,sub_dets,sub_C);
+    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,Tk,S);
+//    det_hash<> C1;
+    combine_hashes(Tk, Ck);
+    scale(Ck, 2.0 * boost::math::cyl_bessel_i(1, range_));
+    combine_hashes(Ck, spawned);
+    Ck.clear();
+
     for (int i = 2; i<=3; i++){
+        Ck.clear();
+        T_p2 = T_p1;
+        T_p1 = Tk;
+        Tk.clear();
         det_hash<> HT_p1;
         copy_hash_to_vec(T_p1, sub_dets,sub_C);
         apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
         scale(HT_p1, 2.0);
-        det_hash<> Tk;
         combine_hashes(HT_p1, Tk);
-        det_hash<> Ck;
+        add(Tk, -1.0, T_p2);
+        combine_hashes(Tk, Ck);
         scale(Ck, 2.0 * boost::math::cyl_bessel_i(i, range_));
         combine_hashes(Ck, spawned);
-        add(Tk, -1.0, T_p2);
-        T_p2 = T_p1;
-        T_p1 = Tk;
     }
     normalize(spawned);
 
