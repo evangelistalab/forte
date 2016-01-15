@@ -792,9 +792,8 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
     evals.reset(new Vector("e",dim_space));
 
     // Diagonalize H
-    boost::timer t_diag;
+    //boost::timer t_diag;
     H->diagonalize(evecs,evals);
-    if(print_details_) outfile->Printf("\n  %s: %f s","Time spent diagonalizing H using Full",t_diag.elapsed());
 }
 
 void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)

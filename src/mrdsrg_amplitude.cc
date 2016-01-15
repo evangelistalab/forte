@@ -107,6 +107,7 @@ void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
                 if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
             }
         });
+        break;
     }}
 
     // transform back to non-canonical basis
@@ -239,6 +240,7 @@ void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1
                 if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
             }
         });
+        break;
     }}
 
     // transform back to non-canonical basis
@@ -618,6 +620,7 @@ void MRDSRG::update_t2_std(){
 
             if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
         });
+        break;
     }}
 
     // transform back to non-canonical basis
@@ -737,6 +740,7 @@ void MRDSRG::update_t1_std(){
 
             if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
         });
+        break;
     }}
 
     // transform back to non-canonical basis

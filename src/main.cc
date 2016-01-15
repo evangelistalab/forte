@@ -289,7 +289,7 @@ read_options(std::string name, Options &options)
         /* - Run a FCI followed by CASSCF computation -*/
         options.add_bool("CASSCF_REFERENCE", false);
         /* - The number of iterations for CASSCF -*/
-        options.add_int("CASSCF_ITERATIONS", 10);
+        options.add_int("CASSCF_ITERATIONS", 30);
         /* - The convergence for the gradient for casscf -*/
         options.add_double("CASSCF_G_CONVERGENCE", 1e-5);
         /* - The convergence of the energy for CASSCF -*/
@@ -298,15 +298,19 @@ read_options(std::string name, Options &options)
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
-        /*- Freeze core with CASSCF -*/
-        options.add_bool("CASSCF_FREEZE_CORE", false);
+        /*- Ignore frozen core option and optimize orbitals -*/
+        options.add_bool("OPTIMIZE_FROZEN_CORE", false);
         /*- CASSCF MAXIMUM VALUE HESSIAN -*/
         options.add_double("CASSCF_MAX_ROTATION", 0.5);
         /*- DO SCALE THE HESSIAN -*/
         options.add_bool("CASSCF_SCALE_ROTATION", true);
+        /*- Use JK builder for restricted docc (EXPERT) -*/
+        options.add_bool("RESTRICTED_DOCC_JK", true);
+        /*- Orbital rotation algorithm -*/
+        options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL", "DIAGONAL AUGMENTED_HESSIAN");
 
         /*- DIIS Options -*/
-        options.add_bool("CASSCF_DO_DIIS", true);
+        options.add_bool("CASSCF_DO_DIIS", false);
         /// The number of Rotation parameters to extrapolate with
         options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
@@ -388,7 +392,7 @@ read_options(std::string name, Options &options)
         /*- The maximum number of determinants used to form the guess wave function -*/
         options.add_double("MAX_GUESS_SIZE",10000);
         /*- The determinant importance threshold -*/
-        options.add_double("GUESS_SPAWNING_THRESHOLD",0.01);
+        options.add_double("GUESS_SPAWNING_THRESHOLD",-1);
         /*- The threshold with which we estimate the variational energy.
             Note that the final energy is always estimated exactly. -*/
         options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
@@ -508,6 +512,8 @@ read_options(std::string name, Options &options)
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- T1 Amplitudes -*/
+        options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
         options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
         /*- Max Iteration for Reference Relaxation -*/
@@ -524,8 +530,6 @@ read_options(std::string name, Options &options)
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
-        /*- Zero T1 Amplitudes -*/
-        options.add_bool("T1_ZERO", false);
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
@@ -638,8 +642,7 @@ extern "C" PsiReturnType forte(Options &options)
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
     {
-        if(options.get_bool("CASSCF_FREEZE_CORE") == false
-                && mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
+        if(mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
         {
             ints_->keep_frozen_core_integrals(KeepFrozenMOs);
             ints_->retransform_integrals();
@@ -708,7 +711,7 @@ extern "C" PsiReturnType forte(Options &options)
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
@@ -769,7 +772,7 @@ extern "C" PsiReturnType forte(Options &options)
 
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);

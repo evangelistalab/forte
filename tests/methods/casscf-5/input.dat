@@ -36,6 +36,7 @@ set globals{
    reference               RHF
 }
 scf = energy('casscf')
+compare_values(refmcscf, scf,10,"SCF Energy")
 
 set scf_type  direct
 set forte {
@@ -51,13 +52,10 @@ set forte {
    cas_type                FCI
    casscf_reference        true
    CASSCF_ITERATIONS       50
-   job_type                 FCI
-   CASSCF_FREEZE_CORE       true
    print                    0
 }
 
 
 #scf = energy('mcscf')
-compare_values(refmcscf, scf,10,"SCF Energy")
 energy('forte')
 compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),6,"CASSCF energy")

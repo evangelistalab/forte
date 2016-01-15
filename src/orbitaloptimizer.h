@@ -29,10 +29,11 @@ namespace psi{ namespace forte{
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_no_symmetry_mo(Call_);
         orbital_optimizer.set_symmmetry_mo(Ca);
+
         orbital_optimizer.update()
         S = orbital_optimizer.approx_solve()
-        C_new = orbital_optimizer.rotate(Ca, S)
-
+        C_new = orbital_optimizer.rotate(Ca, S) -> Right now, if this is an iterative procedure, you should
+        use the Ca that was previously updated, ie (C_new  = Cold(exp(S_previous)) * exp(S))
 */
 class OrbitalOptimizer
 {
@@ -43,7 +44,7 @@ public:
      * @brief Given 1RDM, 2RDM, (pu|xy) integrals, and space information, do an orbital optimization
      * OrbitalOptimizer returns a orbital rotation parameter that allows you to update your orbitals
      * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma2_b
-     * @param Gamma2 The SYMMETRIZTED 2-RDM: 1/4 * (gamma2_aa + gamma2_ab + gamma_2_ba + gamma2_bb)
+     * @param Gamma2 The SYMMETRIZED 2-RDM:  Look at code ( Gamma = rdm_2aa + rdm_2ab) with prefactors
      * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are doing an orbital optimization at the level of CASSCF
      * @param options The options object
      * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
@@ -59,13 +60,10 @@ public:
     /// The MO Coefficient you get from wfn_->Ca()
     void set_symmmetry_mo(SharedMatrix C)  {Ca_sym_ = C;}
     /// The MO Coefficient in pitzer ordering (symmetry-aware)
-    void set_no_symmetry_mo(SharedMatrix C){Call_ = C;}
     /// The workhouse of the program:  Computes gradient, hessian.
     void update();
     /// Solution of g + Hx = 0 (with diagonal H), so x = - g / H
     SharedMatrix approx_solve();
-    /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
-    SharedMatrix AugmentedHessianSolve();
     /// Exponentiate the orbital rotation parameter and use this to update your MOCoefficient
     SharedMatrix rotate_orbitals(SharedMatrix C, SharedMatrix S);
     /// The norm of the orbital gradient
@@ -153,9 +151,12 @@ protected:
     void diagonal_hessian();
     /// check the cas_ci energy with spin-free RDM
     void orbital_rotation_parameter();
-
+    /// Perform the exponential of x
+    SharedMatrix matrix_exp(const SharedMatrix&);
     ///form SharedMatrices of Gamma1 and Gamma2 (Tensor library not great for non contractions)
     void fill_shared_density_matrices();
+    /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
+    SharedMatrix AugmentedHessianSolve();
 
     SharedMatrix make_c_sym_aware();
 
@@ -188,6 +189,9 @@ protected:
     /// Allows for easy acess of unitary parameter
     std::map<size_t, size_t> nhole_map_;
     std::map<size_t, size_t> npart_map_;
+    bool cas_;
+    enum MATRIX_EXP {PSI4, TAYLOR};
+    void zero_redunant(SharedMatrix& matrix);
 
 
 };

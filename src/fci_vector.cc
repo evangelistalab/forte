@@ -37,100 +37,6 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<siz
 }
 void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b)
 {
-    //if(ints_->integral_type()==DF or ints_->integral_type()==DiskDF)
-    //{
-    //    use_jk = true;
-    //}
-    //if(use_jk)
-    //{
-    //    outfile->Printf("\n Using JK builder");
-    //    ///Form JK builder use inactive_docc molecular orbital coefficients
-    //    /// Forms the Fock Operator for frozen_core and restricted_docc
-    //    Dimension restricted_docc_dim = mospace_info->get_dimension("INACTIVE_DOCC");
-    //    Dimension nsopi           = Process::environment.wavefunction()->nsopi();
-    //    int nirrep               = Process::environment.wavefunction()->nirrep();
-    //    Dimension nmopi = mospace_info->get_dimension("ALL");
-
-    //    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
-    //    SharedMatrix Ca = Process::environment.wavefunction()->Ca();
-    //    for(int h = 0; h < nirrep; h++)
-    //    {
-    //        for(int mu = 0; mu < nsopi[h]; mu++)
-    //        {
-    //            for(int i = 0; i < restricted_docc_dim[h]; i++)
-    //            {
-    //                Cdocc->set(h, mu, i, Ca->get(h, mu, i));
-    //            }
-    //        }
-    //    }
-    //    ///F_frozen = D_{uv}^{frozen} * (2<uv|rs> - <ur | vs>)
-    //    ///F_restricted = D_{uv}^{restricted} * (2<uv|rs> - <ur | vs>)
-    //    ///F_inactive = F_frozen + F_restricted + H_{pq}^{core}
-    //    /// D_{uv}^{frozen} = \sum_{i = 0}^{frozen}C_{ui} * C_{vi}
-    //    /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
-    //    /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
-
-    //    boost::shared_ptr<JK> JK_inactive = JK::build_JK();
-
-    //    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
-    //    JK_inactive->initialize();
-
-    //    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_inactive->C_left();
-    //    Cl.push_back(Cdocc);
-    //    JK_inactive->compute();
-    //    SharedMatrix J_restricted = JK_inactive->J()[0];
-    //    SharedMatrix K_restricted = JK_inactive->K()[0];
-
-    //    J_restricted->scale(2.0);
-    //    SharedMatrix F_restricted = J_restricted->clone();
-    //    F_restricted->subtract(K_restricted);
-
-    //    boost::shared_ptr<MintsHelper> mints(new MintsHelper());
-    //    SharedMatrix T = mints->so_kinetic();
-    //    SharedMatrix V = mints->so_potential();
-    //    SharedMatrix H = T->clone();
-    //    H->add(V);
-    //    H->set_name("Core Hamiltonian");
-
-    //    F_restricted->add(H);
-    //    F_restricted->transform(Ca);
-    //    H->transform(Ca);
-    //    size_t all_nmo = mospace_info->size("ALL");
-    //    SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
-    //    size_t offset = 0;
-    //    for(int h = 0; h < nirrep; h++){
-    //        for(int p = 0; p < nmopi[h]; p++){
-    //            for(int q = 0; q < nmopi[h]; q++){
-    //                F_restric_c1->set(p + offset, q + offset, F_restricted->get(h, p, q ));
-    //            }
-    //        }
-    //        offset += nmopi[h];
-    //    }
-
-    //    auto absolute_active = mospace_info->get_absolute_mo("ACTIVE");
-    //    for(size_t u = 0; u < nmo_; u++){
-    //        for(size_t v = 0; v < nmo_; v++){
-    //            double value = F_restric_c1->get(absolute_active[u], absolute_active[v]);
-    //            //double h_value = H->get(absolute_active[u], absolute_active[v]);
-    //            oei_a[u * nmo_ + v ] = value;
-    //            oei_b[u * nmo_ + v ] = value;
-    //        }
-    //    }
-    //    Dimension restricted_docc = mospace_info->get_dimension("INACTIVE_DOCC");
-    //    double E_restricted = 0.0;
-    //    for(int h = 0; h < nirrep; h++){
-    //        for(int rd = 0; rd < restricted_docc[h]; rd++){
-    //            E_restricted += H->get(h, rd, rd) + F_restricted->get(h, rd, rd);
-    //        }
-    //    }
-    //    /// Since F^{INACTIVE} includes frozen_core in fock build, the energy contribution includes frozen_core_energy
-    //    if(print_)
-    //    {
-    //        outfile->Printf("\n Inactive Energy = %8.8f", E_restricted - frozen_core_energy_);
-    //    }
-    //    scalar_energy_ += E_restricted - frozen_core_energy_;
-    //}
-    //else
 
     std::vector<double> tei_rdocc_aa;
     std::vector<double> tei_rdocc_ab;
@@ -176,6 +82,7 @@ void FCIIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a, std::ve
             scalar_energy_ += 0.5 * tei_rdocc_bb[index];
         }
     }
+
 
     for (size_t p = 0; p < nmo_; ++p){
         size_t pp = cmo_to_mo[p];
@@ -235,6 +142,7 @@ FCIIntegrals::FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::shared_ptr
     tei_aa_ = act_aa.data();
     tei_ab_ = act_ab.data();
     tei_bb_ = act_bb.data();
+
 
     scalar_energy_ = ints->scalar();
 

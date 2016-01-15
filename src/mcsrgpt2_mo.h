@@ -71,6 +71,7 @@ protected:
     double T1Nb_;    // Norm T1b
     double T1Maxa_;  // Max T1a
     double T1Maxb_;  // Max T1b
+    string t1_amp_;
 
     /// T2 Amplitude
     d4 T2aa_;
