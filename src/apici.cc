@@ -689,7 +689,7 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
     combine_hashes(C1, spawned);
     det_hash<> Ck;
     combine_hashes(C1, Ck);
-    for (int i = 2; i<=10; i++){
+    for (int i = 2; i<=3; i++){
         det_hash<> HT_p1;
         copy_hash_to_vec(T_p1, sub_dets,sub_C);
         apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
