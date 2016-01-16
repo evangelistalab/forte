@@ -151,13 +151,14 @@ void AdaptivePathIntegralCI::startup()
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
     do_schwarz_prescreening_ = options_.get_bool("SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
+    chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
         propagator_description_ = "Linear";
     }else if (options_.get_str("PROPAGATOR") == "TROTTER"){
         propagator_ = TrotterLinear;
-        propagator_description_ = "Quadratic";
+        propagator_description_ = "Trotter";
     }else if (options_.get_str("PROPAGATOR") == "QUADRATIC"){
         propagator_ = QuadraticPropagator;
         propagator_description_ = "Quadratic";
@@ -691,7 +692,7 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
     combine_hashes(Ck, spawned);
     Ck.clear();
 
-    for (int i = 2; i<=3; i++){
+    for (int i = 2; i<= chebyshev_order_; i++){
         Ck.clear();
         T_p2 = T_p1;
         T_p1 = Tk;
