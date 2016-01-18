@@ -18,11 +18,8 @@ molecule {
 
 set globals{
    scf_type             out_of_core
-   d_convergence        10
-   e_convergence        8
-   r_convergence        6
    MCSCF_E_CONVERGENCE  8
-   MCSCF_R_CONVERGENCE  5
+   MCSCF_R_CONVERGENCE  6
    basis                3-21g
 #   docc                 [2,0,0,0]
 #   socc                 [1,0,0,1]
@@ -47,7 +44,7 @@ set forte{
    int_type             conventional
    cas_type              FCI
    print                 0
-   CASSCF_DO_DIIS        false
+   CASSCF_DO_DIIS        true
 }
 e_casscf = energy('forte')
 
