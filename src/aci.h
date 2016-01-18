@@ -186,6 +186,8 @@ private:
 	int rdm_level_;
     /// Control amount of printing
 	bool quiet_mode_;
+    /// Control streamlining
+    bool streamline_qspace_;
 
     /// A vector of determinants in the P space
     std::vector<STLBitsetDeterminant> P_space_;
@@ -246,6 +248,9 @@ private:
 
     /// Diagonalize the Hamiltonian in a space of determinants
     void diagonalize_hamiltonian2(const std::vector<STLBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+
+    /// Streamlined version of find q space
+    void default_find_q_space( SharedVector evals, SharedMatrix evecs );
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);

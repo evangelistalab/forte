@@ -1260,9 +1260,9 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
     double e_convergence = 1.0e-12;
 
-    if (print){
-        outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
-    }
+//    if (print){
+//        outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
+//    }
 
     // current set of guess vectors stored by row
     Matrix b("b",maxdim,N);
@@ -1366,10 +1366,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
         // If L is close to maxdim, collapse to one guess per root */
         if(maxdim - L < M) {
-            if(print) {
-                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
-                outfile->Printf("Collapsing eigenvectors.\n");
-            }
+//            if(print) {
+//                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
+//                outfile->Printf("Collapsing eigenvectors.\n");
+//            }
             bnew.zero();
             double** bnew_p = bnew.pointer();
             for(size_t i = 0; i < collapse_size; i++) {
@@ -1479,10 +1479,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
         // check convergence on all roots
         if(!skip_check) {
             converged = 0;
-            if(print) {
-                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
-                outfile->Printf("---- -------------------- ------- ----------\n");
-            }
+//            if(print) {
+//                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
+//                outfile->Printf("---- -------------------- ------- ----------\n");
+//            }
             for(int k = 0; k < M; k++) {
                 double diff = std::fabs(lambda.get(k) - lambda_old.get(k));
                 bool this_converged = false;
@@ -1491,10 +1491,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
                     converged++;
                 }
                 lambda_old.set(k,lambda.get(k));
-                if(print) {
-                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k), diff,
-                                    this_converged ? "Y" : "N");
-                }
+//                if(print) {
+//                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k), diff,
+//                                    this_converged ? "Y" : "N");
+//                }
             }
         }
 
