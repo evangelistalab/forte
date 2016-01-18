@@ -54,6 +54,7 @@ void CASSCF::compute_casscf()
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+    double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
     Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
@@ -137,13 +138,12 @@ void CASSCF::compute_casscf()
                 }
             }
         }
-        //if(maxS > hessian_scale_value){
-        //    Sstep->scale(hessian_scale_value / maxS);
-        //}
+        if(maxS > rotation_max_value){
+            Sstep->scale(rotation_max_value / maxS);
+        }
 
-        // Add step to overall rotation
+        //Add step to overall rotation
 
-        Sstep->set_name("Sstep");
         S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
@@ -157,10 +157,7 @@ void CASSCF::compute_casscf()
         {
             diis_manager->extrapolate(1, S.get());
         }
-        S->set_name("OverallS");
         SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
-
-        Cp->set_name("Updated C");
 
         ///ENFORCE Ca = Cb
         Ca->copy(Cp);
