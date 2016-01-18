@@ -75,7 +75,6 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, st
     copy(wfn);
 
     startup();
-    if(!quiet_mode_) print_info();
 }
 
 AdaptiveCI::~AdaptiveCI()
@@ -88,7 +87,6 @@ void AdaptiveCI::startup()
 	if(options_["QUIET_MODE"].has_changed()){
 		quiet_mode_ = options_.get_bool("QUIET_MODE");
 	}
-    if(!quiet_mode_) print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
 
     fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
@@ -148,13 +146,6 @@ void AdaptiveCI::startup()
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
-    if(!quiet_mode_){
-        outfile->Printf("\n  ==> Reference Information <==\n");
-	    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-	    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-        reference_determinant_.print();
-	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
-    }
 
     // Read options
     nroot_ = options_.get_int("NROOT");
@@ -287,7 +278,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 	//Get reference type
 	std::string ref_type = options_.get_str("REFERENCE");
-	if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n", ref_type.c_str());
+	//if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n", ref_type.c_str());
 
 	//nyms denotes the number of electrons needed to assign symmetry and multiplicity
 	int nsym = wavefunction_multiplicity_ - 1;
@@ -478,6 +469,15 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 double AdaptiveCI::compute_energy()
 {
+    if(!quiet_mode_){ 
+        print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+        outfile->Printf("\n  ==> Reference Information <==\n");
+	    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+	    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
+        reference_determinant_.print();
+	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+        print_info();
+    }
     boost::timer t_iamrcisd;
 
     SharedMatrix P_evecs;
