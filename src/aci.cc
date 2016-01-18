@@ -539,7 +539,7 @@ double AdaptiveCI::compute_energy()
     
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
-        outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag.get());
+        if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag.get());
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
 		// Save the dimention of the previous PQ space
@@ -592,7 +592,7 @@ double AdaptiveCI::compute_energy()
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
-        outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag_pq.get());
+        if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
 		// Ensure the solutions are spin-pure
