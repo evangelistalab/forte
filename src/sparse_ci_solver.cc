@@ -51,7 +51,7 @@ void SigmaVectorSparse::get_diagonal(Vector& diag){
     }
 }
 
-SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space)
+SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space, bool print_details )
     : SigmaVector(space.size()), space_(space)
 {
 	using det_hash = std::unordered_map<STLBitsetDeterminant,size_t,STLBitsetDeterminant::Hash>;
@@ -83,7 +83,9 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space)
     ab_ann_list.resize(max_I);
     bb_ann_list.resize(max_I);
 
-    outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
+	if( print_details ){
+		outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
+	}
     for (size_t I = 0; I < max_I; ++I){
         STLBitsetDeterminant detI = space[I];
 
@@ -172,8 +174,9 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space)
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
 
-
-    outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
+	if(print_details){
+		outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
+	}
     for (size_t I = 0; I < max_I; ++I){
         STLBitsetDeterminant detI = space[I];
 
@@ -305,8 +308,11 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space)
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",aa_cre_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",ab_cre_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",bb_cre_list.size());
-    outfile->Printf("\n  Memory for singles: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
-    outfile->Printf("\n  Memory for doubles: %f MB",double(mem_tuple_doubles) / (1024. * 1024.) );
+	
+	if( print_details ){
+		outfile->Printf("\n  Memory for singles: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
+		outfile->Printf("\n  Memory for doubles: %f MB",double(mem_tuple_doubles) / (1024. * 1024.) );
+	}
 }
 
 void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
@@ -788,7 +794,6 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
     // Diagonalize H
     //boost::timer t_diag;
     H->diagonalize(evecs,evals);
-    //outfile->Printf("\n  %s: %f s","Time spent diagonalizing H using Full",t_diag.elapsed());}
 }
 
 void SparseCISolver::diagonalize_davidson_liu_dense(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)
@@ -837,7 +842,8 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<STLBitsetDe
     evals.reset(new Vector("e",nroot));
 
     // Diagonalize H
-    SigmaVectorList svl (space);
+    print_details_ = true;
+    SigmaVectorList svl (space, print_details_);
     SigmaVector* sigma_vector = &svl;
     auto guess = initial_guess(space,nroot,multiplicity);
     davidson_liu_guess(guess,sigma_vector,evals,evecs,nroot,multiplicity);
@@ -845,15 +851,17 @@ void SparseCISolver::diagonalize_davidson_liu_list(const std::vector<STLBitsetDe
 
 void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
 {
-    outfile->Printf("\n\n  Davidson-liu solver algorithm");
-    outfile->Flush();
+	if( print_details_ ){	
+		outfile->Printf("\n\n  Davidson-liu solver algorithm");
+		outfile->Flush();
+	}
 
     size_t dim_space = space.size();
     evecs.reset(new Matrix("U",dim_space,nroot));
     evals.reset(new Vector("e",nroot));
 
     // Diagonalize H
-    SigmaVectorList svl (space);
+    SigmaVectorList svl (space, print_details_);
     SigmaVector* sigma_vector = &svl;
     davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
 }
@@ -991,7 +999,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         STLBitsetDeterminant::enforce_spin_completeness(guess_det);
         if (guess_det.size() > nguess){
             size_t nnew_dets = guess_det.size() - nguess;
-            outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
+            if (print_details_) outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
             int nfound = 0;
             for (size_t i = 0; i < nnew_dets; ++i){
                 for (size_t j = nguess; j < ndets; ++j){
@@ -1003,7 +1011,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
                     }
                 }
             }
-            outfile->Printf("  %d determinant(s) added.",nfound);
+            if(print_details_) outfile->Printf("  %d determinant(s) added.",nfound);
         }
         nguess = guess_dets_pos.size();
     }
@@ -1047,7 +1055,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         double error = mult - static_cast<double>(mult_int);
         if (std::fabs(error) < Stollerance){
             mult_list[mult_int].push_back(i);
-        }else{
+        }else if (print_details_) {
             outfile->Printf("\n  Found a guess vector with spin not close to integer value (%f)",mult);
         }
     }
@@ -1066,7 +1074,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     for (int m : mult_vals){
         std::vector<int>& mult_list_s = mult_list[m];
         int nspin_states = mult_list_s.size();
-        outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c",nspin_states,m,m == multiplicity ? '*' : ' ');
+        if (print_details_)outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c",nspin_states,m,m == multiplicity ? '*' : ' ');
         // Extract the spin manifold
         Matrix HS2("HS2",nspin_states,nspin_states);
         Vector HS2evals("HS2",nspin_states);
@@ -1119,7 +1127,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
                                          int nroot,
                                          int multiplicity)
 {
-    print_details_ = true;
+//    print_details_ = true;
     size_t fci_size = sigma_vector->size();
     DavidsonLiuSolver dls(fci_size,nroot);
     dls.set_e_convergence(e_convergence_);
@@ -1134,7 +1142,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    outfile->Printf("\n  number of guess vectors: %d",guess_size);
+    if (print_details_) outfile->Printf("\n  number of guess vectors: %d",guess_size);
 
     auto guess = initial_guess(space,nroot,multiplicity);
 
@@ -1155,7 +1163,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         for (auto& guess_vec_info : guess[guess_list[n]].second){
             b->set(guess_vec_info.first,guess_vec_info.second);
         }
-        outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+        if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
         dls.add_guess(b);
     }
 
@@ -1252,9 +1260,9 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
     double e_convergence = 1.0e-12;
 
-    if (print_details_){
-        outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
-    }
+//    if (print){
+//        outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
+//    }
 
     // current set of guess vectors stored by row
     Matrix b("b",maxdim,N);
@@ -1358,10 +1366,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
         // If L is close to maxdim, collapse to one guess per root */
         if(maxdim - L < M) {
-            if(print) {
-                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
-                outfile->Printf("Collapsing eigenvectors.\n");
-            }
+//            if(print) {
+//                outfile->Printf("Subspace too large: maxdim = %d, L = %d\n", maxdim, L);
+//                outfile->Printf("Collapsing eigenvectors.\n");
+//            }
             bnew.zero();
             double** bnew_p = bnew.pointer();
             for(size_t i = 0; i < collapse_size; i++) {
@@ -1471,10 +1479,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
         // check convergence on all roots
         if(!skip_check) {
             converged = 0;
-            if(print) {
-                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
-                outfile->Printf("---- -------------------- ------- ----------\n");
-            }
+//            if(print) {
+//                outfile->Printf("Root      Eigenvalue       Delta  Converged?\n");
+//                outfile->Printf("---- -------------------- ------- ----------\n");
+//            }
             for(int k = 0; k < M; k++) {
                 double diff = std::fabs(lambda.get(k) - lambda_old.get(k));
                 bool this_converged = false;
@@ -1483,10 +1491,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
                     converged++;
                 }
                 lambda_old.set(k,lambda.get(k));
-                if(print) {
-                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k), diff,
-                                    this_converged ? "Y" : "N");
-                }
+//                if(print) {
+//                    outfile->Printf("%3d  %20.14f %4.3e    %1s\n", k, lambda.get(k), diff,
+//                                    this_converged ? "Y" : "N");
+//                }
             }
         }
 
@@ -1522,8 +1530,10 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
             v[I][i] /= norm;
         }
     }
-    outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
-    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
+    if(print){
+        outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.", iter);
+        outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
+    }
     return true;
 }
 
@@ -1550,7 +1560,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     double e_convergence = 1.0e-12;
 
-    if (print_details_){
+    if (print){
         outfile->Printf("\n  Size of the Hamiltonian: %d x %d",N,N);
     }
 

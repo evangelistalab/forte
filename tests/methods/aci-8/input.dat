@@ -35,6 +35,8 @@ set forte {
   TAUQ 0.000500
   nroot 1
   charge 0
+  diag_algorithm davidson
+  quiet_mode true
 }
 
 energy('scf')
