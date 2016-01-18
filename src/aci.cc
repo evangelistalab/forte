@@ -84,6 +84,8 @@ AdaptiveCI::~AdaptiveCI()
 
 void AdaptiveCI::startup()
 {
+    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+
     fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
     auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -134,25 +136,19 @@ void AdaptiveCI::startup()
 	nalpha_ = (nactel_ + ms) / 2;
 	nbeta_  = nactel_ - nalpha_; 
 
-	outfile->Printf("\n  Total electrons: %zu", nel);
-	outfile->Printf("\n  Number of active electrons: %d",nactel_);
-	outfile->Printf("\n  nalpha: %d", nalpha_);
-	outfile->Printf("\n  nbeta:  %d \n", nbeta_);
-
-
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
 	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
 	rvir_  = mo_space_info_->size("RESTRICTED_UOCC");	
 
-	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-	outfile->Printf("\n  There are %zu active orbitals.", nact_);
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
-    outfile->Printf("\n  The reference determinant is:\n");
+    outfile->Printf("\n  ==> Reference Information <==\n");
+	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+	outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
     reference_determinant_.print();
-	outfile->Printf("\n  The reference energy is %1.8f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+	outfile->Printf("\n  REFERNECE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
 
 
     // Read options
@@ -164,6 +160,16 @@ void AdaptiveCI::startup()
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 	rdm_level_ = options_.get_int("ACI_MAX_RDM"); 
+
+	quiet_mode_ = false;
+	if(options_["QUIET_MODE"].has_changed()){
+		quiet_mode_ = options_.get_bool("QUIET_MODE");
+	}
+
+	max_cycle_ = 20;
+	if(options_["MAX_ACI_CYCLE"].has_changed()){
+		max_cycle_ = options_.get_int("MAX_ACI_CYCLE");
+	} 
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
@@ -189,16 +195,16 @@ void AdaptiveCI::startup()
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 
 
+    diag_method_ = DLSolver;
+    if(options_["DIAG_ALGORITHM"].has_changed()){
     if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
         diag_method_ = Full;
     } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
         diag_method_ = DavidsonLiuSparse;
     } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
         diag_method_ = DavidsonLiuList;
-    } else if (options_.get_str("DIAG_ALGORITHM") == "SOLVER"){
-        diag_method_ = DLSolver;
     }
-
+    }
     aimed_selection_ = false;
     energy_selection_ = false;
     if (options_.get_str("SELECT_TYPE") == "AIMED_AMP"){
@@ -214,11 +220,26 @@ void AdaptiveCI::startup()
         aimed_selection_ = false;
         energy_selection_ = false;
     }
+
+    if( options_.get_bool("STREAMLINE_Q") == true){
+        streamline_qspace_ = true;
+    }else{
+        streamline_qspace_ = false;
+    }
+
+    // Set streamline mode to true if possible
+    if( (nroot_ == 1) and
+        (aimed_selection_ == true) and
+        (energy_selection_ == true) and
+        (perturb_select_ == false) ){
+        
+        streamline_qspace_ = true;
+    }
+
 }
 
 void AdaptiveCI::print_info()
 {
-    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
 
     // Print a summary
     std::vector<std::pair<std::string,int>> calculation_info{
@@ -298,7 +319,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 			bool add = false;
 			// Remove electron from highest energy docc
 			occupation[labeled_orb_en[nalpha_ - k].second.second] = 0;
-			outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en[nalpha_ - k].second.second, nactel_);
+		//	outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en[nalpha_ - k].second.second, nactel_);
 		
 			// Determine proper symmetry for new occupation
 			orb_sym = wavefunction_symmetry_; 
@@ -312,14 +333,14 @@ std::vector<int> AdaptiveCI::get_occupation()
 				orb_sym  = labeled_orb_en[nalpha_ - k].second.first ^ orb_sym;
 			}
 
-			outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+		//	outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 			// Add electron to lowest-energy orbital of proper symmetry
 			// Loop from current occupation to max MO until correct orbital is reached
 			for(int i = nalpha_ - k, maxi = nact_; i < maxi; ++i){
 				if(orb_sym == labeled_orb_en[i].second.first and occupation[labeled_orb_en[i].second.second] != 1){
 					occupation[labeled_orb_en[i].second.second] = 1;
-					outfile->Printf("\n  Added electron to %d", labeled_orb_en[i].second.second);
+		//			outfile->Printf("\n  Added electron to %d", labeled_orb_en[i].second.second);
 					add = true;
 					break;
 				}else{
@@ -329,7 +350,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 			//If a new occupation could not be created, put electron back and remove a different one
 			if(!add){
 				occupation[labeled_orb_en[nalpha_ - k].second.second] = 1;
-				outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
+		//		outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
 				++k;
 			}else{
 				break;
@@ -361,7 +382,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 				// Remove highest energy alpha electron
 				occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 0;
 
-				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_alfa[nalpha_ - k].second.second, nactel_);
+		//		outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_alfa[nalpha_ - k].second.second, nactel_);
 
 				//Determine proper symmetry for new electron
 				
@@ -376,13 +397,13 @@ std::vector<int> AdaptiveCI::get_occupation()
 					orb_sym = labeled_orb_en_alfa[nalpha_ - k].second.first ^ orb_sym;
 				}
 
-				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+		//		outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy orbital of proper symmetry
 				for(int i = nalpha_ - k; i < nactel_; ++i){
 					if(orb_sym == labeled_orb_en_alfa[i].second.first and occupation[labeled_orb_en_alfa[i].second.second] != 1 ){
 						occupation[labeled_orb_en_alfa[i].second.second] = 1;
-						outfile->Printf("\n  Added electron to %d", labeled_orb_en_alfa[i].second.second);
+		//				outfile->Printf("\n  Added electron to %d", labeled_orb_en_alfa[i].second.second);
 						add = true;
 						break;
 					}else{
@@ -395,7 +416,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 				if(!add){
 					occupation[labeled_orb_en_alfa[nalpha_ - k].second.second] = 1;
-					outfile->Printf("\n  No orbital of symmetry %d available! Putting it back...", orb_sym);
+		//			outfile->Printf("\n  No orbital of symmetry %d available! Putting it back...", orb_sym);
 					++k;
 				}else{
 					break;
@@ -410,7 +431,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 				// Remove highest-energy beta electron
 				occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 0;
-				outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_beta[nbeta_ - k].second.second, nactel_);
+		//		outfile->Printf("\n  Electron removed from %d, out of %d", labeled_orb_en_beta[nbeta_ - k].second.second, nactel_);
 
 				//Determine proper symetry for new occupation
 				orb_sym = wavefunction_symmetry_;
@@ -424,14 +445,14 @@ std::vector<int> AdaptiveCI::get_occupation()
 					orb_sym = labeled_orb_en_beta[nbeta_ - k].second.first ^  orb_sym;
 				}
 
-				outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
+		//		outfile->Printf("\n  Need orbital of symmetry %d", orb_sym);
 
 				// Add electron to lowest-energy beta orbital
 				
 				for(int i = nbeta_ - k; i < nactel_; ++i){
 					if( orb_sym == labeled_orb_en_beta[i].second.first and occupation[labeled_orb_en_beta[i].second.second] != 1){
 						occupation[labeled_orb_en_beta[i].second.second] = 1;
-						outfile->Printf("\n Added electron to %d", labeled_orb_en_beta[i].second.second);
+		//				outfile->Printf("\n Added electron to %d", labeled_orb_en_beta[i].second.second);
 						add = true;
 						break;
 					}
@@ -442,7 +463,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 				if(!add){
 					occupation[labeled_orb_en_beta[nbeta_ - k].second.second] = 1;
-					outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
+		//			outfile->Printf("\n  No orbital of symmetry %d available! Putting electron back...", orb_sym);
 					++k;
 				}else{
 					break;
@@ -457,9 +478,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 double AdaptiveCI::compute_energy()
 {
     boost::timer t_iamrcisd;
-    outfile->Printf("\n\n  Iterative Adaptive CI");
 
-    SharedMatrix H;
     SharedMatrix P_evecs;
     SharedMatrix PQ_evecs;
     SharedVector P_evals;
@@ -474,34 +493,44 @@ double AdaptiveCI::compute_energy()
 	
 	det_history_[bs_det].push_back(std::make_pair(0, "I"));
 	
-    outfile->Printf("\n  The model space contains %zu determinants",P_space_.size());
     outfile->Flush();
 
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
+    if(quiet_mode_) sparse_solver.set_print_details(false);
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
-	
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
-	if( det_save_) det_list_.open("det_list.txt");
-    int maxcycle = 20;
-    for (int cycle = 0; cycle < maxcycle; ++cycle){
+	if( det_save_ ) det_list_.open("det_list.txt");
+
+    if(quiet_mode_){
+        print_h2("ACI Iterations ");
+        outfile->Printf("\n\n----------------------------------------------------------" ); 
+        outfile->Printf(  "\n   Cycle         PQ Dimension             PQ Energy       " );
+        outfile->Printf(  "\n----------------------------------------------------------" ); 
+    }
+
+	int cycle;
+    for (cycle = 0; cycle < max_cycle_; ++cycle){
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
 		std::string cycle_h = "Cycle " + std::to_string(cycle_); 
-		print_h2(cycle_h);
-        outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
+		
+		if( !quiet_mode_ ){
+			print_h2(cycle_h);
+			outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
+		}
 
 		// Check that the initial space is spin-complete
 		if(spin_complete_){
             STLBitsetDeterminant::enforce_spin_completeness(P_space_);
-			outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
-        }else{
+			if( !quiet_mode_) outfile->Printf("\n  %s: %zu determinants","Spin-complete dimension of the P space",P_space_.size());
+        }else if( !quiet_mode_ ){
 			outfile->Printf("\n Not checking for spin-completeness.");
 		}
         // Diagonalize H in the P space
@@ -515,37 +544,44 @@ double AdaptiveCI::compute_energy()
 		if( spin_projection == 1 or spin_projection == 3){
 			double spin_contamination = compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
 			if(spin_contamination >= spin_tol_){
-				outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
+				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
 				full_spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
                 sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
-			}else{
+			}else if (!quiet_mode_){
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
 			}
-		}else{
+		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
 
         // Print the energy
-        outfile->Printf("\n");
-        for (int i = 0; i < num_ref_roots; ++i){
-            double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-            double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
-            outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        }
-        outfile->Printf("\n");
-        outfile->Flush();
+		if( !quiet_mode_ ){
+			outfile->Printf("\n");
+        	for (int i = 0; i < num_ref_roots; ++i){
+        	    double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+        	    double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
+        	    outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+        	}
+        	outfile->Printf("\n");
+        	outfile->Flush();
+		}
 
 
         // Step 2. Find determinants in the Q space        
-        find_q_space(num_ref_roots,P_evals,P_evecs);
+        
+        if( streamline_qspace_ ){
+            default_find_q_space(P_evals,P_evecs);
+        }else{ 
+            find_q_space(num_ref_roots, P_evals, P_evecs);
+        }
 
 		// Check if P+Q space is spin complete
 		if(spin_complete_){
             STLBitsetDeterminant::enforce_spin_completeness(PQ_space_);
-			outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
+			if (!quiet_mode_) outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
@@ -553,115 +589,80 @@ double AdaptiveCI::compute_energy()
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
 		// Ensure the solutions are spin-pure
+
 		if( spin_projection == 1 or spin_projection == 3){
-			double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, num_ref_roots);
+			double spin_contamination = compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
 			if(spin_contamination >= spin_tol_){
-				outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				full_spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
-				PQ_evecs->zero();
-				PQ_evecs = PQ_spin_evecs_->clone();
-                sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
-			}else{
-				outfile->Printf("\n Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n No need to perform spin projection.");
+				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
+				full_spin_transform(P_space_, P_evecs, num_ref_roots);
+				P_evecs->zero();
+				P_evecs = PQ_spin_evecs_->clone();
+                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
+			}else if (!quiet_mode_){
+				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+				outfile->Printf("\n  No need to perform spin projection.");
 			}
-		}else{
+		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
 
-        // Print the energy
-        outfile->Printf("\n");
-        for (int i = 0; i < num_ref_roots; ++ i){
-            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-            outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-            outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-                            exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+		if( !quiet_mode_ ){
+			// Print the energy
+        	outfile->Printf("\n");
+        	for (int i = 0; i < num_ref_roots; ++ i){
+        	    double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+        	    double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+        	    outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+        	    outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+        	                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+        	}
+        	outfile->Printf("\n");
+        	outfile->Flush();
+		}
+        if(quiet_mode_){
+        	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+            outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
         }
-        outfile->Printf("\n");
-        outfile->Flush();
-
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
-        if (converged) break;
-
+        if (converged){
+            if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
+            outfile->Printf("\n  ***** Calculation Converged *****");
+            break;
+        }
+    
         // Step 5. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,num_ref_roots);        
 
         // Print information about the wave function
-        print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
+        if( !quiet_mode_ ) print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
     }// end iterations
 
 	if( det_save_ ) det_list_.close();
-    outfile->Printf("\n\n  ==> Post-Iterations <==\n");
 
 	//STLBitsetDeterminant::check_uniqueness(P_space_);
 
 	// Ensure the solutions are spin-pure
-	if( spin_projection == 2 or spin_projection == 3){
-		double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, nroot_);
+	if( spin_projection == 1 or spin_projection == 3){
+		double spin_contamination = compute_spin_contamination(P_space_, P_evecs, nroot_);
 		if(spin_contamination >= spin_tol_){
-			outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-			full_spin_transform(PQ_space_, PQ_evecs, nroot_);
-			outfile->Printf("\n  ...done");
-			PQ_evecs->print();
-		//	P_evecs->zero();
-			//P_evecs = PQ_spin_evecs_->clone();
-            sparse_solver.compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,nroot_,diag_method_);
-		}else{
+			if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
+			full_spin_transform(P_space_, P_evecs, nroot_);
+			P_evecs->zero();
+			P_evecs = PQ_spin_evecs_->clone();
+            sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_,diag_method_);
+		}else if (!quiet_mode_){
 			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 			outfile->Printf("\n  No need to perform spin projection.");
 		}
-	}else{
+	}else if ( !quiet_mode_ ){
 		outfile->Printf("\n  Not performing spin projection.");
 	}
 
-    // Do Hamiltonian smoothing
-    if (do_smooth_){
-        smooth_hamiltonian(P_space_,P_evals,P_evecs,nroot_);
-    }
-
-	outfile->Printf("\n  Printing Wavefunction Information");
-	print_wfn(PQ_space_, PQ_evecs, nroot_);
-	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
-	outfile->Printf(  "\n  __________ 	____________   ________________ ");
-    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
-
-	std::vector<double> davidson;
-	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
-		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs, PQ_space_, PQ_evals ); 
-	}
-	for( auto& i : davidson ){
-		outfile->Printf("\n Davidson corr: %1.9f", i);
-	}
-
-    for (int i = 0; i < nroot_; ++ i){
-        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-		if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
-                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
-		}
-    }
 
 
-	if(options_.get_bool("DETERMINANT_HISTORY")){
-		outfile->Printf("\n Det history (number,cycle,origin)");
-		size_t counter = 0;
-		for( auto &I : PQ_space_ ){
-			outfile->Printf("\n Det number : %zu", counter);
-			for( auto &n : det_history_[I]){
-				outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
-			}
-			++counter;
-		}
-	}
 	evecs_ = PQ_evecs;
-
 	CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
@@ -693,6 +694,49 @@ double AdaptiveCI::compute_energy()
 		//outfile->Printf("\n  Energy took %2.6f s", energy.get());
 		//outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 
+    outfile->Printf("\n\n  ==> ACI Summary <==\n");
+
+	outfile->Printf("\n  Iterations required:                         %zu", cycle);
+	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", PQ_space_.size());
+
+	std::vector<double> davidson;
+	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs, PQ_space_, PQ_evals ); 
+	}
+	for( auto& i : davidson ){
+		outfile->Printf("\n Davidson corr: %1.9f", i);
+	}
+
+    for (int i = 0; i < nroot_; ++ i){
+        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+		if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
+                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
+		}
+    }
+
+	outfile->Printf("\n\n  ==> Wavefunction Information <==");
+	print_wfn(PQ_space_, PQ_evecs, nroot_);
+	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+	outfile->Printf(  "\n  __________ 	____________   ________________ ");
+    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
+
+	if(options_.get_bool("DETERMINANT_HISTORY")){
+		outfile->Printf("\n Det history (number,cycle,origin)");
+		size_t counter = 0;
+		for( auto &I : PQ_space_ ){
+			outfile->Printf("\n Det number : %zu", counter);
+			for( auto &n : det_history_[I]){
+				outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+			}
+			++counter;
+		}
+	}
+
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
@@ -706,6 +750,85 @@ double AdaptiveCI::compute_energy()
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
+void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
+{
+    Timer build;
+    
+    // This hash saves the determinant coupling to the model space eigenfunction
+    det_hash<std::vector<double> > V_hash;
+
+    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+        STLBitsetDeterminant& det = P_space_[I];
+        generate_excited_determinants(1,I,evecs,det,V_hash);
+    }
+	
+    if( !quiet_mode_){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
+        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",build.get());
+    }
+    outfile->Flush();
+
+    // This will contain all the determinants
+    PQ_space_.clear();
+
+    // Add the P-space determinants and zero the hash
+    for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
+        PQ_space_.push_back(P_space_[J]);
+        V_hash.erase(P_space_[J]);
+    }
+    
+    Timer screen;    
+
+    // Compute criteria for all dets, store them all
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
+    for ( const auto& I : V_hash ){
+        double delta = I.first.energy() - evals->get(0);
+        double V = I.second[0];
+
+        double criteria = 0.5 * (delta - sqrt(delta*delta + V*V*4.0 ) );
+        sorted_dets.push_back(std::make_pair(std::fabs(criteria),I.first));
+    }
+    
+    std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
+    std::vector<double> ept2(nroot_,0.0);
+
+    double sum = 0.0;
+    size_t last_excluded = 0;
+    for( size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+        double energy = sorted_dets[I].first;
+        if( sum + energy < tau_q_){
+            sum += energy;
+            ept2[0] -= energy;
+        }else{
+            PQ_space_.push_back(sorted_dets[I].second);
+        }
+    }
+    
+    // Add missing determinants
+    if( add_aimed_degenerate_ ){
+        size_t num_extra = 0;
+        for( size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+            size_t J = last_excluded - I;
+            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10){
+                PQ_space_.push_back(sorted_dets[J].second);
+                num_extra++;
+            }else{
+                break;
+            }
+        }
+        if( num_extra > 0 and (!quiet_mode_)){
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+        }
+    }
+
+    multistate_pt2_energy_correction_ = ept2;
+
+    if( !quiet_mode_ ){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
+        outfile->Printf("\n  %s: %f s","Time spent screening the model space",screen.get());
+    }
+    outfile->Flush();
+}
 
 void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
@@ -719,9 +842,10 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         generate_excited_determinants(nroot,I,evecs,det,V_hash);
     }
 	
-
-    outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
-    outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
+    if( !quiet_mode_){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
+        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
+    }
     outfile->Flush();
 
     // This will contain all the determinants
@@ -753,7 +877,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	if(perturb_select_){
 		C1_eq = [](double A, double B, double C)->double {return -A / (B - C); }; 
 		E2_eq = [](double A, double B, double C)->double {return -A * A/ (B - C);}; 
-	}else{
+	}else if(!quiet_mode_) {
 		outfile->Printf("\n  Using non-perturbative energy estimates");
 	}
 	
@@ -830,7 +954,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                     break;
                 }
             }
-            if (num_extra > 0){
+            if (num_extra > 0 and (!quiet_mode_) ){
                 outfile->Printf("\n  Added %zu missing determinants in aimed selection.",num_extra);
             }
         }
@@ -838,8 +962,10 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     multistate_pt2_energy_correction_ = ept2;
 
-    outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
-    outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
+    if( !quiet_mode_ ){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
+        outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
+    }
     outfile->Flush();
 }
 
@@ -1415,7 +1541,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 			if(det == det_space.size()) break;
 			++order;
 		}
-		outfile->Printf("\n\n Highest-order excitation searched:     %zu  \n", excitation_counter.size() - 1);
+		outfile->Printf("\n\n  Highest-order excitation searched:     %zu  \n", excitation_counter.size() - 1);
 	}
 }
 

@@ -70,6 +70,8 @@ public:
 
 	/// Set the RDM
 	void set_max_rdm( int rdm );
+	/// Set the printing level
+	void set_quiet_();
 
 private:
 
@@ -124,6 +126,8 @@ private:
     std::vector<double> multistate_pt2_energy_correction_;
 	/// The current iteration
 	int cycle_;
+	/// The last iteration
+	int max_cycle_;
 
     // ==> ACI Options <==
     /// The threshold applied to the primary space
@@ -180,6 +184,10 @@ private:
 	bool det_save_;
 	/// Order of RDM to compute
 	int rdm_level_;
+    /// Control amount of printing
+	bool quiet_mode_;
+    /// Control streamlining
+    bool streamline_qspace_;
 
     /// A vector of determinants in the P space
     std::vector<STLBitsetDeterminant> P_space_;
@@ -240,6 +248,9 @@ private:
 
     /// Diagonalize the Hamiltonian in a space of determinants
     void diagonalize_hamiltonian2(const std::vector<STLBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
+
+    /// Streamlined version of find q space
+    void default_find_q_space( SharedVector evals, SharedMatrix evecs );
 
     /// Find all the relevant excitations out of the P space
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);

@@ -329,7 +329,7 @@ read_options(std::string name, Options &options)
         /*- The threshold for the selection of the Q space -*/
         options.add_double("TAUQ",0.000001);
 		/*- The SD-space prescreening threshold -*/
-		options.add_double("PRESCREEN_THRESHOLD", 0.0);
+		options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
         /*- The type of selection parameters to use*/
@@ -377,6 +377,12 @@ read_options(std::string name, Options &options)
 		options.add_bool("SCREEN_VIRTUALS", false);
 		/*- Perform size extensivity correction -*/
 		options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
+		/*- Sets the maximum cycle -*/
+		options.add_int("MAX_ACI_CYCLE", 20);
+		/*- Control print level -*/
+		options.add_bool("QUIET_MODE", false);
+        /*- Control streamlining -*/
+        options.add_bool("STREAMLINE_Q", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -418,6 +424,8 @@ read_options(std::string name, Options &options)
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
+        /*- The order of Chebyshev truncation -*/
+        options.add_int("CHEBYSHEV_ORDER", 3);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
