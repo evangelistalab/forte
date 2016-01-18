@@ -95,8 +95,6 @@ private:
     /// DEBUG PRINTING
     bool casscf_debug_print_;
     /// Freeze the core and leave them unchanged
-    /// Uses this to override MOSPACEINFO
-    bool casscf_freeze_core_;
     /// set frozen_core_orbitals
     boost::shared_ptr<Matrix> set_frozen_core_orbitals();
     /// Compute the restricted_one_body operator for FCI(done also in OrbitalOptimizer)
@@ -119,12 +117,11 @@ private:
     std::vector<size_t> restricted_uocc_abs_;
     std::vector<size_t> inactive_docc_abs_;
     std::vector<size_t> nmo_abs_;
-
     ///Transform the active integrals
     ambit::Tensor transform_integrals();
-
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
+    int print_;
 
 
 

@@ -310,7 +310,7 @@ read_options(std::string name, Options &options)
         options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL", "DIAGONAL AUGMENTED_HESSIAN");
 
         /*- DIIS Options -*/
-        options.add_bool("CASSCF_DO_DIIS", false);
+        options.add_bool("CASSCF_DO_DIIS", true);
         /// The number of Rotation parameters to extrapolate with
         options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
