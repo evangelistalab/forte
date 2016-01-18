@@ -71,7 +71,8 @@ public:
 	/// Set the RDM
 	void set_max_rdm( int rdm );
 	/// Set the printing level
-	void set_quiet_();
+    void set_quiet(bool quiet){quiet_mode_ = quiet;}
+
 
 private:
 

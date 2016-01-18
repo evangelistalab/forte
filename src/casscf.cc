@@ -255,6 +255,11 @@ void CASSCF::cas_ci()
     ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
     //tei_paaa_ = transform_integrals();
     SharedMatrix gamma2_matrix(new Matrix("gamma2", na_*na_, na_*na_));
+    bool quiet = true;
+    if(print_ > 0)
+    {
+        quiet = false;
+    }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
         //Used to grab the computed energy and RDMs.
@@ -265,8 +270,6 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
         cas.use_default_orbitals(true);
-        bool quiet = true;
-        if(print_ > 0){quiet = false;}
         cas.set_quite_mode(quiet);
         cas.compute_energy();
         cas_ref_ = cas.reference();
@@ -277,6 +280,7 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         AdaptiveCI aci(wfn_, options_, ints_, mo_space_info_);
         aci.set_max_rdm(2);
+        aci.set_quiet(quiet);
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
