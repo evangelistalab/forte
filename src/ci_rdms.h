@@ -42,6 +42,7 @@ public:
 	void rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab,
                   std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
+    void set_print( bool print ) {print_ = print;}
 private:
    /* Class Variables*/  
 	
@@ -88,6 +89,8 @@ private:
 	
 	// Has the one-map been constructed?
 	bool one_map_done_;
+
+    bool print_;
 
 	// The list of a_p |N>
 	std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;

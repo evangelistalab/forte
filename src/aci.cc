@@ -75,7 +75,7 @@ AdaptiveCI::AdaptiveCI(boost::shared_ptr<Wavefunction> wfn, Options &options, st
     copy(wfn);
 
     startup();
-    print_info();
+    if(!quiet_mode_) print_info();
 }
 
 AdaptiveCI::~AdaptiveCI()
@@ -84,7 +84,11 @@ AdaptiveCI::~AdaptiveCI()
 
 void AdaptiveCI::startup()
 {
-    print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
+	quiet_mode_ = false;
+	if(options_["QUIET_MODE"].has_changed()){
+		quiet_mode_ = options_.get_bool("QUIET_MODE");
+	}
+    if(!quiet_mode_) print_method_banner({"Adaptive Configuration Interaction","written by Francesco A. Evangelista"});
 
     fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
 
@@ -144,12 +148,13 @@ void AdaptiveCI::startup()
 
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
-    outfile->Printf("\n  ==> Reference Information <==\n");
-	outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
-	outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
-    reference_determinant_.print();
-	outfile->Printf("\n  REFERNECE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
-
+    if(!quiet_mode_){
+        outfile->Printf("\n  ==> Reference Information <==\n");
+	    outfile->Printf("\n  There are %d frozen orbitals.", nfrzc_);
+	    outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
+        reference_determinant_.print();
+	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+    }
 
     // Read options
     nroot_ = options_.get_int("NROOT");
@@ -161,10 +166,6 @@ void AdaptiveCI::startup()
     spin_complete_ = options_.get_bool("ENFORCE_SPIN_COMPLETE");
 	rdm_level_ = options_.get_int("ACI_MAX_RDM"); 
 
-	quiet_mode_ = false;
-	if(options_["QUIET_MODE"].has_changed()){
-		quiet_mode_ = options_.get_bool("QUIET_MODE");
-	}
 
 	max_cycle_ = 20;
 	if(options_["MAX_ACI_CYCLE"].has_changed()){
@@ -286,7 +287,7 @@ std::vector<int> AdaptiveCI::get_occupation()
 
 	//Get reference type
 	std::string ref_type = options_.get_str("REFERENCE");
-	outfile->Printf("\n  Using %s reference.\n", ref_type.c_str());
+	if(!quiet_mode_) outfile->Printf("\n  Using %s reference.\n", ref_type.c_str());
 
 	//nyms denotes the number of electrons needed to assign symmetry and multiplicity
 	int nsym = wavefunction_multiplicity_ - 1;
@@ -507,14 +508,14 @@ double AdaptiveCI::compute_energy()
 
 	if( det_save_ ) det_list_.open("det_list.txt");
 
-    if(streamline_qspace_) outfile->Printf("\n  Using streamlined Q-space builder.");
+    if(streamline_qspace_ and !quiet_mode_) outfile->Printf("\n  Using streamlined Q-space builder.");
 
-    if(quiet_mode_){
-        print_h2("ACI Iterations ");
-        outfile->Printf("\n\n----------------------------------------------------------" ); 
-        outfile->Printf(  "\n   Cycle         PQ Dimension             PQ Energy       " );
-        outfile->Printf(  "\n----------------------------------------------------------" ); 
-    }
+   // if(quiet_mode_){
+   //     print_h2("ACI Iterations ");
+   //     outfile->Printf("\n\n----------------------------------------------------------" ); 
+   //     outfile->Printf(  "\n   Cycle         PQ Dimension             PQ Energy       " );
+   //     outfile->Printf(  "\n----------------------------------------------------------" ); 
+   // }
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
@@ -539,7 +540,7 @@ double AdaptiveCI::compute_energy()
     
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
-        if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag.get());
+        if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
 		// Save the dimention of the previous PQ space
@@ -592,7 +593,7 @@ double AdaptiveCI::compute_energy()
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
-        if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f", diag_pq.get());
+        if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
 		// Ensure the solutions are spin-pure
@@ -626,16 +627,16 @@ double AdaptiveCI::compute_energy()
         	outfile->Printf("\n");
         	outfile->Flush();
 		}
-        if(quiet_mode_){
-        	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-            outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
-        }
+       // if(quiet_mode_){
+       // 	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+       //     outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
+       // }
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
         if (converged){
-            if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
-            outfile->Printf("\n  ***** Calculation Converged *****");
+           // if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
+            if( !quiet_mode_ )outfile->Printf("\n  ***** Calculation Converged *****");
             break;
         }
     
@@ -674,7 +675,7 @@ double AdaptiveCI::compute_energy()
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
 		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
-		outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
+		if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
 		
 		if( options_.get_bool("PRINT_NO") ){
 			print_nos();	
@@ -684,12 +685,12 @@ double AdaptiveCI::compute_energy()
 	if( rdm_level_ >= 2 ){
 		Timer two_rdm;
 		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
-		outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
+		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 	}
 	if( rdm_level_ >= 3 ){
 		Timer three;
 		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
-		outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
+		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
 		if(options_.get_bool("TEST_RDMS")){
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
@@ -701,51 +702,54 @@ double AdaptiveCI::compute_energy()
 		//outfile->Printf("\n  Energy took %2.6f s", energy.get());
 		//outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 
-    outfile->Printf("\n\n  ==> ACI Summary <==\n");
+    if(!quiet_mode_){
+        outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
-	outfile->Printf("\n  Iterations required:                         %zu", cycle);
-	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", PQ_space_.size());
+	    outfile->Printf("\n  Iterations required:                         %zu", cycle);
+	    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", PQ_space_.size());
+    }
 
 	std::vector<double> davidson;
 	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
 		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs, PQ_space_, PQ_evals ); 
-	}
 	for( auto& i : davidson ){
 		outfile->Printf("\n Davidson corr: %1.9f", i);
-	}
+	}}
 
-    for (int i = 0; i < nroot_; ++ i){
-        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
-                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-		if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
-        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
-                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
-		}
+    if(!quiet_mode_){
+        for (int i = 0; i < nroot_; ++ i){
+            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+	    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
+                    exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
+	    	}
+        }
+
+	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
+	    print_wfn(PQ_space_, PQ_evecs, nroot_);
+	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
+        wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
+
+	    if(options_.get_bool("DETERMINANT_HISTORY")){
+	    	outfile->Printf("\n Det history (number,cycle,origin)");
+	    	size_t counter = 0;
+	    	for( auto &I : PQ_space_ ){
+	    		outfile->Printf("\n Det number : %zu", counter);
+	    		for( auto &n : det_history_[I]){
+	    			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+	    		}
+	    		++counter;
+	    	}
+	    }
+
+        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
+        outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     }
-
-	outfile->Printf("\n\n  ==> Wavefunction Information <==");
-	print_wfn(PQ_space_, PQ_evecs, nroot_);
-	outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
-	outfile->Printf(  "\n  __________ 	____________   ________________ ");
-    wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
-
-	if(options_.get_bool("DETERMINANT_HISTORY")){
-		outfile->Printf("\n Det history (number,cycle,origin)");
-		size_t counter = 0;
-		for( auto &I : PQ_space_ ){
-			outfile->Printf("\n Det number : %zu", counter);
-			for( auto &n : det_history_[I]){
-				outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
-			}
-			++counter;
-		}
-	}
-
-    outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
-    outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     outfile->Flush();
 
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
