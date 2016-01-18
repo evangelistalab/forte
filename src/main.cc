@@ -646,15 +646,8 @@ extern "C" PsiReturnType forte(Options &options)
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
     {
-        if(mo_space_info->get_corr_abs_mo("FROZEN_DOCC").size() > 0)
-        {
-            ints_->keep_frozen_core_integrals(KeepFrozenMOs);
-            ints_->retransform_integrals();
-        }
         auto casscf = std::make_shared<CASSCF>(options,ints_,mo_space_info);
-        //casscf->compute_casscf_soscf();
         casscf->compute_casscf();
-        ints_->keep_frozen_core_integrals(RemoveFrozenMOs);
         ints_->retransform_integrals();
     }
     if (options.get_bool("MP2_NOS")){
