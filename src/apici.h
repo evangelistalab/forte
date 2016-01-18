@@ -179,8 +179,11 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
-    // * Range of Hamiltonian
+    // * Chebyshev propagator
+    /// Range of Hamiltonian
     double range_;
+    /// Order of truncate
+    int chebyshev_order_;
 
     // ==> Class functions <==
 

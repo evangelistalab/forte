@@ -424,6 +424,8 @@ read_options(std::string name, Options &options)
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
+        /*- The order of Chebyshev truncation -*/
+        options.add_int("CHEBYSHEV_ORDER", 3);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
