@@ -381,6 +381,8 @@ read_options(std::string name, Options &options)
 		options.add_int("MAX_ACI_CYCLE", 20);
 		/*- Control print level -*/
 		options.add_bool("QUIET_MODE", false);
+        /*- Control streamlining -*/
+        options.add_bool("STREAMLINE_Q", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI

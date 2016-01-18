@@ -220,6 +220,22 @@ void AdaptiveCI::startup()
         aimed_selection_ = false;
         energy_selection_ = false;
     }
+
+    if( options_.get_bool("STREAMLINE_Q") == true){
+        streamline_qspace_ = true;
+    }else{
+        streamline_qspace_ = false;
+    }
+
+    // Set streamline mode to true if possible
+    if( (nroot_ == 1) and
+        (aimed_selection_ == true) and
+        (energy_selection_ == true) and
+        (perturb_select_ == false) ){
+        
+        streamline_qspace_ = true;
+    }
+
 }
 
 void AdaptiveCI::print_info()
@@ -555,7 +571,12 @@ double AdaptiveCI::compute_energy()
 
 
         // Step 2. Find determinants in the Q space        
-        find_q_space(num_ref_roots,P_evals,P_evecs);
+        
+        if( streamline_qspace_ ){
+            default_find_q_space(P_evals,P_evecs);
+        }else{ 
+            find_q_space(num_ref_roots, P_evals, P_evecs);
+        }
 
 		// Check if P+Q space is spin complete
 		if(spin_complete_){
@@ -729,6 +750,85 @@ double AdaptiveCI::compute_energy()
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
+void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
+{
+    Timer build;
+    
+    // This hash saves the determinant coupling to the model space eigenfunction
+    det_hash<std::vector<double> > V_hash;
+
+    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+        STLBitsetDeterminant& det = P_space_[I];
+        generate_excited_determinants(1,I,evecs,det,V_hash);
+    }
+	
+    if( !quiet_mode_){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
+        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",build.get());
+    }
+    outfile->Flush();
+
+    // This will contain all the determinants
+    PQ_space_.clear();
+
+    // Add the P-space determinants and zero the hash
+    for (size_t J = 0, max_J = P_space_.size(); J < max_J; ++J){
+        PQ_space_.push_back(P_space_[J]);
+        V_hash.erase(P_space_[J]);
+    }
+    
+    Timer screen;    
+
+    // Compute criteria for all dets, store them all
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
+    for ( const auto& I : V_hash ){
+        double delta = I.first.energy() - evals->get(0);
+        double V = I.second[0];
+
+        double criteria = 0.5 * (delta - sqrt(delta*delta + V*V*4.0 ) );
+        sorted_dets.push_back(std::make_pair(std::fabs(criteria),I.first));
+    }
+    
+    std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
+    std::vector<double> ept2(nroot_,0.0);
+
+    double sum = 0.0;
+    size_t last_excluded = 0;
+    for( size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
+        double energy = sorted_dets[I].first;
+        if( sum + energy < tau_q_){
+            sum += energy;
+            ept2[0] -= energy;
+        }else{
+            PQ_space_.push_back(sorted_dets[I].second);
+        }
+    }
+    
+    // Add missing determinants
+    if( add_aimed_degenerate_ ){
+        size_t num_extra = 0;
+        for( size_t I = 0, max_I = last_excluded; I < max_I; ++I){
+            size_t J = last_excluded - I;
+            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10){
+                PQ_space_.push_back(sorted_dets[J].second);
+                num_extra++;
+            }else{
+                break;
+            }
+        }
+        if( num_extra > 0 and (!quiet_mode_)){
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+        }
+    }
+
+    multistate_pt2_energy_correction_ = ept2;
+
+    if( !quiet_mode_ ){
+        outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
+        outfile->Printf("\n  %s: %f s","Time spent screening the model space",screen.get());
+    }
+    outfile->Flush();
+}
 
 void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
