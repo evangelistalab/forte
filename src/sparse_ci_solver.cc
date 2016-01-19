@@ -73,9 +73,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 	det_hash map_a_ann;
 	det_hash map_b_ann;
 	
-	det_hash map_aa_ann;
-	det_hash map_ab_ann;
-	det_hash map_bb_ann;
 
     a_ann_list.resize(max_I);
     b_ann_list.resize(max_I);
@@ -177,99 +174,129 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 	if(print_details){
 		outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
 	}
-    for (size_t I = 0; I < max_I; ++I){
-        STLBitsetDeterminant detI = space[I];
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
-
-        size_t noalpha = aocc.size();
-        size_t nobeta  = bocc.size();
-
-        std::vector<std::tuple<size_t,short,short>> aa_ann(noalpha * (noalpha - 1) / 2);
-        std::vector<std::tuple<size_t,short,short>> ab_ann(noalpha * nobeta);
-        std::vector<std::tuple<size_t,short,short>> bb_ann(nobeta * (nobeta - 1) / 2);
 
         // Generate alpha-alpha annihilation
-        for (size_t i = 0, ij = 0; i < noalpha; ++i){
-            for (size_t j = i + 1; j < noalpha; ++j, ++ij){
-                int ii = aocc[i];
-                int jj = aocc[j];
-                STLBitsetDeterminant detJ(detI);
-                detJ.set_alfa_bit(ii,false);
-                detJ.set_alfa_bit(jj,false);
+   {
+	    det_hash map_aa_ann;
+        for (size_t I = 0; I < max_I; ++I){
+            STLBitsetDeterminant detI = space[I];
 
-                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
 
-                bstmap_it it = map_aa_ann.find(detJ);
-                size_t detJ_add;
-                // detJ is not in the map, add it
-                if (it == map_aa_ann.end()){
-                    detJ_add = naa_ann;
-                    map_aa_ann[detJ] = naa_ann;
-                    naa_ann++;
-                }else{
-                    detJ_add = it->second;
+            size_t noalpha = aocc.size();
+            size_t nobeta  = bocc.size();
+
+            std::vector<std::tuple<size_t,short,short>> aa_ann(noalpha * (noalpha - 1) / 2);
+
+            for (size_t i = 0, ij = 0; i < noalpha; ++i){
+                for (size_t j = i + 1; j < noalpha; ++j, ++ij){
+                    int ii = aocc[i];
+                    int jj = aocc[j];
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(jj,false);
+
+                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_alpha(jj);
+
+                    bstmap_it it = map_aa_ann.find(detJ);
+                    size_t detJ_add;
+                    // detJ is not in the map, add it
+                    if (it == map_aa_ann.end()){
+                        detJ_add = naa_ann;
+                        map_aa_ann[detJ] = naa_ann;
+                        naa_ann++;
+                    }else{
+                        detJ_add = it->second;
+                    }
+                    aa_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
                 }
-                aa_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
             }
+            aa_ann_list[I] = aa_ann;
         }
-        aa_ann_list[I] = aa_ann;
-        // Generate beta-beta annihilation
-        for (size_t i = 0, ij = 0; i < nobeta; ++i){
-            for (size_t j = i + 1; j < nobeta; ++j, ++ij){
-                int ii = bocc[i];
-                int jj = bocc[j];
-                STLBitsetDeterminant detJ(detI);
-                detJ.set_beta_bit(ii,false);
-                detJ.set_beta_bit(jj,false);
-
-                double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);;
-
-                bstmap_it it = map_bb_ann.find(detJ);
-                size_t detJ_add;
-                // detJ is not in the map, add it
-                if (it == map_bb_ann.end()){
-                    detJ_add = nbb_ann;
-                    map_bb_ann[detJ] = nbb_ann;
-                    nbb_ann++;
-                }else{
-                    detJ_add = it->second;
-                }
-                bb_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
-            }
-        }
-        bb_ann_list[I] = bb_ann;
-        for (size_t i = 0, ij = 0; i < noalpha; ++i){
-            for (size_t j = 0; j < nobeta; ++j, ++ij){
-                int ii = aocc[i];
-                int jj = bocc[j];
-                STLBitsetDeterminant detJ(detI);
-                detJ.set_alfa_bit(ii,false);
-                detJ.set_beta_bit(jj,false);
-
-                double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
-
-                bstmap_it it = map_ab_ann.find(detJ);
-                size_t detJ_add;
-                // detJ is not in the map, add it
-                if (it == map_ab_ann.end()){
-                    detJ_add = nab_ann;
-                    map_ab_ann[detJ] = nab_ann;
-                    nab_ann++;
-                }else{
-                    detJ_add = it->second;
-                }
-                ab_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
-            }
-        }
-        ab_ann_list[I] = ab_ann;
+        aa_cre_list.resize(map_aa_ann.size());
     }
+      // Generate beta-beta annihilation
+    {
+        det_hash map_bb_ann;
+        for (size_t I = 0; I < max_I; ++I){
+            STLBitsetDeterminant detI = space[I];
 
-    aa_cre_list.resize(map_aa_ann.size());
-    ab_cre_list.resize(map_ab_ann.size());
-    bb_cre_list.resize(map_bb_ann.size());
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
 
+            size_t noalpha = aocc.size();
+            size_t nobeta  = bocc.size();
+
+            std::vector<std::tuple<size_t,short,short>> bb_ann(nobeta * (nobeta - 1) / 2);
+            for (size_t i = 0, ij = 0; i < nobeta; ++i){
+                for (size_t j = i + 1; j < nobeta; ++j, ++ij){
+                    int ii = bocc[i];
+                    int jj = bocc[j];
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(jj,false);
+
+                    double sign = detI.slater_sign_beta(ii) * detI.slater_sign_beta(jj);;
+
+                    bstmap_it it = map_bb_ann.find(detJ);
+                    size_t detJ_add;
+                    // detJ is not in the map, add it
+                    if (it == map_bb_ann.end()){
+                        detJ_add = nbb_ann;
+                        map_bb_ann[detJ] = nbb_ann;
+                        nbb_ann++;
+                    }else{
+                        detJ_add = it->second;
+                    }
+                    bb_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
+                }
+            }
+            bb_ann_list[I] = bb_ann;
+        }
+        bb_cre_list.resize(map_bb_ann.size());
+    }
+      // Generate alpha-beta annihilation
+    {
+        det_hash map_ab_ann;
+        for (size_t I = 0; I < max_I; ++I){
+            STLBitsetDeterminant detI = space[I];
+
+            std::vector<int> aocc = detI.get_alfa_occ();
+            std::vector<int> bocc = detI.get_beta_occ();
+
+            size_t noalpha = aocc.size();
+            size_t nobeta  = bocc.size();
+
+            std::vector<std::tuple<size_t,short,short>> ab_ann(noalpha * nobeta);
+            for (size_t i = 0, ij = 0; i < noalpha; ++i){
+                for (size_t j = 0; j < nobeta; ++j, ++ij){
+                    int ii = aocc[i];
+                    int jj = bocc[j];
+                    STLBitsetDeterminant detJ(detI);
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_beta_bit(jj,false);
+
+                    double sign = detI.slater_sign_alpha(ii) * detI.slater_sign_beta(jj);
+
+                    bstmap_it it = map_ab_ann.find(detJ);
+                    size_t detJ_add;
+                    // detJ is not in the map, add it
+                    if (it == map_ab_ann.end()){
+                        detJ_add = nab_ann;
+                        map_ab_ann[detJ] = nab_ann;
+                        nab_ann++;
+                    }else{
+                        detJ_add = it->second;
+                    }
+                    ab_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
+                }
+            }
+            ab_ann_list[I] = ab_ann;
+        }
+        ab_cre_list.resize(map_ab_ann.size());
+    }
 
     size_t num_tuples_doubles = 0;
     for (size_t I = 0; I < max_I; ++I){
