@@ -262,6 +262,9 @@ private:
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash<>& det_C,std::pair<double,double>& max_coupling);
     /// Do we have OpenMP?
     static bool have_omp_;
+
+    /// Convergence estimation
+    void print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h);
 };
 
 }} // End Namespaces
