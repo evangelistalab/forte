@@ -59,8 +59,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 
     size_t max_I = space.size();
 
-    size_t na_ann = 0;
-    size_t nb_ann = 0;
     size_t naa_ann = 0;
     size_t nab_ann = 0;
     size_t nbb_ann = 0;
@@ -70,8 +68,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
    // std::map<STLBitsetDeterminant,size_t> map_aa_ann;
    // std::map<STLBitsetDeterminant,size_t> map_ab_ann;
    // std::map<STLBitsetDeterminant,size_t> map_bb_ann;
-	det_hash map_a_ann;
-	det_hash map_b_ann;
 	
 
     a_ann_list.resize(max_I);
@@ -83,68 +79,80 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 	if( print_details ){
 		outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
 	}
-    for (size_t I = 0; I < max_I; ++I){
-        STLBitsetDeterminant detI = space[I];
 
-        double EI = detI.energy();
-        diag_.push_back(EI);
+    // Generate alpha annihilation
+    {
+	    det_hash map_a_ann;
+        size_t na_ann = 0;
+        for (size_t I = 0; I < max_I; ++I){
+            STLBitsetDeterminant detI = space[I];
 
-        std::vector<int> aocc = detI.get_alfa_occ();
-        std::vector<int> bocc = detI.get_beta_occ();
+            double EI = detI.energy();
+            diag_.push_back(EI);
 
-        int noalpha = aocc.size();
-        int nobeta  = bocc.size();
+            std::vector<int> aocc = detI.get_alfa_occ();
+            int noalpha = aocc.size();
 
-        std::vector<std::pair<size_t,short>> a_ann(noalpha);
-        std::vector<std::pair<size_t,short>> b_ann(nobeta);
+            std::vector<std::pair<size_t,short>> a_ann(noalpha);
 
-        // Generate alpha annihilation
-        for (int i = 0; i < noalpha; ++i){
-            int ii = aocc[i];
-            STLBitsetDeterminant detJ(detI);
-            detJ.set_alfa_bit(ii,false);
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                STLBitsetDeterminant detJ(detI);
+                detJ.set_alfa_bit(ii,false);
 
-            double sign = detI.slater_sign_alpha(ii);
+                double sign = detI.slater_sign_alpha(ii);
 
-            bstmap_it it = map_a_ann.find(detJ);
-            size_t detJ_add;
-            // detJ is not in the map, add it
-            if (it == map_a_ann.end()){
-                detJ_add = na_ann;
-                map_a_ann[detJ] = na_ann;
-                na_ann++;
-            }else{
-                detJ_add = it->second;
+                bstmap_it it = map_a_ann.find(detJ);
+                size_t detJ_add;
+                // detJ is not in the map, add it
+                if (it == map_a_ann.end()){
+                    detJ_add = na_ann;
+                    map_a_ann[detJ] = na_ann;
+                    na_ann++;
+                }else{
+                    detJ_add = it->second;
+                }
+                a_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
             }
-            a_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
+            a_ann_list[I] = a_ann;
         }
-        a_ann_list[I] = a_ann;
-        // Generate beta annihilation
-        for (int i = 0; i < nobeta; ++i){
-            int ii = bocc[i];
-            STLBitsetDeterminant detJ(detI);
-            detJ.set_beta_bit(ii,false);
-
-            double sign = detI.slater_sign_beta(ii);
-
-            bstmap_it it = map_b_ann.find(detJ);
-            size_t detJ_add;
-            // detJ is not in the map, add it
-            if (it == map_b_ann.end()){
-                detJ_add = nb_ann;
-                map_b_ann[detJ] = nb_ann;
-                nb_ann++;
-            }else{
-                detJ_add = it->second;
-            }
-            b_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
-        }
-        b_ann_list[I] = b_ann;
+        a_cre_list.resize(map_a_ann.size());
     }
+        // Generate beta annihilation
+    {
+        size_t nb_ann = 0;
+	    det_hash map_b_ann;
+        for (size_t I = 0; I < max_I; ++I){
+            STLBitsetDeterminant detI = space[I];
 
-    a_cre_list.resize(map_a_ann.size());
-    b_cre_list.resize(map_b_ann.size());
+            std::vector<int> bocc = detI.get_beta_occ();
+            int nobeta = bocc.size();
 
+            std::vector<std::pair<size_t,short>> b_ann(nobeta);
+        
+            for (int i = 0; i < nobeta; ++i){
+                int ii = bocc[i];
+                STLBitsetDeterminant detJ(detI);
+                detJ.set_beta_bit(ii,false);
+
+                double sign = detI.slater_sign_beta(ii);
+
+                bstmap_it it = map_b_ann.find(detJ);
+                size_t detJ_add;
+                // detJ is not in the map, add it
+                if (it == map_b_ann.end()){
+                    detJ_add = nb_ann;
+                    map_b_ann[detJ] = nb_ann;
+                    nb_ann++;
+                }else{
+                    detJ_add = it->second;
+                }
+                b_ann[i] = std::make_pair(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1));
+            }
+            b_ann_list[I] = b_ann;
+        }
+        b_cre_list.resize(map_b_ann.size());
+    }
 
     size_t num_tuples_sigles = 0;
     for (size_t I = 0; I < max_I; ++I){
