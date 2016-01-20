@@ -37,7 +37,7 @@ set forte {
     CAS_TYPE             FCI
     CASSCF_ITERATIONS    25
     print                0
-    CASSCF_DO_DIIS       false
+    CASSCF_DO_DIIS       true
 }
 
 

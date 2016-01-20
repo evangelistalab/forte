@@ -38,7 +38,7 @@ void CASSCF::compute_casscf()
     }
 
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
-    int print   = options_.get_int("PRINT");
+    print_   = options_.get_int("PRINT");
 
     /// Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
@@ -53,8 +53,8 @@ void CASSCF::compute_casscf()
     int diis_freq = options_.get_int("CASSCF_DIIS_FREQ");
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
-    double hessian_scale_value = options_.get_double("CASSCF_MAX_ROTATION");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+    double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
     Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
@@ -73,22 +73,28 @@ void CASSCF::compute_casscf()
     E_casscf_ =  Process::environment.globals["SCF ENERGY"];
     outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
     double E_casscf_old = 0.0;
-    SharedMatrix C_start = wfn_->Ca();
-    SharedMatrix C_old_iter(C_start->clone());
-    SharedMatrix C_final_iter(C_start->clone());
-    C_final_iter->zero();
+    SharedMatrix C_start(wfn_->Ca()->clone());
     for(int iter = 0; iter < maxiter; iter++)
     {
 
         Timer transform_integrals_timer;
         tei_paaa_ = transform_integrals();
-        if(casscf_debug_print_ || print > 0){outfile->Printf("\n\n Transform Integrals takes %8.8f s.", transform_integrals_timer.get());}
+        if(casscf_debug_print_ || print_ > 0){outfile->Printf("\n\n Transform Integrals takes %8.8f s.", transform_integrals_timer.get());}
         iter_con.push_back(iter);
 
         /// Perform a CAS-CI using either York's code or Francesco's
         /// If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
+        if(print_ > 0)
+        {
+            outfile->Printf("\n\n Performing a CAS with %5s", options_.get_str("CAS_TYPE").c_str());
+        }
+        Timer cas_timer;
         cas_ci();
+        if(print_ > 0)
+        {
+            outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
+        }
         SharedMatrix Ca = wfn_->Ca();
         SharedMatrix Cb = wfn_->Cb();
 
@@ -104,7 +110,7 @@ void CASSCF::compute_casscf()
         //orbital_optimizer.one_body(Hcore_);
         SharedMatrix Hcore(Hcore_->clone());
         orbital_optimizer.one_body(Hcore);
-        if(print > 0)
+        if(print_ > 0)
         {
             orbital_optimizer.set_print_timings(true);
         }
@@ -132,13 +138,13 @@ void CASSCF::compute_casscf()
                 }
             }
         }
-        //if(maxS > hessian_scale_value){
-        //    Sstep->scale(hessian_scale_value / maxS);
-        //}
+        if(maxS > rotation_max_value){
+            Sstep->scale(rotation_max_value / maxS);
+        }
 
-        // Add step to overall rotation
+        //Add step to overall rotation
 
-        S->copy(Sstep);
+        S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
         if(do_diis && (iter > diis_start && g_norm < 1e-4))
@@ -151,9 +157,7 @@ void CASSCF::compute_casscf()
         {
             diis_manager->extrapolate(1, S.get());
         }
-        SharedMatrix Cp = orbital_optimizer.rotate_orbitals(Ca, S);
-
-        Cp->set_name("Updated C");
+        SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
         ///ENFORCE Ca = Cb
         Ca->copy(Cp);
@@ -248,9 +252,13 @@ void CASSCF::cas_ci()
     ///Calls francisco's FCI code and does a CAS-CI with the active given in the input
     //tei_paaa_ = transform_integrals();
     SharedMatrix gamma2_matrix(new Matrix("gamma2", na_*na_, na_*na_));
+    bool quiet = true;
+    if(print_ > 0)
+    {
+        quiet = false;
+    }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
-
         //Used to grab the computed energy and RDMs.
         set_up_fci();
     }
@@ -259,8 +267,6 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
         cas.use_default_orbitals(true);
-        bool quiet = true;
-        if(options_.get_int("PRINT") > 0){quiet = false;}
         cas.set_quite_mode(quiet);
         cas.compute_energy();
         cas_ref_ = cas.reference();
@@ -271,6 +277,7 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         AdaptiveCI aci(wfn_, options_, ints_, mo_space_info_);
         aci.set_max_rdm(2);
+        aci.set_quiet(quiet);
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
