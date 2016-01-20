@@ -721,7 +721,93 @@ paralleized through openmp.
 * Possible values: CORE FLY_AMBIT FLY_LOOP
 * Default: FLY_AMBIT
 
+.. include:: autodoc_abbr_options_c.rst
+
+.. index::
+   single: CASSCF
+   pair: CASSCF; theory
+
+.. _`sec:CASSCF`:
+
+CASSCF : Complete Active Space Self Consistent Field
+=============================================================
+
+.. codeauthor:: Kevin P. Hannon 
+.. sectionauthor:: Kevin P. Hannon
+
+Theory
+^^^^^^
+
+CASSCF seeks to find a solution where both the orbitals and the CI coefficients are optimum.  
+
+.. math::   | \Psi_{\text{casscf}} \rangle = \sum_i \textbf{C}_i \exp{\textbf{x}} | \Psi_0 \rangle
+   :label: casscf_1
+
+We assume that the CI coefficients and the orbital rotations can be separated, so this means that the :math:`\textbf{C}_{i}` are solved via
+a diagonalization of the CI Hamiltonian: 
+
+.. math::   | \textbf{H} \textbf{C}_i = E_i \textbf{C}_i
+    :label: casscf_ci_1
+
+By separating the CI and the Orbital rotations, we are losing the quadratic convergence of the CASSCF method.  The equations for the orbital
+optimization assume a second order expansion of the energy via a taylor series with respect to the orbital rotation parameter (:math:`\textbf{x}`)
+
+.. math:: E^{(2)} (\textbf{x}) = E(0) + g^{T}\textbf{x} + textbf{x}^{T} H \textbf{x}
+
+.. math:: g_{pq} = [E_{pq}^{-}, \hat{H}]
+
+.. math:: H_{pqrs} = [[E_{pq}^{-}, \hat{H}], E_{rs}^{-}]
+
+.. math:: E_{pq}^{-} = E_{pq} - E_{qp} 
+
+.. math:: \hat{H} = h_{pq}E_{pq} + g_{pqrs}(E_{pqrs})
+
+The convergence of the CASSCF algorithm implies that :math:`||g_{pq}||_2 \approx 0`.
 
 
+The second term of the energy expansion is called the orbital gradient:
+
+.. math:: g_{pq} = 2.0 (F_{pq} - F_{qp})
+
+.. math:: F_{pq} = h_{pn} \gamma_{qn} + g_{pmnr}\Gamma_{qmnr}
+
+.. math:: \gamma_{qn} = \langle 0 | E_{qn} | 0 \rangle
+
+.. math:: \Gamma_{pqrs} = \langle 0 | E_{pqrs} | 0 \rangle
+
+where :math:`\gamma` and :math:`\Gamma` are the reduced density matrices of the CI wavefunction.  By taking advantage of the sparsity of these density matrices, the
+computation of the orbital gradient becomes quite inexpensive:
+
+.. math:: F_{ip} = 2 ^{I}F_{qi} + 2 ^{A}F_{qi}
+
+.. math:: F_{up} = ^{I}F_{pv}\gamma_{uv} + \Gamma_{uvxy} g_{pvxy}
+
+.. math:: F_{ap} = 0
+
+The :math:`^{I}F_{pq}` and :math:`^{A}F_{pq}` are the inactive and active Fock matrices,
+
+.. math:: ^{I}F_{pq} = h_{mn} + 2.0 g_{pqii} - g_{piiq}
+
+.. math:: ^{A}F_{pq} = \gamma_{ux}(g_{pqux} - \frac{1}{2} g_{pxuq})
+
+These inactive and active fock matrices are evaluated very efficiently and do not assume storage of the integrals, so it is expected that these terms
+can be evaluated for larger systems.  However, these two intermediates do become the computational bottleneck for small active spaces.  
+
+It is
+important to note that the algorithm used to form these terms directly depends on what the user specifies for the SCF_TYPE. When the user 
+specifies
+DF or CD as the int_type, :math: `g_{pvxy}` is the only intermediate that is evaluated with the forte integrals class.
+
+The second term of the energy expansion is the orbital hessian.  In this program, only the diagonal values of the hessian are computed:
+
+.. math:: H_{me, me} = 4^{I}F_ee + 4^{A}F_{ee} - 4^{I}F_{mm} - 4^{A}F_{mm}
+
+.. math:: H_{te, te} = 2 \gamma_{tt}^{I}F_{ee} + 2 \gamma_{tt}^{A}F_{ee} - 2(^{I}F_{pu} \gamma_{tu})_{tt} + 2.0 (g_{puxy} \gamma_{tuxy})_{tt})
+
+.. math:: H_{mt, mt} = 4.0(^{I}{F}_{tt} + ^{A}F_{tt}) + 2.0 \gamma_{tt}^{I}F_{mm} + 2.0 \gamma_{tt} ^{A}F_{mm} - (4.0 ^{I}F_{mm} + 4.0 ^{A}F_{mm})
+
+.. math:: H_{mt, mt} = -2 (^{I}F_{pu} \gamma_{tu})_{tt} - 2.0 (g_{puxy} \Gamma_{tuxy})_{tt}
+
+With both the orbital gradient and hessian built, 
 
 

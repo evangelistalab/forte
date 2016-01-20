@@ -44,7 +44,7 @@ set forte{
    cas_type                 FCI
    CASSCF_G_CONVERGENCE     1e-5
    CASSCF_E_CONVERGENCE     1e-6
-   CASSCF_DO_DIIS           false
+   CASSCF_DO_DIIS           true
    print                    0
 }
 e_casscf = energy('forte')
