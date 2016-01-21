@@ -54,6 +54,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void print_polynomial(std::vector<double>& coefs);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
                                                std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -191,7 +192,7 @@ void AdaptivePathIntegralCI::startup()
         propagator_ = ChebyshevPropagator;
         propagator_description_ = "Chebyshev";
         // Make sure that do_shift_ is set to true
-        do_shift_ = true;
+//        do_shift_ = true;
     }
 
     num_threads_ = omp_get_max_threads();
@@ -250,6 +251,23 @@ void AdaptivePathIntegralCI::print_info()
     outfile->Flush();
 }
 
+void print_polynomial(std::vector<double>& coefs) {
+    outfile->Printf("\n    f(x) = ");
+    for (int i=coefs.size()-1; i >= 0; i--) {
+        switch (i) {
+        case 0:
+            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        case 1:
+            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        default:
+            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
+            break;
+        }
+    }
+}
+
 void AdaptivePathIntegralCI::print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h)
 {
     std::vector<double> coefs;
@@ -276,21 +294,11 @@ void AdaptivePathIntegralCI::print_characteristic_function(double tau, double S,
     default:
         break;
     }
-    outfile->Printf("\n\n  ==> Characteristic Function <==\n    f(x) = ");
-    for (int i=coefs.size()-1; i >= 0; i--) {
-        switch (i) {
-        case 0:
-            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        case 1:
-            outfile->Printf("%s%e x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
-            break;
-        default:
-            outfile->Printf("%s%e x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
-            break;
-        }
-    }
+    outfile->Printf("\n\n  ==> Characteristic Function <==");
+    print_polynomial(coefs);
     outfile->Printf("\n    with tau = %e, shift = %.12f", tau, S);
+    if (propagator_ == ChebyshevPropagator)
+        outfile->Printf(", range = %.12f", range_);
     outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1 >= 0.0 ? " " : "", lambda_1);
     outfile->Printf("\n                   lambda_2= %s%.12f", lambda_2 >= 0.0 ? " " : "", lambda_2);
     outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h >= 0.0 ? " " : "", lambda_h);
@@ -387,12 +395,16 @@ void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double ta
 
     for (int i = 0; i <= order; i++) {
         std::vector<double> chbv_poly_coefs;
-        Chebyshev_polynomial_coefs(chbv_poly_coefs, order);
+        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
+//        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+//        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
             poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
         }
+//        outfile->Printf("\n\n  propagate poly in step %d", i);
+//        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, tau/range, -tau * S/range);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
 }
 
 double AdaptivePathIntegralCI::compute_energy()
@@ -536,7 +548,12 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
-    print_characteristic_function(time_step_, 2.0, var_energy, 0.0, max_energy);
+    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+        print_characteristic_function(time_step_, power_shift, var_energy, 0.0, max_energy);
+    } else {
+        print_characteristic_function(time_step_, 0.0, var_energy, 0.0, max_energy);
+    }
+
 
     // Main iterations
     outfile->Printf("\n\n  ==> APIFCI Iterations <==");
@@ -558,7 +575,7 @@ double AdaptivePathIntegralCI::compute_energy()
         iter_ = cycle;
         double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
 
-        if (propagator_ == PowerPropagator) {
+        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
             shift = power_shift;
         }
 
