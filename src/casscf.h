@@ -85,6 +85,8 @@ private:
     void cas_ci();
     /// Sets up the FCISolver
     void set_up_fci();
+    /// Set up a SA-FCI
+    void set_up_sa_fci();
     /// check the cas_ci energy with spin-free RDM
     double cas_check(Reference cas);
     /// Read all the mospace info and assign correct dimensions

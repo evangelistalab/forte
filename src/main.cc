@@ -317,6 +317,11 @@ read_options(std::string name, Options &options)
         options.add_int("CASSCF_DIIS_START", 3);
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
+        /*- SA-CASSCF -*/
+        /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
+        options.add("SA_STATES", new ArrayType());
+        /// An array weights for each state
+        options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
@@ -648,7 +653,6 @@ extern "C" PsiReturnType forte(Options &options)
     {
         auto casscf = std::make_shared<CASSCF>(options,ints_,mo_space_info);
         casscf->compute_casscf();
-        ints_->retransform_integrals();
     }
     if (options.get_bool("MP2_NOS")){
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
