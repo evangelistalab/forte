@@ -48,6 +48,13 @@ double normalize(det_hash<>& dets_C);
 double norm(det_hash<>& dets_C);
 double dot(det_hash<>& A,det_hash<>& B);
 void add(det_hash<>& A,double beta,det_hash<>& B);
+double factorial(int n);
+void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
+void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S);
+void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
+void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void print_polynomial(std::vector<double>& coefs);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
                                                std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -185,7 +192,7 @@ void AdaptivePathIntegralCI::startup()
         propagator_ = ChebyshevPropagator;
         propagator_description_ = "Chebyshev";
         // Make sure that do_shift_ is set to true
-        do_shift_ = true;
+//        do_shift_ = true;
     }
 
     num_threads_ = omp_get_max_threads();
@@ -244,6 +251,161 @@ void AdaptivePathIntegralCI::print_info()
     outfile->Flush();
 }
 
+void print_polynomial(std::vector<double>& coefs) {
+    outfile->Printf("\n    f(x) = ");
+    for (int i=coefs.size()-1; i >= 0; i--) {
+        switch (i) {
+        case 0:
+            outfile->Printf("%s%e", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        case 1:
+            outfile->Printf("%s%e * x ", coefs[i] >= 0 ? "+" : "", coefs[i]);
+            break;
+        default:
+            outfile->Printf("%s%e * x^%d ", coefs[i] >= 0 ? "+" : "", coefs[i], i);
+            break;
+        }
+    }
+}
+
+void AdaptivePathIntegralCI::print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h)
+{
+    std::vector<double> coefs;
+    switch (propagator_) {
+    case PowerPropagator:
+        coefs.push_back(-S);
+        coefs.push_back(1.0);
+        break;
+    case LinearPropagator:
+        Taylor_propagator_coefs(coefs, 1, tau, S);
+        break;
+    case QuadraticPropagator:
+        Taylor_propagator_coefs(coefs, 2, tau, S);
+        break;
+    case CubicPropagator:
+        Taylor_propagator_coefs(coefs, 3, tau, S);
+        break;
+    case QuarticPropagator:
+        Taylor_propagator_coefs(coefs, 4, tau, S);
+        break;
+    case ChebyshevPropagator:
+        Chebyshev_propagator_coefs(coefs, chebyshev_order_, tau, S, range_);
+        break;
+    default:
+        break;
+    }
+    outfile->Printf("\n\n  ==> Characteristic Function <==");
+    print_polynomial(coefs);
+    outfile->Printf("\n    with tau = %e, shift = %.12f", tau, S);
+    if (propagator_ == ChebyshevPropagator)
+        outfile->Printf(", range = %.12f", range_);
+    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1 >= 0.0 ? " " : "", lambda_1);
+    outfile->Printf("\n                   lambda_2= %s%.12f", lambda_2 >= 0.0 ? " " : "", lambda_2);
+    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h >= 0.0 ? " " : "", lambda_h);
+}
+
+double factorial(int n)
+{
+    return (n == 1 || n == 0) ? 1.0 : factorial(n - 1) * n;
+}
+
+void binomial_coefs(std::vector<double>& coefs, int order, double a, double b) {
+    coefs.clear();
+    for (int i = 0; i <= order; i++) {
+        coefs.push_back(factorial(order)/(factorial(i)*factorial(order-i))*pow(a, i)*pow(b, order-i));
+    }
+}
+
+void Polynomial_propagator_coefs(std::vector<double>& coefs, std::vector<double>& poly_coefs, double a, double b) {
+    coefs.clear();
+    int order = poly_coefs.size() - 1;
+    for (int i = 0; i <= order; i++) {
+        coefs.push_back(0.0);
+    }
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> bino_coefs;
+        binomial_coefs(bino_coefs, i, a, b);
+        for (int j = 0; j <= i; j++) {
+            coefs[j] += poly_coefs[i] * bino_coefs[j];
+        }
+    }
+}
+
+void Taylor_polynomial_coefs(std::vector<double>& coefs, int order) {
+    coefs.clear();
+    for (int i=0; i <= order; i++) {
+        coefs.push_back(1.0/factorial(i));
+    }
+}
+
+void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S) {
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    Taylor_polynomial_coefs(poly_coefs, order);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, tau * S);
+//    coefs.clear();
+//    for (int i=0; i <= order; i++) {
+//        coefs.push_back(0.0);
+//        for (int j=0; j <= i; j++) {
+//            coefs[j] += 1.0/(factorial(j)*factorial(i-j))*pow(-tau, i)*pow(-S, i-j);
+//        }
+//    }
+}
+
+void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
+    coefs.clear();
+    std::vector<double> coefs_0, coefs_1;
+    if (order == 0) {
+        coefs.push_back(1.0);
+        return;
+    }
+    else
+        coefs_0.push_back(1.0);
+    if (order == 1) {
+        coefs.push_back(0.0);
+        coefs.push_back(1.0);
+        return;
+    }
+    else{
+        coefs_1.push_back(0.0);
+        coefs_1.push_back(1.0);
+    }
+    for (int i = 2; i <= order; i++) {
+        coefs.clear();
+        for (int j = 0; j <= i; j++){
+            coefs.push_back(0.0);
+        }
+        for (int j = 0; j <= i-2; j++) {
+            coefs[j] -= coefs_0[j];
+        }
+        for (int j = 0; j <= i-1; j++) {
+            coefs[j+1] += 2.0 * coefs_1[j];
+        }
+        coefs_0 = coefs_1;
+        coefs_1 = coefs;
+    }
+}
+
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    for (int i = 0; i <= order; i++) {
+        poly_coefs.push_back(0.0);
+    }
+
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> chbv_poly_coefs;
+        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
+//        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+//        print_polynomial(chbv_poly_coefs);
+        for (int j = 0; j <= i; j++) {
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
+        }
+//        outfile->Printf("\n\n  propagate poly in step %d", i);
+//        print_polynomial(poly_coefs);
+    }
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+}
 
 double AdaptivePathIntegralCI::compute_energy()
 {
@@ -386,6 +548,13 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
+    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+        print_characteristic_function(time_step_, power_shift, var_energy, 0.0, max_energy);
+    } else {
+        print_characteristic_function(time_step_, 0.0, var_energy, 0.0, max_energy);
+    }
+
+
     // Main iterations
     outfile->Printf("\n\n  ==> APIFCI Iterations <==");
 
@@ -406,7 +575,7 @@ double AdaptivePathIntegralCI::compute_energy()
         iter_ = cycle;
         double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
 
-        if (propagator_ == PowerPropagator) {
+        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
             shift = power_shift;
         }
 
