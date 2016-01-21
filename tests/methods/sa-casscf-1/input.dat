@@ -1,0 +1,48 @@
+#! Example of state-averaged CASSCF for the C2 molecule
+#! see C. D. Sherrill and P. Piecuch, J. Chem. Phys. 122, 124104 (2005)
+
+import forte 
+
+molecule {
+0 1
+C
+C 1 1.20
+}
+
+set globals{
+  basis               6-31G*
+  df_basis_scf        cc-pvdz-jkfit
+  df_basis_mp2        cc-pvdz-ri
+  reference           rhf
+  docc                [2, 0, 0, 0, 0, 2, 1, 1]
+  restricted_docc     [1, 0, 0, 0, 0, 1, 0, 0]
+  active              [2, 0, 1, 1, 0, 2, 1, 1]
+  mcscf_e_convergence 1e-8
+  mcscf_r_convergence 1e-8
+  scf_type            df
+  num_roots           2
+  avg_states          [1, 2]
+  mcscf_type           df
+}
+
+
+casscf_energy = energy('casscf')
+energy('scf')
+
+set forte {
+    casscf_reference true
+    CASSCF_ITERATIONS 1
+    restricted_docc  [1, 0, 0, 0, 0, 1, 0, 0]
+    active           [2, 0, 1, 1, 0, 2, 1, 1]
+    print            1
+    CASSCF_G_CONVERGENCE  1e-8
+    CASSCF_E_CONVERGENCE  1e-8
+    CASSCF_DEBUG_PRINTING true
+    SA_STATES             [[0, 1, 2]]
+    int_type               df
+}
+energy('forte')
+
+
+compare_values(-75.604189247182, casscf_energy, 6, 'CASSCF Energy')  #TEST
+
