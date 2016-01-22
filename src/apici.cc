@@ -268,7 +268,34 @@ void print_polynomial(std::vector<double>& coefs) {
     }
 }
 
-void AdaptivePathIntegralCI::print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h)
+void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, double tau)
+{
+    double high_obt_energy = 0.0;
+    int ne = 0;
+    auto bits_ = reference_determinant_.bits_;
+    for (int i = 0; i < ncmo_; i++) {
+        if (bits_[i]) ++ne;
+        if (bits_[ncmo_ +i]) ++ne;
+
+        double temp  = fci_ints_->oei_a(i,i);
+        for(int p = 0; p < ncmo_; ++p){
+            if(bits_[p]){
+                temp += fci_ints_->tei_aa(i,p,i,p);
+            }
+            if(bits_[ncmo_ +p]){
+                temp += fci_ints_->tei_ab(i,p,i,p);
+            }
+        }
+        if (temp > high_obt_energy) high_obt_energy = temp;
+    }
+    lambda_h_ = high_obt_energy * ne;
+    shift_ = (lambda_h_ + lambda_2_)/2.0;
+    range_ = tau*(lambda_h_ - lambda_2_)/2.0;
+
+    print_characteristic_function(propagator, tau, shift_, lambda_1_, lambda_2_, lambda_h_);
+}
+
+void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h)
 {
     std::vector<double> coefs;
     switch (propagator_) {
@@ -508,34 +535,17 @@ double AdaptivePathIntegralCI::compute_energy()
 //    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
 //    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
 
-    double high_obt_energy = 0.0;
-    int ne = 0;
-    auto bits_ = reference_determinant_.bits_;
-    for (int i = 0; i < ncmo_; i++) {
-        if (bits_[i]) ++ne;
-        if (bits_[nmo_ +i]) ++ne;
 
-        double temp  = fci_ints_->oei_a(i,i);
-        for(int p = 0; p < ncmo_; ++p){
-            if(bits_[p]){
-                temp += fci_ints_->tei_aa(i,p,i,p);
-            }
-            if(bits_[nmo_ +p]){
-                temp += fci_ints_->tei_ab(i,p,i,p);
-            }
-        }
-        if (temp > high_obt_energy) high_obt_energy = temp;
-    }
 //    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
 
-    double ref_energy = reference_determinant_.energy();
-//    outfile->Printf("\nreference energy:%.12lf", ref_energy);
-//    reference_determinant_.print();
-    double max_energy = high_obt_energy * ne;
-//    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
-    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
-    range_ = (power_shift-ref_energy)*1.2*time_step_;
-//    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
+//    double ref_energy = reference_determinant_.energy();
+////    outfile->Printf("\nreference energy:%.12lf", ref_energy);
+////    reference_determinant_.print();
+//    double max_energy = high_obt_energy * ne;
+////    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
+//    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
+//    range_ = (power_shift-ref_energy)*1.2*time_step_;
+////    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -548,11 +558,13 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
-    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-        print_characteristic_function(time_step_, power_shift, var_energy, 0.0, max_energy);
-    } else {
-        print_characteristic_function(time_step_, 0.0, var_energy, 0.0, max_energy);
-    }
+    convergence_analysis(propagator_, time_step_);
+
+//    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+//        print_characteristic_function(propagator_, time_step_, power_shift, var_energy, 0.0, max_energy);
+//    } else {
+//        print_characteristic_function(propagator_, time_step_, 0.0, var_energy, 0.0, max_energy);
+//    }
 
 
     // Main iterations
@@ -573,11 +585,11 @@ double AdaptivePathIntegralCI::compute_energy()
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
-        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
+//        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
 
-        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-            shift = power_shift;
-        }
+//        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+//            shift = power_shift;
+//        }
 
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
@@ -586,9 +598,9 @@ double AdaptivePathIntegralCI::compute_energy()
             double min_C_abs = fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
-            propagate(propagator_,dets,C,time_step_,spawning_threshold_ * max_C,shift);
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_ * max_C,shift_);
         } else {
-            propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift_);
         }
         timer_off("PIFCI:Step");
         if (propagator_ == DavidsonLiuPropagator) break;
@@ -715,16 +727,55 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_));
-    SharedVector evals(new Vector("Eigenvalues",nroot_));
+    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
+    SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
   //  std::vector<DynamicBitsetDeterminant> dyn_dets;
    // for (auto& d : dets){
      //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
       //  dyn_dets.push_back(dbs);
    // }
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DavidsonLiuList);
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
+    lambda_1_ = evals->get(current_root_);
+    lambda_2_ = evals->get(current_root_ + 1);
+    if (guess_size < 2)
+        lambda_2_ = lambda_1_ + e_convergence_;
+//    if (guess_size < 100) {
+//        apply_tau_H(time_step_,spawning_threshold_,guess_dets,{1.0},dets_C,0.0);
+
+//        // Save the list of determinants
+//        copy_hash_to_vec(dets_C,dets,C);
+
+//        size_t guess_size = dets.size();
+//        if (guess_size > max_guess_size_){
+//            // Consider the 1000 largest contributions
+//            std::vector<std::pair<double,size_t> > det_weight;
+//            for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+//                det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
+//            }
+//            std::sort(det_weight.begin(),det_weight.end());
+//            std::reverse(det_weight.begin(),det_weight.end());
+
+//            det_vec new_dets;
+//            for (size_t sI = 0; sI < max_guess_size_; ++sI){
+//                size_t I = det_weight[sI].second;
+//                new_dets.push_back(dets[I]);
+//            }
+//            dets = new_dets;
+//            C.resize(guess_size);
+//            guess_size = dets.size();
+//        }
+
+//        SparseCISolver sparse_solver;
+//        sparse_solver.set_parallel(true);
+
+//        SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
+//        SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
+//        sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
+//        lambda_1_ = evals->get(current_root_);
+//        lambda_2_ = evals->get(current_root_ + 1);
+//    }
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I){

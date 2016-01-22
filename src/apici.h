@@ -185,6 +185,16 @@ private:
     /// Order of truncate
     int chebyshev_order_;
 
+    // * Convergence analysis
+    /// Shift of Hamiltonian
+    double shift_;
+    /// lowest e-value in initial guess
+    double lambda_1_;
+    /// Second lowest e-value in initial guess
+    double lambda_2_;
+    /// Highest possible e-value
+    double lambda_h_;
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -264,7 +274,8 @@ private:
     static bool have_omp_;
 
     /// Convergence estimation
-    void print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h);
+    void convergence_analysis(PropagatorType propagator, double tau);
+    void print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h);
 };
 
 }} // End Namespaces
