@@ -16,6 +16,7 @@
 #include "reference.h"
 #include "helpers.h"
 #include "fci_mo.h"
+#include "stl_bitset_determinant.h"
 #include "dsrg_mrpt2.h"
 #include "three_dsrg_mrpt2.h"
 
@@ -69,6 +70,18 @@ private:
 
     /// DSRGPT2 energies
     std::vector<std::vector<double>> pt2_energies_;
+
+    /// Model space of CIS
+    std::vector<std::vector<STLBitsetDeterminant>> vecdet_cis_;
+
+    /// Eigen vectors of CIS
+    std::vector<std::vector<SharedVector>> eigen_cis_;
+
+    /// Singles (T1) percentage
+    std::vector<std::vector<std::pair<int,double>>> t1_percentage_;
+
+    /// Compute the T1%
+    void compute_t1_percentage();
 
     /// Print summary
     void print_summary();

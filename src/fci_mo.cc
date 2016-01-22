@@ -51,6 +51,9 @@ void FCI_MO::read_options(){
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
+    // active space type
+    active_space_type_ = options_.get_str("ACTIVE_SPACE_TYPE");
+
     // set orbitals
     semi_ = options_.get_bool("SEMI_CANONICAL");
 
@@ -243,12 +246,11 @@ double FCI_MO::compute_energy(){
     determinant_.clear();
 
     // form determinants
-    string active_space_type = options_.get_str("ACTIVE_SPACE_TYPE");
-    if(active_space_type == "COMPLETE"){
+    if(active_space_type_ == "COMPLETE"){
         form_det();
-    }else if(active_space_type == "CIS"){
+    }else if(active_space_type_ == "CIS"){
         form_det_cis();
-    }else if(active_space_type == "CISD"){
+    }else if(active_space_type_ == "CISD"){
         form_det_cisd();
 //        throw PSIEXCEPTION("Active-CISD is not implemented.");
     }
