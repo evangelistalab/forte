@@ -2,7 +2,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                               Psi4 (no tag) Driver
 
-                          Git: Rev {master} d8d4a3e 
+                          Git: Rev {detached?} 7a17eb9 dirty
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -16,10 +16,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sat Oct  3 22:12:47 2015
+    Psi4 started on: Fri Jan 22 16:49:33 2016
 
-    Process ID:  52414
-    PSI4DATADIR: /Users/jeffschriber/Source/psi4/lib
+    Process ID:  20731
+    PSI4DATADIR: /Users/jeffschriber/src/psi4/lib
     Memory level set to 256.000 MB
 
   ==> Input File <==
@@ -32,8 +32,8 @@
 import forte
 
 refscf = -75.37487863589541 
-refaci = -75.479410527618
-refacipt2 = -75.723333873985 
+refaci = -75.522945247792
+refacipt2 =-75.750318411025 
 
 molecule N2{
 C 
@@ -58,14 +58,18 @@ set forte {
   job_type = aci
   multiplicity 1
   perturb_select false
-  SELECT_TYPE aimed-energy
+  aci_add_aimed_degenerate false
+  project_out_spin_contaminants false
+  enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
   TAUP 0.05
   TAUQ 0.05
   nroot 3
   mp2_nos true
   charge 0
-  spin_projection 1
+  enforce_spin_complete true
+  aci_add_aimed_degenerate true
+  project_out_spin_contaminants true
 }
 
 energy('scf')
@@ -73,13 +77,13 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refaci, get_variable("ACI ENERGY"),9, "EX-ACI energy") #TEST
-compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy") #TEST
+compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
 --------------------------------------------------------------------------
-/Users/jeffschriber/Source/forte/forte.so loaded.
+/Users/jeffschriber/src/forte/forte.so loaded.
 
-*** tstart() called on Jeffs-MacBook-Pro.local
-*** at Sat Oct  3 22:12:47 2015
+*** tstart() called on Jeffs-MBP.attlocal.net
+*** at Fri Jan 22 16:49:33 2016
 
     There are an even number of electrons - assuming singlet.
     Specify the multiplicity with the MULTP option in the
@@ -192,7 +196,7 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy")
                            Total Energy        Delta E     RMS |[F,P]|
 
    @DF-RHF iter   1:   -69.47808871163789   -6.94781e+01   2.27892e-01 
-   @DF-RHF iter   2:   -74.10722013727614   -4.62913e+00   1.09761e-01 DIIS
+   @DF-RHF iter   2:   -74.10722013727613   -4.62913e+00   1.09761e-01 DIIS
    @DF-RHF iter   3:   -75.36388610130736   -1.25667e+00   9.25791e-03 DIIS
    @DF-RHF iter   4:   -75.37427273498132   -1.03866e-02   1.73546e-03 DIIS
    @DF-RHF iter   5:   -75.37473561843881   -4.62883e-04   2.06350e-04 DIIS
@@ -245,8 +249,8 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "EX-ACI+PT2 energy")
    @RHF iter  16:   -75.37487863588480   -2.10889e-10   2.44211e-07 DIIS
    @RHF iter  17:   -75.37487863589510   -1.03029e-11   3.87886e-08 DIIS
    @RHF iter  18:   -75.37487863589536   -2.55795e-13   7.36306e-09 DIIS
-   @RHF iter  19:   -75.37487863589534    1.42109e-14   8.45338e-10 DIIS
-   @RHF iter  20:   -75.37487863589537   -2.84217e-14   5.36217e-11 DIIS
+   @RHF iter  19:   -75.37487863589533    2.84217e-14   8.45338e-10 DIIS
+   @RHF iter  20:   -75.37487863589537   -4.26326e-14   5.36217e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -311,17 +315,17 @@ Properties computed using the SCF density matrix
 
   Saving occupied orbitals to File 180.
 
-*** tstop() called on Jeffs-MacBook-Pro.local at Sat Oct  3 22:12:47 2015
+*** tstop() called on Jeffs-MBP.attlocal.net at Fri Jan 22 16:49:34 2016
 Module time:
-	user time   =       0.35 seconds =       0.01 minutes
+	user time   =       0.39 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.35 seconds =       0.01 minutes
+	user time   =       0.39 seconds =       0.01 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Reading options from the FORTE block
-Calling plugin /Users/jeffschriber/Source/forte/forte.so.
+Calling plugin /Users/jeffschriber/src/forte/forte.so.
 
 
   ==> MO Space Information <==
@@ -348,7 +352,9 @@ Calling plugin /Users/jeffschriber/Source/forte/forte.so.
   Number of frozen unoccupied orbitals:        0
 
 
- Overall Conventional Integrals timings	Presorting SO-basis two-electron integrals.
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
 	Starting first half-transformation.
@@ -357,14 +363,37 @@ Calling plugin /Users/jeffschriber/Source/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02259600 s
+  Integral transformation done. 0.02399100 s
   Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.018105 GB
+  Size of two-electron integrals:   0.018105 GB MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of SO shells:               6
+      Number of primitives:             30
+      Number of atomic orbitals:        30
+      Number of basis functions:        30
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   8    1    3    3    1    8    3    3 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 15467 non-zero two-electron integrals.
+        Stored in file 33.
+
+	Batch   1 pq = [       0,      98] index = [             0,4851]
+
   Frozen-core energy            -72.854832514490 a.u.
-  Freezing MO 0
-  Freezing MO 16
+
+ FrozenOneBody Operator takes  0.12372100 s
   Resorting integrals after freezing core.
- Conventional integrals take 0.07810500 s
+  Conventional integrals take 0.22133000 s
 
                 ------------------------------------------------
                   Second-Order Moller-Plesset Natural Orbitals
@@ -385,471 +414,368 @@ Calling plugin /Users/jeffschriber/Source/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.03227600 s
+  Integral transformation done. 0.02126400 s
   Reading the two-electron integrals from disk
-  Size of two-electron integrals:   0.018105 GB
+  Size of two-electron integrals:   0.018105 GB MINTS: Wrapper to libmints.
+   by Justin Turney
+
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of SO shells:               6
+      Number of primitives:             30
+      Number of atomic orbitals:        30
+      Number of basis functions:        30
+
+      Number of irreps:                  8
+      Integral cutoff                 1.00e-12
+      Number of functions per irrep: [   8    1    3    3    1    8    3    3 ]
+
+ OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
+         stored in file 35.
+
+      Computing two-electron integrals...done
+      Computed 15467 non-zero two-electron integrals.
+        Stored in file 33.
+
+	Batch   1 pq = [       0,      98] index = [             0,4851]
+
   Frozen-core energy            -72.854832514490 a.u.
-  Freezing MO 0
-  Freezing MO 16
+
+ FrozenOneBody Operator takes  0.13239500 s
   Resorting integrals after freezing core.
-  Total electrons: 12
-  Number of active electrons: 8
-  nalpha: 4
-  nbeta:  4 
+  Frozen Orbitals takes     0.161 s.
+
+                    ---------------------------------------
+                      Adaptive Configuration Interaction
+                      written by Francesco A. Evangelista
+                    ---------------------------------------
+
+  ==> Reference Information <==
 
   There are 2 frozen orbitals.
   There are 28 active orbitals.
-  Using RHF reference.
 
-  Electron removed from 16, out of 8
-  Need orbital of symmetry 5
-  Added electron to 16
-  The reference determinant is:
-
-  |11000000000000011000000000001100000000000001100000000000>
-  The reference energy is -61.16234233
-
+  |2000000000000002000000200200>
+  REFERENCE ENERGY:         -75.374878635895
   ==> Calculation Information <==
 
-  ----------------------------------------------------
-    Symmetry                                       0
-    Number of roots                                3
-    Root used for properties                       0
-    P-threshold                             5.00e-02
-    Q-threshold                             5.00e-02
-    Convergence threshold                   1.00e-10
-    Determinant selection criterion         First-order Coefficients
-    Selection criterion                     Threshold
-    PQ Function                             AVERAGE
-    Q Type                                  Absolute Energy
-    PT2 Parameters                          False
-  ----------------------------------------------------
-
-  Iterative Adaptive CI
-  The model space contains 1 determinants
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          3    
+    Root used for properties                 0    
+    P-threshold                              5.00e-02
+    Q-threshold                              5.00e-02
+    Convergence threshold                    1.00e-10
+    Determinant selection criterion          First-order Coefficients
+    Selection criterion                      Threshold
+    PQ Function                              AVERAGE
+    Q Type                                   Absolute Energy
+    PT2 Parameters                           False
+    Project out spin contaminants            True
+    Enforce spin completeness of basis       True
+    Enforce complete aimed selection         True
+  -----------------------------------------------------------------
 
   ==> Cycle 0 <==
 
   Initial P space dimension: 1
- Not checking for spin-completeness.
-  Time spent diagonalizing H using Full: 0.000009 s
-  Average spin contamination (0.00000) is less than tolerance (0.01000)
-  No need to perform spin projection.
+  Spin-complete dimension of the P space: 1 determinants
+  Time spent diagonalizing H:   0.000059 s
+  Not performing spin projection.
 
-    P-space  CI Energy Root   1        = -61.162342331600 Eh =   0.0000 eV
+    P-space  CI Energy Root   1        = -75.374878635895 Eh =   0.0000 eV
 
-  Dimension of the SD space: 1928 determinants
-  Time spent building the model space: 0.000816 s
+  Dimension of the SD space: 1564 determinants
+  Time spent building the model space: 0.005001 s
 
   Using non-perturbative energy estimates
-  Dimension of the P + Q space: 1164 determinants
-  Time spent screening the model space: 0.003639 s
+  Dimension of the P + Q space: 25 determinants
+  Time spent screening the model space: 0.016200 s
+  Spin-complete dimension of the PQ space: 27
+  Time spent diagonalizing H:   0.001668 s
+  Not performing spin projection.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 129066 nonzero elements out of 1354896 (0.095259)
-  Time spent building H (openmp): 0.186265 s
-  The Davidson-Liu algorithm converged in 54 iterations.
-  Time spent diagonalizing H: 0.065182 s
-  Average spin contamination per root is 0.02350
-  Performing spin projection...
-  Number of CSFs: 457
-  Time spent performing spin transformation: 2.567673
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 129066 nonzero elements out of 1354896 (0.095259)
-  Time spent building H (openmp): 0.176722 s
-
-    PQ-space CI Energy Root   1        = -68.988576551047 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -69.088697039290 Eh =   0.0000 eV
+    PQ-space CI Energy Root   1        = -75.541798294184 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -75.733659930633 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.689196 0.474990728         779 |1000000000000001100000100000|1000000000000001100000100000>
-    1  -0.689194 0.474987737         705 |1000000000000001100000000100|1000000000000001100000000100>
-    2  -0.105183 0.011063552         818 |1000000000000101100000000000|1000000000000101100000000000>
-    3   0.105183 0.011063405         857 |1000000000100001100000000000|1000000000100001100000000000>
-    4  -0.047566 0.002262527         622 |1000000000000001100000100000|1000000000000001100000001000>
-    5  -0.047566 0.002262527         572 |1000000000000001100000001000|1000000000000001100000100000>
-    6   0.047566 0.002262506         634 |1000000000000001100000000100|1000000000000001100000000001>
-    7   0.047566 0.002262506         565 |1000000000000001100000000001|1000000000000001100000000100>
-    8   0.045918 0.002108504         343 |1100000000000001000000100000|1000000000000101100000000000>
-    9   0.045918 0.002108504         455 |1000000000000101100000000000|1100000000000001000000100000>
+    0   0.927483 0.860224768           0 |2000000000000002000000200200>
+    1  -0.216801 0.047002814          13 |2000002000000000000000200200>
+    2  -0.113275 0.012831305           7 |2000000000000202000000000200>
+    3  -0.113275 0.012831305           3 |2000000000200002000000200000>
+    4  -0.079850 0.006376078          21 |200000-000000+0+000000-00200>
+    5  -0.079850 0.006376078          18 |200000+000000-0-000000+00200>
+    6   0.079850 0.006376078          20 |200000+000-0000-000000200+00>
+    7   0.079850 0.006376078           6 |200000-000+0000+000000200-00>
+    8   0.067072 0.004498622           5 |2000000000+00-02000000+00-00>
+    9   0.067072 0.004498622          22 |2000000000-00+02000000-00+00>
 
- Spin state for root 0: S^2 = 0.024, S = 0.023, singlet (from 1000 determinants, 50.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 26 determinants, 95.30)
 
   ==> Cycle 1 <==
 
-  Initial P space dimension: 4
- Not checking for spin-completeness.
-  Time spent diagonalizing H using Full: 0.000027 s
-  Average spin contamination (0.00000) is less than tolerance (0.01000)
-  No need to perform spin projection.
+  Initial P space dimension: 16
+  Spin-complete dimension of the P space: 24 determinants
+  Time spent diagonalizing H:   0.001414 s
+  Not performing spin projection.
 
-    P-space  CI Energy Root   1        = -68.951504739259 Eh =   0.0000 eV
-    P-space  CI Energy Root   2        = -68.923469743616 Eh =   0.7629 eV
-    P-space  CI Energy Root   3        = -68.210084335868 Eh =  20.1751 eV
+    P-space  CI Energy Root   1        = -75.539693427468 Eh =   0.0000 eV
+    P-space  CI Energy Root   2        = -75.281300366237 Eh =   7.0312 eV
+    P-space  CI Energy Root   3        = -75.239683574690 Eh =   8.1637 eV
 
-  Dimension of the SD space: 6709 determinants
-  Time spent building the model space: 0.003608 s
+  Dimension of the SD space: 27020 determinants
+  Time spent building the model space: 0.173539 s
 
   Using non-perturbative energy estimates
-  Dimension of the P + Q space: 2176 determinants
-  Time spent screening the model space: 0.012750 s
+  Dimension of the P + Q space: 26 determinants
+  Time spent screening the model space: 0.249898 s
+  Spin-complete dimension of the PQ space: 26
+  Time spent diagonalizing H:   0.001566 s
+  Not performing spin projection.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 224490 nonzero elements out of 4734976 (0.047411)
-  Time spent building H (openmp): 0.492147 s
-  The Davidson-Liu algorithm converged in 20 iterations.
-  Time spent diagonalizing H: 0.076753 s
- Average spin contamination (0.00002) is less than tolerance (0.01000)
- No need to perform spin projection.
-
-    PQ-space CI Energy Root   1        = -75.474752217981 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -75.638252366224 Eh =   0.0000 eV
-    PQ-space CI Energy Root   2        = -75.461409504325 Eh =   0.3631 eV
-    PQ-space CI Energy + EPT2 Root   2 = -75.634273174979 Eh =   0.1083 eV
-    PQ-space CI Energy Root   3        = -75.432178431006 Eh =   1.1585 eV
-    PQ-space CI Energy + EPT2 Root   3 = -94.449523775229 Eh = -511.8807 eV
+    PQ-space CI Energy Root   1        = -75.540814557676 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -75.747691536886 Eh =   0.0000 eV
+    PQ-space CI Energy Root   2        = -75.353006972632 Eh =   5.1105 eV
+    PQ-space CI Energy + EPT2 Root   2 = -75.608983383381 Eh =   3.7744 eV
+    PQ-space CI Energy Root   3        = -75.333637529574 Eh =   5.6376 eV
+    PQ-space CI Energy + EPT2 Root   3 = -75.588017124717 Eh =   4.3450 eV
 
 
   Most important contributions to root   0:
-    0  -0.661635 0.437760622        1043 |1000001000000001000000100000|1000001000000001000000100000>
-    1   0.661635 0.437760622        2133 |1000001000000001000000000100|1000001000000001000000000100>
-    2   0.129288 0.016715390        1176 |1000001000000001000000100000|1000010000000001000000100000>
-    3   0.129288 0.016715390         916 |1000010000000001000000100000|1000001000000001000000100000>
-    4  -0.129288 0.016715390        1811 |1000001000000001000000000100|1000010000000001000000000100>
-    5  -0.129288 0.016715390        1539 |1000010000000001000000000100|1000001000000001000000000100>
-    6   0.113683 0.012923802         399 |1000001000000101000000000000|1000001000000101000000000000>
-    7  -0.113683 0.012923802          62 |1000001000100001000000000000|1000001000100001000000000000>
-    8   0.065314 0.004265973        1630 |1001000000000001000000100000|1000001000000001000000100000>
-    9   0.065314 0.004265973         915 |1000001000000001000000100000|1001000000000001000000100000>
+    0  -0.926364 0.858150314           0 |2000000000000002000000200200>
+    1   0.219117 0.048012249           9 |2000002000000000000000200200>
+    2   0.112905 0.012747639           4 |2000000000000202000000000200>
+    3   0.112905 0.012747639           1 |2000000000200002000000200000>
+    4  -0.079971 0.006395333          12 |200000+000-0000-000000200+00>
+    5  -0.079971 0.006395333           3 |200000-000+0000+000000200-00>
+    6   0.079971 0.006395333          13 |200000-000000+0+000000-00200>
+    7   0.079971 0.006395333          11 |200000+000000-0-000000+00200>
+    8  -0.067108 0.004503434          14 |2000000000-00+02000000-00+00>
+    9  -0.067108 0.004503434           2 |2000000000+00-02000000+00-00>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 1740 determinants, 50.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 26 determinants, 100.00)
 
   Most important contributions to root   1:
-    0   0.697505 0.486512602         176 |1000000000000001000000100100|1000000000000001000000100100>
-    1  -0.455812 0.207764649        2133 |1000001000000001000000000100|1000001000000001000000000100>
-    2  -0.455812 0.207764649        1043 |1000001000000001000000100000|1000001000000001000000100000>
-    3  -0.124939 0.015609780        1976 |1000000000100001000000100000|1000000000100001000000100000>
-    4  -0.124939 0.015609780        2079 |1000000000000101000000000100|1000000000000101000000000100>
-    5   0.093252 0.008695874          62 |1000001000100001000000000000|1000001000100001000000000000>
-    6   0.093252 0.008695874         399 |1000001000000101000000000000|1000001000000101000000000000>
-    7   0.090760 0.008237309        1811 |1000001000000001000000000100|1000010000000001000000000100>
-    8   0.090760 0.008237309        1539 |1000010000000001000000000100|1000001000000001000000000100>
-    9   0.090760 0.008237309         916 |1000010000000001000000100000|1000001000000001000000100000>
+    0   0.699801 0.489721781          24 |2000002000000002000000200000>
+    1  -0.699801 0.489721781          25 |2000002000000002000000000200>
+    2  -0.057730 0.003332706           1 |2000000000200002000000200000>
+    3   0.057730 0.003332706           4 |2000000000000202000000000200>
+    4  -0.045909 0.002107632           3 |200000-000+0000+000000200-00>
+    5  -0.045909 0.002107632          11 |200000+000000-0-000000+00200>
+    6  -0.045909 0.002107632          12 |200000+000-0000-000000200+00>
+    7  -0.045909 0.002107632          13 |200000-000000+0+000000-00200>
+    8   0.034717 0.001205265          21 |200000+000+0000-000000200-00>
+    9   0.034717 0.001205265          20 |200000-000-0000+000000200+00>
 
- Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 1573 determinants, 54.63)
+  Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 26 determinants, 100.00)
 
   Most important contributions to root   2:
-    0   0.656587 0.431106330         176 |1000000000000001000000100100|1000000000000001000000100100>
-    1   0.474050 0.224723044        2133 |1000001000000001000000000100|1000001000000001000000000100>
-    2   0.474050 0.224723044        1043 |1000001000000001000000100000|1000001000000001000000100000>
-    3  -0.150200 0.022560135        2079 |1000000000000101000000000100|1000000000000101000000000100>
-    4  -0.150200 0.022560135        1976 |1000000000100001000000100000|1000000000100001000000100000>
-    5  -0.096743 0.009359197          62 |1000001000100001000000000000|1000001000100001000000000000>
-    6  -0.096743 0.009359197         399 |1000001000000101000000000000|1000001000000101000000000000>
-    7  -0.091110 0.008301044        1811 |1000001000000001000000000100|1000010000000001000000000100>
-    8  -0.091110 0.008301044        1539 |1000010000000001000000000100|1000001000000001000000000100>
-    9  -0.091110 0.008301044        1176 |1000001000000001000000100000|1000010000000001000000100000>
+    0  -0.659981 0.435574302          25 |2000002000000002000000000200>
+    1  -0.659981 0.435574302          24 |2000002000000002000000200000>
+    2   0.300920 0.090553121           9 |2000002000000000000000200200>
+    3   0.066805 0.004462972           4 |2000000000000202000000000200>
+    4   0.066805 0.004462972           1 |2000000000200002000000200000>
+    5   0.065445 0.004283045          23 |200000+000000+0-000000-00200>
+    6   0.065445 0.004283045          22 |200000-000000-0+000000+00200>
+    7  -0.065445 0.004283045          21 |200000+000+0000-000000200-00>
+    8  -0.065445 0.004283045          20 |200000-000-0000+000000200+00>
+    9  -0.048917 0.002392870          13 |200000-000000+0+000000-00200>
 
- Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 1564 determinants, 88.73)
+  Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 26 determinants, 100.00)
 
   ==> Cycle 2 <==
 
-  Initial P space dimension: 15
- Not checking for spin-completeness.
+  Initial P space dimension: 10
+  Spin-complete dimension of the P space: 18 determinants
+  Time spent diagonalizing H:   0.000933 s
+  Not performing spin projection.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 123 nonzero elements out of 225 (0.546667)
-  Time spent building H (openmp): 0.000166 s
-  The Davidson-Liu algorithm converged in 8 iterations.
-  Time spent diagonalizing H: 0.000245 s
-  Average spin contamination (0.00000) is less than tolerance (0.01000)
-  No need to perform spin projection.
+    P-space  CI Energy Root   1        = -75.521580636329 Eh =   0.0000 eV
+    P-space  CI Energy Root   2        = -75.352903038231 Eh =   4.5900 eV
+    P-space  CI Energy Root   3        = -75.332521134654 Eh =   5.1446 eV
 
-    P-space  CI Energy Root   1        = -75.446064618701 Eh =   0.0000 eV
-    P-space  CI Energy Root   2        = -75.443915527983 Eh =   0.0585 eV
-    P-space  CI Energy Root   3        = -75.403972727769 Eh =   1.1454 eV
-
-  Dimension of the SD space: 19790 determinants
-  Time spent building the model space: 0.017544 s
+  Dimension of the SD space: 21206 determinants
+  Time spent building the model space: 0.123034 s
 
   Using non-perturbative energy estimates
   Dimension of the P + Q space: 24 determinants
-  Time spent screening the model space: 0.052077 s
+  Time spent screening the model space: 0.190113 s
+  Spin-complete dimension of the PQ space: 24
+  Time spent diagonalizing H:   0.001332 s
+  Not performing spin projection.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 266 nonzero elements out of 576 (0.461806)
-  Time spent building H (openmp): 0.000242 s
-  The Davidson-Liu algorithm converged in 12 iterations.
-  Time spent diagonalizing H: 0.000413 s
-  Average spin contamination per root is 0.02698
-  Performing spin projection...
-  Number of CSFs: 14
-  Time spent performing spin transformation: 0.000101
-  Using full algorithm
-
-    PQ-space CI Energy Root   1        = -75.511150567859 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -75.733609857141 Eh =   0.0000 eV
-    PQ-space CI Energy Root   2        = -75.451160583877 Eh =   1.6324 eV
-    PQ-space CI Energy + EPT2 Root   2 = -75.677285429980 Eh =   1.5327 eV
-    PQ-space CI Energy Root   3        = -75.428668793605 Eh =   2.2444 eV
-    PQ-space CI Energy + EPT2 Root   3 = -75.658375771447 Eh =   2.0472 eV
+    PQ-space CI Energy Root   1        = -75.522945247792 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -75.751259615676 Eh =   0.0000 eV
+    PQ-space CI Energy Root   2        = -75.438711690006 Eh =   2.2921 eV
+    PQ-space CI Energy + EPT2 Root   2 = -75.695935932310 Eh =   1.5054 eV
+    PQ-space CI Energy Root   3        = -75.417935289928 Eh =   2.8575 eV
+    PQ-space CI Energy + EPT2 Root   3 = -75.693740733351 Eh =   1.5652 eV
 
 
   Most important contributions to root   0:
-    0  -0.930807 0.866401294           1 |1000000000000001000000100100|1000000000000001000000100100>
-    1   0.202609 0.041050310          20 |1000001000000000000000100100|1000001000000000000000100100>
-    2   0.134114 0.017986657          13 |1000000000000101000000000100|1000000000000101000000000100>
-    3   0.134114 0.017986657          11 |1000000000100001000000100000|1000000000100001000000100000>
-    4   0.115215 0.013274427          14 |1000001000000001000000000100|1000001000000001000000000100>
-    5   0.115215 0.013274427           6 |1000001000000001000000100000|1000001000000001000000100000>
-    6   0.058236 0.003391470          19 |1000001000000000000000100100|1000000000000101000000000100>
-    7  -0.058236 0.003391470          18 |1000000000000001000000100100|1000001000000100000000000100>
-    8  -0.058236 0.003391470          23 |1000001000000100000000000100|1000000000000001000000100100>
-    9   0.058236 0.003391470          21 |1000000000000101000000000100|1000001000000000000000100100>
+    0   0.919728 0.845899734           0 |2000000000000002000000200200>
+    1  -0.212401 0.045114133           4 |2000002000000000000000200200>
+    2  -0.135900 0.018468782           1 |2000000000200002000000200000>
+    3  -0.135900 0.018468782           3 |2000000000000202000000000200>
+    4  -0.100947 0.010190241           9 |2000002000000002000000000200>
+    5  -0.100947 0.010190241           8 |2000002000000002000000200000>
+    6  -0.087946 0.007734568           7 |200000-000000+0+000000-00200>
+    7  -0.087946 0.007734568           5 |200000+000000-0-000000+00200>
+    8   0.087946 0.007734568           6 |200000+000-0000-000000200+00>
+    9   0.087946 0.007734568           2 |200000-000+0000+000000200-00>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 23 determinants, 95.49)
 
   Most important contributions to root   1:
-    0   0.670400 0.449436378           6 |1000001000000001000000100000|1000001000000001000000100000>
-    1  -0.670400 0.449436378          14 |1000001000000001000000000100|1000001000000001000000000100>
-    2   0.122438 0.014991097          10 |1000001000000001000000000100|1000010000000001000000000100>
-    3   0.122438 0.014991097           8 |1000010000000001000000000100|1000001000000001000000000100>
-    4  -0.122438 0.014991097           7 |1000001000000001000000100000|1000010000000001000000100000>
-    5  -0.122438 0.014991097           5 |1000010000000001000000100000|1000001000000001000000100000>
-    6  -0.102291 0.010463470           2 |1000001000000101000000000000|1000001000000101000000000000>
-    7   0.102291 0.010463470           0 |1000001000100001000000000000|1000001000100001000000000000>
-    8   0.045932 0.002109762          13 |1000000000000101000000000100|1000000000000101000000000100>
-    9  -0.045932 0.002109762          11 |1000000000100001000000100000|1000000000100001000000100000>
+    0  -0.672739 0.452577172           8 |2000002000000002000000200000>
+    1   0.672739 0.452577172           9 |2000002000000002000000000200>
+    2   0.120877 0.014611341          18 |20000-+000000002000000200000>
+    3   0.120877 0.014611341          22 |20000+-000000002000000200000>
+    4  -0.120877 0.014611341          21 |20000-+000000002000000000200>
+    5  -0.120877 0.014611341          23 |20000+-000000002000000000200>
+    6   0.104229 0.010863647          19 |2000002000000202000000000000>
+    7  -0.104229 0.010863647          20 |2000002000200002000000000000>
+    8   0.050007 0.002500700           1 |2000000000200002000000200000>
+    9  -0.050007 0.002500700           3 |2000000000000202000000000200>
 
- Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
+  Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
 
   Most important contributions to root   2:
-    0  -0.645886 0.417169208          14 |1000001000000001000000000100|1000001000000001000000000100>
-    1  -0.645886 0.417169208           6 |1000001000000001000000100000|1000001000000001000000100000>
-    2   0.220195 0.048485910          20 |1000001000000000000000100100|1000001000000000000000100100>
-    3  -0.118686 0.014086251           1 |1000000000000001000000100100|1000000000000001000000100100>
-    4   0.115970 0.013448945          10 |1000001000000001000000000100|1000010000000001000000000100>
-    5   0.115970 0.013448945           8 |1000010000000001000000000100|1000001000000001000000000100>
-    6   0.115970 0.013448945           7 |1000001000000001000000100000|1000010000000001000000100000>
-    7   0.115970 0.013448945           5 |1000010000000001000000100000|1000001000000001000000100000>
-    8   0.114584 0.013129484           0 |1000001000100001000000000000|1000001000100001000000000000>
-    9   0.114584 0.013129484           2 |1000001000000101000000000000|1000001000000101000000000000>
+    0  -0.647703 0.419518821           9 |2000002000000002000000000200>
+    1  -0.647703 0.419518821           8 |2000002000000002000000200000>
+    2   0.228383 0.052158757           4 |2000002000000000000000200200>
+    3   0.116349 0.013537065          20 |2000002000200002000000000000>
+    4   0.116349 0.013537065          19 |2000002000000202000000000000>
+    5   0.114609 0.013135146          21 |20000-+000000002000000000200>
+    6   0.114609 0.013135146          23 |20000+-000000002000000000200>
+    7   0.114609 0.013135146          22 |20000+-000000002000000200000>
+    8   0.114609 0.013135146          18 |20000-+000000002000000200000>
+    9  -0.093307 0.008706162           0 |2000000000000002000000200200>
 
- Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
+  Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
 
   ==> Cycle 3 <==
 
-  Initial P space dimension: 12
- Not checking for spin-completeness.
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 78 nonzero elements out of 144 (0.541667)
-  Time spent building H (openmp): 0.000085 s
-  The Davidson-Liu algorithm converged in 6 iterations.
-  Time spent diagonalizing H: 0.000308 s
-  Average spin contamination (0.00000) is less than tolerance (0.01000)
-  No need to perform spin projection.
-
-    P-space  CI Energy Root   1        = -75.486751826115 Eh =   0.0000 eV
-    P-space  CI Energy Root   2        = -75.432739019052 Eh =   1.4698 eV
-    P-space  CI Energy Root   3        = -75.408223344557 Eh =   2.1369 eV
-
-  Dimension of the SD space: 16754 determinants
-  Time spent building the model space: 0.014578 s
-
-  Using non-perturbative energy estimates
-  Dimension of the P + Q space: 16 determinants
-  Time spent screening the model space: 0.040563 s
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 126 nonzero elements out of 256 (0.492188)
-  Time spent building H (openmp): 0.000125 s
-  The Davidson-Liu algorithm converged in 10 iterations.
-  Time spent diagonalizing H: 0.000291 s
-  Average spin contamination per root is 0.04540
-  Performing spin projection...
-  Number of CSFs: 10
-  Time spent performing spin transformation: 0.000046
-  Using full algorithm
-
-    PQ-space CI Energy Root   1        = -75.479410527618 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -75.723333873985 Eh =   0.0000 eV
-    PQ-space CI Energy Root   2        = -75.432521439677 Eh =   1.2759 eV
-    PQ-space CI Energy + EPT2 Root   2 = -75.666690348411 Eh =   1.5413 eV
-    PQ-space CI Energy Root   3        = -75.409162987837 Eh =   1.9115 eV
-    PQ-space CI Energy + EPT2 Root   3 = -75.659276850482 Eh =   1.7431 eV
-
-
-  Most important contributions to root   0:
-    0   0.943931 0.891006335           1 |1000000000000001000000100100|1000000000000001000000100100>
-    1  -0.213285 0.045490630          11 |1000001000000000000000100100|1000001000000000000000100100>
-    2  -0.138254 0.019114130           8 |1000000000100001000000100000|1000000000100001000000100000>
-    3  -0.138254 0.019114130           9 |1000000000000101000000000100|1000000000000101000000000100>
-    4  -0.106804 0.011407175          10 |1000001000000001000000000100|1000001000000001000000000100>
-    5  -0.106804 0.011407175           4 |1000001000000001000000100000|1000001000000001000000100000>
-    6   0.020316 0.000412734           7 |1000001000000001000000000100|1000010000000001000000000100>
-    7   0.020316 0.000412734           6 |1000010000000001000000000100|1000001000000001000000000100>
-    8   0.020316 0.000412734           5 |1000001000000001000000100000|1000010000000001000000100000>
-    9   0.020316 0.000412734           3 |1000010000000001000000100000|1000001000000001000000100000>
-
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 15 determinants, 95.45)
-
-  Most important contributions to root   1:
-    0  -0.676538 0.457703913           4 |1000001000000001000000100000|1000001000000001000000100000>
-    1   0.676538 0.457703913          10 |1000001000000001000000000100|1000001000000001000000000100>
-    2   0.121247 0.014700952           5 |1000001000000001000000100000|1000010000000001000000100000>
-    3   0.121247 0.014700952           3 |1000010000000001000000100000|1000001000000001000000100000>
-    4  -0.121247 0.014700952           7 |1000001000000001000000000100|1000010000000001000000000100>
-    5  -0.121247 0.014700952           6 |1000010000000001000000000100|1000001000000001000000000100>
-    6   0.104854 0.010994453           2 |1000001000000101000000000000|1000001000000101000000000000>
-    7  -0.104854 0.010994453           0 |1000001000100001000000000000|1000001000100001000000000000>
-    8  -0.043586 0.001899729           9 |1000000000000101000000000100|1000000000000101000000000100>
-    9   0.043586 0.001899729           8 |1000000000100001000000100000|1000000000100001000000100000>
-
- Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 16 determinants, 100.00)
-
-  Most important contributions to root   2:
-    0  -0.654103 0.427851209          10 |1000001000000001000000000100|1000001000000001000000000100>
-    1  -0.654103 0.427851209           4 |1000001000000001000000100000|1000001000000001000000100000>
-    2   0.203850 0.041554884          11 |1000001000000000000000100100|1000001000000000000000100100>
-    3  -0.120243 0.014458494           1 |1000000000000001000000100100|1000000000000001000000100100>
-    4   0.118121 0.013952509           2 |1000001000000101000000000000|1000001000000101000000000000>
-    5   0.118121 0.013952509           0 |1000001000100001000000000000|1000001000100001000000000000>
-    6   0.115047 0.013235867           7 |1000001000000001000000000100|1000010000000001000000000100>
-    7   0.115047 0.013235867           6 |1000010000000001000000000100|1000001000000001000000000100>
-    8   0.115047 0.013235867           5 |1000001000000001000000100000|1000010000000001000000100000>
-    9   0.115047 0.013235867           3 |1000010000000001000000100000|1000001000000001000000100000>
-
- Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 16 determinants, 100.00)
-
-  ==> Cycle 4 <==
-
-  Initial P space dimension: 12
- Not checking for spin-completeness.
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 78 nonzero elements out of 144 (0.541667)
-  Time spent building H (openmp): 0.000080 s
-  The Davidson-Liu algorithm converged in 6 iterations.
-  Time spent diagonalizing H: 0.000192 s
-  Average spin contamination (0.00000) is less than tolerance (0.01000)
-  No need to perform spin projection.
-
-    P-space  CI Energy Root   1        = -75.486751826115 Eh =   0.0000 eV
-    P-space  CI Energy Root   2        = -75.432739019052 Eh =   1.4698 eV
-    P-space  CI Energy Root   3        = -75.408223344557 Eh =   2.1369 eV
-
-  Dimension of the SD space: 16754 determinants
-  Time spent building the model space: 0.011390 s
-
-  Using non-perturbative energy estimates
-  Dimension of the P + Q space: 16 determinants
-  Time spent screening the model space: 0.034267 s
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 126 nonzero elements out of 256 (0.492188)
-  Time spent building H (openmp): 0.000135 s
-  The Davidson-Liu algorithm converged in 10 iterations.
-  Time spent diagonalizing H: 0.000343 s
-  Average spin contamination per root is 0.04540
-  Performing spin projection...
-  Number of CSFs: 10
-  Time spent performing spin transformation: 0.000092
-  Using full algorithm
-
-    PQ-space CI Energy Root   1        = -75.479410527618 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -75.723333873985 Eh =   0.0000 eV
-    PQ-space CI Energy Root   2        = -75.432521439677 Eh =   1.2759 eV
-    PQ-space CI Energy + EPT2 Root   2 = -75.666690348411 Eh =   1.5413 eV
-    PQ-space CI Energy Root   3        = -75.409162987837 Eh =   1.9115 eV
-    PQ-space CI Energy + EPT2 Root   3 = -75.659276850482 Eh =   1.7431 eV
-
-
-  ==> Post-Iterations <==
-
+  Initial P space dimension: 16
+  Spin-complete dimension of the P space: 24 determinants
+  Time spent diagonalizing H:   0.001291 s
   Not performing spin projection.
-  Printing Wavefunction Information
+
+    P-space  CI Energy Root   1        = -75.522945247792 Eh =   0.0000 eV
+    P-space  CI Energy Root   2        = -75.438711690006 Eh =   2.2921 eV
+    P-space  CI Energy Root   3        = -75.417935289928 Eh =   2.8575 eV
+
+  Dimension of the SD space: 27588 determinants
+  Time spent building the model space: 0.167899 s
+
+  Using non-perturbative energy estimates
+  Dimension of the P + Q space: 24 determinants
+  Time spent screening the model space: 0.255508 s
+  Spin-complete dimension of the PQ space: 24
+  Time spent diagonalizing H:   0.001329 s
+  Not performing spin projection.
+
+    PQ-space CI Energy Root   1        = -75.522945247792 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -75.750318411023 Eh =   0.0000 eV
+    PQ-space CI Energy Root   2        = -75.438711690006 Eh =   2.2921 eV
+    PQ-space CI Energy + EPT2 Root   2 = -75.668871302111 Eh =   2.2163 eV
+    PQ-space CI Energy Root   3        = -75.417935289928 Eh =   2.8575 eV
+    PQ-space CI Energy + EPT2 Root   3 = -75.661532778589 Eh =   2.4160 eV
+
+  ***** Calculation Converged *****
+  Not performing spin projection.
+  1-RDM  took 0.000344 s
+
+  ==> ACI Summary <==
+
+  Iterations required:                         3
+  Dimension of optimized determinant space:    24
+
+  * Adaptive-CI Energy Root   1        = -75.522945247792 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   1 + EPT2 = -75.750318411023 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   2        = -75.438711690006 Eh =   2.2921 eV
+  * Adaptive-CI Energy Root   2 + EPT2 = -75.668871302111 Eh =   2.2163 eV
+  * Adaptive-CI Energy Root   3        = -75.417935289928 Eh =   2.8575 eV
+  * Adaptive-CI Energy Root   3 + EPT2 = -75.661532778589 Eh =   2.4160 eV
+
+  ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0   0.943931 0.891006335           1 |1000000000000001000000100100|1000000000000001000000100100>
-    1  -0.213285 0.045490630          11 |1000001000000000000000100100|1000001000000000000000100100>
-    2  -0.138254 0.019114130           8 |1000000000100001000000100000|1000000000100001000000100000>
-    3  -0.138254 0.019114130           9 |1000000000000101000000000100|1000000000000101000000000100>
-    4  -0.106804 0.011407175          10 |1000001000000001000000000100|1000001000000001000000000100>
-    5  -0.106804 0.011407175           4 |1000001000000001000000100000|1000001000000001000000100000>
-    6   0.020316 0.000412734           7 |1000001000000001000000000100|1000010000000001000000000100>
-    7   0.020316 0.000412734           6 |1000010000000001000000000100|1000001000000001000000000100>
-    8   0.020316 0.000412734           5 |1000001000000001000000100000|1000010000000001000000100000>
-    9   0.020316 0.000412734           3 |1000010000000001000000100000|1000001000000001000000100000>
+    0  -0.919728 0.845899734           0 |2000000000000002000000200200>
+    1   0.212401 0.045114133           4 |2000002000000000000000200200>
+    2   0.135900 0.018468782           3 |2000000000000202000000000200>
+    3   0.135900 0.018468782           1 |2000000000200002000000200000>
+    4   0.100947 0.010190241           8 |2000002000000002000000200000>
+    5   0.100947 0.010190241           9 |2000002000000002000000000200>
+    6  -0.087946 0.007734568           2 |200000-000+0000+000000200-00>
+    7  -0.087946 0.007734568           6 |200000+000-0000-000000200+00>
+    8   0.087946 0.007734568           5 |200000+000000-0-000000+00200>
+    9   0.087946 0.007734568           7 |200000-000000+0+000000-00200>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 15 determinants, 95.45)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
 
   Most important contributions to root   1:
-    0  -0.676538 0.457703913           4 |1000001000000001000000100000|1000001000000001000000100000>
-    1   0.676538 0.457703913          10 |1000001000000001000000000100|1000001000000001000000000100>
-    2   0.121247 0.014700952           5 |1000001000000001000000100000|1000010000000001000000100000>
-    3   0.121247 0.014700952           3 |1000010000000001000000100000|1000001000000001000000100000>
-    4  -0.121247 0.014700952           7 |1000001000000001000000000100|1000010000000001000000000100>
-    5  -0.121247 0.014700952           6 |1000010000000001000000000100|1000001000000001000000000100>
-    6   0.104854 0.010994453           2 |1000001000000101000000000000|1000001000000101000000000000>
-    7  -0.104854 0.010994453           0 |1000001000100001000000000000|1000001000100001000000000000>
-    8  -0.043586 0.001899729           9 |1000000000000101000000000100|1000000000000101000000000100>
-    9   0.043586 0.001899729           8 |1000000000100001000000100000|1000000000100001000000100000>
+    0  -0.672739 0.452577172           9 |2000002000000002000000000200>
+    1   0.672739 0.452577172           8 |2000002000000002000000200000>
+    2   0.120877 0.014611341          13 |20000-+000000002000000000200>
+    3   0.120877 0.014611341          15 |20000+-000000002000000000200>
+    4  -0.120877 0.014611341          14 |20000+-000000002000000200000>
+    5  -0.120877 0.014611341          10 |20000-+000000002000000200000>
+    6   0.104229 0.010863647          12 |2000002000200002000000000000>
+    7  -0.104229 0.010863647          11 |2000002000000202000000000000>
+    8   0.050007 0.002500700           3 |2000000000000202000000000200>
+    9  -0.050007 0.002500700           1 |2000000000200002000000200000>
 
- Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 16 determinants, 100.00)
+  Spin state for root 1: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
 
   Most important contributions to root   2:
-    0  -0.654103 0.427851209          10 |1000001000000001000000000100|1000001000000001000000000100>
-    1  -0.654103 0.427851209           4 |1000001000000001000000100000|1000001000000001000000100000>
-    2   0.203850 0.041554884          11 |1000001000000000000000100100|1000001000000000000000100100>
-    3  -0.120243 0.014458494           1 |1000000000000001000000100100|1000000000000001000000100100>
-    4   0.118121 0.013952509           2 |1000001000000101000000000000|1000001000000101000000000000>
-    5   0.118121 0.013952509           0 |1000001000100001000000000000|1000001000100001000000000000>
-    6   0.115047 0.013235867           7 |1000001000000001000000000100|1000010000000001000000000100>
-    7   0.115047 0.013235867           6 |1000010000000001000000000100|1000001000000001000000000100>
-    8   0.115047 0.013235867           5 |1000001000000001000000100000|1000010000000001000000100000>
-    9   0.115047 0.013235867           3 |1000010000000001000000100000|1000001000000001000000100000>
+    0  -0.647703 0.419518821           8 |2000002000000002000000200000>
+    1  -0.647703 0.419518821           9 |2000002000000002000000000200>
+    2   0.228383 0.052158757           4 |2000002000000000000000200200>
+    3   0.116349 0.013537065          11 |2000002000000202000000000000>
+    4   0.116349 0.013537065          12 |2000002000200002000000000000>
+    5   0.114609 0.013135146          14 |20000+-000000002000000200000>
+    6   0.114609 0.013135146          10 |20000-+000000002000000200000>
+    7   0.114609 0.013135146          15 |20000+-000000002000000000200>
+    8   0.114609 0.013135146          13 |20000-+000000002000000000200>
+    9  -0.093307 0.008706162           0 |2000000000000002000000200200>
 
- Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 16 determinants, 100.00)
+  Spin state for root 2: S^2 = 0.000, S = 0.000, singlet (from 24 determinants, 100.00)
 
      Order		 # of Dets        Total |c^2|   
   __________ 	____________   ________________ 
-      0			       1		0.89100633545
-      1			      13		0.10818417287
-      2			       2		0.00080949168
+       0                  1           0.84589973440
+       1                  0           0.00000000000
+       2                 21           0.15337852100
+       3                  0           0.00000000000
+       4                  2           0.00072174460
 
- Highest-order excitation searched:     10  
+  Highest-order excitation searched:     8  
 
-      0			       2		0.47240486524
-      1			      11		0.51099445321
-      2			       3		0.01660068155
+       0                  1           0.00000000000
+       1                  0           0.00000000000
+       2                 21           0.97827270650
+       3                  0           0.00000000000
+       4                  2           0.02172729350
 
- Highest-order excitation searched:     10  
+  Highest-order excitation searched:     8  
 
-      0			       2		0.44108707652
-      1			      11		0.54195919834
-      2			       3		0.01695372514
+       0                  1           0.00870616165
+       1                  0           0.00000000000
+       2                 21           0.96421970766
+       3                  0           0.00000000000
+       4                  2           0.02707413069
 
- Highest-order excitation searched:     10  
+  Highest-order excitation searched:     8  
 
-  * Adaptive-CI Energy Root   1        = -75.479410527618 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   1 + EPT2 = -75.723333873985 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   2        = -75.432521439677 Eh =   1.2759 eV
-  * Adaptive-CI Energy Root   2 + EPT2 = -75.666690348411 Eh =   1.5413 eV
-  * Adaptive-CI Energy Root   3        = -75.409162987837 Eh =   1.9115 eV
-  * Adaptive-CI Energy Root   3 + EPT2 = -75.659276850482 Eh =   1.7431 eV
 
-  Adaptive-CI (bitset) ran in : 9.485910 s
+  Adaptive-CI (bitset) ran in : 1.247575 s
 
   Saving information for root: 1
- Your calculation took 9.88906700 seconds
+
+  Your calculation took 2.12997100 seconds
+
 *** PSI4 exiting successfully. Buy a developer a beer!
