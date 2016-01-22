@@ -298,7 +298,6 @@ double FCISolver::compute_energy()
         ambit::Tensor tei_active_aa = ints_->aptei_aa_block(active_mo_, active_mo_, active_mo_, active_mo_);
         ambit::Tensor tei_active_ab = ints_->aptei_ab_block(active_mo_, active_mo_, active_mo_, active_mo_);
         ambit::Tensor tei_active_bb = ints_->aptei_bb_block(active_mo_, active_mo_, active_mo_, active_mo_);
-        outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", tei_active_aa.norm(2), tei_active_ab.norm(2));
         fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
         fci_ints->compute_restricted_one_body_operator();
     }

@@ -92,13 +92,16 @@ void CI_RDMS::startup()
 		symmetry_ = options_.get_int("ROOT_SYM");
 	}
 	
+    print_ = false;
+
 	one_map_done_ = false;
 	
-	outfile->Printf("\n  Computing RDMS");
-	outfile->Printf("\n  Number of active alpha electrons: %zu", na_);
-	outfile->Printf("\n  Number of active beta electrons: %zu", nb_);
-	outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
-	
+    if(print_){
+	    outfile->Printf("\n  Computing RDMS");
+	    outfile->Printf("\n  Number of active alpha electrons: %zu", na_);
+	    outfile->Printf("\n  Number of active beta electrons: %zu", nb_);
+	    outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
+	}
 
 }
 
@@ -135,11 +138,14 @@ double CI_RDMS::get_energy( std::vector<double>& oprdm_a,
         }
     }
     double total_energy = nuc_rep+ scalar_energy + energy_1rdm + energy_2rdm;
-    outfile->Printf("\n  Total Energy: %25.15f\n",total_energy);
-    outfile->Printf("\n  Scalar Energy = %8.8f", scalar_energy);
-    outfile->Printf("\n  energy_1rdm = %8.8f", energy_1rdm);
-    outfile->Printf("\n  energy_2rdm = %8.8f", energy_2rdm);
-    outfile->Printf("\n  nuclear_repulsion_energy = %8.8f", nuc_rep);
+    
+    if(print_){
+        outfile->Printf("\n  Total Energy: %25.15f\n",total_energy);
+        outfile->Printf("\n  Scalar Energy = %8.8f", scalar_energy);
+        outfile->Printf("\n  energy_1rdm = %8.8f", energy_1rdm);
+        outfile->Printf("\n  energy_2rdm = %8.8f", energy_2rdm);
+        outfile->Printf("\n  nuclear_repulsion_energy = %8.8f", nuc_rep);
+    }
 
 	return total_energy;
 }
@@ -149,7 +155,7 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
 {
 	Timer one;
 	get_one_map();
-	outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
+	if( print_ ) outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
 
 	Timer build;
 	oprdm_a.resize(ncmo2_, 0.0);
@@ -178,7 +184,7 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
     	    }
     	}
 	}
-	outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
+	if( print_ ) outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
 void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root )
@@ -189,7 +195,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 
     Timer two;
 	get_two_map();
-	outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.get());
+	if( print_) outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.get());
 
 	Timer build;
 	for( size_t J = 0; J < dim_space_; ++J){
@@ -257,7 +263,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 		}
 
 	}	
-	outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
+	if(print_) outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
 
@@ -276,7 +282,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 
 	Timer three;
 	get_three_map();
-	outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.get());
+	if( print_ ) outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.get());
 	
 
 	Timer build;
@@ -458,7 +464,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 		}
 	}
 
-	outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
+	if( print_ ) outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
 void CI_RDMS::get_one_map()
@@ -475,7 +481,7 @@ void CI_RDMS::get_one_map()
 	size_t na_ann = 0;
 	size_t nb_ann = 0;
 
-	outfile->Printf("\n\n  Generating one-particle maps.");
+	if( print_ )outfile->Printf("\n\n  Generating one-particle maps.");
 
 	for( size_t I = 0; I < dim_space_; ++I){
 		STLBitsetDeterminant detI = det_space_[I];
@@ -570,7 +576,7 @@ void CI_RDMS::get_two_map()
 	size_t nab_ann = 0;
 	size_t nbb_ann = 0;
 
-	outfile->Printf("\n  Generating two-particle maps.");
+	if( print_ ) outfile->Printf("\n  Generating two-particle maps.");
 
 	for( size_t I = 0; I < dim_space_; ++I){
 		STLBitsetDeterminant detI = det_space_[I];
@@ -714,7 +720,7 @@ void CI_RDMS::get_three_map()
 	size_t nabb_ann = 0;
 	size_t nbbb_ann = 0;
 
-	outfile->Printf("\n  Generating three-particle maps.");
+	if( print_ ) outfile->Printf("\n  Generating three-particle maps.");
 
 	for( size_t I = 0; I < dim_space_; ++I){
 		STLBitsetDeterminant detI = det_space_[I];
