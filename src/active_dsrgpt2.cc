@@ -23,6 +23,9 @@ void ACTIVE_DSRGPT2::startup(){
         int nirrep = wfn_->nirrep();
         ref_energies_ = vector<vector<double>> (nirrep,vector<double>());
         pt2_energies_ = vector<vector<double>> (nirrep,vector<double>());
+        vecdet_cis_ = vector<vector<STLBitsetDeterminant>> (nirrep,vector<STLBitsetDeterminant>());
+        eigen_cis_ = vector<vector<SharedVector>> (nirrep,vector<SharedVector>());
+        t1_percentage_ = vector<vector<pair<int,double>>> (nirrep,vector<pair<int,double>>());
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
 
         for(int h = 0; h < nirrep; ++h){
@@ -64,6 +67,14 @@ void ACTIVE_DSRGPT2::compute_energy(){
                     ref_energies_[h].push_back(fci_mo.compute_energy());
                     Reference reference = fci_mo.reference();
 
+                    // save the CIS stuff
+                    eigen_cis_[h].push_back(fci_mo.eigen().back().first);
+                    if(i == nrootpi_[h] - 1){
+                        if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
+                            vecdet_cis_[h] = fci_mo.p_space();
+                        }
+                    }
+
                     // PT2 routine
                     double pt2 = 0.0;
                     if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
@@ -77,7 +88,64 @@ void ACTIVE_DSRGPT2::compute_energy(){
                 }
             }
         }
+        compute_t1_percentage();
         print_summary();
+    }
+}
+
+void ACTIVE_DSRGPT2::compute_t1_percentage(){
+    print_h2("Compute the singles percentage");
+
+    // set to CISD first
+    FCI_MO fci_mo(wfn_,options_,ints_,mo_space_info_);
+    fci_mo.set_active_space_type("CISD");
+    fci_mo.set_quite_mode(true);
+    int nirrep = nrootpi_.size();
+    for(int h = 0; h < nirrep; ++h){
+        if(nrootpi_[h] == 0) continue;
+        else{
+            fci_mo.set_root_sym(h);
+            Matrix overlap ("overlap", 2 * nrootpi_[h], nrootpi_[h]);
+            for(int i = 0; i < 2 * nrootpi_[h]; ++i){
+                // CI routine
+                outfile->Printf("\n\n  %s", std::string(35,'=').c_str());
+                outfile->Printf("\n    Current Job: %3s state, root %2d", irrep_symbol_[h].c_str(), i);
+                outfile->Printf("\n  %s\n", std::string(35,'=').c_str());
+                fci_mo.set_nroots(i+1);
+                fci_mo.set_root(i);
+                fci_mo.compute_energy();
+
+                std::vector<STLBitsetDeterminant> vecdet_cisd = fci_mo.p_space();
+                SharedVector eigen_cisd = fci_mo.eigen().back().first;
+
+                // loop over CIS states
+                for(int j = 0; j < eigen_cis_[h].size(); ++j){
+                    for(int s = 0; s < vecdet_cis_[h].size(); ++s){
+                        for(int sd = 0; sd < vecdet_cisd.size(); ++sd){
+                            if(vecdet_cis_[h][s] == vecdet_cisd[sd]){
+                                double value = std::fabs(eigen_cisd->get(sd)) * std::fabs(eigen_cis_[h][j]->get(s));
+                                overlap.add(i,j,value);
+                            }
+                        }
+                    }
+                }
+
+            }
+            overlap.print();
+            for(int i = 0; i < overlap.ncol(); ++i){
+                double max = overlap.get(i,i);
+                int root = i;
+                for(int j = 0; j < overlap.nrow(); ++j){
+                    double value = overlap.get(j,i);
+                    if(max < value){
+                        max = value;
+                        root = j;
+                    }
+                }
+                t1_percentage_[h].push_back(make_pair(root,100.0*max));
+            }
+
+        }
     }
 }
 
@@ -88,17 +156,35 @@ void ACTIVE_DSRGPT2::print_summary(){
     if(ref_type == "COMPLETE") ref_type = std::string("CAS");
 
     int nirrep = nrootpi_.size();
-    int total_width = 4 + 6 + 18 + 18 + 3 * 2;
-    outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(), "PT2");
-    outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
-    for(int h = 0; h < nirrep; ++h){
-        if(nrootpi_[h] != 0){
-            for(int i = nrootpi_[h]; i > 0; --i){
-                std::string sym(4,' ');
-                if(i == 1) sym = irrep_symbol_[h];
-                outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt2_energies_[h][i-1]);
+    if(ref_type != "CIS"){
+        int total_width = 4 + 6 + 18 + 18 + 3 * 2;
+        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(), "PT2");
+        outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+        for(int h = 0; h < nirrep; ++h){
+            if(nrootpi_[h] != 0){
+                for(int i = nrootpi_[h]; i > 0; --i){
+                    std::string sym(4,' ');
+                    if(i == 1) sym = irrep_symbol_[h];
+                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt2_energies_[h][i-1]);
+                }
+                outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
             }
-            outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+        }
+    }else{
+        int total_width = 4 + 6 + 18 + 18 + 11 + 4 * 2;
+        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s%7s  %8s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(),
+                        "PT2", std::string(7,' ').c_str(), "T1% (#CISD)");
+        outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+        for(int h = 0; h < nirrep; ++h){
+            if(nrootpi_[h] != 0){
+                for(int i = nrootpi_[h]; i > 0; --i){
+                    std::string sym(4,' ');
+                    if(i == 1) sym = irrep_symbol_[h];
+                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f  %5.1f (%3d)", sym.c_str(), i-1, ref_energies_[h][i-1],
+                            pt2_energies_[h][i-1], t1_percentage_[h][i-1].second, t1_percentage_[h][i-1].first);
+                }
+                outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+            }
         }
     }
 
