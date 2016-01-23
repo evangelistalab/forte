@@ -76,6 +76,9 @@ public:
     /// Return the vector of eigen vectors
     vector<pair<SharedVector,double>> eigen() {return eigen_;}
 
+    /// Return the dominant determinant
+    STLBitsetDeterminant dominant_det() {return dominant_det_;}
+
     /// Set to use semicanonical
     void set_semicanonical(const bool& semi) {semi_ = semi;}
     /// Quiet mode (no printing, for use with CASSCF)
@@ -162,6 +165,7 @@ protected:
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
+    STLBitsetDeterminant dominant_det_;
 
     /// Orbital Strings
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);

@@ -414,6 +414,9 @@ double MRDSRG::compute_energy_relaxed(){
 
         // start iteration
         do{
+            // print
+            outfile->Printf("\n  ==> MR-DSRG Ref. Relaxation Iter. %d <==", cycle);
+
             // compute dsrg energy
             double Etemp = Edsrg;
             Edsrg = compute_energy();

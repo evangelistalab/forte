@@ -53,7 +53,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         BTF_->print_memory_info();
     }
     ref_type_ = options_.get_str("REFERENCE");
-    outfile->Printf("\n Reference = %s", ref_type_.c_str());
+    outfile->Printf("\n  Reference = %s", ref_type_.c_str());
 
     startup();
     //if(false){
