@@ -426,7 +426,7 @@ void FCI_MO::form_det_cis(){
     // singles
     Timer tdet;
     string str = "Forming determinants";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
@@ -490,7 +490,7 @@ void FCI_MO::form_det_cisd(){
     // singles
     Timer tdet;
     string str = "Forming determinants";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
@@ -854,14 +854,16 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     }
 
     for(int i = 0; i != nroot; ++i){
-        vector<tuple<double, int>> ci_selec;
+        vector<tuple<double, int>> ci_selec; // tuple<coeff, index>
 
+        // choose CI coefficients greater than CI_threshold
         for(size_t j = 0; j < det.size(); ++j){
             double value = (eigen[i].first)->get(j);
             if(std::fabs(value) > CI_threshold)
                 ci_selec.push_back(make_tuple(value, j));
         }
         sort(ci_selec.begin(), ci_selec.end(), ReverseAbsSort);
+        dominant_det_ = det[get<1>(ci_selec[0])];
 
         if(!quiet_){outfile->Printf("\n  ==> Root No. %d <==\n", i);}
         for(size_t j = 0; j < ci_selec.size(); ++j){

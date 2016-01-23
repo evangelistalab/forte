@@ -71,17 +71,14 @@ private:
     /// DSRGPT2 energies
     std::vector<std::vector<double>> pt2_energies_;
 
-    /// Model space of CIS
-    std::vector<std::vector<STLBitsetDeterminant>> vecdet_cis_;
-
-    /// Eigen vectors of CIS
-    std::vector<std::vector<SharedVector>> eigen_cis_;
-
     /// Singles (T1) percentage
     std::vector<std::vector<std::pair<int,double>>> t1_percentage_;
 
-    /// Compute the T1%
-    void compute_t1_percentage();
+    /// Dominant determinants
+    std::vector<std::vector<STLBitsetDeterminant>> dominant_dets_;
+
+    /// Compute the excitaion type based on ref_det
+    std::string compute_ex_type(const STLBitsetDeterminant& det1, const STLBitsetDeterminant& ref_det);
 
     /// Print summary
     void print_summary();
