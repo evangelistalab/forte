@@ -2,7 +2,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                               Psi4 (no tag) Driver
 
-                          Git: Rev {master} d8d4a3e 
+                          Git: Rev {detached?} 7a17eb9 dirty
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -16,10 +16,10 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sat Oct  3 22:12:41 2015
+    Psi4 started on: Fri Jan 22 16:49:16 2016
 
-    Process ID:  52408
-    PSI4DATADIR: /Users/jeffschriber/Source/psi4/lib
+    Process ID:  20724
+    PSI4DATADIR: /Users/jeffschriber/src/psi4/lib
     Memory level set to 256.000 MB
 
   ==> Input File <==
@@ -58,6 +58,7 @@ set forte {
   SELECT_TYPE amp
   TAUP 0.01000
   TAUQ 0.001000
+  enforce_spin_complete false
   nroot 1
   charge 0
 }
@@ -70,7 +71,7 @@ energy('forte')
 compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
 --------------------------------------------------------------------------
-/Users/jeffschriber/Source/forte/forte.so loaded.
+/Users/jeffschriber/src/forte/forte.so loaded.
 
          ------------------------------------------
            MCSCF: a self-consistent field program
@@ -184,17 +185,17 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
   MCSCF Execution Completed.
 
 
-*** tstop() called on Jeffs-MacBook-Pro.local at Sat Oct  3 22:12:41 2015
+*** tstop() called on Jeffs-MBP.attlocal.net at Fri Jan 22 16:49:16 2016
 Module time:
-	user time   =       0.19 seconds =       0.00 minutes
-	system time =       0.07 seconds =       0.00 minutes
-	total time  = 1443924761 seconds = 24065412.68 minutes
+	user time   =       0.24 seconds =       0.00 minutes
+	system time =       0.08 seconds =       0.00 minutes
+	total time  = 1453499356 seconds = 24224989.27 minutes
 Total time:
-	user time   =       0.19 seconds =       0.00 minutes
-	system time =       0.07 seconds =       0.00 minutes
-	total time  = 1443924761 seconds = 24065412.68 minutes
+	user time   =       0.24 seconds =       0.00 minutes
+	system time =       0.08 seconds =       0.00 minutes
+	total time  = 1453499356 seconds = 24224989.27 minutes
 Reading options from the FORTE block
-Calling plugin /Users/jeffschriber/Source/forte/forte.so.
+Calling plugin /Users/jeffschriber/src/forte/forte.so.
 
 
   ==> MO Space Information <==
@@ -219,7 +220,9 @@ Calling plugin /Users/jeffschriber/Source/forte/forte.so.
   Number of frozen unoccupied orbitals:        0
 
 
- Overall Conventional Integrals timings	Presorting SO-basis two-electron integrals.
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
 	Sorting File: SO Ints (nn|nn) nbuckets = 1
 	Transforming the one-electron integrals and constructing Fock matrices
 	Starting first half-transformation.
@@ -228,250 +231,351 @@ Calling plugin /Users/jeffschriber/Source/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00792700 s
+  Integral transformation done. 0.01272300 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB
- Conventional integrals take 0.01103000 s
-  Total electrons: 6
-  Number of active electrons: 6
-  nalpha: 3
-  nbeta:  3 
+  Conventional integrals take 0.02193500 s
+
+                    ---------------------------------------
+                      Adaptive Configuration Interaction
+                      written by Francesco A. Evangelista
+                    ---------------------------------------
+
+  ==> Reference Information <==
 
   There are 0 frozen orbitals.
   There are 20 active orbitals.
-  Using RHF reference.
 
-  Electron removed from 1, out of 6
-  Need orbital of symmetry 0
-  Added electron to 1
-  The reference determinant is:
-
-  |1100000000100000000011000000001000000000>
-  The reference energy is -14.83984651
-
+  |22000000002000000000>
+  REFERENCE ENERGY:         -14.839846512738
   ==> Calculation Information <==
 
-  ----------------------------------------------------
-    Symmetry                                       0
-    Number of roots                                1
-    Root used for properties                       0
-    P-threshold                             1.00e-02
-    Q-threshold                             1.00e-03
-    Convergence threshold                   1.00e-10
-    Determinant selection criterion         First-order Coefficients
-    Selection criterion                     Threshold
-    PQ Function                             AVERAGE
-    Q Type                                  Absolute Energy
-    PT2 Parameters                          False
-  ----------------------------------------------------
-
-  Iterative Adaptive CI
-  The model space contains 1 determinants
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Root used for properties                 0    
+    P-threshold                              1.00e-02
+    Q-threshold                              1.00e-03
+    Convergence threshold                    1.00e-10
+    Determinant selection criterion          First-order Coefficients
+    Selection criterion                      Threshold
+    PQ Function                              AVERAGE
+    Q Type                                   Absolute Energy
+    PT2 Parameters                           False
+    Project out spin contaminants            True
+    Enforce spin completeness of basis       False
+    Enforce complete aimed selection         True
+  -----------------------------------------------------------------
 
   ==> Cycle 0 <==
 
   Initial P space dimension: 1
  Not checking for spin-completeness.
-  Time spent diagonalizing H using Full: 0.000008 s
+  Time spent diagonalizing H:   0.000055 s
   Not performing spin projection.
 
     P-space  CI Energy Root   1        = -14.839846512738 Eh =   0.0000 eV
 
-  Dimension of the SD space: 687 determinants
-  Time spent building the model space: 0.000239 s
+  Dimension of the SD space: 661 determinants
+  Time spent building the model space: 0.001885 s
 
   Using non-perturbative energy estimates
   Dimension of the P + Q space: 223 determinants
-  Time spent screening the model space: 0.000989 s
+  Time spent screening the model space: 0.004939 s
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 10185 nonzero elements out of 49729 (0.204810)
-  Time spent building H (openmp): 0.005803 s
-  The Davidson-Liu algorithm converged in 14 iterations.
-  Time spent diagonalizing H: 0.001054 s
+  Davidson-liu solver algorithm
+  Generating determinants with N-1 electrons.
+
+  Memory for single-hole lists: 0.012760 MB
+  Memory for single-hole maps:  0.040054 MB
+  Generating determinants with N-2 electrons.
+
+  Memory for double-hole lists: 0.038280 MB
+  Memory for double-hole maps:  0.059242 MB
+  number of guess vectors: 2
+  Initial guess found 14 solutions with 2S+1 = 1 *
+  Initial guess found 6 solutions with 2S+1 = 3  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.252171134824  -1.725e+01
+      2      -17.268741353014  -1.657e-02
+      3      -17.269059183283  -3.178e-04
+      4      -17.269086158106  -2.697e-05
+      5      -17.269090531850  -4.374e-06
+      6      -17.269091046582  -5.147e-07
+      7      -17.269091130888  -8.431e-08
+      8      -17.269091145200  -1.431e-08
+      9      -17.269091148211  -3.011e-09
+     10      -17.269091148672  -4.611e-10
+     11      -17.269091148750  -7.736e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+  Time spent diagonalizing H:   0.068219 s
   Not performing spin projection.
 
-    PQ-space CI Energy Root   1        = -14.887793710112 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -14.888142689412 Eh =   0.0000 eV
+    PQ-space CI Energy Root   1        = -14.887793710095 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -14.888142689394 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0   0.945198 0.893399715           0 |11000000001000000000|11000000001000000000>
-    1  -0.141633 0.020060042         213 |10000000001000000010|10000000001000000010>
-    2  -0.141633 0.020060042          54 |10000000001000001000|10000000001000001000>
-    3  -0.096283 0.009270399         221 |10000000001000000001|10000000001000000010>
-    4  -0.096283 0.009270399         222 |10000000001000000100|10000000001000001000>
-    5  -0.096283 0.009270399         167 |10000000001000001000|10000000001000000100>
-    6  -0.096283 0.009270399          52 |10000000001000000010|10000000001000000001>
-    7  -0.067948 0.004616873         178 |10000000001000000001|10000000001000000001>
-    8  -0.067948 0.004616873         177 |10000000001000000100|10000000001000000100>
-    9  -0.056086 0.003145691          74 |10010000001000000000|10010000001000000000>
+    0  -0.945201 0.893405473           0 |22000000002000000000>
+    1   0.141631 0.020059242          51 |20000000002000000020>
+    2   0.141631 0.020059242          53 |20000000002000002000>
+    3   0.096282 0.009270136         222 |200000000020000000-+>
+    4   0.096282 0.009270136          50 |200000000020000000+->
+    5   0.096282 0.009270136         145 |2000000000200000-+00>
+    6   0.096282 0.009270136         179 |2000000000200000+-00>
+    7   0.067947 0.004616755         193 |20000000002000000002>
+    8   0.067947 0.004616755         191 |20000000002000000200>
+    9   0.056087 0.003145765          73 |20020000002000000000>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 221 determinants, 95.99)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 223 determinants, 100.00)
 
   ==> Cycle 1 <==
 
   Initial P space dimension: 38
  Not checking for spin-completeness.
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 972 nonzero elements out of 1444 (0.673130)
-  Time spent building H (openmp): 0.000382 s
-  The Davidson-Liu algorithm converged in 14 iterations.
-  Time spent diagonalizing H: 0.000207 s
+  Time spent diagonalizing H:   0.002562 s
   Not performing spin projection.
 
     P-space  CI Energy Root   1        = -14.883654851818 Eh =   0.0000 eV
 
-  Dimension of the SD space: 11465 determinants
-  Time spent building the model space: 0.007332 s
+  Dimension of the SD space: 11503 determinants
+  Time spent building the model space: 0.098850 s
 
   Using non-perturbative energy estimates
   Dimension of the P + Q space: 256 determinants
-  Time spent screening the model space: 0.015784 s
+  Time spent screening the model space: 0.085398 s
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 11580 nonzero elements out of 65536 (0.176697)
-  Time spent building H (openmp): 0.006948 s
-  The Davidson-Liu algorithm converged in 16 iterations.
-  Time spent diagonalizing H: 0.001336 s
+  Davidson-liu solver algorithm
+  Generating determinants with N-1 electrons.
+
+  Memory for single-hole lists: 0.014648 MB
+  Memory for single-hole maps:  0.045700 MB
+  Generating determinants with N-2 electrons.
+
+  Memory for double-hole lists: 0.043945 MB
+  Memory for double-hole maps:  0.066872 MB
+  number of guess vectors: 2
+  Initial guess found 13 solutions with 2S+1 = 1 *
+  Initial guess found 7 solutions with 2S+1 = 3  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.248310045235  -1.725e+01
+      2      -17.269727168903  -2.142e-02
+      3      -17.270271246178  -5.441e-04
+      4      -17.270301068507  -2.982e-05
+      5      -17.270304834564  -3.766e-06
+      6      -17.270305291253  -4.567e-07
+      7      -17.270305369594  -7.834e-08
+      8      -17.270305379993  -1.040e-08
+      9      -17.270305381762  -1.769e-09
+     10      -17.270305382067  -3.057e-10
+     11      -17.270305382128  -6.006e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+  Time spent diagonalizing H:   0.086299 s
   Not performing spin projection.
 
-    PQ-space CI Energy Root   1        = -14.889007943485 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -14.890147346953 Eh =   0.0000 eV
+    PQ-space CI Energy Root   1        = -14.889007943473 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -14.890147346865 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0  -0.939997 0.883594235           0 |11000000001000000000|11000000001000000000>
-    1   0.150092 0.022527655          32 |10000000001000000010|10000000001000000010>
-    2   0.150092 0.022527655           3 |10000000001000001000|10000000001000001000>
-    3   0.102045 0.010413217          37 |10000000001000000100|10000000001000001000>
-    4   0.102045 0.010413217          36 |10000000001000000001|10000000001000000010>
-    5   0.102045 0.010413217          22 |10000000001000001000|10000000001000000100>
-    6   0.102045 0.010413217           2 |10000000001000000010|10000000001000000001>
-    7   0.069611 0.004845675          26 |10000000001000000001|10000000001000000001>
-    8   0.069611 0.004845675          25 |10000000001000000100|10000000001000000100>
-    9   0.054595 0.002980566          10 |10010000001000000000|10010000001000000000>
+    0  -0.939999 0.883598074           0 |22000000002000000000>
+    1   0.150106 0.022531861           5 |20000000002000002000>
+    2   0.150077 0.022522981           4 |20000000002000000020>
+    3   0.102054 0.010414926          30 |2000000000200000+-00>
+    4   0.102054 0.010414926          27 |2000000000200000-+00>
+    5   0.102033 0.010410741          37 |200000000020000000-+>
+    6   0.102033 0.010410741           3 |200000000020000000+->
+    7   0.069613 0.004845907          33 |20000000002000000200>
+    8   0.069600 0.004844093          34 |20000000002000000002>
+    9   0.054588 0.002979890          12 |20020000002000000000>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 256 determinants, 100.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 256 determinants, 100.00)
 
   ==> Cycle 2 <==
 
   Initial P space dimension: 41
  Not checking for spin-completeness.
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 1157 nonzero elements out of 1681 (0.688281)
-  Time spent building H (openmp): 0.000455 s
-  The Davidson-Liu algorithm converged in 14 iterations.
-  Time spent diagonalizing H: 0.000210 s
+  Time spent diagonalizing H:   0.002682 s
   Not performing spin projection.
 
     P-space  CI Energy Root   1        = -14.883751524570 Eh =   0.0000 eV
 
-  Dimension of the SD space: 11820 determinants
-  Time spent building the model space: 0.007492 s
+  Dimension of the SD space: 11861 determinants
+  Time spent building the model space: 0.109053 s
 
   Using non-perturbative energy estimates
   Dimension of the P + Q space: 260 determinants
-  Time spent screening the model space: 0.016210 s
+  Time spent screening the model space: 0.090622 s
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 11822 nonzero elements out of 67600 (0.174882)
-  Time spent building H (openmp): 0.007410 s
-  The Davidson-Liu algorithm converged in 16 iterations.
-  Time spent diagonalizing H: 0.001350 s
+  Davidson-liu solver algorithm
+  Generating determinants with N-1 electrons.
+
+  Memory for single-hole lists: 0.014877 MB
+  Memory for single-hole maps:  0.046234 MB
+  Generating determinants with N-2 electrons.
+
+  Memory for double-hole lists: 0.044632 MB
+  Memory for double-hole maps:  0.067329 MB
+  number of guess vectors: 2
+  Initial guess found 13 solutions with 2S+1 = 1 *
+  Initial guess found 7 solutions with 2S+1 = 3  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.248310045235  -1.725e+01
+      2      -17.269743581672  -2.143e-02
+      3      -17.270292753652  -5.492e-04
+      4      -17.270322634283  -2.988e-05
+      5      -17.270326420888  -3.787e-06
+      6      -17.270326880920  -4.600e-07
+      7      -17.270326960565  -7.964e-08
+      8      -17.270326971224  -1.066e-08
+      9      -17.270326973041  -1.817e-09
+     10      -17.270326973357  -3.158e-10
+     11      -17.270326973419  -6.222e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+  Time spent diagonalizing H:   0.084551 s
   Not performing spin projection.
 
-    PQ-space CI Energy Root   1        = -14.889029534777 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -14.890144527518 Eh =   0.0000 eV
+    PQ-space CI Energy Root   1        = -14.889029534764 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -14.890144527185 Eh =   0.0000 eV
 
 
   Most important contributions to root   0:
-    0  -0.939963 0.883530182           0 |11000000001000000000|11000000001000000000>
-    1   0.150057 0.022517052           3 |10000000001000001000|10000000001000001000>
-    2   0.150057 0.022517052          32 |10000000001000000010|10000000001000000010>
-    3   0.102074 0.010419057          36 |10000000001000000001|10000000001000000010>
-    4   0.102074 0.010419057          37 |10000000001000000100|10000000001000001000>
-    5   0.102074 0.010419057          22 |10000000001000001000|10000000001000000100>
-    6   0.102074 0.010419057           2 |10000000001000000010|10000000001000000001>
-    7   0.069870 0.004881798          25 |10000000001000000100|10000000001000000100>
-    8   0.069870 0.004881798          26 |10000000001000000001|10000000001000000001>
-    9   0.054574 0.002978298          10 |10010000001000000000|10010000001000000000>
+    0  -0.939965 0.883534205           0 |22000000002000000000>
+    1   0.150071 0.022521197           5 |20000000002000002000>
+    2   0.150041 0.022512317           4 |20000000002000000020>
+    3   0.102082 0.010420812          30 |2000000000200000+-00>
+    4   0.102082 0.010420812          27 |2000000000200000-+00>
+    5   0.102061 0.010416495          37 |200000000020000000-+>
+    6   0.102061 0.010416495           3 |200000000020000000+->
+    7   0.069872 0.004882100          33 |20000000002000000200>
+    8   0.069859 0.004880211          34 |20000000002000000002>
+    9   0.054567 0.002977612          12 |20020000002000000000>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 260 determinants, 100.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 260 determinants, 100.00)
 
   ==> Cycle 3 <==
 
   Initial P space dimension: 41
  Not checking for spin-completeness.
-
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 1157 nonzero elements out of 1681 (0.688281)
-  Time spent building H (openmp): 0.000469 s
-  The Davidson-Liu algorithm converged in 14 iterations.
-  Time spent diagonalizing H: 0.000208 s
+  Time spent diagonalizing H:   0.002935 s
   Not performing spin projection.
 
     P-space  CI Energy Root   1        = -14.883751524570 Eh =   0.0000 eV
 
-  Dimension of the SD space: 11820 determinants
-  Time spent building the model space: 0.007369 s
+  Dimension of the SD space: 11861 determinants
+  Time spent building the model space: 0.111284 s
 
   Using non-perturbative energy estimates
   Dimension of the P + Q space: 260 determinants
-  Time spent screening the model space: 0.016250 s
+  Time spent screening the model space: 0.093535 s
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 11822 nonzero elements out of 67600 (0.174882)
-  Time spent building H (openmp): 0.007322 s
-  The Davidson-Liu algorithm converged in 16 iterations.
-  Time spent diagonalizing H: 0.001361 s
+  Davidson-liu solver algorithm
+  Generating determinants with N-1 electrons.
+
+  Memory for single-hole lists: 0.014877 MB
+  Memory for single-hole maps:  0.046234 MB
+  Generating determinants with N-2 electrons.
+
+  Memory for double-hole lists: 0.044632 MB
+  Memory for double-hole maps:  0.067329 MB
+  number of guess vectors: 2
+  Initial guess found 13 solutions with 2S+1 = 1 *
+  Initial guess found 7 solutions with 2S+1 = 3  
+  Adding guess 0 (multiplicity = 1.000000)
+  Adding guess 1 (multiplicity = 1.000000)
+
+  ==> Diagonalizing Hamiltonian <==
+
+  ----------------------------------------
+    Iter.      Avg. Energy       Delta_E
+  ----------------------------------------
+      1      -17.248310045235  -1.725e+01
+      2      -17.269743581672  -2.143e-02
+      3      -17.270292753652  -5.492e-04
+      4      -17.270322634283  -2.988e-05
+      5      -17.270326420888  -3.787e-06
+      6      -17.270326880920  -4.600e-07
+      7      -17.270326960565  -7.964e-08
+      8      -17.270326971224  -1.066e-08
+      9      -17.270326973041  -1.817e-09
+     10      -17.270326973357  -3.158e-10
+     11      -17.270326973419  -6.222e-11
+  ----------------------------------------
+  The Davidson-Liu algorithm converged in 12 iterations.
+  Time spent diagonalizing H:   0.088058 s
   Not performing spin projection.
 
-    PQ-space CI Energy Root   1        = -14.889029534777 Eh =   0.0000 eV
-    PQ-space CI Energy + EPT2 Root   1 = -14.890144527518 Eh =   0.0000 eV
+    PQ-space CI Energy Root   1        = -14.889029534764 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   1 = -14.890144527185 Eh =   0.0000 eV
 
-
-  ==> Post-Iterations <==
-
+  ***** Calculation Converged *****
   Not performing spin projection.
-  Printing Wavefunction Information
+  1-RDM  took 0.002244 s
+
+  ==> ACI Summary <==
+
+  Iterations required:                         3
+  Dimension of optimized determinant space:    260
+
+  * Adaptive-CI Energy Root   1        = -14.889029534764 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   1 + EPT2 = -14.890144527185 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
 
   Most important contributions to root   0:
-    0  -0.939963 0.883530182           0 |11000000001000000000|11000000001000000000>
-    1   0.150057 0.022517052           3 |10000000001000001000|10000000001000001000>
-    2   0.150057 0.022517052          32 |10000000001000000010|10000000001000000010>
-    3   0.102074 0.010419057          36 |10000000001000000001|10000000001000000010>
-    4   0.102074 0.010419057          37 |10000000001000000100|10000000001000001000>
-    5   0.102074 0.010419057          22 |10000000001000001000|10000000001000000100>
-    6   0.102074 0.010419057           2 |10000000001000000010|10000000001000000001>
-    7   0.069870 0.004881798          25 |10000000001000000100|10000000001000000100>
-    8   0.069870 0.004881798          26 |10000000001000000001|10000000001000000001>
-    9   0.054574 0.002978298          10 |10010000001000000000|10010000001000000000>
+    0  -0.939965 0.883534205           0 |22000000002000000000>
+    1   0.150071 0.022521197           5 |20000000002000002000>
+    2   0.150041 0.022512317           4 |20000000002000000020>
+    3   0.102082 0.010420812          30 |2000000000200000+-00>
+    4   0.102082 0.010420812          27 |2000000000200000-+00>
+    5   0.102061 0.010416495          37 |200000000020000000-+>
+    6   0.102061 0.010416495           3 |200000000020000000+->
+    7   0.069872 0.004882100          33 |20000000002000000200>
+    8   0.069859 0.004880211          34 |20000000002000000002>
+    9   0.054567 0.002977612          12 |20020000002000000000>
 
- Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 260 determinants, 100.00)
+  Spin state for root 0: S^2 = 0.000, S = 0.000, singlet (from 260 determinants, 100.00)
 
      Order		 # of Dets        Total |c^2|   
   __________ 	____________   ________________ 
-      0			      10		0.88379013888
-      1			     195		0.11604821437
-      2			      55		0.00016164674
+       0                  1           0.88353420506
+       1                 12           0.00050925470
+       2                195           0.11580020069
+       3                  0           0.00000000000
+       4                 52           0.00015633954
 
- Highest-order excitation searched:     8  
+  Highest-order excitation searched:     8  
 
-  * Adaptive-CI Energy Root   1        = -14.889029534777 Eh =   0.0000 eV
-  * Adaptive-CI Energy Root   1 + EPT2 = -14.890144527518 Eh =   0.0000 eV
 
-  Adaptive-CI (bitset) ran in : 0.141519 s
+  Adaptive-CI (bitset) ran in : 1.297817 s
 
   Saving information for root: 1
- Your calculation took 0.25611400 seconds
+
+  Your calculation took 1.40334300 seconds
+
 *** PSI4 exiting successfully. Buy a developer a beer!
