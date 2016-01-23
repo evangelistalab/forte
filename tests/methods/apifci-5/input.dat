@@ -4,7 +4,7 @@
 import forte
 
 refscf = -108.3243829450626947 #TEST
-refapifci = -108.638029331115 #TEST
+refapifci = -108.638029332209 #TEST
 
 molecule N2{
    N
@@ -39,4 +39,4 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refapifci, get_variable("APIFCI ENERGY"), 11, "APIFCI energy") #TEST
+compare_values(refapifci, get_variable("APIFCI ENERGY"), 9, "APIFCI energy") #TEST

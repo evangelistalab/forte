@@ -79,7 +79,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 	if( print_details ){
 		outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
 	}
-
+    double s_map_size = 0.0;
     // Generate alpha annihilation
     {
 	    det_hash map_a_ann;
@@ -117,6 +117,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             a_ann_list[I] = a_ann;
         }
         a_cre_list.resize(map_a_ann.size());
+        s_map_size += ( 32. + sizeof(size_t) ) * map_a_ann.size();
     }
         // Generate beta annihilation
     {
@@ -152,6 +153,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             b_ann_list[I] = b_ann;
         }
         b_cre_list.resize(map_b_ann.size());
+        s_map_size += ( 32. + sizeof(size_t) ) * map_b_ann.size();
     }
 
     size_t num_tuples_sigles = 0;
@@ -178,14 +180,17 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",b_ann_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
+	if( print_details ){
+		outfile->Printf("\n  Memory for single-hole lists: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
+		outfile->Printf("\n  Memory for single-hole maps:  %f MB", s_map_size / (1024. * 1024.) ); // Convert to MB
 
-	if(print_details){
 		outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
 	}
 
 
         // Generate alpha-alpha annihilation
-   {
+    double d_map_size = 0.0; 
+    {
 	    det_hash map_aa_ann;
         for (size_t I = 0; I < max_I; ++I){
             STLBitsetDeterminant detI = space[I];
@@ -224,6 +229,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             aa_ann_list[I] = aa_ann;
         }
         aa_cre_list.resize(map_aa_ann.size());
+        d_map_size += ( 32. + sizeof(size_t) ) * map_aa_ann.size();
     }
       // Generate beta-beta annihilation
     {
@@ -264,6 +270,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             bb_ann_list[I] = bb_ann;
         }
         bb_cre_list.resize(map_bb_ann.size());
+        d_map_size += ( 32. + sizeof(size_t) ) * map_bb_ann.size();
     }
       // Generate alpha-beta annihilation
     {
@@ -304,6 +311,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             ab_ann_list[I] = ab_ann;
         }
         ab_cre_list.resize(map_ab_ann.size());
+        d_map_size += ( 32. + sizeof(size_t) ) * map_ab_ann.size();
     }
 
     size_t num_tuples_doubles = 0;
@@ -345,8 +353,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",bb_cre_list.size());
 	
 	if( print_details ){
-		outfile->Printf("\n  Memory for singles: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
-		outfile->Printf("\n  Memory for doubles: %f MB",double(mem_tuple_doubles) / (1024. * 1024.) );
+		outfile->Printf("\n  Memory for double-hole lists: %f MB",double(mem_tuple_doubles) / (1024. * 1024.) );
+		outfile->Printf("\n  Memory for double-hole maps:  %f MB",d_map_size/ (1024. * 1024.) );
 	}
 }
 
