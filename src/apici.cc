@@ -789,6 +789,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         new_max_two_HJI_ = 0.0;
     }
 
+//    propagate_Polynomial(dets, C, cha_func_coefs_, spawning_threshold);
+
     // Evaluate (1-beta H) |C>
     if (propagator == LinearPropagator){
         propagate_first_order(dets,C,tau,spawning_threshold,S);
@@ -883,7 +885,34 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
 
 void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold)
 {
-    double order = coef.size() - 1;
+    int order = coef.size() - 1;
+    if (order <= 0)
+        return;
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    det_hash<> dets_sum_map;
+    // A vector of maps that hold (determinant,coefficient)
+
+    // Term 1. |n>
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_sum_map[dets[I]] = coef[0] * C[I];
+    }
+
+    apply_tau_H(coef[1],spawning_threshold,dets,C,dets_C_hash,0.0);
+    // Add this term to the total vector
+    combine_hashes(dets_C_hash,dets_sum_map);
+
+    for (int j = 2; j <= order; ++j){
+        // Copy the wave function to a vector
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
+
+        // Add this term to the total vector
+        combine_hashes(dets_C_hash,dets_sum_map);
+
+    }
+    copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
 void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
