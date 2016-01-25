@@ -229,7 +229,7 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     /// Form Density Matrix
-    void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
+    void FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B);
     /// Check Density Matrix
     bool CheckDensity();
 
