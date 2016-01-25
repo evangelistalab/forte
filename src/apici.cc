@@ -178,6 +178,7 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "POWER"){
         propagator_ = PowerPropagator;
         propagator_description_ = "Power";
+        time_step_ = 1.0;
     }else if (options_.get_str("PROPAGATOR") == "OLSEN"){
         propagator_ = OlsenPropagator;
         propagator_description_ = "Olsen";
