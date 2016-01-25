@@ -268,7 +268,7 @@ void print_polynomial(std::vector<double>& coefs) {
     }
 }
 
-void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, double tau)
+void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, double tau, std::vector<double>& cha_func_coefs)
 {
     double high_obt_energy = 0.0;
     int ne = 0;
@@ -292,40 +292,37 @@ void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, dou
     shift_ = (lambda_h_ + lambda_2_)/2.0;
     range_ = tau*(lambda_h_ - lambda_2_)/2.0;
 
-    print_characteristic_function(propagator, tau, shift_, lambda_1_, lambda_2_, lambda_h_);
+    print_characteristic_function(propagator, tau, shift_, lambda_1_, lambda_2_, lambda_h_, cha_func_coefs);
 }
 
-void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h)
+void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs)
 {
-    std::vector<double> coefs;
     switch (propagator_) {
     case PowerPropagator:
-        coefs.push_back(-S);
-        coefs.push_back(1.0);
+        cha_func_coefs.push_back(-S);
+        cha_func_coefs.push_back(1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(coefs, 1, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 1, tau, S);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(coefs, 2, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 2, tau, S);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(coefs, 3, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 3, tau, S);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(coefs, 4, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 4, tau, S);
         break;
     case ChebyshevPropagator:
-        Chebyshev_propagator_coefs(coefs, chebyshev_order_, tau, S, range_);
+        Chebyshev_propagator_coefs(cha_func_coefs, chebyshev_order_, tau, S, range_);
         break;
     default:
         break;
     }
     outfile->Printf("\n\n  ==> Characteristic Function <==");
-    print_polynomial(coefs);
-    outfile->Printf("\n    with tau = %e, shift = %.12f", tau, S);
-    if (propagator_ == ChebyshevPropagator)
-        outfile->Printf(", range = %.12f", range_);
+    print_polynomial(cha_func_coefs);
+    outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", tau, S, range_);
     outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1 >= 0.0 ? " " : "", lambda_1);
     outfile->Printf("\n                   lambda_2= %s%.12f", lambda_2 >= 0.0 ? " " : "", lambda_2);
     outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h >= 0.0 ? " " : "", lambda_h);
@@ -558,7 +555,7 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
-    convergence_analysis(propagator_, time_step_);
+    convergence_analysis(propagator_, time_step_, cha_func_coefs_);
 
 //    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
 //        print_characteristic_function(propagator_, time_step_, power_shift, var_energy, 0.0, max_energy);
@@ -882,6 +879,11 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold)
+{
+    double order = coef.size() - 1;
 }
 
 void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
