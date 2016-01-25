@@ -456,7 +456,7 @@ double DSRG_MRPT2::compute_energy()
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
-    outfile->Printf("\n\n\n Energy took %8.8f s", DSRG_energy.get());
+    outfile->Printf("\n\n  Energy took %8.8f s", DSRG_energy.get());
 
     return Etotal;
 }

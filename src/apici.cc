@@ -268,37 +268,61 @@ void print_polynomial(std::vector<double>& coefs) {
     }
 }
 
-void AdaptivePathIntegralCI::print_characteristic_function(double tau, double S, double lambda_1, double lambda_2, double lambda_h)
+void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, double tau, std::vector<double>& cha_func_coefs)
 {
-    std::vector<double> coefs;
+    double high_obt_energy = 0.0;
+    int ne = 0;
+    auto bits_ = reference_determinant_.bits_;
+    for (int i = 0; i < ncmo_; i++) {
+        if (bits_[i]) ++ne;
+        if (bits_[ncmo_ +i]) ++ne;
+
+        double temp  = fci_ints_->oei_a(i,i);
+        for(int p = 0; p < ncmo_; ++p){
+            if(bits_[p]){
+                temp += fci_ints_->tei_aa(i,p,i,p);
+            }
+            if(bits_[ncmo_ +p]){
+                temp += fci_ints_->tei_ab(i,p,i,p);
+            }
+        }
+        if (temp > high_obt_energy) high_obt_energy = temp;
+    }
+    lambda_h_ = high_obt_energy * ne;
+    shift_ = (lambda_h_ + lambda_2_)/2.0;
+    range_ = tau*(lambda_h_ - lambda_2_)/2.0;
+
+    print_characteristic_function(propagator, tau, shift_, lambda_1_, lambda_2_, lambda_h_, cha_func_coefs);
+}
+
+void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs)
+{
     switch (propagator_) {
     case PowerPropagator:
-        coefs.push_back(-S);
-        coefs.push_back(1.0);
+        cha_func_coefs.push_back(-S);
+        cha_func_coefs.push_back(1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(coefs, 1, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 1, tau, S);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(coefs, 2, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 2, tau, S);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(coefs, 3, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 3, tau, S);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(coefs, 4, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs, 4, tau, S);
         break;
     case ChebyshevPropagator:
-        Chebyshev_propagator_coefs(coefs, chebyshev_order_, tau, S, range_);
+        Chebyshev_propagator_coefs(cha_func_coefs, chebyshev_order_, tau, S, range_);
         break;
     default:
         break;
     }
     outfile->Printf("\n\n  ==> Characteristic Function <==");
-    print_polynomial(coefs);
-    outfile->Printf("\n    with tau = %e, shift = %.12f", tau, S);
-    if (propagator_ == ChebyshevPropagator)
-        outfile->Printf(", range = %.12f", range_);
+    print_polynomial(cha_func_coefs);
+    outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", tau, S, range_);
     outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1 >= 0.0 ? " " : "", lambda_1);
     outfile->Printf("\n                   lambda_2= %s%.12f", lambda_2 >= 0.0 ? " " : "", lambda_2);
     outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h >= 0.0 ? " " : "", lambda_h);
@@ -508,34 +532,17 @@ double AdaptivePathIntegralCI::compute_energy()
 //    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
 //    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
 
-    double high_obt_energy = 0.0;
-    int ne = 0;
-    auto bits_ = reference_determinant_.bits_;
-    for (int i = 0; i < ncmo_; i++) {
-        if (bits_[i]) ++ne;
-        if (bits_[nmo_ +i]) ++ne;
 
-        double temp  = fci_ints_->oei_a(i,i);
-        for(int p = 0; p < ncmo_; ++p){
-            if(bits_[p]){
-                temp += fci_ints_->tei_aa(i,p,i,p);
-            }
-            if(bits_[nmo_ +p]){
-                temp += fci_ints_->tei_ab(i,p,i,p);
-            }
-        }
-        if (temp > high_obt_energy) high_obt_energy = temp;
-    }
 //    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
 
-    double ref_energy = reference_determinant_.energy();
-//    outfile->Printf("\nreference energy:%.12lf", ref_energy);
-//    reference_determinant_.print();
-    double max_energy = high_obt_energy * ne;
-//    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
-    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
-    range_ = (power_shift-ref_energy)*1.2*time_step_;
-//    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
+//    double ref_energy = reference_determinant_.energy();
+////    outfile->Printf("\nreference energy:%.12lf", ref_energy);
+////    reference_determinant_.print();
+//    double max_energy = high_obt_energy * ne;
+////    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
+//    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
+//    range_ = (power_shift-ref_energy)*1.2*time_step_;
+////    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -548,11 +555,13 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
-    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-        print_characteristic_function(time_step_, power_shift, var_energy, 0.0, max_energy);
-    } else {
-        print_characteristic_function(time_step_, 0.0, var_energy, 0.0, max_energy);
-    }
+    convergence_analysis(propagator_, time_step_, cha_func_coefs_);
+
+//    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+//        print_characteristic_function(propagator_, time_step_, power_shift, var_energy, 0.0, max_energy);
+//    } else {
+//        print_characteristic_function(propagator_, time_step_, 0.0, var_energy, 0.0, max_energy);
+//    }
 
 
     // Main iterations
@@ -573,11 +582,11 @@ double AdaptivePathIntegralCI::compute_energy()
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
-        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
+//        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
 
-        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-            shift = power_shift;
-        }
+//        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
+//            shift = power_shift;
+//        }
 
         // Compute |n+1> = exp(-tau H)|n>
         timer_on("PIFCI:Step");
@@ -586,9 +595,9 @@ double AdaptivePathIntegralCI::compute_energy()
             double min_C_abs = fabs(*minmax_C.first);
             double max_C = *minmax_C.second;
             max_C = max_C > min_C_abs ? max_C : min_C_abs;
-            propagate(propagator_,dets,C,time_step_,spawning_threshold_ * max_C,shift);
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_ * max_C,shift_);
         } else {
-            propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift);
+            propagate(propagator_,dets,C,time_step_,spawning_threshold_,shift_);
         }
         timer_off("PIFCI:Step");
         if (propagator_ == DavidsonLiuPropagator) break;
@@ -715,16 +724,55 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_));
-    SharedVector evals(new Vector("Eigenvalues",nroot_));
+    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
+    SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
   //  std::vector<DynamicBitsetDeterminant> dyn_dets;
    // for (auto& d : dets){
      //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
       //  dyn_dets.push_back(dbs);
    // }
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DavidsonLiuList);
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
+    lambda_1_ = evals->get(current_root_);
+    lambda_2_ = evals->get(current_root_ + 1);
+    if (guess_size < 2)
+        lambda_2_ = lambda_1_ + e_convergence_;
+//    if (guess_size < 100) {
+//        apply_tau_H(time_step_,spawning_threshold_,guess_dets,{1.0},dets_C,0.0);
+
+//        // Save the list of determinants
+//        copy_hash_to_vec(dets_C,dets,C);
+
+//        size_t guess_size = dets.size();
+//        if (guess_size > max_guess_size_){
+//            // Consider the 1000 largest contributions
+//            std::vector<std::pair<double,size_t> > det_weight;
+//            for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
+//                det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
+//            }
+//            std::sort(det_weight.begin(),det_weight.end());
+//            std::reverse(det_weight.begin(),det_weight.end());
+
+//            det_vec new_dets;
+//            for (size_t sI = 0; sI < max_guess_size_; ++sI){
+//                size_t I = det_weight[sI].second;
+//                new_dets.push_back(dets[I]);
+//            }
+//            dets = new_dets;
+//            C.resize(guess_size);
+//            guess_size = dets.size();
+//        }
+
+//        SparseCISolver sparse_solver;
+//        sparse_solver.set_parallel(true);
+
+//        SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
+//        SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
+//        sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
+//        lambda_1_ = evals->get(current_root_);
+//        lambda_2_ = evals->get(current_root_ + 1);
+//    }
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I){
@@ -740,6 +788,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         new_max_one_HJI_ = 0.0;
         new_max_two_HJI_ = 0.0;
     }
+
+//    propagate_Polynomial(dets, C, cha_func_coefs_, spawning_threshold);
 
     // Evaluate (1-beta H) |C>
     if (propagator == LinearPropagator){
@@ -831,6 +881,38 @@ void AdaptivePathIntegralCI::propagate_power(det_vec& dets,std::vector<double>& 
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);
+}
+
+void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold)
+{
+    int order = coef.size() - 1;
+    if (order <= 0)
+        return;
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    det_hash<> dets_sum_map;
+    // A vector of maps that hold (determinant,coefficient)
+
+    // Term 1. |n>
+    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+        dets_sum_map[dets[I]] = coef[0] * C[I];
+    }
+
+    apply_tau_H(coef[1],spawning_threshold,dets,C,dets_C_hash,0.0);
+    // Add this term to the total vector
+    combine_hashes(dets_C_hash,dets_sum_map);
+
+    for (int j = 2; j <= order; ++j){
+        // Copy the wave function to a vector
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
+
+        // Add this term to the total vector
+        combine_hashes(dets_C_hash,dets_sum_map);
+
+    }
+    copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
 void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)

@@ -64,8 +64,20 @@ public:
     /// Set which root is preferred
     void set_root(const int& root) {root_ = root;}
 
+    /// Set active space type
+    void set_active_space_type(const string& act) {active_space_type_ = act;}
+
     /// Use whatever orbitals passed to this code
     void use_default_orbitals(const bool& default_orbitals) {default_orbitals_ = default_orbitals;}
+
+    /// Return the vector of determinants
+    vecdet p_space() {return determinant_;}
+
+    /// Return the vector of eigen vectors
+    vector<pair<SharedVector,double>> eigen() {return eigen_;}
+
+    /// Return the dominant determinant
+    STLBitsetDeterminant dominant_det() {return dominant_det_;}
 
     /// Set to use semicanonical
     void set_semicanonical(const bool& semi) {semi_ = semi;}
@@ -145,11 +157,15 @@ protected:
     long int nalfa_;
     long int nbeta_;
 
+    /// Active Space Type: CAS, CIS, CISD
+    string active_space_type_;
+
     /// Determinants
     void form_det();
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
+    STLBitsetDeterminant dominant_det_;
 
     /// Orbital Strings
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
@@ -213,7 +229,7 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     /// Form Density Matrix
-    void FormDensity(const vecdet &determinants, const int &root, d2 &A, d2 &B);
+    void FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B);
     /// Check Density Matrix
     bool CheckDensity();
 
