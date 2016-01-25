@@ -51,6 +51,9 @@ void FCI_MO::read_options(){
         outfile->Printf("\n  We suggest using unrestricted natural orbitals.");
     }
 
+    // active space type
+    active_space_type_ = options_.get_str("ACTIVE_SPACE_TYPE");
+
     // set orbitals
     semi_ = options_.get_bool("SEMI_CANONICAL");
 
@@ -243,12 +246,11 @@ double FCI_MO::compute_energy(){
     determinant_.clear();
 
     // form determinants
-    string active_space_type = options_.get_str("ACTIVE_SPACE_TYPE");
-    if(active_space_type == "COMPLETE"){
+    if(active_space_type_ == "COMPLETE"){
         form_det();
-    }else if(active_space_type == "CIS"){
+    }else if(active_space_type_ == "CIS"){
         form_det_cis();
-    }else if(active_space_type == "CISD"){
+    }else if(active_space_type_ == "CISD"){
         form_det_cisd();
 //        throw PSIEXCEPTION("Active-CISD is not implemented.");
     }
@@ -277,8 +279,16 @@ double FCI_MO::compute_energy(){
     }
     Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
+    // prepare ci_rdms for one density
+    int dim = (eigen_[0].first)->dim();
+    SharedMatrix evecs (new Matrix("evecs",dim,dim));
+    for(int i = 0; i < eigen_.size(); ++i){
+        evecs->set_column(0,i,(eigen_[i]).first);
+    }
+    CI_RDMS ci_rdms (options_,wfn_,fci_ints_,mo_space_info_,determinant_,evecs);
+
     // form density
-    FormDensity(determinant_, root_, Da_, Db_);
+    FormDensity(ci_rdms, root_, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
         print_d2("Db", Db_);
@@ -424,7 +434,7 @@ void FCI_MO::form_det_cis(){
     // singles
     Timer tdet;
     string str = "Forming determinants";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
@@ -488,7 +498,7 @@ void FCI_MO::form_det_cisd(){
     // singles
     Timer tdet;
     string str = "Forming determinants";
-    outfile->Printf("\n  %-35s ...", str.c_str());
+    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
     int i = symmetry ^ root_sym_;
     size_t single_size = string_singles[i].size();
@@ -742,12 +752,20 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         // Store CI Vectors in eigen_
         Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
+        // prepare ci_rdms for one density
+        int dim = (eigen_[0].first)->dim();
+        SharedMatrix evecs (new Matrix("evecs",dim,dim));
+        for(int i = 0; i < eigen_.size(); ++i){
+            evecs->set_column(0,i,(eigen_[i]).first);
+        }
+        CI_RDMS ci_rdms (options_,wfn_,fci_ints_,mo_space_info_,determinant_,evecs);
+
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
         Db_ = d2(ncmo_, d1(ncmo_));
         L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
         L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
-        FormDensity(determinant_, root_, Da_, Db_);
+        FormDensity(ci_rdms, root_, Da_, Db_);
         if(print_ > 1){
             print_d2("Da", Da_);
             print_d2("Db", Db_);
@@ -852,14 +870,16 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     }
 
     for(int i = 0; i != nroot; ++i){
-        vector<tuple<double, int>> ci_selec;
+        vector<tuple<double, int>> ci_selec; // tuple<coeff, index>
 
+        // choose CI coefficients greater than CI_threshold
         for(size_t j = 0; j < det.size(); ++j){
             double value = (eigen[i].first)->get(j);
             if(std::fabs(value) > CI_threshold)
                 ci_selec.push_back(make_tuple(value, j));
         }
         sort(ci_selec.begin(), ci_selec.end(), ReverseAbsSort);
+        dominant_det_ = det[get<1>(ci_selec[0])];
 
         if(!quiet_){outfile->Printf("\n  ==> Root No. %d <==\n", i);}
         for(size_t j = 0; j < ci_selec.size(); ++j){
@@ -893,7 +913,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     timer_off("STORE CI Vectors");
 }
 
-void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
+void FCI_MO::FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B){
     timer_on("FORM Density");
     Timer tdensity;
     std::string str = "Forming one-particle density";
@@ -905,6 +925,12 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
             B[np][np] = 1.0;
     }
 
+    size_t dim = na_ * na_;
+    vector<double> opdm_a (dim, 0.0);
+    vector<double> opdm_b (dim, 0.0);
+
+    ci_rdms.compute_1rdm(opdm_a,opdm_b,root);
+
     for(size_t p = 0; p < na_; ++p){
         size_t np = idx_a_[p];
         for(size_t q = p; q < na_; ++q){
@@ -912,27 +938,16 @@ void FCI_MO::FormDensity(const vecdet &dets, const int &root, d2 &A, d2 &B){
 
             if((sym_active_[p] ^ sym_active_[q]) != 0) continue;
 
-            size_t size = dets.size();
-            for(size_t ket = 0; ket != size; ++ket){
-                STLBitsetDeterminant Ja(vector<bool> (2*ncmo_)), Jb(vector<bool> (2*ncmo_));
-                double a = 1.0, b = 1.0, vket = (eigen_[root].first)->get(ket);
-                if(std::fabs(vket) < econv_)
-                    continue;
-                a *= OneOP(dets[ket],Ja,p,0,q,0) * vket;
-                b *= OneOP(dets[ket],Jb,p,1,q,1) * vket;
-                for(size_t bra = 0; bra != size; ++bra){
-                    double vbra = (eigen_[root].first)->get(bra);
-                    if(std::fabs(vbra) < econv_)
-                        continue;
-                    A[np][nq] += a * (dets[bra] == Ja) * vbra;
-                    B[np][nq] += b * (dets[bra] == Jb) * vbra;
-                }
-            }
+            size_t index = p * na_ + q;
+
+            A[np][nq] = opdm_a[index];
+            B[np][nq] = opdm_b[index];
+
             A[nq][np] = A[np][nq];
             B[nq][np] = B[np][nq];
         }
-
     }
+
     fill_density();
     if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdensity.get());}
     timer_off("FORM Density");
@@ -1008,22 +1023,6 @@ void FCI_MO::FormCumulant2AA(const vector<double> &tpdm_aa, const vector<double>
 
                     if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0) continue;
 
-//                    size_t size = dets.size();
-//                    for(size_t ket = 0; ket != size; ++ket){
-//                        STLBitsetDeterminant Jaa(vector<bool> (2*na_)), Jbb(vector<bool> (2*na_));
-//                        double aa = 1.0, bb = 1.0, vket = (eigen_[root].first)->get(ket);
-//                        if(std::fabs(vket) < econv_) continue;
-//                        aa *= TwoOP(dets[ket],Jaa,p,0,q,0,r,0,s,0) * vket;
-//                        bb *= TwoOP(dets[ket],Jbb,p,1,q,1,r,1,s,1) * vket;
-
-//                        for(size_t bra = 0; bra != size; ++bra){
-//                            double vbra = (eigen_[root].first)->get(bra);
-//                            if(std::fabs(vbra) < econv_) continue;
-//                            AA[p][q][r][s] += aa * (dets[bra] == Jaa) * vbra;
-//                            BB[p][q][r][s] += bb * (dets[bra] == Jbb) * vbra;
-//                        }
-//                    }
-
                     size_t index = p * dim3 + q * dim2 + r * na_ + s;
 
                     AA[p][q][r][s] += tpdm_aa[index];
@@ -1060,20 +1059,6 @@ void FCI_MO::FormCumulant2AB(const vector<double> &tpdm_ab, d4 &AB){
                     size_t ns = idx_a_[s];
 
                     if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s]) != 0) continue;
-
-//                    size_t size = dets.size();
-//                    for(size_t ket = 0; ket != size; ++ket){
-//                        STLBitsetDeterminant Jab(vector<bool> (2*ncmo_));
-//                        double ab = 1.0, vket = (eigen_[root].first)->get(ket);
-//                        if(std::fabs(vket) < econv_) continue;
-//                        ab *= TwoOP(dets[ket],Jab,p,0,q,1,r,0,s,1) * vket;
-
-//                        for(size_t bra = 0; bra != size; ++bra){
-//                            double vbra = (eigen_[root].first)->get(bra);
-//                            if(std::fabs(vbra) < econv_) continue;
-//                            AB[p][q][r][s] += ab * (dets[bra] == Jab) * vbra;
-//                        }
-//                    }
 
                     size_t index = p * dim3 + q * dim2 + r * na_ + s;
                     AB[p][q][r][s] += tpdm_ab[index];
@@ -1184,21 +1169,6 @@ void FCI_MO::FormCumulant3AAA(const vector<double> &tpdm_aaa, const vector<doubl
                             if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0) continue;
 
                             if(DC == "MK"){
-//                                size_t size = dets.size();
-//                                for(size_t ket = 0; ket != size; ++ket){
-//                                    STLBitsetDeterminant Jaaa(vector<bool> (2*ncmo_)), Jbbb(vector<bool> (2*ncmo_));
-//                                    double aaa = 1.0, bbb = 1.0, vket = (eigen_[root].first)->get(ket);
-//                                    if(std::fabs(vket) < econv_) continue;
-//                                    aaa *= ThreeOP(dets[ket],Jaaa,p,0,q,0,r,0,s,0,t,0,u,0) * vket;
-//                                    bbb *= ThreeOP(dets[ket],Jbbb,p,1,q,1,r,1,s,1,t,1,u,1) * vket;
-
-//                                    for(size_t bra = 0; bra != size; ++bra){
-//                                        double vbra = (eigen_[root].first)->get(bra);
-//                                        if(std::fabs(vbra) < econv_) continue;
-//                                        AAA[p][q][r][s][t][u] += aaa * (dets[bra] == Jaaa) * vbra;
-//                                        BBB[p][q][r][s][t][u] += bbb * (dets[bra] == Jbbb) * vbra;
-//                                    }
-//                                }
                                 size_t index = p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
 
                                 AAA[p][q][r][s][t][u] += tpdm_aaa[index];
@@ -1255,22 +1225,6 @@ void FCI_MO::FormCumulant3AAB(const vector<double> &tpdm_aab, const vector<doubl
                             if((sym_active_[p] ^ sym_active_[q] ^ sym_active_[r] ^ sym_active_[s] ^ sym_active_[t] ^ sym_active_[u]) != 0) continue;
 
                             if(DC == "MK"){
-//                                size_t size = dets.size();
-//                                for(size_t ket = 0; ket != size; ++ket){
-//                                    STLBitsetDeterminant Jaab(vector<bool> (2*ncmo_)), Jabb(vector<bool> (2*ncmo_));
-//                                    double aab = 1.0, abb = 1.0, vket = (eigen_[root].first)->get(ket);
-//                                    if(std::fabs(vket) < econv_) continue;
-//                                    aab *= ThreeOP(dets[ket],Jaab,p,0,q,0,r,1,s,0,t,0,u,1) * vket;
-//                                    abb *= ThreeOP(dets[ket],Jabb,r,0,p,1,q,1,u,0,s,1,t,1) * vket;
-
-//                                    for(size_t bra = 0; bra != size; ++bra){
-//                                        double vbra = (eigen_[root].first)->get(bra);
-//                                        if(std::fabs(vbra) < econv_) continue;
-//                                        AAB[p][q][r][s][t][u] += aab * (dets[bra] == Jaab) * vbra;
-//                                        ABB[r][p][q][u][s][t] += abb * (dets[bra] == Jabb) * vbra;
-//                                    }
-//                                }
-
                                 size_t index = p * dim5 + q * dim4 + r * dim3 + s * dim2 + t * na_ + u;
                                 AAB[p][q][r][s][t][u] += tpdm_aab[index];
 
