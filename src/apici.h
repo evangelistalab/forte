@@ -250,6 +250,8 @@ private:
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
+    /// Apply tau H to a subset of determinants
+    void apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
     std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening

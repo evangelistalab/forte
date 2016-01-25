@@ -789,28 +789,35 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         new_max_two_HJI_ = 0.0;
     }
 
-//    propagate_Polynomial(dets, C, cha_func_coefs_, spawning_threshold);
-
-    // Evaluate (1-beta H) |C>
-    if (propagator == LinearPropagator){
-        propagate_first_order(dets,C,tau,spawning_threshold,S);
-    }else if (propagator == TrotterLinear){
+    switch (propagator) {
+    case TrotterLinear:
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
-    }else if (propagator == ChebyshevPropagator){
-        propagate_Chebyshev(dets,C,tau,spawning_threshold,S);
-    }else if (propagator == QuadraticPropagator){
-        propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
-    }else if (propagator == CubicPropagator){
-        propagate_Taylor(3,dets,C,tau,spawning_threshold,S);
-    }else if (propagator == QuarticPropagator){
-        propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
-    }else if (propagator == PowerPropagator){
-        propagate_power(dets,C,spawning_threshold,S);
-    }else if (propagator == OlsenPropagator){
-        propagate_Olsen(dets,C,spawning_threshold,S);
-    }else if (propagator == DavidsonLiuPropagator){
-        propagate_DavidsonLiu(dets,C,spawning_threshold);
+        break;
+    default:
+        propagate_Polynomial(dets, C, cha_func_coefs_, spawning_threshold);
+        break;
     }
+
+//    // Evaluate (1-beta H) |C>
+//    if (propagator == LinearPropagator){
+//        propagate_first_order(dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == TrotterLinear){
+//        propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == ChebyshevPropagator){
+//        propagate_Chebyshev(dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == QuadraticPropagator){
+//        propagate_Taylor(2,dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == CubicPropagator){
+//        propagate_Taylor(3,dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == QuarticPropagator){
+//        propagate_Taylor(4,dets,C,tau,spawning_threshold,S);
+//    }else if (propagator == PowerPropagator){
+//        propagate_power(dets,C,spawning_threshold,S);
+//    }else if (propagator == OlsenPropagator){
+//        propagate_Olsen(dets,C,spawning_threshold,S);
+//    }else if (propagator == DavidsonLiuPropagator){
+//        propagate_DavidsonLiu(dets,C,spawning_threshold);
+//    }
 
     // Update prescreening boundary
     if (do_simple_prescreening_){
@@ -906,7 +913,8 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
         // Copy the wave function to a vector
         copy_hash_to_vec(dets_C_hash,dets,C);
         dets_C_hash.clear();
-        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
+//        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
+        apply_tau_H_subset(coef[j]/coef[j-1], dets, C, dets_C_hash, 0.0);
 
         // Add this term to the total vector
         combine_hashes(dets_C_hash,dets_sum_map);
@@ -1492,6 +1500,23 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
         }
     }
 
+}
+
+void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_hash, double S)
+{
+    size_t max_I = dets.size();
+#pragma omp parallel for
+    for (size_t I = 0; I < max_I; ++I){
+        double CI = 0.0;
+        for (size_t j = 0; j < max_I; ++j) {
+            CI += dets[I].slater_rules(dets[j]) * C[j];
+        }
+        CI *= tau;
+        #pragma omp critical
+        {
+            dets_C_hash[dets[I]] = CI;
+        }
+    }
 }
 
 std::pair<double,double> AdaptivePathIntegralCI::apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
