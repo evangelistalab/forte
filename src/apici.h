@@ -194,6 +194,8 @@ private:
     double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
+    /// Characteristic function coefficients
+    std::vector<double> cha_func_coefs_;
 
     // ==> Class functions <==
 
@@ -243,6 +245,8 @@ private:
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev propagator
     void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    /// The Polynomial propagator
+    void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
@@ -274,8 +278,8 @@ private:
     static bool have_omp_;
 
     /// Convergence estimation
-    void convergence_analysis(PropagatorType propagator, double tau);
-    void print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h);
+    void convergence_analysis(PropagatorType propagator, double tau, std::vector<double> &cha_func_coefs);
+    void print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs);
 };
 
 }} // End Namespaces
