@@ -78,7 +78,7 @@ void FiniteTemperatureHF::frac_occupation()
 {
     double T = 0.0;
     T = options_.get_double("TEMPERATURE");
-    if(debug_)
+    if(debug_ > 1)
     {
         outfile->Printf("\n Running a Temperature of %8.8f", T);
     }
@@ -212,7 +212,7 @@ double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
     double iterations = fabs(log(1e-10) / log(fabs(ef2 - ef1)));
     int max_iter = std::ceil(iterations);
 
-    if(debug_)
+    if(debug_ > 1)
     {
         outfile->Printf("\n In Bisection function HAMO = %6.3f  LAMO = %6.3f\n", ef1, ef2);
         outfile->Printf("\n Bisection should converged in %d iterations", max_iter);
@@ -229,7 +229,7 @@ double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
         {
              break;
         }
-        if(debug_)
+        if(debug_ > 1)
         {
             outfile->Printf("\n %d %d %8.8f  %8.8f", iter, naelec, std::fabs(sum - naelec), ef);
         }
@@ -266,7 +266,7 @@ double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
     sumef = 0.0;
     ni = nibisect;
     int count = 0;
-    if(debug_)
+    if(debug_ > 2)
     {
         for(auto occupancy: nibisect){
             sumef+=occupancy;

@@ -160,15 +160,30 @@ double SA_FCISolver::compute_energy()
         {
             L1a_sa("u, v") += casscf_ref.L1a()("u, v");
             L1b_sa("u, v") += casscf_ref.L1b()("u, v");
-            L2aa_sa("u, v, x, y") += casscf_ref.L2aa()("u, v, x, y");
-            L2ab_sa("u, v, x, y") += casscf_ref.L2ab()("u, v, x, y");
-            L2bb_sa("u, v, x, y") += casscf_ref.L2bb()("u, v, x, y");
+            L2aa_sa("u, v, x, y") += casscf_ref.g2aa()("u, v, x, y");
+            L2ab_sa("u, v, x, y") += casscf_ref.g2ab()("u, v, x, y");
+            L2bb_sa("u, v, x, y") += casscf_ref.g2bb()("u, v, x, y");
         }
+        //sa_cas.set_g2ab(L2ab);
+        //sa_cas.set_g2bb(L2bb);
+
+        /// You need to first get SA RDM and use those to convert to sa-cumulants.
         L1a_sa.scale(1.0 / number_of_states_);
         L1b_sa.scale(1.0 / number_of_states_);
         L2aa_sa.scale(1.0 / number_of_states_);
         L2ab_sa.scale(1.0 / number_of_states_);
         L2bb_sa.scale(1.0 / number_of_states_);
+
+        L2aa_sa("pqrs") -= L1a_sa("pr") * L1a_sa("qs");
+        L2aa_sa("pqrs") += L1a_sa("ps") * L1a_sa("qr");
+
+        L2ab_sa("pqrs") -= L1a_sa("pr") * L1b_sa("qs");
+
+        L2bb_sa("pqrs") -= L1b_sa("pr") * L1b_sa("qs");
+        L2bb_sa("pqrs") += L1b_sa("ps") * L1b_sa("qr");
+
+
+
         sa_cas.set_L1a(L1a_sa);
         sa_cas.set_L1b(L1b_sa);
         sa_cas.set_L2aa(L2aa_sa);
