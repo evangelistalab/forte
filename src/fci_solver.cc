@@ -481,7 +481,7 @@ double FCISolver::compute_energy()
         if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",root_);
         C_->compute_rdms(max_rdm_level_);
 
-        if(print_ > 1){C_->energy_from_rdms(fci_ints);}
+        if(print_ > 1 && max_rdm_level_ > 1){C_->energy_from_rdms(fci_ints);}
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
