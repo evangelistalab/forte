@@ -54,6 +54,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Delta_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
@@ -189,11 +190,14 @@ void AdaptivePathIntegralCI::startup()
         propagator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    }else if (options_.get_str("PROPAGATOR") == "CHEBYSHEV"){
-        propagator_ = ChebyshevPropagator;
-        propagator_description_ = "Chebyshev";
+    }else if (options_.get_str("PROPAGATOR") == "EXP-CHEBYSHEV"){
+        propagator_ = ExpChebyshevPropagator;
+        propagator_description_ = "Exp-Chebyshev";
         // Make sure that do_shift_ is set to true
 //        do_shift_ = true;
+    }else if (options_.get_str("PROPAGATOR") == "DELTA-CHEBYSHEV"){
+        propagator_ = DeltaChebyshevPropagator;
+        propagator_description_ = "Delta-Chebyshev";
     }
 
     num_threads_ = omp_get_max_threads();
@@ -220,7 +224,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Energy estimate tollerance",energy_estimate_threshold_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Propagator type",propagator_description_},        
+        {"Propagator type",propagator_description_},
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy",do_shift_ ? "YES" : "NO"},
         {"Use intermediate normalization", use_inter_norm_ ? "YES" : "NO"},
@@ -315,9 +319,11 @@ void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propag
     case QuarticPropagator:
         Taylor_propagator_coefs(cha_func_coefs, 4, tau, S);
         break;
-    case ChebyshevPropagator:
+    case ExpChebyshevPropagator:
         Chebyshev_propagator_coefs(cha_func_coefs, chebyshev_order_, tau, S, range_);
         break;
+    case DeltaChebyshevPropagator:
+        Delta_propagator_coefs(cha_func_coefs, chebyshev_order_, tau, S, range_);
     default:
         break;
     }
@@ -425,6 +431,28 @@ void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double ta
 //        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
             poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
+        }
+//        outfile->Printf("\n\n  propagate poly in step %d", i);
+//        print_polynomial(poly_coefs);
+    }
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+}
+
+void Delta_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
+{
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    for (int i = 0; i <= order; i++) {
+        poly_coefs.push_back(0.0);
+    }
+
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> chbv_poly_coefs;
+        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
+//        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+//        print_polynomial(chbv_poly_coefs);
+        for (int j = 0; j <= i; j++) {
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
         }
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);

@@ -47,7 +47,8 @@ enum PropagatorType {LinearPropagator,
                      PowerPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator,
-                     ChebyshevPropagator};
+                     ExpChebyshevPropagator,
+                     DeltaChebyshevPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class

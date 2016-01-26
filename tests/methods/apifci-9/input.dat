@@ -27,7 +27,7 @@ set forte {
   ENERGY_ESTIMATE_FREQ 25
   FAST_EVAR true
   ENERGY_ESTIMATE_THRESHOLD 0.0
-  PROPAGATOR Chebyshev
+  PROPAGATOR Exp-Chebyshev
   Chebyshev_order 5
   maxbeta 100000.00
 }
