@@ -192,7 +192,7 @@ private:
     /// lowest e-value in initial guess
     double lambda_1_;
     /// Second lowest e-value in initial guess
-    double lambda_2_;
+//    double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
     /// Characteristic function coefficients
@@ -280,9 +280,14 @@ private:
     /// Do we have OpenMP?
     static bool have_omp_;
 
+    /// Estimate the highest possible energy
+    double estimate_high_energy();
     /// Convergence estimation
-    void convergence_analysis(PropagatorType propagator, double tau, std::vector<double> &cha_func_coefs);
-    void print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs);
+    void convergence_analysis();
+    /// Compute the characteristic function for projector
+    void compute_characteristic_function();
+    /// Print the characteristic function
+    void print_characteristic_function();
 };
 
 }} // End Namespaces
