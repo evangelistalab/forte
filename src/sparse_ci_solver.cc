@@ -14,7 +14,7 @@
 
 namespace psi{ namespace forte{
 
-void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int nroot){
+void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int){
     sigma.gemm(false,true,1.0,H_,b,0.0);
 }
 
@@ -62,23 +62,12 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     size_t naa_ann = 0;
     size_t nab_ann = 0;
     size_t nbb_ann = 0;
-   // std::map<STLBitsetDeterminant,size_t> map_a_ann;
-   // std::map<STLBitsetDeterminant,size_t> map_b_ann;
 
-   // std::map<STLBitsetDeterminant,size_t> map_aa_ann;
-   // std::map<STLBitsetDeterminant,size_t> map_ab_ann;
-   // std::map<STLBitsetDeterminant,size_t> map_bb_ann;
-	
-
-    a_ann_list.resize(max_I);
-    b_ann_list.resize(max_I);
-    aa_ann_list.resize(max_I);
-    ab_ann_list.resize(max_I);
-    bb_ann_list.resize(max_I);
 
 	if( print_details ){
 		outfile->Printf("\n  Generating determinants with N-1 electrons.\n");
 	}
+    a_ann_list.resize(max_I);
     double s_map_size = 0.0;
     // Generate alpha annihilation
     {
@@ -118,8 +107,10 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         }
         a_cre_list.resize(map_a_ann.size());
         s_map_size += ( 32. + sizeof(size_t) ) * map_a_ann.size();
+        a_cre_list.shrink_to_fit();
     }
         // Generate beta annihilation
+        b_ann_list.resize(max_I);
     {
         size_t nb_ann = 0;
 	    det_hash map_b_ann;
@@ -152,28 +143,29 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             }
             b_ann_list[I] = b_ann;
         }
+        b_ann_list.shrink_to_fit();
         b_cre_list.resize(map_b_ann.size());
         s_map_size += ( 32. + sizeof(size_t) ) * map_b_ann.size();
     }
 
-    size_t num_tuples_sigles = 0;
     for (size_t I = 0; I < max_I; ++I){
         const std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[I];
         for (const std::pair<size_t,short>& J_sign : a_ann){
             size_t J = J_sign.first;
             short sign = J_sign.second;
             a_cre_list[J].push_back(std::make_pair(I,sign));
-            num_tuples_sigles++;
+        //    num_tuples_sigles++;
         }
         const std::vector<std::pair<size_t,short>>& b_ann = b_ann_list[I];
         for (const std::pair<size_t,short>& J_sign : b_ann){
             size_t J = J_sign.first;
             short sign = J_sign.second;
             b_cre_list[J].push_back(std::make_pair(I,sign));
-            num_tuples_sigles++;
+        //    num_tuples_sigles++;
         }
     }
-    size_t mem_tuple_singles = num_tuples_sigles * (sizeof(size_t) + sizeof(short));
+    size_t mem_tuple_singles = a_cre_list.capacity() * (sizeof(size_t) + sizeof(short));
+    mem_tuple_singles += b_cre_list.capacity() * (sizeof(size_t) + sizeof(short));
 
     //    outfile->Printf("\n  Size of lists:");
     //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",a_ann_list.size());
@@ -190,18 +182,17 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
 
         // Generate alpha-alpha annihilation
     double d_map_size = 0.0; 
+    aa_ann_list.resize(max_I);
     {
 	    det_hash map_aa_ann;
         for (size_t I = 0; I < max_I; ++I){
             STLBitsetDeterminant detI = space[I];
 
             std::vector<int> aocc = detI.get_alfa_occ();
-            std::vector<int> bocc = detI.get_beta_occ();
-
             size_t noalpha = aocc.size();
-            size_t nobeta  = bocc.size();
 
-            std::vector<std::tuple<size_t,short,short>> aa_ann(noalpha * (noalpha - 1) / 2);
+
+            std::vector<std::tuple<size_t,short,short>> aa_ann ( noalpha * (noalpha - 1) / 2);
 
             for (size_t i = 0, ij = 0; i < noalpha; ++i){
                 for (size_t j = i + 1; j < noalpha; ++j, ++ij){
@@ -232,15 +223,15 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         d_map_size += ( 32. + sizeof(size_t) ) * map_aa_ann.size();
     }
       // Generate beta-beta annihilation
+    aa_ann_list.shrink_to_fit();
+    bb_ann_list.resize(max_I);
     {
         det_hash map_bb_ann;
         for (size_t I = 0; I < max_I; ++I){
             STLBitsetDeterminant detI = space[I];
 
-            std::vector<int> aocc = detI.get_alfa_occ();
             std::vector<int> bocc = detI.get_beta_occ();
 
-            size_t noalpha = aocc.size();
             size_t nobeta  = bocc.size();
 
             std::vector<std::tuple<size_t,short,short>> bb_ann(nobeta * (nobeta - 1) / 2);
@@ -273,6 +264,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         d_map_size += ( 32. + sizeof(size_t) ) * map_bb_ann.size();
     }
       // Generate alpha-beta annihilation
+    bb_ann_list.shrink_to_fit();
+    ab_ann_list.resize(max_I);
     {
         det_hash map_ab_ann;
         for (size_t I = 0; I < max_I; ++I){
@@ -313,8 +306,8 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
         ab_cre_list.resize(map_ab_ann.size());
         d_map_size += ( 32. + sizeof(size_t) ) * map_ab_ann.size();
     }
+    ab_ann_list.shrink_to_fit();
 
-    size_t num_tuples_doubles = 0;
     for (size_t I = 0; I < max_I; ++I){
         const std::vector<std::tuple<size_t,short,short>>& aa_ann = aa_ann_list[I];
         for (const std::tuple<size_t,short,short>& J_sign : aa_ann){
@@ -322,7 +315,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             short i = std::get<1>(J_sign);
             short j = std::get<2>(J_sign);
             aa_cre_list[J].push_back(std::make_tuple(I,i,j));
-            num_tuples_doubles++;
         }
         const std::vector<std::tuple<size_t,short,short>>& bb_ann = bb_ann_list[I];
         for (const std::tuple<size_t,short,short>& J_sign : bb_ann){
@@ -330,7 +322,6 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             short i = std::get<1>(J_sign);
             short j = std::get<2>(J_sign);
             bb_cre_list[J].push_back(std::make_tuple(I,i,j));
-            num_tuples_doubles++;
         }
         const std::vector<std::tuple<size_t,short,short>>& ab_ann = ab_ann_list[I];
         for (const std::tuple<size_t,short,short>& J_sign : ab_ann){
@@ -338,11 +329,15 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
             short i = std::get<1>(J_sign);
             short j = std::get<2>(J_sign);
             ab_cre_list[J].push_back(std::make_tuple(I,i,j));
-            num_tuples_doubles++;
         }
     }
+    aa_cre_list.shrink_to_fit();
+    bb_cre_list.shrink_to_fit();
+    ab_cre_list.shrink_to_fit();
 
-    size_t mem_tuple_doubles = num_tuples_doubles * (sizeof(size_t) + 2 * sizeof(short));
+    size_t mem_tuple_doubles = aa_cre_list.capacity() *  (sizeof(size_t) + 2 * sizeof(short));
+    mem_tuple_doubles += bb_cre_list.capacity() *  (sizeof(size_t) + 2 * sizeof(short));
+    mem_tuple_doubles += ab_cre_list.capacity() *  (sizeof(size_t) + 2 * sizeof(short));
 
     //    outfile->Printf("\n  Size of lists:");
     //    outfile->Printf("\n  |I> ->  a_p |I>: %zu",aa_ann_list.size());
@@ -825,7 +820,7 @@ void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDetermin
     }
 }
 
-void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity)
+void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int,int)
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian(space);
@@ -1512,7 +1507,7 @@ bool SparseCISolver::davidson_liu_guess(std::vector<std::pair<double,std::vector
 
         // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
         for(int k = 0; k < M; k++){
-            if (L < subspace_size){
+            if (L < static_cast<int>(subspace_size) ){
                 if(schmidt_add(b_p, L, N, f_p[k])) {
                     L++;  // <- Increase L if we add one more basis vector
                 }
@@ -1713,9 +1708,9 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             }
             bnew.zero();
             double** bnew_p = bnew.pointer();
-            for(int i = 0; i < collapse_size; i++) {
+            for(size_t i = 0; i < collapse_size; i++) {
                 for(int j = 0; j < L; j++) {
-                    for(int k = 0; k < N; k++) {
+                    for(size_t k = 0; k < N; k++) {
                         bnew_p[i][k] += alpha_p[j][i] * b_p[j][k];
                     }
                 }
@@ -1724,11 +1719,11 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
             // normalize new vectors
             for(size_t i = 0; i < collapse_size; i++){
                 double norm = 0.0;
-                for(int k = 0; k < N; k++){
+                for(size_t k = 0; k < N; k++){
                     norm += bnew_p[i][k] * bnew_p[i][k];
                 }
                 norm = std::sqrt(norm);
-                for(int k = 0; k < N; k++){
+                for(size_t k = 0; k < N; k++){
                     bnew_p[i][k] = bnew_p[i][k] / norm;
                 }
             }
@@ -1758,7 +1753,7 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
         // form preconditioned residue vectors
         f.zero();
         for(int k = 0; k < M; k++){  // loop over roots
-            for(int I = 0; I < N; I++) {  // loop over elements
+            for(size_t I = 0; I < N; I++) {  // loop over elements
                 for(int i = 0; i < L; i++) {
                     f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
                 }
@@ -1776,18 +1771,18 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
         /* normalize each residual */
         for(int k = 0; k < M; k++) {
             double norm = 0.0;
-            for(int I = 0; I < N; I++) {
+            for(size_t I = 0; I < N; I++) {
                 norm += f_p[k][I] * f_p[k][I];
             }
             norm = std::sqrt(norm);
-            for(int I = 0; I < N; I++) {
+            for(size_t I = 0; I < N; I++) {
                 f_p[k][I] /= norm;
             }
         }
 
         // schmidt orthogonalize the f[k] against the set of b[i] and add new vectors
         for(int k = 0; k < M; k++){
-            if (L < subspace_size){
+            if (L < static_cast<int>(subspace_size) ){
                 if(schmidt_add(b_p, L, N, f_p[k])) {
                     L++;  // <- Increase L if we add one more basis vector
                 }
@@ -1830,21 +1825,21 @@ bool SparseCISolver::davidson_liu(SigmaVector* sigma_vector, SharedVector Eigenv
 
     for(int i = 0; i < M; i++) {
         eps[i] = lambda.get(i);
-        for(int I = 0; I < N; I++){
+        for(size_t I = 0; I < N; I++){
             v[I][i] = 0.0;
         }
         for(int j = 0; j < L; j++) {
-            for(int I=0; I < N; I++) {
+            for(size_t I=0; I < N; I++) {
                 v[I][i] += alpha_p[j][i] * b_p[j][I];
             }
         }
         // Normalize v
         double norm = 0.0;
-        for(int I = 0; I < N; I++) {
+        for(size_t I = 0; I < N; I++) {
             norm += v[I][i] * v[I][i];
         }
         norm = std::sqrt(norm);
-        for(int I = 0; I < N; I++) {
+        for(size_t I = 0; I < N; I++) {
             v[I][i] /= norm;
         }
     }
