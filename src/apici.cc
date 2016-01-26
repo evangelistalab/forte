@@ -276,6 +276,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
 {
     double high_obt_energy = 0.0;
     int ne = 0;
+    std::vector<double> obt_energies;
     auto bits_ = reference_determinant_.bits_;
     for (int i = 0; i < ncmo_; i++) {
         if (bits_[i]) ++ne;
@@ -290,9 +291,19 @@ double AdaptivePathIntegralCI::estimate_high_energy()
                 temp += fci_ints_->tei_ab(i,p,i,p);
             }
         }
-        if (temp > high_obt_energy) high_obt_energy = temp;
+        obt_energies.push_back(temp);
     }
-    lambda_h_ = high_obt_energy * ne;
+    std::sort(obt_energies.begin(),obt_energies.end());
+//    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
+//    for (auto item : obt_energies)
+//        outfile -> Printf("  %lf", item);
+    int Ndocc = ne/2;
+    for (int i = 1; i <= Ndocc; i++) {
+        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i];
+    }
+    if (ne % 2)
+        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
+    lambda_h_ = high_obt_energy;
     return lambda_h_;
 }
 
