@@ -197,6 +197,10 @@ void AdaptivePathIntegralCI::startup()
         propagator_ = DeltaChebyshevPropagator;
         propagator_description_ = "Delta-Chebyshev";
         time_step_ = 1.0;
+    }else if (options_.get_str("PROPAGATOR") == "DELTA"){
+        propagator_ = DeltaPropagator;
+        propagator_description_ = "Delta-Chebyshev-10th-order";
+        time_step_ = 1.0;
     }
 
     num_threads_ = omp_get_max_threads();
@@ -849,6 +853,9 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }
 
     switch (propagator) {
+    case DeltaPropagator:
+        propagate_delta(dets,C,spawning_threshold,S);
+        break;
     case TrotterLinear:
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
         break;
@@ -884,6 +891,29 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         old_max_two_HJI_ = new_max_two_HJI_;
     }
     normalize(C);
+}
+
+void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
+{
+    std::vector<double> roots{0.98883082622512854506974288293401,
+                              0.90096886790241912623610231950745,
+                              0.73305187182982632852243148927067,
+                                                             0.5,
+                              0.22252093395631440428890256449679,
+                            -0.074730093586424254290939745734767,
+                             -0.36534102436639501454473799892977,
+                             -0.62348980185873353052500488400424,
+                             -0.82623877431599487194516257377268,
+                             -0.95557280578614073281133405376747};
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    for (double root : roots) {
+//        outfile->Printf("\nCurrent root:%.12lf",range_ * root + shift_);
+        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+    }
+
 }
 
 
