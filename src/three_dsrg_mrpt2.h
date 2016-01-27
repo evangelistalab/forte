@@ -98,6 +98,7 @@ protected:
     ambit::TensorType tensor_type_;
     ambit::BlockedTensor H_;
     ambit::BlockedTensor F_;
+    ambit::BlockedTensor F_no_renorm_;
     ambit::BlockedTensor Gamma1_;
     ambit::BlockedTensor Eta1_;
     ambit::BlockedTensor Lambda2_;
@@ -110,6 +111,11 @@ protected:
     ambit::BlockedTensor T2_;
     ambit::BlockedTensor V_;
     ambit::BlockedTensor ThreeIntegral_;
+    ambit::BlockedTensor H0_;
+    ambit::BlockedTensor Hbar1_;
+    ambit::BlockedTensor Hbar2_;
+    ambit::BlockedTensor O1_;
+    ambit::BlockedTensor O2_;
 
 
     /// A vector of strings that avoids creating ccvv indices
@@ -169,6 +175,51 @@ protected:
     double E_VT2_4PH();
     double E_VT2_6();
 
+    double Hbar0_ = 0.0;
+    double scalar_energy_fci_ = 0.0;
+    ///
+    /// Compute zero-body term of commutator [H1, T1]
+    void H1_T1_C0(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H1, T2]
+    void H1_T2_C0(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T1]
+    void H2_T1_C0(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T2]
+    void H2_T2_C0(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha, double& C0);
+
+    /// Compute one-body term of commutator [H1, T1]
+    void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha, ambit::BlockedTensor& C1);
+    /// Compute one-body term of commutator [H1, T2]
+    void H1_T2_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T1]
+    void H2_T1_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha, ambit::BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2]
+    void H2_T2_C1(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [H2, T1]
+    void H2_T1_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha, ambit::BlockedTensor& C2);
+    /// Compute two-body term of commutator [H1, T2]
+    void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2]
+    void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C2);
+    double time_H1_T1_C0 = 0.0;
+    double time_H1_T2_C0 = 0.0;
+    double time_H2_T1_C0 = 0.0;
+    double time_H2_T2_C0 = 0.0;
+    double time_H1_T1_C1 = 0.0;
+    double time_H1_T2_C1 = 0.0;
+    double time_H2_T1_C1 = 0.0;
+    double time_H2_T2_C1 = 0.0;
+    double time_H1_T2_C2 = 0.0;
+    double time_H2_T1_C2 = 0.0;
+    double time_H2_T2_C2 = 0.0;
+
+    void de_normal_order();
+
+    double relaxed_energy();
+
+    std::vector<std::vector<double> > compute_restricted_docc_operator_dsrg();
+
     // Print levels
     int print_;
 
@@ -207,6 +258,8 @@ public:
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
+    /// Allow the reference to relax
+    void relax_reference_once();
 
     /// The energy of the reference
     double Eref_;
