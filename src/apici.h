@@ -255,13 +255,15 @@ private:
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply tau H to a subset of determinants
-    void apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_hash, double S);
+    void apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<> &dets_sum_map, det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
     std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening
     void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,std::pair<double,double>& max_coupling);
     /// Apply tau H to a determinant using Schwarz screening
     void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
+    /// Apply tau H to a determinant within subset
+    void apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
