@@ -909,7 +909,7 @@ void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& 
     det_hash<> dets_C_hash;
     for (double root : roots) {
 //        outfile->Printf("\nCurrent root:%.12lf",range_ * root + shift_);
-        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
         copy_hash_to_vec(dets_C_hash,dets,C);
         dets_C_hash.clear();
     }
