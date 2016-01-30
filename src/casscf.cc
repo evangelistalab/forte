@@ -265,6 +265,8 @@ void CASSCF::cas_ci()
     if(print_ > 0)
     {
         quiet = false;
+        print_h2("CAS");
+        outfile->Printf(" Using %5s", options_.get_str("CAS_TYPE").c_str());
     }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
