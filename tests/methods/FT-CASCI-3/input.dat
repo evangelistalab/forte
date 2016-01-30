@@ -1,6 +1,6 @@
 #! CASSCF/6-31G** energy point
 import forte
-fci_energy = -75.604094638821891
+fci_energy = -75.605131901470926
 
 molecule {
 O
@@ -12,22 +12,23 @@ units angstrom
 set {
     scf_type        df
     basis           3-21g
+    df_basis_mp2    cc-pvdz-ri
+    df_basis_scf    cc-pvdz-jkfit
     reference       rhf
     #FROZEN_DOCC     [1, 0, 0, 0]
     #active          [3, 0, 1, 2]
-    e_convergence   1e-6
-    d_convergence   1e-6
-    mcscf_type      conv
+    DOCC          [3, 0, 1, 1]
+    e_convergence   1e-12
+    d_convergence   1e-10
 }
 
 #casscf_energy = energy('casscf')
 energy('scf')
-set scf_type df
 set forte {
-    int_type        conventional
+    int_type               df
     ALTERNATIVE_CASSCF     FTHF
-    TEMPERATURE            500.0
-    print                  1
+    TEMPERATURE            50.0
+    print                  2
     RESTRICTED_DOCC         [1, 0, 0, 0]
     ACTIVE                  [3, 0, 1, 2]
     job_type                FCI
