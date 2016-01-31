@@ -17,29 +17,33 @@ set globals{
   docc                [2, 0, 0, 0, 0, 2, 1, 1]
   restricted_docc     [1, 0, 0, 0, 0, 1, 0, 0]
   active              [2, 0, 1, 1, 0, 2, 1, 1]
-  mcscf_e_convergence 1e-8
+  e_convergence       1e-12
+  d_convergence       1e-8
+  r_convergence       1e-8
+  mcscf_e_convergence 1e-12
   mcscf_r_convergence 1e-8
-  scf_type            df
-  num_roots           2
-  avg_states          [1, 2]
-  mcscf_type           df
+  scf_type            out_of_core
+  num_roots           3
+  avg_states          [1, 2, 3]
+  #MCSCF_MAXITER       1
 }
 
 
 casscf_energy = energy('casscf')
 energy('scf')
 
+set scf_type direct
 set forte {
     casscf_reference true
-    CASSCF_ITERATIONS 1
+    CASSCF_ITERATIONS 25
     restricted_docc  [1, 0, 0, 0, 0, 1, 0, 0]
     active           [2, 0, 1, 1, 0, 2, 1, 1]
     print            1
     CASSCF_G_CONVERGENCE  1e-8
-    CASSCF_E_CONVERGENCE  1e-8
-    CASSCF_DEBUG_PRINTING true
-    SA_STATES             [[0, 1, 2]]
-    int_type               df
+    CASSCF_E_CONVERGENCE  1e-12
+    CASSCF_DEBUG_PRINTING   false
+    SA_STATES             [[0, 1, 3]]
+    int_type               conventional
 }
 energy('forte')
 

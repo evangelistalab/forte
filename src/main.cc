@@ -32,7 +32,7 @@
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
 #include "casscf.h"
-#include "alternativescasscf.h"
+#include "finite_temperature.h"
 #include "active_dsrgpt2.h"
 
 INIT_PLUGIN
