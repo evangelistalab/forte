@@ -33,7 +33,8 @@ set globals{
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
    maxiter                 500
-   reference               RHF
+   reference               ROHF
+   S                       0.0
 }
 scf = energy('casscf')
 compare_values(refmcscf, scf,10,"SCF Energy")
@@ -56,6 +57,5 @@ set forte {
 }
 
 
-#scf = energy('mcscf')
-energy('forte')
-compare_values(refdsrgpt2, get_variable("CURRENT ENERGY"),6,"CASSCF energy")
+my_casscf = energy('forte')
+compare_values(my_casscf, get_variable("CURRENT ENERGY"),6,"CASSCF energy")

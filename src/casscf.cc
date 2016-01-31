@@ -77,6 +77,7 @@ void CASSCF::compute_casscf()
     SharedMatrix C_start(wfn_->Ca()->clone());
     for(int iter = 0; iter < maxiter; iter++)
     {
+        Timer casscf_total_iter;
 
         Timer transform_integrals_timer;
         tei_paaa_ = transform_integrals();
@@ -167,6 +168,10 @@ void CASSCF::compute_casscf()
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
+        if(print_ > 0)
+        {
+            outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
+        }
     }
     if(casscf_debug_print_)
     {
@@ -182,9 +187,12 @@ void CASSCF::compute_casscf()
     }
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
+    Timer retrans_ints;
     ints_->retransform_integrals();
-
-
+    if(print_ > 0)
+    {
+        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
+    }
 
 }
 void CASSCF::startup()
@@ -257,6 +265,8 @@ void CASSCF::cas_ci()
     if(print_ > 0)
     {
         quiet = false;
+        print_h2("CAS");
+        outfile->Printf(" Using %5s", options_.get_str("CAS_TYPE").c_str());
     }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
