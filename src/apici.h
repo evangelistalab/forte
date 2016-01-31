@@ -181,6 +181,13 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
+    // * Energy extrapolation
+    /// Estimated variational energy at each step
+    std::vector<std::pair<double, double>> iter_Evar_steps_;
+//    std::tuple<double, double, double> fit_exp(std::vector<std::pair<double, double>> data);
+//    std::tuple<double, double, double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+//    std::pair<double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+
     // * Chebyshev propagator
     /// Range of Hamiltonian
     double range_;
