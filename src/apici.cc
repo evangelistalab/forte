@@ -1091,9 +1091,10 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     for (int j = 2; j <= order; ++j){
         // Copy the wave function to a vector
         copy_hash_to_vec(dets_C_hash,dets,C);
+        double current_spawning = spawning_threshold * norm(dets_C_hash);
         dets_C_hash.clear();
 //        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
-        apply_tau_H_subset(coef[j]/coef[j-1], spawning_threshold, dets, C, dets_sum_map, dets_C_hash, 0.0);
+        apply_tau_H_subset(coef[j]/coef[j-1], current_spawning, dets, C, dets_sum_map, dets_C_hash, 0.0);
 
         // Add this term to the total vector
         combine_hashes(dets_C_hash,dets_sum_map);
