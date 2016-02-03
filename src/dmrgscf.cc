@@ -20,13 +20,12 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef HAVE_CHEMPS2
-    #include "chemps2/Irreps.h"
-    #include "chemps2/Problem.h"
-    #include "chemps2/CASSCF.h"
-    #include "chemps2/Initialize.h"
-    #include "chemps2/EdmistonRuedenberg.h"
-#endif 
+#include "chemps2/Irreps.h"
+#include "chemps2/Problem.h"
+#include "chemps2/CASSCF.h"
+#include "chemps2/Initialize.h"
+#include "chemps2/EdmistonRuedenberg.h"
+
 #include "ambit/blocked_tensor.h"
 #include "dmrgscf.h"
 #include "helpers.h"
@@ -889,16 +888,15 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, CheMPS2::DMRGS
         value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
     /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
     gamma2_aa.copy(gamma2_dmrg);
-    gamma2_aa("p, q, r, s") -= gamma2_dmrg("p, q, s, r");
+    gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
     gamma2_aa.scale(1.0 / 6.0);
 
-    gamma2_ab.copy(gamma2_dmrg);
-    gamma2_ab.scale(2.0);
-    gamma2_ab("p, q, r, s") -= gamma2_dmrg("p, q, s, r");
+    gamma2_ab("p, q, r, s") = (2.0 * gamma2_dmrg("p, q, r, s") + gamma2_dmrg("p, q, s, r"));
     gamma2_ab.scale(1.0 / 6.0);
     dmrg_ref.set_g2aa(gamma2_aa);
     dmrg_ref.set_g2bb(gamma2_aa);
     dmrg_ref.set_g2ab(gamma2_ab);
+    gamma2_ab.print(stdout);
     ambit::Tensor cumulant2_aa = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_aa", {na, na, na, na});
     ambit::Tensor cumulant2_ab = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_ab", {na, na, na, na});
     cumulant2_aa.copy(gamma2_aa);
