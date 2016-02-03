@@ -7,11 +7,13 @@
 #include "reference.h"
 #include "integrals.h"
 #include "helpers.h"
-#include "chemps2/Irreps.h"
-#include "chemps2/Problem.h"
-#include "chemps2/CASSCF.h"
-#include "chemps2/Initialize.h"
-#include "chemps2/EdmistonRuedenberg.h"
+#ifdef HAVE_CHEMPS2
+    #include "chemps2/Irreps.h"
+    #include "chemps2/Problem.h"
+    #include "chemps2/CASSCF.h"
+    #include "chemps2/Initialize.h"
+    #include "chemps2/EdmistonRuedenberg.h"
+#endif
 
 namespace psi { namespace  forte {
 
