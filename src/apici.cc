@@ -695,6 +695,8 @@ double AdaptivePathIntegralCI::compute_energy()
             old_var_energy = var_energy;
             old_proj_energy = proj_energy;
 
+            iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
+
             if (std::fabs(var_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
@@ -1089,9 +1091,10 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     for (int j = 2; j <= order; ++j){
         // Copy the wave function to a vector
         copy_hash_to_vec(dets_C_hash,dets,C);
+        double current_spawning = spawning_threshold * norm(dets_C_hash);
         dets_C_hash.clear();
 //        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
-        apply_tau_H_subset(coef[j]/coef[j-1], dets, C, dets_sum_map, dets_C_hash, 0.0);
+        apply_tau_H_subset(coef[j]/coef[j-1], current_spawning, dets, C, dets_sum_map, dets_C_hash, 0.0);
 
         // Add this term to the total vector
         combine_hashes(dets_C_hash,dets_sum_map);
@@ -1816,7 +1819,193 @@ void AdaptivePathIntegralCI::apply_tau_H_det_subset(double tau, Determinant& det
 
 }
 
-void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_sum_map, det_hash<>& dets_C_hash, double S)
+void AdaptivePathIntegralCI::apply_tau_H_det_subset_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
+{
+    // Diagonal contributions
+    double det_energy = detI.energy();
+//    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    std::vector<int> aocc = detI.get_alfa_occ();
+    std::vector<int> bocc = detI.get_beta_occ();
+    std::vector<int> avir = detI.get_alfa_vir();
+    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc_offset(nirrep_ + 1);
+    std::vector<int> bocc_offset(nirrep_ + 1);
+    std::vector<int> avir_offset(nirrep_ + 1);
+    std::vector<int> bvir_offset(nirrep_ + 1);
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+    for (int h = 1; h < nirrep_ + 1; ++h){
+        aocc_offset[h] += aocc_offset[h-1];
+        avir_offset[h] += avir_offset[h-1];
+        bocc_offset[h] += bocc_offset[h-1];
+        bvir_offset[h] += bvir_offset[h-1];
+    }
+
+
+    // do_singles
+    Determinant detJ(detI);
+    // Generate aa excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = aocc_offset[h]; i < aocc_offset[h + 1]; ++i){
+            int ii = aocc[i];
+            for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a){
+                int aa = avir[a];
+                double HJI = detI.slater_rules_single_alpha(ii,aa);
+//                my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                if (std::fabs(HJI * CI) >= spawning_threshold){
+                    detJ = detI;
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+//                detJ = detI;
+//                detJ.set_alfa_bit(ii,false);
+//                detJ.set_alfa_bit(aa,true);
+//                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                    double HJI = detI.slater_rules_single_alpha(ii,aa);
+//                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                }
+            }
+        }
+    }
+    // Generate bb excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = bocc_offset[h]; i < bocc_offset[h + 1]; ++i){
+            int ii = bocc[i];
+            for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a){
+                int aa = bvir[a];
+                double HJI = detI.slater_rules_single_beta(ii,aa);
+//                my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                if (std::fabs(HJI * CI) >= spawning_threshold){
+                    detJ = detI;
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+//                detJ = detI;
+//                detJ.set_beta_bit(ii,false);
+//                detJ.set_beta_bit(aa,true);
+//                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                    double HJI = detI.slater_rules_single_beta(ii,aa);
+//                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                }
+            }
+        }
+    }
+
+    // do_doubles
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : avir_offset[h];
+                int maxb = avir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = avir[b];
+                    double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_aa(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_aa(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                int minb = bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_ab(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_ab(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_bb(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_bb(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+}
+
+void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_sum_map, det_hash<>& dets_C_hash, double S)
 {
 //    size_t max_I = dets.size();
 //#pragma omp parallel for
@@ -1835,7 +2024,8 @@ void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, det_vec &dets, const
 #pragma omp parallel for
     for (size_t I = 0; I < max_I; ++I){
         std::vector<std::pair<Determinant, double>> thread_det_C_vec;
-        apply_tau_H_det_subset(tau,dets[I],C[I], dets_sum_map,thread_det_C_vec,S);
+//        apply_tau_H_det_subset(tau,dets[I],C[I], dets_sum_map,thread_det_C_vec,S);
+        apply_tau_H_det_subset_prescreening(tau, spawning_threshold, dets[I], C[I], dets_sum_map, thread_det_C_vec, S);
         #pragma omp critical
         {
             for (auto det_C : thread_det_C_vec) {
