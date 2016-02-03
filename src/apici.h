@@ -181,6 +181,13 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
+    // * Energy extrapolation
+    /// Estimated variational energy at each step
+    std::vector<std::pair<double, double>> iter_Evar_steps_;
+//    std::tuple<double, double, double> fit_exp(std::vector<std::pair<double, double>> data);
+//    std::tuple<double, double, double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+//    std::pair<double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+
     // * Chebyshev propagator
     /// Range of Hamiltonian
     double range_;
@@ -255,7 +262,7 @@ private:
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply tau H to a subset of determinants
-    void apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<> &dets_sum_map, det_hash<>& dets_C_hash, double S);
+    void apply_tau_H_subset(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<> &dets_sum_map, det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
     std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening
@@ -264,6 +271,8 @@ private:
     void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant within subset
     void apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
+    /// Apply tau H to a determinant by selection within subset
+    void apply_tau_H_det_subset_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
