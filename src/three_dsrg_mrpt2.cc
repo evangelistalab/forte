@@ -278,8 +278,8 @@ void THREE_DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
+    Lambda3_ = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
     if(options_.get_str("THREEPDC") != "ZERO"){
-        Lambda3_ = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
         ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
         ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
         ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
