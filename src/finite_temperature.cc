@@ -153,7 +153,7 @@ std::vector<std::pair<double, int> > FiniteTemperatureHF::get_active_orbital_ene
         offset += nmopi[h];
 
     }
-    std::sort(nmo_vec.begin(), nmo_vec.end(), [](std::pair<double, int> &left,std::pair<double, int> &right) {
+    std::sort(nmo_vec.begin(), nmo_vec.end(), [](const std::pair<double, int> &left,const std::pair<double, int> &right) {
         return left.first < right.first;
     });
 
