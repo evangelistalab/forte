@@ -20,11 +20,13 @@
 #include <iostream>
 #include <fstream>
 
-#include "chemps2/Irreps.h"
-#include "chemps2/Problem.h"
-#include "chemps2/CASSCF.h"
-#include "chemps2/Initialize.h"
-#include "chemps2/EdmistonRuedenberg.h"
+#ifdef HAVE_CHEMPS2
+    #include "chemps2/Irreps.h"
+    #include "chemps2/Problem.h"
+    #include "chemps2/CASSCF.h"
+    #include "chemps2/Initialize.h"
+    #include "chemps2/EdmistonRuedenberg.h"
+#endif 
 #include "ambit/blocked_tensor.h"
 #include "dmrgscf.h"
 #include "helpers.h"

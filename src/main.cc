@@ -20,7 +20,9 @@
 #include "apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
-#include "dmrgscf.h"
+#ifdef HAVE_CHEMPS2
+    #include "dmrgscf.h"
+#endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
@@ -766,8 +768,10 @@ extern "C" PsiReturnType forte(Options &options)
     }
     if (options.get_str("JOB_TYPE") == "DMRG")
     {
+        #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
         dmrg->compute_energy();
+        #endif
     }
 
     if(options.get_str("JOB_TYPE")=="CAS")
@@ -890,8 +894,10 @@ extern "C" PsiReturnType forte(Options &options)
 		}
         else if(options.get_str("CAS_TYPE")=="DMRG")
         {
+        #ifdef HAVE_CHEMPS2
             boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             if(options.get_bool("SEMI_CANONICAL")){
+
                 auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
                 dmrg->compute_energy();
                 Reference dmrg_reference = dmrg->reference();
@@ -902,6 +908,7 @@ extern "C" PsiReturnType forte(Options &options)
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
+        #endif
 
         }
 
@@ -964,8 +971,10 @@ extern "C" PsiReturnType forte(Options &options)
        else if(options.get_str("CAS_TYPE")=="DMRG")
 
        {
-           auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
-           dmrg->compute_energy();
+       #ifdef HAVE_CHEMPS2
+            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            dmrg->compute_energy();
+       #endif
        }
 
     }
