@@ -3,7 +3,6 @@
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
-#include <libthce/lreri.h>
 
 
 #include "integrals.h"
