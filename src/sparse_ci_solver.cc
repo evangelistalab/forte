@@ -151,6 +151,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 
     // Build alpha annihilation list
     Timer single; 
+    outfile->Printf("\n  Building alpha annihilation list");
     size_t na_ann = 0;
     a_ann_list_.resize(max_I);
     for(size_t B = 0; B < n_beta_strings; ++B){
@@ -195,9 +196,11 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             a_ann_list_[I] = a_ann;
         }
     }    
+    outfile->Printf("      ...done");
     a_cre_list_.resize(na_ann);
 
     // Compute the beta annihilation lists
+    outfile->Printf("\n  Building beta annihilation list");
     b_ann_list_.resize(max_I);
     size_t nb_ann = 0;
     for(size_t A = 0; A < n_alfa_strings; ++A){
@@ -241,9 +244,11 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             b_ann_list_[I] = b_ann;
         }
     }    
+    outfile->Printf("      ...done");
     b_cre_list_.resize(nb_ann);
     
     // Build alpha and beta creatin lists
+    outfile->Printf("\n  Building single-hole creation lists");
     for (size_t I = 0; I < max_I; ++I){
         const std::vector<std::pair<size_t,short>>& a_ann = a_ann_list_[I];
         for (const std::pair<size_t,short>& J_sign : a_ann){
@@ -260,10 +265,12 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         //    num_tuples_sigles++;
         }
     }
+    outfile->Printf("      ...done");
 
     outfile->Printf("\n  Time spent building single lists:    %7.6f s", single.get());
     Timer doubles;
     // Compute alpha-alpha coupling list
+    outfile->Printf("\n  Building alpha-alpha annihilation lists");
     size_t naa_ann = 0;
     aa_ann_list_.resize(max_I);
     for(size_t B = 0; B < n_beta_strings; ++B){
@@ -314,8 +321,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             aa_ann_list_[I] = aa_ann;
         }
     }
+    outfile->Printf("      ...done");
 
     // Compute beta-beta coupling list
+    outfile->Printf("\n  Building beta-beta annihilation lists");
     size_t nbb_ann = 0;
     bb_ann_list_.resize(max_I);
     for(size_t A = 0; A < n_alfa_strings; ++A){
@@ -366,7 +375,9 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             bb_ann_list_[I] = bb_ann;
         }
     }
+    outfile->Printf("      ...done");
     // Form alpha-beta annihilation list
+    outfile->Printf("\n  Building alpha-beta annihilation lists");
 
     size_t nab_ann = 0;
     ab_ann_list_.resize(max_I);
@@ -407,6 +418,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             }
         }
     }
+    outfile->Printf("      ...done");
 
 
 //    outfile->Printf("\n ab_ann_list from strings:");
@@ -474,6 +486,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 */
     
     // Form creation lists
+    outfile->Printf("\n  Building two-hole creation lists");
     aa_cre_list_.resize(naa_ann);
     bb_cre_list_.resize(nbb_ann);
     ab_cre_list_.resize(nab_ann);
@@ -500,6 +513,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             ab_cre_list_[J].push_back(std::make_tuple(I,i,j));
         }
     }
+    outfile->Printf("      ...done");
 
     outfile->Printf("\n  Time spent building doubles lists:   %7.6f s", doubles.get());
 }
