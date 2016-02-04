@@ -71,8 +71,8 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     size_t n_beta_strings = 0;
 
     // Vector that links alpha/beta strings back to original determinant
-    std::vector<std::vector<std::pair<size_t,size_t>>> alfa_to_det;
-    std::vector<std::vector<std::pair<size_t,size_t>>> beta_to_det;
+    std::vector<std::vector<size_t>> alfa_to_det;
+    std::vector<std::vector<size_t>> beta_to_det;
 
     std::vector<std::vector<std::pair<size_t, short>>> a_str_list(max_I*10);
     // Fill maps and list
@@ -110,8 +110,8 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         alfa_to_det.resize(n_alfa_strings);
         beta_to_det.resize(n_beta_strings);
 
-        alfa_to_det[a_add].push_back(std::make_pair(b_add,I));
-        beta_to_det[b_add].push_back(std::make_pair(a_add,I));
+        alfa_to_det[a_add].push_back(I);
+        beta_to_det[b_add].push_back(I);
 
         //Build a vector linking a_ann dets to dets
         std::vector<int> aocc = adet.get_alfa_occ();        
@@ -156,29 +156,22 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     a_ann_list_.resize(max_I);
     for(size_t B = 0; B < n_beta_strings; ++B){
         det_hash map_a_ann;
-        std::vector<std::pair<size_t,size_t>> a_list = beta_to_det[B];
+        std::vector<size_t> a_list = beta_to_det[B];
         size_t max_A = a_list.size();
 
         if( max_A < 2) continue;
 
         for( size_t A = 0; A < max_A; ++A){
-            STLBitsetDeterminant detA;
-            size_t a_string = a_list[A].first;
-            size_t I = a_list[A].second;
-            bstmap_it a_it;
-            for( a_it = alfa_map.begin(); a_it != alfa_map.end(); ++a_it ){
-                if( a_it->second == a_string ){
-                    detA = a_it->first;
-                    break;
-                }
-            }
+            size_t I = a_list[A];
+            STLBitsetDeterminant detA(space[I]);
+            detA.zero_spin(1);
             std::vector<int> aocc = detA.get_alfa_occ();
             std::vector<std::pair<size_t,short>> a_ann(noalfa);
 
             for( int a = 0; a < noalfa; ++a){
                 int aa = aocc[a];
                 detA.set_alfa_bit(aa,false);
-                const double sign = detA.slater_sign_alpha(aa);
+               // const double sign = detA.slater_sign_alpha(aa);
 
                 size_t detA_add;
                 bstmap_it it = map_a_ann.find(detA);
@@ -189,7 +182,9 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                 }else{
                     detA_add = it->second;
                 }
-                a_ann[a] = std::make_pair(detA_add, (sign > 0.0) ? (aa+1) : (-aa-1));
+
+                //a_ann[a] = std::make_pair(detA_add, (sign > 0.0) ? (aa+1) : (-aa-1));
+                a_ann[a] = std::make_pair(detA_add, aa);
                 detA.set_alfa_bit(aa,true);
             }
             a_ann.shrink_to_fit();
@@ -205,29 +200,23 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     size_t nb_ann = 0;
     for(size_t A = 0; A < n_alfa_strings; ++A){
         det_hash map_b_ann;
-        std::vector<std::pair<size_t,size_t>> b_list = alfa_to_det[A];
+        std::vector<size_t> b_list = alfa_to_det[A];
         size_t max_B = b_list.size();
 
         if( max_B < 2) continue;
 
         for( size_t B = 0; B < max_B; ++B){
-            STLBitsetDeterminant detB;
-            size_t b_string = b_list[B].first;
-            size_t I = b_list[B].second;
-            bstmap_it b_it;
-            for( b_it = beta_map.begin(); b_it != beta_map.end(); ++b_it ){
-                if( b_it->second == b_string ){
-                    detB = b_it->first;
-                    break;
-                }
-            }
+            size_t I = b_list[B];
+            STLBitsetDeterminant detB(space[I]);
+            detB.zero_spin(0);
+            
             std::vector<int> bocc = detB.get_beta_occ();
             std::vector<std::pair<size_t,short>> b_ann(nobeta);            
  
             for( int a = 0; a < nobeta; ++a){
                 int aa = bocc[a];
                 detB.set_beta_bit(aa,false);
-                const double sign = detB.slater_sign_beta(aa);
+               // const double sign = detB.slater_sign_beta(aa);
                 size_t detB_add;
                 bstmap_it it = map_b_ann.find(detB);
                 if( it == map_b_ann.end()){
@@ -237,7 +226,8 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                 }else{
                     detB_add = it->second;
                 } 
-                b_ann[a] = std::make_pair(detB_add, (sign > 0.0) ? (aa+1) : (-aa-1)); 
+                //b_ann[a] = std::make_pair(detB_add, (sign > 0.0) ? (aa+1) : (-aa-1)); 
+                b_ann[a] = std::make_pair(detB_add, aa); 
                 detB.set_beta_bit(aa,true);
             }
             b_ann.shrink_to_fit();
@@ -275,22 +265,16 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     aa_ann_list_.resize(max_I);
     for(size_t B = 0; B < n_beta_strings; ++B){
         det_hash map_aa_ann;
-        std::vector<std::pair<size_t,size_t>> a_list = beta_to_det[B];
+        std::vector<size_t> a_list = beta_to_det[B];
         size_t max_A = a_list.size();
 
         if( max_A < 2) continue;
 
         for( size_t A = 0; A < max_A; ++A){
-            STLBitsetDeterminant detA;
-            size_t a_string = a_list[A].first;
-            const size_t I = a_list[A].second;
-            bstmap_it a_it;
-            for( a_it = alfa_map.begin(); a_it != alfa_map.end(); ++a_it ){
-                if( a_it->second == a_string ){
-                    detA = a_it->first;
-                    break;
-                }
-            }
+            const size_t I = a_list[A];
+            STLBitsetDeterminant detA(space[I]);
+            detA.zero_spin(1);
+
             std::vector<int> aocc = detA.get_alfa_occ();
             std::vector<std::tuple<size_t,short,short>> aa_ann ( noalfa * (noalfa - 1) / 2);
 
@@ -329,22 +313,17 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     bb_ann_list_.resize(max_I);
     for(size_t A = 0; A < n_alfa_strings; ++A){
         det_hash map_bb_ann;
-        std::vector<std::pair<size_t,size_t>> b_list = alfa_to_det[A];
+        std::vector<size_t> b_list = alfa_to_det[A];
         size_t max_B = b_list.size();
 
         if( max_B < 2) continue;
 
         for( size_t B = 0; B < max_B; ++B){
-            STLBitsetDeterminant detB;
-            size_t b_string = b_list[B].first;
-            size_t I = b_list[B].second;
-            bstmap_it b_it;
-            for( b_it = beta_map.begin(); b_it != beta_map.end(); ++b_it ){
-                if( b_it->second == b_string ){
-                    detB = b_it->first;
-                    break;
-                }
-            }
+            size_t I = b_list[B];
+
+            STLBitsetDeterminant detB(space[I]);
+            detB.zero_spin(0);
+
             std::vector<int> bocc = detB.get_beta_occ();
             std::vector<std::tuple<size_t,short,short>> bb_ann ( nobeta * (nobeta - 1) / 2);
 
@@ -514,6 +493,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         }
     }
     outfile->Printf("      ...done");
+     
+    aa_cre_list_.shrink_to_fit();
+    bb_cre_list_.shrink_to_fit();
+    ab_cre_list_.shrink_to_fit();
 
     outfile->Printf("\n  Time spent building doubles lists:   %7.6f s", doubles.get());
 }
@@ -536,11 +519,13 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list_[J]){
             const size_t aJ_add = aJ_mo_sign.first;
-            const size_t p = std::abs(aJ_mo_sign.second) - 1;
+           // const size_t p = std::abs(aJ_mo_sign.second) - 1;
+            const size_t p = aJ_mo_sign.second;
             for (auto& aaJ_mo_sign : a_cre_list_[aJ_add]){
-                const size_t q = std::abs(aaJ_mo_sign.second) - 1;
+                //const size_t q = std::abs(aaJ_mo_sign.second) - 1;
+                const size_t q = aaJ_mo_sign.second;
                 if (p != q){
-                    const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
+                    const double HIJ = space_[J].slater_rules_single_alpha(p,q);
                     const size_t I = aaJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
                 }
@@ -550,11 +535,13 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         // bb singles
         for (auto& bJ_mo_sign : b_ann_list_[J]){
             const size_t bJ_add = bJ_mo_sign.first;
-            const size_t p = std::abs(bJ_mo_sign.second) - 1;
+            //const size_t p = std::abs(bJ_mo_sign.second) - 1;
+            const size_t p = bJ_mo_sign.second;
             for (auto& bbJ_mo_sign : b_cre_list_[bJ_add]){
-                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
+                //const size_t q = std::abs(bbJ_mo_sign.second) - 1;
+                const size_t q = bbJ_mo_sign.second;
                 if (p != q){
-                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
+                    const double HIJ = space_[J].slater_rules_single_beta(p,q);
                     const size_t I = bbJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
                 }
