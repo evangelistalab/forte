@@ -419,6 +419,12 @@ void DMRGSCF::compute_energy()
     const int dmrgscf_num_vec_diis    = CheMPS2::DMRGSCF_numDIISvecs;
     const std::string unitaryname     = psi::get_writer_file_prefix() + ".unitary.h5";
     const std::string diisname        = psi::get_writer_file_prefix() + ".DIIS.h5";
+    bool three_pdm = false;
+    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE")=="THREE-DSRG-MRPT2")
+    {
+        if(options_.get_str("THREEPDC") != "ZERO")
+            three_pdm = true;
+    }
 
     /****************************************
      *   Check if the input is consistent   *
@@ -495,6 +501,11 @@ void DMRGSCF::compute_energy()
     const int nOrbDMRG = iHandler->getDMRGcumulative(nirrep);
     double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
     double * DMRG2DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
+    double * DMRG3DM;
+    if(three_pdm)
+    {
+        DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
+    }
     CheMPS2::DMRGSCFmatrix * theFmatrix = new CheMPS2::DMRGSCFmatrix( iHandler ); theFmatrix->clear();
     CheMPS2::DMRGSCFmatrix * theQmatOCC = new CheMPS2::DMRGSCFmatrix( iHandler ); theQmatOCC->clear();
     CheMPS2::DMRGSCFmatrix * theQmatACT = new CheMPS2::DMRGSCFmatrix( iHandler ); theQmatACT->clear();
@@ -743,24 +754,31 @@ void DMRGSCF::compute_energy()
                 if (state > 0){ theDMRG->newExcitation( fabs( Energy ) ); }
                 Energy = theDMRG->Solve();
                 if ( dmrgscf_state_avg ){ // When SA-DMRGSCF: 2DM += current 2DM
-                    theDMRG->calc2DMandCorrelations();
+                    //theDMRG->calc2DMandCorrelations();
+                    theDMRG->calc_rdms_and_correlations(three_pdm);
                     CheMPS2::CASSCF::copy2DMover( theDMRG->get2DM(), nOrbDMRG, DMRG2DM );
                 }
                 if ((state == 0) && (dmrgscf_which_root > 1)){ theDMRG->activateExcitations( dmrgscf_which_root-1 ); }
             }
             if ( !(dmrgscf_state_avg) ){ // When SS-DMRGSCF: 2DM += last 2DM
-                theDMRG->calc2DMandCorrelations();
+                //theDMRG->calc2DMandCorrelations();
+                theDMRG->calc_rdms_and_correlations(three_pdm);
                 CheMPS2::CASSCF::copy2DMover( theDMRG->get2DM(), nOrbDMRG, DMRG2DM );
             }
             if ( dmrg_print_corr ){ theDMRG->getCorrelations()->Print(); }
             if ( CheMPS2::DMRG_storeRenormOptrOnDisk ){ theDMRG->deleteStoredOperators(); }
-            delete theDMRG;
             if ((dmrgscf_state_avg) && (dmrgscf_which_root > 1)){
                 const double averagingfactor = 1.0 / dmrgscf_which_root;
                 for (int cnt = 0; cnt < nOrbDMRG_pow4; cnt++){ DMRG2DM[ cnt ] *= averagingfactor; }
             }
             CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM );
             CheMPS2::CASSCF::calcNOON( iHandler, mem1, mem2, DMRG1DM );
+            if(three_pdm)
+            {
+                CheMPS2::CASSCF::copy3DMover( theDMRG->get3DM(), nOrbDMRG, DMRG3DM);
+            }
+            delete theDMRG;
+
 
             cout.rdbuf(cout_buffer);
             capturing.close();
@@ -818,11 +836,7 @@ void DMRGSCF::compute_energy()
             system(("rm " + chemps2filename).c_str());
         }
     }
-    for (int cnt = 0; cnt < nOrbDMRG_pow4; cnt++)
-    {outfile->Printf("\n DMRG2DM[%d] = %8.8f", cnt, DMRG2DM[cnt]);}
-    for(int cnt = 0; cnt < nOrbDMRG * nOrbDMRG; cnt++)
-        outfile->Printf("\n DMRG1DM[%d] = %8.8f", cnt, DMRG1DM[cnt]);
-    compute_reference(DMRG1DM, DMRG2DM, iHandler);
+    compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler);
 
 
     delete [] mem1;
@@ -840,6 +854,10 @@ void DMRGSCF::compute_energy()
     delete theFmatrix;
     delete [] DMRG1DM;
     delete [] DMRG2DM;
+    if(three_pdm)
+    {
+        delete [] DMRG3DM;
+    }
     delete theRotatedTEI;
     delete unitary;
     delete iHandler;
@@ -853,7 +871,7 @@ void DMRGSCF::compute_energy()
     Process::environment.globals["DMRGSCF ENERGY"] = Energy;
     dmrg_ref_.set_Eref(Energy);
 }
-void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, CheMPS2::DMRGSCFindices * iHandler)
+void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler)
 {
     if(options_.get_int("MULTIPLICITY") != 1 && options_.get_int("DMRG_WFN_MULTP") != 1)
     {
@@ -884,30 +902,102 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, CheMPS2::DMRGS
     /// Gamma_b = 1_RDM / 2
     dmrg_ref.set_L1a(gamma1_a);
     dmrg_ref.set_L1b(gamma1_a);
-    gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
-        value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
-    /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
-    gamma2_aa.copy(gamma2_dmrg);
-    gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
-    gamma2_aa.scale(1.0 / 6.0);
+    /// Form 2_rdms
+    {
+        gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
+            value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
+        /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
+        gamma2_aa.copy(gamma2_dmrg);
+        gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
+        gamma2_aa.scale(1.0 / 6.0);
 
-    gamma2_ab("p, q, r, s") = (2.0 * gamma2_dmrg("p, q, r, s") + gamma2_dmrg("p, q, s, r"));
-    gamma2_ab.scale(1.0 / 6.0);
-    dmrg_ref.set_g2aa(gamma2_aa);
-    dmrg_ref.set_g2bb(gamma2_aa);
-    dmrg_ref.set_g2ab(gamma2_ab);
-    gamma2_ab.print(stdout);
-    ambit::Tensor cumulant2_aa = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_aa", {na, na, na, na});
-    ambit::Tensor cumulant2_ab = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_ab", {na, na, na, na});
-    cumulant2_aa.copy(gamma2_aa);
-    cumulant2_aa("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
-    cumulant2_aa("pqrs") += gamma1_a("ps") * gamma1_a("qr");
+        gamma2_ab("p, q, r, s") = (2.0 * gamma2_dmrg("p, q, r, s") + gamma2_dmrg("p, q, s, r"));
+        gamma2_ab.scale(1.0 / 6.0);
+        dmrg_ref.set_g2aa(gamma2_aa);
+        dmrg_ref.set_g2bb(gamma2_aa);
+        dmrg_ref.set_g2ab(gamma2_ab);
+        ambit::Tensor cumulant2_aa = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_aa", {na, na, na, na});
+        ambit::Tensor cumulant2_ab = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_ab", {na, na, na, na});
+        cumulant2_aa.copy(gamma2_aa);
+        cumulant2_aa("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
+        cumulant2_aa("pqrs") += gamma1_a("ps") * gamma1_a("qr");
 
-    cumulant2_ab.copy(gamma2_ab);
-    cumulant2_ab("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
-    dmrg_ref.set_L2aa(cumulant2_aa);
-    dmrg_ref.set_L2ab(cumulant2_ab);
-    dmrg_ref.set_L2bb(cumulant2_aa);
+        cumulant2_ab.copy(gamma2_ab);
+        cumulant2_ab("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
+        dmrg_ref.set_L2aa(cumulant2_aa);
+        dmrg_ref.set_L2ab(cumulant2_ab);
+        dmrg_ref.set_L2bb(cumulant2_aa);
+    }
+    if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
+    {
+        ambit::Tensor gamma3_dmrg = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_aaa = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aaa", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_aab = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aab", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_abb = ambit::Tensor::build(ambit::CoreTensor, "Gamma2_abb", {na, na, na, na, na, na});
+        gamma3_dmrg.iterate([&](const::vector<size_t>& i,double& value){
+            value = three_rdm[i[0] * na * na * na * na * na + i[1] * na * na * na * na
+                    + i[2] * na * na * na + i[3] * na * na + i[4] * na + i[5]]; });
+        gamma3_aaa("p, q, r, s, t, u") = gamma3_dmrg("p, q, r, s, t, u") + gamma3_dmrg("p, q, r, t, u, s") + gamma3_dmrg("p, q, r, u, s, t") ;
+        gamma3_aaa.scale(1.0 / 12.0);
+        gamma3_aab("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
+        gamma3_aab.scale(1.0 / 12.0);
+        gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
+        gamma3_abb.scale(1.0 / 12.0);
+        ambit::Tensor L1a = dmrg_ref.L1a();
+        ambit::Tensor L1b = dmrg_ref.L1b();
+        ambit::Tensor L2aa = dmrg_ref.L2aa();
+        ambit::Tensor L2ab = dmrg_ref.L2ab();
+        ambit::Tensor L2bb = dmrg_ref.L2bb();
+        // Convert the 3-RDMs to 3-RCMs
+        gamma3_aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+        gamma3_aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+        gamma3_aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+        gamma3_aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+        gamma3_aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+        gamma3_aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+        gamma3_aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+        gamma3_aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+        gamma3_aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+        gamma3_aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+        gamma3_aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+        gamma3_aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+        gamma3_aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+        gamma3_aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+        gamma3_aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+
+        gamma3_aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+        gamma3_aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+        gamma3_aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+        gamma3_aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+        gamma3_aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+        gamma3_aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+        gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+
+        gamma3_abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+        gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+        gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+        gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+        gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+        gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+        gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+        dmrg_ref.set_L3aaa(gamma3_aaa);
+        dmrg_ref.set_L3aab(gamma3_aab);
+        dmrg_ref.set_L3abb(gamma3_aab);
+        dmrg_ref.set_L3bbb(gamma3_aaa);
+    }
     dmrg_ref_ = dmrg_ref;
 
 }
