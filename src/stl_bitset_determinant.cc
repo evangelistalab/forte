@@ -50,6 +50,11 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
     }
 }
 
+STLBitsetDeterminant::STLBitsetDeterminant(const std::bitset<256>& bits )
+{
+    bits_ = bits;
+}
+
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
 {
     return (bits_ == lhs.bits_);
@@ -62,6 +67,12 @@ bool STLBitsetDeterminant::operator<(const STLBitsetDeterminant& lhs) const
         if ((bits_[p] == true) and (lhs.bits_[p] == false)) return false;
     }
     return false;
+}
+
+STLBitsetDeterminant STLBitsetDeterminant::operator^(const STLBitsetDeterminant& lhs) const
+{
+    STLBitsetDeterminant ndet( bits_ ^ lhs.bits() );
+    return ndet;
 }
 
 const std::bitset<256>& STLBitsetDeterminant::bits() const {return bits_;}
@@ -217,6 +228,14 @@ void STLBitsetDeterminant::spin_flip()
         bits_[p] = bits_[nmo_ + p];
         bits_[nmo_ + p] = temp;
     }
+}
+
+/// Return determinant with one spin annihilated, 0 == alpha
+void STLBitsetDeterminant::zero_spin( bool spin )
+{
+    for( int p = 0; p < nmo_; ++p ){
+        bits_[p + (spin*nmo_)] = false;        
+    }  
 }
 
 DynamicBitsetDeterminant STLBitsetDeterminant::to_dynamic_bitset() const

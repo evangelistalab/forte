@@ -31,7 +31,7 @@
 
 namespace psi{ namespace forte{
 
-enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList,DLSolver};
+enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList,DLSolver,DLString};
 
 /**
  * @brief The SigmaVector class
@@ -142,6 +142,37 @@ protected:
 	bool print_details_ = true;
 };
 
+class SigmaVectorString : public SigmaVector
+{
+public:
+    SigmaVectorString(const std::vector<STLBitsetDeterminant>& space, bool print_detail);
+
+    // Create the list of a_p|N>
+    std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;
+    std::vector<std::vector<std::pair<size_t,short>>> b_ann_list_;
+    // Create the list of a+_q |N-1>
+    std::vector<std::vector<std::pair<size_t,short>>> a_cre_list_;
+    std::vector<std::vector<std::pair<size_t,short>>> b_cre_list_;
+
+    // Create the list of a_q a_p|N>
+    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list_;
+    // Create the list of a+_s a+_r |N-2>
+    std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list_;
+    std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list_;
+
+    void compute_sigma(SharedVector sigma, SharedVector b);
+    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
+    void get_diagonal(Vector& diag);
+
+protected:
+    bool print_details_ = true;
+    const std::vector<STLBitsetDeterminant>& space_;
+
+    std::vector<double> diag_;
+};
 
 /**
  * @brief The SparseCISolver class
@@ -225,6 +256,7 @@ private:
 
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
 
+    void diagonalize_davidson_liu_string(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
     /// Build the full Hamiltonian matrix
     SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
 
