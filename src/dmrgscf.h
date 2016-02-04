@@ -34,7 +34,7 @@ private:
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<ForteIntegrals> ints_;
     void set_up_ints();
-    void compute_reference(double* one_rdm, double* two_rdm, CheMPS2::DMRGSCFindices * iHandler);
+    void compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler);
     ///Ported over codes from DMRGSCF plugin
     void startup();
 
