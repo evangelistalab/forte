@@ -396,6 +396,7 @@ double MRDSRG::compute_energy_relaxed(){
         // diagonalize the Hamiltonian
         FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
+        fcisolver.set_max_rdm_level(2);
         Erelax = fcisolver.compute_energy();
 
         // printing

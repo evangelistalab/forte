@@ -47,7 +47,9 @@ enum PropagatorType {LinearPropagator,
                      PowerPropagator,
                      OlsenPropagator,
                      DavidsonLiuPropagator,
-                     ChebyshevPropagator};
+                     ExpChebyshevPropagator,
+                     DeltaChebyshevPropagator,
+                     DeltaPropagator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -179,6 +181,13 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
 
+    // * Energy extrapolation
+    /// Estimated variational energy at each step
+    std::vector<std::pair<double, double>> iter_Evar_steps_;
+//    std::tuple<double, double, double> fit_exp(std::vector<std::pair<double, double>> data);
+//    std::tuple<double, double, double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+//    std::pair<double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
+
     // * Chebyshev propagator
     /// Range of Hamiltonian
     double range_;
@@ -191,7 +200,7 @@ private:
     /// lowest e-value in initial guess
     double lambda_1_;
     /// Second lowest e-value in initial guess
-    double lambda_2_;
+//    double lambda_2_;
     /// Highest possible e-value
     double lambda_h_;
     /// Characteristic function coefficients
@@ -227,6 +236,8 @@ private:
     * @param S An energy shift subtracted from the Hamiltonian
     */
     void propagate(PropagatorType propagator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    /// A Delta projector fitted by 10th order chebyshev polynomial
+    void propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
     /// A first-order propagator
     void propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An Trotter-decomposed propagator (H = H^d + H^od)
@@ -251,13 +262,17 @@ private:
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
     /// Apply tau H to a subset of determinants
-    void apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_hash, double S);
+    void apply_tau_H_subset(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<> &dets_sum_map, det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
     std::pair<double, double> apply_tau_H_det_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant using dynamic screening
     void apply_tau_H_det_dynamic(double tau,double spawning_threshold,const Determinant& detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0,std::pair<double,double>& max_coupling);
     /// Apply tau H to a determinant using Schwarz screening
     void apply_tau_H_det_schwarz(double tau, double spawning_threshold, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
+    /// Apply tau H to a determinant within subset
+    void apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
+    /// Apply tau H to a determinant by selection within subset
+    void apply_tau_H_det_subset_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
@@ -279,9 +294,14 @@ private:
     /// Do we have OpenMP?
     static bool have_omp_;
 
+    /// Estimate the highest possible energy
+    double estimate_high_energy();
     /// Convergence estimation
-    void convergence_analysis(PropagatorType propagator, double tau, std::vector<double> &cha_func_coefs);
-    void print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs);
+    void convergence_analysis();
+    /// Compute the characteristic function for projector
+    void compute_characteristic_function();
+    /// Print the characteristic function
+    void print_characteristic_function();
 };
 
 }} // End Namespaces

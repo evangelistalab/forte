@@ -1,0 +1,50 @@
+#! Generated using commit GITCOMMIT
+#! A SA-CASSCF test of H-He-H with averaged singlet and triplet.
+
+import forte 
+
+#The triplet ROHF energy
+ref_rohf = -3.85103041668458
+ref_casscf=-3.851129343128
+#Reference value in wavenumbers
+#ref_split = (-3.851214594496629 - -3.851030416685039) * 219474.63
+
+
+memory 1 GB
+molecule HHeH {
+0   3
+H   0.00  0.00  -2.0
+He  0.00  0.00   0.00
+H   0.00  0.00   2.0
+units angstrom
+}
+
+set global{
+    e_convergence 1e-10
+    d_convergence 1e-10
+    scf_type  direct
+    basis def2-tzvp
+    reference ROHF
+}
+
+scf_first = energy('scf')
+mints()
+
+set forte {
+restricted_docc [ 1,0,0,0,0,0,0,0]
+active          [1, 0, 0, 0, 0, 1, 0, 0]
+#job_type                FCI
+multiplicity             3
+root_sym                 5
+ms                       0
+cas_type                 FCI
+e_convergence           1e-10
+int_type                conventional
+SA_STATES               [[5, 3, 1], [0, 1, 1]]
+CASSCF_REFERENCE        TRUE
+}
+
+triplet = energy('forte')
+compare_values(ref_casscf, triplet, 6, "FCI splitting")
+
+

@@ -1,5 +1,6 @@
 import forte 
 
+refci = -99.971809687595439
 molecule {
 0 1
 H
@@ -9,19 +10,21 @@ units angstrom
 
 
 set {
-  basis     3-21g
+  basis     cc-pvdz
   reference rhf
   scf_type  direct
+  diis_start 10
 }
 
 set forte {
   print 1
-  ALTERNATIVE_CASSCF FTHF
+  #ALTERNATIVE_CASSCF FTHF
   RESTRICTED_DOCC    [1, 0, 0, 0]
   ACTIVE             [3, 0, 1, 1]
-  TEMPERATURE        10.0
+  TEMPERATURE        30.0
   job_type           FCI
 }
 energy('scf')
 mints()
-energy('forte')
+ft_casci = energy('forte')
+compare_values(refci, ft_casci, 6, "FT-CAS-CI Energy")
