@@ -32,7 +32,7 @@ set forte {
   multiplicity 1
   perturb_select false
   SELECT_TYPE aimed_energy
-  DIAG_ALGORITHM SOLVER
+  DIAG_ALGORITHM dlstring
   frozen_docc [1,0,0,0,0,1,0,0]
   TAUP 0.05
   TAUQ 0.05
