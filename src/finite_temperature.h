@@ -44,7 +44,7 @@ protected:
     /// A Vector of eigenvalues
     SharedVector eps_;
     /// The active orbital energies (fractionally occupied orbitals)
-    std::vector<double> active_orb_energy_;
+    std::vector<std::pair<double, int> > active_orb_energy_;
     /// The Fermi-Dirac distribution for occupation
     std::vector<double> fermidirac_;
     /// The wavefunction object
@@ -92,14 +92,14 @@ protected:
     /// active          -> f(e)
     /// restricted_uocc -> 0
     void initialize_occupation_vector(std::vector<double>& dirac);
-    std::vector<double> get_active_orbital_energy();
+    std::vector<std::pair<double, int> > get_active_orbital_energy();
 
     /// Use of Derived SCF calculations
     /// Compute the 2J - K
     /// This needs a algorithm that can handle assymetric densities
     virtual void form_G();
     /// This forms D from folded C and regular C.
-    //virtual void form_D();
+    virtual void form_D();
     /// Whether or not to print debug stuff
     int debug_ = 0;
 

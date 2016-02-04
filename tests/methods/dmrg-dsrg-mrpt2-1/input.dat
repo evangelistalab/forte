@@ -1,0 +1,44 @@
+import forte
+
+molecule LiH {
+Li
+H  1 1.4
+
+}
+
+set basis cc-pvdz
+set scf_type  direct
+energy('scf')
+
+set forte {
+    frozen_docc            [0, 0, 0, 0]
+    active                 [3, 0, 0, 0]
+    int_type               cholesky
+    cholesky_tolerance        1e-14
+    job_type                  FCI
+    PRINT_NO                  true
+    #casscf_reference          true
+    #casscf_iterations         1
+}
+fci = energy('forte')
+print fci
+
+energy('scf')
+
+set forte {
+    active      [3, 0, 0, 0]
+    dmrg_wfn_irrep    0
+    dmrg_wfn_multp    1
+    dmrg_states       [200, 500, 1000, 1000]
+    dmrg_econv        [1e-8, 1e-8, 1e-8, 1e-8]
+    dmrg_maxsweeps    [5, 5, 5, 100]
+    dmrg_noiseprefactors    [0.03, 0.03, 0.03, 0.0]
+    dmrgscf_max_iter  1
+    int_type          cholesky
+    cholesky_tolerance 1e-14
+    job_type           dsrg-mrpt2
+    cas_type           DMRG
+#    THREEPDC           ZERO
+}
+mints()
+dmrgscf = energy('forte')

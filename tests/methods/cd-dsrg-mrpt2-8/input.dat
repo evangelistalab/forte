@@ -1,0 +1,51 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refrohf      = -15.56359936064
+refdsrgpt2   = -15.625784122677812
+
+molecule {
+  0 1
+  Be 0.00000000    0.00000000   0.000000000
+  H  0.00000000    1.2750       2.7500
+  H  0.00000000   -1.2750       2.7500
+  units bohr
+  no_reorient
+}
+
+set {
+  docc               [2,0,0,1]
+  reference          rhf
+  scf_type           cd
+  cholesky_tolerance 1e-14
+  maxiter            300
+  e_convergence      8
+  d_convergence      10
+  basis              cc-pvdz
+  df_basis_mp2       cc-pvdz-ri
+}
+
+set forte {
+  job_type              three-dsrg-mrpt2
+  frozen_docc           [1,0,0,0]
+  restricted_docc       [1,0,0,0]
+  active                [1,0,0,1]
+  multiplicity          1
+  root_sym              0
+  nroot                 1
+  root                  0
+  ms                    0
+  dsrg_s                1.0
+  maxiter               100
+  int_type              cholesky
+  cholesky_tolerance    1e-14
+  relax_ref             once
+  semi_canonical        true
+}
+
+energy('scf')
+compare_values(refrohf,get_variable("CURRENT ENERGY"),10,"ROHF energy") #TEST
+
+energy('forte')
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8, "MRDSRG-PT2 relaxed energy") #TEST

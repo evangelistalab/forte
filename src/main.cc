@@ -20,6 +20,9 @@
 #include "apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
+#ifdef HAVE_CHEMPS2
+    #include "dmrgscf.h"
+#endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
@@ -32,7 +35,7 @@
 #include "so-mrdsrg.h"
 #include "dsrg_wick.h"
 #include "casscf.h"
-#include "alternativescasscf.h"
+#include "finite_temperature.h"
 #include "active_dsrgpt2.h"
 
 INIT_PLUGIN
@@ -98,7 +101,7 @@ read_options(std::string name, Options &options)
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
          *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS DMRG"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
@@ -324,6 +327,84 @@ read_options(std::string name, Options &options)
         options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
 
         //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE DMRGSCF
+        //////////////////////////////////////////////////////////////
+
+        options.add_int("DMRG_WFN_MULTP", -1);
+
+        /*- The DMRGSCF wavefunction irrep uses the same conventions as PSI4. How convenient :-).
+            Just to avoid confusion, it's copied here. It can also be found on
+            http://sebwouters.github.io/CheMPS2/classCheMPS2_1_1Irreps.html .
+
+            Symmetry Conventions        Irrep Number & Name
+            Group Number & Name         0 	1 	2 	3 	4 	5 	6 	7
+            0: c1                       A
+            1: ci                       Ag 	Au
+            2: c2                       A 	B
+            3: cs                       A' 	A''
+            4: d2                       A 	B1 	B2 	B3
+            5: c2v                      A1 	A2 	B1 	B2
+            6: c2h                      Ag 	Bg 	Au 	Bu
+            7: d2h                      Ag 	B1g 	B2g 	B3g 	Au 	B1u 	B2u 	B3u
+        -*/
+        options.add_int("DMRG_WFN_IRREP", -1);
+
+        /*- The number of reduced renormalized basis states to be
+            retained during successive DMRG instructions -*/
+        options.add_array("DMRG_STATES");
+
+        /*- The energy convergence to stop an instruction
+            during successive DMRG instructions -*/
+        options.add_array("DMRG_ECONV");
+
+        /*- The maximum number of sweeps to stop an instruction
+            during successive DMRG instructions -*/
+        options.add_array("DMRG_MAXSWEEPS");
+
+        /*- The noiseprefactors for successive DMRG instructions -*/
+        options.add_array("DMRG_NOISEPREFACTORS");
+
+        /*- Whether or not to print the correlation functions after the DMRG calculation -*/
+        options.add_bool("DMRG_PRINT_CORR", false);
+
+        /*- Whether or not to create intermediary MPS checkpoints -*/
+        options.add_bool("MPS_CHKPT", false);
+
+        /*- Convergence threshold for the gradient norm. -*/
+        options.add_double("DMRG_CONVERGENCE", 1e-6);
+
+        /*- Whether or not to store the unitary on disk (convenient for restarting). -*/
+        options.add_bool("DMRG_STORE_UNIT", true);
+
+        /*- Whether or not to use DIIS for DMRGSCF. -*/
+        options.add_bool("DMRG_DO_DIIS", false);
+
+        /*- When the update norm is smaller than this value DIIS starts. -*/
+        options.add_double("DMRG_DIIS_BRANCH", 1e-2);
+
+        /*- Whether or not to store the DIIS checkpoint on disk (convenient for restarting). -*/
+        options.add_bool("DMRG_STORE_DIIS", true);
+
+        /*- Maximum number of DMRGSCF iterations -*/
+        options.add_int("DMRGSCF_MAX_ITER", 100);
+
+        /*- Which root is targeted: 1 means ground state, 2 first excited state, etc. -*/
+        options.add_int("DMRG_WHICH_ROOT", 1);
+
+        /*- Whether or not to use state-averaging for roots >=2 with DMRG-SCF. -*/
+        options.add_bool("DMRG_STATE_AVG", true);
+
+        /*- Which active space to use for DMRGSCF calculations:
+               --> input with SCF rotations (INPUT);
+               --> natural orbitals (NO);
+               --> localized and ordered orbitals (LOC) -*/
+        options.add_str("DMRG_ACTIVE_SPACE", "INPUT", "INPUT NO LOC");
+
+        /*- Whether to start the active space localization process from a random unitary or the unit matrix. -*/
+        options.add_bool("DMRG_LOC_RANDOM", true);
+
+
+        //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
 		
@@ -393,7 +474,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV CHEBYSHEV");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -430,7 +511,7 @@ read_options(std::string name, Options &options)
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
-        options.add_int("CHEBYSHEV_ORDER", 3);
+        options.add_int("CHEBYSHEV_ORDER", 5);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
@@ -685,6 +766,14 @@ extern "C" PsiReturnType forte(Options &options)
         auto fci = std::make_shared<FCI>(wfn,options,ints_,mo_space_info);
         fci->compute_energy();
     }
+    if (options.get_str("JOB_TYPE") == "DMRG")
+    {
+        #ifdef HAVE_CHEMPS2
+        auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+        dmrg->compute_energy();
+        #endif
+    }
+
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
@@ -805,8 +894,22 @@ extern "C" PsiReturnType forte(Options &options)
 		}
         else if(options.get_str("CAS_TYPE")=="DMRG")
         {
-            outfile->Printf("\n Buy Kevin a beer and he will maybe implement DMRG into libadaptive\n");
-            throw PSIEXCEPTION("DMRG is not available quite yet");
+        #ifdef HAVE_CHEMPS2
+            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+            if(options.get_bool("SEMI_CANONICAL")){
+
+                auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+                dmrg->compute_energy();
+                Reference dmrg_reference = dmrg->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,dmrg_reference);
+            }
+            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            dmrg->compute_energy();
+            Reference dmrg_reference = dmrg->reference();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
+            dsrg_mrpt2->compute_energy();
+        #endif
+
         }
 
     }
@@ -868,8 +971,10 @@ extern "C" PsiReturnType forte(Options &options)
        else if(options.get_str("CAS_TYPE")=="DMRG")
 
        {
-           outfile->Printf("\n Please buy Kevin a beer and maybe he will add DMRG to this code. :-).\n"); 
-           throw PSIEXCEPTION("NO DMRG Reference available yet");
+       #ifdef HAVE_CHEMPS2
+            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            dmrg->compute_energy();
+       #endif
        }
 
     }

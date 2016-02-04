@@ -53,7 +53,8 @@ void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
 void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S);
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
-void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
 AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
@@ -189,11 +190,29 @@ void AdaptivePathIntegralCI::startup()
         propagator_description_ = "Davidson-Liu";
         // Make sure that do_shift_ is set to true
         do_shift_ = true;
-    }else if (options_.get_str("PROPAGATOR") == "CHEBYSHEV"){
-        propagator_ = ChebyshevPropagator;
-        propagator_description_ = "Chebyshev";
-        // Make sure that do_shift_ is set to true
-//        do_shift_ = true;
+    }else if (options_.get_str("PROPAGATOR") == "EXP-CHEBYSHEV"){
+        propagator_ = ExpChebyshevPropagator;
+        propagator_description_ = "Exp-Chebyshev";
+        if (chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
+    }else if (options_.get_str("PROPAGATOR") == "DELTA-CHEBYSHEV"){
+        propagator_ = DeltaChebyshevPropagator;
+        propagator_description_ = "Delta-Chebyshev";
+        time_step_ = 1.0;
+        if (chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
+    }else if (options_.get_str("PROPAGATOR") == "DELTA"){
+        propagator_ = DeltaPropagator;
+        propagator_description_ = "Delta-Chebyshev-Iter-Power";
+        time_step_ = 1.0;
+        if (chebyshev_order_ > 20 || chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
     }
 
     num_threads_ = omp_get_max_threads();
@@ -220,7 +239,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Energy estimate tollerance",energy_estimate_threshold_}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
-        {"Propagator type",propagator_description_},        
+        {"Propagator type",propagator_description_},
         {"Adaptive time step",adaptive_beta_ ? "YES" : "NO"},
         {"Shift the energy",do_shift_ ? "YES" : "NO"},
         {"Use intermediate normalization", use_inter_norm_ ? "YES" : "NO"},
@@ -269,10 +288,11 @@ void print_polynomial(std::vector<double>& coefs) {
     }
 }
 
-void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, double tau, std::vector<double>& cha_func_coefs)
+double AdaptivePathIntegralCI::estimate_high_energy()
 {
     double high_obt_energy = 0.0;
     int ne = 0;
+    std::vector<double> obt_energies;
     auto bits_ = reference_determinant_.bits_;
     for (int i = 0; i < ncmo_; i++) {
         if (bits_[i]) ++ne;
@@ -287,46 +307,69 @@ void AdaptivePathIntegralCI::convergence_analysis(PropagatorType propagator, dou
                 temp += fci_ints_->tei_ab(i,p,i,p);
             }
         }
-        if (temp > high_obt_energy) high_obt_energy = temp;
+        obt_energies.push_back(temp);
     }
-    lambda_h_ = high_obt_energy * ne;
-    shift_ = (lambda_h_ + lambda_2_)/2.0;
-    range_ = tau*(lambda_h_ - lambda_2_)/2.0;
-
-    print_characteristic_function(propagator, tau, shift_, lambda_1_, lambda_2_, lambda_h_, cha_func_coefs);
+    std::sort(obt_energies.begin(),obt_energies.end());
+//    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
+//    for (auto item : obt_energies)
+//        outfile -> Printf("  %lf", item);
+    int Ndocc = ne/2;
+    for (int i = 1; i <= Ndocc; i++) {
+        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i];
+    }
+    if (ne % 2)
+        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
+    lambda_h_ = high_obt_energy;
+    return lambda_h_;
 }
 
-void AdaptivePathIntegralCI::print_characteristic_function(PropagatorType propagator, double tau, double S, double lambda_1, double lambda_2, double lambda_h, std::vector<double>& cha_func_coefs)
+void AdaptivePathIntegralCI::convergence_analysis()
 {
+    estimate_high_energy();
+    compute_characteristic_function();
+    print_characteristic_function();
+}
+
+void AdaptivePathIntegralCI::compute_characteristic_function()
+{
+    shift_ = (lambda_h_ + lambda_1_)/2.0;
+    range_ = time_step_*(lambda_h_ - lambda_1_)/2.0;
     switch (propagator_) {
     case PowerPropagator:
-        cha_func_coefs.push_back(-S);
-        cha_func_coefs.push_back(1.0);
+        cha_func_coefs_.clear();
+        cha_func_coefs_.push_back(-shift_);
+        cha_func_coefs_.push_back(1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(cha_func_coefs, 1, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, shift_);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs, 2, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, shift_);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(cha_func_coefs, 3, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, shift_);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs, 4, tau, S);
+        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, shift_);
         break;
-    case ChebyshevPropagator:
-        Chebyshev_propagator_coefs(cha_func_coefs, chebyshev_order_, tau, S, range_);
+    case ExpChebyshevPropagator:
+        Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
         break;
+    case DeltaPropagator:
+    case DeltaChebyshevPropagator:
+        Delta_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
     default:
         break;
     }
+}
+
+void AdaptivePathIntegralCI::print_characteristic_function()
+{
     outfile->Printf("\n\n  ==> Characteristic Function <==");
-    print_polynomial(cha_func_coefs);
-    outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", tau, S, range_);
-    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1 >= 0.0 ? " " : "", lambda_1);
-    outfile->Printf("\n                   lambda_2= %s%.12f", lambda_2 >= 0.0 ? " " : "", lambda_2);
-    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h >= 0.0 ? " " : "", lambda_h);
+    print_polynomial(cha_func_coefs_);
+    outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_, range_);
+    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "", lambda_1_);
+    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "", lambda_h_);
 }
 
 double factorial(int n)
@@ -411,7 +454,7 @@ void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order) {
     }
 }
 
-void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
+void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
     coefs.clear();
     std::vector<double> poly_coefs;
     for (int i = 0; i <= order; i++) {
@@ -425,6 +468,28 @@ void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double ta
 //        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
             poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
+        }
+//        outfile->Printf("\n\n  propagate poly in step %d", i);
+//        print_polynomial(poly_coefs);
+    }
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+}
+
+void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
+{
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    for (int i = 0; i <= order; i++) {
+        poly_coefs.push_back(0.0);
+    }
+
+    for (int i = 0; i <= order; i++) {
+        std::vector<double> chbv_poly_coefs;
+        Chebyshev_polynomial_coefs(chbv_poly_coefs, i);
+//        outfile->Printf("\n\n  chebyshev poly in step %d", i);
+//        print_polynomial(chbv_poly_coefs);
+        for (int j = 0; j <= i; j++) {
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * chbv_poly_coefs[j];
         }
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
@@ -556,7 +621,7 @@ double AdaptivePathIntegralCI::compute_energy()
         old_space_map[dets[I]] = C[I];
     }
 
-    convergence_analysis(propagator_, time_step_, cha_func_coefs_);
+    convergence_analysis();
 
 //    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
 //        print_characteristic_function(propagator_, time_step_, power_shift, var_energy, 0.0, max_energy);
@@ -590,6 +655,7 @@ double AdaptivePathIntegralCI::compute_energy()
 //        }
 
         // Compute |n+1> = exp(-tau H)|n>
+
         timer_on("PIFCI:Step");
         if (use_inter_norm_) {
             auto minmax_C = std::minmax_element(C.begin(),C.end());
@@ -629,9 +695,15 @@ double AdaptivePathIntegralCI::compute_energy()
             old_var_energy = var_energy;
             old_proj_energy = proj_energy;
 
+            iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
+
             if (std::fabs(var_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
+            }
+            if (do_shift_) {
+                lambda_1_ = var_energy - nuclear_repulsion_energy_;
+                compute_characteristic_function();
             }
         }
         beta += time_step_;
@@ -640,6 +712,11 @@ double AdaptivePathIntegralCI::compute_energy()
 
     outfile->Printf("\n  ------------------------------------------------------------------------------------------");
     outfile->Printf("\n\n  Calculation %s",converged ? "converged." : "did not converge!");
+
+    if (do_shift_) {
+        outfile->Printf("\n\n  Shift applied during iteration, the characteristic function may change every step.\n  Characteristic function at last step:");
+        print_characteristic_function();
+    }
 
     if (fast_variational_estimate_){
         var_energy = estimate_var_energy_sparse(dets,C,1.0e-14);
@@ -725,20 +802,20 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
 
-    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
-    SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
+    SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_));
+    SharedVector evals(new Vector("Eigenvalues",nroot_));
   //  std::vector<DynamicBitsetDeterminant> dyn_dets;
    // for (auto& d : dets){
      //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
       //  dyn_dets.push_back(dbs);
    // }
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DavidsonLiuList);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
     lambda_1_ = evals->get(current_root_);
-    lambda_2_ = evals->get(current_root_ + 1);
-    if (guess_size < 2)
-        lambda_2_ = lambda_1_ + e_convergence_;
+//    lambda_2_ = evals->get(current_root_ + 1);
+//    if (guess_size < 2)
+//        lambda_2_ = lambda_1_ + e_convergence_;
 //    if (guess_size < 100) {
 //        apply_tau_H(time_step_,spawning_threshold_,guess_dets,{1.0},dets_C,0.0);
 
@@ -791,6 +868,9 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }
 
     switch (propagator) {
+    case DeltaPropagator:
+        propagate_delta(dets,C,spawning_threshold,S);
+        break;
     case TrotterLinear:
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
         break;
@@ -826,6 +906,104 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
         old_max_two_HJI_ = new_max_two_HJI_;
     }
     normalize(C);
+}
+
+void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
+{
+//    std::vector<std::vector<double>> roots{{0.98883082622512854506974288293401, 0.90096886790241912623610231950745, 0.73305187182982632852243148927067,0.5,0.22252093395631440428890256449679,
+//            -0.074730093586424254290939745734767,-0.36534102436639501454473799892977,-0.62348980185873353052500488400424,-0.82623877431599487194516257377268,-0.95557280578614073281133405376747}};
+    std::vector<std::vector<double>> roots{{ 0.5},
+
+    { 0.80901699437494742410229341718282, -0.30901699437494742410229341718282},
+
+    { 0.90096886790241912623610231950745, 0.22252093395631440428890256449679, -0.62348980185873353052500488400424},
+
+    { 0.93969262078590838405410927732473, 0.5, -0.17364817766693034885171662676931, -0.76604444311897803520239265055542},
+
+    { 0.95949297361449738989036805706633, 0.65486073394528506405692507246629, 0.14231483827328514044379266861637, -0.41541501300188642552927414922962, -0.84125353283118116886181164891937},
+
+    { 0.97094181742605202715698227629379, 0.74851074817110109863463059970135, 0.35460488704253562596963789260002, -0.12053668025532305334906768745254, -0.56806474673115580251180755912752, -0.8854560256532098959003755220151},
+
+    { 0.9781476007338056379285667478696, 0.80901699437494742410229341718282, 0.5, 0.1045284632676534713998341548025, -0.30901699437494742410229341718282, -0.66913060635885821382627333068678, -0.91354545764260089550212757198532},
+
+    { 0.9829730996839017782819488448552, 0.85021713572961415213414392294935, 0.60263463637925638917858815498684, 0.27366299007208286353907793543681, -0.092268359463301995239651107154506, -0.44573835577653826739645754937949, -0.73900891722065911592453430987265, -0.93247222940435580457311589182156},
+
+    { 0.98636130340272237360250919481907, 0.87947375120648907139085475488184, 0.67728157162574107476215098449563, 0.40169542465296945751684165974262, 0.08257934547233232460034393423744, -0.24548548714079914892229091779637, -0.54694815812242687471176274669619, -0.78914050939639359921898114939909, -0.94581724170063467901966571428494},
+
+    { 0.98883082622512854506974288293401, 0.90096886790241912623610231950745, 0.73305187182982632852243148927067, 0.5, 0.22252093395631440428890256449679, -0.074730093586424254290939745734767, -0.36534102436639501454473799892977, -0.62348980185873353052500488400424, -0.82623877431599487194516257377268, -0.95557280578614073281133405376747},
+
+    { 0.99068594603633075234232296009621, 0.91721130150545301784380544796562, 0.77571129070441980704110101096954, 0.57668032211486714125104827526685, 0.33487961217098615195811507084789, 0.068242413364670975921188479022459, -0.20345601305263378987802872206158, -0.46006503773115212604157575981095, -0.68255314321865408287453754537254, -0.85441940454648855254821561955025, -0.96291728734779929501522359737324},
+
+    { 0.99211470131447783104979304278578, 0.92977648588825140366094255622199, 0.80901699437494742410229341718282, 0.63742398974868971017671281167602, 0.42577929156507264886250244574425, 0.18738131458572463054255073444729, -0.062790519529313376076178224565631, -0.30901699437494742410229341718282, -0.53582679497899661827130876786764, -0.72896862742141152314673031905526, -0.87630668004386358730811590392206, -0.96858316112863111949016837546474},
+
+    { 0.9932383577419429885478955521937, 0.93969262078590838405410927732473, 0.83548781141293641965382617001958, 0.68624163786873358572960499961754, 0.5, 0.28680323271109025310328017316716, 0.058144828910475828538748016847072, -0.17364817766693034885171662676931, -0.39607976603915682369604339160974, -0.59715859170278616485185216058396, -0.76604444311897803520239265055542, -0.89363264032341224819257418686666, -0.9730448705798238388328851727847},
+
+    { 0.99413795715435960895530271587955, 0.94765317118280244427400401197116, 0.85685717616758924452307655190537, 0.72599549192313085813833489892851, 0.56118706536238236926994092837361, 0.37013815533991435686398066761516, 0.16178199655276472654426006433642, -0.054138908585417526149908325974599, -0.26752833852922082119462620528334, -0.46840844069979013921623967414946, -0.64738628478182763918166013418615, -0.79609306570564374599807624650987, -0.90757541967095705362016129002852, -0.97662055571008668320822796287786},
+
+    { 0.99486932339189514632135330988372, 0.9541392564000488514758967202113, 0.87434661614458211882748466420065, 0.75875812269279090191325463636344, 0.61210598254766284414670562025986, 0.44039415155763430951617153371378, 0.25065253225872053931480203526596, 0.0506491688387127122787518574852, -0.15142777750457666365746764672722, -0.34730525284482028554185435548101, -0.52896401032696245736549239391223, -0.68896691907568656780086680381814, -0.82076344120727632636354456135537, -0.91895781162023062912718817327815, -0.97952994125249449393800644281177},
+
+    { 0.99547192257308460472625528112993, 0.95949297361449738989036805706633, 0.88883544865492346631159889295085, 0.78605309474278746975679605614722, 0.65486073394528506405692507246629, 0.5, 0.32706796331742163634174937015845, 0.14231483827328514044379266861637, -0.047581915823742297449787244031487, -0.23575893550942722825051032030149, -0.41541501300188642552927414922962, -0.58005690957119817919698113190031, -0.72373403810507016163985773676484, -0.84125353283118116886181164891937, -0.92836793301607261020058872476359, -0.98192869726270670039867444262475},
+
+    { 0.99597429399523902958171899372117, 0.96396286069585329188856595254999, 0.90096886790241912623610231950745, 0.80901699437494742410229341718282, 0.69106264898686467590493542565917, 0.55089698145210252268710431912041, 0.39302503165392361818796750981793, 0.22252093395631440428890256449679, 0.044864830350514925458090336801961, -0.13423326581765547603701864151067, -0.30901699437494742410229341718282, -0.47386866247299867070838300966598, -0.62348980185873353052500488400424, -0.75307146600361093353289811269675, -0.85844879360186611852569095533914, -0.93623487063973720950875572446812, -0.98392958859862965539563609398997},
+
+    { 0.99639748854252650165154277365754, 0.9677329469334988386884628287514, 0.91122849038813570282660508992284, 0.82850964924384212353081843419187, 0.72195609395452446235391606047102, 0.5946331763042866161328284577791, 0.45020374481767329245599983050632, 0.2928227712765503799533928156354, 0.12701781974687874737457396565945, -0.042441203196148305878069187534507, -0.21067926999572632036051575150445, -0.37285647778030861083065004879616, -0.52430728355723168779775745634732, -0.66067472339008144190840299928421, -0.77803575431843950713790343113589, -0.87301411316118815874909980158175, -0.94287744546108417004097128641441, -0.98561591034770846226477029397622},
+
+    { 0.99675730813420998558524122397576, 0.97094181742605202715698227629379, 0.9199794436588242031333806039892, 0.8451900855437947525384210461578, 0.74851074817110109863463059970135, 0.63244537559537723782104213562438, 0.5, 0.35460488704253562596963789260002, 0.20002569377604442753027918394613, 0.040265940109415143361954475857299, -0.12053668025532305334906768745254, -0.27821746391645263455461824396515, -0.42869256140305418307343366484824, -0.56806474673115580251180755912752, -0.69272435350959939260236403232864, -0.79944276340350114978431291653666, -0.8854560256532098959003755220151, -0.94853644194714552616490978364748, -0.9870502626379128637906800282244},
+
+    { 0.99706580118374046214464141042541, 0.97369542387777904436187566323954, 0.92750245110209466460508268787215, 0.85956960698720116004262881312271, 0.77148917982194292363331378525574, 0.66532570016556536355714133984804, 0.54356755000122115072811519024248, 0.40906863717133988836214785727025, 0.26498150219666168233133831383682, 0.11468342539840043432753801304704, -0.038302733690035348803054238839057, -0.1903911091646683687060801363671, -0.33801687840850275828011849137555, -0.47771981851226292267147382917956, -0.60622541096663801827437568536444, -0.72052159360078700864179520131798, -0.81792936076671766529581678508955, -0.89616555696105561114288125740742, -0.95339639205493054595327807138694, -0.98828042378034852632494937783259}
+                                          };
+//    std::vector<std::vector<double>> roots{{ 0.5},
+
+//    { 0.80901699437494742410229341718282, -0.30901699437494742410229341718282},
+
+//    { 0.90096886790241912623610231950745, -0.62348980185873353052500488400424, 0.22252093395631440428890256449679},
+
+//    { 0.93969262078590838405410927732473, -0.76604444311897803520239265055542, 0.5, -0.17364817766693034885171662676931},
+
+//    { 0.95949297361449738989036805706633, -0.84125353283118116886181164891937, 0.65486073394528506405692507246629, -0.41541501300188642552927414922962, 0.14231483827328514044379266861637},
+
+//    { 0.97094181742605202715698227629379, -0.8854560256532098959003755220151, 0.74851074817110109863463059970135, -0.56806474673115580251180755912752, 0.35460488704253562596963789260002, -0.12053668025532305334906768745254},
+
+//    { 0.9781476007338056379285667478696, -0.91354545764260089550212757198532, 0.80901699437494742410229341718282, -0.66913060635885821382627333068678, 0.5, -0.30901699437494742410229341718282, 0.1045284632676534713998341548025},
+
+//    { 0.9829730996839017782819488448552, -0.93247222940435580457311589182156, 0.85021713572961415213414392294935, -0.73900891722065911592453430987265, 0.60263463637925638917858815498684, -0.44573835577653826739645754937949, 0.27366299007208286353907793543681, -0.092268359463301995239651107154506},
+
+//    { 0.98636130340272237360250919481907, -0.94581724170063467901966571428494, 0.87947375120648907139085475488184, -0.78914050939639359921898114939909, 0.67728157162574107476215098449563, -0.54694815812242687471176274669619, 0.40169542465296945751684165974262, -0.24548548714079914892229091779637, 0.08257934547233232460034393423744},
+
+//    { 0.98883082622512854506974288293401, -0.95557280578614073281133405376747, 0.90096886790241912623610231950745, -0.82623877431599487194516257377268, 0.73305187182982632852243148927067, -0.62348980185873353052500488400424, 0.5, -0.36534102436639501454473799892977, 0.22252093395631440428890256449679, -0.074730093586424254290939745734767},
+
+//    { 0.99068594603633075234232296009621, -0.96291728734779929501522359737324, 0.91721130150545301784380544796562, -0.85441940454648855254821561955025, 0.77571129070441980704110101096954, -0.68255314321865408287453754537254, 0.57668032211486714125104827526685, -0.46006503773115212604157575981095, 0.33487961217098615195811507084789, -0.20345601305263378987802872206158, 0.068242413364670975921188479022459},
+
+//    { 0.99211470131447783104979304278578, -0.96858316112863111949016837546474, 0.92977648588825140366094255622199, -0.87630668004386358730811590392206, 0.80901699437494742410229341718282, -0.72896862742141152314673031905526, 0.63742398974868971017671281167602, -0.53582679497899661827130876786764, 0.42577929156507264886250244574425, -0.30901699437494742410229341718282, 0.18738131458572463054255073444729, -0.062790519529313376076178224565631},
+
+//    { 0.9932383577419429885478955521937, -0.9730448705798238388328851727847, 0.93969262078590838405410927732473, -0.89363264032341224819257418686666, 0.83548781141293641965382617001958, -0.76604444311897803520239265055542, 0.68624163786873358572960499961754, -0.59715859170278616485185216058396, 0.5, -0.39607976603915682369604339160974, 0.28680323271109025310328017316716, -0.17364817766693034885171662676931, 0.058144828910475828538748016847072},
+
+//    { 0.99413795715435960895530271587955, -0.97662055571008668320822796287786, 0.94765317118280244427400401197116, -0.90757541967095705362016129002852, 0.85685717616758924452307655190537, -0.79609306570564374599807624650987, 0.72599549192313085813833489892851, -0.64738628478182763918166013418615, 0.56118706536238236926994092837361, -0.46840844069979013921623967414946, 0.37013815533991435686398066761516, -0.26752833852922082119462620528334, 0.16178199655276472654426006433642, -0.054138908585417526149908325974599},
+
+//    { 0.99486932339189514632135330988372, -0.97952994125249449393800644281177, 0.9541392564000488514758967202113, -0.91895781162023062912718817327815, 0.87434661614458211882748466420065, -0.82076344120727632636354456135537, 0.75875812269279090191325463636344, -0.68896691907568656780086680381814, 0.61210598254766284414670562025986, -0.52896401032696245736549239391223, 0.44039415155763430951617153371378, -0.34730525284482028554185435548101, 0.25065253225872053931480203526596, -0.15142777750457666365746764672722, 0.0506491688387127122787518574852},
+
+//    { 0.99547192257308460472625528112993, -0.98192869726270670039867444262475, 0.95949297361449738989036805706633, -0.92836793301607261020058872476359, 0.88883544865492346631159889295085, -0.84125353283118116886181164891937, 0.78605309474278746975679605614722, -0.72373403810507016163985773676484, 0.65486073394528506405692507246629, -0.58005690957119817919698113190031, 0.5, -0.41541501300188642552927414922962, 0.32706796331742163634174937015845, -0.23575893550942722825051032030149, 0.14231483827328514044379266861637, -0.047581915823742297449787244031487},
+
+//    { 0.99597429399523902958171899372117, -0.98392958859862965539563609398997, 0.96396286069585329188856595254999, -0.93623487063973720950875572446812, 0.90096886790241912623610231950745, -0.85844879360186611852569095533914, 0.80901699437494742410229341718282, -0.75307146600361093353289811269675, 0.69106264898686467590493542565917, -0.62348980185873353052500488400424, 0.55089698145210252268710431912041, -0.47386866247299867070838300966598, 0.39302503165392361818796750981793, -0.30901699437494742410229341718282, 0.22252093395631440428890256449679, -0.13423326581765547603701864151067, 0.044864830350514925458090336801961},
+
+//    { 0.99639748854252650165154277365754, -0.98561591034770846226477029397622, 0.9677329469334988386884628287514, -0.94287744546108417004097128641441, 0.91122849038813570282660508992284, -0.87301411316118815874909980158175, 0.82850964924384212353081843419187, -0.77803575431843950713790343113589, 0.72195609395452446235391606047102, -0.66067472339008144190840299928421, 0.5946331763042866161328284577791, -0.52430728355723168779775745634732, 0.45020374481767329245599983050632, -0.37285647778030861083065004879616, 0.2928227712765503799533928156354, -0.21067926999572632036051575150445, 0.12701781974687874737457396565945, -0.042441203196148305878069187534507},
+
+//    { 0.99675730813420998558524122397576, -0.9870502626379128637906800282244, 0.97094181742605202715698227629379, -0.94853644194714552616490978364748, 0.9199794436588242031333806039892, -0.8854560256532098959003755220151, 0.8451900855437947525384210461578, -0.79944276340350114978431291653666, 0.74851074817110109863463059970135, -0.69272435350959939260236403232864, 0.63244537559537723782104213562438, -0.56806474673115580251180755912752, 0.5, -0.42869256140305418307343366484824, 0.35460488704253562596963789260002, -0.27821746391645263455461824396515, 0.20002569377604442753027918394613, -0.12053668025532305334906768745254, 0.040265940109415143361954475857299},
+
+//    { 0.99706580118374046214464141042541, -0.98828042378034852632494937783259, 0.97369542387777904436187566323954, -0.95339639205493054595327807138694, 0.92750245110209466460508268787215, -0.89616555696105561114288125740742, 0.85956960698720116004262881312271, -0.81792936076671766529581678508955, 0.77148917982194292363331378525574, -0.72052159360078700864179520131798, 0.66532570016556536355714133984804, -0.60622541096663801827437568536444, 0.54356755000122115072811519024248, -0.47771981851226292267147382917956, 0.40906863717133988836214785727025, -0.33801687840850275828011849137555, 0.26498150219666168233133831383682, -0.1903911091646683687060801363671, 0.11468342539840043432753801304704, -0.038302733690035348803054238839057}
+//                                          };
+
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    for (double root : roots[chebyshev_order_ - 1]) {
+//        outfile->Printf("\nCurrent root:%.12lf",range_ * root + shift_);
+//        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+        normalize(C);
+    }
+
 }
 
 
@@ -913,9 +1091,10 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     for (int j = 2; j <= order; ++j){
         // Copy the wave function to a vector
         copy_hash_to_vec(dets_C_hash,dets,C);
+        double current_spawning = spawning_threshold * norm(dets_C_hash);
         dets_C_hash.clear();
 //        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
-        apply_tau_H_subset(coef[j]/coef[j-1], dets, C, dets_C_hash, 0.0);
+        apply_tau_H_subset(coef[j]/coef[j-1], current_spawning, dets, C, dets_sum_map, dets_C_hash, 0.0);
 
         // Add this term to the total vector
         combine_hashes(dets_C_hash,dets_sum_map);
@@ -1503,19 +1682,355 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
 
 }
 
-void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_hash, double S)
+void AdaptivePathIntegralCI::apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
 {
+    // Diagonal contributions
+    double det_energy = detI.energy();
+//    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    std::vector<int> aocc = detI.get_alfa_occ();
+    std::vector<int> bocc = detI.get_beta_occ();
+    std::vector<int> avir = detI.get_alfa_vir();
+    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc_offset(nirrep_ + 1);
+    std::vector<int> bocc_offset(nirrep_ + 1);
+    std::vector<int> avir_offset(nirrep_ + 1);
+    std::vector<int> bvir_offset(nirrep_ + 1);
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+    for (int h = 1; h < nirrep_ + 1; ++h){
+        aocc_offset[h] += aocc_offset[h-1];
+        avir_offset[h] += avir_offset[h-1];
+        bocc_offset[h] += bocc_offset[h-1];
+        bvir_offset[h] += bvir_offset[h-1];
+    }
+
+    // do_singles
+    Determinant detJ(detI);
+    // Generate aa excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = aocc_offset[h]; i < aocc_offset[h + 1]; ++i){
+            int ii = aocc[i];
+            for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a){
+                int aa = avir[a];
+                detJ = detI;
+                detJ.set_alfa_bit(ii,false);
+                detJ.set_alfa_bit(aa,true);
+                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                    double HJI = detI.slater_rules_single_alpha(ii,aa);
+                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                }
+            }
+        }
+    }
+    // Generate bb excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = bocc_offset[h]; i < bocc_offset[h + 1]; ++i){
+            int ii = bocc[i];
+            for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a){
+                int aa = bvir[a];
+                detJ = detI;
+                detJ.set_beta_bit(ii,false);
+                detJ.set_beta_bit(aa,true);
+                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                    double HJI = detI.slater_rules_single_beta(ii,aa);
+                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                }
+            }
+        }
+    }
+
+    // do_doubles
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : avir_offset[h];
+                int maxb = avir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = avir[b];
+                    detJ = detI;
+                    double HJI = detJ.double_excitation_aa(ii,jj,aa,bb);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        HJI *= fci_ints_->tei_aa(ii,jj,aa,bb);
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                int minb = bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    detJ = detI;
+                    double HJI = detJ.double_excitation_ab(ii,jj,aa,bb);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        HJI *= fci_ints_->tei_ab(ii,jj,aa,bb);
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    detJ = detI;
+                    double HJI = detJ.double_excitation_bb(ii,jj,aa,bb);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        HJI *= fci_ints_->tei_bb(ii,jj,aa,bb);
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+void AdaptivePathIntegralCI::apply_tau_H_det_subset_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
+{
+    // Diagonal contributions
+    double det_energy = detI.energy();
+//    new_space_C[detI] += tau * (det_energy - E0) * CI;
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    std::vector<int> aocc = detI.get_alfa_occ();
+    std::vector<int> bocc = detI.get_beta_occ();
+    std::vector<int> avir = detI.get_alfa_vir();
+    std::vector<int> bvir = detI.get_beta_vir();
+    std::vector<int> aocc_offset(nirrep_ + 1);
+    std::vector<int> bocc_offset(nirrep_ + 1);
+    std::vector<int> avir_offset(nirrep_ + 1);
+    std::vector<int> bvir_offset(nirrep_ + 1);
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+    for (int h = 1; h < nirrep_ + 1; ++h){
+        aocc_offset[h] += aocc_offset[h-1];
+        avir_offset[h] += avir_offset[h-1];
+        bocc_offset[h] += bocc_offset[h-1];
+        bvir_offset[h] += bvir_offset[h-1];
+    }
+
+
+    // do_singles
+    Determinant detJ(detI);
+    // Generate aa excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = aocc_offset[h]; i < aocc_offset[h + 1]; ++i){
+            int ii = aocc[i];
+            for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a){
+                int aa = avir[a];
+                double HJI = detI.slater_rules_single_alpha(ii,aa);
+//                my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                if (std::fabs(HJI * CI) >= spawning_threshold){
+                    detJ = detI;
+                    detJ.set_alfa_bit(ii,false);
+                    detJ.set_alfa_bit(aa,true);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+//                detJ = detI;
+//                detJ.set_alfa_bit(ii,false);
+//                detJ.set_alfa_bit(aa,true);
+//                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                    double HJI = detI.slater_rules_single_alpha(ii,aa);
+//                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                }
+            }
+        }
+    }
+    // Generate bb excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = bocc_offset[h]; i < bocc_offset[h + 1]; ++i){
+            int ii = bocc[i];
+            for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a){
+                int aa = bvir[a];
+                double HJI = detI.slater_rules_single_beta(ii,aa);
+//                my_new_max_one_HJI = std::max(my_new_max_one_HJI,std::fabs(HJI));
+                if (std::fabs(HJI * CI) >= spawning_threshold){
+                    detJ = detI;
+                    detJ.set_beta_bit(ii,false);
+                    detJ.set_beta_bit(aa,true);
+                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                    }
+                }
+//                detJ = detI;
+//                detJ.set_beta_bit(ii,false);
+//                detJ.set_beta_bit(aa,true);
+//                if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                    double HJI = detI.slater_rules_single_beta(ii,aa);
+//                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                }
+            }
+        }
+    }
+
+    // do_doubles
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : avir_offset[h];
+                int maxb = avir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = avir[b];
+                    double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_aa(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_aa(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                int minb = bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_ab(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_ab(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
+//                    my_new_max_two_HJI = std::max(my_new_max_two_HJI,std::fabs(HJI));
+
+                    if (std::fabs(HJI * CI) >= spawning_threshold){
+                        detJ = detI;
+                        HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
+                        if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                        }
+                    }
+//                    detJ = detI;
+//                    double HJI = detJ.double_excitation_bb(ii,jj,aa,bb);
+//                    if (dets_sum_map.end() != dets_sum_map.find(detJ)){
+//                        HJI *= fci_ints_->tei_bb(ii,jj,aa,bb);
+//                        new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+//                    }
+                }
+            }
+        }
+    }
+}
+
+void AdaptivePathIntegralCI::apply_tau_H_subset(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_sum_map, det_hash<>& dets_C_hash, double S)
+{
+//    size_t max_I = dets.size();
+//#pragma omp parallel for
+//    for (size_t I = 0; I < max_I; ++I){
+//        double CI = 0.0;
+//        for (size_t j = 0; j < max_I; ++j) {
+//            CI += dets[I].slater_rules(dets[j]) * C[j];
+//        }
+//        CI *= tau;
+//        #pragma omp critical
+//        {
+//            dets_C_hash[dets[I]] = CI;
+//        }
+//    }
     size_t max_I = dets.size();
 #pragma omp parallel for
     for (size_t I = 0; I < max_I; ++I){
-        double CI = 0.0;
-        for (size_t j = 0; j < max_I; ++j) {
-            CI += dets[I].slater_rules(dets[j]) * C[j];
-        }
-        CI *= tau;
+        std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+//        apply_tau_H_det_subset(tau,dets[I],C[I], dets_sum_map,thread_det_C_vec,S);
+        apply_tau_H_det_subset_prescreening(tau, spawning_threshold, dets[I], C[I], dets_sum_map, thread_det_C_vec, S);
         #pragma omp critical
         {
-            dets_C_hash[dets[I]] = CI;
+            for (auto det_C : thread_det_C_vec) {
+                dets_C_hash[det_C.first] += det_C.second;
+            }
         }
     }
 }
