@@ -2376,11 +2376,11 @@ void THREE_DSRG_MRPT2::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const doub
 void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
     Timer timer;
 
-    C1["ij"] += alpha * H1["aj"] * T1["ia"];
-    C1["ja"] -= alpha * T1["ia"] * H1["ji"];
+    C1["ip"] += alpha * H1["ap"] * T1["ia"];
+    C1["qa"] -= alpha * T1["ia"] * H1["qi"];
 
-    C1["IJ"] += alpha * H1["AJ"] * T1["IA"];
-    C1["JA"] -= alpha * T1["IA"] * H1["JI"];
+    C1["IP"] += alpha * H1["AP"] * T1["IA"];
+    C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());
@@ -2391,12 +2391,12 @@ void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const doub
 void THREE_DSRG_MRPT2::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
     Timer timer;
 
-    C1["ij"] += alpha * H1["bm"] * T2["imjb"];
-    C1["ij"] += alpha * H1["bu"] * T2["ivjb"] * Gamma1_["uv"];
+    C1["ia"] += alpha * H1["bm"] * T2["imab"];
+    C1["ia"] += alpha * H1["bu"] * T2["ivab"] * Gamma1_["uv"];
     C1["ia"] -= alpha * H1["vj"] * T2["ijau"] * Gamma1_["uv"];
-    C1["ij"] += alpha * H1["BM"] * T2["iMjB"];
-    C1["ij"] += alpha * H1["BU"] * T2["iVjB"] * Gamma1_["UV"];
-    C1["ij"] -= alpha * H1["VJ"] * T2["iJjU"] * Gamma1_["UV"];
+    C1["ia"] += alpha * H1["BM"] * T2["iMaB"];
+    C1["ia"] += alpha * H1["BU"] * T2["iVaB"] * Gamma1_["UV"];
+    C1["ia"] -= alpha * H1["VJ"] * T2["iJaU"] * Gamma1_["UV"];
 
     C1["IA"] += alpha * H1["bm"] * T2["mIbA"];
     C1["IA"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["vIbA"];
