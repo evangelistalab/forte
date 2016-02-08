@@ -17,7 +17,7 @@ Makefile
 /tests/*/output.dat
 /tests/methods/*/output.dat
 /tests/*/*.clean
-/tests/*/*.bin
+/tests/methods/*/*.bin
 /tests/methods/*/*.clean
 /tests/*/*.txt
 /tests/*/*.plt
