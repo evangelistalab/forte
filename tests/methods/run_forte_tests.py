@@ -30,7 +30,8 @@ lambda_ci_tests = ["casci-1","casci-2","casci-3","casci-4",
 adaptive_ci_tests = ["aci-1","aci-2","aci-3",
                      "aci-4","aci-5","aci-6",
                      "aci-7","aci-8","aci-9",
-                     "aci-10","aci-11","aci-12", "aci_scf-1"]
+                     "aci-10","aci-11","aci-12", 
+                     "aci-13","aci_scf-1"]
 
 apifci_tests = ["apifci-1","apifci-2","apifci-3","apifci-4","apifci-5", "apifci-6", "apifci-7", "apifci-8","apifci-9"]
 fciqmc_tests = ["fciqmc"]
