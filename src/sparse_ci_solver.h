@@ -31,7 +31,7 @@
 
 namespace psi{ namespace forte{
 
-enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList,DLSolver,DLString};
+enum DiagonalizationMethod {Full,DavidsonLiuDense,DavidsonLiuSparse,DavidsonLiuList,DLSolver,DLString, DLDisk};
 
 /**
  * @brief The SigmaVector class
@@ -145,7 +145,7 @@ protected:
 class SigmaVectorString : public SigmaVector
 {
 public:
-    SigmaVectorString(const std::vector<STLBitsetDeterminant>& space, bool print_detail);
+    SigmaVectorString(const std::vector<STLBitsetDeterminant>& space, bool print_detail, bool disk);
 
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;
@@ -169,9 +169,20 @@ public:
 
 protected:
     bool print_details_ = true;
+    bool use_disk_ = false;    
+
     const std::vector<STLBitsetDeterminant>& space_;
 
     std::vector<double> diag_;
+    std::vector<std::vector<int>>   s_buf_;    
+    std::vector<std::vector<int>>   d_buf_;    
+
+    void write_single_to_disk( std::vector<std::vector<std::pair<size_t,short>>>& s_list ,int i); 
+    void write_double_to_disk( std::vector<std::vector<std::tuple<size_t,short,short>>>& s_list, int i ); 
+
+    void read_single_from_disk(  std::vector<std::vector<std::pair<size_t,short>>>& s_list, int i);
+    void read_double_from_disk(  std::vector<std::vector<std::tuple<size_t,short,short>>>& d_list, int i);
+
 };
 
 /**
@@ -256,7 +267,7 @@ private:
 
     void diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
 
-    void diagonalize_davidson_liu_string(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
+    void diagonalize_davidson_liu_string(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
     /// Build the full Hamiltonian matrix
     SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
 
