@@ -210,11 +210,14 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
                 for (int orb2 = orb1; orb2 < iHandler->getNDMRG(h); orb2++){
                     HamDMRG->setTmat( shift+orb1, shift+orb2, moOei[h][NOCC+orb1][NOCC+orb2]
                                                   + theQmatOCC->get(h, NOCC+orb1, NOCC+orb2) );
+                    outfile->Printf("\n TMat(%d, %d) = %8.8f", shift + orb1, shift+orb2, moOei[h][NOCC+orb1][NOCC+orb2]
+                            + theQmatOCC->get(h, NOCC+orb1, NOCC+orb2));
                 }
             }
         }
         delete [] work1;
         HamDMRG->setEconst( Econstant );
+        outfile->Printf("\n EConst = %8.8f", Econstant);
     }
 
     // Two-electron integrals
@@ -237,6 +240,10 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
     }
     global_dpd_->buf4_close(&K);
     psio->close(PSIF_LIBTRANS_DPD, PSIO_OPEN_OLD);
+
+}
+void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix *theQmatOCC, CheMPS2::DMRGSCFindices *iHandler, CheMPS2::Hamiltonian *HamDMRG, boost::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints)
+{
 
 }
 
@@ -552,8 +559,8 @@ void DMRGSCF::compute_energy()
 
     SharedMatrix work1; work1 = SharedMatrix( new Matrix("work1", nirrep, orbspi, orbspi) );
     SharedMatrix work2; work2 = SharedMatrix( new Matrix("work2", nirrep, orbspi, orbspi) );
-    //boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(wfn->basisset()));
-    boost::shared_ptr<JK> myJK = JK::build_JK();
+    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(wfn->basisset()));
+    //boost::shared_ptr<JK> myJK = JK::build_JK();
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
@@ -941,13 +948,13 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aaa.scale(1.0 / 12.0);
         gamma3_aab("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
         gamma3_aab.scale(1.0 / 12.0);
-        gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
-        gamma3_abb.scale(1.0 / 12.0);
+        //gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
+        //gamma3_abb.scale(1.0 / 12.0);
         ambit::Tensor L1a = dmrg_ref.L1a();
         ambit::Tensor L1b = dmrg_ref.L1b();
         ambit::Tensor L2aa = dmrg_ref.L2aa();
         ambit::Tensor L2ab = dmrg_ref.L2ab();
-        ambit::Tensor L2bb = dmrg_ref.L2bb();
+        //ambit::Tensor L2bb = dmrg_ref.L2bb();
         // Convert the 3-RDMs to 3-RCMs
         gamma3_aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
         gamma3_aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
@@ -982,16 +989,16 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
 
-        gamma3_abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
 
-        gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-        gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+        //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+        //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
 
-        gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-        gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+        //gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+        //gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
 
-        gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-        gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+        //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
         dmrg_ref.set_L3aab(gamma3_aab);
