@@ -57,6 +57,10 @@ private:
                   CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler,
                   CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<PSIO> psio,
                   boost::shared_ptr<Wavefunction> wfn );
+    void buildHamDMRGForte(
+                  CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler,
+                  CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints);
+
 
     void fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr,
                             CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI,

@@ -836,14 +836,14 @@ void PostCASSCFOrbitalOptimizer::form_fock_intermediates()
         H_->print();
     }
 
-
-
     ///Form F_core and F_active using user provided integrals
     F_core("p, q") = 2.0 * pq_mm_("pqmm") - pm_qm_("pmqm");
     F_active("p, q") = gamma1_("u, v") * (pq_uv_("pquv") );
     F_active("p, q") -= 0.5 * gamma1_("u, v") * (pu_qv_("pquv") );
     F_core_c1 = tensor_to_matrix(F_core);
-    F_core_c1 = tensor_to_matrix(F_active);
+    F_active_c1 = tensor_to_matrix(F_active);
+    F_core_ = F_core_c1;
+    F_act_ = F_core_c1;
 }
 
 
