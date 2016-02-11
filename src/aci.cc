@@ -197,6 +197,8 @@ void AdaptiveCI::startup()
             diag_method_ = DavidsonLiuList;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING"){
             diag_method_ = DLString;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK"){
+            diag_method_ = DLDisk;
         }
     }
     aimed_selection_ = false;
