@@ -755,7 +755,6 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
             }
         }
     }
-    outfile->Printf("\n  Get to here");
         // aabb singles
     if( use_disk_ ){
         bb_ann_list_.clear();
