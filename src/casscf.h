@@ -92,6 +92,9 @@ private:
     void startup();
     /// Compute overlap between old_c and new_c
     void overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new);
+    void write_orbitals_molden();
+    /// Diagonalize F_I + F_A
+    std::pair<SharedMatrix, SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;

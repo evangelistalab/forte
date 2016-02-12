@@ -497,9 +497,10 @@ ambit::Tensor CASSCF::transform_integrals()
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
     std::vector<std::pair<boost::shared_ptr<Matrix>, std::vector<int> > > D_vec;
+    Timer c_dger;
     for(size_t i = 0; i < na_; i++){
         SharedVector C_i = CAct->get_column(0, i);
-        for(size_t j = 0; j < na_; j++){
+        for(size_t j = i; j < na_; j++){
             SharedMatrix D(new Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
@@ -510,6 +511,10 @@ ambit::Tensor CASSCF::transform_integrals()
 
             D_vec.push_back(std::make_pair(D, ij));
         }
+    }
+    if(print_ > 1)
+    {
+        outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
     boost::shared_ptr<JK> JK_trans = JK::build_JK();
     JK_trans->set_memory(Process::environment.get_memory() * 0.8);
@@ -525,7 +530,12 @@ ambit::Tensor CASSCF::transform_integrals()
         Cl.push_back(D_vec[d].first);
         Cr.push_back(Identity);
     }
+    Timer jk_build;
     JK_trans->compute();
+    if(print_ > 1)
+    {
+        outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
+    }
 
     SharedMatrix half_trans(new Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
@@ -542,6 +552,7 @@ ambit::Tensor CASSCF::transform_integrals()
         for(size_t p = 0; p < nmo_with_froze; p++){
             for(size_t q = 0; q < na_; q++){
                 active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(absolute_all[p], q);
+                active_int_data[corr_abs[p] * na_ * na_ * na_ + j * na_ * na_ + q * na_ + i] = half_trans->get(absolute_all[p], q);
             }
         }
     }
@@ -862,6 +873,11 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
+}
+void CASSCF::write_orbitals_molden()
+{
+    SharedVector occ_vector(new Vector(nirrep_, nmopi_));
+    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
 }
 
 }}
