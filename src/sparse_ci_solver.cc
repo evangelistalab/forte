@@ -14,6 +14,13 @@
 
 namespace psi{ namespace forte{
 
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num() 0
+#endif
+
 void SigmaVectorFull::compute_sigma(Matrix& sigma, Matrix &b, int){
     sigma.gemm(false,true,1.0,H_,b,0.0);
 }
@@ -56,6 +63,9 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 {
     using det_hash = std::unordered_map<STLBitsetDeterminant,size_t,STLBitsetDeterminant::Hash>;
     using bstmap_it = det_hash::iterator;
+
+    int ntd = omp_get_max_threads();
+    outfile->Printf("\n  Using %d threads.", ntd);
 
     print_ = print_details;
     
@@ -156,6 +166,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         a_ann_list_.resize(max_I*noalfa_, std::make_pair(0,0));
         outfile->Printf("\n\n  Building alpha annihilation list");
         size_t na_ann = 0;
+
         for(size_t B = 0; B < n_beta_strings; ++B){
             det_hash map_a_ann;
             std::vector<size_t> a_list = beta_to_det[B];
@@ -639,6 +650,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         read_single_from_disk(a_cre_list_, 2);
     }
 
+#pragma omp parallel for schedule(dynamic)
     for (size_t J = 0; J < size_; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
@@ -652,9 +664,9 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 std::pair<size_t,int> aaJ_mo_sign = a_cre_list_[adet];
                 const size_t q = aaJ_mo_sign.second;
                 if (p != q){
-                    const double HIJ = space_[J].slater_rules_single_alpha(p,q);
                     const size_t I = aaJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    const double HIJ = space_[I].slater_rules_single_alpha(q,p);
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -671,6 +683,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         read_single_from_disk(b_ann_list_, 1);
         read_single_from_disk(b_cre_list_, 3);
     }
+#pragma omp parallel for schedule(dynamic)
     for (size_t J = 0; J < size_; ++J){
         for( size_t b = 0; b < nobeta_; ++b){
             std::pair<size_t,int> bpair = b_ann_list_[J * nobeta_ + b];
@@ -681,9 +694,9 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 std::pair<size_t,int> bbJ_mo_sign = b_cre_list_[bdet];
                 const size_t q = bbJ_mo_sign.second;
                 if (p != q){
-                    const double HIJ = space_[J].slater_rules_single_beta(p,q);
                     const size_t I = bbJ_mo_sign.first;
-                    sigma_p[I] += HIJ * b_p[J];
+                    const double HIJ = space_[I].slater_rules_single_beta(q,p);
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -701,6 +714,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         read_double_from_disk(aa_cre_list_, 7);
 
     }
+#pragma omp parallel for schedule(dynamic)
     for (size_t J = 0; J < size_; ++J){
         for( size_t a = 0, max_a = noalfa_*(noalfa_-1)/2; a < max_a; ++a){
             std::tuple<size_t,short,short> aaJ_mo_sign = aa_ann_list_[J*noalfa_*(noalfa_-1)/2 + a];
@@ -717,8 +731,8 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
                     const size_t I = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(r,s,p,q);
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -734,6 +748,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         read_double_from_disk(bb_ann_list_, 5);
         read_double_from_disk(bb_cre_list_, 8);
     }
+#pragma omp parallel for schedule(dynamic)
     for (size_t J = 0; J < size_; ++J){
         for( size_t b = 0, max_b = nobeta_*(nobeta_-1)/2; b < max_b; ++b){
             std::tuple<size_t,short,short> bbJ_mo_sign = bb_ann_list_[J*nobeta_*(nobeta_-1)/2 + b];
@@ -749,8 +764,8 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
                     const size_t I = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
-                    sigma_p[I] += HIJ * b_p[J];
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(r,s,p,q);
+                    sigma_p[J] += HIJ * b_p[I];
                 }
             }
         }
@@ -766,6 +781,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         read_double_from_disk(ab_ann_list_, 6);
         read_double_from_disk(ab_cre_list_, 9);
     }
+#pragma omp parallel for schedule(dynamic)
     for (size_t J = 0; J < size_; ++J){
         for (size_t a = 0; a < noalfa_; ++a){
             for (size_t b = 0; b < nobeta_; ++b){
@@ -782,8 +798,8 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     if ((p != r) and (q != s)){
                         const size_t I = std::get<0>(ababJ_mo_sign);
                         const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
-                        sigma_p[I] += HIJ * b_p[J];
+                        const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(r,s,p,q);
+                        sigma_p[J] += HIJ * b_p[I];
                     }
                 }
             }
