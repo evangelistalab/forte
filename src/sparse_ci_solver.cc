@@ -153,7 +153,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     Timer single; 
     // Build alpha annihilation list
     {
-        a_ann_list_.resize(max_I*noalfa_);
+        a_ann_list_.resize(max_I*noalfa_, std::make_pair(0,0));
         outfile->Printf("\n\n  Building alpha annihilation list");
         size_t na_ann = 0;
         for(size_t B = 0; B < n_beta_strings; ++B){
@@ -205,7 +205,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         a_ann_list_.shrink_to_fit();
         outfile->Printf("      ...done");
         outfile->Printf("\n  Building alpha creation list");
-        a_cre_list_.resize(a_ann_list_.size());
+        a_cre_list_.resize(a_ann_list_.size(), std::make_pair(0,0));
         std::vector<int> buffer(na_ann,0);
         for( size_t I = 0; I < max_I; ++I){
             for( size_t a = 0; a < noalfa_; ++a){
@@ -230,7 +230,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     // Compute the beta annihilation lists
     {
         outfile->Printf("\n  Building beta annihilation list");
-        b_ann_list_.resize(max_I*nobeta_);
+        b_ann_list_.resize(max_I*nobeta_, std::make_pair(0,0));
         size_t nb_ann = 0;
         for(size_t A = 0; A < n_alfa_strings; ++A){
             det_hash map_b_ann;
@@ -281,7 +281,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         b_ann_list_.shrink_to_fit();
         outfile->Printf("       ...done");
         outfile->Printf("\n  Building beta creation list");
-        b_cre_list_.resize(b_ann_list_.size());
+        b_cre_list_.resize(b_ann_list_.size(), std::make_pair(0,0));
         for( size_t I = 0; I < max_I; ++I){
             for( size_t b = 0; b < nobeta_; ++b){
                 auto bpair = b_ann_list_[nobeta_*I + b];
@@ -310,7 +310,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     outfile->Printf("\n  Building alpha-alpha annihilation lists");
     {
         size_t naa_ann = 0;
-        aa_ann_list_.resize(max_I * noalfa_ * (noalfa_-1)/2);
+        aa_ann_list_.resize(max_I * noalfa_ * (noalfa_-1)/2, std::make_tuple(0,0,0));
         for(size_t B = 0; B < n_beta_strings; ++B){
             det_hash map_aa_ann;
             std::vector<size_t> a_list = beta_to_det[B];
@@ -362,7 +362,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 
         outfile->Printf("     ...done");
         outfile->Printf("\n  Building alpha-alpha creation lists");
-        aa_cre_list_.resize(aa_ann_list_.size());
+        aa_cre_list_.resize(aa_ann_list_.size(), std::make_tuple(0,0,0) );
         std::vector<int> buffer(naa_ann,0);
         for(size_t I = 0; I < max_I; ++I){
             for ( size_t a = 0, max_a = noalfa_*(noalfa_-1)/2; a < max_a; ++a){
@@ -391,7 +391,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     outfile->Printf("\n  Building beta-beta annihilation lists");
     {
         size_t nbb_ann = 0;
-        bb_ann_list_.resize(max_I * nobeta_*(nobeta_-1)/2);
+        bb_ann_list_.resize(max_I * nobeta_*(nobeta_-1)/2, std::make_tuple(0,0,0));
         for(size_t A = 0; A < n_alfa_strings; ++A){
             det_hash map_bb_ann;
             std::vector<size_t> b_list = alfa_to_det[A];
@@ -444,7 +444,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         cre_list_buffer_[3].push_back(bb_ann_list_.size());        
 
         outfile->Printf("\n  Building beta-beta creation lists");
-        bb_cre_list_.resize(bb_ann_list_.size());
+        bb_cre_list_.resize(bb_ann_list_.size(), std::make_tuple(0,0,0));
         std::vector<size_t> buffer(nbb_ann,0);
         for(size_t I = 0; I < max_I; ++I){
             for ( size_t a = 0; a < nobeta_*(nobeta_-1)/2; ++a){
@@ -474,7 +474,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     outfile->Printf("\n  Building alpha-beta annihilation lists");
     {
         size_t nab_ann = 0;
-        ab_ann_list_.resize(max_I*noalfa_*nobeta_);
+        ab_ann_list_.resize(max_I*noalfa_*nobeta_, std::make_tuple(0,0,0) );
 
         // Loop through a_str_list to get all n-1(a) determinants
         for( size_t adet = 0; adet < nastr; ++adet){
@@ -524,7 +524,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         cre_list_buffer_[4].push_back(ab_ann_list_.size());        
 
         outfile->Printf("\n  Building alpha-beta creation lists");
-        ab_cre_list_.resize(ab_ann_list_.size());
+        ab_cre_list_.resize(ab_ann_list_.size(), std::make_tuple(0,0,0));
         std::vector<int> buffer(nab_ann,0);
         for(size_t I = 0; I < max_I; ++I){
             for ( size_t a = 0; a < noalfa_; ++a){
@@ -552,6 +552,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     } 
 
     outfile->Printf("\n  Time spent building doubles lists:   %7.6f s \n", doubles.get());
+    outfile->Flush();
 }
 
 
@@ -703,11 +704,12 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     for (size_t J = 0; J < size_; ++J){
         for( size_t a = 0, max_a = noalfa_*(noalfa_-1)/2; a < max_a; ++a){
             std::tuple<size_t,short,short> aaJ_mo_sign = aa_ann_list_[J*noalfa_*(noalfa_-1)/2 + a];
+            if( std::get<1>(aaJ_mo_sign) == 0) continue;
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
             const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
             const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
             const size_t q = std::get<2>(aaJ_mo_sign);
-            if( aaJ_add == 0 and p == 0 and q ==0 and J !=0 ) continue; 
+            if( (aaJ_add == 0) and (p==0) and (q==0) and (J!=0) ) continue; 
             for( size_t aadet = cre_list_buffer_[2][aaJ_add]; aadet < cre_list_buffer_[2][aaJ_add+1]; ++aadet){
                 std::tuple<size_t,short,short> aaaaJ_mo_sign = aa_cre_list_[aadet];
                 const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
@@ -735,11 +737,11 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     for (size_t J = 0; J < size_; ++J){
         for( size_t b = 0, max_b = nobeta_*(nobeta_-1)/2; b < max_b; ++b){
             std::tuple<size_t,short,short> bbJ_mo_sign = bb_ann_list_[J*nobeta_*(nobeta_-1)/2 + b];
+            if( std::get<1>(bbJ_mo_sign) == 0) continue;
             const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
             const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
             const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
             const size_t q = std::get<2>(bbJ_mo_sign);
-            if( bbJ_add == 0 and p == 0 and q ==0 and J !=0 ) continue; 
             for(size_t bbdet = cre_list_buffer_[3][bbJ_add]; bbdet < cre_list_buffer_[3][bbJ_add+1]; ++bbdet){
                 std::tuple<size_t,short,short> bbbbJ_mo_sign = bb_cre_list_[bbdet];
                 const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
@@ -753,7 +755,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
             }
         }
     }
-
+    outfile->Printf("\n  Get to here");
         // aabb singles
     if( use_disk_ ){
         bb_ann_list_.clear();
@@ -769,11 +771,11 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
         for (size_t a = 0; a < noalfa_; ++a){
             for (size_t b = 0; b < nobeta_; ++b){
                 std::tuple<size_t,short,short> abJ_mo_sign = ab_ann_list_[J * nobeta_ *noalfa_ + a*noalfa_ + b];
+                if( std::get<1>(abJ_mo_sign) == 0) continue;
                 const size_t abJ_add = std::get<0>(abJ_mo_sign);
                 const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                 const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
                 const size_t q = std::get<2>(abJ_mo_sign);
-                if( abJ_add == 0 and p == 0 and q ==0 and J !=0 ) continue; 
                 for( size_t abdet = cre_list_buffer_[4][abJ_add]; abdet < cre_list_buffer_[4][abJ_add+1]; ++abdet){
                     std::tuple<size_t,short,short> ababJ_mo_sign = ab_cre_list_[abdet];
                     const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
