@@ -731,7 +731,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
                     const size_t I = std::get<0>(aaaaJ_mo_sign);
                     const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(r,s,p,q);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
@@ -764,7 +764,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                 if ((p != r) and (q != s) and (p != s) and (q != r)){
                     const size_t I = std::get<0>(bbbbJ_mo_sign);
                     const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(r,s,p,q);
+                    const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[J] += HIJ * b_p[I];
                 }
             }
@@ -798,7 +798,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
                     if ((p != r) and (q != s)){
                         const size_t I = std::get<0>(ababJ_mo_sign);
                         const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                        const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(r,s,p,q);
+                        const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                         sigma_p[J] += HIJ * b_p[I];
                     }
                 }
