@@ -1,0 +1,125 @@
+/*
+ *@BEGIN LICENSE
+ *
+ * Libadaptive: an ab initio quantum chemistry software package
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *@END LICENSE
+ */
+
+#ifndef _bitset_string_h_
+#define _bitset_string_h_
+
+#include <unordered_map>
+#include <bitset>
+
+#include "integrals.h"
+#include "fci_vector.h"
+#include "stl_bitset_determinant.h"
+
+namespace psi{ namespace forte{
+
+/**
+ * A class to store a Slater determinant using the STL bitset container.
+ *
+ * The determinant is represented by a pair of alpha/beta strings
+ * that specify the occupation of each molecular orbital
+ * (excluding frozen core and virtual orbitals).
+ *
+ * |Det> = |I>
+ *
+ * The strings are represented using one array of bits of size 2 x nmo,
+ * and the following convention is used here:
+ * true <-> 1
+ * false <-> 0
+ */
+class STLBitsetString{
+public:
+    using bit_t = std::bitset<128>;
+
+    // Class Constructor and Destructor
+    /// Construct an empty occupation string 
+    STLBitsetString();
+    
+    /// Construct String from an occupation vector, spin unspecified
+    explicit STLBitsetString(const std::vector<int>& occupation);
+    explicit STLBitsetString(const std::vector<bool>& occupation);
+    /// Construnct a determinant from a bitset object
+    explicit STLBitsetString(const std::bitset<128>& bits);
+
+
+    /// Equal operator
+    bool operator==(const STLBitsetString& lhs) const;
+    /// Less than operator
+    bool operator<(const STLBitsetString& lhs) const;
+    /// XOR operator
+    STLBitsetString operator^(const STLBitsetString& lhs) const;
+
+    /// Set the dimension
+    void set_nmo( int nmo );
+    
+    /// Get a pointer to the alpha bits
+    const std::bitset<128>& bits() const;
+
+    /// Return the value of a bit
+    bool get_bit(int n) const;
+
+    /// Set the value of a bit
+    void set_bit(int n, bool value);
+
+    /// Get a vector of the  bits
+    std::vector<bool> get_bits_vector_bool();
+
+    /// Return a vector of occupied orbitals
+    std::vector<int> get_occ();
+    /// Return a vector of virtual orbitals
+    std::vector<int> get_vir();
+
+    /// Print the occupation string 
+    void print() const;
+    /// Save the occupation string  as a std::string
+    std::string str() const;
+
+public:
+    // Object Data
+    /// The occupation vector (does not include the frozen orbitals)
+    bit_t bits_;
+
+    // Static data
+    /// Number of non-frozen molecular orbitals
+    static int nmo_;
+    /// Return the sign of a_n applied to string I
+    static double SlaterSign(const bit_t& I,int n);
+
+    /// Number of non-zero bits
+    double get_nocc();
+
+    struct Hash
+    {
+        std::size_t operator()(const psi::forte::STLBitsetString& bs) const
+        {
+            return std::hash<bit_t>()(bs.bits_);
+        }
+    };
+};
+
+using string_vec = std::vector<STLBitsetString>;
+template <typename T = double> using string_hash = std::unordered_map<STLBitsetString, T, STLBitsetString::Hash>;
+using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetString::Hash>::iterator;
+}} // End Namespaces
+
+
+#endif // _bitset_determinant_h_
