@@ -172,10 +172,11 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
         }
     }
-    if(casscf_debug_print_)
-    {
-        overlap_orbitals(wfn_->Ca(), C_start);
-    }
+    //if(casscf_debug_print_)
+    //{
+    //    overlap_orbitals(wfn_->Ca(), C_start);
+    //}
+    overlap_coefficients();
     diis_manager->delete_diis_file();
     diis_manager.reset();
 
@@ -696,6 +697,11 @@ void CASSCF::set_up_fci()
 
 
     E_casscf_ = fcisolver.compute_energy();
+    /// Get the CIVector for each iteration
+    std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
+    FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
+    CISolutions_.push_back(FCIWfnSolution);
+
     cas_ref_ = fcisolver.reference();
 
 
@@ -873,11 +879,33 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
+    //if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    //{
+        std::vector<std::shared_ptr<FCIWfn> > StateAveragedFCISolver = sa_fcisolver.StateAveragedCISolution();
+        CISolutions_.push_back(StateAveragedFCISolver);
+    //}
 }
 void CASSCF::write_orbitals_molden()
 {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
     view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+}
+void CASSCF::overlap_coefficients()
+{
+    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
+    for(int iter = 1; iter < CISolutions_.size(); ++iter)
+    {
+        for(int cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
+        {
+            for(int j = 0; j < CISolutions_[iter].size(); j++){
+            if(abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90)
+            {
+                outfile->Printf("\n %d:%d %d:%d %8.8f",0, cisoln, iter, j, CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
+            }
+            }
+        }
+        outfile->Printf("\n");
+    }
 }
 
 }}

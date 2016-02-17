@@ -602,6 +602,15 @@ double FCIWfn::dot(FCIWfn& wfn)
 //            }
 //        }
 }
+double FCIWfn::dot(std::shared_ptr<FCIWfn>& wfn)
+{
+    double dot = 0.0;
+    for(int alfa_sym = 0; alfa_sym < nirrep_; ++alfa_sym)
+    {
+        dot += C_[alfa_sym]->vector_dot(wfn->C_[alfa_sym]);
+    }
+    return(dot);
+}
 
 ///**
 // * Find the largest element in the wave function

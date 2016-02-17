@@ -96,6 +96,12 @@ public:
     void test_rdms(bool value) {test_rdms_ = value;}
     /// Print the Natural Orbitals
     void print_no(bool value){print_no_ = value;}
+    /// Return a FCIWfn
+    std::shared_ptr<FCIWfn> get_FCIWFN()
+    {
+        return C_;
+    }
+
 private:
 
     // ==> Class Data <==
