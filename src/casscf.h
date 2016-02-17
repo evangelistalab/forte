@@ -10,6 +10,7 @@
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
+#include "fci_vector.h"
 
 namespace psi{ namespace forte{
 
@@ -92,6 +93,10 @@ private:
     void startup();
     /// Compute overlap between old_c and new_c
     void overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new);
+    void overlap_coefficients();
+    void write_orbitals_molden();
+    /// Diagonalize F_I + F_A
+    std::pair<SharedMatrix, SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
@@ -123,6 +128,8 @@ private:
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
     int print_;
+    /// The CISolutions per iteration
+    std::vector<std::vector<std::shared_ptr<FCIWfn> > > CISolutions_;
 
 
 
