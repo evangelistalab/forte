@@ -176,7 +176,10 @@ void CASSCF::compute_casscf()
     //{
     //    overlap_orbitals(wfn_->Ca(), C_start);
     //}
-    overlap_coefficients();
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    {
+        overlap_coefficients();
+    }
     diis_manager->delete_diis_file();
     diis_manager.reset();
 
@@ -879,11 +882,11 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
-    //if(options_.get_bool("MONITOR_SA_SOLUTION"))
-    //{
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    {
         std::vector<std::shared_ptr<FCIWfn> > StateAveragedFCISolver = sa_fcisolver.StateAveragedCISolution();
         CISolutions_.push_back(StateAveragedFCISolver);
-    //}
+    }
 }
 void CASSCF::write_orbitals_molden()
 {
