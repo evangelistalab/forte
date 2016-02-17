@@ -217,7 +217,7 @@ read_options(std::string name, Options &options)
         options.add_bool("SELECT",false);
 
         /*- The diagonalization method -*/
-        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING");
+        options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
 
         /*- The number of roots computed -*/
         options.add_int("NROOT",1);
@@ -325,6 +325,8 @@ read_options(std::string name, Options &options)
         options.add("SA_STATES", new ArrayType());
         /// An array weights for each state
         options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
+        /// Monitor the CAS-CI Solutions through iterations
+        options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE DMRGSCF
@@ -771,7 +773,10 @@ extern "C" PsiReturnType forte(Options &options)
         #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
         dmrg->compute_energy();
+        #else 
+            throw PSIEXCEPTION("Did not compile with CHEM_PS2 so DMRG will not work");
         #endif
+
     }
 
     if(options.get_str("JOB_TYPE")=="CAS")
@@ -972,8 +977,19 @@ extern "C" PsiReturnType forte(Options &options)
 
        {
        #ifdef HAVE_CHEMPS2
-            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
-            dmrg->compute_energy();
+           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+           if(options.get_bool("SEMI_CANONICAL")){
+
+               auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+               dmrg->compute_energy();
+               Reference dmrg_reference = dmrg->reference();
+               SemiCanonical semi(wfn,options,ints_,mo_space_info,dmrg_reference);
+           }
+           auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+           dmrg->compute_energy();
+           Reference dmrg_reference = dmrg->reference();
+           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
+           three_dsrg_mrpt2->compute_energy();
        #endif
        }
 

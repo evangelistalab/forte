@@ -172,10 +172,11 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
         }
     }
-    if(casscf_debug_print_)
-    {
-        overlap_orbitals(wfn_->Ca(), C_start);
-    }
+    //if(casscf_debug_print_)
+    //{
+    //    overlap_orbitals(wfn_->Ca(), C_start);
+    //}
+    overlap_coefficients();
     diis_manager->delete_diis_file();
     diis_manager.reset();
 
@@ -497,9 +498,10 @@ ambit::Tensor CASSCF::transform_integrals()
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
     std::vector<std::pair<boost::shared_ptr<Matrix>, std::vector<int> > > D_vec;
+    Timer c_dger;
     for(size_t i = 0; i < na_; i++){
         SharedVector C_i = CAct->get_column(0, i);
-        for(size_t j = 0; j < na_; j++){
+        for(size_t j = i; j < na_; j++){
             SharedMatrix D(new Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
@@ -510,6 +512,10 @@ ambit::Tensor CASSCF::transform_integrals()
 
             D_vec.push_back(std::make_pair(D, ij));
         }
+    }
+    if(print_ > 1)
+    {
+        outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
     boost::shared_ptr<JK> JK_trans = JK::build_JK();
     JK_trans->set_memory(Process::environment.get_memory() * 0.8);
@@ -525,7 +531,12 @@ ambit::Tensor CASSCF::transform_integrals()
         Cl.push_back(D_vec[d].first);
         Cr.push_back(Identity);
     }
+    Timer jk_build;
     JK_trans->compute();
+    if(print_ > 1)
+    {
+        outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
+    }
 
     SharedMatrix half_trans(new Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
@@ -542,6 +553,7 @@ ambit::Tensor CASSCF::transform_integrals()
         for(size_t p = 0; p < nmo_with_froze; p++){
             for(size_t q = 0; q < na_; q++){
                 active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(absolute_all[p], q);
+                active_int_data[corr_abs[p] * na_ * na_ * na_ + j * na_ * na_ + q * na_ + i] = half_trans->get(absolute_all[p], q);
             }
         }
     }
@@ -685,6 +697,11 @@ void CASSCF::set_up_fci()
 
 
     E_casscf_ = fcisolver.compute_energy();
+    /// Get the CIVector for each iteration
+    std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
+    FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
+    CISolutions_.push_back(FCIWfnSolution);
+
     cas_ref_ = fcisolver.reference();
 
 
@@ -862,6 +879,33 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
+    //if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    //{
+        std::vector<std::shared_ptr<FCIWfn> > StateAveragedFCISolver = sa_fcisolver.StateAveragedCISolution();
+        CISolutions_.push_back(StateAveragedFCISolver);
+    //}
+}
+void CASSCF::write_orbitals_molden()
+{
+    SharedVector occ_vector(new Vector(nirrep_, nmopi_));
+    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+}
+void CASSCF::overlap_coefficients()
+{
+    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
+    for(int iter = 1; iter < CISolutions_.size(); ++iter)
+    {
+        for(int cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
+        {
+            for(int j = 0; j < CISolutions_[iter].size(); j++){
+            if(abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90)
+            {
+                outfile->Printf("\n %d:%d %d:%d %8.8f",0, cisoln, iter, j, CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
+            }
+            }
+        }
+        outfile->Printf("\n");
+    }
 }
 
 }}

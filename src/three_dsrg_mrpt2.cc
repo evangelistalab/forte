@@ -1675,7 +1675,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         Vefu[thread]("e, f, u") -= BeuQ("Q, e, u") * Bm_Qe[thread]("Q, f");
 
         //E = V["efmu"] (1 + Exp(-s * D^{ef}_{mu}) * V^{mv}_{ef} * Denom^{mv}_{ef}
-        #pragma omp crtical
+        #pragma omp critical
         {
             Tefv[thread].data() = Vefu[thread].data();
 

@@ -22,6 +22,14 @@ using namespace psi;
 
 namespace psi{ namespace forte{
 
+#ifdef _OPENMP
+    #include <omp.h>
+#else
+    #define omp_get_max_threads() 1
+    #define omp_get_thread_num() 0
+#endif
+
+
 /**
  * Template used to quickly access
  * vectors that store three related quantities
@@ -197,6 +205,8 @@ void AdaptiveCI::startup()
             diag_method_ = DavidsonLiuList;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING"){
             diag_method_ = DLString;
+        } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK"){
+            diag_method_ = DLDisk;
         }
     }
     aimed_selection_ = false;
