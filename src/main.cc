@@ -325,6 +325,8 @@ read_options(std::string name, Options &options)
         options.add("SA_STATES", new ArrayType());
         /// An array weights for each state
         options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
+        /// Monitor the CAS-CI Solutions through iterations
+        options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE DMRGSCF
