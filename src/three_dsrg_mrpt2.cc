@@ -657,10 +657,10 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
     Vmin["ABIJ"] =   ThreeInt["gAI"]*ThreeInt["gBJ"];
     Vmin["ABIJ"] -=  ThreeInt["gAJ"]*ThreeInt["gBI"];
     Vmin["aBiJ"] =   ThreeInt["gai"]*ThreeInt["gBJ"];
-    for(auto space : spaces)
-    {
-        outfile->Printf("\n space: %s ThreeIntNorm: %8.6f", space.c_str(), Vmin.block(space).norm(2));
-    }
+    //for(auto space : spaces)
+    //{
+    //    outfile->Printf("\n space: %s ThreeIntNorm: %8.6f", space.c_str(), Vmin.block(space).norm(2));
+    //}
 
     if(renormalize)
     {
