@@ -55,6 +55,7 @@ void CASSCF::compute_casscf()
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+    double diis_gradient_norm = options_.get_double("CASSCF_DIIS_NORM");
     double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
@@ -148,7 +149,7 @@ void CASSCF::compute_casscf()
         S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if(do_diis && (iter > diis_start && g_norm < 1e-4))
+        if(do_diis && (iter > diis_start && g_norm < diis_gradient_norm))
         {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
