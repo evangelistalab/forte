@@ -320,11 +320,15 @@ read_options(std::string name, Options &options)
         options.add_int("CASSCF_DIIS_START", 3);
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
+        /// When the norm of the orbital gradient is below this value, do diis
+        options.add_double("CASSCF_DIIS_GRADIENT", 1e-4);
         /*- SA-CASSCF -*/
         /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
         options.add("SA_STATES", new ArrayType());
         /// An array weights for each state
         options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
+        /// Monitor the CAS-CI Solutions through iterations
+        options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE DMRGSCF
