@@ -411,7 +411,8 @@ void DMRGSCF::compute_energy()
     const bool mps_chkpt              = options_.get_bool("DMRG_CHKPT");
     //int * frozen_docc                 = options_.get_int_array("FROZEN_DOCC");
     //int * active                      = options_.get_int_array("ACTIVE");
-    Dimension frozen_docc             = mo_space_info_->get_dimension("FROZEN_DOCC");
+    /// Sebastian optimizes the frozen_docc
+    Dimension frozen_docc             = mo_space_info_->get_dimension("INACTIVE_DOCC");
     Dimension active                  = mo_space_info_->get_dimension("ACTIVE");
     const double dmrgscf_convergence  = options_.get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit     = options_.get_bool("DMRG_STORE_UNIT");

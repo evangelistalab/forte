@@ -139,6 +139,7 @@ double SA_FCISolver::compute_energy()
         {
             fcisolver.set_root(root_number);
             double E_casscf = fcisolver.compute_energy();
+            SA_C_.push_back(fcisolver.get_FCIWFN());
             casscf_energies.push_back(E_casscf);
             sa_cas_ref.push_back(fcisolver.reference());
         }
