@@ -299,7 +299,9 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
-        /* - Multiplicity for the CASSCF solution (if different from multiplicity) -*/
+        /* - Multiplicity for the CASSCF solution (if different from multiplicity) 
+         You should not use this if you are interested in having a CASSCF solution with the same multiplicitity as the DSRG-MRPT2-                                          */
+        
         options.add_int("CASSCF_MULTIPLICITY", 0);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
