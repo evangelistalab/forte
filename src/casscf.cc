@@ -589,6 +589,10 @@ void CASSCF::set_up_fci()
     if(options_["MULTIPLICITY"].has_changed()){
         multiplicity = options_.get_int("MULTIPLICITY");
     }
+    if(options_["MULTIPLICITY"].has_changed() && options_["CASSCF_MULTIPLICITY"].has_changed())
+    {
+        multiplicity = options_.get_int("CASSCF_MULTIPLICITY");
+    }
 
     // Default: lowest spin solution
     int ms = (multiplicity + 1) % 2;
