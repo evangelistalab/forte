@@ -1,0 +1,48 @@
+import forte
+
+refdmrg = -149.645431587602872
+
+molecule O2 {
+  O       0.0   0.0   0.0
+  O       0.0   0.0   3.0 
+units au
+}
+
+
+set basis     cc-pVDZ
+set reference rhf
+set scf_type  direct
+set e_convergence 1e-12
+set d_convergence 1e-12
+
+set forte{
+    dmrg_wfn_irrep            0
+    dmrg_wfn_multp            1
+    multiplicity              1
+    root_sym                  0
+    frozen_docc          [ 1 , 0 , 0 , 0 , 0 , 1 , 0 , 0 ]
+    active               [ 2 , 0 , 2 , 2 , 0 , 2 , 2 , 2 ]
+    #dmrg_states          [   500,  1000,  1000 ]
+    #dmrg_econv           [ 1e-10, 1e-10, 1e-10 ]
+    #dmrg_maxsweeps       [     5,     5,    10 ]
+    #dmrg_noiseprefactors [  0.05,  0.05,   0.0 ]
+    #dmrg_print_corr      false
+    #mps_chkpt            false
+    #dmrg_convergence     1e-6
+    #dmrg_store_unit      true
+    #dmrg_do_diis         true
+    #dmrg_diis_branch     1e-2
+    #dmrg_store_diis      true
+    #dmrgscf_max_iter     1
+    #dmrg_which_root      1   # First excited state
+    #dmrg_state_avg       false
+    #dmrg_active_space    NO  # INPUT; NO; LOC
+    #dmrg_loc_random      false
+    job_type             FCI
+}
+energy('scf')
+mints()
+dmrgscf = energy('forte')
+
+compare_values(refdmrg, dmrgscf, 6, "DMRG Energy")
+

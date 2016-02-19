@@ -222,6 +222,8 @@ protected:
 
     // Print levels
     int print_;
+    // Print detailed timings
+    bool detail_time_ = false;
 
     // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
     double Taylor_Exp(const double& Z, const int& n){
