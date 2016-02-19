@@ -256,7 +256,6 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                 detB.zero_spin(0);
                 
                 std::vector<int> bocc = detB.get_beta_occ();
-                std::vector<std::pair<size_t,short>> b_ann(nobeta_);            
  
                 for( size_t a = 0; a < nobeta_; ++a){
                     int aa = bocc[a];
@@ -520,7 +519,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                         cre_list_buffer_[4][detJ_add]++;
                     }
                     
-                    ab_ann_list_[I*nobeta_*noalfa_ + i * noalfa_ + j] = std::make_tuple(detJ_add,(sign > 0.5 ) ? (ii+1) : (-ii-1),jj);
+                    ab_ann_list_[I*nobeta_*noalfa_ + i * nobeta_ + j] = std::make_tuple(detJ_add,(sign > 0.5 ) ? (ii+1) : (-ii-1),jj);
                     detB.set_beta_bit(jj,true);  
                 }
             }
@@ -540,7 +539,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
         for(size_t I = 0; I < max_I; ++I){
             for ( size_t a = 0; a < noalfa_; ++a){
                 for ( size_t b = 0; b < nobeta_; ++b){
-                    auto J_sign = ab_ann_list_[I*nobeta_*noalfa_ + a*noalfa_ + b];
+                    auto J_sign = ab_ann_list_[I*nobeta_*noalfa_ + a*nobeta_ + b];
                     size_t J = std::get<0>(J_sign);
                     short i = std::get<1>(J_sign);
                     short j = std::get<2>(J_sign);
@@ -785,7 +784,7 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     for (size_t J = 0; J < size_; ++J){
         for (size_t a = 0; a < noalfa_; ++a){
             for (size_t b = 0; b < nobeta_; ++b){
-                std::tuple<size_t,short,short> abJ_mo_sign = ab_ann_list_[J * nobeta_ *noalfa_ + a*noalfa_ + b];
+                std::tuple<size_t,short,short> abJ_mo_sign = ab_ann_list_[J * nobeta_ *noalfa_ + a*nobeta_ + b];
                 if( std::get<1>(abJ_mo_sign) == 0) continue;
                 const size_t abJ_add = std::get<0>(abJ_mo_sign);
                 const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
