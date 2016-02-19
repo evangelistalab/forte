@@ -299,6 +299,8 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
+        /* - Multiplicity for the CASSCF solution (if different from multiplicity) -*/
+        options.add_int("CASSCF_MULTIPLICITY", 0);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
         /*- Ignore frozen core option and optimize orbitals -*/
@@ -321,7 +323,7 @@ read_options(std::string name, Options &options)
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
         /// When the norm of the orbital gradient is below this value, do diis
-        options.add_double("CASSCF_DIIS_GRADIENT", 1e-4);
+        options.add_double("CASSCF_DIIS_NORM", 1e-4);
         /*- SA-CASSCF -*/
         /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
         options.add("SA_STATES", new ArrayType());
@@ -635,6 +637,9 @@ read_options(std::string name, Options &options)
         options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
+        /*- Detailed timing printings -*/
+        options.add_bool("THREE_MRPT2_TIMINGS", false);
+        
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
