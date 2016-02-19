@@ -28,7 +28,7 @@
 
 #include "integrals.h"
 #include "fci_vector.h"
-#include "stl_bitset_determinant.h"
+//#include "stl_bitset_determinant.h"
 
 namespace psi{ namespace forte{
 
@@ -122,4 +122,4 @@ using string_hash_it = std::unordered_map<STLBitsetString, double, STLBitsetStri
 }} // End Namespaces
 
 
-#endif // _bitset_determinant_h_
+#endif // _bitset_string_h_

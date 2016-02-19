@@ -29,6 +29,7 @@
 #include "integrals.h"
 #include "fci_vector.h"
 #include "dynamic_bitset_determinant.h"
+#include "stl_bitset_string.h"
 
 namespace psi{ namespace forte{
 
@@ -63,8 +64,10 @@ public:
     /// Construct the determinant from two occupation vectors that
     /// specifies the alpha and beta strings.  occupation = [Ia,Ib]
     explicit STLBitsetDeterminant(const std::vector<bool>& occupation_a, const std::vector<bool>& occupation_b);
-    /// Construnct a determinant from a bitset object
+    /// Construct a determinant from a bitset object
     explicit STLBitsetDeterminant(const std::bitset<256>& bits);
+    /// Construct a determinant from two STLBitsetStrings
+    explicit STLBitsetDeterminant(const STLBitsetString& alpha,const STLBitsetString& beta);
 
 
     /// Equal operator
