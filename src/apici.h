@@ -288,6 +288,12 @@ private:
     /// @param C The wave function coefficients
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
     double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
+    /// Estimate the pertubation energy for the result
+    std::tuple<double, double, double, double> estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+    /// Estimate the 1st order pertubation energy for the result.
+    double estimate_1st_order_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+    /// Estimate the 2nd order pertubation energy for the result within subspace
+    double estimate_2nd_order_perturbation_sub(det_vec& dets, std::vector<double>& C, double spawning_threshold);
 
     /// Form the product H c
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash<>& det_C,std::pair<double,double>& max_coupling);
