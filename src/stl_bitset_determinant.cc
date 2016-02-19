@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "stl_bitset_determinant.h"
+#include "stl_bitset_string.h"
 #include "fci_vector.h"
 
 using namespace std;
@@ -53,6 +54,14 @@ STLBitsetDeterminant::STLBitsetDeterminant(const std::vector<bool>& occupation_a
 STLBitsetDeterminant::STLBitsetDeterminant(const std::bitset<256>& bits )
 {
     bits_ = bits;
+}
+
+STLBitsetDeterminant::STLBitsetDeterminant(const STLBitsetString& alpha, const STLBitsetString& beta)
+{
+    for(int p = 0; p < nmo_; ++p){
+        bits_[p] = alpha.get_bit(p);
+        bits_[p + nmo_] = beta.get_bit(p);
+    }
 }
 
 bool STLBitsetDeterminant::operator==(const STLBitsetDeterminant& lhs) const
