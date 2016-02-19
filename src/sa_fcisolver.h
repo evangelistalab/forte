@@ -30,6 +30,10 @@ public:
     {
         ints_ = ints;
     }
+    std::vector<std::shared_ptr<FCIWfn> > StateAveragedCISolution()
+    {
+        return SA_C_;
+    }
 
 private:
     void read_options();
@@ -44,6 +48,8 @@ private:
     /// The total number of states to be averaged in casscf
     int number_of_states_;
     Reference sa_ref_;
+    /// A vector of the C solutions
+    std::vector<std::shared_ptr<FCIWfn> > SA_C_;
 };
 
 }}

@@ -55,6 +55,7 @@ void CASSCF::compute_casscf()
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+    double diis_gradient_norm = options_.get_double("CASSCF_DIIS_NORM");
     double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
@@ -148,7 +149,7 @@ void CASSCF::compute_casscf()
         S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if(do_diis && (iter > diis_start && g_norm < 1e-4))
+        if(do_diis && (iter > diis_start && g_norm < diis_gradient_norm))
         {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
@@ -172,9 +173,13 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
         }
     }
-    if(casscf_debug_print_)
+    //if(casscf_debug_print_)
+    //{
+    //    overlap_orbitals(wfn_->Ca(), C_start);
+    //}
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
     {
-        overlap_orbitals(wfn_->Ca(), C_start);
+        overlap_coefficients();
     }
     diis_manager->delete_diis_file();
     diis_manager.reset();
@@ -584,6 +589,10 @@ void CASSCF::set_up_fci()
     if(options_["MULTIPLICITY"].has_changed()){
         multiplicity = options_.get_int("MULTIPLICITY");
     }
+    if(options_["MULTIPLICITY"].has_changed() && options_["CASSCF_MULTIPLICITY"].has_changed())
+    {
+        multiplicity = options_.get_int("CASSCF_MULTIPLICITY");
+    }
 
     // Default: lowest spin solution
     int ms = (multiplicity + 1) % 2;
@@ -696,6 +705,11 @@ void CASSCF::set_up_fci()
 
 
     E_casscf_ = fcisolver.compute_energy();
+    /// Get the CIVector for each iteration
+    std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
+    FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
+    CISolutions_.push_back(FCIWfnSolution);
+
     cas_ref_ = fcisolver.reference();
 
 
@@ -873,11 +887,33 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    {
+        std::vector<std::shared_ptr<FCIWfn> > StateAveragedFCISolver = sa_fcisolver.StateAveragedCISolution();
+        CISolutions_.push_back(StateAveragedFCISolver);
+    }
 }
 void CASSCF::write_orbitals_molden()
 {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
     view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+}
+void CASSCF::overlap_coefficients()
+{
+    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
+    for(int iter = 1; iter < CISolutions_.size(); ++iter)
+    {
+        for(int cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
+        {
+            for(int j = 0; j < CISolutions_[iter].size(); j++){
+            if(abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90)
+            {
+                outfile->Printf("\n %d:%d %d:%d %8.8f",0, cisoln, iter, j, CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
+            }
+            }
+        }
+        outfile->Printf("\n");
+    }
 }
 
 }}

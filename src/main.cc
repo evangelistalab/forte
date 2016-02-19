@@ -299,6 +299,10 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
+        /* - Multiplicity for the CASSCF solution (if different from multiplicity) 
+         You should not use this if you are interested in having a CASSCF solution with the same multiplicitity as the DSRG-MRPT2-                                          */
+        
+        options.add_int("CASSCF_MULTIPLICITY", 0);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
         /*- Ignore frozen core option and optimize orbitals -*/
@@ -320,11 +324,15 @@ read_options(std::string name, Options &options)
         options.add_int("CASSCF_DIIS_START", 3);
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
+        /// When the norm of the orbital gradient is below this value, do diis
+        options.add_double("CASSCF_DIIS_NORM", 1e-4);
         /*- SA-CASSCF -*/
         /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
         options.add("SA_STATES", new ArrayType());
         /// An array weights for each state
         options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
+        /// Monitor the CAS-CI Solutions through iterations
+        options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE DMRGSCF
@@ -631,6 +639,9 @@ read_options(std::string name, Options &options)
         options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
+        /*- Detailed timing printings -*/
+        options.add_bool("THREE_MRPT2_TIMINGS", false);
+        
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/

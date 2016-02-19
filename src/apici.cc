@@ -727,10 +727,18 @@ double AdaptivePathIntegralCI::compute_energy()
     Process::environment.globals["APIFCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %.12f Eh",1,var_energy);
-    outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %.12f Eh",1,proj_energy);
+    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %18.12f Eh",1,var_energy);
+    outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %18.12f Eh",1,proj_energy);
 
     outfile->Printf("\n\n  * Size of CI space                   = %zu",C.size());
+
+    double eff_var_energy, error_1st_perturbation, error_2nd_perturb_sub, error_2nd_perturb_full;
+    std::tie(eff_var_energy, error_1st_perturbation, error_2nd_perturb_sub, error_2nd_perturb_full) = estimate_perturbation(dets, C, spawning_threshold_);
+    outfile->Printf("\n\n  * Variational Energy no perturbation = %18.12f Eh",1,eff_var_energy);
+    outfile->Printf("\n  * 1st order perturbation est. Error  = %18.12f Eh",1,error_1st_perturbation);
+    outfile->Printf("\n  * 2nd order perturbation est. Error  = %18.12f Eh",1,error_2nd_perturb_sub);
+
+
     if (do_schwarz_prescreening_) {
         outfile->Printf("\n  * Schwarz prescreening total attempt= %zu",schwarz_total_);
         outfile->Printf("\n  * Schwarz prescreening succeed      = %zu",schwarz_succ_);
@@ -2721,6 +2729,76 @@ double AdaptivePathIntegralCI::estimate_var_energy_sparse(det_vec &dets, std::ve
     return variational_energy_estimator + nuclear_repulsion_energy_;
 }
 
+double AdaptivePathIntegralCI::estimate_1st_order_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold)
+{
+    // Compute a variational estimator of the energy
+    size_t size = dets.size();
+    double perturbation_energy_estimator = 0.0;
+#pragma omp parallel for reduction(+:perturbation_energy_estimator)
+    for (size_t I = 0; I < size; ++I){
+        for (size_t J = 0; J < size; ++J){
+            double HIJ = dets[I].slater_rules(dets[J]);
+            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
+                perturbation_energy_estimator += C[I] * HIJ * C[J];
+            }
+        }
+    }
+    return perturbation_energy_estimator;
+}
+
+double AdaptivePathIntegralCI::estimate_2nd_order_perturbation_sub(det_vec& dets, std::vector<double>& C, double spawning_threshold)
+{
+    // Compute a variational estimator of the energy
+    size_t size = dets.size();
+    double perturbation_energy_estimator = 0.0;
+#pragma omp parallel for reduction(+:perturbation_energy_estimator)
+    for (size_t I = 0; I < size; ++I){
+        double current_V = 0.0;
+        for (size_t J = 0; J < size; ++J){
+            double HIJ = dets[I].slater_rules(dets[J]);
+            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
+                perturbation_energy_estimator += C[I] * HIJ * C[J];
+            }
+        }
+    }
+    return perturbation_energy_estimator;
+}
+
+std::tuple<double, double, double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold)
+{
+//    double first_order_perturb = estimate_1st_order_perturbation(dets, C, spawning_threshold);
+//    return std::make_tuple(first_order_perturb, 0.0, 0.0);
+    // Compute a variational estimator of the energy
+    size_t size = dets.size();
+    double variational_energy_estimator = 0.0;
+    double perturbation_1st_energy_estimator = 0.0;
+#pragma omp parallel for reduction(+:variational_energy_estimator, perturbation_1st_energy_estimator)
+    for (size_t I = 0; I < size; ++I){
+        for (size_t J = 0; J < size; ++J){
+            double HIJ = dets[I].slater_rules(dets[J]);
+            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
+                perturbation_1st_energy_estimator += C[I] * HIJ * C[J];
+            } else {
+                variational_energy_estimator += C[I] * HIJ * C[J];
+            }
+        }
+    }
+    double perturbation_2nd_energy_estimator_sub = 0.0;
+#pragma omp parallel for reduction(+:perturbation_2nd_energy_estimator_sub)
+    for (size_t I = 0; I < size; ++I){
+        double current_V = 0.0;
+        for (size_t J = 0; J < size; ++J){
+            double HIJ = dets[J].slater_rules(dets[I]);
+            if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I){
+                current_V += HIJ * C[J];
+            }
+        }
+        current_V *= C[I];
+        double delta = dets[I].energy() - variational_energy_estimator;
+        perturbation_2nd_energy_estimator_sub += 0.5* (delta - sqrt(delta * delta + 4 * current_V * current_V));
+    }
+    return std::make_tuple(variational_energy_estimator + nuclear_repulsion_energy_, perturbation_1st_energy_estimator, perturbation_2nd_energy_estimator_sub, 0.0);
+}
 
 void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C)
 {

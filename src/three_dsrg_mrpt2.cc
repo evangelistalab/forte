@@ -56,6 +56,10 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     }
     ref_type_ = options_.get_str("REFERENCE");
     outfile->Printf("\n  Reference = %s", ref_type_.c_str());
+    if(options_.get_bool("THREE_MRPT2_TIMINGS"))
+    {
+        detail_time_ = true;
+    }
 
     startup();
     //if(false){
@@ -651,19 +655,27 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
 
     ambit::BlockedTensor Vmin = BTF_->build(tensor_type_,"Vmin",spaces, true);
     ambit::BlockedTensor ThreeInt;
+    Timer computeB;
     ThreeInt = compute_B_minimal(spaces);
+    if(detail_time_)
+    {
+        outfile->Printf("\n Compute B minimal takes %8.6f s", computeB.get());
+    }
+    Timer ComputeV;
     Vmin["abij"] =   ThreeInt["gai"]*ThreeInt["gbj"];
     Vmin["abij"] -=  ThreeInt["gaj"]*ThreeInt["gbi"];
     Vmin["ABIJ"] =   ThreeInt["gAI"]*ThreeInt["gBJ"];
     Vmin["ABIJ"] -=  ThreeInt["gAJ"]*ThreeInt["gBI"];
     Vmin["aBiJ"] =   ThreeInt["gai"]*ThreeInt["gBJ"];
-    for(auto space : spaces)
+    if(detail_time_)
     {
-        outfile->Printf("\n space: %s ThreeIntNorm: %8.6f", space.c_str(), Vmin.block(space).norm(2));
+        outfile->Printf("\n Compute V from B takes %8.6f s", ComputeV.get());
+
     }
 
     if(renormalize)
     {
+        Timer RenormV;
         Vmin.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
                 value = (value + value * renormalized_exp(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]));
@@ -673,6 +685,10 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
                 value = (value + value * renormalized_exp(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]));
             }
         });
+        if(detail_time_)
+        {
+            outfile->Printf("\n RenormalizeV takes %8.6f s.", RenormV.get());
+        }
     }
     return Vmin;
 }
@@ -1760,7 +1776,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     if(print_ > 0)
     {
         outfile->Printf("\n\n CAVV computation takes %8.8f", ccvaTimer.get());
-        outfile->Printf("\n\n Eacvv   =  %8.8f", Eacvv);
     }
 
     std::vector<ambit::Tensor>  Bm_vQ;
