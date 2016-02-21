@@ -262,6 +262,7 @@ void DSRG_MRPT2::startup()
     if(print_ > 3){
         Lambda3.print(stdout);
     }
+
 }
 
 void DSRG_MRPT2::print_summary()

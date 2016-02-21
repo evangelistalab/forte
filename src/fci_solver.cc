@@ -483,13 +483,13 @@ double FCISolver::compute_energy()
         if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",root_);
         C_->compute_rdms(max_rdm_level_);
 
-        if(print_ > 1){C_->energy_from_rdms(fci_ints);}
+        if(print_ > 1 && max_rdm_level_ > 1){C_->energy_from_rdms(fci_ints);}
 
         // Optionally, test the RDMs
         if (test_rdms_) C_->rdm_test();
 
         // Print the NO if energy converged
-        if(print_no_ or print_) {C_->print_natural_orbitals(mo_space_info_);}
+        if(print_no_ || print_ > 0) {C_->print_natural_orbitals(mo_space_info_);}
     }
     else
     {

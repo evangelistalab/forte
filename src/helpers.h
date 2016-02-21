@@ -152,6 +152,8 @@ private:
  */
 Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims);
 
+SharedMatrix tensor_to_matrix(ambit::Tensor t);
+
 /**
  * @brief print_method_banner Print a banner
  * @param text A vector of strings to print in the banner. Each string is a line.

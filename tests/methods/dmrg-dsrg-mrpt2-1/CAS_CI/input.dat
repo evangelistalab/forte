@@ -1,0 +1,21 @@
+import forte
+
+molecule LiH {
+Li
+H  1 1.4
+
+}
+
+set basis cc-pvdz
+set scf_type  direct
+energy('scf')
+set forte {
+    active      [3, 0, 0, 0]
+    job_type        dsrg-mrpt2
+    cas_type        FCI
+    #threepdc       none
+    int_type       cholesky
+    cholesky_tolerance 1e-14
+}
+dsrg_mrpt2 = energy('forte')
+print dsrg_mrpt2

@@ -188,6 +188,7 @@ public:
 ////    void normalize_wrt(Determinant& det);
     void normalize();
     double dot(FCIWfn& wfn);
+    double dot(std::shared_ptr<FCIWfn>& wfn);
 
 
     std::vector<double>& opdm_a() {return opdm_a_;}
