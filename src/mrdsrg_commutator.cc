@@ -8,18 +8,6 @@
 
 namespace psi{ namespace forte{
 
-double time_H1_T1_C0 = 0.0;
-double time_H1_T2_C0 = 0.0;
-double time_H2_T1_C0 = 0.0;
-double time_H2_T2_C0 = 0.0;
-double time_H1_T1_C1 = 0.0;
-double time_H1_T2_C1 = 0.0;
-double time_H2_T1_C1 = 0.0;
-double time_H2_T2_C1 = 0.0;
-double time_H1_T2_C2 = 0.0;
-double time_H2_T1_C2 = 0.0;
-double time_H2_T2_C2 = 0.0;
-
 void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0){
     Timer timer;
 
@@ -38,7 +26,7 @@ void MRDSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f",timer.get());
     }
-    time_H1_T1_C0 += timer.get();
+    dsrg_time_.add("110",timer.get());
 }
 
 void MRDSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0){
@@ -69,7 +57,7 @@ void MRDSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f",timer.get());
     }
-    time_H1_T2_C0 += timer.get();
+    dsrg_time_.add("120",timer.get());
 }
 
 void MRDSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0){
@@ -100,7 +88,7 @@ void MRDSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f",timer.get());
     }
-    time_H2_T1_C0 += timer.get();
+    dsrg_time_.add("210",timer.get());
 }
 
 void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0){
@@ -241,25 +229,21 @@ void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
         temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
         temp["uvWxyZ"] -= H2["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += 2.0 * H2["uWyI"] * T2["vIxZ"];//  aaAaaA from hole
 
         temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
         temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= 2.0 * H2["vAxZ"] * T2["uWyA"];//  aaAaaA from particle
         E += 0.5 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
 
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
         temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
         temp["uVWxYZ"] -= H2["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += 2.0 * H2["uViZ"] * T2["iWxY"];//  aAAaAA from hole
 
         temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
         temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= 2.0 * H2["aWxY"] * T2["uVaZ"];//  aAAaAA from particle
         E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
     }
 
@@ -270,7 +254,7 @@ void MRDSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f",timer.get());
     }
-    time_H2_T2_C0 += timer.get();
+    dsrg_time_.add("220",timer.get());
 }
 
 void MRDSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
@@ -285,7 +269,7 @@ void MRDSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());
     }
-    time_H1_T1_C1 += timer.get();
+    dsrg_time_.add("111",timer.get());
 }
 
 void MRDSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
@@ -308,7 +292,7 @@ void MRDSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f",timer.get());
     }
-    time_H1_T2_C1 += timer.get();
+    dsrg_time_.add("121",timer.get());
 }
 
 void MRDSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
@@ -331,7 +315,7 @@ void MRDSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f",timer.get());
     }
-    time_H2_T1_C1 += timer.get();
+    dsrg_time_.add("211",timer.get());
 }
 
 void MRDSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
@@ -491,7 +475,7 @@ void MRDSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f",timer.get());
     }
-    time_H2_T2_C1 += timer.get();
+    dsrg_time_.add("221",timer.get());
 }
 
 void MRDSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
@@ -538,7 +522,7 @@ void MRDSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f",timer.get());
     }
-    time_H1_T2_C2 += timer.get();
+    dsrg_time_.add("122",timer.get());
 }
 
 void MRDSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2){
@@ -562,7 +546,7 @@ void MRDSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f",timer.get());
     }
-    time_H2_T1_C2 += timer.get();
+    dsrg_time_.add("212",timer.get());
 }
 
 void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
@@ -638,25 +622,7 @@ void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f",timer.get());
     }
-    time_H2_T2_C2 += timer.get();
-}
-
-void MRDSRG::print_comm_time(){
-    outfile->Printf("\n\n  ==> Total Timings (s) for Computing Commutators <==\n");
-    std::string indent(4, ' ');
-    std::string dash(53, '-');
-    std::string output;
-    output += indent + str(boost::format("%5c  %10s  %10s  %10s  %10s\n")
-                           % ' ' % "[H1, T1]" % "[H1, T2]" % "[H2, T1]" % "[H2, T2]");
-    output += indent + dash + "\n";
-    output += indent + str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n")
-                           % "-> C0" % time_H1_T1_C0 % time_H1_T2_C0 % time_H2_T1_C0 % time_H2_T2_C0);
-    output += indent + str(boost::format("%5s  %10.3f  %10.3f  %10.3f  %10.3f\n")
-                           % "-> C1" % time_H1_T1_C1 % time_H1_T2_C1 % time_H2_T1_C1 % time_H2_T2_C1);
-    output += indent + str(boost::format("%5s  %10c  %10.3f  %10.3f  %10.3f\n")
-                           % "-> C2" % ' ' % time_H1_T2_C2 % time_H2_T1_C2 % time_H2_T2_C2);
-    output += indent + dash + "\n";
-    outfile->Printf("\n%s", output.c_str());
+    dsrg_time_.add("222",timer.get());
 }
 
 }}

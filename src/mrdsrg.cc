@@ -30,14 +30,12 @@ MRDSRG::~MRDSRG(){
 }
 
 void MRDSRG::cleanup(){
-    print_comm_time();
+    dsrg_time_.print_comm_time();
 }
 
 void MRDSRG::read_options(){
 
     print_ = options_.get_int("PRINT");
-
-    source_ = options_.get_str("SOURCE");
 
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
@@ -49,7 +47,19 @@ void MRDSRG::read_options(){
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer greater than 0!");
         throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer greater than 0!");
     }
-    taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
+
+    source_ = options_.get_str("SOURCE");
+    if(source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON"){
+        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented in DSRG_MRPT. Changed to STANDARD.", source_.c_str());
+        source_ = "STANDARD";
+    }
+    if(source_ == "STANDARD"){
+        dsrg_source_ = std::make_shared<STD_SOURCE>(s_,taylor_threshold_);
+    }else if(source_ == "LABS"){
+        dsrg_source_ = std::make_shared<LABS_SOURCE>(s_,taylor_threshold_);
+    }else if(source_ == "DYSON"){
+        dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_,taylor_threshold_);
+    }
 
     ntamp_ = options_.get_int("NTAMP");
     intruder_tamp_ = options_.get_double("INTRUDER_TAMP");
@@ -152,6 +162,9 @@ void MRDSRG::startup()
     }else{
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
     }
+
+    // initialize timer for commutator
+    dsrg_time_ = DSRG_TIME();
 }
 
 void MRDSRG::build_ints(){
@@ -293,24 +306,6 @@ void MRDSRG::print_options()
     }
     outfile->Printf("\n");
     outfile->Flush();
-}
-
-double MRDSRG::renormalized_denominator(const double& D){
-    double Z = std::sqrt(s_) * D;
-    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
-        return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
-    }else{
-        return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
-    }
-}
-
-double MRDSRG::renormalized_denominator_labs(const double& D){
-    double Z = s_ * D;
-    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
-        return Taylor_Exp_Linear(Z, taylor_order_ * 2) * s_;
-    }else{
-        return (1.0 - std::exp(-s_ * std::fabs(D))) / D;
-    }
 }
 
 double MRDSRG::compute_energy(){

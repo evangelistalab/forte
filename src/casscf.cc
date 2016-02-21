@@ -307,7 +307,7 @@ void CASSCF::cas_ci()
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
-    gamma2("u,v,x,y") +=  L2aa("u,v,x, y");
+    gamma2("u,v,x,y") +=  L2aa("u,v,x,y");
     gamma2("u,v,x,y") +=  L2ab("u,v,x,y");
     gamma2_ = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
     gamma2_.copy(gamma2);
