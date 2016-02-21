@@ -87,9 +87,10 @@ void FCI::startup()
     if(print_)
         print_method_banner({"String-based Full Configuration Interaction","by Francesco A. Evangelista"});
 
-    max_rdm_level_ = options_.get_int("FCI_MAX_RDM");
+    max_rdm_level_  = options_.get_int("FCI_MAX_RDM");
     fci_iterations_ = options_.get_int("FCI_ITERATIONS");
     print_no_       = options_.get_bool("PRINT_NO");
+    ms_             = options_.get_int("MS");
 }
 
 double FCI::compute_energy()
@@ -124,13 +125,14 @@ double FCI::compute_energy()
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
+    ms = ms_;
 
-    if(ms < 0){
-        outfile->Printf("\n  Ms must be no less than 0.");
-        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms, multiplicity);
-        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
-        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
-    }
+//    if(ms < 0){
+//        outfile->Printf("\n  Ms must be no less than 0.");
+//        outfile->Printf("\n  Ms = %2d, MULTIPLICITY = %2d", ms, multiplicity);
+//        outfile->Printf("\n  Check (specify) Ms value (component of multiplicity)! \n");
+//        throw PSIEXCEPTION("Ms must be no less than 0. Check output for details.");
+//    }
 
     if (print_){
         outfile->Printf("\n  Number of electrons: %d",nel);

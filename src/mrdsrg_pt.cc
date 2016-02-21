@@ -401,7 +401,7 @@ bool MRDSRG::check_semicanonical(){
         Foff.emplace_back(value);
         Foff_sum += value;
     }
-    double threshold = 10.0 * options_.get_double("D_CONVERGENCE");
+    double threshold = 1.0e-6;
     bool semi = false;
     if(Foff_sum > threshold){
         std::string sep(3 + 16 * 3, '-');
