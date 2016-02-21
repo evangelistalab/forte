@@ -55,6 +55,7 @@ void CASSCF::compute_casscf()
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
+    double diis_gradient_norm = options_.get_double("CASSCF_DIIS_NORM");
     double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
 
     Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
@@ -77,6 +78,7 @@ void CASSCF::compute_casscf()
     SharedMatrix C_start(wfn_->Ca()->clone());
     for(int iter = 0; iter < maxiter; iter++)
     {
+        Timer casscf_total_iter;
 
         Timer transform_integrals_timer;
         tei_paaa_ = transform_integrals();
@@ -99,12 +101,11 @@ void CASSCF::compute_casscf()
         SharedMatrix Ca = wfn_->Ca();
         SharedMatrix Cb = wfn_->Cb();
 
-        OrbitalOptimizer orbital_optimizer(gamma1_,
+        CASSCFOrbitalOptimizer orbital_optimizer(gamma1_,
                                            gamma2_,
                                            tei_paaa_,
                                            options_,
                                            mo_space_info_);
-
 
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_symmmetry_mo(Ca);
@@ -148,7 +149,7 @@ void CASSCF::compute_casscf()
         S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if(do_diis && (iter > diis_start && g_norm < 1e-4))
+        if(do_diis && (iter > diis_start && g_norm < diis_gradient_norm))
         {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
@@ -167,10 +168,18 @@ void CASSCF::compute_casscf()
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
+        if(print_ > 0)
+        {
+            outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
+        }
     }
-    if(casscf_debug_print_)
+    //if(casscf_debug_print_)
+    //{
+    //    overlap_orbitals(wfn_->Ca(), C_start);
+    //}
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
     {
-        overlap_orbitals(wfn_->Ca(), C_start);
+        overlap_coefficients();
     }
     diis_manager->delete_diis_file();
     diis_manager.reset();
@@ -182,9 +191,12 @@ void CASSCF::compute_casscf()
     }
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
+    Timer retrans_ints;
     ints_->retransform_integrals();
-
-
+    if(print_ > 0)
+    {
+        outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
+    }
 
 }
 void CASSCF::startup()
@@ -257,6 +269,8 @@ void CASSCF::cas_ci()
     if(print_ > 0)
     {
         quiet = false;
+        print_h2("CAS");
+        outfile->Printf(" Using %5s", options_.get_str("CAS_TYPE").c_str());
     }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
@@ -314,12 +328,6 @@ void CASSCF::cas_ci()
     gamma2_.scale(2.0);
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
         gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
-    //if(options_.get_bool("CASSCF_DEBUG_PRINTING"))
-    //{
-    //    double E_casscf_check = cas_check(cas_ref_);
-    //    outfile->Printf("\n E_casscf_check - E_casscf_ = difference\n");
-    //    outfile->Printf("\n %8.8f - %8.8f = %8.8f", E_casscf_check, E_casscf_, E_casscf_check - E_casscf_);
-    //}
 
     /// Compute the 1RDM
     ambit::Tensor gamma_no_spin = ambit::Tensor::build(ambit::CoreTensor,"Return",{na_, na_});
@@ -494,9 +502,10 @@ ambit::Tensor CASSCF::transform_integrals()
     ///         = C_{Mp}^{T} D_{MN}^{xy} C_{Nu}
 
     std::vector<std::pair<boost::shared_ptr<Matrix>, std::vector<int> > > D_vec;
+    Timer c_dger;
     for(size_t i = 0; i < na_; i++){
         SharedVector C_i = CAct->get_column(0, i);
-        for(size_t j = 0; j < na_; j++){
+        for(size_t j = i; j < na_; j++){
             SharedMatrix D(new Matrix("D", nso, nso));
             std::vector<int> ij(2);
             ij[0] = i;
@@ -507,6 +516,10 @@ ambit::Tensor CASSCF::transform_integrals()
 
             D_vec.push_back(std::make_pair(D, ij));
         }
+    }
+    if(print_ > 1)
+    {
+        outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
     boost::shared_ptr<JK> JK_trans = JK::build_JK();
     JK_trans->set_memory(Process::environment.get_memory() * 0.8);
@@ -522,7 +535,12 @@ ambit::Tensor CASSCF::transform_integrals()
         Cl.push_back(D_vec[d].first);
         Cr.push_back(Identity);
     }
+    Timer jk_build;
     JK_trans->compute();
+    if(print_ > 1)
+    {
+        outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
+    }
 
     SharedMatrix half_trans(new Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
@@ -539,6 +557,7 @@ ambit::Tensor CASSCF::transform_integrals()
         for(size_t p = 0; p < nmo_with_froze; p++){
             for(size_t q = 0; q < na_; q++){
                 active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(absolute_all[p], q);
+                active_int_data[corr_abs[p] * na_ * na_ * na_ + j * na_ * na_ + q * na_ + i] = half_trans->get(absolute_all[p], q);
             }
         }
     }
@@ -569,6 +588,10 @@ void CASSCF::set_up_fci()
     int multiplicity = Process::environment.molecule()->multiplicity();
     if(options_["MULTIPLICITY"].has_changed()){
         multiplicity = options_.get_int("MULTIPLICITY");
+    }
+    if(options_["MULTIPLICITY"].has_changed() && options_["CASSCF_MULTIPLICITY"].has_changed())
+    {
+        multiplicity = options_.get_int("CASSCF_MULTIPLICITY");
     }
 
     // Default: lowest spin solution
@@ -682,6 +705,11 @@ void CASSCF::set_up_fci()
 
 
     E_casscf_ = fcisolver.compute_energy();
+    /// Get the CIVector for each iteration
+    std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
+    FCIWfnSolution.push_back(fcisolver.get_FCIWFN());
+    CISolutions_.push_back(FCIWfnSolution);
+
     cas_ref_ = fcisolver.reference();
 
 
@@ -859,6 +887,33 @@ void CASSCF::set_up_sa_fci()
 
     E_casscf_ = sa_fcisolver.compute_energy();
     cas_ref_ = sa_fcisolver.reference();
+    if(options_.get_bool("MONITOR_SA_SOLUTION"))
+    {
+        std::vector<std::shared_ptr<FCIWfn> > StateAveragedFCISolver = sa_fcisolver.StateAveragedCISolution();
+        CISolutions_.push_back(StateAveragedFCISolver);
+    }
+}
+void CASSCF::write_orbitals_molden()
+{
+    SharedVector occ_vector(new Vector(nirrep_, nmopi_));
+    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+}
+void CASSCF::overlap_coefficients()
+{
+    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
+    for(int iter = 1; iter < CISolutions_.size(); ++iter)
+    {
+        for(int cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
+        {
+            for(int j = 0; j < CISolutions_[iter].size(); j++){
+            if(abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90)
+            {
+                outfile->Printf("\n %d:%d %d:%d %8.8f",0, cisoln, iter, j, CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
+            }
+            }
+        }
+        outfile->Printf("\n");
+    }
 }
 
 }}

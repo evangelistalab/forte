@@ -343,6 +343,17 @@ Matrix tensor_to_matrix(ambit::Tensor t,Dimension dims)
     }
     return M_sym;
 }
+SharedMatrix tensor_to_matrix(ambit::Tensor t)
+{
+    size_t size1 = t.dim(0);
+    size_t size2 = t.dim(1);
+    SharedMatrix M(new Matrix("M",size1,size2));
+    t.iterate([&](const std::vector<size_t>& i,double& value){
+        M->set(i[0],i[1],value);
+    });
+    return M;
+}
+
 void view_modified_orbitals(const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
 {
         boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(Process::environment.wavefunction()));
