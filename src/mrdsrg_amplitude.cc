@@ -54,61 +54,21 @@ void MRDSRG::guess_t2_std(BlockedTensor &V, BlockedTensor &T2){
         T2["IJCD"] = tempT2["IJAB"] * U_["DB"] * U_["CA"];
     }
 
-    switch (sourcemap[source_]){
-    case SOURCE::LABS:{
-        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (fabs(value) > 1.0e-15){
-                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    t2aa_norm_ += value * value;
-                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    t2ab_norm_ += value * value;
-                } else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+    T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (fabs(value) > 1.0e-15){
+            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                t2aa_norm_ += value * value;
+            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                t2ab_norm_ += value * value;
+            } else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                t2bb_norm_ += value * value;
             }
-        });
-        break;
-    }
-    case SOURCE::DYSON:{
-        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (fabs(value) > 1.0e-15){
-                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                    value *= renormalized_denominator_dyson(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    t2aa_norm_ += value * value;
-                } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_dyson(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    t2ab_norm_ += value * value;
-                } else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator_dyson(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            }
-        });
-        break;
-    }
-    default:{
-        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (fabs(value) > 1.0e-15){
-                if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                    value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                    t2aa_norm_ += value * value;
-                }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                    t2ab_norm_ += value * value;
-                }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                    value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                    t2bb_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-            }
-        });
-        break;
-    }}
+            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+        }
+    });
 
     // transform back to non-canonical basis
     if(!semi_canonical_){
@@ -196,52 +156,18 @@ void MRDSRG::guess_t1_std(BlockedTensor &F, BlockedTensor &T2, BlockedTensor &T1
         T1["IA"] = tempT1["IA"];
     }
 
-    switch (sourcemap[source_]){
-    case SOURCE::LABS:{
-        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(fabs(value) > 1.0e-15){
-                if (spin[0]  == AlphaSpin){
-                    value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
-                    t1a_norm_ += value * value;
-                }else{
-                    value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+    T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if(fabs(value) > 1.0e-15){
+            if (spin[0]  == AlphaSpin){
+                value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+                t1a_norm_ += value * value;
+            }else{
+                value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+                t1b_norm_ += value * value;
             }
-        });
-        break;
-    }
-    case SOURCE::DYSON:{
-        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(fabs(value) > 1.0e-15){
-                if (spin[0]  == AlphaSpin){
-                    value *= renormalized_denominator_dyson(Fa_[i[0]] - Fa_[i[1]]);
-                    t1a_norm_ += value * value;
-                }else{
-                    value *= renormalized_denominator_dyson(Fb_[i[0]] - Fb_[i[1]]);
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            }
-        });
-        break;
-    }
-    default:{
-        T1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(fabs(value) > 1.0e-15){
-                if (spin[0]  == AlphaSpin){
-                    value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                    t1a_norm_ += value * value;
-                }else{
-                    value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                    t1b_norm_ += value * value;
-                }
-                if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-            }
-        });
-        break;
-    }}
+            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+        }
+    });
 
     // transform back to non-canonical basis
     if(!semi_canonical_){
@@ -347,13 +273,7 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2)
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             size_t i2 = label_to_spacemo_[block[2]][i[2]];
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            if (source_ == "LABS"){
-                value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }else if (source_ == "DYSON"){
-                value *= renormalized_denominator_dyson(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }else{
-                value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
 
             if (spin0 && spin1){
                 t2aa_norm_ += value * value;
@@ -486,13 +406,7 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
         T1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            if (source_ == "LABS"){
-                value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
-            }else if (source_ == "DYSON"){
-                value *= renormalized_denominator_dyson(F0[i0] - F0[i1]);
-            }else{
-                value *= renormalized_denominator(F0[i0] - F0[i1]);
-            }
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
 
             if (spin0){
                 t1a_norm_ += value * value;
@@ -572,56 +486,19 @@ void MRDSRG::update_t2_std(){
     R2["iJaB"] += Hbar2_["iJaB"];
     R2["IJAB"] += Hbar2_["IJAB"];
 
-    switch (sourcemap[source_]){
-    case SOURCE::LABS:{
-        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                value *= renormalized_denominator_labs(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                t2aa_norm_ += value * value;
-            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator_labs(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                t2ab_norm_ += value * value;
-            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator_labs(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-        });
-        break;
-    }
-    case SOURCE::DYSON:{
-        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                value *= renormalized_denominator_dyson(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                t2aa_norm_ += value * value;
-            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator_dyson(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                t2ab_norm_ += value * value;
-            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator_dyson(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-        });
-        break;
-    }
-    default:{
-        R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-                t2aa_norm_ += value * value;
-            }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-                t2ab_norm_ += value * value;
-            }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-                t2bb_norm_ += value * value;
-            }
-
-            if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
-        });
-        break;
-    }}
+    R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            t2aa_norm_ += value * value;
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            t2ab_norm_ += value * value;
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+            t2bb_norm_ += value * value;
+        }
+        if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
+    });
 
     // transform back to non-canonical basis
     if(!semi_canonical_){
@@ -699,49 +576,17 @@ void MRDSRG::update_t1_std(){
     R1["ia"] += Hbar1_["ia"];
     R1["IA"] += Hbar1_["IA"];
 
-    switch (sourcemap[source_]){
-    case SOURCE::LABS:{
-        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin){
-                value *= renormalized_denominator_labs(Fa_[i[0]] - Fa_[i[1]]);
-                t1a_norm_ += value * value;
-            }else{
-                value *= renormalized_denominator_labs(Fb_[i[0]] - Fb_[i[1]]);
-                t1b_norm_ += value * value;
-            }
+    R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+            t1a_norm_ += value * value;
+        }else{
+            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+            t1b_norm_ += value * value;
+        }
 
-            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-        });
-        break;
-    }
-    case SOURCE::DYSON:{
-        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin){
-                value *= renormalized_denominator_dyson(Fa_[i[0]] - Fa_[i[1]]);
-                t1a_norm_ += value * value;
-            }else{
-                value *= renormalized_denominator_dyson(Fb_[i[0]] - Fb_[i[1]]);
-                t1b_norm_ += value * value;
-            }
-
-            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-        });
-        break;
-    }
-    default:{
-        R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin){
-                value *= renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                t1a_norm_ += value * value;
-            }else{
-                value *= renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                t1b_norm_ += value * value;
-            }
-
-            if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
-        });
-        break;
-    }}
+        if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
+    });
 
     // transform back to non-canonical basis
     if(!semi_canonical_){
@@ -870,13 +715,7 @@ void MRDSRG::update_t2_noccvv(){
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             size_t i2 = label_to_spacemo_[block[2]][i[2]];
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            if (source_ == "LABS"){
-                value *= renormalized_denominator_labs(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }else if (source_ == "DYSON"){
-                value *= renormalized_denominator_dyson(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }else{
-                value *= renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-            }
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
 
             if (spin0 && spin1){
                 t2aa_norm_ += value * value;
@@ -999,13 +838,7 @@ void MRDSRG::update_t1_nocv(){
         R1.block(block).iterate([&](const std::vector<size_t>& i,double& value){
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            if (source_ == "LABS"){
-                value *= renormalized_denominator_labs(F0[i0] - F0[i1]);
-            }else if (source_ == "DYSON"){
-                value *= renormalized_denominator_dyson(F0[i0] - F0[i1]);
-            }else{
-                value *= renormalized_denominator(F0[i0] - F0[i1]);
-            }
+            value *= dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
 
             if (spin0){
                 t1a_norm_ += value * value;
@@ -1087,7 +920,7 @@ void MRDSRG::check_t2(BlockedTensor& T2)
     std::vector<std::pair<std::vector<size_t>, double>> t2aa, t2ab, t2bb;
 
     // create all knids of spin maps; 0: aa, 1: ab, 2:bb
-    std::map<int, double> spin_to_nonzero;
+    std::map<int, size_t> spin_to_nonzero;
     std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t2;
     std::map<int, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt2;
 
@@ -1151,7 +984,7 @@ void MRDSRG::check_t1(BlockedTensor& T1)
     std::vector<std::pair<std::vector<size_t>, double>> t1a, t1b;
 
     // create all kinds of spin maps; true: a, false: b
-    std::map<bool, double> spin_to_nonzero;
+    std::map<bool, size_t> spin_to_nonzero;
     std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_t1;
     std::map<bool, std::vector<std::pair<std::vector<size_t>, double>>> spin_to_lt1;
 

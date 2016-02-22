@@ -37,6 +37,7 @@
 #include "casscf.h"
 #include "finite_temperature.h"
 #include "active_dsrgpt2.h"
+#include "dsrg_mrpt.h"
 
 INIT_PLUGIN
 
@@ -105,7 +106,7 @@ read_options(std::string name, Options &options)
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
-                                              " ACTIVE-DSRGPT2 TASKS");
+                                              " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
 
         /*- The symmetry of the electronic state. (zero based) -*/
         options.add_int("ROOT_SYM",0);
@@ -849,6 +850,43 @@ extern "C" PsiReturnType forte(Options &options)
         boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         ACTIVE_DSRGPT2 pt(wfn,options,ints_,mo_space_info);
         pt.compute_energy();
+    }
+    if(options.get_str("JOB_TYPE") == "DSRG_MRPT"){
+        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+
+        std::string cas_type = options.get_str("CAS_TYPE");
+        if (cas_type == "CAS") {
+            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.reference();
+
+            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                dsrg->compute_energy();
+            }else{
+//                dsrg->compute_energy_relaxed();
+            }
+        } else if (cas_type == "FCI") {
+            if (options.get_bool("SEMI_CANONICAL")) {
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(1);
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+
+            std::shared_ptr<DSRG_MRPT> dsrg(new DSRG_MRPT(reference,wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") == "NONE"){
+                dsrg->compute_energy();
+            }else{
+//                dsrg->compute_energy_relaxed();
+            }
+        }
+
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CAS_TYPE")=="CAS")

@@ -1228,24 +1228,20 @@ double DSRG_MRPT2::E_VT2_6()
 
         temp["uvWxyZ"] -= V["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
         temp["uvWxyZ"] -= V["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += V["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
+        temp["uvWxyZ"] += 2.0 * V["uWyI"] * T2["vIxZ"];//  aaAaaA from hole
 
         temp["uvWxyZ"] += V["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
         temp["uvWxyZ"] -= V["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= V["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
+        temp["uvWxyZ"] -= 2.0 * V["vAxZ"] * T2["uWyA"];//  aaAaaA from particle
         E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
         temp["uVWxYZ"] -= V["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
         temp["uVWxYZ"] -= V["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += V["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
+        temp["uVWxYZ"] += 2.0 * V["uViZ"] * T2["iWxY"];//  aAAaAA from hole
 
         temp["uVWxYZ"] += V["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
         temp["uVWxYZ"] -= V["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= V["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
+        temp["uVWxYZ"] -= 2.0 * V["aWxY"] * T2["uVaZ"];//  aAAaAA from particle
         E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
     }
 
