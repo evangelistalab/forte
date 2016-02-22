@@ -13,6 +13,8 @@
 #include "integrals.h"
 #include "reference.h"
 #include "blockedtensorfactory.h"
+#include "dsrg_source.h"
+#include "dsrg_time.h"
 
 using namespace ambit;
 namespace psi{ namespace forte{
@@ -127,15 +129,14 @@ protected:
 
     /// Source operator
     std::string source_;
-    enum class SOURCE {STANDARD, LABS, DYSON, AMP, EMP2, LAMP, LEMP2};
-    std::map<std::string, SOURCE> sourcemap =
-            boost::assign::map_list_of("STANDARD", SOURCE::STANDARD)("LABS", SOURCE::LABS)("DYSON", SOURCE::DYSON)
-            ("AMP", SOURCE::AMP)("LAMP", SOURCE::LAMP)("EMP2", SOURCE::EMP2)("LEMP2",SOURCE::LEMP2);
+    /// The dsrg source operator
+    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
 
-    /// Smaller than which we will do Taylor expansion of f(z) = (1-exp(-z^2))/z
+    /// Smaller than which we will do Taylor expansion for renormalization
     double taylor_threshold_;
-    /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    int taylor_order_;
+
+    /// Timings for computing the commutators
+    DSRG_TIME dsrg_time_;
 
     /// Kevin's Tensor Wrapper
     std::shared_ptr<BlockedTensorFactory> BTF_;
@@ -170,15 +171,6 @@ protected:
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
     std::vector<double> Fb_;
-
-    /// Renormalize denominator
-    double renormalized_denominator(const double& D);
-    double renormalized_denominator_labs(const double& D);
-    double renormalized_denominator_dyson(const double& D) {return s_ * D / (1.0 + s_ * D * D);}
-//    double renormalized_denominator_amp(double V,double D);
-//    double renormalized_denominator_emp2(double V,double D);
-//    double renormalized_denominator_lamp(double V,double D);
-//    double renormalized_denominator_lemp2(double V,double D);
 
     /// Automatic adjust the flow parameter
     enum class SMART_S {DSRG_S, MIN_DELTA1, MAX_DELTA1, DAVG_MIN_DELTA1, DAVG_MAX_DELTA1};
@@ -237,6 +229,15 @@ protected:
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
+
+    /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
+    void write_t2_file(BlockedTensor& T2, const std::string& spin);
+    /// Read T2 from files MRDSRG_T2_XX.dat, XX = AA, AB, BB
+    void read_t2_file(BlockedTensor& T2, const std::string& spin);
+    /// Write T1 to files MRDSRG_T1_X.dat, X = A, B
+    void write_t1_file(BlockedTensor& T1, const std::string& spin);
+    /// Read T1 from files MRDSRG_T1_X.dat, X = A, B
+    void read_t1_file(BlockedTensor& T1, const std::string& spin);
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
@@ -351,51 +352,10 @@ protected:
     /// Print intruder analysis
     void print_intruder(const std::string& name,
                         const std::vector<std::pair<std::vector<size_t>, double>>& list);
-    /// Print commutator timings
-    void print_comm_time();
     /// Check the max and norm of density
     void check_density(BlockedTensor& D, const std::string& name);
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
-
-
-    // => Useful Inline functions <= //
-
-    /// Return exp(-s * D^2)
-    double renormalized_exp(const double& D) {return std::exp(-s_ * std::pow(D, 2.0));}
-    /// Taylor Expansion of [1 - exp(- Z^2)] / Z
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
-            double value = Z, tmp = Z;
-            for(int x = 0; x < n - 1; ++x){
-                tmp *= -1.0 * std::pow(Z, 2.0) / (x + 2);
-                value += tmp;
-            }
-            return value;
-        }else{return 0.0;}
-    }
-
-    /// Return exp(-s * |D|)
-    double renormalized_exp_linear(const double& D) {return std::exp(-s_ * std::fabs(D));}
-    /// Taylor Expansion of [1 - exp(-|Z|)] / Z
-    double Taylor_Exp_Linear(const double& Z, const int& n){
-        double Zabs = std::fabs(Z);
-        if(n > 0){
-            double value = 1.0, tmp = 1.0;
-            for(int x = 0; x < n - 1; ++x){
-                tmp *= -1.0 * Zabs / (x + 2);
-                value += tmp;
-            }
-            if(Z >= 0.0){
-                return value;
-            }else{
-                return -value;
-            }
-        }else{return 0.0;}
-    }
-
-    /// Return 1.0 / (1.0 + s * D^2)
-    double renormalized_dyson(const double& D) {return 1.0 / (1.0 + s_ * D * D);}
 };
 
 }}

@@ -213,6 +213,8 @@ public:
     void set_fci_iterations(int value);
     /// Print the NO from the 1RDM
     void print_no(bool value);
+    /// Set Ms value
+    void set_ms(int ms) {ms_ = ms;}
 
 private:
 
@@ -237,6 +239,8 @@ private:
     int fci_iterations_;
     /// Print the Natural Orbitals from the 1-RDM
     bool print_no_;
+    /// Z component of spin times 2 (i.e. 2 * Sz)
+    int ms_;
 
     // ==> Class functions <==
 
