@@ -1074,7 +1074,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     ambit::finalize();
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
-    return Success;
+    return ref_wfn;
 }
 
 }} // End Namespaces
