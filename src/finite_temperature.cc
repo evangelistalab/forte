@@ -17,13 +17,13 @@
 
 namespace psi { namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(boost::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space)
-    : RHF(options, _default_psio_lib_),
-      wfn_(wfn),
+FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space)
+    : RHF(ref_wfn,options,_default_psio_lib_),
       mo_space_info_(mo_space),
       options_(options)
 {
-    //copy(wfn);
+    shallow_copy(ref_wfn);
+    wfn_ = ref_wfn;
     startup();
 }
 
@@ -262,7 +262,7 @@ void FiniteTemperatureHF::form_G()
     }
     frac_occupation();
     form_D();
-    boost::shared_ptr<JK> JK_core = JK::build_JK();
+    boost::shared_ptr<JK> JK_core = JK::build_JK( );
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
