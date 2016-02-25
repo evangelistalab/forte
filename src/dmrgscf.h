@@ -44,6 +44,9 @@ private:
                        CheMPS2::DMRGSCFindices * iHandler,
                        SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat,
                        boost::shared_ptr<JK> myJK);
+    void buildTmatrix(  CheMPS2::DMRGSCFmatrix * theTmatrix,
+                       CheMPS2::DMRGSCFindices * iHandler,
+                       boost::shared_ptr<PSIO> psio, SharedMatrix Cmat);
 
     ///Form active fock matrix
     void buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSCFindices * iHandler, double * DMRG1DM,

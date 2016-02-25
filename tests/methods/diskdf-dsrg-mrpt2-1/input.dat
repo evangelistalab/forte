@@ -3,7 +3,7 @@
 import forte
 
 refmcscf    = -15.569761360884
-refdsrgpt2 =  -15.618447695526415
+refdsrgpt2 =  -15.613384259998316
 refdsrgpt2_jk_rdocc = -15.61856716895
 
 molecule {
@@ -16,17 +16,11 @@ molecule {
 }
 
 set globals{
-   reference    twocon
-   scf_type     pk
+   reference    ROHF
+   scf_type     df
    d_convergence           12
    e_convergence           15
    df_basis_mp2            cc-pvdz-ri
-}
-
-set mcscf{
-   docc         [2,0,0,0]
-   socc         [1,0,0,1]
-   maxiter       1000
 }
 
 set forte{
@@ -75,9 +69,8 @@ S   1   1.00
 ****
 }
 
-ref = energy('mcscf')
-compare_values(refmcscf,ref,10,"SCF energy")
+ref = energy('scf')
 forte_energy = energy('forte')
-compare_values(refdsrgpt2_jk_rdocc,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+compare_values(forte_energy, refdsrgpt2, 8, "DSRG-MRPT2 Energy")
 
 

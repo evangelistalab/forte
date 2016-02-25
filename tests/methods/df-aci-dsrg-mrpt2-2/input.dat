@@ -47,8 +47,8 @@ set forte {
    tauq					   0.001
 }
 
-ref = energy('mcscf')
-energy('forte')
+scf, wfn = energy('mcscf', return_wfn=True)
+energy('forte', ref_wfn = wfn)
 
-compare_values(refmcscf, ref,10,"SCF energy")
+compare_values(refmcscf, scf,10,"SCF energy")
 compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DF-DSRG-MRPT2 energy")
