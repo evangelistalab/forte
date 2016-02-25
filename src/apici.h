@@ -78,8 +78,6 @@ private:
     // ==> Class data <==
 
     // * Calculation data
-    /// A reference to the options object
-    Options& options_;
     /// The molecular integrals required by Explorer
     std::shared_ptr<ForteIntegrals>  ints_;
     /// Store all the integrals locally

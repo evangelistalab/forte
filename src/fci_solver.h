@@ -223,8 +223,6 @@ private:
 
     // ==> Class data <==
 
-    /// A reference to the options object
-    Options& options_;
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals>  ints_;
     /// The information about the molecular orbital spaces

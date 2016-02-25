@@ -78,7 +78,6 @@ ACIString::ACIString(SharedWavefunction ref_wfn, Options &options,
                      std::shared_ptr<ForteIntegrals>  ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options),
-      options_(options),
       ints_(ints),
       mo_space_info_(mo_space_info)
 {
