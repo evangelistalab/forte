@@ -23,7 +23,7 @@ FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& op
       options_(options)
 {
     shallow_copy(ref_wfn);
-    wfn_ = ref_wfn;
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
