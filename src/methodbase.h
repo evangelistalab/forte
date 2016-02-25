@@ -102,7 +102,9 @@ public:
 
     // => Constructors <= //
 
-    MethodBase(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MethodBase(SharedWavefunction ref_wfn, Options &options,
+               std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info);
     ~MethodBase();
 
     /// The energy of the reference
