@@ -28,19 +28,19 @@ namespace psi{ namespace forte{
 #endif
 
 
-THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
+THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
+    : Wavefunction(options),
       reference_(reference),
       ints_(ints),
       tensor_type_(ambit::CoreTensor),
       BTF_(new BlockedTensorFactory(options)),
       mo_space_info_(mo_space_info)
 {
+    shallow_copy(ref_wfn);
+
     ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
-    // Copy the wavefunction information
-    copy(wfn);
 
 	num_threads_ = omp_get_max_threads();
 
