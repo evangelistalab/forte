@@ -45,13 +45,13 @@ public:
      * @param resort_frozen_core Determines if the the integral with frozen index are removed
      *        (RemoveFrozenMOs = remove and resort, KeepFrozenMOs = keep all the integrals).
      */
-    ForteIntegrals(psi::Options &options,
-    IntegralSpinRestriction restricted, 
-    IntegralFrozenCore resort_frozen_core, 
-    std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ForteIntegrals(psi::Options &options, SharedWavefunction ref_wfn,
+                   IntegralSpinRestriction restricted,
+                   IntegralFrozenCore resort_frozen_core,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
-    virtual ~ ForteIntegrals();
+    virtual ~ForteIntegrals();
 
 
     // ==> Class Interface <==
@@ -74,10 +74,7 @@ private:
     Dimension& frzvpi() {return frzvpi_;}
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    Dimension& ncmopi() {return ncmopi_;}
-
-    /// The Wavefunction object
-    SharedWavefunction wfn_;    
+    Dimension& ncmopi() {return ncmopi_;}   
 
 public:
     /// Return the number of auxiliary functions
@@ -194,6 +191,10 @@ protected:
 
     /// The options object
     psi::Options& options_;
+
+    /// The Wavefunction object
+    SharedWavefunction wfn_;
+
     /// The integral_type
     IntegralType integral_type_;
 
