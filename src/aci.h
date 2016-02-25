@@ -53,6 +53,7 @@ public:
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
      */
     AdaptiveCI(SharedWavefunction ref_wfn, Options &options,
                            std::shared_ptr<ForteIntegrals>  ints,
@@ -79,8 +80,6 @@ private:
 
     // ==> Class data <==
 
-	/// The Wavefuction object
-	boost::shared_ptr<Wavefunction> wfn_;	
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer

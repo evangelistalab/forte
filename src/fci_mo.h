@@ -90,9 +90,6 @@ protected:
     void read_options();
     void cleanup();
 
-    /// The wavefunction pointer
-    boost::shared_ptr<Wavefunction> wfn_;
-
     /// Integrals
     std::shared_ptr<ForteIntegrals>  integral_;
     std::string int_type_;

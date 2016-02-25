@@ -53,9 +53,6 @@ protected:
     /// Print levels
     int print_;
 
-    /// The wavefunction pointer
-    boost::shared_ptr<Wavefunction> wfn_;
-
     /// The reference object
     Reference reference_;
 

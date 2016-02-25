@@ -191,11 +191,14 @@ public:
 
     /**
      * Constructor
-     * @param wfn The main wavefunction object
+     * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
+     * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    FCI(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI(SharedWavefunction ref_wfn, Options &options,
+        std::shared_ptr<ForteIntegrals> ints,
+        std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~FCI();
 
