@@ -217,7 +217,7 @@ public:
     /// Print the NO from the 1RDM
     void print_no(bool value);
     /// Set Ms value
-    void set_ms(int ms) {ms_ = ms;}
+    void set_ms(int ms);
 
 private:
 
@@ -242,6 +242,8 @@ private:
     bool print_no_;
     /// Z component of spin times 2 (i.e. 2 * Sz)
     int ms_;
+    /// Did the user set ms?
+    bool set_ms_ = false;
 
     // ==> Class functions <==
 

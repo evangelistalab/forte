@@ -77,13 +77,21 @@ void FCI::set_max_rdm_level(int value)
 {
     max_rdm_level_ = value;
 }
+
 void FCI::set_fci_iterations(int value)
 {
     fci_iterations_ = value;
 }
+
 void FCI::print_no(bool value)
 {
     print_no_ = value;
+}
+
+void FCI::set_ms(int ms)
+{
+    set_ms_ = true;
+    ms_ = ms;
 }
 
 void FCI::startup()
@@ -94,7 +102,6 @@ void FCI::startup()
     max_rdm_level_  = options_.get_int("FCI_MAX_RDM");
     fci_iterations_ = options_.get_int("FCI_ITERATIONS");
     print_no_       = options_.get_bool("PRINT_NO");
-    ms_             = options_.get_int("MS");
 }
 
 double FCI::compute_energy()
@@ -123,13 +130,17 @@ double FCI::compute_energy()
         multiplicity = options_.get_int("MULTIPLICITY");
     }
 
-    // Default: lowest spin solution
-    int ms = (multiplicity + 1) % 2;
 
-    if(options_["MS"].has_changed()){
-        ms = options_.get_int("MS");
+    // If the user did not specify ms determine the value from the input or
+    // take the lowest value consistent with the value of "MULTIPLICITY"
+    if (not set_ms_){
+        if(options_["MS"].has_changed()){
+            ms_ = options_.get_int("MS");
+        }else{
+            // Default: lowest spin solution
+            ms_ = (multiplicity + 1) % 2;
+        }
     }
-    ms = ms_;
 
 //    if(ms < 0){
 //        outfile->Printf("\n  Ms must be no less than 0.");
@@ -144,20 +155,20 @@ double FCI::compute_energy()
         outfile->Printf("\n  Multiplicity: %d",multiplicity);
         outfile->Printf("\n  Davidson subspace max dim: %d",options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
         outfile->Printf("\n  Davidson subspace min dim: %d",options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-        if (ms % 2 == 0){
-            outfile->Printf("\n  M_s: %d",ms / 2);
+        if (ms_ % 2 == 0){
+            outfile->Printf("\n  M_s: %d",ms_ / 2);
         }else{
-            outfile->Printf("\n  M_s: %d/2",ms);
+            outfile->Printf("\n  M_s: %d/2",ms_);
         }
     }
 
-    if( ((nel - ms) % 2) != 0)
+    if( ((nel - ms_) % 2) != 0)
         throw PSIEXCEPTION("\n\n  FCI: Wrong value of M_s.\n\n");
 
     // Adjust the number of for frozen and restricted doubly occupied
     size_t nactel = nel - 2 * nfdocc - 2 * rdocc.size();
 
-    size_t na = (nactel + ms) / 2;
+    size_t na = (nactel + ms_) / 2;
     size_t nb =  nactel - na;
 
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
