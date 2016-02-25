@@ -78,7 +78,7 @@ void CASSCF::compute_casscf()
     E_casscf_ =  Process::environment.globals["SCF ENERGY"];
     outfile->Printf("\n E_casscf: %8.8f", E_casscf_);
     double E_casscf_old = 0.0;
-    SharedMatrix C_start(wfn_->Ca()->clone());
+    SharedMatrix C_start(this->Ca()->clone());
     for(int iter = 0; iter < maxiter; iter++)
     {
         Timer casscf_total_iter;
@@ -101,8 +101,8 @@ void CASSCF::compute_casscf()
         {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
         }
-        SharedMatrix Ca = wfn_->Ca();
-        SharedMatrix Cb = wfn_->Cb();
+        SharedMatrix Ca = this->Ca();
+        SharedMatrix Cb = this->Cb();
 
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_,
                                            gamma2_,
@@ -179,7 +179,7 @@ void CASSCF::compute_casscf()
     }
     //if(casscf_debug_print_)
     //{
-    //    overlap_orbitals(wfn_->Ca(), C_start);
+    //    overlap_orbitals(this->Ca(), C_start);
     //}
     if(options_.get_bool("MONITOR_SA_SOLUTION"))
     {
@@ -207,8 +207,8 @@ void CASSCF::startup()
 {
     print_method_banner({"Complete Active Space Self Consistent Field","Kevin Hannon"});
     na_  = mo_space_info_->size("ACTIVE");
-    nsopi_ = wfn_->nsopi();
-    nirrep_ = wfn_->nirrep();
+    nsopi_ = this->nsopi();
+    nirrep_ = this->nirrep();
     if(options_.get_str("SCF_TYPE") == "PK")
     {
         outfile->Printf("\n\n CASSCF algorithm can not use PK");
@@ -289,7 +289,7 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "CAS")
     {
         ints_->retransform_integrals();
-        FCI_MO cas(wfn_, options_, ints_, mo_space_info_);
+        FCI_MO cas(reference_wavefunction_, options_, ints_, mo_space_info_);
         cas.use_default_orbitals(true);
         cas.set_quite_mode(quiet);
         cas.compute_energy();
@@ -299,7 +299,7 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "ACI")
     {
         ints_->retransform_integrals();
-        AdaptiveCI aci(wfn_, options_, ints_, mo_space_info_);
+        AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_max_rdm(2);
         aci.set_quiet(quiet);
         aci.compute_energy();
@@ -413,8 +413,8 @@ double CASSCF::cas_check(Reference cas_ref)
 }
 boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 {
-    SharedMatrix Ca = wfn_->Ca();
-    Dimension nsopi = wfn_->nsopi();
+    SharedMatrix Ca = this->Ca();
+    Dimension nsopi = this->nsopi();
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     SharedMatrix C_core(new Matrix("C_core",nirrep_, nsopi, frozen_dim));
     // Need to get the frozen block of the C matrix
@@ -466,13 +466,13 @@ ambit::Tensor CASSCF::transform_integrals()
 
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
-    SharedMatrix aotoso = wfn_->aotoso();
+    SharedMatrix aotoso = this->aotoso();
 
     /// I want a C matrix in the C1 basis but symmetry aware
-    size_t nso = wfn_->nso();
-    nirrep_ = wfn_->nirrep();
+    size_t nso = this->nso();
+    nirrep_ = this->nirrep();
     SharedMatrix Call(new Matrix(nso, nmo_no_froze));
-    SharedMatrix Ca_sym = wfn_->Ca();
+    SharedMatrix Ca_sym = this->Ca();
     SharedMatrix Identity(new Matrix("I", nso,nso));
     Identity->identity();
 
@@ -726,7 +726,7 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
-    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Ca = this->Ca();
     for(int h = 0; h < nirrep; h++)
     {
         for(int i = 0; i < restricted_docc_dim[h]; i++)
@@ -812,8 +812,8 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
 }
 void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_new)
 {
-    SharedMatrix S_orbitals(new Matrix("Overlap", wfn_->nsopi(), wfn_->nsopi()));
-    SharedMatrix S_basis = wfn_->S();
+    SharedMatrix S_orbitals(new Matrix("Overlap", this->nsopi(), this->nsopi()));
+    SharedMatrix S_basis = this->S();
     S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
     S_orbitals->print();
@@ -832,7 +832,7 @@ void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_n
 }
 void CASSCF::set_up_sa_fci()
 {
-    SA_FCISolver sa_fcisolver(options_, wfn_);
+    SA_FCISolver sa_fcisolver(options_, reference_wavefunction_);
     sa_fcisolver.set_mo_space_info(mo_space_info_);
     sa_fcisolver.set_integrals(ints_);
     std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");

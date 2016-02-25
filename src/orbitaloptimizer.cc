@@ -25,11 +25,11 @@ OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info), options_(options)
 {
-    startup();
 
 }
 void OrbitalOptimizer::update()
 {
+    startup();
     fill_shared_density_matrices();
     /// F^{I}_{pq} = h_{pq} + 2 (pq | kk) - (pk |qk)
     /// This is done using JK builder: F^{I}_{pq} = h_{pq} + C^{T}[2J - K]C

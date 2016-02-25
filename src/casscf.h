@@ -50,7 +50,6 @@ private:
     double E_casscf_;
     /// The OPtions object
     Options options_;
-    boost::shared_ptr<Wavefunction> wfn_;
     std::shared_ptr<ForteIntegrals> ints_;
     /// The mo_space_info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
