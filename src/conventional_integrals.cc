@@ -22,7 +22,7 @@ namespace psi{ namespace forte{
      */
 ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
+    : ForteIntegrals(options, ref_wfn, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
     integral_type_ = ConventionalInts;
 
 
