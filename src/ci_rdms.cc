@@ -43,10 +43,6 @@ void CI_RDMS::startup()
 	ncmo3_ = ncmo2_ * ncmo_;
 	ncmo4_ = ncmo3_ * ncmo_;
 	ncmo5_ = ncmo3_ * ncmo2_;
-	
-
-	// The number of irreps
-	nirrep_ = wfn_->nirrep(); 
 
 	size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
 

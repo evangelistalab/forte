@@ -48,8 +48,6 @@ private:
 	
 	// The options object
 	Options& options_;
-	// The Wavefunction Object
-	boost::shared_ptr<Wavefunction> wfn_;
 	// The FCI integrals
 	std::shared_ptr<FCIIntegrals> fci_ints_;
 	// The MOSpaceInfo object
@@ -63,8 +61,6 @@ private:
 
 	// The wavefunction symmetry
 	int symmetry_;
-	// The number of irreps
-	int nirrep_;
 
 	// The number of alpha electrons
 	int na_;
