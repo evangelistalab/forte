@@ -353,7 +353,7 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t)
 void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
 {
         boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
-        std::string filename = get_writer_file_prefix("") + ".molden";
+        std::string filename = get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
 
         if(remove(filename.c_str()) == 0){
             outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
