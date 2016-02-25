@@ -79,8 +79,6 @@ private:
 
     // ==> Class data <==
 
-	/// The Wavefuction object
-	boost::shared_ptr<Wavefunction> wfn_;	
     /// A reference to the options object
     Options& options_;
     /// The molecular integrals required by Explorer

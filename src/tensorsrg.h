@@ -28,14 +28,7 @@
 #include "methodbase.h"
 typedef ambit::BlockedTensor BlockedTensor;
 
-// Version history
-// 5/01/2014 0.2.0 - corrects equations for 4th-order correct version of Hbar
-// 5/10/2014 0.2.1 - fixes a problem with computing the correct scalar
-//                   contribution to the non-normal ordered Hamiltonian
-// 5/26/2014 0.2.2 - Implements the SRG(2) approximation like in Tsukiyama
-
 namespace psi{ namespace forte{
-
 
 /**
  * @brief The TensorSRG class

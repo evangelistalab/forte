@@ -44,9 +44,6 @@ private:
     /// Basic Preparation
     void startup();
 
-    /// The wavefunction pointer
-    boost::shared_ptr<Wavefunction> wfn_;
-
     /// Options
     Options options_;
 
