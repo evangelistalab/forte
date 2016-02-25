@@ -38,7 +38,6 @@ set forte{
  }
 
 energy('scf')
-mints()
 dmrgscf = energy('forte')
 
 compare_values(dmrg_ref, dmrgscf, 6,"DMRG CI Energy")
