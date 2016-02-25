@@ -11,7 +11,6 @@
 //Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
 #include <libciomr/libciomr.h>
 #include <liboptions/liboptions.h>
-#include <libchkpt/chkpt.h>
 #include <libfock/jk.h>
 #include <libmints/writer_file_prefix.h>
 //Header above allows to obtain "filename.moleculename" with psi::get_writer_file_prefix()
@@ -39,9 +38,11 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-DMRGSCF::DMRGSCF(Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
-    : options_(options), mo_space_info_(mo_space_info), ints_(ints)
+DMRGSCF::DMRGSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
+    : Wavefunction(options), mo_space_info_(mo_space_info), ints_(ints)
 {
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
     print_method_banner({"Density Matrix Renormalization Group SCF","Sebastian Wouters"});
 }
 
@@ -68,13 +69,13 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel){
 }
 
 
-void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK, boost::shared_ptr<Wavefunction> wfn){
+void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
 
-    const int nso    = wfn->nso();
-    int * nsopi      = wfn->nsopi();
-    const int nmo    = wfn->nmo();
-    int * nmopi      = wfn->nmopi();
-    const int nirrep = wfn->nirrep();
+    const int nso    = this->nso();
+    int * nsopi      = this->nsopi();
+    const int nmo    = this->nmo();
+    int * nmopi      = this->nmopi();
+    const int nirrep = this->nirrep();
 
     // nso can be different from nmo
     SharedMatrix SO_RDM;     SO_RDM = SharedMatrix( new Matrix( "SO RDM",   nirrep, nsopi, nsopi ) );
@@ -134,7 +135,7 @@ void DMRGSCF::copyCHEMPS2MXtoPSIMX( CheMPS2::DMRGSCFmatrix * source, CheMPS2::DM
 }
 
 
-void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK, boost::shared_ptr<Wavefunction> wfn ){
+void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
 
     MO_RDM->zero();
     for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++){
@@ -142,12 +143,12 @@ void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSC
             MO_RDM->set(irrep, orb, orb, 2.0);
         }
     }
-    buildJK( MO_RDM, MO_JK, Cmat, myJK, wfn );
+    buildJK( MO_RDM, MO_JK, Cmat, myJK);
     copyPSIMXtoCHEMPS2MX( MO_JK, iHandler, theQmatOCC );
 }
 
 
-void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSCFindices * iHandler, double * DMRG1DM, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK, boost::shared_ptr<Wavefunction> wfn ){
+void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSCFindices * iHandler, double * DMRG1DM, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
 
     MO_RDM->zero();
     const int nOrbDMRG = iHandler->getDMRGcumulative(iHandler->getNirreps());
@@ -162,28 +163,28 @@ void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSC
             }
         }
     }
-    buildJK( MO_RDM, MO_JK, Cmat, myJK, wfn );
+    buildJK( MO_RDM, MO_JK, Cmat, myJK);
     copyPSIMXtoCHEMPS2MX( MO_JK, iHandler, theQmatACT );
 
 }
 
 
-void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<PSIO> psio, boost::shared_ptr<Wavefunction> wfn ){
+void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<PSIO> psio){
 
     ints->update_orbitals();
     // Since we don't regenerate the SO ints, we don't call sort_so_tei, and the OEI are not updated !!!!!
     ints->transform_tei( Aorbs_ptr, Aorbs_ptr, Aorbs_ptr, Aorbs_ptr );
     dpd_set_default(ints->get_dpd_id());
-    const int nirrep = wfn->nirrep();
+    const int nirrep = this->nirrep();
 
     // Econstant and one-electron integrals
     {
-        const int nmo    = wfn->nmo();
+        const int nmo    = this->nmo();
         const int nTriMo = nmo * (nmo + 1) / 2;
-        const int nso    = wfn->nso();
+        const int nso    = this->nso();
         const int nTriSo = nso * (nso + 1) / 2;
-        int * mopi       = wfn->nmopi();
-        int * sopi       = wfn->nsopi();
+        int * mopi       = this->nmopi();
+        int * sopi       = this->nsopi();
         double * work1   = new double[ nTriSo ];
         double * work2   = new double[ nTriSo ];
         IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
@@ -196,8 +197,8 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
         Matrix moOei("MO OEI", nirrep, mopi, mopi);
 
         soOei.set( work1 );
-        half.gemm(true, false, 1.0, wfn->Ca(), soOei, 0.0);
-        moOei.gemm(false, false, 1.0, half, wfn->Ca(), 0.0);
+        half.gemm(true, false, 1.0, this->Ca(), soOei, 0.0);
+        moOei.gemm(false, false, 1.0, half, this->Ca(), 0.0);
 
         double Econstant = Process::environment.molecule()->nuclear_repulsion_energy();
         for (int h = 0; h < iHandler->getNirreps(); h++){
@@ -242,28 +243,28 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
     psio->close(PSIF_LIBTRANS_DPD, PSIO_OPEN_OLD);
 
 }
-void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix *theQmatOCC, CheMPS2::DMRGSCFindices *iHandler, CheMPS2::Hamiltonian *HamDMRG, boost::shared_ptr<Wavefunction> wfn, std::shared_ptr<ForteIntegrals> ints)
+void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix *theQmatOCC, CheMPS2::DMRGSCFindices *iHandler, CheMPS2::Hamiltonian *HamDMRG, std::shared_ptr<ForteIntegrals> ints)
 {
 
 }
 
 
-void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio, boost::shared_ptr<Wavefunction> wfn ){
+void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio){
 
     ints->update_orbitals();
     // Since we don't regenerate the SO ints, we don't call sort_so_tei, and the OEI are not updated !!!!!
     ints->transform_tei( OAorbs_ptr, OAorbs_ptr, MOSpace::all, MOSpace::all );
     dpd_set_default(ints->get_dpd_id());
-    const int nirrep = wfn->nirrep();
+    const int nirrep = this->nirrep();
 
     //One-electron integrals
     {
-        const int nmo    = wfn->nmo();
+        const int nmo    = this->nmo();
         const int nTriMo = nmo * (nmo + 1) / 2;
-        const int nso    = wfn->nso();
+        const int nso    = this->nso();
         const int nTriSo = nso * (nso + 1) / 2;
-        int * mopi       = wfn->nmopi();
-        int * sopi       = wfn->nsopi();
+        int * mopi       = this->nmopi();
+        int * sopi       = this->nsopi();
         double * work1   = new double[ nTriSo ];
         double * work2   = new double[ nTriSo ];
         IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
@@ -276,8 +277,8 @@ void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints,
         SharedMatrix moOei; moOei = SharedMatrix( new Matrix("MO OEI", nirrep, mopi, mopi) );
 
         soOei->set( work1 );
-        half->gemm(true, false, 1.0, wfn->Ca(), soOei, 0.0);
-        moOei->gemm(false, false, 1.0, half, wfn->Ca(), 0.0);
+        half->gemm(true, false, 1.0, this->Ca(), soOei, 0.0);
+        moOei->gemm(false, false, 1.0, half, this->Ca(), 0.0);
         delete [] work1;
 
         copyPSIMXtoCHEMPS2MX( moOei, iHandler, theTmatrix );
@@ -372,17 +373,17 @@ void DMRGSCF::copyUNITARYtoPSIMX( CheMPS2::DMRGSCFunitary * unitary, CheMPS2::DM
 }
 
 
-void DMRGSCF::update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::DMRGSCFunitary * unitary, boost::shared_ptr<Wavefunction> wfn, SharedMatrix work1, SharedMatrix work2 ){
+void DMRGSCF::update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::DMRGSCFunitary * unitary, SharedMatrix work1, SharedMatrix work2 ){
 
     copyCHEMPS2MXtoPSIMX( Coeff_orig, iHandler, work1 );
     copyUNITARYtoPSIMX( unitary, iHandler, work2 );
-    wfn->Ca()->gemm(false, true, 1.0, work1, work2, 0.0);
-    wfn->Cb()->copy(wfn->Ca());
+    this->Ca()->gemm(false, true, 1.0, work1, work2, 0.0);
+    this->Cb()->copy(this->Ca());
 
 }
 
 
-void DMRGSCF::compute_energy()
+double DMRGSCF::compute_energy()
 {
     /* This plugin is able to perform a DMRGSCF calculation in a molecular orbital active space. */
 
@@ -390,8 +391,8 @@ void DMRGSCF::compute_energy()
      *   Environment information   *
      *******************************/
     boost::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default) PSIO object, for file I/O
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction(); // The reference (SCF) wavefunction
-    if (!wfn){ throw PSIEXCEPTION("SCF has not been run yet!"); }
+    //boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction(); // The reference (SCF) wavefunction
+    if (!reference_wavefunction_){ throw PSIEXCEPTION("SCF has not been run yet!"); }
 
     /*************************
      *   Fetch the options   *
@@ -425,8 +426,8 @@ void DMRGSCF::compute_energy()
     const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
     const bool dmrgscf_loc_random     = options_.get_bool("DMRG_LOC_RANDOM");
     const int dmrgscf_num_vec_diis    = CheMPS2::DMRGSCF_numDIISvecs;
-    const std::string unitaryname     = psi::get_writer_file_prefix() + ".unitary.h5";
-    const std::string diisname        = psi::get_writer_file_prefix() + ".DIIS.h5";
+    const std::string unitaryname     = psi::get_writer_file_prefix("MOLECULE") + ".unitary.h5";
+    const std::string diisname        = psi::get_writer_file_prefix("MOLECULE") + ".DIIS.h5";
     bool three_pdm = false;
     if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE")=="THREE-DSRG-MRPT2")
     {
@@ -439,11 +440,11 @@ void DMRGSCF::compute_energy()
      ****************************************/
 
     const int SyGroup= chemps2_groupnumber( Process::environment.molecule()->sym_label() );
-    const int nmo    = wfn->nmo();
-    const int nirrep = wfn->nirrep();
-    int * orbspi     = wfn->nmopi();
-    int * docc       = wfn->doccpi();
-    int * socc       = wfn->soccpi();
+    const int nmo    = this->nmo();
+    const int nirrep = this->nirrep();
+    int * orbspi     = this->nmopi();
+    int * docc       = this->doccpi();
+    int * socc       = this->soccpi();
     if ( wfn_irrep<0 )                            { throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!"); }
     if ( wfn_multp<1 )                            { throw PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or equal to one: WFN_MULTP = (2S+1) >= 1 !"); }
     if ( ndmrg_states==0 )                        { throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!"); }
@@ -560,13 +561,13 @@ void DMRGSCF::compute_energy()
 
     SharedMatrix work1; work1 = SharedMatrix( new Matrix("work1", nirrep, orbspi, orbspi) );
     SharedMatrix work2; work2 = SharedMatrix( new Matrix("work2", nirrep, orbspi, orbspi) );
-    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(wfn->basisset()));
+    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(reference_wavefunction_->basisset()), options_);
     //boost::shared_ptr<JK> myJK = JK::build_JK();
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
     CheMPS2::DMRGSCFmatrix * Coeff_orig  = new CheMPS2::DMRGSCFmatrix( iHandler );
-    copyPSIMXtoCHEMPS2MX(wfn->Ca(), iHandler, Coeff_orig);
+    copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, Coeff_orig);
 
     std::vector<int> OAorbs; // Occupied + active
     std::vector<int> Aorbs;  // Only active
@@ -593,7 +594,7 @@ void DMRGSCF::compute_energy()
     spaces.push_back( MOSpace::all );
     // CheMPS2 requires RHF or ROHF orbitals.
     boost::shared_ptr<IntegralTransform> ints;
-    ints = boost::shared_ptr<IntegralTransform>( new IntegralTransform( wfn, spaces, IntegralTransform::Restricted ) );
+    ints = boost::shared_ptr<IntegralTransform>( new IntegralTransform(reference_wavefunction_, spaces, IntegralTransform::Restricted ) );
     ints->set_keep_iwl_so_ints( true );
     ints->set_keep_dpd_so_ints( true );
     //ints->set_print(6);
@@ -633,7 +634,7 @@ void DMRGSCF::compute_energy()
     double * mem2 = new double[sizeWorkMem];
 
     CheMPS2::EdmistonRuedenberg * theLocalizer = NULL;
-    if ( dmrgscf_active_space.compare("LOC")==0 ){ theLocalizer = new CheMPS2::EdmistonRuedenberg(HamDMRG); }
+    if ( dmrgscf_active_space.compare("LOC")==0 ){ theLocalizer = new CheMPS2::EdmistonRuedenberg( HamDMRG->getVmat(), iHandler->getGroupNumber() ); }
 
     //Load unitary from disk
     if ( dmrgscf_store_unit ){
@@ -709,9 +710,9 @@ void DMRGSCF::compute_energy()
         if (( dmrgscf_store_diis ) && (updateNorm!=1.0) && (theDIIS!=NULL)){ theDIIS->saveDIIS( diisname ); }
 
         //Fill HamDMRG
-        update_WFNco( Coeff_orig, iHandler, unitary, wfn, work1, work2 );
-        buildQmatOCC( theQmatOCC, iHandler, work1, work2, wfn->Ca(), myJK, wfn );
-        buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio, wfn );
+        update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
+        buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+        buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
 
         //Localize the active space and reorder the orbitals within each irrep based on the exchange matrix
         if (( dmrgscf_active_space.compare("LOC")==0 ) && (theDIIS==NULL)){ //When the DIIS has started: stop
@@ -739,9 +740,9 @@ void DMRGSCF::compute_energy()
             }
             system(("rm " + chemps2filename).c_str());
 
-            update_WFNco( Coeff_orig, iHandler, unitary, wfn, work1, work2 );
-            buildQmatOCC( theQmatOCC, iHandler, work1, work2, wfn->Ca(), myJK, wfn );
-            buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio, wfn );
+            update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
+            buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+            buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
             (*outfile) << "Rotated the active space to localized orbitals, sorted according to the exchange matrix." << endl;
 
         }
@@ -780,7 +781,7 @@ void DMRGSCF::compute_energy()
                 for (int cnt = 0; cnt < nOrbDMRG_pow4; cnt++){ DMRG2DM[ cnt ] *= averagingfactor; }
             }
             CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM );
-            CheMPS2::CASSCF::calcNOON( iHandler, mem1, mem2, DMRG1DM );
+            //CheMPS2::CASSCF::calcNOON( iHandler, mem1, mem2, DMRG1DM );
             if(three_pdm)
             {
                 CheMPS2::CASSCF::copy3DMover( theDMRG->get3DM(), nOrbDMRG, DMRG3DM);
@@ -802,11 +803,13 @@ void DMRGSCF::compute_energy()
 
         bool wfn_co_updated = false;
         if (( dmrgscf_active_space.compare("NO")==0 ) && (theDIIS==NULL)){ //When the DIIS has started: stop
-            CheMPS2::CASSCF::rotate2DMand1DM( nDMRGelectrons, nOrbDMRG, mem1, mem2, DMRG1DM, DMRG2DM );
+            theLocalizer->Optimize( mem1, mem2, dmrgscf_loc_random );
+            theLocalizer->FiedlerExchange(maxlinsize, mem1, mem2);
+            CheMPS2::CASSCF::fillLocalizedOrbitalRotations(theLocalizer->getUnitary(), iHandler, mem1);
             unitary->rotateActiveSpaceVectors(mem1, mem2); //This rotation can change the determinant from +1 to -1 !!!!
-            update_WFNco( Coeff_orig, iHandler, unitary, wfn, work1, work2 );
+            update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
             wfn_co_updated = true;
-            buildQmatOCC( theQmatOCC, iHandler, work1, work2, wfn->Ca(), myJK, wfn );
+            buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
             (*outfile) << "Rotated the active space to natural orbitals, sorted according to the NOON." << endl;
         }
 
@@ -815,9 +818,9 @@ void DMRGSCF::compute_energy()
             break;
         }
 
-        if ( !wfn_co_updated ){ update_WFNco( Coeff_orig, iHandler, unitary, wfn, work1, work2 ); }
-        buildQmatACT( theQmatACT, iHandler, DMRG1DM, work1, work2, wfn->Ca(), myJK, wfn );
-        fillRotatedTEI_coulomb(  ints, OAorbs_ptr, theTmatrix, theRotatedTEI, iHandler, psio, wfn ); // Also fills the T-matrix
+        if ( !wfn_co_updated ){ update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 ); }
+        buildQmatACT( theQmatACT, iHandler, DMRG1DM, work1, work2, this->Ca(), myJK);
+        fillRotatedTEI_coulomb(  ints, OAorbs_ptr, theTmatrix, theRotatedTEI, iHandler, psio); // Also fills the T-matrix
         fillRotatedTEI_exchange( ints, OAorbs_ptr, Vorbs_ptr,  theRotatedTEI, iHandler, psio );
 
         {
@@ -878,14 +881,15 @@ void DMRGSCF::compute_energy()
     Process::environment.globals["CURRENT ENERGY"] = Energy;
     Process::environment.globals["DMRGSCF ENERGY"] = Energy;
     dmrg_ref_.set_Eref(Energy);
+    return Energy;
 }
 void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler)
 {
-    if(options_.get_int("MULTIPLICITY") != 1 && options_.get_int("DMRG_WFN_MULTP") != 1)
-    {
-        outfile->Printf("\n\n Spinadapted formalism requires spin-averaged quantitities");
-        throw PSIEXCEPTION("You need to spin averaged things");
-    }
+    //if(options_.get_int("MULTIPLICITY") != 1 && options_.get_int("DMRG_WFN_MULTP") != 1)
+    //{
+    //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged quantitities");
+    //    throw PSIEXCEPTION("You need to spin averaged things");
+    //}
     Reference dmrg_ref;
     size_t na = mo_space_info_->size("ACTIVE");
     ambit::Tensor gamma1_a = ambit::Tensor::build(ambit::CoreTensor, "gamma1_a", {na, na});
