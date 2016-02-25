@@ -31,18 +31,13 @@ def parse_input():
     parser = argparse.ArgumentParser(description="Configure FORTE",
                             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    group = parser.add_argument_group('PSI4 and Ambit options')
+    group = parser.add_argument_group('PSI4 and CheMPS2 options')
     group.add_argument('--psi4',
             action='store',
             default=None,
             help="""The PSI4 executable.
             If this is left blank this script will attempt to find PSI4 on your system.
             Failing that it will not be able to compile FORTE.""",
-            metavar='PATH')
-    group.add_argument('--ambit-bindir',
-            action='store',
-            default=None,
-            help="""The ambit binary installation directory.""",
             metavar='PATH')
     group.add_argument('--chemps2-bindir',
             action='store',
@@ -56,7 +51,6 @@ def parse_input():
 def generate_makefile(args):
     print "   root directory: %s" % root_directory
     print "   psi4 executable: %s" % args.psi4
-    print "   ambit binary installation directory: %s\n" % args.ambit_bindir
     print "   chemps2 binary installation directory: %s\n" % args.chemps2_bindir
 
     os.chdir(root_directory + "/src")
@@ -86,16 +80,13 @@ def generate_makefile(args):
             chemps2 = False
 
         addons = "# Added by FORTE setup\n"
-        addons += "AMBIT_BINDIR = %s\n" % args.ambit_bindir
-        addons += "INCLUDES += -I$(AMBIT_BINDIR)/include \n"
-        addons += "LDFLAGS += -L$(AMBIT_BINDIR)/lib -lambit -Wl,-rpath $(AMBIT_BINDIR)/lib \n"
         if chemps2:
             addons += "CHEMPS2_BINDIR = %s\n" % args.chemps2_bindir
             addons += "INCLUDES +=  -I$(CHEMPS2_BINDIR)/include\n"
             addons += "LDFLAGS +=   -L$(CHEMPS2_BINDIR)/lib -lchemps2\n"
             addons += "#This works on our cluster\n"
-            addons += "#INCLUDES += -I$(AMBIT_BINDIR)/include -I$(CHEMPS2_BINDIR)/include\n"
-            addons += "#LDFLAGS += -L$(AMBIT_BINDIR)/lib -lambit -Wl,-rpath $(AMBIT_BINDIR)/lib -L$(CHEMPS2_BINDIR)/lib64 -lchemps2 -Wl,-rpath $(CHEMPS2_BINDIR)/lib64\n"
+            addons += "#INCLUDES += -I$(CHEMPS2_BINDIR)/include\n"
+            addons += "#LDFLAGS += -Wl,-rpath -L$(CHEMPS2_BINDIR)/lib64 -lchemps2 -Wl,-rpath $(CHEMPS2_BINDIR)/lib64\n"
             addons += "CXXFLAGS += -DHAVE_CHEMPS2\n"
         else:
             addons += "CXXSRC = $(filter-out dmrgscf.cc, $(notdir $(wildcard *.cc)))\n"
@@ -139,7 +130,6 @@ def main(argv):
     args = parse_input()
     save_setup_command(argv,root_directory)
     configure_psi4(args)
-    configure_ambit(args)
     configure_chemps2(args)
     status = generate_makefile(args)
 
@@ -171,28 +161,6 @@ def configure_psi4(args):
         print "The psi4 executable \"%s\" could not be found" % args.psi4
         exit(1)
 
-
-def configure_ambit(args):
-    if not args.ambit_bindir:
-        # no --ambit-bindir provided
-        print "Please specify the location of the AMBIT installation directory.\nThis directory is created after compiling and installing AMBIT (make; make install)"
-        exit(1)
-    else:
-        # check if psi4 executable exists
-        ambit_libdir = args.ambit_bindir + "/lib/"
-        if os.path.isdir(ambit_libdir):
-            # check for lib/libambit.*
-            found = False
-            for file in os.listdir(ambit_libdir):
-                if 'libambit.' in file:
-                    found = True
-
-            if not found:
-                print "The ambit directory \"%s\" does not contain a library file." % ambit_libdir
-                exit(1)
-        else:
-            print "The ambit directory \"%s\" does not contain a libambit file.\nCheck the argument passed via --ambit-bindir." % ambit_libdir
-            exit(1)
 
 def configure_chemps2(args):
     if not args.chemps2_bindir:
