@@ -52,10 +52,10 @@ set forte{
    PRINT_DENOM2           true
 }
 
-scf = energy('mcscf')
+scf, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")
 
-energy('forte')
+energy('forte', ref_wfn = wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
 
 
