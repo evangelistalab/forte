@@ -36,13 +36,9 @@
 namespace psi{ namespace forte{
 
 
-MOSpaceInfo::MOSpaceInfo()
+MOSpaceInfo::MOSpaceInfo(Dimension& nmopi)
+    : nirrep_(nmopi.n()), nmopi_(nmopi)
 {
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    nirrep_ = wfn->nirrep();
-    nmopi_ = wfn->nmopi();
-
     // Add the elementary spaces to the list of composite spaces
     for (const std::string& es : elementary_spaces_){
         composite_spaces_[es] = {es};
