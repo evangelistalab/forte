@@ -662,8 +662,8 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     ambit::initialize();
 
     //[forte-public]
-
-    std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
+    Dimension nmopi = ref_wfn->nmopi();
+    std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
 
     std::shared_ptr<ForteIntegrals> ints_;
