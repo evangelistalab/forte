@@ -39,7 +39,7 @@ public:
 
     /**
      * @brief FCI_MO Constructor
-     * @param wfn The main wavefunction object
+     * @param ref_wfn The reference wavefunction object
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
