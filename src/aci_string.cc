@@ -74,16 +74,17 @@ bool paircomp( const std::pair<double, STLBitsetDeterminant> E1, const std::pair
     return E1.first < E2.first;
 }
 
-ACIString::ACIString(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
-        wfn_(wfn),
-        options_(options),
-		ints_(ints), 
-        mo_space_info_(mo_space_info)
+ACIString::ACIString(SharedWavefunction ref_wfn, Options &options,
+                     std::shared_ptr<ForteIntegrals>  ints,
+                     std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options),
+      options_(options),
+      ints_(ints),
+      mo_space_info_(mo_space_info)
 {
     // Copy the wavefunction information
-    copy(wfn);
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
 
     startup();
 }
@@ -695,7 +696,7 @@ double ACIString::compute_energy()
 	}
 
 	evecs_ = PQ_evecs;
-	CI_RDMS ci_rdms_(options_,wfn_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+    CI_RDMS ci_rdms_(options_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
 		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
@@ -1757,7 +1758,7 @@ void ACIString::set_max_rdm( int rdm )
 
 Reference ACIString::reference()
 {
-	CI_RDMS ci_rdms(options_, wfn_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
+    CI_RDMS ci_rdms(options_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
 }

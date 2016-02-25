@@ -5,10 +5,16 @@
 #include "active_dsrgpt2.h"
 
 namespace psi{ namespace forte{
-ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(boost::shared_ptr<Wavefunction> wfn, Options &options,
-                               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : wfn_(wfn), options_(options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0)
+
+ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(SharedWavefunction ref_wfn, Options &options,
+                               std::shared_ptr<ForteIntegrals> ints,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options), options_(options), ints_(ints), mo_space_info_(mo_space_info), total_nroots_(0)
 {
+    // Copy the wavefunction information
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
+
     print_method_banner({"ACTIVE-DSRGPT2", "Chenyang Li"});
     outfile->Printf("\n    The orbitals are fixed throughout the process.");
     outfile->Printf("\n    If different orbitals (or reference) are desired for different roots,");
@@ -22,7 +28,7 @@ void ACTIVE_DSRGPT2::startup(){
     if(options_["NROOTPI"].size() == 0){
         throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
     }else{
-        int nirrep = wfn_->nirrep();
+        int nirrep = this->nirrep();
         ref_energies_ = vector<vector<double>> (nirrep,vector<double>());
         pt2_energies_ = vector<vector<double>> (nirrep,vector<double>());
         dominant_dets_ = vector<vector<STLBitsetDeterminant>> (nirrep,vector<STLBitsetDeterminant>());
@@ -49,11 +55,11 @@ void ACTIVE_DSRGPT2::startup(){
     }
 }
 
-void ACTIVE_DSRGPT2::compute_energy(){
+double ACTIVE_DSRGPT2::compute_energy(){
     if(total_nroots_ == 0){
         outfile->Printf("\n  NROOTPI is zero. Did nothing.");
     }else{
-        FCI_MO fci_mo(wfn_,options_,ints_,mo_space_info_);
+        FCI_MO fci_mo(reference_wavefunction_,options_,ints_,mo_space_info_);
         int nirrep = nrootpi_.size();
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] == 0) continue;
@@ -75,10 +81,10 @@ void ACTIVE_DSRGPT2::compute_energy(){
                     // PT2 routine
                     double pt2 = 0.0;
                     if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
-                        auto dsrg = std::make_shared<DSRG_MRPT2>(reference,wfn_,options_,ints_,mo_space_info_);
+                        auto dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
                         pt2 = dsrg->compute_energy();
                     }else{
-                        auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,wfn_,options_,ints_,mo_space_info_);
+                        auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
                         pt2 = dsrg->compute_energy();
                     }
                     pt2_energies_[h].push_back(pt2);
@@ -144,6 +150,7 @@ void ACTIVE_DSRGPT2::compute_energy(){
         }
         print_summary();
     }
+    return 0.0;
 }
 
 void ACTIVE_DSRGPT2::print_summary(){
@@ -239,7 +246,7 @@ void ACTIVE_DSRGPT2::print_summary(){
 
 std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det, const STLBitsetDeterminant& ref_det){
     Dimension active = mo_space_info_->get_dimension("ACTIVE");
-    int nirrep = wfn_->nirrep();
+    int nirrep = this->nirrep();
     std::vector<std::string> sym_active;
     for(int h = 0; h < nirrep; ++h){
         for(int i = 0; i < active[h]; ++i){
