@@ -86,10 +86,9 @@ void OrbitalOptimizer::startup()
     nfrozen_ = frozen_docc_abs_.size();
     na_     = active_abs_.size();
     nvir_  = restricted_uocc_abs_.size();
-    wfn_ = Process::environment.wavefunction();
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
-    nirrep_ = wfn_->nirrep();
-    nsopi_  = wfn_->nsopi();
+    nirrep_ = mo_space_info_->nirrep();
+    nsopi_  = n_->nsopi();
 
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
@@ -498,7 +497,7 @@ SharedMatrix OrbitalOptimizer::rotate_orbitals(SharedMatrix C, SharedMatrix S)
     ///Clone the C matrix
     SharedMatrix C_rot(C->clone());
     SharedMatrix S_mat(S->clone());
-    SharedMatrix S_sym(new Matrix("Exp(K)", wfn_->nirrep(), wfn_->nmopi(), wfn_->nmopi()));
+    SharedMatrix S_sym(new Matrix("Exp(K)", mo_space_info_->nirrep(), mo_space_info_->get_dimension("ALL"), mo_space_info_->get_dimension("ALL")));
     int offset_hole = 0;
     int offset_part = 0;
     for(size_t h = 0; h < nirrep_; h++){
@@ -571,7 +570,7 @@ boost::shared_ptr<Matrix> OrbitalOptimizer::make_c_sym_aware()
 
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = wfn_->nso();
-    nirrep_ = wfn_->nirrep();
+    nirrep_ = mo_space_info_->nirrep();
     SharedMatrix Call(new Matrix(nso, nmopi.sum()));
 
     // Transform from the SO to the AO basis for the C matrix.
