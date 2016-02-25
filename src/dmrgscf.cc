@@ -68,6 +68,34 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel){
 
 }
 
+void DMRGSCF::buildTmatrix( CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio, SharedMatrix Cmat){
+
+    const int nirrep = this->nirrep();
+    const int nmo    = this->nmo();
+    const int nTriMo = nmo * (nmo + 1) / 2;
+    const int nso    = this->nso();
+    const int nTriSo = nso * (nso + 1) / 2;
+    int * mopi       = this->nmopi();
+    int * sopi       = this->nsopi();
+    double * work1   = new double[ nTriSo ];
+    double * work2   = new double[ nTriSo ];
+    IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_T, work1, nTriSo, 0, 0, "outfile");
+    IWL::read_one(psio.get(), PSIF_OEI, PSIF_SO_V, work2, nTriSo, 0, 0, "outfile");
+    for (int n = 0; n < nTriSo; n++){ work1[n] += work2[n]; }
+    delete [] work2;
+
+    SharedMatrix soOei; soOei = SharedMatrix( new Matrix("SO OEI", nirrep, sopi, sopi) );
+    SharedMatrix half;   half = SharedMatrix( new Matrix(  "Half", nirrep, mopi, sopi) );
+    SharedMatrix moOei; moOei = SharedMatrix( new Matrix("MO OEI", nirrep, mopi, mopi) );
+
+    soOei->set( work1 );
+    half->gemm(true, false, 1.0, Cmat, soOei, 0.0);
+    moOei->gemm(false, false, 1.0, half, Cmat, 0.0);
+    delete [] work1;
+
+    copyPSIMXtoCHEMPS2MX( moOei, iHandler, theTmatrix );
+
+}
 
 void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
 
@@ -711,6 +739,7 @@ double DMRGSCF::compute_energy()
 
         //Fill HamDMRG
         update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
+        buildTmatrix( theTmatrix, iHandler, psio, this->Ca());
         buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
         buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
 
@@ -741,6 +770,7 @@ double DMRGSCF::compute_energy()
             system(("rm " + chemps2filename).c_str());
 
             update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
+            buildTmatrix( theTmatrix, iHandler, psio, this->Ca());
             buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
             buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
             (*outfile) << "Rotated the active space to localized orbitals, sorted according to the exchange matrix." << endl;
