@@ -57,9 +57,10 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
-AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> wfn, Options &options,
-                                               std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
+AdaptivePathIntegralCI::AdaptivePathIntegralCI(SharedWavefunction ref_wfn, Options &options,
+                                               std::shared_ptr<ForteIntegrals>  ints,
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options),
       options_(options),
       ints_(ints),
       mo_space_info_(mo_space_info),
@@ -67,7 +68,8 @@ AdaptivePathIntegralCI::AdaptivePathIntegralCI(boost::shared_ptr<Wavefunction> w
       fast_variational_estimate_(false)
 {
     // Copy the wavefunction information
-    copy(wfn);
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
