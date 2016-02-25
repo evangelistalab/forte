@@ -426,8 +426,8 @@ double DMRGSCF::compute_energy()
     const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
     const bool dmrgscf_loc_random     = options_.get_bool("DMRG_LOC_RANDOM");
     const int dmrgscf_num_vec_diis    = CheMPS2::DMRGSCF_numDIISvecs;
-    const std::string unitaryname     = psi::get_writer_file_prefix("MOLECULE") + ".unitary.h5";
-    const std::string diisname        = psi::get_writer_file_prefix("MOLECULE") + ".DIIS.h5";
+    const std::string unitaryname     = psi::get_writer_file_prefix(this->molecule()->name() ) + ".unitary.h5";
+    const std::string diisname        = psi::get_writer_file_prefix(this->molecule()->name() ) + ".DIIS.h5";
     bool three_pdm = false;
     if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE")=="THREE-DSRG-MRPT2")
     {
