@@ -47,8 +47,6 @@ protected:
     std::vector<std::pair<double, int> > active_orb_energy_;
     /// The Fermi-Dirac distribution for occupation
     std::vector<double> fermidirac_;
-    /// The wavefunction object
-    boost::shared_ptr<Wavefunction> wfn_;
     /// The MOSpaceInfo object -> Tells active space and things
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     ///The options object

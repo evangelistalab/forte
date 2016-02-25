@@ -43,7 +43,7 @@ FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options &options,
      // fciInts_(ints, mo_space_info)
 {
     shallow_copy(ref_wfn);
-    wfn_ = ref_wfn;
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 
