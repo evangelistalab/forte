@@ -110,6 +110,7 @@ void CASSCF::compute_casscf()
                                            options_,
                                            mo_space_info_);
 
+        orbital_optimizer.set_wavefunction(reference_wavefunction_);
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         //orbital_optimizer.one_body(Hcore_);
@@ -903,11 +904,11 @@ void CASSCF::write_orbitals_molden()
 void CASSCF::overlap_coefficients()
 {
     outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");
-    for(int iter = 1; iter < CISolutions_.size(); ++iter)
+    for(size_t iter = 1; iter < CISolutions_.size(); ++iter)
     {
-        for(int cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
+        for(size_t cisoln = 0; cisoln < CISolutions_[iter].size(); cisoln++)
         {
-            for(int j = 0; j < CISolutions_[iter].size(); j++){
+            for(size_t j = 0; j < CISolutions_[iter].size(); j++){
             if(abs(CISolutions_[0][cisoln]->dot(CISolutions_[iter][j])) > 0.90)
             {
                 outfile->Printf("\n %d:%d %d:%d %8.8f",0, cisoln, iter, j, CISolutions_[0][cisoln]->dot(CISolutions_[iter][j]));
