@@ -45,8 +45,8 @@ set forte{
    e_convergence           8
 }
 
-energy('mcscf')
+Emcscf, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
