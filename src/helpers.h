@@ -91,7 +91,7 @@ using SpaceInfo = std::pair<Dimension,std::vector<MOInfo>>;
 class MOSpaceInfo
 {
 public:
-    MOSpaceInfo();
+    MOSpaceInfo(Dimension& nmopi);
     ~MOSpaceInfo();
 
     /// @return The names of orbital spaces
