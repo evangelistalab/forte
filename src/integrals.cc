@@ -35,13 +35,20 @@ namespace psi{ namespace forte{
 #endif
 
 
-ForteIntegrals::ForteIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
-std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core),frozen_core_energy_(0.0), scalar_(0.0),
-    mo_space_info_(mo_space_info)
+ForteIntegrals::ForteIntegrals(psi::Options &options, SharedWavefunction ref_wfn,
+                               IntegralSpinRestriction restricted,
+                               IntegralFrozenCore resort_frozen_core,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : options_(options),
+      wfn_(ref_wfn),
+      restricted_(restricted),
+      resort_frozen_core_(resort_frozen_core),
+      frozen_core_energy_(0.0),
+      scalar_(0.0),
+      mo_space_info_(mo_space_info)
 {
     // Copy the Wavefunction object
-    wfn_ = ref_wfn;
+
 
     startup();
     allocate();
@@ -198,6 +205,7 @@ void ForteIntegrals::transform_one_electron_integrals()
         offset += nmopi_[h];
     }
 }
+
 void ForteIntegrals::compute_frozen_one_body_operator()
 {
     Timer FrozenOneBody;
@@ -217,7 +225,7 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         }
     }
 
-    boost::shared_ptr<JK> JK_core = JK::build_JK();
+    boost::shared_ptr<JK> JK_core = JK::build_JK(wfn_->basisset(),options_);
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
