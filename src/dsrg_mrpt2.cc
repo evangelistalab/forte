@@ -509,7 +509,7 @@ void DSRG_MRPT2::compute_t2()
                << acore_mos.size() + aactv_mos.size() << " "
                << aactv_mos.size() + avirt_mos.size() << " "
                << aactv_mos.size() + avirt_mos.size() << " \n";
-        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        T2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double&){
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
                 double D = renormalized_denominator_ts(Fa[i[0]] + Fa[i[1]] - Fa[i[2]] - Fa[i[3]]);
                 myfile << i[0] << " " << i[1] << " "

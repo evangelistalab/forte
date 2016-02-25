@@ -204,7 +204,7 @@ public:
     // => Constructors <= //
 
     SOMRDSRG(Reference reference,
-           boost::shared_ptr<Wavefunction> wfn,
+           SharedWavefunction ref_wfn,
            Options &options,
            std::shared_ptr<ForteIntegrals>  ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info);
