@@ -14,7 +14,7 @@
 
 namespace psi{ namespace forte{
 
-class CASSCF
+class CASSCF : public Wavefunction
 {
 public:
     /**
@@ -27,7 +27,7 @@ public:
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(Options &options,
+    CASSCF(SharedWavefunction ref_wfn, Options &options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
     /// Compute CASSCF given a 1RDM and 2RDM
     void compute_casscf();
@@ -37,7 +37,7 @@ public:
     ambit::Tensor gamma1(){return gamma1_;}
     ///Return the final gamma2;
     ambit::Tensor gamma2(){return gamma2_;}
-    double E_casscf(){return E_casscf_;}
+    double compute_energy(){return E_casscf_;}
 private:
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
