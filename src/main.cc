@@ -739,7 +739,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
     {
-        auto casscf = std::make_shared<CASSCF>(options,ints_,mo_space_info);
+        auto casscf = std::make_shared<CASSCF>(ref_wfn,options,ints_,mo_space_info);
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")){
