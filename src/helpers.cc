@@ -36,13 +36,9 @@
 namespace psi{ namespace forte{
 
 
-MOSpaceInfo::MOSpaceInfo()
+MOSpaceInfo::MOSpaceInfo(Dimension& nmopi)
+    : nirrep_(nmopi.n()), nmopi_(nmopi)
 {
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    nirrep_ = wfn->nirrep();
-    nmopi_ = wfn->nmopi();
-
     // Add the elementary spaces to the list of composite spaces
     for (const std::string& es : elementary_spaces_){
         composite_spaces_[es] = {es};
@@ -354,10 +350,10 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t)
     return M;
 }
 
-void view_modified_orbitals(const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
+void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
 {
-        boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(Process::environment.wavefunction()));
-        std::string filename = get_writer_file_prefix() + ".molden";
+        boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
+        std::string filename = get_writer_file_prefix("") + ".molden";
 
         if(remove(filename.c_str()) == 0){
             outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
