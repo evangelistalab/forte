@@ -16,13 +16,16 @@
 #include <libmints/factory.h>
 namespace psi{ namespace forte{
 
-CASSCF::CASSCF(Options &options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-         : options_(options),
-         wfn_(Process::environment.wavefunction()),
+CASSCF::CASSCF(SharedWavefunction ref_wfn, Options &options,
+               std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
+         : Wavefunction(options),
+         options_(options),
          ints_(ints),
          mo_space_info_(mo_space_info)
 {
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
     startup();
 }
 void CASSCF::compute_casscf()
@@ -246,15 +249,14 @@ void CASSCF::startup()
 
     }
     boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    SharedMatrix T = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_V));
+    SharedMatrix T = SharedMatrix(matrix_factory()->create_matrix(PSIF_SO_T));
+    SharedMatrix V = SharedMatrix(matrix_factory()->create_matrix(PSIF_SO_V));
     SharedMatrix OneInt = T;
     OneInt->zero();
 
     T->load(psio_, PSIF_OEI);
     V->load(psio_, PSIF_OEI);
-    Hcore_ = wfn->matrix_factory()->create_shared_matrix("Core Hamiltonian");
+    Hcore_ = matrix_factory()->create_shared_matrix("Core Hamiltonian");
     Hcore_->add(T);
     Hcore_->add(V);
 
@@ -421,7 +423,7 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
         }
     }
 
-    boost::shared_ptr<JK> JK_core = JK::build_JK();
+    boost::shared_ptr<JK> JK_core = JK::build_JK(this->basisset(), this->options_);
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
@@ -521,7 +523,7 @@ ambit::Tensor CASSCF::transform_integrals()
     {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
-    boost::shared_ptr<JK> JK_trans = JK::build_JK();
+    boost::shared_ptr<JK> JK_trans = JK::build_JK(this->basisset(), this->options_);
     JK_trans->set_memory(Process::environment.get_memory() * 0.8);
     JK_trans->set_allow_desymmetrization(false);
     JK_trans->set_do_K(false);
@@ -718,8 +720,8 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
 {
     ///
     Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    Dimension nsopi           = Process::environment.wavefunction()->nsopi();
-    int nirrep               = Process::environment.wavefunction()->nirrep();
+    Dimension nsopi           = this->nsopi();
+    int nirrep               = this->nirrep();
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
 
     SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
@@ -738,7 +740,7 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
     /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    boost::shared_ptr<JK> JK_inactive = JK::build_JK();
+    boost::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(), this->options_);
 
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
@@ -896,7 +898,7 @@ void CASSCF::set_up_sa_fci()
 void CASSCF::write_orbitals_molden()
 {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
-    view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+    view_modified_orbitals(this->Ca(), this->epsilon_a(), occ_vector );
 }
 void CASSCF::overlap_coefficients()
 {
