@@ -88,7 +88,7 @@ void OrbitalOptimizer::startup()
     nvir_  = restricted_uocc_abs_.size();
     casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
-    nsopi_  = n_->nsopi();
+    nsopi_  = wfn_->nsopi();
 
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
@@ -698,7 +698,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
     }
     ///Back transform 1-RDM to AO basis
     C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
-    boost::shared_ptr<JK> JK_fock = JK::build_JK();
+    boost::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     JK_fock->set_memory(Process::environment.get_memory() * 0.8);
     JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_fock->initialize();

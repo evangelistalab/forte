@@ -28,7 +28,8 @@ SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn,
       BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
-    copy(ref_wfn);
+    shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
 
     BlockedTensor::set_expert_mode(true);
 
