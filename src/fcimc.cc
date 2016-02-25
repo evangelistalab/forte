@@ -36,13 +36,14 @@ std::pair<size_t,size_t> generate_ind_random_pair(size_t range)
    bool FCIQMC::have_omp_ = false;
 #endif
 
-FCIQMC::FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options,
+FCIQMC::FCIQMC(SharedWavefunction ref_wfn, Options &options,
                std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), ints_(ints),
+    : Wavefunction(options), ints_(ints),
       mo_space_info_(mo_space_info)
      // fciInts_(ints, mo_space_info)
 {
-    copy(wfn);
+    shallow_copy(ref_wfn);
+    wfn_ = ref_wfn;
     startup();
 }
 
