@@ -38,6 +38,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
       mo_space_info_(mo_space_info)
 {
     shallow_copy(ref_wfn);
+    reference_wavefunction_ = ref_wfn;
 
     ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
@@ -240,7 +241,7 @@ void THREE_DSRG_MRPT2::startup()
     if(options_.get_bool("MOLDEN_WRITE_FORTE"))
     {
         Dimension nmopi_ = mo_space_info_->get_dimension("ALL");
-        int nirrep = Process::environment.wavefunction()->nirrep();
+        int nirrep = this->nirrep();
         boost::shared_ptr<Vector>occ_vector(new Vector(nirrep, nmopi_));
 
         for(auto orb_energy : Fa_)
@@ -253,7 +254,7 @@ void THREE_DSRG_MRPT2::startup()
                 occ_vector->set(h, i, 0.0);
 
 
-        view_modified_orbitals(Process::environment.wavefunction()->Ca(), Process::environment.wavefunction()->epsilon_a(), occ_vector );
+        view_modified_orbitals(this->reference_wavefunction_, this->Ca(), this->epsilon_a(), occ_vector );
     }
 
 
