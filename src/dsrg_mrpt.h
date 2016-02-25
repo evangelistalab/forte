@@ -24,7 +24,7 @@ class DSRG_MRPT : public Wavefunction
 public:
     /**
      * DSRG-MRPT Constructor
-     * @param wfn The main wavefunction object
+     * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
