@@ -109,8 +109,8 @@ public:
     std::vector<size_t> get_corr_abs_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular orbitals in space
     std::vector<std::pair<size_t,size_t>> get_relative_mo(const std::string& space);
-
     void read_options(Options& options);
+    size_t get_nirrep(){ return nirrep_; }
 private:
 
     std::pair<SpaceInfo,bool> read_mo_space(const std::string& space,Options& options);
@@ -167,7 +167,7 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
  * @param occupation -> occupation vector
  */
-void view_modified_orbitals(const boost::shared_ptr<Matrix>& Ca, const boost::shared_ptr<Vector> &diag_F, const boost::shared_ptr<Vector> &occupation);
+void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix>& Ca, const boost::shared_ptr<Vector> &diag_F, const boost::shared_ptr<Vector> &occupation);
 
 /**
  * @brief print_h2 Print a header

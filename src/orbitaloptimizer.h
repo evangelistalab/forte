@@ -74,6 +74,7 @@ public:
     void one_body(SharedMatrix H){H_ = H;}
     /// Print a summary of timings
     void set_print_timings(bool timing){timings_ = timing;}
+    void set_wavefunction(SharedWavefunction wfn){ wfn_ = wfn; }
 protected:
     ///The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
@@ -89,7 +90,7 @@ protected:
 
     Options options_;
     /// The ForteIntegrals pointer
-    boost::shared_ptr<Wavefunction> wfn_;
+    SharedWavefunction wfn_;
     /// The mo_space_info
     /// The MO Coefficient matrix in Pfitzer ordering in whatever symmetry
     /// this matrix is ao by nmo
