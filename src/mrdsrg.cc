@@ -14,11 +14,13 @@
 
 namespace psi{ namespace forte{
 
-MRDSRG::MRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options& options,
+MRDSRG::MRDSRG(Reference reference, SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), wfn_(wfn), reference_(reference), ints_(ints),
+    : Wavefunction(options), reference_(reference), ints_(ints),
       mo_space_info_(mo_space_info), BTF_(new BlockedTensorFactory(options)), tensor_type_(CoreTensor)
 {
+    shallow_copy(ref_wfn)
+    wfn_ = ref_wfn;
     print_method_banner({"Multireference Driven Similarity Renormalization Group","Chenyang Li"});
     read_options();
     print_options();
