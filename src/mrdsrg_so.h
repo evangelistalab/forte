@@ -244,7 +244,9 @@ public:
 
     // => Constructors <= //
 
-    MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG_SO(Reference reference,Options &options,
+              std::shared_ptr<ForteIntegrals> ints,
+              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~MRDSRG_SO();
 
