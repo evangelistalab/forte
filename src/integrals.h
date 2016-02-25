@@ -603,7 +603,7 @@ private:
  */
 class DFIntegrals : public ForteIntegrals{
 public:
-    DFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo>
+    DFIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo>
     mo_space_info);
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s);
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s);
@@ -636,6 +636,8 @@ public:
 
     virtual size_t nthree() const {return nthree_;}
 private:
+    SharedWavefunction wfn_;
+
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();
@@ -657,7 +659,7 @@ private:
 /// Reading individual elements is slow
 class DISKDFIntegrals : public ForteIntegrals{
 public:
-    DISKDFIntegrals(psi::Options &options,IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DISKDFIntegrals(psi::Options &options,SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ///aptei_xy functions are slow.  try to use three_integral_block
 
@@ -694,6 +696,7 @@ public:
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const {return nthree_;}
 private:
+    SharedWavefunction wfn_;
     virtual void gather_integrals();
     virtual void allocate();
     virtual void deallocate();

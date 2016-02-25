@@ -13,6 +13,27 @@ using namespace ambit;
 namespace psi{ namespace forte{
 //Class for the DF Integrals
 //Generates DF Integrals.  Freezes Core orbitals, computes integrals, and resorts integrals.  Also computes fock matrix
+DFIntegrals::DFIntegrals(psi::Options &options, SharedWavefunction ref_wfn,  IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
+    integral_type_ = DF;
+    // If code calls constructor print things
+    // But if someone calls retransform integrals do not print it
+
+    wfn_ = ref_wfn;
+
+    outfile->Printf("\n  DFIntegrals overall time");
+    Timer DFInt;
+    allocate();
+    gather_integrals();
+    make_diagonal_integrals();
+    if (ncmo_ < nmo_){
+        freeze_core_orbitals();
+        // Set the new value of the number of orbitals to be used in indexing routines
+        aptei_idx_ = ncmo_;
+    }
+    outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
+}
 
 DFIntegrals::~DFIntegrals()
 {
@@ -117,7 +138,6 @@ void DFIntegrals::set_tei(size_t, size_t, size_t ,size_t,double,bool, bool)
 
 void DFIntegrals::gather_integrals()
 {
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
     if(print_ > 0){outfile->Printf("\n Computing Density fitted integrals \n");}
     if(options_.get_str("DF_BASIS_MP2").length() == 0)
@@ -126,7 +146,7 @@ void DFIntegrals::gather_integrals()
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
     }
 
-    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(primary->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
 
     size_t nprim = primary->nbf();
@@ -138,9 +158,9 @@ void DFIntegrals::gather_integrals()
         outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
     }
 
-    Dimension nsopi_ = wfn->nsopi();
-    SharedMatrix aotoso = wfn->aotoso();
-    SharedMatrix Ca = wfn->Ca();
+    Dimension nsopi_ = wfn_->nsopi();
+    SharedMatrix aotoso = wfn_->aotoso();
+    SharedMatrix Ca = wfn_->Ca();
     //SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
 
@@ -233,25 +253,6 @@ void DFIntegrals::make_diagonal_integrals()
     }
 }
 
-DFIntegrals::DFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
-std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
-    integral_type_ = DF;
-    // If code calls constructor print things
-    // But if someone calls retransform integrals do not print it
-
-    outfile->Printf("\n  DFIntegrals overall time");
-    Timer DFInt;
-    allocate();
-    gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
-    }
-    outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
-}
 
 void DFIntegrals::deallocate()
 {
