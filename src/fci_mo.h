@@ -44,7 +44,7 @@ public:
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    FCI_MO(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCI_MO(SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FCI_MO();
@@ -89,6 +89,9 @@ protected:
     void startup();
     void read_options();
     void cleanup();
+
+    /// Wavefunction
+    SharedWavefunction wfn_;
 
     /// Integrals
     std::shared_ptr<ForteIntegrals>  integral_;

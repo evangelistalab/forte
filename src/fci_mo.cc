@@ -9,11 +9,12 @@ using namespace std;
 
 namespace psi{ namespace forte{
 
-FCI_MO::FCI_MO(boost::shared_ptr<Wavefunction> wfn, Options& options,
+FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), wfn_(wfn), integral_(ints), mo_space_info_(mo_space_info)
+    : Wavefunction(options), integral_(ints), mo_space_info_(mo_space_info)
 {
-    copy(wfn);
+    shallow_copy(ref_wfn);
+    wfn_ = ref_wfn;
     startup();
 }
 
@@ -285,7 +286,7 @@ double FCI_MO::compute_energy(){
     for(int i = 0; i < eigen_.size(); ++i){
         evecs->set_column(0,i,(eigen_[i]).first);
     }
-    CI_RDMS ci_rdms (options_,wfn_,fci_ints_,mo_space_info_,determinant_,evecs);
+    CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
 
     // form density
     FormDensity(ci_rdms, root_, Da_, Db_);
@@ -560,8 +561,7 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
     timer_on("FORM String Ref");
 
     vector<bool> String;
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    Dimension doccpi(wfn->doccpi());
+    Dimension doccpi(wfn_->doccpi());
     for(int h = 0; h < nirrep_; ++h){
         int act_docc = doccpi[h] - frzcpi_[h] - core_[h];
         int act = active_[h];
@@ -758,7 +758,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         for(int i = 0; i < eigen_.size(); ++i){
             evecs->set_column(0,i,(eigen_[i]).first);
         }
-        CI_RDMS ci_rdms (options_,wfn_,fci_ints_,mo_space_info_,determinant_,evecs);
+        CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
 
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
@@ -1818,7 +1818,7 @@ void FCI_MO::compute_ref(){
     for(int i = 0; i < eigen_.size(); ++i){
         evecs->set_column(0,i,(eigen_[i]).first);
     }
-    CI_RDMS ci_rdms (options_,wfn_,fci_ints_,mo_space_info_,determinant_,evecs);
+    CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
 
     // 2-PDC
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));
