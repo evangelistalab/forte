@@ -262,14 +262,12 @@ void FiniteTemperatureHF::form_G()
     }
     frac_occupation();
     form_D();
-    boost::shared_ptr<JK> JK_core = JK::build_JK();
+    jk_->set_memory(Process::environment.get_memory() * 0.8);
+    jk_->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    jk_->initialize();
 
-    JK_core->set_memory(Process::environment.get_memory() * 0.8);
-    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->initialize();
-
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
+    std::vector<boost::shared_ptr<Matrix> >&Cl = jk_->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = jk_->C_right();
 
     Cl.clear();
     if(nmo_ > 0)
@@ -282,10 +280,10 @@ void FiniteTemperatureHF::form_G()
     Cr.push_back(C_occ_a_);
 
 
-    JK_core->compute();
+    jk_->compute();
 
-    SharedMatrix J_core = JK_core->J()[0];
-    SharedMatrix K_core = JK_core->K()[0];
+    SharedMatrix J_core = jk_->J()[0];
+    SharedMatrix K_core = jk_->K()[0];
 
     J_core->scale(2.0);
     SharedMatrix F_core = J_core->clone();
