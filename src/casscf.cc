@@ -899,7 +899,7 @@ void CASSCF::set_up_sa_fci()
 void CASSCF::write_orbitals_molden()
 {
     SharedVector occ_vector(new Vector(nirrep_, nmopi_));
-    view_modified_orbitals(this->Ca(), this->epsilon_a(), occ_vector );
+    view_modified_orbitals(reference_wavefunction_,this->Ca(), this->epsilon_a(), occ_vector );
 }
 void CASSCF::overlap_coefficients()
 {
