@@ -104,7 +104,7 @@ protected:
     int debug_ = 0;
 
 public:
-    FiniteTemperatureHF(boost::shared_ptr<Wavefunction> wfn, Options& Options, std::shared_ptr<MOSpaceInfo> mo_space);
+    FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& Options, std::shared_ptr<MOSpaceInfo> mo_space);
     /// Get the SCF ENERGY for the complete iteration
     double get_scf_energy(){return scf_energy_;}
     boost::shared_ptr<Matrix> get_mo_coefficient(){return CMatrix_;}

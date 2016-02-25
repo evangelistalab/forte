@@ -17,13 +17,13 @@
 
 namespace psi { namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(boost::shared_ptr<Wavefunction> wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space)
-    : RHF(options, _default_psio_lib_),
-      wfn_(wfn),
+FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space)
+    : RHF(ref_wfn,options,_default_psio_lib_),
       mo_space_info_(mo_space),
       options_(options)
 {
-    //copy(wfn);
+    shallow_copy(ref_wfn);
+    wfn_ = ref_wfn;
     startup();
 }
 
@@ -144,7 +144,6 @@ std::vector<std::pair<double, int> > FiniteTemperatureHF::get_active_orbital_ene
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int> > nmo_vec;
     int offset = 0;
-    int count =  0;
     for(int h = 0; h < nirrep; h++){
         for(int p = 0; p < nmopi[h]; p++)
         {
@@ -262,14 +261,8 @@ void FiniteTemperatureHF::form_G()
     }
     frac_occupation();
     form_D();
-    boost::shared_ptr<JK> JK_core = JK::build_JK();
-
-    JK_core->set_memory(Process::environment.get_memory() * 0.8);
-    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->initialize();
-
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
+    std::vector<boost::shared_ptr<Matrix> >&Cl = jk_->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = jk_->C_right();
 
     Cl.clear();
     if(nmo_ > 0)
@@ -282,10 +275,10 @@ void FiniteTemperatureHF::form_G()
     Cr.push_back(C_occ_a_);
 
 
-    JK_core->compute();
+    jk_->compute();
 
-    SharedMatrix J_core = JK_core->J()[0];
-    SharedMatrix K_core = JK_core->K()[0];
+    SharedMatrix J_core = jk_->J()[0];
+    SharedMatrix K_core = jk_->K()[0];
 
     J_core->scale(2.0);
     SharedMatrix F_core = J_core->clone();
