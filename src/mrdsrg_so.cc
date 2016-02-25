@@ -10,8 +10,8 @@
 
 namespace psi{ namespace forte{
 
-MRDSRG_SO::MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
+MRDSRG_SO::MRDSRG_SO(Reference reference,Options &options,std::shared_ptr<ForteIntegrals>  ints,std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : Wavefunction(options),
       reference_(reference),
       ints_(ints),
       mo_space_info_(mo_space_info),
@@ -19,7 +19,7 @@ MRDSRG_SO::MRDSRG_SO(Reference reference,boost::shared_ptr<Wavefunction> wfn,Opt
       BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
-//    copy(wfn);
+//    shallow_copy(ref_wfn);
 
     print_method_banner({"SO-Based Multireference Driven Similarity Renormalization Group","Chenyang Li"});
     startup();
