@@ -668,15 +668,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
-        ints_ = std::make_shared<CholeskyIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<CholeskyIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DF"){
-        ints_ = std::make_shared<DFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<DFIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISKDF"){
-        ints_ =  std::make_shared<DISKDFIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ =  std::make_shared<DISKDFIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "CONVENTIONAL"){
-        ints_ = std::make_shared<ConventionalIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<ConventionalIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
-        ints_ = std::make_shared<EffectiveIntegrals>(options,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
@@ -828,7 +828,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.reference();
-        boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,ref_wfn,options,ints_,mo_space_info));
+        boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,options,ints_,mo_space_info));
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
