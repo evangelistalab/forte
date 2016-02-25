@@ -17,10 +17,10 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-SOMRDSRG::SOMRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn,
+SOMRDSRG::SOMRDSRG(Reference reference, SharedWavefunction ref_wfn,
                    Options &options, std::shared_ptr<ForteIntegrals>  ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
+    : Wavefunction(options),
       reference_(reference),
       ints_(ints),
       mo_space_info_(mo_space_info),
@@ -28,17 +28,13 @@ SOMRDSRG::SOMRDSRG(Reference reference, boost::shared_ptr<Wavefunction> wfn,
       BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
-    copy(wfn);
+    copy(ref_wfn);
 
     BlockedTensor::set_expert_mode(true);
 
     print_ = 2;
 
     print_method_banner({"Multireference Driven Similarity Renormalization Group","written by Francesco A. Evangelista"});
-//    if(options.get_bool("MEMORY_SUMMARY"))
-//    {
-//        BTF->print_memory_info();
-//    }
 
     startup();
     print_summary();
