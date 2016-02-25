@@ -43,7 +43,6 @@ set forte{
     cholesky_tolerance   1e-12
 }
 energy('scf')
-mints()
 dmrgscf = energy('forte')
 
 compare_values(refdmrg, dmrgscf, 6, "DMRG Energy")
