@@ -45,9 +45,6 @@ private:
     /// Basic Preparation
     void startup();
 
-    /// Options
-    Options options_;
-
     /// Integrals
     std::shared_ptr<ForteIntegrals> ints_;
 
