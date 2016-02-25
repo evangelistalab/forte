@@ -447,7 +447,7 @@ public:
     };
 
     ///Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints constructor
-    EffectiveIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
+    EffectiveIntegrals(psi::Options &options,SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,
                           IntegralFrozenCore resort_frozen_core,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~EffectiveIntegrals();
@@ -499,6 +499,8 @@ public:
     }
 
 private:
+
+    SharedWavefunction wfn_;
     /// Transform the integrals
     void transform_integrals();
 
