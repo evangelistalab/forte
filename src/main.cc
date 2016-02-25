@@ -659,7 +659,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         return ref_wfn;
     }
     Timer overall_time;
-    ambit::initialize();
 
     //[forte-public]
     Dimension nmopi = ref_wfn->nmopi();
@@ -1070,8 +1069,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     DynamicBitsetDeterminant::reset_ints();
     STLBitsetDeterminant::reset_ints();
-
-    ambit::finalize();
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
     return ref_wfn;
