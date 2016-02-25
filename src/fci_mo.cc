@@ -70,11 +70,11 @@ void FCI_MO::read_options(){
     e_nuc_ = molecule->nuclear_repulsion_energy();
 
     // number of Irrep
-    nirrep_ = wfn_->nirrep();
+    nirrep_ = this->nirrep();
 
     // obtain MOs
-    nmo_ = wfn_->nmo();
-    nmopi_ = wfn_->nmopi();
+    nmo_ = this->nmo();
+    nmopi_ = this->nmopi();
     ncmo_ = mo_space_info_->size("CORRELATED");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
@@ -561,7 +561,7 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
     timer_on("FORM String Ref");
 
     vector<bool> String;
-    Dimension doccpi(wfn_->doccpi());
+    Dimension doccpi(this->doccpi());
     for(int h = 0; h < nirrep_; ++h){
         int act_docc = doccpi[h] - frzcpi_[h] - core_[h];
         int act = active_[h];
@@ -711,8 +711,8 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
         SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
         BD_Fock(Fa_,Fb_,Ua,Ub,"Fock");
-        SharedMatrix Ca = wfn_->Ca();
-        SharedMatrix Cb = wfn_->Cb();
+        SharedMatrix Ca = this->Ca();
+        SharedMatrix Cb = this->Cb();
         SharedMatrix Ca_new(Ca->clone());
         SharedMatrix Cb_new(Cb->clone());
         Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);

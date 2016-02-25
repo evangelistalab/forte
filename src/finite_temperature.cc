@@ -29,17 +29,17 @@ FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& op
 
 void FiniteTemperatureHF::startup()
 {
-    sMat_ = wfn_->S();
-    hMat_ = wfn_->H();
+    sMat_ = this->S();
+    hMat_ = this->H();
     nmo_  = mo_space_info_->size("ALL");
 
     print_method_banner({"Finite Temperature Hartree-Fock","Kevin Hannon"});
 
-    eps_ = wfn_->epsilon_a();
-    nirrep_ = wfn_->nirrep();
+    eps_ = this->epsilon_a();
+    nirrep_ = this->nirrep();
 
     debug_ = options_.get_int("PRINT");
-    SharedMatrix C(wfn_->Ca()->clone());
+    SharedMatrix C(this->Ca()->clone());
 }
 
 double FiniteTemperatureHF::compute_energy()
@@ -56,9 +56,9 @@ double FiniteTemperatureHF::compute_energy()
     scf_energy_ = RHF::compute_energy();
 
     ///It seems that HF class does not actually copy Ca into Process::Environment
-    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Ca = this->Ca();
     Ca->copy(Ca_);
-    wfn_->Cb()->copy(Ca);
+    this->Cb()->copy(Ca);
 
     print_h2("FT-HF Converged");
     outfile->Printf("\n  FT-SCF = %12.16f\n\n", scf_energy_);
@@ -108,11 +108,11 @@ void FiniteTemperatureHF::frac_occupation()
         offset += nmopi[h];
     }
 
-    SharedMatrix C(new Matrix("C_matrix", wfn_->nsopi(), occupation));
-    SharedMatrix Call(wfn_->Ca()->clone());
+    SharedMatrix C(new Matrix("C_matrix", this->nsopi(), occupation));
+    SharedMatrix Call(this->Ca()->clone());
 
 
-    Dimension nsopi = wfn_->nsopi();
+    Dimension nsopi = this->nsopi();
     SharedMatrix C_scaled(new Matrix("C_rdocc_active", nirrep_, nsopi, occupation));
     SharedMatrix C_no_scale(new Matrix("C_nochange", nirrep_, nsopi , occupation));
     ///Scale the columns with the occupation.
@@ -140,7 +140,7 @@ void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dira
 }
 std::vector<std::pair<double, int> > FiniteTemperatureHF::get_active_orbital_energy()
 {
-    int nirrep = wfn_->nirrep();
+    int nirrep = this->nirrep();
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int> > nmo_vec;
     int offset = 0;
@@ -160,7 +160,7 @@ std::vector<std::pair<double, int> > FiniteTemperatureHF::get_active_orbital_ene
 }
 double FiniteTemperatureHF::bisection(std::vector<double> & ni, double T)
 {
-    size_t naelec = wfn_->nalpha();
+    size_t naelec = this->nalpha();
     double ef1 = active_orb_energy_[naelec - 1].first;
     double ef2 = active_orb_energy_[naelec].first;
 
