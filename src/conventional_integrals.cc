@@ -20,10 +20,13 @@ namespace psi{ namespace forte{
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
     integral_type_ = ConventionalInts;
+
+
+    wfn_ = ref_wfn;    
 
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
@@ -77,8 +80,6 @@ void ConventionalIntegrals::deallocate()
 
 void ConventionalIntegrals::transform_integrals()
 {
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
     // For now, we'll just transform for closed shells and generate all integrals.
     std::vector<boost::shared_ptr<MOSpace> > spaces;
@@ -91,9 +92,9 @@ void ConventionalIntegrals::transform_integrals()
 
     // Call IntegralTransform asking for integrals over restricted or unrestricted orbitals
     if (restricted_){
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Restricted, IntegralTransform::DPDOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::Restricted, IntegralTransform::DPDOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     }else{
-        ints_ = new IntegralTransform(wfn, spaces, IntegralTransform::Unrestricted, IntegralTransform::DPDOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
+        ints_ = new IntegralTransform(wfn_, spaces, IntegralTransform::Unrestricted, IntegralTransform::DPDOnly,IntegralTransform::PitzerOrder,IntegralTransform::None);
     }
 
     // Keep the SO integrals on disk in case we want to retransform them

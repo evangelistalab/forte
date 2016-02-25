@@ -75,6 +75,10 @@ private:
 
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     Dimension& ncmopi() {return ncmopi_;}
+
+    /// The Wavefunction object
+    SharedWavefunction wfn_;    
+
 public:
     /// Return the number of auxiliary functions
     virtual size_t nthree() const = 0;
@@ -317,7 +321,7 @@ protected:
 class ConventionalIntegrals: public ForteIntegrals{
 public:
     ///Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints constructor
-    ConventionalIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
+    ConventionalIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,
                           IntegralFrozenCore resort_frozen_core,
                           std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~ConventionalIntegrals();
@@ -369,6 +373,10 @@ public:
     }
 
 private:
+
+    /// Wavefunction object
+    SharedWavefunction wfn_;
+
     /// Transform the integrals
     void transform_integrals();
 
@@ -529,7 +537,7 @@ private:
 class CholeskyIntegrals : public ForteIntegrals{
 public:
 
-    CholeskyIntegrals(psi::Options &options,IntegralSpinRestriction restricted,
+    CholeskyIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,
                       IntegralFrozenCore resort_frozen_core,
                       std::shared_ptr<MOSpaceInfo> mo_space_info);
     virtual ~CholeskyIntegrals();
@@ -565,6 +573,8 @@ public:
     virtual size_t nthree() const {return nthree_;}
 
 private:
+    /// Wavefuntion object    
+    SharedWavefunction wfn_;
     ///Computes Cholesky integrals
     virtual void gather_integrals();
     ///Allocates diagonal integrals

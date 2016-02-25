@@ -35,11 +35,14 @@ namespace psi{ namespace forte{
 #endif
 
 
-ForteIntegrals::ForteIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+ForteIntegrals::ForteIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : options_(options), restricted_(restricted), resort_frozen_core_(resort_frozen_core),frozen_core_energy_(0.0), scalar_(0.0),
     mo_space_info_(mo_space_info)
 {
+    // Copy the Wavefunction object
+    wfn_ = ref_wfn;
+
     startup();
     allocate();
     transform_one_electron_integrals();
@@ -55,22 +58,21 @@ void ForteIntegrals::startup()
     // Grab the global (default) PSIO object, for file I/O
     boost::shared_ptr<PSIO> psio(_default_psio_lib_);
 
-    // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
-    if (not wfn){
+
+    if (not wfn_){
         outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         outfile->Flush();
         exit(1);
     }
 
-    nirrep_ = wfn->nirrep();
-    nso_ = wfn->nso();
-    nmo_ = wfn->nmo();
-    nsopi_ = wfn->nsopi();
-    nmopi_ = wfn->nmopi();
-    frzcpi_ = wfn->frzcpi();
-    frzvpi_ = wfn->frzvpi();
+    nirrep_ = wfn_->nirrep();
+    nso_ = wfn_->nso();
+    nmo_ = wfn_->nmo();
+    nsopi_ = wfn_->nsopi();
+    nmopi_ = wfn_->nmopi();
+    frzcpi_ = wfn_->frzcpi();
+    frzvpi_ = wfn_->frzvpi();
     frzcpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     frzvpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
@@ -159,18 +161,17 @@ void ForteIntegrals::transform_one_electron_integrals()
 {
     // Now we want the reference (SCF) wavefunction
     boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 
-    SharedMatrix T = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_T));
-    SharedMatrix V = SharedMatrix(wfn->matrix_factory()->create_matrix(PSIF_SO_V));
+    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
     SharedMatrix OneInt = T;
     OneInt->zero();
 
     T->load(psio_, PSIF_OEI);
     V->load(psio_, PSIF_OEI);
 
-    SharedMatrix Ca = wfn->Ca();
-    SharedMatrix Cb = wfn->Cb();
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
 
     T->add(V);
     V->copy(T);
@@ -204,9 +205,8 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
     Dimension nmopi      = mo_space_info_->get_dimension("ALL");
     // Need to get the inactive block of the C matrix
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    Dimension nsopi      = wfn->nsopi();
-    SharedMatrix Ca = wfn->Ca();
+    Dimension nsopi      = wfn_->nsopi();
+    SharedMatrix Ca = wfn_->Ca();
     SharedMatrix C_core(new Matrix("C_core",nirrep_, nsopi, frozen_dim));
 
     for(int h = 0; h < nirrep_; h++){
@@ -323,7 +323,7 @@ void ForteIntegrals::rotate_mos()
         rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
         if(rotate_mo_group[0] > nirrep_)
         {
-            outfile->Printf("\n Irrep:%d does not match wfn symmetry:%d", rotate_mo_group[0], nirrep_);
+            outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0], nirrep_);
             throw PSIEXCEPTION("Irrep does not match wavefunction symmetry");
         }
         rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
@@ -332,8 +332,7 @@ void ForteIntegrals::rotate_mos()
 
         outfile->Printf(" %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1], rotate_mo_group[2]);
     }
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    SharedMatrix C_old = wfn->Ca();
+    SharedMatrix C_old = wfn_->Ca();
     SharedMatrix C_new(C_old->clone());
 
     for(auto mo_group : rotate_mo_list)

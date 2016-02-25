@@ -1,6 +1,7 @@
 //[forte-public]
 #include <cmath>
 
+#include <libmints/wavefunction.h>
 #include <libmints/integral.h>
 #include <lib3index/cholesky.h>
 #include <libmints/basisset.h>
@@ -18,9 +19,12 @@ namespace psi{ namespace forte{
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+CholeskyIntegrals::CholeskyIntegrals(psi::Options &options, SharedWavefunction ref_wfn,  IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
+
+    wfn_ = ref_wfn;
+
     integral_type_ = Cholesky;
     outfile->Printf("\n  Cholesky integrals time");
     Timer CholInt;
@@ -130,8 +134,8 @@ void CholeskyIntegrals::gather_integrals()
     if(print_){outfile->Printf("\n Computing the Cholesky Vectors \n");}
 
 
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+
+    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
 
 
     size_t nbf = primary->nbf();
@@ -161,11 +165,11 @@ void CholeskyIntegrals::gather_integrals()
     SharedMatrix Lao = Ch->L();
     SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
-    SharedMatrix Ca = wfn->Ca();
-    SharedMatrix aotoso = wfn->aotoso();
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix aotoso = wfn_->aotoso();
 
     // Transform from the SO to the AO basis
-    Dimension nsopi_ = wfn->nsopi();
+    Dimension nsopi_ = wfn_->nsopi();
     for (int h = 0, index = 0; h < nirrep_; ++h){
         for (int i = 0; i < nmopi_[h]; ++i){
             int nao = nso_;
