@@ -110,7 +110,8 @@ public:
     /// @return The list of the relative index (h,p_rel) of the molecular orbitals in space
     std::vector<std::pair<size_t,size_t>> get_relative_mo(const std::string& space);
     void read_options(Options& options);
-    size_t get_nirrep(){ return nirrep_; }
+    /// @return The number of irreps
+    size_t nirrep(){ return nirrep_; }
 private:
 
     std::pair<SpaceInfo,bool> read_mo_space(const std::string& space,Options& options);
