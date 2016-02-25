@@ -828,7 +828,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.reference();
-        boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,ref_wfn,options,ints_,mo_space_info));
+        boost::shared_ptr<MRDSRG_SO> mrdsrg(new MRDSRG_SO(reference,options,ints_,mo_space_info));
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
