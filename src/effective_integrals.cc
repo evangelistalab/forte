@@ -15,11 +15,12 @@ namespace psi{ namespace forte{
      * @param restricted - type of integral transformation
      * @param resort_frozen_core -
      */
-EffectiveIntegrals::EffectiveIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+EffectiveIntegrals::EffectiveIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info), ints_(nullptr){
     integral_type_ = Effective;
 
+    wfn_ = ref_wfn;
     outfile->Printf("\n  Overall Effective Integrals timings\n\n");
     Timer ConvTime;
     allocate();
@@ -76,10 +77,9 @@ void EffectiveIntegrals::transform_integrals()
     Timer int_timer;
 
     // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-    boost::shared_ptr<IntegralFactory> integral = wfn->integral();
+    boost::shared_ptr<IntegralFactory> integral = wfn_->integral();
 
-    boost::shared_ptr<SOBasisSet> sobasisset = wfn->sobasisset();
+    boost::shared_ptr<SOBasisSet> sobasisset = wfn_->sobasisset();
 //    boost::shared_ptr<TwoBodyAOInt> tb(integral->eri());
 //    boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
@@ -157,7 +157,7 @@ void EffectiveIntegrals::transform_integrals()
 
     }
 
-    SharedMatrix Ca = wfn->Ca();
+    SharedMatrix Ca = wfn_->Ca();
     // Remove symmetry from Ca
     Matrix Ca_nosym(nso_,nmo_);
     for (int h = 0, so_offset = 0, mo_offset = 0; h < nirrep_; ++h){
