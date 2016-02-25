@@ -8,11 +8,13 @@
 
 namespace psi{ namespace forte{
 
-DSRG_MRPT::DSRG_MRPT(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options& options,
+DSRG_MRPT::DSRG_MRPT(Reference reference, SharedWavefunction ref_wfn, Options& options,
                      std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_), wfn_(wfn), reference_(reference), ints_(ints),
+    : Wavefunction(options), reference_(reference), ints_(ints),
       mo_space_info_(mo_space_info), tensor_type_(ambit::CoreTensor)
 {
+    shallow_copy(ref_wfn); 
+    //wfn_ = ref_wfn;
     print_method_banner({"Spin-Adapted 2nd- & 3rd-order DSRG-MRPT", "Chenyang Li"});
     print_citation();
     read_options();

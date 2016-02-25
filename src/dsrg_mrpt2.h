@@ -263,7 +263,7 @@ public:
 
     // => Constructors <= //
 
-    DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options,
+    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     ~DSRG_MRPT2();

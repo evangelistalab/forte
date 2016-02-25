@@ -16,9 +16,9 @@ using namespace ambit;
 
 namespace psi{ namespace forte{
 
-DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn, Options &options,
+DSRG_MRPT2::DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
                        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : Wavefunction(options,_default_psio_lib_),
+    : Wavefunction(options),
       reference_(reference),
       ints_(ints),
       mo_space_info_(mo_space_info),
@@ -26,7 +26,7 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, boost::shared_ptr<Wavefunction> wfn,
       BTF(new BlockedTensorFactory(options))
 {
     // Copy the wavefunction information
-    copy(wfn);
+    shallow_copy(ref_wfn);
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Driven Similarity Renormalization Group MBPT2");
