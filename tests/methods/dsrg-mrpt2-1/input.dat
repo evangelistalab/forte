@@ -15,13 +15,13 @@ molecule {
 }
 
 set globals{
-   reference            twocon
    scf_type             pk
    d_convergence        12
    e_convergence        15
 }
 
 set mcscf{
+   reference            twocon
    docc                 [2,0,0,0]
    socc                 [1,0,0,1]
    maxiter              1000
@@ -72,8 +72,8 @@ S   1   1.00
 ****
 }
 
-energy('mcscf')
+scf_energy, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
-energy('forte')
+energy('forte',ref_wfn=wfn)
 compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST
