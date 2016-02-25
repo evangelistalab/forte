@@ -57,7 +57,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    FCIQMC(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    FCIQMC(SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~FCIQMC();
@@ -80,6 +80,9 @@ private:
 //    std::vector<int> frzv_;
 //    /// The nuclear repulsion energy
 //    double nuclear_repulsion_energy_;
+
+
+    SharedWavefunction wfn_;
 
 //    int compute_pgen(DynamicBitsetDeterminant& detI);
     /// The reference determinant
