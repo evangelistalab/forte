@@ -15,20 +15,18 @@ namespace psi{ namespace forte {
 // coefficients and computes reduced density matrices.
 
 
-CI_RDMS::CI_RDMS( Options &options, 
-				  boost::shared_ptr<Wavefunction> wfn, 
-				  std::shared_ptr<FCIIntegrals> fci_ints,
-			      std::shared_ptr<MOSpaceInfo> mo_space_info, 
-				  std::vector<STLBitsetDeterminant> det_space,
-				  SharedMatrix evecs)
-				: options_(options),
-				  wfn_(wfn),
-				  fci_ints_(fci_ints),
-				  mo_space_info_(mo_space_info),
-				  det_space_(det_space),
-				  evecs_(evecs)
+CI_RDMS::CI_RDMS(Options &options,
+                 std::shared_ptr<FCIIntegrals> fci_ints,
+                 std::shared_ptr<MOSpaceInfo> mo_space_info,
+                 std::vector<STLBitsetDeterminant> det_space,
+                 SharedMatrix evecs)
+    : options_(options),
+      fci_ints_(fci_ints),
+      mo_space_info_(mo_space_info),
+      det_space_(det_space),
+      evecs_(evecs)
 {
-	startup();
+    startup();
 }
 
 CI_RDMS::~CI_RDMS()

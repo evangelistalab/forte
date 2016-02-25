@@ -21,24 +21,25 @@
 #include "three_dsrg_mrpt2.h"
 
 namespace psi{ namespace forte{
-class ACTIVE_DSRGPT2
+class ACTIVE_DSRGPT2 : public Wavefunction
 {
 public:
     /**
      * @brief ACTIVE_DSRGPT2 Constructor
-     * @param wfn The main wavefunction object
+     * @param ref_wfn The reference wavefunction object
      * @param options PSI4 and FORTE options
      * @param ints ForteInegrals
      * @param mo_space_info MOSpaceInfo
      */
-    ACTIVE_DSRGPT2(boost::shared_ptr<Wavefunction> wfn, Options &options,
-                   std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ACTIVE_DSRGPT2(SharedWavefunction ref_wfn, Options &options,
+                   std::shared_ptr<ForteIntegrals> ints,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     ~ACTIVE_DSRGPT2();
 
     /// Compute energy
-    void compute_energy();
+    double compute_energy();
 
 private:
     /// Basic Preparation

@@ -46,7 +46,6 @@ public:
     // ==> Class Constructors <==
 
     ///Generating a contructor to create the active integrals
-    ///
     FCIIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo, std::vector<size_t> rdocc_mo);
 
     ///Constructor that needs to be deleted

@@ -24,7 +24,7 @@ public:
 	using det_hash_it = det_hash::iterator; 
 
 	// Class constructor and destructor
-	CI_RDMS(Options &options, boost::shared_ptr<Wavefunction> wfn, std::shared_ptr<FCIIntegrals> fci_ints, std::shared_ptr<MOSpaceInfo> mo_space_info, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs);
+    CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints, std::shared_ptr<MOSpaceInfo> mo_space_info, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs);
 
 	~CI_RDMS();
 
