@@ -656,7 +656,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 {
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();
-        return Success;
+        return ref_wfn;
     }
     Timer overall_time;
     ambit::initialize();
