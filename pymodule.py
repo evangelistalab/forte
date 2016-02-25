@@ -25,8 +25,7 @@ def run_forte(name, **kwargs):
 
     ref_wfn = kwargs.get('ref_wfn', None)
     if ref_wfn is None:
-        print '\n  Reference wave function missing from input to forte.'
-        exit()
+        ref_wfn = scf_helper(name, **kwargs)
 
     # Run FORTE
     returnvalue = psi4.plugin(sofile,ref_wfn)
