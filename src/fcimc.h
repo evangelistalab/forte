@@ -82,7 +82,6 @@ private:
 //    double nuclear_repulsion_energy_;
 
 
-    SharedWavefunction wfn_;
 
 //    int compute_pgen(DynamicBitsetDeterminant& detI);
     /// The reference determinant

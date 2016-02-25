@@ -90,9 +90,6 @@ protected:
     void read_options();
     void cleanup();
 
-    /// Wavefunction
-    SharedWavefunction wfn_;
-
     /// Integrals
     std::shared_ptr<ForteIntegrals>  integral_;
     std::string int_type_;
