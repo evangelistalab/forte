@@ -13,9 +13,11 @@
 using namespace ambit;
 namespace psi{ namespace forte{
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
+DISKDFIntegrals::DISKDFIntegrals(psi::Options &options, SharedWavefunction ref_wfn, IntegralSpinRestriction restricted, IntegralFrozenCore resort_frozen_core,
 std::shared_ptr<MOSpaceInfo> mo_space_info)
     : ForteIntegrals(options, restricted, resort_frozen_core, mo_space_info){
+
+    wfn_ = ref_wfn;
 
     integral_type_ = DiskDF;
     outfile->Printf("\n  DISKDFIntegrals overall time");
@@ -415,11 +417,9 @@ void DISKDFIntegrals::set_tei(size_t, size_t, size_t,size_t,double,bool,bool)
 
 void DISKDFIntegrals::gather_integrals()
 {
-    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
     outfile->Printf("\n Computing Density fitted integrals \n");
 
-    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
     if(options_.get_str("DF_BASIS_MP2").length() == 0)
     {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
@@ -435,9 +435,9 @@ void DISKDFIntegrals::gather_integrals()
     outfile->Printf("\n Need %8.6f GB to store DF integrals\n", (nprim * nprim * naux * sizeof(double)/1073741824.0));
     int_mem_ = (nprim * nprim * naux * sizeof(double));
 
-    Dimension nsopi_ = wfn->nsopi();
-    SharedMatrix aotoso = wfn->aotoso();
-    SharedMatrix Ca = wfn->Ca();
+    Dimension nsopi_ = wfn_->nsopi();
+    SharedMatrix aotoso = wfn_->aotoso();
+    SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
 
     // Transform from the SO to the AO basis
