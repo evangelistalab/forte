@@ -21,7 +21,7 @@
 #include "fcimc.h"
 #include "fci_mo.h"
 #ifdef HAVE_CHEMPS2
-    #include "dmrgscf.h"
+#include "dmrgscf.h"
 #endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
@@ -73,7 +73,7 @@ read_options(std::string name, Options &options)
         options.add_int("PRINT", 0);
         /*- Print summary of memory -*/
         options.add_bool("MEMORY_SUMMARY", false);
-         
+
 
         /*- The algorithm used to screen the determinant
          *  - CONVENTIONAL Conventional two-electron integrals
@@ -89,10 +89,10 @@ read_options(std::string name, Options &options)
 
         /*- The screening for JK builds and DF libraries -*/
         options.add_double("INTEGRAL_SCREENING", 1e-12);
-        
+
         /* - The tolerance for cholesky integrals */
         options.add_double("CHOLESKY_TOLERANCE", 1e-6);
-         
+
         /*- The job type
          *  - FCI Full configuration interaction (Francesco's code)
          *  - CAS Full configuration interaction (York's code)
@@ -183,7 +183,7 @@ read_options(std::string name, Options &options)
         options.add_int("IMRCISD_TEST_SIZE",0);
         options.add_int("IMRCISD_SIZE",0);
 
-        /*- The number of determinants used to build the Hamiltonian -*/        
+        /*- The number of determinants used to build the Hamiltonian -*/
         options.add_int("NDETS",100);
 
         /*- The maximum dimension of the Hamiltonian -*/
@@ -300,9 +300,9 @@ read_options(std::string name, Options &options)
         options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
-        /* - Multiplicity for the CASSCF solution (if different from multiplicity) 
+        /* - Multiplicity for the CASSCF solution (if different from multiplicity)
          You should not use this if you are interested in having a CASSCF solution with the same multiplicitity as the DSRG-MRPT2-                                          */
-        
+
         options.add_int("CASSCF_MULTIPLICITY", 0);
         /*- A complete SOSCF ie Form full Hessian -*/
         options.add_bool("CASSCF_SOSCF", false);
@@ -416,15 +416,15 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
-		
-		/*- The selection type for the Q-space-*/
+
+        /*- The selection type for the Q-space-*/
         options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
-		/*-Threshold for the selection of the P space -*/
+        /*-Threshold for the selection of the P space -*/
         options.add_double("TAUP",0.01);
         /*- The threshold for the selection of the Q space -*/
         options.add_double("TAUQ",0.000001);
-		/*- The SD-space prescreening threshold -*/
-		options.add_double("PRESCREEN_THRESHOLD", 1e-9);
+        /*- The SD-space prescreening threshold -*/
+        options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
         options.add_double("SMOOTH_THRESHOLD",0.01);
         /*- The type of selection parameters to use*/
@@ -449,33 +449,33 @@ read_options(std::string name, Options &options)
         options.add_int("ACI_MAX_RDM", 1);
         /*- Form initial space with based on energy */
         options.add_bool("LAMBDA_GUESS", false);
-		/*- Type of spin projection
-		 * 0 - None
-		 * 1 - Project initial P spaces at each iteration
-		 * 2 - Project only after converged PQ space
-		 * 3 - Do 1 and 2 -*/
-		options.add_int("SPIN_PROJECTION", 0);
-		/*- Threshold for Lambda guess -*/
-		options.add_double("LAMBDA_THRESH", 1.0);
-		/*- Add determinants to enforce spin-complete set? -*/
+        /*- Type of spin projection
+         * 0 - None
+         * 1 - Project initial P spaces at each iteration
+         * 2 - Project only after converged PQ space
+         * 3 - Do 1 and 2 -*/
+        options.add_int("SPIN_PROJECTION", 0);
+        /*- Threshold for Lambda guess -*/
+        options.add_double("LAMBDA_THRESH", 1.0);
+        /*- Add determinants to enforce spin-complete set? -*/
         options.add_bool("ENFORCE_SPIN_COMPLETE", true);
         /*- Project out spin contaminants in Davidson-Liu's algorithm? -*/
         options.add_bool("PROJECT_OUT_SPIN_CONTAMINANTS", true);
         /*- Add "degenerate" determinants not included in the aimed selection? -*/
         options.add_bool("ACI_ADD_AIMED_DEGENERATE", true);
 
-		/*- Print an analysis of determinant history? -*/
-		options.add_bool("DETERMINANT_HISTORY", false);
-		/*- Save determinants to file? -*/
-		options.add_bool("SAVE_DET_FILE", false);
-		/*- Screen Virtuals? -*/
-		options.add_bool("SCREEN_VIRTUALS", false);
-		/*- Perform size extensivity correction -*/
-		options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
-		/*- Sets the maximum cycle -*/
-		options.add_int("MAX_ACI_CYCLE", 20);
-		/*- Control print level -*/
-		options.add_bool("QUIET_MODE", false);
+        /*- Print an analysis of determinant history? -*/
+        options.add_bool("DETERMINANT_HISTORY", false);
+        /*- Save determinants to file? -*/
+        options.add_bool("SAVE_DET_FILE", false);
+        /*- Screen Virtuals? -*/
+        options.add_bool("SCREEN_VIRTUALS", false);
+        /*- Perform size extensivity correction -*/
+        options.add_str("SIZE_CORRECTION", "", "DAVIDSON");
+        /*- Sets the maximum cycle -*/
+        options.add_int("MAX_ACI_CYCLE", 20);
+        /*- Control print level -*/
+        options.add_bool("QUIET_MODE", false);
         /*- Control streamlining -*/
         options.add_bool("STREAMLINE_Q", false);
 
@@ -642,7 +642,7 @@ read_options(std::string name, Options &options)
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Detailed timing printings -*/
         options.add_bool("THREE_MRPT2_TIMINGS", false);
-        
+
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
@@ -652,7 +652,7 @@ read_options(std::string name, Options &options)
     return true;
 }
 
-extern "C" PsiReturnType forte(Options &options)
+extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options)
 {
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();
@@ -661,7 +661,7 @@ extern "C" PsiReturnType forte(Options &options)
     Timer overall_time;
     ambit::initialize();
 
-//[forte-public]
+    //[forte-public]
 
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>();
     mo_space_info->read_options(options);
@@ -683,7 +683,7 @@ extern "C" PsiReturnType forte(Options &options)
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
-//[forte-private]
+    //[forte-private]
 
     //Link the integrals to the DynamicBitsetDeterminant class
     //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
@@ -698,13 +698,11 @@ extern "C" PsiReturnType forte(Options &options)
 
         for (std::string& task : tasks){
             if (task == "FCI"){
-                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
                 auto fci = std::make_shared<FCI>(wfn,options,ints_,mo_space_info);
                 fci->compute_energy();
             }
 
             if (task == "FCI_SEMI_CANONICAL"){
-                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
                 {
                     boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                     fci->set_max_rdm_level(1);
@@ -719,7 +717,6 @@ extern "C" PsiReturnType forte(Options &options)
             }
 
             if (task == "PILOTCI"){
-                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
                 boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(wfn,options,ints_,mo_space_info));
                 fci_mo->set_semicanonical(true);
                 fci_mo->compute_energy();
@@ -727,7 +724,6 @@ extern "C" PsiReturnType forte(Options &options)
             }
 
             if (task == "DSRG-MRPT2"){
-                boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
                 boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
                 three_dsrg_mrpt2->compute_energy();
             }
@@ -736,10 +732,9 @@ extern "C" PsiReturnType forte(Options &options)
 
     if(options.get_str("ALTERNATIVE_CASSCF") == "FTHF")
     {
-       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-       auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
-       FTHF->compute_energy();
-       ints_->retransform_integrals();
+        auto FTHF = std::make_shared<FiniteTemperatureHF>(wfn, options, mo_space_info);
+        FTHF->compute_energy();
+        ints_->retransform_integrals();
     }
 
     if(options.get_bool("CASSCF_REFERENCE") == true or options.get_str("JOB_TYPE") == "CASSCF")
@@ -748,56 +743,47 @@ extern "C" PsiReturnType forte(Options &options)
         casscf->compute_casscf();
     }
     if (options.get_bool("MP2_NOS")){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto mp2_nos = std::make_shared<MP2_NOS>(wfn,options,ints_, mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         MCSRGPT2_MO mcsrgpt2_mo(wfn, options, ints_, mo_space_info);
     }
     if (options.get_str("JOB_TYPE") == "FCIQMC"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto fciqmc = std::make_shared<FCIQMC>(wfn,options,ints_, mo_space_info);
         fciqmc->compute_energy();
     }
     if ((options.get_str("JOB_TYPE") == "ACI") or (options.get_str("JOB_TYPE") == "ACI_SPARSE")){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "APICI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto apici = std::make_shared<AdaptivePathIntegralCI>(wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             apici->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto fci = std::make_shared<FCI>(wfn,options,ints_,mo_space_info);
         fci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "DMRG")
     {
-        #ifdef HAVE_CHEMPS2
+#ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
         dmrg->compute_energy();
-        #else 
-            throw PSIEXCEPTION("Did not compile with CHEM_PS2 so DMRG will not work");
-        #endif
+#else
+        throw PSIEXCEPTION("Did not compile with CHEM_PS2 so DMRG will not work");
+#endif
 
     }
 
     if(options.get_str("JOB_TYPE")=="CAS")
     {
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
         fci_mo.compute_energy();
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
             FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
@@ -839,7 +825,6 @@ extern "C" PsiReturnType forte(Options &options)
 
     }
     if(options.get_str("JOB_TYPE") == "MRDSRG_SO"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
         fci_mo.compute_energy();
         Reference reference = fci_mo.reference();
@@ -847,13 +832,10 @@ extern "C" PsiReturnType forte(Options &options)
         mrdsrg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "ACTIVE-DSRGPT2"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         ACTIVE_DSRGPT2 pt(wfn,options,ints_,mo_space_info);
         pt.compute_energy();
     }
     if(options.get_str("JOB_TYPE") == "DSRG_MRPT"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
             FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
@@ -864,7 +846,7 @@ extern "C" PsiReturnType forte(Options &options)
             if(options.get_str("RELAX_REF") == "NONE"){
                 dsrg->compute_energy();
             }else{
-//                dsrg->compute_energy_relaxed();
+                //                dsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
@@ -883,7 +865,7 @@ extern "C" PsiReturnType forte(Options &options)
             if(options.get_str("RELAX_REF") == "NONE"){
                 dsrg->compute_energy();
             }else{
-//                dsrg->compute_energy_relaxed();
+                //                dsrg->compute_energy_relaxed();
             }
         }
 
@@ -891,7 +873,6 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
         if(options.get_str("CAS_TYPE")=="CAS")
         {
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(wfn,options,ints_,mo_space_info));
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference();
@@ -903,15 +884,12 @@ extern "C" PsiReturnType forte(Options &options)
                                                                      dsrg_mrpt2->Rtei(),
                                                                      dsrg_mrpt2->Singles(),
                                                                      dsrg_mrpt2->Doubles()));
-//                dsrg_mrpt2->transform_integrals();
-
-//                FCI_MO fci(options,ints_);
+                //                dsrg_mrpt2->transform_integrals();
+                //                FCI_MO fci(options,ints_);
             }
         }
         if(options.get_str("CAS_TYPE")=="FCI")
         {
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(1);
@@ -919,35 +897,33 @@ extern "C" PsiReturnType forte(Options &options)
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
-                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
-                fci->compute_energy();
-                Reference reference = fci->reference();
-                boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
-                dsrg_mrpt2->compute_energy();
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,wfn,options,ints_,mo_space_info));
+            dsrg_mrpt2->compute_energy();
         }
 
-		if(options.get_str("CAS_TYPE")=="ACI"){
-			boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-			if(options.get_bool("SEMI_CANONICAL")){
-				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-				aci->set_max_rdm(3);
-		    	aci->compute_energy();
-				Reference aci_reference = aci->reference();
-				SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
-			}
-				auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-				aci->set_max_rdm(3);
-		    	aci->compute_energy();
-				Reference aci_reference = aci->reference();
-		    	boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
-				dsrg_mrpt2->compute_energy();
-			
-		}
+        if(options.get_str("CAS_TYPE")=="ACI"){
+            if(options.get_bool("SEMI_CANONICAL")){
+                auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+                aci->set_max_rdm(3);
+                aci->compute_energy();
+                Reference aci_reference = aci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference);
+            }
+            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+            aci->set_max_rdm(3);
+            aci->compute_energy();
+            Reference aci_reference = aci->reference();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
+            dsrg_mrpt2->compute_energy();
+
+        }
         else if(options.get_str("CAS_TYPE")=="DMRG")
         {
-        #ifdef HAVE_CHEMPS2
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+#ifdef HAVE_CHEMPS2
             if(options.get_bool("SEMI_CANONICAL")){
 
                 auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
@@ -960,94 +936,86 @@ extern "C" PsiReturnType forte(Options &options)
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
-        #endif
-
+#endif
         }
 
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
     {
 
-       if(options.get_str("INT_TYPE")=="CONVENTIONAL")
-       {
-           outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
-           throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
-       }
+        if(options.get_str("INT_TYPE")=="CONVENTIONAL")
+        {
+            outfile->Printf("\n THREE-DSRG-MRPT2 is designed for DF/CD integrals");
+            throw PSIEXCEPTION("Please set INT_TYPE  DF/CHOLESKY for THREE_DSRG");
+        }
 
-       if(options.get_str("CAS_TYPE")=="CAS")
-       {
-           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-           FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
-           fci_mo.compute_energy();
-           Reference reference = fci_mo.reference();
-           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
-           three_dsrg_mrpt2->compute_energy();
-       }
-	   if(options.get_str("CAS_TYPE")=="ACI"){
-	       boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-	   	   if(options.get_bool("SEMI_CANONICAL")){
-		       auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-			   aci->set_max_rdm(3);
-			   aci->compute_energy();
-	   		   Reference aci_reference = aci->reference();
-	   		   SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference); 
-		   }
-		   auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
-		   aci->set_max_rdm(3);
-	       aci->compute_energy();
-	   	   Reference aci_reference = aci->reference();
-	       boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
-	   	   dsrg_mrpt2->compute_energy();
-	   }
+        if(options.get_str("CAS_TYPE")=="CAS")
+        {
+            FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
+            fci_mo.compute_energy();
+            Reference reference = fci_mo.reference();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
+        }
+        if(options.get_str("CAS_TYPE")=="ACI"){
+            if(options.get_bool("SEMI_CANONICAL")){
+                auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+                aci->set_max_rdm(3);
+                aci->compute_energy();
+                Reference aci_reference = aci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,aci_reference);
+            }
+            auto aci = std::make_shared<AdaptiveCI>(wfn,options,ints_,mo_space_info);
+            aci->set_max_rdm(3);
+            aci->compute_energy();
+            Reference aci_reference = aci->reference();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,wfn,options,ints_,mo_space_info));
+            dsrg_mrpt2->compute_energy();
+        }
 
-       else if(options.get_str("CAS_TYPE")=="FCI")
-       {
-           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+        else if(options.get_str("CAS_TYPE")=="FCI")
+        {
+            if (options.get_bool("SEMI_CANONICAL")){
+                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
+            }
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
 
-           if (options.get_bool("SEMI_CANONICAL")){
-               boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-               fci->set_max_rdm_level(3);
-               fci->compute_energy();
-               Reference reference2 = fci->reference();
-               SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
-           }
-           boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-           fci->set_max_rdm_level(3);
-           fci->compute_energy();
-           Reference reference = fci->reference();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
+        }
 
-           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,wfn,options,ints_, mo_space_info));
-           three_dsrg_mrpt2->compute_energy();
-       }
+        else if(options.get_str("CAS_TYPE")=="DMRG")
 
-       else if(options.get_str("CAS_TYPE")=="DMRG")
+        {
+#ifdef HAVE_CHEMPS2
+            if(options.get_bool("SEMI_CANONICAL")){
 
-       {
-       #ifdef HAVE_CHEMPS2
-           boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-           if(options.get_bool("SEMI_CANONICAL")){
-
-               auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
-               dmrg->compute_energy();
-               Reference dmrg_reference = dmrg->reference();
-               SemiCanonical semi(wfn,options,ints_,mo_space_info,dmrg_reference);
-           }
-           auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
-           dmrg->compute_energy();
-           Reference dmrg_reference = dmrg->reference();
-           boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
-           three_dsrg_mrpt2->compute_energy();
-       #endif
-       }
+                auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+                dmrg->compute_energy();
+                Reference dmrg_reference = dmrg->reference();
+                SemiCanonical semi(wfn,options,ints_,mo_space_info,dmrg_reference);
+            }
+            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            dmrg->compute_energy();
+            Reference dmrg_reference = dmrg->reference();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,wfn,options,ints_,mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
+#endif
+        }
 
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         auto srg = std::make_shared<TensorSRG>(wfn, options, ints_, mo_space_info);
         srg->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "SR-DSRG-ACI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         {
             auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
@@ -1059,7 +1027,6 @@ extern "C" PsiReturnType forte(Options &options)
         }
     }
     if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
-        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
         {
             auto dsrg = std::make_shared<TensorSRG>(wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
@@ -1074,7 +1041,6 @@ extern "C" PsiReturnType forte(Options &options)
     if (options.get_str("JOB_TYPE") == "SOMRDSRG"){
         if(options.get_str("CAS_TYPE")=="CAS")
         {
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
             FCI_MO fci_mo(wfn,options,ints_,mo_space_info);
             fci_mo.compute_energy();
             Reference reference = fci_mo.reference();
@@ -1083,8 +1049,6 @@ extern "C" PsiReturnType forte(Options &options)
         }
         if(options.get_str("CAS_TYPE")=="FCI")
         {
-            boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
-
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(3);
@@ -1092,12 +1056,12 @@ extern "C" PsiReturnType forte(Options &options)
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(wfn,options,ints_,mo_space_info,reference2);
             }
-                boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
-                fci->compute_energy();
-                Reference reference = fci->reference();
-                boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
-                somrdsrg->compute_energy();
+            boost::shared_ptr<FCI> fci(new FCI(wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+            boost::shared_ptr<SOMRDSRG> somrdsrg(new SOMRDSRG(reference,wfn,options,ints_,mo_space_info));
+            somrdsrg->compute_energy();
         }
 
     }
