@@ -561,7 +561,7 @@ double DMRGSCF::compute_energy()
 
     SharedMatrix work1; work1 = SharedMatrix( new Matrix("work1", nirrep, orbspi, orbspi) );
     SharedMatrix work2; work2 = SharedMatrix( new Matrix("work2", nirrep, orbspi, orbspi) );
-    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(reference_wavefunction_->basisset()), options_);
+    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
     //boost::shared_ptr<JK> myJK = JK::build_JK();
 
     myJK->set_cutoff(0.0);

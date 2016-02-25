@@ -769,10 +769,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     if (options.get_str("JOB_TYPE") == "DMRG")
     {
 #ifdef HAVE_CHEMPS2
-        auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+        auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
         dmrg->compute_energy();
 #else
-        throw PSIEXCEPTION("Did not compile with CHEM_PS2 so DMRG will not work");
+        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
 
     }
@@ -925,12 +925,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #ifdef HAVE_CHEMPS2
             if(options.get_bool("SEMI_CANONICAL")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
                 dmrg->compute_energy();
                 Reference dmrg_reference = dmrg->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
             dmrg->compute_energy();
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
@@ -996,12 +996,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #ifdef HAVE_CHEMPS2
             if(options.get_bool("SEMI_CANONICAL")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
                 dmrg->compute_energy();
                 Reference dmrg_reference = dmrg->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(options, mo_space_info, ints_);
+            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
             dmrg->compute_energy();
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
