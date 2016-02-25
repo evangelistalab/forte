@@ -144,7 +144,6 @@ std::vector<std::pair<double, int> > FiniteTemperatureHF::get_active_orbital_ene
     Dimension nmopi = mo_space_info_->get_dimension("ALL");
     std::vector<std::pair<double, int> > nmo_vec;
     int offset = 0;
-    int count =  0;
     for(int h = 0; h < nirrep; h++){
         for(int p = 0; p < nmopi[h]; p++)
         {
