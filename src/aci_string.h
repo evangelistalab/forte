@@ -158,7 +158,7 @@ private:
 	/// Algorithm for computing excited states
 	std::string ex_alg_;
     /// The eigensolver type
-    DiagonalizationMethod diag_method_ = DavidsonLiuList;
+    DiagonalizationMethod diag_method_ = DLString;
 	/// The reference root
 	int ref_root_;
     /// Enable aimed selection
@@ -312,6 +312,8 @@ private:
 	
 	/// Compute the Davidson correction
 	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant> P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals );   
+
+    void compute_H_expectation_val( const std::vector<STLBitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method);
 
 	/// Print natural orbitals
 	void print_nos();

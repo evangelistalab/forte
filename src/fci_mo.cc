@@ -804,7 +804,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     int nroot = det_size < 25 ? det_size : 25;
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
-    DiagonalizationMethod diag_method = DavidsonLiuList;
+    DiagonalizationMethod diag_method = DLSolver;
     if(diag_algorithm_ == "FULL"){
         diag_method = Full;
     }
