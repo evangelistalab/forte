@@ -522,7 +522,6 @@ ambit::Tensor CASSCF::transform_integrals()
             /// D_{uv}^{ij} = C_i C_j^T
             C_DGER(nso, nso, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nso);
 
-            D->print();
             D_vec.push_back(std::make_pair(D, ij));
         }
     }
@@ -822,7 +821,6 @@ void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_n
     SharedMatrix S_basis = this->S();
     S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
-    S_orbitals->print();
     for(size_t h = 0; h < nirrep_; h++)
     {
         for(int i = 0; i < S_basis->rowspi(h); i++)
