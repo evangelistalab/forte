@@ -34,8 +34,7 @@ set forte {
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
   enforce_spin_complete false
-  diag_algorithm davidson
-  quiet_mode true
+  diag_algorithm full
 }
 
 energy('scf')

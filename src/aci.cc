@@ -199,10 +199,6 @@ void AdaptiveCI::startup()
     if(options_["DIAG_ALGORITHM"].has_changed()){
         if (options_.get_str("DIAG_ALGORITHM") == "FULL"){
             diag_method_ = Full;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
-            diag_method_ = DavidsonLiuSparse;
-        } else if (options_.get_str("DIAG_ALGORITHM") == "DAVIDSONLIST"){
-            diag_method_ = DavidsonLiuList;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLSTRING"){
             diag_method_ = DLString;
         } else if (options_.get_str("DIAG_ALGORITHM") == "DLDISK"){
@@ -566,7 +562,7 @@ double AdaptiveCI::compute_energy()
 				full_spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
+               compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
 			}else if (!quiet_mode_){
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -617,7 +613,7 @@ double AdaptiveCI::compute_energy()
 				full_spin_transform(P_space_, P_evecs, num_ref_roots);
 				P_evecs->zero();
 				P_evecs = PQ_spin_evecs_->clone();
-                sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
+               compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
 			}else if (!quiet_mode_){
 				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 				outfile->Printf("\n  No need to perform spin projection.");
@@ -671,7 +667,7 @@ double AdaptiveCI::compute_energy()
 			full_spin_transform(P_space_, P_evecs, nroot_);
 			P_evecs->zero();
 			P_evecs = PQ_spin_evecs_->clone();
-            sparse_solver.compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_,diag_method_);
+            compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_,diag_method_);
 		}else if (!quiet_mode_){
 			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
 			outfile->Printf("\n  No need to perform spin projection.");
@@ -1889,6 +1885,37 @@ void AdaptiveCI::print_nos()
 
 
 }
+
+void AdaptiveCI::compute_H_expectation_val( const std::vector<STLBitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method)
+{
+    size_t space_size = space.size();
+    SparseCISolver ssolver;
+    
+    if( (space_size <= 200) or (diag_method == Full) ){
+        outfile->Printf("\n  Using full algorithm.");
+        SharedMatrix Hd = ssolver.build_full_hamiltonian( space );
+        for( int n = 0; n < nroot; ++n){
+            for( size_t I = 0; I < space_size; ++I){
+                for( size_t J = 0; J < space_size; ++J){
+                    evals->add(n, evecs->get(I,n) * Hd->get(I,J) * evecs->get(J,n) );
+                }
+            }
+        }
+    }else{
+        outfile->Printf("\n  Using sparse algorithm.");
+        auto Hs = ssolver.build_sparse_hamiltonian( space );
+        for( int n = 0; n < nroot; ++n){
+            for( size_t I = 0; I < space_size; ++I){
+                std::vector<double> H_val = Hs[I].second;
+                std::vector<int> Hidx = Hs[I].first;
+                for( size_t J = 0, max_J = H_val.size(); J < max_J; ++J){
+                    evals->add(n, evecs->get(I,n) * H_val[J] * evecs->get(Hidx[J],n) );
+                }
+            }
+        }
+    }
+}
+
 
 }} // EndNamespaces
 
