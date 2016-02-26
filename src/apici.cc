@@ -818,7 +818,7 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
      //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
       //  dyn_dets.push_back(dbs);
    // }
-    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DavidsonLiuList);
+    sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_,wavefunction_multiplicity_,DLSolver);
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
     lambda_1_ = evals->get(current_root_);
