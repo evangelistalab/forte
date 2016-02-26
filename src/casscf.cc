@@ -453,6 +453,11 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 }
 ambit::Tensor CASSCF::transform_integrals()
 {
+    if(options_.get_str("SCF_TYPE") == "OUT_OF_CORE")
+    {
+        outfile->Printf("\n To use Out_of_core for scf_type, I need to implement integral transform with symmetry");
+        throw PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want conventional integrals");
+    }
     ///This function will do an integral transformation using the JK builder
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
     size_t nmo_no_froze =  mo_space_info_->size("ALL");
@@ -517,6 +522,7 @@ ambit::Tensor CASSCF::transform_integrals()
             /// D_{uv}^{ij} = C_i C_j^T
             C_DGER(nso, nso, 1.0, &(C_i->pointer()[0]), 1, &(C_j->pointer()[0]), 1, D->pointer()[0], nso);
 
+            D->print();
             D_vec.push_back(std::make_pair(D, ij));
         }
     }
