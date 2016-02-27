@@ -263,6 +263,7 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
                 const int r = K.params->colorb[h][rs][0];
                 const int s = K.params->colorb[h][rs][1];
                 HamDMRG->setVmat( p, r, q, s, K.matrix[h][pq][rs] );
+                outfile->Printf("\n p:%d r:%d q:%d s:%d = %8.8f", p, r, q, s, K.matrix[h][pq][rs]);
             }
         }
         global_dpd_->buf4_mat_irrep_close(&K, h);
@@ -273,9 +274,23 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
 }
 void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix *theQmatOCC, CheMPS2::DMRGSCFindices *iHandler, CheMPS2::Hamiltonian *HamDMRG, std::shared_ptr<ForteIntegrals> ints)
 {
+    ///Retransform all the integrals for now (TODO:  CASSCF-like integral transformation)
+    ints->retransform_integrals();
+    size_t na = mo_space_info_->size("ACTIVE");
+    std::vector<size_t> active_orbs = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    ambit::Tensor VMat = ints_->aptei_ab_block(active_orbs, active_orbs, active_orbs, active_orbs);
+    for(size_t u = 0; u < na; u++){
+        for(size_t v = 0; v < na; v++){
+            for(size_t x = 0; x < na; x++){
+                for(size_t y = 0; y < na; y++){
+                    size_t offset = u * na * na * na + v * na * na + x * na + y;
+                    HamDMRG->setVmat(u, x, v, y, VMat.data()[offset]);
+                }
+            }
+        }
+    }
 
 }
-
 
 void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio){
 
@@ -407,7 +422,6 @@ void DMRGSCF::update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSC
     copyUNITARYtoPSIMX( unitary, iHandler, work2 );
     this->Ca()->gemm(false, true, 1.0, work1, work2, 0.0);
     this->Cb()->copy(this->Ca());
-
 }
 
 
@@ -589,8 +603,7 @@ double DMRGSCF::compute_energy()
 
     SharedMatrix work1; work1 = SharedMatrix( new Matrix("work1", nirrep, orbspi, orbspi) );
     SharedMatrix work2; work2 = SharedMatrix( new Matrix("work2", nirrep, orbspi, orbspi) );
-    boost::shared_ptr<JK> myJK; myJK = boost::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
-    //boost::shared_ptr<JK> myJK = JK::build_JK();
+    boost::shared_ptr<JK> myJK = JK::build_JK(this->basisset(), options_);
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
@@ -741,6 +754,7 @@ double DMRGSCF::compute_energy()
         update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
         buildTmatrix( theTmatrix, iHandler, psio, this->Ca());
         buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
+        buildHamDMRGForte(theQmatOCC, iHandler, HamDMRG, ints_);
         buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
 
         //Localize the active space and reorder the orbitals within each irrep based on the exchange matrix
