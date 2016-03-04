@@ -622,10 +622,10 @@ void MRDSRG::transfer_integrals(){
     });
 
     O1_.zero();
-    O1_["pq"] += Hbar2_["puqv"] * Gamma1_["vu"];
-    O1_["pq"] += Hbar2_["pUqV"] * Gamma1_["VU"];
-    O1_["PQ"] += Hbar2_["uPvQ"] * Gamma1_["vu"];
-    O1_["PQ"] += Hbar2_["PUQV"] * Gamma1_["VU"];
+    O1_["ij"] += Hbar2_["iujv"] * Gamma1_["vu"];
+    O1_["ij"] += Hbar2_["iUjV"] * Gamma1_["VU"];
+    O1_["IJ"] += Hbar2_["uIvJ"] * Gamma1_["vu"];
+    O1_["IJ"] += Hbar2_["IUJV"] * Gamma1_["VU"];
     O1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
         if (i[0] == i[1]) scalar2 += value;
     });
@@ -644,16 +644,16 @@ void MRDSRG::transfer_integrals(){
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
     O1_.scale(-1.0);
-    O1_["pq"] += Hbar1_["pq"];
-    O1_["PQ"] += Hbar1_["PQ"];
+    O1_["ij"] += Hbar1_["ij"];
+    O1_["IJ"] += Hbar1_["IJ"];
     BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"cc"}));
     temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
         if (i[0] == i[1]) value = 1.0;
     });
-    O1_["pq"] -= Hbar2_["pmqn"] * temp["nm"];
-    O1_["pq"] -= Hbar2_["pMqN"] * temp["NM"];
-    O1_["PQ"] -= Hbar2_["mPnQ"] * temp["nm"];
-    O1_["PQ"] -= Hbar2_["PMQN"] * temp["NM"];
+    O1_["ij"] -= Hbar2_["imjn"] * temp["nm"];
+    O1_["ij"] -= Hbar2_["iMjN"] * temp["NM"];
+    O1_["IJ"] -= Hbar2_["mInJ"] * temp["nm"];
+    O1_["IJ"] -= Hbar2_["IMJN"] * temp["NM"];
     outfile->Printf("  Done. Timing %10.3f s", t_one.get());
 
     // update integrals

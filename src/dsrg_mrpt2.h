@@ -34,11 +34,10 @@
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
+#include "dsrg_time.h"
 
-namespace psi{
-
-namespace forte{
-
+using namespace ambit;
+namespace psi{ namespace forte{
 /**
  * @brief The MethodBase class
  * This class provides basic functions to write electronic structure
@@ -55,6 +54,12 @@ protected:
 
     /// The reference object
     Reference reference_;
+
+    /// The energy of the reference
+    double Eref_;
+
+    /// The frozen-core energy
+    double frozen_core_energy_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals>  ints_;
@@ -148,6 +153,8 @@ protected:
     ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
     ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
     ambit::BlockedTensor Hbar2;  // < two-body term of effective Hamiltonian
+    ambit::BlockedTensor C1;
+    ambit::BlockedTensor C2;
 
     // => Class initialization and termination <= //
 
@@ -217,19 +224,45 @@ protected:
     double E_VT2_4PH();
     double E_VT2_6();
 
-    /// Compute Hbar truncated to 2nd-order
-    double Hbar0;
-    void Hbar1_FT1();
-    void Hbar1_FT2();
-    void Hbar1_VT1();
-    void Hbar1_VT2_2();
-    void Hbar1_VT2_4_22();
-    void Hbar1_VT2_4_13();
-    void Hbar2_FT2();
-    void Hbar2_VT1();
-    void Hbar2_VT2_PP();
-    void Hbar2_VT2_HH();
-    void Hbar2_VT2_PH();
+    /// Timings for computing the commutators
+    DSRG_TIME dsrg_time_;
+
+    /// Compute zero-body Hbar truncated to 2nd-order
+    double Hbar0_;
+    /// Compute one-body term of commutator [H1, T1]
+    void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H1, T2]
+    void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T1]
+    void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2]
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [H2, T1]
+    void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H1, T2]
+    void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2]
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    // => Reference relaxation <= //
+
+    /// Fill up integrals
+    void build_ints();
+    /// Fill up density matrix and density cumulants
+    void build_density();
+    /// Build Fock matrix and diagonal Fock matrix elements
+    void build_fock(BlockedTensor& H, BlockedTensor& V);
+    /// Transfer integrals for FCI
+    void transfer_integrals();
+    /// Reset integrals to bare Hamiltonian
+    void reset_ints(BlockedTensor& H, BlockedTensor& V);
+    /// Diagonalize the diagonal blocks of the Fock matrix
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
+    /// Separate an 2D ambit::Tensor according to its irrep
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    /// Combine a separated 2D ambit::Tensor
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
 
     // Print levels
     int print_;
@@ -271,26 +304,8 @@ public:
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
 
-    /// The energy of the reference
-    double Eref;
-
-    /// The frozen-core energy
-    double frozen_core_energy;
-
-    /// Transfer integrals
-    void transform_integrals();
-
-    /// return renormalized Fock matrix
-    ambit::BlockedTensor RF() {return F;}
-
-    /// return renormalized two-electron integral
-    ambit::BlockedTensor Rtei() {return V;}
-
-    /// return single excitation amplitude
-    ambit::BlockedTensor Singles() {return T1;}
-
-    /// return double excitation amplitude
-    ambit::BlockedTensor Doubles() {return T2;}
+    /// Compute the corr_level energy with relaxed reference
+    double compute_energy_relaxed();
 };
 
 }} // End Namespaces

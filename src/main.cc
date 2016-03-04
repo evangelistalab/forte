@@ -876,15 +876,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
-            if(options.get_str("RELAX_REF") == "ONCE"){
-                boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
-                                                                     dsrg_mrpt2->RF(),
-                                                                     dsrg_mrpt2->Rtei(),
-                                                                     dsrg_mrpt2->Singles(),
-                                                                     dsrg_mrpt2->Doubles()));
-                //                dsrg_mrpt2->transform_integrals();
-                //                FCI_MO fci(options,ints_);
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt2->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt2->compute_energy();
             }
         }
         if(options.get_str("CAS_TYPE")=="FCI")
@@ -901,7 +896,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci->compute_energy();
             Reference reference = fci->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt2->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt2->compute_energy();
+            }
         }
 
         if(options.get_str("CAS_TYPE")=="ACI"){
