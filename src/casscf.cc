@@ -453,6 +453,11 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
 }
 ambit::Tensor CASSCF::transform_integrals()
 {
+    if(options_.get_str("SCF_TYPE") == "OUT_OF_CORE")
+    {
+        outfile->Printf("\n To use Out_of_core for scf_type, I need to implement integral transform with symmetry");
+        throw PSIEXCEPTION("Need to use scf_type direct for CASSCF if you want conventional integrals");
+    }
     ///This function will do an integral transformation using the JK builder
     /// This was borrowed from Kevin Hannon's IntegralTransform Plugin
     size_t nmo_no_froze =  mo_space_info_->size("ALL");
@@ -816,7 +821,6 @@ void CASSCF::overlap_orbitals(const SharedMatrix& C_old, const SharedMatrix& C_n
     SharedMatrix S_basis = this->S();
     S_orbitals = Matrix::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
-    S_orbitals->print();
     for(size_t h = 0; h < nirrep_; h++)
     {
         for(int i = 0; i < S_basis->rowspi(h); i++)
