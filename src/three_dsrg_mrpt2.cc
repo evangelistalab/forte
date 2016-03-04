@@ -1432,20 +1432,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ealpha += 0.5 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+                Ealpha += 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 BefVec[thread].zero();
                 BefJKVec[thread].zero();
                 RDVec[thread].zero();
 
-                // beta-beta
-                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+                //// beta-beta
+                //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+                //BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+                //BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+                //RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                //    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                //    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                //Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
                 // alpha-beta
                 BefVec[thread].zero();
@@ -1517,16 +1517,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ealpha += 0.5 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+                Ealpha += 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 // beta-beta
-                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+                //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+                //BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+                //BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+                //RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                //    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                //    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                //Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
                 // alpha-beta
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
