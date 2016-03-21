@@ -11,6 +11,7 @@
 #include "mrdsrg.h"
 #include "fci_solver.h"
 #include "mp2_nos.h"
+#include "fci_mo.h"
 
 namespace psi{ namespace forte{
 
@@ -139,7 +140,7 @@ void MRDSRG::startup()
 
     // test semi-canonical
     print_h2("Checking Orbitals");
-    H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",diag_labels());
+    H0th_ = BTF_->build(tensor_type_,"Zeroth-order H",diag_one_labels());
     H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if(i[0] == i[1]){
             if(spin[0] == AlphaSpin){
@@ -396,6 +397,8 @@ double MRDSRG::compute_energy_relaxed(){
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
         fcisolver.set_max_rdm_level(2);
         Erelax = fcisolver.compute_energy();
+//        boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
+//        Erelax = fci_mo->compute_energy();
 
         // printing
         print_h2("MRDSRG Energy Summary");
@@ -588,6 +591,28 @@ void MRDSRG::transfer_integrals(){
     // printing
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
+//    BlockedTensor X1 = BTF_->build(tensor_type_,"X1",spin_cases({"aa"}));
+//    BlockedTensor X2 = BTF_->build(tensor_type_,"X1",spin_cases({"aaaa"}));
+//    X1["uv"] = Hbar1_["uv"];
+//    X1["UV"] = Hbar1_["UV"];
+//    X2["uvxy"] = Hbar2_["uvxy"];
+//    X2["uVxY"] = Hbar2_["uVxY"];
+//    X2["UVXY"] = Hbar2_["UVXY"];
+
+//        Hbar1_.zero();
+//        Hbar2_.zero();
+////    Hbar1_["ij"] = F_["ij"];
+////    Hbar1_["IJ"] = F_["IJ"];
+////    Hbar2_["ijkl"] = V_["ijkl"];
+////    Hbar2_["iJkL"] = V_["iJkL"];
+////    Hbar2_["IJKL"] = V_["IJKL"];
+
+//    Hbar1_["uv"] = X1["uv"];
+//    Hbar1_["UV"] = X1["UV"];
+//    Hbar2_["uvxy"] = X2["uvxy"];
+//    Hbar2_["uVxY"] = X2["uVxY"];
+//    Hbar2_["UVXY"] = X2["UVXY"];
+
     // compute scalar term
     Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
@@ -702,26 +727,17 @@ void MRDSRG::transfer_integrals(){
     Etest1 += O1_["uv"] * Gamma1_["vu"];
     Etest1 += O1_["UV"] * Gamma1_["VU"];
 
+    Hbar1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Hbar1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
+    Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
+    Etest1 *= 0.5;
+
     double Etest2 = 0.0;
-    Hbar2_.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-    Hbar2_.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += value;
-    });
-    Hbar2_.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-
-    Etest2 += Hbar2_["munv"] * temp["nm"] * Gamma1_["vu"];
-    Etest2 += Hbar2_["uMvN"] * temp["NM"] * Gamma1_["vu"];
-    Etest2 += Hbar2_["mUnV"] * temp["nm"] * Gamma1_["VU"];
-    Etest2 += Hbar2_["MUNV"] * temp["NM"] * Gamma1_["VU"];
-
-    Etest2 += 0.5 * Gamma1_["vu"] * Hbar2_["uxvy"] * Gamma1_["yx"];
-    Etest2 += 0.5 * Gamma1_["VU"] * Hbar2_["UXVY"] * Gamma1_["YX"];
-    Etest2 += Gamma1_["vu"] * Hbar2_["uXvY"] * Gamma1_["YX"];
-
     Etest2 += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
     Etest2 += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
     Etest2 += Hbar2_["uVxY"] * Lambda2_["xYuV"];
@@ -763,7 +779,7 @@ void MRDSRG::reset_ints(BlockedTensor& H, BlockedTensor& V){
 
 std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTensor& U){
     // diagonal blocks identifiers (C-A-V ordering)
-    std::vector<std::string> blocks = diag_labels();
+    std::vector<std::string> blocks = diag_one_labels();
 
     // map MO space label to its Dimension
     std::map<std::string, Dimension> MOlabel_to_dimension;
@@ -964,6 +980,80 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name){
         output += str(boost::format(" %12.6f") % norms[i]);
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
+}
+
+std::vector<std::string> MRDSRG::diag_one_labels(){
+    // C-A-V ordering
+    std::vector<std::string> labels{acore_label_ + acore_label_, aactv_label_ + aactv_label_, avirt_label_ + avirt_label_,
+                bcore_label_ + bcore_label_, bactv_label_ + bactv_label_, bvirt_label_ + bvirt_label_};
+    return labels;
+}
+
+std::vector<std::string> MRDSRG::diag_two_labels(){
+    std::vector<std::string> labels (V_.block_labels());
+    std::vector<std::string> od_labels (od_two_labels());
+    labels.erase(std::remove_if(labels.begin(), labels.end(),
+                                 [&](std::string i) {return std::find(od_labels.begin(), od_labels.end(), i) != od_labels.end();}),
+            labels.end());
+    return labels;
+}
+
+std::vector<std::string> MRDSRG::od_one_labels_hp(){
+    std::vector<std::string> blocks1 (T1_.block_labels());
+    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_, bactv_label_ + bactv_label_};
+    blocks1.erase(std::remove_if(blocks1.begin(), blocks1.end(),
+                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
+            blocks1.end());
+    return blocks1;
+}
+
+std::vector<std::string> MRDSRG::od_one_labels_ph(){
+    std::vector<std::string> blocks1 (od_one_labels_hp());
+    for(auto& block: blocks1){
+        std::swap(block[0],block[1]);
+    }
+    return blocks1;
+}
+
+std::vector<std::string> MRDSRG::od_one_labels(){
+    std::vector<std::string> blocks1 (od_one_labels_hp());
+    std::vector<std::string> temp (blocks1);
+    for(auto& block: temp){
+        std::swap(block[0],block[1]);
+    }
+    blocks1.insert(std::end(blocks1), std::begin(temp), std::end(temp));
+    return blocks1;
+}
+
+std::vector<std::string> MRDSRG::od_two_labels_hhpp(){
+    std::vector<std::string> blocks2 (T2_.block_labels());
+    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
+                aactv_label_ + bactv_label_ + aactv_label_ + bactv_label_,
+                bactv_label_ + bactv_label_ + bactv_label_ + bactv_label_};
+    blocks2.erase(std::remove_if(blocks2.begin(), blocks2.end(),
+                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
+            blocks2.end());
+    return blocks2;
+}
+
+std::vector<std::string> MRDSRG::od_two_labels_pphh(){
+    std::vector<std::string> blocks2 (od_two_labels_hhpp());
+    for(auto& block: blocks2){
+        std::swap(block[0],block[2]);
+        std::swap(block[1],block[3]);
+    }
+    return blocks2;
+}
+
+std::vector<std::string> MRDSRG::od_two_labels(){
+    std::vector<std::string> blocks2 (od_two_labels_hhpp());
+    std::vector<std::string> temp (blocks2);
+    for(auto& block: temp){
+        std::swap(block[0],block[2]);
+        std::swap(block[1],block[3]);
+    }
+    blocks2.insert(std::end(blocks2), std::begin(temp), std::end(temp));
+    return blocks2;
 }
 
 }}
