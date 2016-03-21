@@ -611,6 +611,8 @@ read_options(std::string name, Options &options)
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- Different Zeroth-order Hamiltonian -*/
+        options.add_str("H0TH", "FDIAG", "FDIAG FFULL FDIAG_VACTV FDIAG_VDIAG");
         /*- T1 Amplitudes -*/
         options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
@@ -623,6 +625,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- The residue convergence criterion -*/
+        options.add_double("R_CONVERGENCE",1.0e-6);
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- Automatic Adjusting Flow Parameter -*/

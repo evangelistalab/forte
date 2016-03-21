@@ -941,10 +941,12 @@ void DSRG_MRPT2::renormalize_F()
     temp2["IA"] += F["IA"] * RExp1["IA"];
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
-    F["ia"] += temp2["ia"];
-    F["IA"] += temp2["IA"];
+    // avoid counting the a-a block
+    F["ma"] += temp2["ma"];
+    F["MA"] += temp2["MA"];
+    F["ue"] += temp2["ue"];
+    F["UE"] += temp2["UE"];
 
-    // avoid double counting the a-a block
     F["am"] += temp2["ma"];
     F["AM"] += temp2["MA"];
     F["eu"] += temp2["ue"];
@@ -1372,8 +1374,6 @@ double DSRG_MRPT2::compute_energy_relaxed(){
         // compute energy with fixed ref.
         Edsrg = compute_energy();
 
-//        Hbar2.print();
-
         // transfer integrals
         transfer_integrals();
 
@@ -1512,26 +1512,17 @@ void DSRG_MRPT2::transfer_integrals(){
     Etest1 += C1["uv"] * Gamma1["vu"];
     Etest1 += C1["UV"] * Gamma1["VU"];
 
+    Hbar1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Hbar1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Etest1 += Hbar1["uv"] * Gamma1["vu"];
+    Etest1 += Hbar1["UV"] * Gamma1["VU"];
+    Etest1 *= 0.5;
+
     double Etest2 = 0.0;
-    Hbar2.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-    Hbar2.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += value;
-    });
-    Hbar2.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-
-    Etest2 += Hbar2["munv"] * temp["nm"] * Gamma1["vu"];
-    Etest2 += Hbar2["uMvN"] * temp["NM"] * Gamma1["vu"];
-    Etest2 += Hbar2["mUnV"] * temp["nm"] * Gamma1["VU"];
-    Etest2 += Hbar2["MUNV"] * temp["NM"] * Gamma1["VU"];
-
-    Etest2 += 0.5 * Gamma1["vu"] * Hbar2["uxvy"] * Gamma1["yx"];
-    Etest2 += 0.5 * Gamma1["VU"] * Hbar2["UXVY"] * Gamma1["YX"];
-    Etest2 += Gamma1["vu"] * Hbar2["uXvY"] * Gamma1["YX"];
-
     Etest2 += 0.25 * Hbar2["uvxy"] * Lambda2["xyuv"];
     Etest2 += 0.25 * Hbar2["UVXY"] * Lambda2["XYUV"];
     Etest2 += Hbar2["uVxY"] * Lambda2["xYuV"];
