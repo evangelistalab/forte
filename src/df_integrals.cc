@@ -322,6 +322,7 @@ void DFIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
         fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
     });
 
+    ///Form with JK builders
 }
 
 void DFIntegrals::resort_three(SharedMatrix& threeint,std::vector<size_t>& map)

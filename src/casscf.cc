@@ -11,6 +11,7 @@
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
+#include "dmrgsolver.h"
 #include <libdiis/diismanager.h>
 #include <libdiis/diisentry.h>
 #include <libmints/factory.h>
@@ -305,6 +306,23 @@ void CASSCF::cas_ci()
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
+    }
+    else if(options_.get_str("CAS_TYPE") == "DMRG")
+    {
+#ifdef  HAVE_CHEMPS2
+        ints_->retransform_integrals();
+        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_);
+        dmrg.set_max_rdm(2);
+        std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
+        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
+        dmrg.compute_energy();
+
+        cas_ref_ = dmrg.reference();
+        E_casscf_ = cas_ref_.get_Eref();
+#else
+        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+#endif
+    
     }
 
     ambit::Tensor L2aa = cas_ref_.L2aa();
@@ -921,6 +939,21 @@ void CASSCF::overlap_coefficients()
         }
         outfile->Printf("\n");
     }
+}
+std::pair<ambit::Tensor, std::vector<double> > CASSCF::CI_Integrals()
+{
+    std::vector<std::vector<double> > oei_vector = compute_restricted_docc_operator();
+
+    auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    const std::vector<double>& tei_paaa_data = tei_paaa_.data();
+    ambit::Tensor active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
+
+    active_ab.iterate([&](const std::vector<size_t>& i,double& value){
+        value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
+    std::pair<ambit::Tensor, std::vector<double> > pair_return = std::make_pair(active_ab, oei_vector[0]);
+    return pair_return;
+    
+
 }
 
 }}

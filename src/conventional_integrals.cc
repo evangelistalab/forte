@@ -167,6 +167,8 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r,size_t s,double
 
 void ConventionalIntegrals::gather_integrals()
 {
+    MintsHelper mints = MintsHelper(wfn_->basisset());
+    mints.integrals();
     transform_integrals();
 
     if(print_ > 0)

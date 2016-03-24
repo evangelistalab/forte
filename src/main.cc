@@ -336,7 +336,7 @@ read_options(std::string name, Options &options)
         options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE DMRGSCF
+        ///         OPTIONS FOR THE DMRGSolver
         //////////////////////////////////////////////////////////////
 
         options.add_int("DMRG_WFN_MULTP", -1);
@@ -369,6 +369,8 @@ read_options(std::string name, Options &options)
         /*- The maximum number of sweeps to stop an instruction
             during successive DMRG instructions -*/
         options.add_array("DMRG_MAXSWEEPS");
+        /*- The Davidson R tolerance (Wouters says this will cause RDms to be close to exact -*/
+        options.add_double("DMRG_DAVIDSON_RTOL", 1e-6);
 
         /*- The noiseprefactors for successive DMRG instructions -*/
         options.add_array("DMRG_NOISEPREFACTORS");
