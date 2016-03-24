@@ -144,10 +144,10 @@ double MRDSRG::compute_energy_ldsrg2(){
     outfile->Printf("\n%s", title.c_str());
 
     // figure out off-diagonal block labels for Hbar1
-    std::vector<std::string> blocks1 = od_one_labels();
+    std::vector<std::string> blocks1 = od_one_labels_hp();
 
     // figure out off-diagonal block labels for Hbar2
-    std::vector<std::string> blocks2 = od_two_labels();
+    std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
     // iteration variables
     double Ecorr = 0.0;
@@ -272,8 +272,8 @@ double MRDSRG::compute_energy_cepa0(){
     outfile->Printf("\n%s", title.c_str());
 
     // figure out off-diagonal blocks labels
-    std::vector<std::string> blocks1 = od_one_labels();
-    std::vector<std::string> blocks2 = od_two_labels();
+    std::vector<std::string> blocks1 = od_one_labels_hp();
+    std::vector<std::string> blocks2 = od_two_labels_hhpp();
 
     // iteration variables
     double Ecorr = 0.0;
@@ -457,26 +457,6 @@ double MRDSRG::compute_energy_cepa0(){
 
     Hbar0_ = Ecorr;
     return Ecorr;
-}
-
-std::vector<std::string> MRDSRG::od_one_labels(){
-    std::vector<std::string> blocks1 (T1_.block_labels());
-    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_, bactv_label_ + bactv_label_};
-    blocks1.erase(std::remove_if(blocks1.begin(), blocks1.end(),
-                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
-            blocks1.end());
-    return blocks1;
-}
-
-std::vector<std::string> MRDSRG::od_two_labels(){
-    std::vector<std::string> blocks2 (T2_.block_labels());
-    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
-                aactv_label_ + bactv_label_ + aactv_label_ + bactv_label_,
-                bactv_label_ + bactv_label_ + bactv_label_ + bactv_label_};
-    blocks2.erase(std::remove_if(blocks2.begin(), blocks2.end(),
-                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
-            blocks2.end());
-    return blocks2;
 }
 
 double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks){

@@ -11,6 +11,7 @@
 
 #include "dsrg_mrpt2.h"
 #include "blockedtensorfactory.h"
+#include "fci_solver.h"
 
 using namespace ambit;
 
@@ -28,9 +29,7 @@ DSRG_MRPT2::DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options 
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
 
-    outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t      Driven Similarity Renormalization Group MBPT2");
-    outfile->Printf("\n\t  ---------------------------------------------------------");
+    print_method_banner({"Driven Similarity Renormalization Group MBPT2", "Chenyang Li, Kevin Hannon, Francesco Evangelista"});
     if(options.get_bool("MEMORY_SUMMARY"))
     {
     BTF->print_memory_info();
@@ -49,7 +48,7 @@ void DSRG_MRPT2::startup()
 {
     print_ = options_.get_int("PRINT");
 
-    frozen_core_energy = ints_->frozen_core_energy();
+    frozen_core_energy_ = ints_->frozen_core_energy();
 
     source_ = options_.get_str("SOURCE");
 
@@ -108,7 +107,7 @@ void DSRG_MRPT2::startup()
     BTF->add_composite_mo_space("G","PQRS",{bcore_label,bactv_label,bvirt_label});
 
     // get reference energy
-    Eref = reference_.get_Eref();
+    Eref_ = reference_.get_Eref();
 
     // prepare integrals
     H = BTF->build(tensor_type_,"H",spin_cases({"gg"}));
@@ -263,6 +262,8 @@ void DSRG_MRPT2::startup()
         Lambda3.print(stdout);
     }
 
+    // initialize timer for commutator
+    dsrg_time_ = DSRG_TIME();
 }
 
 void DSRG_MRPT2::print_summary()
@@ -296,6 +297,7 @@ void DSRG_MRPT2::print_summary()
 
 void DSRG_MRPT2::cleanup()
 {
+    dsrg_time_.print_comm_time();
 }
 
 double DSRG_MRPT2::renormalized_denominator(double D)
@@ -386,46 +388,46 @@ double DSRG_MRPT2::compute_energy()
     double Ecorr  = 0.0;
     double Etotal = 0.0;
     std::vector<std::pair<std::string,double>> energy;
-    energy.push_back({"E0 (reference)", Eref});
+    energy.push_back({"E0 (reference)", Eref_});
 
-    Etemp  = 2 * E_FT1();
+    Etemp  = E_FT1();
     Ecorr += Etemp;
     energy.push_back({"<[F, T1]>", Etemp});
 
-    Etemp  = 2 * E_FT2();
+    Etemp  = E_FT2();
     Ecorr += Etemp;
     energy.push_back({"<[F, T2]>", Etemp});
 
-    Etemp  = 2 * E_VT1();
+    Etemp  = E_VT1();
     Ecorr += Etemp;
     energy.push_back({"<[V, T1]>", Etemp});
 
-    Etemp  = 2 * E_VT2_2();
+    Etemp  = E_VT2_2();
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
 
-    Etemp  = 2 * E_VT2_4HH();
+    Etemp  = E_VT2_4HH();
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
 
-    Etemp  = 2 * E_VT2_4PP();
+    Etemp  = E_VT2_4PP();
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
 
-    Etemp  = 2 * E_VT2_4PH();
+    Etemp  = E_VT2_4PH();
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    Etemp  = 2 * E_VT2_6();
+    Etemp  = E_VT2_6();
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
 
     Ecorr += EVT2;
-    Etotal = Ecorr + Eref;
+    Etotal = Ecorr + Eref_;
     energy.push_back({"<[V, T2]>", EVT2});
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Etotal});
-    Hbar0 = Etotal;
+    Hbar0_ = Ecorr;
 
     // Analyze T1 and T2
     outfile->Printf("\n\n  ==> Excitation Amplitudes Summary <==\n");
@@ -459,6 +461,30 @@ double DSRG_MRPT2::compute_energy()
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
     outfile->Printf("\n\n  Energy took %8.8f s", DSRG_energy.get());
 
+    // relax reference
+    if(options_.get_str("RELAX_REF") != "NONE"){
+        C1 = BTF->build(tensor_type_,"C1",spin_cases({"hh"}));
+        C2 = BTF->build(tensor_type_,"C2",spin_cases({"hhhh"}));
+        H1_T1_C1(F,T1,0.5,C1);
+        H1_T2_C1(F,T2,0.5,C1);
+        H2_T1_C1(V,T1,0.5,C1);
+        H2_T2_C1(V,T2,0.5,C1);
+        H1_T2_C2(F,T2,0.5,C2);
+        H2_T1_C2(V,T1,0.5,C2);
+        H2_T2_C2(V,T2,0.5,C2);
+
+        Hbar1["ij"] += C1["ij"];
+        Hbar1["ij"] += C1["ji"];
+        Hbar1["IJ"] += C1["IJ"];
+        Hbar1["IJ"] += C1["JI"];
+        Hbar2["ijkl"] += C2["ijkl"];
+        Hbar2["ijkl"] += C2["klij"];
+        Hbar2["iJkL"] += C2["iJkL"];
+        Hbar2["iJkL"] += C2["kLiJ"];
+        Hbar2["IJKL"] += C2["IJKL"];
+        Hbar2["IJKL"] += C2["KLIJ"];
+    }
+
     return Etotal;
 }
 
@@ -482,7 +508,7 @@ double DSRG_MRPT2::compute_ref()
     double Enuc = molecule->nuclear_repulsion_energy();
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
-    return E + frozen_core_energy + Enuc;
+    return E + frozen_core_energy_ + Enuc;
 }
 
 void DSRG_MRPT2::compute_t2()
@@ -872,43 +898,22 @@ void DSRG_MRPT2::renormalize_V()
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     BlockedTensor temp1 = BTF->build(tensor_type_,"temp1",spin_cases({"hhpp"}));
-    BlockedTensor temp2 = BTF->build(tensor_type_,"temp2",spin_cases({"hhpp"}));
 
     temp1["ijab"] = V["ijab"] * RExp2["ijab"];
     temp1["iJaB"] = V["iJaB"] * RExp2["iJaB"];
     temp1["IJAB"] = V["IJAB"] * RExp2["IJAB"];
 
-    // Non-diagonal Hbar2
-    if(options_.get_str("RELAX_REF") != "NONE"){
-        Hbar2["ijuv"] = temp1["ijuv"];
-        Hbar2["iJuV"] = temp1["iJuV"];
-        Hbar2["IJUV"] = temp1["IJUV"];
-        Hbar2["uvij"] = temp1["ijuv"];
-        Hbar2["uViJ"] = temp1["iJuV"];
-        Hbar2["UVIJ"] = temp1["IJUV"];
+    temp1["ijab"] += V["ijab"];
+    temp1["iJaB"] += V["iJaB"];
+    temp1["IJAB"] += V["IJAB"];
 
-        // acv-acv-acv-acv block should be zero
-        Hbar2.block("aaaa").zero();
-        Hbar2.block("AAAA").zero();
-//        Hbar2.print(stdout);
-    }
+    V["ijab"] = temp1["ijab"];
+    V["iJaB"] = temp1["iJaB"];
+    V["IJAB"] = temp1["IJAB"];
 
-    // Back to renormalized V
-    temp2["ijab"] = temp1["ijab"];
-    temp2["iJaB"] = temp1["iJaB"];
-    temp2["IJAB"] = temp1["IJAB"];
-    temp2["ijab"] += V["ijab"];
-    temp2["iJaB"] += V["iJaB"];
-    temp2["IJAB"] += V["IJAB"];
-//    temp2.print(stdout);
-
-    V["ijab"] = 0.5 * temp2["ijab"];
-    V["iJaB"] = 0.5 * temp2["iJaB"];
-    V["IJAB"] = 0.5 * temp2["IJAB"];
-
-    V["abij"] = 0.5 * temp2["ijab"];
-    V["aBiJ"] = 0.5 * temp2["iJaB"];
-    V["ABIJ"] = 0.5 * temp2["IJAB"];
+    V["abij"] = temp1["ijab"];
+    V["aBiJ"] = temp1["iJaB"];
+    V["ABIJ"] = temp1["IJAB"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -936,24 +941,16 @@ void DSRG_MRPT2::renormalize_F()
     temp2["IA"] += F["IA"] * RExp1["IA"];
     temp2["IA"] += temp1["IA"] * RExp1["IA"];
 
-    // Non-diagonal Hbar1 (acv-acv block should be diagonal)
-    if(options_.get_str("RELAX_REF") != "NONE"){
-        Hbar1["mv"] = temp2["mv"];
-        Hbar1["MV"] = temp2["MV"];
-        Hbar1["vm"] = temp2["mv"];
-        Hbar1["VM"] = temp2["MV"];
-//        Hbar1.print(stdout);
-    }
+    // avoid counting the a-a block
+    F["ma"] += temp2["ma"];
+    F["MA"] += temp2["MA"];
+    F["ue"] += temp2["ue"];
+    F["UE"] += temp2["UE"];
 
-    // Back to renormalized F
-    temp2["ia"] += F["ia"];
-    temp2["IA"] += F["IA"];
-
-    F["ia"] = 0.5 * temp2["ia"];
-    F["IA"] = 0.5 * temp2["IA"];
-
-    F["ai"] = 0.5 * temp2["ia"];
-    F["AI"] = 0.5 * temp2["IA"];
+    F["am"] += temp2["ma"];
+    F["AM"] += temp2["MA"];
+    F["eu"] += temp2["ue"];
+    F["EU"] += temp2["UE"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -974,6 +971,7 @@ double DSRG_MRPT2::E_FT1()
     E += F["XM"] * T1["MY"] * Eta1["YX"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("110",timer.get());
     return E;
 }
 
@@ -1003,6 +1001,7 @@ double DSRG_MRPT2::E_VT1()
     E += temp["uVxY"] * Lambda2["xYuV"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("210",timer.get());
     return E;
 }
 
@@ -1032,6 +1031,7 @@ double DSRG_MRPT2::E_FT2()
     E += temp["uVxY"] * Lambda2["xYuV"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("120",timer.get());
     return E;
 }
 
@@ -1104,6 +1104,7 @@ double DSRG_MRPT2::E_VT2_2()
     E += temp["YVXU"] * Gamma1["XY"] * Eta1["UV"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
@@ -1129,6 +1130,7 @@ double DSRG_MRPT2::E_VT2_4HH()
     E += Lambda2["XYUV"] * temp["UVXY"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
@@ -1154,6 +1156,7 @@ double DSRG_MRPT2::E_VT2_4PP()
     E += Lambda2["XYUV"] * temp["UVXY"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
@@ -1205,6 +1208,7 @@ double DSRG_MRPT2::E_VT2_4PH()
     E += temp["uVxY"] * Lambda2["xYuV"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
@@ -1246,580 +1250,876 @@ double DSRG_MRPT2::E_VT2_6()
     }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
-void DSRG_MRPT2::transform_integrals(){
+void DSRG_MRPT2::build_density(){
+    // prepare density matrices
+    (Gamma1.block("cc")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    (Gamma1.block("CC")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    (Eta1.block("aa")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    (Eta1.block("AA")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    (Eta1.block("vv")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    (Eta1.block("VV")).iterate([&](const std::vector<size_t>& i,double& value){
+        value = i[0] == i[1] ? 1.0 : 0.0;});
+    // symmetrize beta spin
+    outfile->Printf("\n  Warning: I am forcing density Db = Da to avoid spin symmetry breaking.");
+    outfile->Printf("\n  If this is not desired, go to dsrg_mrpt2.cc around line 1250.");
+    Gamma1.block("aa")("pq") = reference_.L1a()("pq");
+    Gamma1.block("AA")("pq") = reference_.L1a()("pq");
+    Eta1.block("aa")("pq") -= reference_.L1a()("pq");
+    Eta1.block("AA")("pq") -= reference_.L1a()("pq");
 
-    outfile->Printf("\n\n  ==> Building effective Hamiltonian Hbar ... <==\n");
+    // prepare two-body density cumulants
+    ambit::Tensor Lambda2_aa = Lambda2.block("aaaa");
+    ambit::Tensor Lambda2_aA = Lambda2.block("aAaA");
+    ambit::Tensor Lambda2_AA = Lambda2.block("AAAA");
+    Lambda2_aa("pqrs") = reference_.L2aa()("pqrs");
+    Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
+    Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    // Compute second-order one- and two-body Hbar
-    // Cautious: V and F are renormalized !
-//    Hbar1_FT1();
-//    Hbar1_FT2();
-//    Hbar2_FT2();
-//    Hbar1_VT1();
-//    Hbar2_VT1();
-//    Hbar2_VT2_HH();
-//    Hbar2_VT2_PP();
-//    Hbar2_VT2_PH();
-//    Hbar1_VT2_2();
-//    Hbar1_VT2_4_22();
-//    Hbar1_VT2_4_13();
-    Hbar1.print(stdout);
-//    Hbar2.print(stdout);
+    // prepare three-body density cumulants
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    }
+}
 
-    // Scalar term
-    outfile->Printf("\n\n  ==> Computing scalar term in Hbar ... <==\n");
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    double Enuc = molecule->nuclear_repulsion_energy();
-    double scalar = Hbar0 - Enuc;
+void DSRG_MRPT2::build_fock(BlockedTensor& H, BlockedTensor& V){
+    // build Fock matrix
+    F["pq"]  = H["pq"];
+    F["pq"] += V["pjqi"] * Gamma1["ij"];
+    F["pq"] += V["pJqI"] * Gamma1["IJ"];
+    F["PQ"]  = H["PQ"];
+    F["PQ"] += V["jPiQ"] * Gamma1["ij"];
+    F["PQ"] += V["PJQI"] * Gamma1["IJ"];
 
-    scalar -= Hbar1["ji"] * Gamma1["ij"];
-    scalar -= Hbar1["JI"] * Gamma1["IJ"];
+    // obtain diagonal elements of Fock matrix
+    size_t ncmo_ = mo_space_info_->size("CORRELATED");
+    Fa = std::vector<double>(ncmo_);
+    Fb = std::vector<double>(ncmo_);
+    F.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin and (i[0] == i[1])){
+            Fa[i[0]] = value;
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])){
+            Fb[i[0]] = value;
+        }
+    });
+}
 
-    scalar -= 0.25 * Hbar2["xyuv"] * Lambda2["uvxy"];
-    scalar -= 0.25 * Hbar2["XYUV"] * Lambda2["UVXY"];
-    scalar -= Hbar2["xYuV"] * Lambda2["uVxY"];
+void DSRG_MRPT2::reset_ints(BlockedTensor& H, BlockedTensor& V){
+    ints_->set_scalar(0.0);
+    H.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if (spin[0] == AlphaSpin){
+            ints_->set_oei(i[0],i[1],value,true);
+        }else{
+            ints_->set_oei(i[0],i[1],value,false);
+        }
+    });
+    V.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,false);
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,false,false);
+        }
+    });
+}
 
-    scalar += 0.5 * Hbar2["klij"] * Gamma1["ik"] * Gamma1["jl"];
-    scalar += 0.5 * Hbar2["KLIJ"] * Gamma1["IK"] * Gamma1["JL"];
-    scalar += Hbar2["kLiJ"] * Gamma1["ik"] * Gamma1["JL"];
+double DSRG_MRPT2::compute_energy_relaxed(){
+    // setup for FCISolver
+    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+    int charge = Process::environment.molecule()->molecular_charge();
+    if(options_["CHARGE"].has_changed()){
+        charge = options_.get_int("CHARGE");
+    }
+    auto nelec = 0;
+    int natom = Process::environment.molecule()->natom();
+    for(int i = 0; i < natom; ++i){
+        nelec += Process::environment.molecule()->fZ(i);
+    }
+    nelec -= charge;
+    int multi = Process::environment.molecule()->multiplicity();
+    if(options_["MULTIPLICITY"].has_changed()){
+        multi = options_.get_int("MULTIPLICITY");
+    }
+    int ms = multi - 1;
+    if(options_["MS"].has_changed()){
+        ms = options_.get_int("MS");
+    }
+    auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos.size();
+    auto na = (nelec_actv + ms) / 2;
+    auto nb =  nelec_actv - na;
 
-    outfile->Printf("\n    %-30s = %22.15f", "Hbar scalar", scalar);
+    // reference relaxation
+    double Edsrg = 0.0, Erelax = 0.0;
+    std::string relax_algorithm = options_.get_str("RELAX_REF");
 
-    // Update integrals
+    // only relax once, otherwise we have to store another
+    if(relax_algorithm != "NONE"){
+        // compute energy with fixed ref.
+        Edsrg = compute_energy();
+
+        // transfer integrals
+        transfer_integrals();
+
+        // diagonalize the Hamiltonian
+        FCISolver fcisolver(active_dim,acore_mos,aactv_mos,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
+                                             options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
+        fcisolver.set_max_rdm_level(2);
+        Erelax = fcisolver.compute_energy();
+
+        // printing
+        print_h2("MRDSRG Energy Summary");
+        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (fixed)", Edsrg);
+        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n");
+    }
+
+    Process::environment.globals["CURRENT ENERGY"] = Erelax;
+    return Erelax;
+}
+
+void DSRG_MRPT2::transfer_integrals(){
+    // printing
+    print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
+
+    // compute scalar term
+    Timer t_scalar;
+    std::string str = "Computing the scalar term   ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    double scalar0 = Eref_ + Hbar0_ - molecule_->nuclear_repulsion_energy()
+            - ints_->frozen_core_energy();
+
+    // scalar from Hbar1
+    double scalar1 = 0.0;
+    Hbar1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar1 -= value;
+    });
+    Hbar1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar1 -= value;
+    });
+    scalar1 -= Hbar1["vu"] * Gamma1["uv"];
+    scalar1 -= Hbar1["VU"] * Gamma1["UV"];
+
+    // scalar from Hbar2
+    double scalar2 = 0.0;
+    scalar2 -= 0.25 * Hbar2["xyuv"] * Lambda2["uvxy"];
+    scalar2 -= 0.25 * Hbar2["XYUV"] * Lambda2["UVXY"];
+    scalar2 -= Hbar2["xYuV"] * Lambda2["uVxY"];
+    Hbar2.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
+    });
+    Hbar2.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += value;
+    });
+    Hbar2.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
+    });
+
+    C1.zero();
+    C1["ij"] += Hbar2["iujv"] * Gamma1["vu"];
+    C1["ij"] += Hbar2["iUjV"] * Gamma1["VU"];
+    C1["IJ"] += Hbar2["uIvJ"] * Gamma1["vu"];
+    C1["IJ"] += Hbar2["IUJV"] * Gamma1["VU"];
+    C1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar2 += value;
+    });
+    C1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) scalar2 += value;
+    });
+    scalar2 += 0.5 * Gamma1["uv"] * Hbar2["vyux"] * Gamma1["xy"];
+    scalar2 += 0.5 * Gamma1["UV"] * Hbar2["VYUX"] * Gamma1["XY"];
+    scalar2 += Gamma1["uv"] * Hbar2["vYuX"] * Gamma1["XY"];
+
+    double scalar = scalar0 + scalar1 + scalar2;
+    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
+
+    // compute one-body term
+    Timer t_one;
+    str = "Computing the one-body term ...";
+    outfile->Printf("\n    %-35s", str.c_str());
+    C1.scale(-1.0);
+    C1["ij"] += Hbar1["ij"];
+    C1["IJ"] += Hbar1["IJ"];
+    BlockedTensor temp = BTF->build(tensor_type_,"temp",spin_cases({"cc"}));
+    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
+        if (i[0] == i[1]) value = 1.0;
+    });
+    C1["ij"] -= Hbar2["imjn"] * temp["nm"];
+    C1["ij"] -= Hbar2["iMjN"] * temp["NM"];
+    C1["IJ"] -= Hbar2["mInJ"] * temp["nm"];
+    C1["IJ"] -= Hbar2["IMJN"] * temp["NM"];
+    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+
+    // update integrals
+    Timer t_int;
+    str = "Updating integrals          ...";
+    outfile->Printf("\n    %-35s", str.c_str());
     ints_->set_scalar(scalar);
-    outfile->Printf("\n\n  ==> Updating all integrals ... <==\n");
+    C1.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if (spin[0] == AlphaSpin){
+            ints_->set_oei(i[0],i[1],value,true);
+        }else{
+            ints_->set_oei(i[0],i[1],value,false);
+        }
+    });
+    Hbar2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,true,false);
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            ints_->set_tei(i[0],i[1],i[2],i[3],value,false,false);
+        }
+    });
+    outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
-    // Compute one-body operator (two-body operator is Hbar2)
-    Timer o1;
-    std::string str = "Computing new one-electron integrals";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-    BlockedTensor O1 = BTF->build(tensor_type_, "One-body operator", spin_cases({"hh"}));
-    O1["ij"]  = Hbar1["ij"];
-    O1["ij"] -= Hbar2["ikjl"] * Gamma1["lk"];
-    O1["ij"] -= Hbar2["iKjL"] * Gamma1["LK"];
-    O1["IJ"]  = Hbar1["IJ"];
-    O1["IJ"] -= Hbar2["kIlJ"] * Gamma1["lk"];
-    O1["IJ"] -= Hbar2["IKJL"] * Gamma1["LK"];
-    outfile->Printf("  Done. Timing %15.6f s", o1.get());
+    // print scalar
+    double scalar_include_fc = scalar + ints_->frozen_core_energy();
+    print_h2("Scalar of the DSRG Hamiltonian (WRT True Vacuum)");
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
+    outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core", scalar);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core", scalar_include_fc);
 
-    // Fill out ints->oei
-    Timer fill1;
-    str = "Updating one-electron integrals";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-    for(const std::string& block: O1.block_labels()){
-        bool spin = islower(block[0]) ? true : false;
-        O1.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
-            size_t idx0 = label_to_spacemo[block[0]][i[0]];
-            size_t idx1 = label_to_spacemo[block[1]][i[1]];
-            ints_->set_oei(idx0,idx1,value,spin);
-        });
+    // test if de-normal-ordering is correct
+    print_h2("Test De-Normal-Ordered Hamiltonian");
+    double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
+
+    double Etest1 = 0.0;
+    C1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    C1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Etest1 += C1["uv"] * Gamma1["vu"];
+    Etest1 += C1["UV"] * Gamma1["VU"];
+
+    Hbar1.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Hbar1.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
+        if (i[0] == i[1]) Etest1 += value;
+    });
+    Etest1 += Hbar1["uv"] * Gamma1["vu"];
+    Etest1 += Hbar1["UV"] * Gamma1["VU"];
+    Etest1 *= 0.5;
+
+    double Etest2 = 0.0;
+    Etest2 += 0.25 * Hbar2["uvxy"] * Lambda2["xyuv"];
+    Etest2 += 0.25 * Hbar2["UVXY"] * Lambda2["XYUV"];
+    Etest2 += Hbar2["uVxY"] * Lambda2["xYuV"];
+
+    Etest += Etest1 + Etest2;
+    outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
+    outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
+    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
+
+    if(fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")){
+        throw PSIEXCEPTION("De-normal-odering failed.");
+    }else{
+        ints_->update_integrals(false);
     }
-    outfile->Printf("  Done. Timing %15.6f s", fill1.get());
+}
 
-    // Fill out ints->tei
-    Timer fill2;
-    str = "Updating two-electron integrals";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-    for(const std::string& block: Hbar2.block_labels()){
-        bool spin0 = islower(block[0]) ? true : false;
-        bool spin1 = islower(block[1]) ? true : false;
-        Hbar2.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
-            size_t idx0 = label_to_spacemo[block[0]][i[0]];
-            size_t idx1 = label_to_spacemo[block[1]][i[1]];
-            size_t idx2 = label_to_spacemo[block[2]][i[2]];
-            size_t idx3 = label_to_spacemo[block[3]][i[3]];
-            ints_->set_tei(idx0,idx1,idx2,idx3,value,spin0,spin1);
-        });
+//void DSRG_MRPT2::transfer_integrals(){
+
+//    outfile->Printf("\n\n  ==> Building effective Hamiltonian Hbar ... <==\n");
+
+//    // Compute second-order one- and two-body Hbar
+//    // Cautious: V and F are renormalized !
+////    Hbar1_FT1();
+////    Hbar1_FT2();
+////    Hbar2_FT2();
+////    Hbar1_VT1();
+////    Hbar2_VT1();
+////    Hbar2_VT2_HH();
+////    Hbar2_VT2_PP();
+////    Hbar2_VT2_PH();
+////    Hbar1_VT2_2();
+////    Hbar1_VT2_4_22();
+////    Hbar1_VT2_4_13();
+//    Hbar1.print(stdout);
+////    Hbar2.print(stdout);
+
+//    // Scalar term
+//    outfile->Printf("\n\n  ==> Computing scalar term in Hbar ... <==\n");
+//    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+//    double Enuc = molecule->nuclear_repulsion_energy();
+//    double scalar = Hbar0_ - Enuc;
+
+//    scalar -= Hbar1["ji"] * Gamma1["ij"];
+//    scalar -= Hbar1["JI"] * Gamma1["IJ"];
+
+//    scalar -= 0.25 * Hbar2["xyuv"] * Lambda2["uvxy"];
+//    scalar -= 0.25 * Hbar2["XYUV"] * Lambda2["UVXY"];
+//    scalar -= Hbar2["xYuV"] * Lambda2["uVxY"];
+
+//    scalar += 0.5 * Hbar2["klij"] * Gamma1["ik"] * Gamma1["jl"];
+//    scalar += 0.5 * Hbar2["KLIJ"] * Gamma1["IK"] * Gamma1["JL"];
+//    scalar += Hbar2["kLiJ"] * Gamma1["ik"] * Gamma1["JL"];
+
+//    outfile->Printf("\n    %-30s = %22.15f", "Hbar scalar", scalar);
+
+//    // Update integrals
+//    ints_->set_scalar(scalar);
+//    outfile->Printf("\n\n  ==> Updating all integrals ... <==\n");
+
+//    // Compute one-body operator (two-body operator is Hbar2)
+//    Timer o1;
+//    std::string str = "Computing new one-electron integrals";
+//    outfile->Printf("\n    %-40s ...", str.c_str());
+//    BlockedTensor O1 = BTF->build(tensor_type_, "One-body operator", spin_cases({"hh"}));
+//    O1["ij"]  = Hbar1["ij"];
+//    O1["ij"] -= Hbar2["ikjl"] * Gamma1["lk"];
+//    O1["ij"] -= Hbar2["iKjL"] * Gamma1["LK"];
+//    O1["IJ"]  = Hbar1["IJ"];
+//    O1["IJ"] -= Hbar2["kIlJ"] * Gamma1["lk"];
+//    O1["IJ"] -= Hbar2["IKJL"] * Gamma1["LK"];
+//    outfile->Printf("  Done. Timing %15.6f s", o1.get());
+
+//    // Fill out ints->oei
+//    Timer fill1;
+//    str = "Updating one-electron integrals";
+//    outfile->Printf("\n    %-40s ...", str.c_str());
+//    for(const std::string& block: O1.block_labels()){
+//        bool spin = islower(block[0]) ? true : false;
+//        O1.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
+//            size_t idx0 = label_to_spacemo[block[0]][i[0]];
+//            size_t idx1 = label_to_spacemo[block[1]][i[1]];
+//            ints_->set_oei(idx0,idx1,value,spin);
+//        });
+//    }
+//    outfile->Printf("  Done. Timing %15.6f s", fill1.get());
+
+//    // Fill out ints->tei
+//    Timer fill2;
+//    str = "Updating two-electron integrals";
+//    outfile->Printf("\n    %-40s ...", str.c_str());
+//    for(const std::string& block: Hbar2.block_labels()){
+//        bool spin0 = islower(block[0]) ? true : false;
+//        bool spin1 = islower(block[1]) ? true : false;
+//        Hbar2.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
+//            size_t idx0 = label_to_spacemo[block[0]][i[0]];
+//            size_t idx1 = label_to_spacemo[block[1]][i[1]];
+//            size_t idx2 = label_to_spacemo[block[2]][i[2]];
+//            size_t idx3 = label_to_spacemo[block[3]][i[3]];
+//            ints_->set_tei(idx0,idx1,idx2,idx3,value,spin0,spin1);
+//        });
+//    }
+//    outfile->Printf("  Done. Timing %15.6f s", fill2.get());
+
+//    ints_->update_integrals(false);
+//}
+
+void DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
+    Timer timer;
+
+    C1["ij"] += alpha * H1["aj"] * T1["ia"];
+    C1["ju"] -= alpha * T1["iu"] * H1["ji"];
+
+    C1["IJ"] += alpha * H1["AJ"] * T1["IA"];
+    C1["JU"] -= alpha * T1["IU"] * H1["JI"];
+
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());
     }
-    outfile->Printf("  Done. Timing %15.6f s", fill2.get());
-
-    ints_->update_integrals(false);
+    dsrg_time_.add("111",timer.get());
 }
 
-void DSRG_MRPT2::Hbar1_FT1(){
+void DSRG_MRPT2::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
     Timer timer;
-    std::string str = "Computing [F, T1] for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
 
-//    Hbar1.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hh"}));
-    temp["ij"] = F["aj"] * T1["ia"];
-    temp["IJ"] = F["AJ"] * T1["IA"];
+    C1["iu"] += alpha * H1["bm"] * T2["imub"];
+    C1["ix"] += alpha * H1["bu"] * T2["ivxb"] * Gamma1["uv"];
+    C1["ix"] -= alpha * H1["vj"] * T2["ijxu"] * Gamma1["uv"];
+    C1["iu"] += alpha * H1["BM"] * T2["iMuB"];
+    C1["ix"] += alpha * H1["BU"] * T2["iVxB"] * Gamma1["UV"];
+    C1["ix"] -= alpha * H1["VJ"] * T2["iJxU"] * Gamma1["UV"];
 
-    Hbar1["ij"] += temp["ij"];
-    Hbar1["ij"] += temp["ji"];
-    Hbar1["IJ"] += temp["IJ"];
-    Hbar1["IJ"] += temp["JI"];
+    C1["IU"] += alpha * H1["bm"] * T2["mIbU"];
+    C1["IX"] += alpha * H1["bu"] * Gamma1["uv"] * T2["vIbX"];
+    C1["IX"] -= alpha * H1["vj"] * T2["jIuX"] * Gamma1["uv"];
+    C1["IU"] += alpha * H1["BM"] * T2["IMUB"];
+    C1["IX"] += alpha * H1["BU"] * T2["IVXB"] * Gamma1["UV"];
+    C1["IX"] -= alpha * H1["VJ"] * T2["IJXU"] * Gamma1["UV"];
 
-    temp = BTF->build(tensor_type_, "temp", spin_cases({"ha"}));
-    temp["iu"] = F["im"] * T1["mu"];
-    temp["IU"] = F["IM"] * T1["MU"];
-
-    Hbar1["iu"] -= temp["iu"];
-    Hbar1["ui"] -= temp["iu"];
-    Hbar1["IU"] -= temp["IU"];
-    Hbar1["UI"] -= temp["IU"];
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("121",timer.get());
 }
 
-void DSRG_MRPT2::Hbar1_FT2(){
+void DSRG_MRPT2::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
     Timer timer;
-    std::string str = "Computing [F, T2] for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
 
-//    Hbar1.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"ha"}));
-    temp["iu"] += T2["ijub"] * F["bk"] * Gamma1["kj"];
-    temp["iu"] += T2["iJuB"] * F["BK"] * Gamma1["KJ"];
-    temp["iu"] -= T2["ijuv"] * F["xj"] * Gamma1["vx"];
-    temp["iu"] -= T2["iJuV"] * F["XJ"] * Gamma1["VX"];
+    C1["ij"] += alpha * T1["ma"] * H2["iajm"];
+    C1["ij"] += alpha * T1["xe"] * Gamma1["yx"] * H2["iejy"];
+    C1["ij"] -= alpha * T1["mu"] * Gamma1["uv"] * H2["ivjm"];
+    C1["ij"] += alpha * T1["MA"] * H2["iAjM"];
+    C1["ij"] += alpha * T1["XE"] * Gamma1["YX"] * H2["iEjY"];
+    C1["ij"] -= alpha * T1["MU"] * Gamma1["UV"] * H2["iVjM"];
 
-    temp["IU"] += T2["jIbU"] * F["bk"] * Gamma1["kj"];
-    temp["IU"] += T2["IJUB"] * F["BK"] * Gamma1["KJ"];
-    temp["IU"] -= T2["jIvU"] * F["xj"] * Gamma1["vx"];
-    temp["IU"] -= T2["IJUV"] * F["XJ"] * Gamma1["VX"];
+    C1["IJ"] += alpha * T1["ma"] * H2["aImJ"];
+    C1["IJ"] += alpha * T1["xe"] * Gamma1["yx"] * H2["eIyJ"];
+    C1["IJ"] -= alpha * T1["mu"] * Gamma1["uv"] * H2["vImJ"];
+    C1["IJ"] += alpha * T1["MA"] * H2["IAJM"];
+    C1["IJ"] += alpha * T1["XE"] * Gamma1["YX"] * H2["IEJY"];
+    C1["IJ"] -= alpha * T1["MU"] * Gamma1["UV"] * H2["IVJM"];
 
-    Hbar1["iu"] += temp["iu"];
-    Hbar1["ui"] += temp["iu"];
-    Hbar1["IU"] += temp["IU"];
-    Hbar1["UI"] += temp["IU"];
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("211",timer.get());
 }
 
-void DSRG_MRPT2::Hbar2_FT2(){
+void DSRG_MRPT2::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
     Timer timer;
-    std::string str = "Computing [F, T2] for Hbar2";
-    outfile->Printf("\n    %-40s ...", str.c_str());
+    BlockedTensor temp;
 
-//    Hbar2.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hhhh"}));
-    temp["ijku"] += T2["ijau"] * F["ak"];
-    temp["iJkU"] += T2["iJaU"] * F["ak"];
-    temp["IJKU"] += T2["IJAU"] * F["AK"];
-    Hbar2["ijku"] += temp["ijku"];
-    Hbar2["iJkU"] += temp["iJkU"];
-    Hbar2["IJKU"] += temp["IJKU"];
-    Hbar2["kuij"] += temp["ijku"];
-    Hbar2["kUiJ"] += temp["iJkU"];
-    Hbar2["KUIJ"] += temp["IJKU"];
+    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
+    C1["ij"] += 0.5 * alpha * H2["abjm"] * T2["imab"];
+    C1["ij"] += alpha * H2["aBjM"] * T2["iMaB"];
+    C1["IJ"] += 0.5 * alpha * H2["ABJM"] * T2["IMAB"];
+    C1["IJ"] += alpha * H2["aBmJ"] * T2["mIaB"];
 
-    // No need to recompute temp["ijuk"] because of the permutation symmetry
-    temp["iJuK"]   = T2["iJuA"] * F["AK"];
-    Hbar2["ijuk"] -= temp["ijku"];
-    Hbar2["iJuK"] += temp["iJuK"];
-    Hbar2["IJUK"] -= temp["IJKU"];
-    Hbar2["ukij"] -= temp["ijku"];
-    Hbar2["uKiJ"] += temp["iJuK"];
-    Hbar2["UKIJ"] -= temp["IJKU"];
+    C1["ij"] += 0.5 * alpha * Gamma1["uv"] * H2["abju"] * T2["ivab"];
+    C1["ij"] += alpha * Gamma1["UV"] * H2["aBjU"] * T2["iVaB"];
+    C1["IJ"] += 0.5 * alpha * Gamma1["UV"] * H2["ABJU"] * T2["IVAB"];
+    C1["IJ"] += alpha * Gamma1["uv"] * H2["aBuJ"] * T2["vIaB"];
 
-    temp["ijuv"]  = T2["kjuv"] * F["ik"];
-    Hbar2["ijuv"] -= temp["ijuv"];
-    Hbar2["ijuv"] += temp["jiuv"];
-    Hbar2["uvij"] -= temp["ijuv"];
-    Hbar2["uvij"] += temp["jiuv"];
+    C1["ik"] += 0.5 * alpha * T2["ijux"] * Gamma1["xy"] * Gamma1["uv"] * H2["vykj"];
+    C1["IK"] += 0.5 * alpha * T2["IJUX"] * Gamma1["XY"] * Gamma1["UV"] * H2["VYKJ"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hHaA"});
+    temp["iJvY"] = T2["iJuX"] * Gamma1["XY"] * Gamma1["uv"];
+    C1["ik"] += alpha * temp["iJvY"] * H2["vYkJ"];
+    C1["IK"] += alpha * temp["jIvY"] * H2["vYjK"];
 
-    temp["iJuV"]  = T2["kJuV"] * F["ik"];
-    temp["iJuV"] += T2["iKuV"] * F["JK"];
-    Hbar2["iJuV"] -= temp["iJuV"];
-    Hbar2["uViJ"] -= temp["iJuV"];
+    C1["ij"] -= alpha * Gamma1["uv"] * H2["vbjm"] * T2["imub"];
+    C1["ij"] -= alpha * Gamma1["uv"] * H2["vBjM"] * T2["iMuB"];
+    C1["ij"] -= alpha * Gamma1["UV"] * T2["iMbU"] * H2["bVjM"];
+    C1["IJ"] -= alpha * Gamma1["UV"] * H2["VBJM"] * T2["IMUB"];
+    C1["IJ"] -= alpha * Gamma1["UV"] * H2["bVmJ"] * T2["mIbU"];
+    C1["IJ"] -= alpha * Gamma1["uv"] * H2["vBmJ"] * T2["mIuB"];
 
-    temp["IJUV"]  = T2["KJUV"] * F["IK"];
-    Hbar2["IJUV"] -= temp["IJUV"];
-    Hbar2["IJUV"] += temp["JIUV"];
-    Hbar2["UVIJ"] -= temp["IJUV"];
-    Hbar2["UVIJ"] += temp["JIUV"];
+    C1["ij"] -= alpha * H2["vbjx"] * Gamma1["uv"] * Gamma1["xy"] * T2["iyub"];
+    C1["ij"] -= alpha * H2["vBjX"] * Gamma1["uv"] * Gamma1["XY"] * T2["iYuB"];
+    C1["ij"] -= alpha * H2["bVjX"] * Gamma1["XY"] * Gamma1["UV"] * T2["iYbU"];
+    C1["IJ"] -= alpha * H2["VBJX"] * Gamma1["UV"] * Gamma1["XY"] * T2["IYUB"];
+    C1["IJ"] -= alpha * H2["vBxJ"] * Gamma1["uv"] * Gamma1["xy"] * T2["yIuB"];
+    C1["IJ"] -= alpha * T2["yIbU"] * Gamma1["UV"] * Gamma1["xy"] * H2["bVxJ"];
 
-//    Hbar2.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
+    C1["ku"] -= 0.5 * alpha * H2["keij"] * T2["ijue"];
+    C1["ku"] -= alpha * H2["kEiJ"] * T2["iJuE"];
+    C1["KU"] -= 0.5 * alpha * H2["KEIJ"] * T2["IJUE"];
+    C1["KU"] -= alpha * H2["eKiJ"] * T2["iJeU"];
+
+    C1["kx"] -= 0.5 * alpha * Eta1["uv"] * T2["ijxu"] * H2["kvij"];
+    C1["kx"] -= alpha * Eta1["UV"] * T2["iJxU"] * H2["kViJ"];
+    C1["KX"] -= 0.5 * alpha * Eta1["UV"] * T2["IJXU"] * H2["KVIJ"];
+    C1["KX"] -= alpha * Eta1["uv"] * T2["iJuX"] * H2["vKiJ"];
+
+    C1["kw"] -= 0.5 * alpha * T2["vywb"] * Eta1["uv"] * Eta1["xy"] * H2["kbux"];
+    C1["KW"] -= 0.5 * alpha * T2["VYWB"] * Eta1["UV"] * Eta1["XY"] * H2["KBUX"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aApP"});
+    temp["uXaB"] = T2["vYaB"] * Eta1["uv"] * Eta1["XY"];
+    C1["kw"] -= alpha * H2["kBuX"] * temp["uXwB"];
+    C1["KW"] -= alpha * H2["bKuX"] * temp["uXbW"];
+
+    C1["kx"] += alpha * Eta1["uv"] * T2["vjxe"] * H2["keuj"];
+    C1["kx"] += alpha * Eta1["uv"] * T2["vJxE"] * H2["kEuJ"];
+    C1["kx"] += alpha * Eta1["UV"] * H2["kEjU"] * T2["jVxE"];
+    C1["KX"] += alpha * Eta1["UV"] * T2["VJXE"] * H2["KEUJ"];
+    C1["KX"] += alpha * Eta1["uv"] * T2["vJeX"] * H2["eKuJ"];
+    C1["KX"] += alpha * Eta1["UV"] * H2["eKjU"] * T2["jVeX"];
+
+    C1["kw"] += alpha * T2["vjwx"] * Eta1["uv"] * Eta1["xy"] * H2["kyuj"];
+    C1["kw"] += alpha * T2["vJwX"] * Eta1["uv"] * Eta1["XY"] * H2["kYuJ"];
+    C1["kw"] += alpha * T2["jVwX"] * Eta1["XY"] * Eta1["UV"] * H2["kYjU"];
+    C1["KW"] += alpha * T2["VJWX"] * Eta1["UV"] * Eta1["XY"] * H2["KYUJ"];
+    C1["KW"] += alpha * T2["vJxW"] * Eta1["uv"] * Eta1["xy"] * H2["yKuJ"];
+    C1["KW"] += alpha * H2["yKjU"] * Eta1["UV"] * Eta1["xy"] * T2["jVxW"];
+
+    // [Hbar2, T2] C_4 C_2 2:2 -> C1
+    C1["ik"] +=  0.25 * alpha * T2["ijxy"] * Lambda2["xyuv"] * H2["uvkj"];
+    C1["IK"] +=  0.25 * alpha * T2["IJXY"] * Lambda2["XYUV"] * H2["UVKJ"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hHaA"});
+    temp["iJuV"] = T2["iJxY"] * Lambda2["xYuV"];
+    C1["ik"] += alpha * H2["uVkJ"] * temp["iJuV"];
+    C1["IK"] += alpha * H2["uVjK"] * temp["jIuV"];
+
+    C1["iw"] -=  0.25 * alpha * Lambda2["xyuv"] * T2["uvwb"] * H2["ibxy"];
+    C1["IW"] -=  0.25 * alpha * Lambda2["XYUV"] * T2["UVWB"] * H2["IBXY"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aApP"});
+    temp["xYaB"] = T2["uVaB"] * Lambda2["xYuV"];
+    C1["iw"] -= alpha * H2["iBxY"] * temp["xYwB"];
+    C1["IW"] -= alpha * H2["bIxY"] * temp["xYbW"];
+
+    C1["ij"] -= alpha * Lambda2["yXuV"] * T2["iVyA"] * H2["uAjX"];
+    C1["IJ"] -= alpha * Lambda2["xYvU"] * T2["vIaY"] * H2["aUxJ"];
+    C1["kw"] += alpha * Lambda2["xYvU"] * T2["vIwY"] * H2["kUxI"];
+    C1["KW"] += alpha * Lambda2["yXuV"] * T2["iVyW"] * H2["uKiX"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hapa"});
+    temp["ixau"] += Lambda2["xyuv"] * T2["ivay"];
+    temp["ixau"] += Lambda2["xYuV"] * T2["iVaY"];
+    C1["ij"] += alpha * temp["ixau"] * H2["aujx"];
+    C1["kw"] -= alpha * H2["kuix"] * temp["ixwu"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hApA"});
+    temp["iXaU"] += Lambda2["XYUV"] * T2["iVaY"];
+    temp["iXaU"] += Lambda2["yXvU"] * T2["ivay"];
+    C1["ij"] += alpha * temp["iXaU"] * H2["aUjX"];
+    C1["kw"] -= alpha * H2["kUiX"] * temp["iXwU"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aHaP"});
+    temp["xIuA"] += Lambda2["xyuv"] * T2["vIyA"];
+    temp["xIuA"] += Lambda2["xYuV"] * T2["VIYA"];
+    C1["IJ"] += alpha * temp["xIuA"] * H2["uAxJ"];
+    C1["KW"] -= alpha * H2["uKxI"] * temp["xIuW"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"HAPA"});
+    temp["IXAU"] += Lambda2["XYUV"] * T2["IVAY"];
+    temp["IXAU"] += Lambda2["yXvU"] * T2["vIyA"];
+    C1["IJ"] += alpha * temp["IXAU"] * H2["AUJX"];
+    C1["KW"] -= alpha * H2["KUIX"] * temp["IXWU"];
+
+    // [Hbar2, T2] C_4 C_2 1:3 -> C1
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"pa"});
+    temp["au"] += 0.5 * Lambda2["xyuv"] * H2["avxy"];
+    temp["au"] += Lambda2["xYuV"] * H2["aVxY"];
+    C1["jx"] += alpha * temp["au"] * T2["ujax"];
+    C1["JX"] += alpha * temp["au"] * T2["uJaX"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"PA"});
+    temp["AU"] += 0.5 * Lambda2["XYUV"] * H2["AVXY"];
+    temp["AU"] += Lambda2["xYvU"] * H2["vAxY"];
+    C1["jx"] += alpha * temp["AU"] * T2["jUxA"];
+    C1["JX"] += alpha * temp["AU"] * T2["UJAX"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"ah"});
+    temp["xi"] += 0.5 * Lambda2["xyuv"] * H2["uviy"];
+    temp["xi"] += Lambda2["xYuV"] * H2["uViY"];
+    C1["ju"] -= alpha * temp["xi"] * T2["ijxu"];
+    C1["JU"] -= alpha * temp["xi"] * T2["iJxU"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AH"});
+    temp["XI"] += 0.5 * Lambda2["XYUV"] * H2["UVIY"];
+    temp["XI"] += Lambda2["yXvU"] * H2["vUyI"];
+    C1["ju"] -= alpha * temp["XI"] * T2["jIuX"];
+    C1["JU"] -= alpha * temp["XI"] * T2["IJXU"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"av"});
+    temp["xe"] += 0.5 * T2["uvey"] * Lambda2["xyuv"];
+    temp["xe"] += T2["uVeY"] * Lambda2["xYuV"];
+    C1["ij"] += alpha * temp["xe"] * H2["eixj"];
+    C1["IJ"] += alpha * temp["xe"] * H2["eIxJ"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AV"});
+    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2["XYUV"];
+    temp["XE"] += T2["uVyE"] * Lambda2["yXuV"];
+    C1["ij"] += alpha * temp["XE"] * H2["iEjX"];
+    C1["IJ"] += alpha * temp["XE"] * H2["EIXJ"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"ca"});
+    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2["xyuv"];
+    temp["mu"] += T2["mVxY"] * Lambda2["xYuV"];
+    C1["ij"] -= alpha * temp["mu"] * H2["uimj"];
+    C1["IJ"] -= alpha * temp["mu"] * H2["uImJ"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"CA"});
+    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2["XYUV"];
+    temp["MU"] += T2["vMxY"] * Lambda2["xYvU"];
+    C1["ij"] -= alpha * temp["MU"] * H2["iUjM"];
+    C1["IJ"] -= alpha * temp["MU"] * H2["UIMJ"];
+
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("221",timer.get());
 }
 
-void DSRG_MRPT2::Hbar1_VT1(){
+void DSRG_MRPT2::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
     Timer timer;
-    std::string str = "Computing [V, T1] for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
 
-//    Hbar1.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hhhh"}));
-    temp["likj"] = V["lakj"] * T1["ia"];
-    Hbar1["lk"] += temp["likj"] * Gamma1["ji"];
-    Hbar1["lk"] += temp["kilj"] * Gamma1["ji"];
+    C2["ijku"] += alpha * T2["ijau"] * H1["ak"];
+    C2["ijuk"] += alpha * T2["ijub"] * H1["bk"];
+    C2["kjuv"] -= alpha * T2["ijuv"] * H1["ki"];
+    C2["ikuv"] -= alpha * T2["ijuv"] * H1["kj"];
 
-    temp["lIkJ"] = V["lAkJ"] * T1["IA"];
-    Hbar1["lk"] += temp["lIkJ"] * Gamma1["JI"];
-    Hbar1["lk"] += temp["kIlJ"] * Gamma1["JI"];
+    C2["iJkU"] += alpha * T2["iJaU"] * H1["ak"];
+    C2["iJuK"] += alpha * T2["iJuB"] * H1["BK"];
+    C2["kJuV"] -= alpha * T2["iJuV"] * H1["ki"];
+    C2["iKuV"] -= alpha * T2["iJuV"] * H1["KJ"];
 
-    temp["lukv"] = V["lukm"] * T1["mv"];
-    Hbar1["lk"] -= temp["lukv"] * Gamma1["vu"];
-    Hbar1["lk"] -= temp["kulv"] * Gamma1["vu"];
+    C2["IJKU"] += alpha * T2["IJAU"] * H1["AK"];
+    C2["IJUK"] += alpha * T2["IJUB"] * H1["BK"];
+    C2["KJUV"] -= alpha * T2["IJUV"] * H1["KI"];
+    C2["IKUV"] -= alpha * T2["IJUV"] * H1["KJ"];
 
-    temp["lUkV"] = V["lUkM"] * T1["MV"];
-    Hbar1["lk"] -= temp["lUkV"] * Gamma1["VU"];
-    Hbar1["lk"] -= temp["kUlV"] * Gamma1["VU"];
-
-    temp["iLjK"] = V["aLjK"] * T1["ia"];
-    Hbar1["LK"] += temp["iLjK"] * Gamma1["ji"];
-    Hbar1["LK"] += temp["iKjL"] * Gamma1["ji"];
-
-    temp["LIKJ"] = V["LAKJ"] * T1["IA"];
-    Hbar1["LK"] += temp["LIKJ"] * Gamma1["JI"];
-    Hbar1["LK"] += temp["KILJ"] * Gamma1["JI"];
-
-    temp["uLvK"] = V["uLmK"] * T1["mv"];
-    Hbar1["LK"] -= temp["uLvK"] * Gamma1["vu"];
-    Hbar1["LK"] -= temp["uKvL"] * Gamma1["uv"];
-
-    temp["LUKV"] = V["LUKM"] * T1["MV"];
-    Hbar1["LK"] -= temp["LUKV"] * Gamma1["VU"];
-    Hbar1["LK"] -= temp["KULV"] * Gamma1["UV"];
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("122",timer.get());
 }
 
-void DSRG_MRPT2::Hbar2_VT1(){
+void DSRG_MRPT2::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2){
     Timer timer;
-    std::string str = "Computing [V, T1] for Hbar2";
-    outfile->Printf("\n    %-40s ...", str.c_str());
 
-//    Hbar2.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hhhh"}));
-    temp["ijkl"] = T1["ia"] * V["ajkl"];
-    Hbar2["ijkl"] += temp["ijkl"];
-    Hbar2["ijkl"] += temp["klij"];
-    Hbar2["ijkl"] -= temp["jikl"];
-    Hbar2["ijkl"] -= temp["lkij"];
+    C2["ijkl"] += alpha * T1["ia"] * H2["ajkl"];
+    C2["jikl"] += alpha * T1["ia"] * H2["jakl"];
+    C2["kluj"] -= alpha * T1["iu"] * H2["klij"];
+    C2["klju"] -= alpha * T1["iu"] * H2["klji"];
 
-    temp["iJkL"] = T1["ia"] * V["aJkL"];
-    Hbar2["iJkL"] += temp["iJkL"];
-    Hbar2["iJkL"] += temp["kLiJ"];
-    temp["iJkL"] = T1["JA"] * V["iAkL"];
-    Hbar2["iJkL"] += temp["iJkL"];
-    Hbar2["iJkL"] += temp["kLiJ"];
+    C2["iJkL"] += alpha * T1["ia"] * H2["aJkL"];
+    C2["jIkL"] += alpha * T1["IA"] * H2["jAkL"];
+    C2["kLuJ"] -= alpha * T1["iu"] * H2["kLiJ"];
+    C2["kLjU"] -= alpha * T1["IU"] * H2["kLjI"];
 
-    temp["IJKL"] = T1["IA"] * V["AJKL"];
-    Hbar2["IJKL"] += temp["IJKL"];
-    Hbar2["IJKL"] += temp["KLIJ"];
-    Hbar2["IJKL"] -= temp["JIKL"];
-    Hbar2["IJKL"] -= temp["LKIJ"];
+    C2["IJKL"] += alpha * T1["IA"] * H2["AJKL"];
+    C2["JIKL"] += alpha * T1["IA"] * H2["JAKL"];
+    C2["KLUJ"] -= alpha * T1["IU"] * H2["KLIJ"];
+    C2["KLJU"] -= alpha * T1["IU"] * H2["KLJI"];
 
-    temp["ijku"] = T1["mu"] * V["ijkm"];
-    temp["iJkU"] = T1["MU"] * V["iJkM"];
-    temp["IJKU"] = T1["MU"] * V["IJKM"];
-    Hbar2["ijku"] -= temp["ijku"];
-    Hbar2["iJkU"] -= temp["iJkU"];
-    Hbar2["IJKU"] -= temp["IJKU"];
-    Hbar2["kuij"] -= temp["ijku"];
-    Hbar2["kUiJ"] -= temp["iJkU"];
-    Hbar2["KUIJ"] -= temp["IJKU"];
-
-    temp["iJuK"] = T1["mu"] * V["iJmK"];
-    Hbar2["ijuk"] += temp["ijku"];
-    Hbar2["iJuK"] -= temp["iJuK"];
-    Hbar2["IJUK"] += temp["IJKU"];
-    Hbar2["ukij"] += temp["ijku"];
-    Hbar2["uKiJ"] -= temp["iJuK"];
-    Hbar2["UKIJ"] += temp["IJKU"];
-
-//    Hbar2.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("212",timer.get());
 }
 
-void DSRG_MRPT2::Hbar2_VT2_PP(){
+void DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
     Timer timer;
-    std::string str = "Computing [V, T2] PP for Hbar2";
-    outfile->Printf("\n    %-40s ...", str.c_str());
 
-//    Hbar2.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hhpp"}));
-    temp["ijcd"]  = T2["ijab"] * Eta1["ac"] * Eta1["bd"];
-    Hbar2["ijkl"] += 0.5 * temp["ijcd"] * V["cdkl"];
-    Hbar2["ijkl"] += 0.5 * temp["klcd"] * V["cdij"];
+    // particle-particle contractions
+    C2["ijkl"] += 0.5 * alpha * H2["abkl"] * T2["ijab"];
+    C2["iJkL"] += alpha * H2["aBkL"] * T2["iJaB"];
+    C2["IJKL"] += 0.5 * alpha * H2["ABKL"] * T2["IJAB"];
 
-    temp["ijvy"] = T2["ijux"] * Gamma1["uv"] * Gamma1["xy"];
-    Hbar2["ijkl"] -= 0.5 * temp["ijvy"] * V["vykl"];
-    Hbar2["ijkl"] -= 0.5 * temp["klvy"] * V["vyij"];
+    C2["ijkl"] -= alpha * Gamma1["xy"] * H2["ybkl"] * T2["ijxb"];
+    C2["iJkL"] -= alpha * Gamma1["xy"] * H2["yBkL"] * T2["iJxB"];
+    C2["iJkL"] -= alpha * Gamma1["XY"] * T2["iJbX"] * H2["bYkL"];
+    C2["IJKL"] -= alpha * Gamma1["XY"] * H2["YBKL"] * T2["IJXB"];
 
-    temp["iJcD"] = T2["iJaB"] * Eta1["ac"] * Eta1["BD"];
-    Hbar2["iJkL"] += temp["iJcD"] * V["cDkL"];
-    Hbar2["iJkL"] += temp["kLcD"] * V["cDiJ"];
+    // hole-hole contractions
+    C2["kluv"] += 0.5 * alpha * H2["klij"] * T2["ijuv"];
+    C2["kLuV"] += alpha * H2["kLiJ"] * T2["iJuV"];
+    C2["KLUV"] += 0.5 * alpha * H2["KLIJ"] * T2["IJUV"];
 
-    temp["iJvY"] = T2["iJuX"] * Gamma1["uv"] * Gamma1["XY"];
-    Hbar2["iJkL"] -= temp["iJvY"] * V["vYkL"];
-    Hbar2["iJkL"] -= temp["kLvY"] * V["vYiJ"];
+    C2["kluv"] -= alpha * Eta1["xy"] * T2["yjuv"] * H2["klxj"];
+    C2["kLuV"] -= alpha * Eta1["xy"] * T2["yJuV"] * H2["kLxJ"];
+    C2["kLuV"] -= alpha * Eta1["XY"] * H2["kLjX"] * T2["jYuV"];
+    C2["KLUV"] -= alpha * Eta1["XY"] * T2["YJUV"] * H2["KLXJ"];
 
-    temp["IJCD"] = T2["IJAB"] * Eta1["AC"] * Eta1["BD"];
-    Hbar2["IJKL"] += 0.5 * temp["IJCD"] * V["CDKL"];
-    Hbar2["IJKL"] += 0.5 * temp["KLCD"] * V["CDIJ"];
+    // hole-particle contractions
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hhha"});
+    temp["kjlu"] += alpha * H2["akml"] * T2["mjau"];
+    temp["kjlu"] += alpha * H2["kAlM"] * T2["jMuA"];
+    temp["kjlu"] += alpha * Gamma1["xy"] * T2["yjau"] * H2["akxl"];
+    temp["kjlu"] += alpha * Gamma1["XY"] * T2["jYuA"] * H2["kAlX"];
+    temp["kjlu"] -= alpha * Gamma1["xy"] * H2["ykil"] * T2["ijxu"];
+    temp["kjlu"] -= alpha * Gamma1["XY"] * H2["kYlI"] * T2["jIuX"];
+    C2["kjlu"] += temp["kjlu"];
+    C2["jklu"] -= temp["kjlu"];
+    C2["kjul"] -= temp["kjlu"];
+    C2["jkul"] += temp["kjlu"];
 
-    temp["IJVY"] = T2["IJUX"] * Gamma1["UV"] * Gamma1["XY"];
-    Hbar2["IJKL"] -= 0.5 * temp["IJVY"] * V["VYKL"];
-    Hbar2["IJKL"] -= 0.5 * temp["KLVY"] * V["VYIJ"];
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"HHHA"});
+    temp["KJLU"] += alpha * H2["AKML"] * T2["MJAU"];
+    temp["KJLU"] += alpha * H2["aKmL"] * T2["mJaU"];
+    temp["KJLU"] += alpha * Gamma1["XY"] * T2["YJAU"] * H2["AKXL"];
+    temp["KJLU"] += alpha * Gamma1["xy"] * T2["yJaU"] * H2["aKxL"];
+    temp["KJLU"] -= alpha * Gamma1["XY"] * H2["YKIL"] * T2["IJXU"];
+    temp["KJLU"] -= alpha * Gamma1["xy"] * H2["yKiL"] * T2["iJxU"];
+    C2["KJLU"] += temp["KJLU"];
+    C2["JKLU"] -= temp["KJLU"];
+    C2["KJUL"] -= temp["KJLU"];
+    C2["JKUL"] += temp["KJLU"];
 
-//    Hbar2.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    C2["kJlU"] += alpha * H2["akml"] * T2["mJaU"];
+    C2["kJlU"] += alpha * H2["kAlM"] * T2["MJAU"];
+    C2["kJlU"] += alpha * Gamma1["xy"] * T2["yJaU"] * H2["akxl"];
+    C2["kJlU"] += alpha * Gamma1["XY"] * T2["YJAU"] * H2["kAlX"];
+    C2["kJlU"] -= alpha * Gamma1["xy"] * H2["ykil"] * T2["iJxU"];
+    C2["kJlU"] -= alpha * Gamma1["XY"] * H2["kYlI"] * T2["IJXU"];
+
+    C2["iKlU"] -= alpha * T2["iMaU"] * H2["aKlM"];
+    C2["iKlU"] -= alpha * Gamma1["XY"] * T2["iYaU"] * H2["aKlX"];
+    C2["iKlU"] += alpha * Gamma1["xy"] * H2["yKlJ"] * T2["iJxU"];
+
+    C2["kJuL"] -= alpha * T2["mJuB"] * H2["kBmL"];
+    C2["kJuL"] -= alpha * Gamma1["xy"] * T2["yJuB"] * H2["kBxL"];
+    C2["kJuL"] += alpha * Gamma1["XY"] * H2["kYiL"] * T2["iJuX"];
+
+    C2["iKuL"] += alpha * T2["imub"] * H2["bKmL"];
+    C2["iKuL"] += alpha * T2["iMuB"] * H2["BKML"];
+    C2["iKuL"] += alpha * Gamma1["xy"] * T2["iyub"] * H2["bKxL"];
+    C2["iKuL"] += alpha * Gamma1["XY"] * T2["iYuB"] * H2["BKXL"];
+    C2["iKuL"] -= alpha * Gamma1["xy"] * H2["yKjL"] * T2["ijux"];
+    C2["iKuL"] -= alpha * Gamma1["XY"] * H2["YKJL"] * T2["iJuX"];
+
+    if(print_ > 2){
+        outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f",timer.get());
+    }
+    dsrg_time_.add("222",timer.get());
 }
 
-void DSRG_MRPT2::Hbar2_VT2_HH(){
-    Timer timer;
-    std::string str = "Computing [V, T2] HH for Hbar2";
-    outfile->Printf("\n    %-40s ...", str.c_str());
+//std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U){
+//    // diagonal blocks identifiers (C-A-V ordering)
+//    std::vector<std::string> blocks = diag_labels();
 
-//    Hbar2.print(stdout);
-    BlockedTensor temp = BTF->build(tensor_type_, "temp", spin_cases({"hhaa"}));
-    BlockedTensor final = BTF->build(tensor_type_, "final_temp", spin_cases({"hhaa"}));
-    temp["ijuv"] = T2["kluv"] * Gamma1["ik"] * Gamma1["jl"];
-    temp["iJuV"] = T2["kLuV"] * Gamma1["ik"] * Gamma1["JL"];
-    temp["IJUV"] = T2["KLUV"] * Gamma1["IK"] * Gamma1["JL"];
+//    // map MO space label to its Dimension
+//    std::map<std::string, Dimension> MOlabel_to_dimension;
+//    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+//    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
+//    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
-    final["ijuv"] = V["ijkl"] * temp["kluv"];
-    final["iJuV"] = V["iJkL"] * temp["kLuV"];
-    final["IJUV"] = V["IJKL"] * temp["KLUV"];
+//    // eigen values to be returned
+//    size_t ncmo = mo_space_info_->size("CORRELATED");
+//    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+//    std::vector<double> eigenvalues_a(ncmo, 0.0);
+//    std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    Hbar2["ijuv"] += 0.5 * final["ijuv"];
-    Hbar2["uvij"] += 0.5 * final["ijuv"];
+//    // map MO space label to its offset Dimension
+//    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+//    int nirrep = corr.n();
+//    MOlabel_to_offset_dimension[acore_label_] = Dimension(std::vector<int> (nirrep, 0));
+//    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+//    MOlabel_to_offset_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
 
-    Hbar2["iJuV"] += final["iJuV"];
-    Hbar2["uViJ"] += final["iJuV"];
+//    // figure out index
+//    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values){
+//        int h = irrep;
+//        size_t idx_begin = 0;
+//        while((--h) >= 0) idx_begin += corr[h];
 
-    Hbar2["IJUV"] += 0.5 * final["IJUV"];
-    Hbar2["UVIJ"] += 0.5 * final["IJUV"];
+//        std::string label (1, tolower(block_label[0]));
+//        idx_begin += MOlabel_to_offset_dimension[label][irrep];
 
-//    Hbar2.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-}
+//        bool spin_alpha = islower(block_label[0]);
+//        size_t nvalues = values.size();
+//        if(spin_alpha){
+//            for(size_t i = 0; i < nvalues; ++i){
+//                eigenvalues_a[i + idx_begin] = values[i];
+//            }
+//        }else{
+//            for(size_t i = 0; i < nvalues; ++i){
+//                eigenvalues_b[i + idx_begin] = values[i];
+//            }
+//        }
+//    };
 
-void DSRG_MRPT2::Hbar2_VT2_PH(){
-    Timer timer;
-    std::string str = "Computing [V, T2] PH for Hbar2";
-    outfile->Printf("\n    %-40s ...", str.c_str());
+//    // diagonalize diagonal blocks
+//    for(const auto& block: blocks){
+//        size_t dim = F_.block(block).dim(0);
+//        if(dim == 0){
+//            continue;
+//        }else{
+//            std::string label (1, tolower(block[0]));
+//            Dimension space = MOlabel_to_dimension[label];
+//            int nirrep = space.n();
 
-//    Hbar2.print(stdout);
-    BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", spin_cases({"hhhh"}));
-    BlockedTensor temp2 = BTF->build(tensor_type_, "temp2", spin_cases({"hhhh"}));
-    BlockedTensor temp1 = BTF->build(tensor_type_, "temp1", spin_cases({"hhpp"}));
+//            // separate Fock with irrep
+//            for(int h = 0; h < nirrep; ++h){
+//                size_t h_dim = space[h];
+//                ambit::Tensor U_h;
+//                if(h_dim == 0){
+//                    continue;
+//                }else if(h_dim == 1){
+//                    U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
+//                    U_h.data()[0] = 1.0;
+//                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
+//                    fill_eigen(block,h,T_h.data());
+//                }else{
+//                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
+//                    auto Feigen = T_h.syev(AscendingEigenvalue);
+//                    U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
+//                    U_h("pq") = Feigen["eigenvectors"]("pq");
+//                    fill_eigen(block,h,Feigen["eigenvalues"].data());
+//                }
+//                ambit::Tensor U_out = U.block(block);
+//                combine_tensor(U_out,U_h,space,h);
+//            }
+//        }
+//    }
+//    return {eigenvalues_a, eigenvalues_b};
+//}
 
-    // alpha-alpha
-    temp1["ljau"]  = T2["ijau"] * Gamma1["li"];
-    temp2["ijku"]  = V["ailk"] * temp1["ljau"];
-    temp3["ijku"]  = temp2["ijku"];
-    temp3["ijku"] -= temp2["jiku"];
+//ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h){
+//    // test tens and irrep
+//    int tens_dim = static_cast<int>(tens.dim(0));
+//    if(tens_dim != irrep.sum() || tens_dim != tens.dim(1)){
+//        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+//    }
+//    if(h >= irrep.n()){
+//        throw PSIEXCEPTION("Ask for wrong irrep.");
+//    }
 
-    temp1["jLuA"]  = T2["jIuA"] * Gamma1["LI"];
-    temp2["ijku"]  = V["iAkL"] * temp1["jLuA"];
-    temp3["ijku"] += temp2["ijku"];
-    temp3["ijku"] -= temp2["jiku"];
+//    // from relative (blocks) to absolute (big tensor) index
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset){
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    Hbar2["ijku"] += temp3["ijku"];
-    Hbar2["kuij"] += temp3["ijku"];
-    Hbar2["ijuk"] -= temp3["ijku"];
-    Hbar2["ukij"] -= temp3["ijku"];
+//    // compute offset
+//    size_t offset = 0, h_dim = irrep[h];
+//    int h_local = h;
+//    while((--h_local) >= 0) offset += irrep[h_local];
 
-    temp1["ljyu"]  = T2["ljxu"] * Gamma1["xy"];
-    temp2["ijku"]  = V["yilk"] * temp1["ljyu"];
-    temp3["ijku"]  = temp2["ijku"];
-    temp3["ijku"] -= temp2["jiku"];
+//    // fill in values
+//    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_,"T_h",std::vector<size_t> (2, h_dim));
+//    for(size_t i = 0; i < h_dim; ++i){
+//        for(size_t j = 0; j < h_dim; ++j){
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+//        }
+//    }
 
-    temp1["jLuY"]  = T2["jLuX"] * Gamma1["XY"];
-    temp2["ijku"]  = V["iYkL"] * temp1["jLuY"];
-    temp3["ijku"] += temp2["ijku"];
-    temp3["ijku"] -= temp2["jiku"];
+//    return T_h;
+//}
 
-    Hbar2["ijku"] -= temp3["ijku"];
-    Hbar2["kuij"] -= temp3["ijku"];
-    Hbar2["ijuk"] += temp3["ijku"];
-    Hbar2["ukij"] += temp3["ijku"];
+//void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h){
+//    // test tens and irrep
+//    if(h >= irrep.n()){
+//        throw PSIEXCEPTION("Ask for wrong irrep.");
+//    }
+//    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
+//    if(tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)){
+//        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+//    }
 
-    // beta-beta
-    temp1["lJaU"]  = T2["iJaU"] * Gamma1["li"];
-    temp2["IJKU"]  = V["aIlK"] * temp1["lJaU"];
-    temp3["IJKU"]  = temp2["IJKU"];
-    temp3["IJKU"] -= temp2["JIKU"];
+//    // from relative (blocks) to absolute (big tensor) index
+//    size_t tens_dim = tens.dim(0);
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset){
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    temp1["LJAU"]  = T2["IJAU"] * Gamma1["LI"];
-    temp2["IJKU"]  = V["AILK"] * temp1["LJAU"];
-    temp3["IJKU"] += temp2["IJKU"];
-    temp3["IJKU"] -= temp2["JIKU"];
+//    // compute offset
+//    size_t offset = 0;
+//    int h_local = h;
+//    while((--h_local) >= 0) offset += irrep[h_local];
 
-    Hbar2["IJKU"] += temp3["IJKU"];
-    Hbar2["KUIJ"] += temp3["IJKU"];
-    Hbar2["IJUK"] -= temp3["IJKU"];
-    Hbar2["UKIJ"] -= temp3["IJKU"];
-
-    temp1["lJyU"]  = T2["lJxU"] * Gamma1["xy"];
-    temp2["IJKU"]  = V["yIlK"] * temp1["lJyU"];
-    temp3["IJKU"]  = temp2["IJKU"];
-    temp3["IJKU"] -= temp2["JIKU"];
-
-    temp1["LJYU"]  = T2["LJXU"] * Gamma1["XY"];
-    temp2["IJKU"]  = V["YILK"] * temp1["LJYU"];
-    temp3["IJKU"] += temp2["IJKU"];
-    temp3["IJKU"] -= temp2["JIKU"];
-
-    Hbar2["IJKU"] -= temp3["IJKU"];
-    Hbar2["KUIJ"] -= temp3["IJKU"];
-    Hbar2["IJUK"] += temp3["IJKU"];
-    Hbar2["UKIJ"] += temp3["IJKU"];
-
-    // alpha-beta ["iJkU"]
-    temp1["lJaU"]  = T2["iJaU"] * Gamma1["li"];
-    temp2["iJkU"]  = V["ailk"] * temp1["lJaU"];
-    temp3["iJkU"]  = temp2["iJkU"];
-
-    temp1["LJAU"]  = T2["IJAU"] * Gamma1["LI"];
-    temp2["iJkU"]  = V["iAkL"] * temp1["LJAU"];
-    temp3["iJkU"] += temp2["iJkU"];
-
-    temp1["iLaU"]  = T2["iJaU"] * Gamma1["LJ"];
-    temp2["iJkU"]  = -1.0 * V["aJkL"] * temp1["iLaU"];
-    temp3["iJkU"] += temp2["iJkU"];
-
-    temp1["lJyU"]  = T2["lJxU"] * Gamma1["xy"];
-    temp2["iJkU"]  = V["yilk"] * temp1["lJyU"];
-    temp3["iJkU"] -= temp2["iJkU"];
-
-    temp1["LJYU"]  = T2["LJXU"] * Gamma1["XY"];
-    temp2["iJkU"]  = V["iYkL"] * temp1["LJYU"];
-    temp3["iJkU"] -= temp2["iJkU"];
-
-    temp1["iLyU"]  = T2["iLxU"] * Gamma1["xy"];
-    temp2["iJkU"]  = -1.0 * V["yJkL"] * temp1["iLyU"];
-    temp3["iJkU"] -= temp2["iJkU"];
-
-    Hbar2["iJkU"] += temp3["iJkU"];
-    Hbar2["kUiJ"] += temp3["iJkU"];
-
-    // alpha-beta ["iJuK"]
-    temp1["ilub"]  = T2["ijub"] * Gamma1["lj"];
-    temp2["iJuK"]  = V["bJlK"] * temp1["ilub"];
-    temp3["iJuK"]  = temp2["iJuK"];
-
-    temp1["iLuB"]  = T2["iJuB"] * Gamma1["LJ"];
-    temp2["iJuK"]  = V["BJLK"] * temp1["iLuB"];
-    temp3["iJuK"] += temp2["iJuK"];
-
-    temp1["lJuB"]  = T2["iJuB"] * Gamma1["li"];
-    temp2["iJuK"]  = -1.0 * V["iBlK"] * temp1["lJuB"];
-    temp3["iJuK"] += temp2["iJuK"];
-
-    temp1["iluy"]  = T2["ilux"] * Gamma1["xy"];
-    temp2["iJuK"]  = V["yJlK"] * temp1["iluy"];
-    temp3["iJuK"] -= temp2["iJuK"];
-
-    temp1["iLuY"]  = T2["iLuX"] * Gamma1["XY"];
-    temp2["iJuK"]  = V["YJLK"] * temp1["iLuY"];
-    temp3["iJuK"] -= temp2["iJuK"];
-
-    temp1["lJuY"]  = T2["lJuX"] * Gamma1["XY"];
-    temp2["iJuK"]  = -1.0 * V["iYlK"] * temp1["lJuY"];
-    temp3["iJuK"] -= temp2["iJuK"];
-
-    Hbar2["iJuK"] += temp3["iJuK"];
-    Hbar2["uKiJ"] += temp3["iJuK"];
-
-//    Hbar2.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-}
-
-void DSRG_MRPT2::Hbar1_VT2_2(){
-    Timer timer;
-    std::string str = "Computing [V, T2] (C_2)^3 for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-
-    BlockedTensor temp1 = BTF->build(tensor_type_, "temp1", spin_cases({"hhpp"}));
-    BlockedTensor temp2 = BTF->build(tensor_type_, "temp2", spin_cases({"hhhh"}));
-    BlockedTensor temp3 = BTF->build(tensor_type_, "temp3", spin_cases({"hh"}));
-
-    // hole-hole Gamma * Eta * Eta
-    temp1["ikcd"] = T2["ikab"] * Eta1["bd"] * Eta1["ac"];
-    temp1["iKcD"] = T2["iKaB"] * Eta1["BD"] * Eta1["ac"];
-    temp1["IKCD"] = T2["IKAB"] * Eta1["BD"] * Eta1["AC"];
-
-    temp2["ikjl"] = V["cdjl"] * temp1["ikcd"];
-    temp3["ij"] = temp2["ikjl"] * Gamma1["lk"];
-    Hbar1["ij"] += 0.5 * temp3["ij"];
-    Hbar1["ij"] += 0.5 * temp3["ji"];
-
-    temp2["iKjL"] = V["cDjL"] * temp1["iKcD"];
-    temp3["ij"] = temp2["iKjL"] * Gamma1["LK"];
-    Hbar1["ij"] += temp3["ij"];
-    Hbar1["ij"] += temp3["ji"];
-
-    temp3["IJ"] = temp2["kIlJ"] * Gamma1["lk"];
-    Hbar1["IJ"] += temp3["IJ"];
-    Hbar1["IJ"] += temp3["JI"];
-
-    temp2["IKJL"] = V["CDJL"] * temp1["IKCD"];
-    temp3["IJ"] = temp2["IKJL"] * Gamma1["LK"];
-    Hbar1["IJ"] += 0.5 * temp3["IJ"];
-    Hbar1["IJ"] += 0.5 * temp3["JI"];
-
-    // hole-hole Gamma * Gamma * Eta
-    temp1["izxy"] = T2["izuv"] * Gamma1["ux"] * Gamma1["vy"];
-    temp2["izjw"] = V["xyjw"] * temp1["izxy"];
-    temp3["ij"] = temp2["izjw"] * Eta1["wz"];
-    Hbar1["ij"] += 0.5 * temp3["ij"];
-    Hbar1["ij"] += 0.5 * temp3["ji"];
-
-    temp1["iZxY"] = T2["iZuV"] * Gamma1["ux"] * Gamma1["VY"];
-    temp2["iZjW"] = V["xYjW"] * temp1["iZxY"];
-    temp3["ij"] = temp2["iZjW"] * Eta1["WZ"];
-    Hbar1["ij"] += temp3["ij"];
-    Hbar1["ij"] += temp3["ji"];
-
-    temp1["zIyX"] = T2["zIvU"] * Gamma1["UX"] * Gamma1["vy"];
-    temp2["zIwJ"] = V["yXwJ"] * temp1["zIyX"];
-    temp3["IJ"] = temp2["zIwJ"] * Eta1["wz"];
-    Hbar1["IJ"] += temp3["IJ"];
-    Hbar1["IJ"] += temp3["JI"];
-
-    temp1["IZXY"] = T2["IZUV"] * Gamma1["UX"] * Gamma1["VY"];
-    temp2["IZJW"] = V["XYJW"] * temp1["IZXY"];
-    temp3["IJ"] = temp2["IZJW"] * Eta1["WZ"];
-    Hbar1["IJ"] += 0.5 * temp3["IJ"];
-    Hbar1["IJ"] += 0.5 * temp3["JI"];
-
-    // hole-active
-    temp1["liub"] = T2["kjub"] * Gamma1["lk"] * Gamma1["ij"];
-    temp3["iu"] = 0.5 * temp1["ljub"] * Eta1["ba"] * V["ialj"];
-    temp1["lIuB"] = T2["kJuB"] * Gamma1["lk"] * Gamma1["IJ"];
-    temp3["iu"] += temp1["lJuB"] * Eta1["BA"] * V["iAlJ"];
-    Hbar1["iu"] -= temp3["iu"];
-    Hbar1["ui"] -= temp3["iu"];
-
-    temp1["iLbU"] = T2["jKbU"] * Gamma1["LK"] * Gamma1["ij"];
-    temp3["IU"] = temp1["jLbU"] * Eta1["ba"] * V["aIjL"];
-    temp1["LIUB"] = T2["KJUB"] * Gamma1["LK"] * Gamma1["IJ"];
-    temp3["IU"] += 0.5 * temp1["LJUB"] * Eta1["BA"] * V["IALJ"];
-    Hbar1["IU"] -= temp3["IU"];
-    Hbar1["UI"] -= temp3["IU"];
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-}
-
-void DSRG_MRPT2::Hbar1_VT2_4_22(){
-    Timer timer;
-    std::string str = "Computing [V, T2] C_4 C_2 2-2 for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-}
-
-void DSRG_MRPT2::Hbar1_VT2_4_13(){
-    Timer timer;
-    std::string str = "Computing [V, T2] C_4 C_2 1-3 for Hbar1";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-
-//    Hbar1.print(stdout);
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-}
+//    // fill in values
+//    for(size_t i = 0; i < h_dim; ++i){
+//        for(size_t j = 0; j < h_dim; ++j){
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
+//        }
+//    }
+//}
 
 }} // End Namespaces

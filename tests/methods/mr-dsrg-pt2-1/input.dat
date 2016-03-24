@@ -16,6 +16,7 @@ molecule {
 
 set globals{
    reference             rhf
+   scf_type              out_of_core
    d_convergence         12
    e_convergence         15
    docc                  [2,0,0,1]

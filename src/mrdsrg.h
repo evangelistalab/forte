@@ -292,12 +292,18 @@ protected:
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
-    /// Compute diagonal blocks labels
-    std::vector<std::string> diag_labels();
+    /// Compute diagonal blocks labels of a one-body operator
+    std::vector<std::string> diag_one_labels();
+    /// Compute diagonal blocks labels of a two-body operator
+    std::vector<std::string> diag_two_labels();
     /// Compute off-diagonal blocks labels of a one-body operator
     std::vector<std::string> od_one_labels();
+    std::vector<std::string> od_one_labels_hp();
+    std::vector<std::string> od_one_labels_ph();
     /// Compute off-diagonal blocks labels of a two-body operator
     std::vector<std::string> od_two_labels();
+    std::vector<std::string> od_two_labels_hhpp();
+    std::vector<std::string> od_two_labels_pphh();
     /// Copy T1 and T2 to a big vector for DIIS
     std::vector<double> copy_amp_diis(BlockedTensor& T1, const std::vector<std::string>& label1,
                                       BlockedTensor& T2, const std::vector<std::string>& label2);
@@ -322,6 +328,15 @@ protected:
     double compute_energy_pt3();
     /// Check if orbitals are semi-canonicalized
     bool check_semicanonical();
+
+    /// Compute DSRG-MRPT2 energy using Fdiag as H0th
+    std::vector<std::pair<std::string,double>> compute_energy_pt2_Fdiag();
+    /// Compute DSRG-MRPT2 energy using Ffull as H0th
+    std::vector<std::pair<std::string,double>> compute_energy_pt2_Ffull();
+    /// Compute DSRG-MRPT2 energy using Fdiag_Vactv or Fdiag_Vdiag as H0th
+    std::vector<std::pair<std::string,double>> compute_energy_pt2_FdiagV();
+    /// Compute DSRG-MRPT2 energy using Fdiag_Vdiag as H0th
+    std::vector<std::pair<std::string,double>> compute_energy_pt2_FdiagVdiag();
 
 
     // => Reference relaxation <= //

@@ -613,6 +613,8 @@ read_options(std::string name, Options &options)
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
         options.add_str("T_ALGORITHM", "DSRG", "DSRG DSRG_NOSEMI SELEC ISA");
+        /*- Different Zeroth-order Hamiltonian -*/
+        options.add_str("H0TH", "FDIAG", "FDIAG FFULL FDIAG_VACTV FDIAG_VDIAG");
         /*- T1 Amplitudes -*/
         options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
@@ -625,6 +627,8 @@ read_options(std::string name, Options &options)
         options.add_int("NTAMP", 15);
         /*- T Threshold for Intruder States -*/
         options.add_double("INTRUDER_TAMP", 0.10);
+        /*- The residue convergence criterion -*/
+        options.add_double("R_CONVERGENCE",1.0e-6);
         /*- DSRG Transformation Type -*/
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- Automatic Adjusting Flow Parameter -*/
@@ -878,15 +882,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
-            if(options.get_str("RELAX_REF") == "ONCE"){
-                boost::shared_ptr<DSRG_WICK> dsrg_wick(new DSRG_WICK(mo_space_info,
-                                                                     dsrg_mrpt2->RF(),
-                                                                     dsrg_mrpt2->Rtei(),
-                                                                     dsrg_mrpt2->Singles(),
-                                                                     dsrg_mrpt2->Doubles()));
-                //                dsrg_mrpt2->transform_integrals();
-                //                FCI_MO fci(options,ints_);
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt2->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt2->compute_energy();
             }
         }
         if(options.get_str("CAS_TYPE")=="FCI")
@@ -903,7 +902,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             fci->compute_energy();
             Reference reference = fci->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt2->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt2->compute_energy();
+            }
         }
 
         if(options.get_str("CAS_TYPE")=="ACI"){
