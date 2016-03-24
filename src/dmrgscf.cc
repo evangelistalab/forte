@@ -513,7 +513,7 @@ double DMRGSCF::compute_energy()
     CheMPS2::Initialize::Init();
     CheMPS2::ConvergenceScheme * OptScheme = new CheMPS2::ConvergenceScheme( ndmrg_states );
     for (int cnt=0; cnt<ndmrg_states; cnt++){
-       OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt] );
+       OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt]);
     }
 
     /******************************************************************************
@@ -754,7 +754,7 @@ double DMRGSCF::compute_energy()
         update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
         buildTmatrix( theTmatrix, iHandler, psio, this->Ca());
         buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
-        buildHamDMRGForte(theQmatOCC, iHandler, HamDMRG, ints_);
+        //buildHamDMRGForte(theQmatOCC, iHandler, HamDMRG, ints_);
         buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
 
         //Localize the active space and reorder the orbitals within each irrep based on the exchange matrix
