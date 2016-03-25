@@ -43,6 +43,11 @@ DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options, std::shared
 {
     print_method_banner({"Density Matrix Renormalization Group SCF","Sebastian Wouters"});
 }
+DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info)
+{
+    print_method_banner({"Density Matrix Renormalization Group","Sebastian Wouters"});
+}
 void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler)
 {
     //if(options_.get_int("MULTIPLICITY") != 1 && options_.get_int("DMRG_WFN_MULTP") != 1)
@@ -262,7 +267,7 @@ void DMRGSolver::compute_energy()
     (*outfile) << "nEl. active = " << nDMRGelectrons << endl;
 
     // Create the CheMPS2::Hamiltonian --> fill later
-    const int nOrbDMRG = mo_space_info_->size("ACTIVE");
+    const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
     int * orbitalIrreps = new int[ nOrbDMRG ];
     int counterFillOrbitalIrreps = 0;
     for (int h=0; h<nirrep; h++){
@@ -279,10 +284,26 @@ void DMRGSolver::compute_energy()
     Prob->SetupReorderD2h();
 
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
-        Ham->setVmat(i[0], i[1], i[2], i[3], value);});
+        if(
+        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[1]] ) 
+        == CheMPS2::Irreps::directProd(orbitalIrreps[i[2]], orbitalIrreps[i[3]] ) )
+        {
+            Ham->setVmat(i[0], i[1], i[2], i[3], value);
+            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[1], i[2], i[3], value);
+        } ;});
     for(int u = 0; u < nOrbDMRG; u++)
-        for(int v = 0; v < nOrbDMRG; v++)
-            Ham->setTmat(u, v, one_body_integrals_[u * nOrbDMRG + v]);
+    {
+        for(int v = u; v < nOrbDMRG; v++)
+        {
+            if(orbitalIrreps[u] == orbitalIrreps[v])
+            {
+                Ham->setTmat(u, v, one_body_integrals_[u * nOrbDMRG + v]);
+                outfile->Printf("\n %d  %d %8.8f", u, v, one_body_integrals_[u * nOrbDMRG + v]);
+            }
+        }
+    }
+    Ham->setEconst(scalar_energy_);
+    outfile->Printf("\n scalar_energy_: %8.8f", scalar_energy_);
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 

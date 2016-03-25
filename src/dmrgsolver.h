@@ -58,7 +58,7 @@ private:
     int chemps2_groupnumber(const string SymmLabel);
     ambit::Tensor active_integrals_;
     std::vector<double> one_body_integrals_;
-    double   scalar_energy_;
+    double   scalar_energy_ = 0.0;
 
 };
 

@@ -114,8 +114,12 @@ void OrbitalOptimizer::startup()
             cas_ = false;
         }
     }
+    else if(options_.get_str("CAS_TYPE") == "DMRG")
+    {
+        cas_ = true;
+    }
     else {
-        outfile->Printf("\n\n Please set your CAS_TYPE to either FCI, CAS, or ACI");
+        outfile->Printf("\n\n Please set your CAS_TYPE to either FCI, CAS, ACI, or DMRG");
         outfile->Printf("\n\n You set your CAS_TYPE to %s.", options_.get_str("CAS_TYPE").c_str());
         throw PSIEXCEPTION("You did not specify your CAS_TYPE correctly.");
     }

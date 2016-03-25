@@ -44,6 +44,7 @@ DMRGSCF::DMRGSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<M
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Density Matrix Renormalization Group SCF","Sebastian Wouters"});
+    const int dmrg_iterations_        = options_.get_int("DMRGSCF_MAX_ITER");
 }
 
 int DMRGSCF::chemps2_groupnumber(const string SymmLabel){
@@ -462,7 +463,6 @@ double DMRGSCF::compute_energy()
     const bool dmrgscf_do_diis        = options_.get_bool("DMRG_DO_DIIS");
     const double dmrgscf_diis_branch  = options_.get_double("DMRG_DIIS_BRANCH");
     const bool dmrgscf_store_diis     = options_.get_bool("DMRG_STORE_DIIS");
-    const int dmrgscf_max_iter        = options_.get_int("DMRGSCF_MAX_ITER");
     const int dmrgscf_which_root      = options_.get_int("DMRG_WHICH_ROOT");
     const bool dmrgscf_state_avg      = options_.get_bool("DMRG_AVG_STATES");
     const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
@@ -503,7 +503,7 @@ double DMRGSCF::compute_energy()
     }
     if ( dmrgscf_convergence<=0.0 )               { throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!"); }
     if ( dmrgscf_diis_branch<=0.0 )               { throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!"); }
-    if ( dmrgscf_max_iter<1 )                     { throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!"); }
+    if ( dmrg_iterations_<1 )                     { throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!"); }
     if ( dmrgscf_which_root<1 )                   { throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!"); }
 
     /*******************************************
@@ -702,7 +702,7 @@ double DMRGSCF::compute_energy()
     /********************************
      ***   Actual DMRGSCF loops   ***
      ********************************/
-    while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrgscf_max_iter)){
+    while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrg_iterations_)){
 
         nIterations++;
 
@@ -857,7 +857,7 @@ double DMRGSCF::compute_energy()
             (*outfile) << "Rotated the active space to natural orbitals, sorted according to the NOON." << endl;
         }
 
-        if (dmrgscf_max_iter == nIterations){
+        if (dmrg_iterations_ == nIterations){
             if ( dmrgscf_store_unit ){ unitary->saveU( unitaryname ); }
             break;
         }
