@@ -11,7 +11,9 @@
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
-#include "dmrgsolver.h"
+#ifdef HAVE_CHEMPS2
+    #include "dmrgsolver.h"
+#endif
 #include <libdiis/diismanager.h>
 #include <libdiis/diisentry.h>
 #include <libmints/factory.h>
@@ -310,11 +312,13 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "DMRG")
     {
 #ifdef  HAVE_CHEMPS2
-        ints_->retransform_integrals();
+        //ints_->retransform_integrals();
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_);
         dmrg.set_max_rdm(2);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
+        outfile->Printf("\n Scalar_energy_: %8.8f", scalar_energy_ + ints_->frozen_core_energy());
+        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
