@@ -169,7 +169,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
 
         //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
         //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
-        //gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
+        gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
         dmrg_ref.set_L3aab(gamma3_aab);
