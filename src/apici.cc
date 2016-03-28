@@ -54,6 +54,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
@@ -201,6 +202,14 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "DELTA-CHEBYSHEV"){
         propagator_ = DeltaChebyshevPropagator;
         propagator_description_ = "Delta-Chebyshev";
+        time_step_ = 1.0;
+        if (chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
+    }else if (options_.get_str("PROPAGATOR") == "CHEBYSHEV"){
+        propagator_ = ChebyshevPropagator;
+        propagator_description_ = "Chebyshev";
         time_step_ = 1.0;
         if (chebyshev_order_ <= 0) {
             outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
@@ -356,6 +365,9 @@ void AdaptivePathIntegralCI::compute_characteristic_function()
     case ExpChebyshevPropagator:
         Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
         break;
+    case ChebyshevPropagator:
+        Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
+        break;
     case DeltaPropagator:
     case DeltaChebyshevPropagator:
         Delta_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
@@ -473,6 +485,14 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+}
+
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    Chebyshev_polynomial_coefs(poly_coefs, order);
+
     Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
 }
 
@@ -877,6 +897,9 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }
 
     switch (propagator) {
+    case ChebyshevPropagator:
+        propagate_Chebyshev(dets,C,spawning_threshold);
+        break;
     case DeltaPropagator:
         propagate_delta(dets,C,spawning_threshold,S);
         break;
@@ -1015,6 +1038,24 @@ void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& 
 
 }
 
+void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
+{
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    for (int i = 0; i < chebyshev_order_; i++) {
+        double root = 0.0;
+        if (i < 0) {
+            root = 1.0;
+        } else {
+            root = cos((2.0*i+1)/(2.0*chebyshev_order_));
+        }
+
+        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+        normalize(C);
+    }
+}
 
 void AdaptivePathIntegralCI::propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
@@ -1112,53 +1153,53 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
-{
-    // A map that contains the pair (determinant,coefficient)
-    det_hash<> dets_C_hash;
-    det_hash<> spawned;
-    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
-        dets_C_hash[dets[I]] = C[I];
-    }
-    det_hash<> T_p2;
-    det_hash<> T_p1;
-    combine_hashes(dets_C_hash, T_p1);
-    det_hash<> Ck;
-    combine_hashes(T_p1, Ck);
-    scale(Ck,boost::math::cyl_bessel_i(0, range_));
-    combine_hashes(Ck, spawned);
-    Ck.clear();
+//void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+//{
+//    // A map that contains the pair (determinant,coefficient)
+//    det_hash<> dets_C_hash;
+//    det_hash<> spawned;
+//    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
+//        dets_C_hash[dets[I]] = C[I];
+//    }
+//    det_hash<> T_p2;
+//    det_hash<> T_p1;
+//    combine_hashes(dets_C_hash, T_p1);
+//    det_hash<> Ck;
+//    combine_hashes(T_p1, Ck);
+//    scale(Ck,boost::math::cyl_bessel_i(0, range_));
+//    combine_hashes(Ck, spawned);
+//    Ck.clear();
 
-    det_hash<> Tk;
-    det_vec sub_dets;
-    std::vector<double> sub_C;
-    copy_hash_to_vec(T_p1,sub_dets,sub_C);
-    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,Tk,S);
-//    det_hash<> C1;
-    combine_hashes(Tk, Ck);
-    scale(Ck, 2.0 * boost::math::cyl_bessel_i(1, range_));
-    combine_hashes(Ck, spawned);
-    Ck.clear();
+//    det_hash<> Tk;
+//    det_vec sub_dets;
+//    std::vector<double> sub_C;
+//    copy_hash_to_vec(T_p1,sub_dets,sub_C);
+//    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,Tk,S);
+////    det_hash<> C1;
+//    combine_hashes(Tk, Ck);
+//    scale(Ck, 2.0 * boost::math::cyl_bessel_i(1, range_));
+//    combine_hashes(Ck, spawned);
+//    Ck.clear();
 
-    for (int i = 2; i<= chebyshev_order_; i++){
-        Ck.clear();
-        T_p2 = T_p1;
-        T_p1 = Tk;
-        Tk.clear();
-        det_hash<> HT_p1;
-        copy_hash_to_vec(T_p1, sub_dets,sub_C);
-        apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
-        scale(HT_p1, 2.0);
-        combine_hashes(HT_p1, Tk);
-        add(Tk, -1.0, T_p2);
-        combine_hashes(Tk, Ck);
-        scale(Ck, 2.0 * boost::math::cyl_bessel_i(i, range_));
-        combine_hashes(Ck, spawned);
-    }
-    normalize(spawned);
+//    for (int i = 2; i<= chebyshev_order_; i++){
+//        Ck.clear();
+//        T_p2 = T_p1;
+//        T_p1 = Tk;
+//        Tk.clear();
+//        det_hash<> HT_p1;
+//        copy_hash_to_vec(T_p1, sub_dets,sub_C);
+//        apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
+//        scale(HT_p1, 2.0);
+//        combine_hashes(HT_p1, Tk);
+//        add(Tk, -1.0, T_p2);
+//        combine_hashes(Tk, Ck);
+//        scale(Ck, 2.0 * boost::math::cyl_bessel_i(i, range_));
+//        combine_hashes(Ck, spawned);
+//    }
+//    normalize(spawned);
 
-    copy_hash_to_vec(spawned,dets,C);
-}
+//    copy_hash_to_vec(spawned,dets,C);
+//}
 
 void AdaptivePathIntegralCI::propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
