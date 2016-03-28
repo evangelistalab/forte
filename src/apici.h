@@ -49,6 +49,7 @@ enum PropagatorType {LinearPropagator,
                      DavidsonLiuPropagator,
                      ExpChebyshevPropagator,
                      DeltaChebyshevPropagator,
+                     ChebyshevPropagator,
                      DeltaPropagator};
 
 /**
@@ -253,7 +254,8 @@ private:
     /// The Davidson-Liu propagator
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev propagator
-    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Chebyshev(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+//    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Polynomial propagator
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
 
