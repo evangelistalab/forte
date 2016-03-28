@@ -513,7 +513,7 @@ double DMRGSCF::compute_energy()
     CheMPS2::Initialize::Init();
     CheMPS2::ConvergenceScheme * OptScheme = new CheMPS2::ConvergenceScheme( ndmrg_states );
     for (int cnt=0; cnt<ndmrg_states; cnt++){
-       OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt]);
+       OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], 1e-10);
     }
 
     /******************************************************************************
@@ -997,8 +997,9 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aaa.scale(1.0 / 12.0);
         gamma3_aab("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
         gamma3_aab.scale(1.0 / 12.0);
-        //gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
-        //gamma3_abb.scale(1.0 / 12.0);
+        //gamma3_abb("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
+        //gamma3_abb.scale(1.0/12.0);
+
         ambit::Tensor L1a = dmrg_ref.L1a();
         ambit::Tensor L1b = dmrg_ref.L1b();
         ambit::Tensor L2aa = dmrg_ref.L2aa();
@@ -1038,7 +1039,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
 
-        //gamma3_abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
 
         //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
         //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
@@ -1048,10 +1049,11 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
 
         //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
         //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
         dmrg_ref.set_L3aab(gamma3_aab);
-        dmrg_ref.set_L3abb(gamma3_aab);
+        dmrg_ref.set_L3abb(gamma3_abb);
         dmrg_ref.set_L3bbb(gamma3_aaa);
     }
     dmrg_ref_ = dmrg_ref;

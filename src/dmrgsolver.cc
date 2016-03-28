@@ -159,20 +159,21 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
 
-        gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
 
-        gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-        gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+        //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+        //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
 
-        gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-        gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+        //gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+        //gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
 
-        gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-        gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+        //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        //gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
         dmrg_ref.set_L3aab(gamma3_aab);
-        dmrg_ref.set_L3abb(gamma3_aab);
+        dmrg_ref.set_L3abb(gamma3_abb);
         dmrg_ref.set_L3bbb(gamma3_aaa);
     }
     dmrg_ref_ = dmrg_ref;
@@ -285,19 +286,21 @@ void DMRGSolver::compute_energy()
 
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
         if(
-        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[1]] ) 
-        == CheMPS2::Irreps::directProd(orbitalIrreps[i[2]], orbitalIrreps[i[3]] ) )
+        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[2]] ) 
+        == CheMPS2::Irreps::directProd(orbitalIrreps[i[1]], orbitalIrreps[i[3]] ) )
         {
-            Ham->setVmat(i[0], i[1], i[2], i[3], value);
-            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[1], i[2], i[3], value);
+            Ham->setVmat(i[0], i[2], i[1], i[3], value);
+            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[2], i[1], i[3], value);
         } ;});
+    //int shift = iHandler->getDMRGcumulative(h);
+    int shift = 0;
     for(int u = 0; u < nOrbDMRG; u++)
     {
         for(int v = u; v < nOrbDMRG; v++)
         {
             if(orbitalIrreps[u] == orbitalIrreps[v])
             {
-                Ham->setTmat(u, v, one_body_integrals_[u * nOrbDMRG + v]);
+                Ham->setTmat(shift + u, shift + v, one_body_integrals_[u * nOrbDMRG + v]);
                 outfile->Printf("\n %d  %d %8.8f", u, v, one_body_integrals_[u * nOrbDMRG + v]);
             }
         }

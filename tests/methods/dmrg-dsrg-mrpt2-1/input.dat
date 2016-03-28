@@ -7,21 +7,23 @@ H  1 1.4
 }
 
 set basis cc-pvdz
-set scf_type  direct
+set scf_type  out_of_core
 energy('scf')
 
 set forte {
-    frozen_docc            [0, 0, 0, 0]
-    active                 [3, 0, 0, 0]
-    int_type               cholesky
+    frozen_docc               [0, 0, 0, 0]
+    active                    [3, 0, 0, 0]
+    int_type                  cholesky
     cholesky_tolerance        1e-14
     job_type                  FCI
     PRINT_NO                  true
-    #casscf_reference          true
-    #casscf_iterations         1
+    job_type                  three-dsrg-mrpt2
+    dsrg_s                    0.5
+    #casscf_reference         true
+    #casscf_iterations        1
 }
-fci = energy('forte')
-print fci
+dsrg_fci = energy('forte')
+print dsrg_fci
 
 energy('scf')
 
@@ -36,9 +38,9 @@ set forte {
     dmrgscf_max_iter  1
     int_type          cholesky
     cholesky_tolerance 1e-14
-    job_type           dsrg-mrpt2
+    job_type           three-dsrg-mrpt2
     cas_type           DMRG
 #    THREEPDC           ZERO
 }
-mints()
-dmrgscf = energy('forte')
+dsrg_dmrg = energy('forte')
+compare_values(dsrg_fci - dsrg_dmrg, 0.000000000, 8, "DSRG(CAS-CI) - DSRG(DMRG)")
