@@ -4,6 +4,7 @@
 
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
+#include <libpsio/psio.hpp>
 #include <libciomr/libciomr.h>
 #include <libqt/qt.h>
 
@@ -548,7 +549,9 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 void SigmaVectorString::write_single_to_disk( std::vector<std::pair<size_t,short>>& s_list, int i )
 {
     size_t dim = s_list.size();
-    FILE* fh = fopen( ("forte.slist." + std::to_string(i) + ".bin").c_str(),"w+" );
+    std::string path = PSIOManager::shared_object()->get_default_path();    
+
+    FILE* fh = fopen( (path + "forte.slist." + std::to_string(i) + ".bin").c_str(),"w+" );
 
     if( s_list.size() > 0 ){
         fwrite(&s_list[0],sizeof(std::pair<size_t,short>),dim,fh); 
@@ -559,7 +562,8 @@ void SigmaVectorString::write_single_to_disk( std::vector<std::pair<size_t,short
 void SigmaVectorString::write_double_to_disk( std::vector<std::tuple<size_t,short,short>>& d_list, int i )
 {
     size_t dim = d_list.size();
-    FILE* fh = fopen( ("forte.dlist." + std::to_string(i) + ".bin").c_str(),"w+" );
+    std::string path = PSIOManager::shared_object()->get_default_path();    
+    FILE* fh = fopen( (path + "forte.dlist." + std::to_string(i) + ".bin").c_str(),"w+" );
 
     if( d_list.size() > 0 ){
         fwrite(&d_list[0],sizeof(std::tuple<size_t,short,short>),dim,fh); 
@@ -572,7 +576,8 @@ void SigmaVectorString::write_double_to_disk( std::vector<std::tuple<size_t,shor
 void SigmaVectorString::read_single_from_disk(  std::vector<std::pair<size_t,short>>& s_list, int i)
 {
     size_t size = s_list.size();
-    FILE* fh = fopen( ("forte.slist." + std::to_string(i) + ".bin").c_str(),"r" );
+    std::string path = PSIOManager::shared_object()->get_default_path();    
+    FILE* fh = fopen( (path + "forte.slist." + std::to_string(i) + ".bin").c_str(),"r" );
 
     fseek( fh, 0, SEEK_SET);
     fread( &(s_list)[0], sizeof(std::pair<size_t,short>),size, fh);
@@ -583,7 +588,8 @@ void SigmaVectorString::read_single_from_disk(  std::vector<std::pair<size_t,sho
 void SigmaVectorString::read_double_from_disk(  std::vector<std::tuple<size_t,short,short>>& d_list, int i)
 {
     size_t maxI = d_list.size();
-    FILE* fh = fopen( ("forte.dlist." + std::to_string(i) + ".bin").c_str(),"r" );
+    std::string path = PSIOManager::shared_object()->get_default_path();    
+    FILE* fh = fopen( (path + "forte.dlist." + std::to_string(i) + ".bin").c_str(),"r" );
     
     fseek( fh, 0, SEEK_SET);
     fread( &(d_list)[0], sizeof(std::tuple<size_t,short,short>), maxI, fh);

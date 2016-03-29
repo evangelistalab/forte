@@ -27,7 +27,6 @@ set globals {
 }
 
 energy('scf')
-mints()
 set forte {
   frozen_docc  [9, 6, 0, 0, 0, 0, 7, 7]
   active       [0, 0, 2, 3, 2, 3, 0, 0]
@@ -39,7 +38,6 @@ set forte {
 fci_dsrg_energy = energy('forte')
 
 energy('scf')
-mints()
 set scf_type direct
 set forte {
   dmrg_wfn_irrep             0
@@ -52,7 +50,7 @@ set forte {
   dmrgscf_max_iter        1
   dmrg_print_corr         false
   mps_chkpt               false
-  dmrg_states             [200, 500, 1000, 6000]
+  dmrg_states             [200, 500, 1000, 1000]
   dmrg_econv              [1e-8, 1e-8, 1e-8, 1e-12]
   dmrg_maxsweeps          [5, 5, 5, 100]
   dmrg_noiseprefactors    [0.03, 0.03, 0.03, 0.0]
@@ -61,5 +59,6 @@ set forte {
 dmrg_dsrg_energy = energy('forte')
 
 print fci_dsrg_energy - dmrg_dsrg_energy
+compare_values(fci_dsrg_energy - dmrg_dsrg_energy, 0.00000000, 6, "DSRG(CAS) - DSRG(DMRG)")
   
 
