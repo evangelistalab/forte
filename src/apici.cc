@@ -318,6 +318,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
             }
         }
         obt_energies.push_back(temp);
+
     }
     std::sort(obt_energies.begin(),obt_energies.end());
 //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
@@ -329,7 +330,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
     }
     if (ne % 2)
         high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
-    lambda_h_ = high_obt_energy;
+    lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     return lambda_h_;
 }
 
