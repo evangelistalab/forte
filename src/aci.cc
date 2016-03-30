@@ -146,6 +146,9 @@ void AdaptiveCI::startup()
 	nalpha_ = (nactel_ + ms) / 2;
 	nbeta_  = nactel_ - nalpha_; 
 
+    outfile->Printf("\n  nbeta = %d", nbeta_);
+    outfile->Printf("\n  nalpha = %d", nalpha_);
+
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
 	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
@@ -645,6 +648,12 @@ double AdaptiveCI::compute_energy()
         if (converged){
            // if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
             if( !quiet_mode_ )outfile->Printf("\n  ***** Calculation Converged *****");
+            break;
+        }
+
+        bool stuck = check_stuck( energy_history, PQ_evals );
+        if( stuck ){
+            outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
         }
     
