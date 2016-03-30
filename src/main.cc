@@ -519,6 +519,8 @@ read_options(std::string name, Options &options)
         options.add_bool("INITIATOR_APPROX",false);
         /*- The initiator approximation factor -*/
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
+        /*- Do result perturbation analysis -*/
+        options.add_bool("PERTURB_ANALYSIS",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
