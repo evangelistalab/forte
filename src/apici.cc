@@ -586,9 +586,9 @@ double AdaptivePathIntegralCI::compute_energy()
     // Main iterations
     outfile->Printf("\n\n  ==> APIFCI Iterations <==");
 
-    outfile->Printf("\n\n  -----------------------------------------------------------------------------------------------------------------------------");
-    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Var. Energy/Eh      dEv/dt      Approx. Energy/Eh   dEv/dt");
-    outfile->Printf("\n  -----------------------------------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n\n  ------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt");
+    outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
 
     int maxcycle = maxiter_;
     double old_var_energy = 0.0;
@@ -624,32 +624,36 @@ double AdaptivePathIntegralCI::compute_energy()
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0){
-            CHC_flag_ = true;
+            approx_E_flag_ = true;
             timer_on("PIFCI:<E>");
             std::map<std::string,double> results = estimate_energy(dets,C);
             timer_off("PIFCI:<E>");
 
-            var_energy = results["VARIATIONAL ENERGY"];
+//            var_energy = results["VARIATIONAL ENERGY"];
             proj_energy = results["PROJECTIVE ENERGY"];
 
-            double var_energy_gradient = (var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_);
+//            double var_energy_gradient = (var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_);
             double proj_energy_gradient = (proj_energy - old_proj_energy) / (time_step_ * energy_estimate_freq_);
+            double approx_energy_gradient = (approx_energy_ - old_approx_energy_) / (time_step_ * energy_estimate_freq_);
+            if (cycle == 0)  approx_energy_gradient = 10.0 * e_convergence_+1.0;
 
-            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e %20.12f %10.3e",cycle,beta,C.size(),
-                            proj_energy,proj_energy_gradient,
-                            var_energy,var_energy_gradient);
+//            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e %20.12f %10.3e",cycle,beta,C.size(),
+//                            proj_energy,proj_energy_gradient,
+//                            var_energy,var_energy_gradient);
+            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
+                            proj_energy,proj_energy_gradient);
 
             old_var_energy = var_energy;
             old_proj_energy = proj_energy;
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(proj_energy_gradient) < e_convergence_){
+            if (std::fabs(approx_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
             }
             if (do_shift_) {
-                lambda_1_ = CHC_energy_ - nuclear_repulsion_energy_;
+                lambda_1_ = approx_energy_ - nuclear_repulsion_energy_;
                 compute_characteristic_function();
             }
         }
@@ -661,7 +665,7 @@ double AdaptivePathIntegralCI::compute_energy()
     apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, 0.0);
     dets_C_hash.clear();
 
-    outfile->Printf("\n  -----------------------------------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
     outfile->Printf("\n\n  Calculation %s",converged ? "converged." : "did not converge!");
 
     if (do_shift_) {
@@ -681,8 +685,8 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n  * Adaptive-CI Variational Energy     = %18.12f Eh",1,var_energy);
     outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %18.12f Eh",1,proj_energy);
 
-    outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,CHC_energy_);
-    outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - CHC_energy_);
+    outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,approx_energy_);
+    outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - approx_energy_);
 
     if (do_perturb_analysis_) {
         double error_2nd_perturb_sub, error_2nd_perturb_full;
@@ -1614,7 +1618,7 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             new_max_two_HJI_ = std::max(thread_max_HJI[t].second,new_max_two_HJI_);
         }
     }
-    if (CHC_flag_) {
+    if (approx_E_flag_) {
         size_t max_I = dets.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+:CHC_energy)
@@ -1622,10 +1626,11 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             CHC_energy += C[I] * dets_C_hash[dets[I]];
         }
         CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
-        double CHC_energy_gradient = (CHC_energy - CHC_energy_) / (time_step_ * energy_estimate_freq_);
-        CHC_energy_ = CHC_energy;
-        CHC_flag_ = false;
-        outfile->Printf(" %20.12f %10.3e",CHC_energy_,CHC_energy_gradient);
+        double CHC_energy_gradient = (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+        old_approx_energy_ = approx_energy_;
+        approx_energy_ = CHC_energy;
+        approx_E_flag_ = false;
+        outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
     }
 }
 
@@ -2572,15 +2577,15 @@ std::map<std::string,double> AdaptivePathIntegralCI::estimate_energy(det_vec& de
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets,C);
     timer_off("PIFCI:<E>p");
 
-    if (fast_variational_estimate_){
-        timer_on("PIFCI:<E>vs");
-        results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(dets,C,energy_estimate_threshold_);
-        timer_off("PIFCI:<E>vs");
-    }else{
-        timer_on("PIFCI:<E>v");
-        results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C,energy_estimate_threshold_);
-        timer_off("PIFCI:<E>v");
-    }
+//    if (fast_variational_estimate_){
+//        timer_on("PIFCI:<E>vs");
+//        results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(dets,C,energy_estimate_threshold_);
+//        timer_off("PIFCI:<E>vs");
+//    }else{
+//        timer_on("PIFCI:<E>v");
+//        results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C,energy_estimate_threshold_);
+//        timer_off("PIFCI:<E>v");
+//    }
 
     return results;
 }
@@ -2709,7 +2714,7 @@ std::tuple<double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec
 //    return std::make_tuple(first_order_perturb, 0.0, 0.0);
     // Compute a variational estimator of the energy
     size_t size = dets.size();
-    double variational_energy_estimator = CHC_energy_ - nuclear_repulsion_energy_;
+    double variational_energy_estimator = approx_energy_ - nuclear_repulsion_energy_;
 //#pragma omp parallel for reduction(+:variational_energy_estimator, perturbation_1st_energy_estimator)
 //    for (size_t I = 0; I < size; ++I){
 //        for (size_t J = 0; J < size; ++J){
