@@ -915,8 +915,8 @@ void MCSRGPT2_MO::test_D1_RE(){
         std::string indent(4, ' ');
         std::string dash(47, '-');
         std::string title = indent
-                + str(boost::format("%=9s    %=15s    %=15s\n") % "Indices" % "Denominator")
-                + indent + dash;
+                + str(boost::format("%=9s    %=15s    %=15s\n") % "Indices" % "Denominator"
+                      % "Original Denom.") + indent + dash;
         outfile->Printf("\n%s", title.c_str());
         for(const auto& pair: smallD1){
             size_t i = pair.first[0];
