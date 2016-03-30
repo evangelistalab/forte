@@ -127,6 +127,11 @@ protected:
     double Ecorr_;
     double Etotal_;
 
+    /// Test denominators from Dyall / retaining excitation Hamiltonian
+    void test_D1_RE();
+    void test_D2_RE();
+    void test_D2_Dyall();
+
     /// Timings
     void Print_Timing();
     Timer dsrg_timer;

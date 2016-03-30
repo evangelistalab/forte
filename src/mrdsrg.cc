@@ -990,11 +990,42 @@ std::vector<std::string> MRDSRG::diag_one_labels(){
 }
 
 std::vector<std::string> MRDSRG::diag_two_labels(){
-    std::vector<std::string> labels (V_.block_labels());
-    std::vector<std::string> od_labels (od_two_labels());
-    labels.erase(std::remove_if(labels.begin(), labels.end(),
-                                 [&](std::string i) {return std::find(od_labels.begin(), od_labels.end(), i) != od_labels.end();}),
-            labels.end());
+    std::vector<std::string> labels;
+    std::vector<std::string> labels_aa {acore_label_ + acore_label_ + acore_label_ + acore_label_,
+                aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
+                avirt_label_ + avirt_label_ + avirt_label_ + avirt_label_};
+    std::vector<std::string> mixed {acore_label_ + aactv_label_, acore_label_ + avirt_label_,
+                aactv_label_ + avirt_label_};
+    for(const std::string& half: mixed){
+        std::string reverse (half);
+        std::reverse(reverse.begin(),reverse.end());
+        labels_aa.push_back(half + half);
+        labels_aa.push_back(half + reverse);
+        labels_aa.push_back(reverse + half);
+        labels_aa.push_back(reverse + reverse);
+    }
+    for(const std::string& label: labels_aa){
+        std::string aa (label);
+        std::string ab (label);
+        std::string bb (label);
+
+        for(const int& idx: {1,3}){
+            ab[idx] = std::toupper(ab[idx]);
+            bb[idx] = std::toupper(bb[idx]);
+        }
+        for(const int& idx: {0,2}){
+            bb[idx] = std::toupper(bb[idx]);
+        }
+
+        labels.push_back(aa);
+        labels.push_back(ab);
+        labels.push_back(bb);
+    }
+//    std::vector<std::string> labels (V_.block_labels());
+//    std::vector<std::string> od_labels (od_two_labels());
+//    labels.erase(std::remove_if(labels.begin(), labels.end(),
+//                                 [&](std::string i) {return std::find(od_labels.begin(), od_labels.end(), i) != od_labels.end();}),
+//            labels.end());
     return labels;
 }
 
