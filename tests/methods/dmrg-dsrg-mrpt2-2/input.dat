@@ -1,6 +1,6 @@
 import forte
 
-dmrg_ref = -76.0784263950
+dsrg_dmrg = -76.221868734680811
 
 molecule H2O {
  0 1
@@ -13,7 +13,7 @@ molecule H2O {
 
 set basis          cc-pVDZ
 set reference      rhf
-set scf_type       direct
+set scf_type       out_of_core
 set e_convergence  1e-13
 set d_convergence  1e-13
 set ints_tolerance 0.0
@@ -34,14 +34,14 @@ set forte{
     dmrgscf_max_iter     1
     int_type             cholesky
     cholesky_tolerance   1e-14
-    job_type             dsrg-mrpt2
+    job_type             three-dsrg-mrpt2
     cas_type             dmrg
     dsrg_s               0.5
  }
 
 energy('scf')
-mints()
+set scf_type direct
 dmrgscf = energy('forte')
 
-compare_values(dmrg_ref, dmrgscf, 6,"DMRG CI Energy")
+compare_values(dsrg_dmrg, dmrgscf, 6,"DMRG CI Energy")
 

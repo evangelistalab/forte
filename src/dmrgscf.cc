@@ -44,6 +44,7 @@ DMRGSCF::DMRGSCF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<M
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
     print_method_banner({"Density Matrix Renormalization Group SCF","Sebastian Wouters"});
+    const int dmrg_iterations_        = options_.get_int("DMRGSCF_MAX_ITER");
 }
 
 int DMRGSCF::chemps2_groupnumber(const string SymmLabel){
@@ -462,7 +463,6 @@ double DMRGSCF::compute_energy()
     const bool dmrgscf_do_diis        = options_.get_bool("DMRG_DO_DIIS");
     const double dmrgscf_diis_branch  = options_.get_double("DMRG_DIIS_BRANCH");
     const bool dmrgscf_store_diis     = options_.get_bool("DMRG_STORE_DIIS");
-    const int dmrgscf_max_iter        = options_.get_int("DMRGSCF_MAX_ITER");
     const int dmrgscf_which_root      = options_.get_int("DMRG_WHICH_ROOT");
     const bool dmrgscf_state_avg      = options_.get_bool("DMRG_AVG_STATES");
     const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
@@ -503,7 +503,7 @@ double DMRGSCF::compute_energy()
     }
     if ( dmrgscf_convergence<=0.0 )               { throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!"); }
     if ( dmrgscf_diis_branch<=0.0 )               { throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!"); }
-    if ( dmrgscf_max_iter<1 )                     { throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!"); }
+    if ( dmrg_iterations_<1 )                     { throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!"); }
     if ( dmrgscf_which_root<1 )                   { throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!"); }
 
     /*******************************************
@@ -513,7 +513,7 @@ double DMRGSCF::compute_energy()
     CheMPS2::Initialize::Init();
     CheMPS2::ConvergenceScheme * OptScheme = new CheMPS2::ConvergenceScheme( ndmrg_states );
     for (int cnt=0; cnt<ndmrg_states; cnt++){
-       OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt] );
+       OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], 1e-10);
     }
 
     /******************************************************************************
@@ -702,7 +702,7 @@ double DMRGSCF::compute_energy()
     /********************************
      ***   Actual DMRGSCF loops   ***
      ********************************/
-    while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrgscf_max_iter)){
+    while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrg_iterations_)){
 
         nIterations++;
 
@@ -754,7 +754,7 @@ double DMRGSCF::compute_energy()
         update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
         buildTmatrix( theTmatrix, iHandler, psio, this->Ca());
         buildQmatOCC( theQmatOCC, iHandler, work1, work2, this->Ca(), myJK);
-        buildHamDMRGForte(theQmatOCC, iHandler, HamDMRG, ints_);
+        //buildHamDMRGForte(theQmatOCC, iHandler, HamDMRG, ints_);
         buildHamDMRG( ints, Aorbs_ptr, theQmatOCC, iHandler, HamDMRG, psio);
 
         //Localize the active space and reorder the orbitals within each irrep based on the exchange matrix
@@ -857,7 +857,7 @@ double DMRGSCF::compute_energy()
             (*outfile) << "Rotated the active space to natural orbitals, sorted according to the NOON." << endl;
         }
 
-        if (dmrgscf_max_iter == nIterations){
+        if (dmrg_iterations_ == nIterations){
             if ( dmrgscf_store_unit ){ unitary->saveU( unitaryname ); }
             break;
         }
@@ -997,8 +997,9 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aaa.scale(1.0 / 12.0);
         gamma3_aab("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
         gamma3_aab.scale(1.0 / 12.0);
-        //gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
-        //gamma3_abb.scale(1.0 / 12.0);
+        //gamma3_abb("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
+        //gamma3_abb.scale(1.0/12.0);
+
         ambit::Tensor L1a = dmrg_ref.L1a();
         ambit::Tensor L1b = dmrg_ref.L1b();
         ambit::Tensor L2aa = dmrg_ref.L2aa();
@@ -1038,7 +1039,7 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
         gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
 
-        //gamma3_abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
 
         //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
         //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
@@ -1048,10 +1049,11 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
 
         //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
         //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
         dmrg_ref.set_L3aab(gamma3_aab);
-        dmrg_ref.set_L3abb(gamma3_aab);
+        dmrg_ref.set_L3abb(gamma3_abb);
         dmrg_ref.set_L3bbb(gamma3_aaa);
     }
     dmrg_ref_ = dmrg_ref;

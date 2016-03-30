@@ -1,0 +1,383 @@
+//#include <libplugin/plugin.h>
+#include <psi4-dec.h>
+#include <libdpd/dpd.h>
+#include <psifiles.h>
+#include <libpsio/psio.hpp>
+#include <libiwl/iwl.hpp>
+#include <libtrans/integraltransform.h>
+#include <libmints/wavefunction.h>
+#include <libmints/mints.h>
+#include <libmints/typedefs.h>
+//Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
+#include <libciomr/libciomr.h>
+#include <liboptions/liboptions.h>
+#include <libfock/jk.h>
+#include <libmints/writer_file_prefix.h>
+//Header above allows to obtain "filename.moleculename" with psi::get_writer_file_prefix()
+
+#include <stdlib.h>
+#include <iostream>
+#include <fstream>
+
+#include "chemps2/Irreps.h"
+#include "chemps2/Problem.h"
+#include "chemps2/CASSCF.h"
+#include "chemps2/Initialize.h"
+#include "chemps2/EdmistonRuedenberg.h"
+
+#include "ambit/blocked_tensor.h"
+#include "dmrgsolver.h"
+#include "helpers.h"
+#include "integrals.h"
+
+using namespace std;
+
+// This allows us to be lazy in getting the spaces in DPD calls
+#define ID(x) ints->DPD_ID(x)
+
+
+namespace psi{ namespace forte{
+
+DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
+    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info), ints_(ints)
+{
+    print_method_banner({"Density Matrix Renormalization Group SCF","Sebastian Wouters"});
+}
+DMRGSolver::DMRGSolver(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info)
+{
+    print_method_banner({"Density Matrix Renormalization Group","Sebastian Wouters"});
+}
+void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler)
+{
+    //if(options_.get_int("MULTIPLICITY") != 1 && options_.get_int("DMRG_WFN_MULTP") != 1)
+    //{
+    //    outfile->Printf("\n\n Spinadapted formalism requires spin-averaged quantitities");
+    //    throw PSIEXCEPTION("You need to spin averaged things");
+    //}
+    Reference dmrg_ref;
+    size_t na = mo_space_info_->size("ACTIVE");
+    ambit::Tensor gamma1_a = ambit::Tensor::build(ambit::CoreTensor, "gamma1_a", {na, na});
+    ambit::Tensor gamma2_dmrg = ambit::Tensor::build(ambit::CoreTensor, "Gamma2_DMRG", {na, na, na, na});
+    ambit::Tensor gamma2_aa = ambit::Tensor::build(ambit::CoreTensor, "gamma2_aa", {na, na, na, na});
+    ambit::Tensor gamma2_ab = ambit::Tensor::build(ambit::CoreTensor, "gamma2_ab", {na, na, na, na});
+
+    const int nOrbDMRG = iHandler->getDMRGcumulative(iHandler->getNirreps());
+    std::vector<double>& gamma1_data = gamma1_a.data();
+    for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++){
+        const int shift = iHandler->getDMRGcumulative(irrep);
+        for (int orb1 = 0; orb1 < iHandler->getNDMRG(irrep); orb1++){
+            for (int orb2 = orb1; orb2 < iHandler->getNDMRG(irrep); orb2++){
+                const double value = one_rdm[ shift + orb1 + nOrbDMRG * ( shift + orb2 ) ];
+                gamma1_data[ shift + orb1 + nOrbDMRG * ( shift + orb2 )] = 0.5 * value;
+                gamma1_data[ shift + orb2 + nOrbDMRG * ( shift + orb1 )] = 0.5 * value;
+
+            }
+        }
+    }
+    /// Gamma_a = 1_RDM / 2
+    /// Gamma_b = 1_RDM / 2
+    dmrg_ref.set_L1a(gamma1_a);
+    dmrg_ref.set_L1b(gamma1_a);
+    /// Form 2_rdms
+    {
+        gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
+            value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
+        /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
+        gamma2_aa.copy(gamma2_dmrg);
+        gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
+        gamma2_aa.scale(1.0 / 6.0);
+
+        gamma2_ab("p, q, r, s") = (2.0 * gamma2_dmrg("p, q, r, s") + gamma2_dmrg("p, q, s, r"));
+        gamma2_ab.scale(1.0 / 6.0);
+        dmrg_ref.set_g2aa(gamma2_aa);
+        dmrg_ref.set_g2bb(gamma2_aa);
+        dmrg_ref.set_g2ab(gamma2_ab);
+        ambit::Tensor cumulant2_aa = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_aa", {na, na, na, na});
+        ambit::Tensor cumulant2_ab = ambit::Tensor::build(ambit::CoreTensor, "Cumulant2_ab", {na, na, na, na});
+        cumulant2_aa.copy(gamma2_aa);
+        cumulant2_aa("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
+        cumulant2_aa("pqrs") += gamma1_a("ps") * gamma1_a("qr");
+
+        cumulant2_ab.copy(gamma2_ab);
+        cumulant2_ab("pqrs") -= gamma1_a("pr") * gamma1_a("qs");
+        dmrg_ref.set_L2aa(cumulant2_aa);
+        dmrg_ref.set_L2ab(cumulant2_ab);
+        dmrg_ref.set_L2bb(cumulant2_aa);
+    }
+    if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
+    {
+        ambit::Tensor gamma3_dmrg = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_aaa = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aaa", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_aab = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aab", {na, na, na, na, na, na});
+        ambit::Tensor gamma3_abb = ambit::Tensor::build(ambit::CoreTensor, "Gamma2_abb", {na, na, na, na, na, na});
+        gamma3_dmrg.iterate([&](const::vector<size_t>& i,double& value){
+            value = three_rdm[i[0] * na * na * na * na * na + i[1] * na * na * na * na
+                    + i[2] * na * na * na + i[3] * na * na + i[4] * na + i[5]]; });
+        gamma3_aaa("p, q, r, s, t, u") = gamma3_dmrg("p, q, r, s, t, u") + gamma3_dmrg("p, q, r, t, u, s") + gamma3_dmrg("p, q, r, u, s, t") ;
+        gamma3_aaa.scale(1.0 / 12.0);
+        gamma3_aab("p, q, r, s, t, u") = (gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, t, s, u"));
+        gamma3_aab.scale(1.0 / 12.0);
+        //gamma3_abb("p, q, r, s, t, u") = (-gamma3_dmrg("p, q, r, s, t, u") - gamma3_dmrg("p, q, r, t, u, s") - gamma3_dmrg("p, q, r, u, s, t") - 2.0 * gamma3_dmrg("p, q, r, s, u, t"));
+        //gamma3_abb.scale(1.0 / 12.0);
+        ambit::Tensor L1a = dmrg_ref.L1a();
+        ambit::Tensor L1b = dmrg_ref.L1b();
+        ambit::Tensor L2aa = dmrg_ref.L2aa();
+        ambit::Tensor L2ab = dmrg_ref.L2ab();
+        //ambit::Tensor L2bb = dmrg_ref.L2bb();
+        // Convert the 3-RDMs to 3-RCMs
+        gamma3_aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+        gamma3_aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+        gamma3_aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+        gamma3_aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+        gamma3_aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+        gamma3_aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+        gamma3_aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+        gamma3_aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+        gamma3_aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+        gamma3_aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+        gamma3_aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+        gamma3_aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+        gamma3_aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+        gamma3_aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+        gamma3_aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+
+        gamma3_aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+        gamma3_aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+        gamma3_aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+        gamma3_aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+        gamma3_aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+        gamma3_aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+        gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
+
+        //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+        //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+        //gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+        //gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+        //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+        //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
+
+        dmrg_ref.set_L3aaa(gamma3_aaa);
+        dmrg_ref.set_L3aab(gamma3_aab);
+        dmrg_ref.set_L3abb(gamma3_abb);
+        dmrg_ref.set_L3bbb(gamma3_aaa);
+    }
+    dmrg_ref_ = dmrg_ref;
+
+}
+void DMRGSolver::compute_energy()
+{
+    const int wfn_irrep               = options_.get_int("DMRG_WFN_IRREP");
+    const int wfn_multp               = options_.get_int("DMRG_WFN_MULTP");
+    int * dmrg_states                 = options_.get_int_array("DMRG_STATES");
+    const int ndmrg_states            = options_["DMRG_STATES"].size();
+    double * dmrg_econv               = options_.get_double_array("DMRG_ECONV");
+    const int ndmrg_econv             = options_["DMRG_ECONV"].size();
+    int * dmrg_maxsweeps              = options_.get_int_array("DMRG_MAXSWEEPS");
+    const int ndmrg_maxsweeps         = options_["DMRG_MAXSWEEPS"].size();
+    double * dmrg_noiseprefactors     = options_.get_double_array("DMRG_NOISEPREFACTORS");
+    const int ndmrg_noiseprefactors   = options_["DMRG_NOISEPREFACTORS"].size();
+    const bool dmrg_print_corr        = options_.get_bool("DMRG_PRINT_CORR");
+    const bool mps_chkpt              = options_.get_bool("DMRG_CHKPT");
+    //int * frozen_docc                 = options_.get_int_array("FROZEN_DOCC");
+    //int * active                      = options_.get_int_array("ACTIVE");
+    /// Sebastian optimizes the frozen_docc
+    Dimension frozen_docc             = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    Dimension active                  = mo_space_info_->get_dimension("ACTIVE");
+    Dimension virtual_orbs                 = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    const double dmrgscf_convergence  = options_.get_double("D_CONVERGENCE");
+    const double dmrg_davidson_r_tol  = options_.get_double("DMRG_DAVIDSON_RTOL");
+    const bool dmrgscf_store_unit     = options_.get_bool("DMRG_STORE_UNIT");
+    const bool dmrgscf_do_diis        = options_.get_bool("DMRG_DO_DIIS");
+    const double dmrgscf_diis_branch  = options_.get_double("DMRG_DIIS_BRANCH");
+    const bool dmrgscf_store_diis     = options_.get_bool("DMRG_STORE_DIIS");
+    const int dmrgscf_max_iter        = options_.get_int("DMRGSCF_MAX_ITER");
+    const int dmrgscf_which_root      = options_.get_int("DMRG_WHICH_ROOT");
+    const bool dmrgscf_state_avg      = options_.get_bool("DMRG_AVG_STATES");
+    const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
+    const bool dmrgscf_loc_random     = options_.get_bool("DMRG_LOC_RANDOM");
+    const int dmrgscf_num_vec_diis    = CheMPS2::DMRGSCF_numDIISvecs;
+    const std::string unitaryname     = psi::get_writer_file_prefix(wfn_->molecule()->name() ) + ".unitary.h5";
+    const std::string diisname        = psi::get_writer_file_prefix(wfn_->molecule()->name() ) + ".DIIS.h5";
+    bool three_pdm = false;
+    if(options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE")=="THREE-DSRG-MRPT2")
+    {
+        if(options_.get_str("THREEPDC") != "ZERO")
+            three_pdm = true;
+    }
+        /****************************************
+     *   Check if the input is consistent   *
+     ****************************************/
+
+    const int SyGroup= chemps2_groupnumber( wfn_->molecule()->sym_label() );
+    const int nmo    = mo_space_info_->size("ALL");
+    const int nirrep = mo_space_info_->nirrep();
+    Dimension orbspi     = mo_space_info_->get_dimension("ALL");
+    int * docc       = wfn_->doccpi();
+    int * socc       = wfn_->soccpi();
+    if ( wfn_irrep<0 )                            { throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!"); }
+    if ( wfn_multp<1 )                            { throw PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or equal to one: WFN_MULTP = (2S+1) >= 1 !"); }
+    if ( ndmrg_states==0 )                        { throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!"); }
+    if ( ndmrg_econv==0 )                         { throw PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!"); }
+    if ( ndmrg_maxsweeps==0 )                     { throw PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!"); }
+    if ( ndmrg_noiseprefactors==0 )               { throw PSIEXCEPTION("Option DMRG_NOISEPREFACTORS (double array) should be set!"); }
+    if ( ndmrg_states!=ndmrg_econv )              { throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV (double array) should contain the same number of elements!"); }
+    if ( ndmrg_states!=ndmrg_maxsweeps )          { throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_MAXSWEEPS (integer array) should contain the same number of elements!"); }
+    if ( ndmrg_states!=ndmrg_noiseprefactors )    { throw PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_NOISEPREFACTORS (double array) should contain the same number of elements!"); }
+    for ( int cnt=0; cnt<ndmrg_states; cnt++ ){
+       if ( dmrg_states[cnt] < 2 ){
+          throw PSIEXCEPTION("Entries in DMRG_STATES (integer array) should be larger than 1!");
+       }
+    }
+    if ( dmrgscf_convergence<=0.0 )               { throw PSIEXCEPTION("Option D_CONVERGENCE (double) must be larger than zero!"); }
+    if ( dmrgscf_diis_branch<=0.0 )               { throw PSIEXCEPTION("Option DMRG_DIIS_BRANCH (double) must be larger than zero!"); }
+    if ( dmrgscf_max_iter<1 )                     { throw PSIEXCEPTION("Option DMRG_MAX_ITER (integer) must be larger than zero!"); }
+    if ( dmrgscf_which_root<1 )                   { throw PSIEXCEPTION("Option DMRG_WHICH_ROOT (integer) must be larger than zero!"); }
+
+    /*******************************************
+     *   Create a CheMPS2::ConvergenceScheme   *
+     *******************************************/
+    CheMPS2::Initialize::Init();
+    std::shared_ptr<CheMPS2::ConvergenceScheme>  OptScheme = std::make_shared<CheMPS2::ConvergenceScheme>(ndmrg_states);
+    for (int cnt=0; cnt<ndmrg_states; cnt++){
+       OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], dmrgscf_convergence);
+    }
+    //CheMPS2::DMRGSCFindices * iHandler = new ChemP
+    std::shared_ptr<CheMPS2::DMRGSCFindices> iHandler = std::make_shared<CheMPS2::DMRGSCFindices>(nmo, SyGroup, frozen_docc, active, virtual_orbs);
+    int nElectrons = 0;
+    for (int cnt=0; cnt<nirrep; cnt++){ nElectrons += 2 * docc[cnt] + socc[cnt]; }
+    (*outfile) << "nElectrons  = " << nElectrons << endl;
+
+    // Number of electrons in the active space
+    int nDMRGelectrons = nElectrons;
+    for (int cnt=0; cnt<nirrep; cnt++){ nDMRGelectrons -= 2 * frozen_docc[cnt]; }
+    (*outfile) << "nEl. active = " << nDMRGelectrons << endl;
+
+    // Create the CheMPS2::Hamiltonian --> fill later
+    const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
+    int * orbitalIrreps = new int[ nOrbDMRG ];
+    int counterFillOrbitalIrreps = 0;
+    for (int h=0; h<nirrep; h++){
+       for (int cnt=0; cnt<active[h]; cnt++){ //Only the active space is treated with DMRG-SCF!
+          orbitalIrreps[counterFillOrbitalIrreps] = h;
+          counterFillOrbitalIrreps++;
+       }
+    }
+    std::shared_ptr<CheMPS2::Hamiltonian> Ham = std::make_shared<CheMPS2::Hamiltonian>(nOrbDMRG, SyGroup, orbitalIrreps);
+    //fill_integrals(Ham);
+
+    std::shared_ptr<CheMPS2::Problem> Prob = std::make_shared<CheMPS2::Problem>(Ham.get(), wfn_multp - 1, nDMRGelectrons, wfn_irrep);
+
+    Prob->SetupReorderD2h();
+
+    active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
+        if(
+        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[2]] ) 
+        == CheMPS2::Irreps::directProd(orbitalIrreps[i[1]], orbitalIrreps[i[3]] ) )
+        {
+            Ham->setVmat(i[0], i[2], i[1], i[3], value);
+            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[2], i[1], i[3], value);
+        } ;});
+    //int shift = iHandler->getDMRGcumulative(h);
+    int shift = 0;
+    for(int u = 0; u < nOrbDMRG; u++)
+    {
+        for(int v = u; v < nOrbDMRG; v++)
+        {
+            if(orbitalIrreps[u] == orbitalIrreps[v])
+            {
+                Ham->setTmat(shift + u, shift + v, one_body_integrals_[u * nOrbDMRG + v]);
+                outfile->Printf("\n %d  %d %8.8f", u, v, one_body_integrals_[u * nOrbDMRG + v]);
+            }
+        }
+    }
+    Ham->setEconst(scalar_energy_);
+    outfile->Printf("\n scalar_energy_: %8.8f", scalar_energy_);
+
+    std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
+
+    double Energy = 1e-8;
+    double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
+    double * DMRG2DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
+    double * DMRG3DM;
+    if(max_rdm_ > 2)
+        DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
+
+    for(int state = 0; state < dmrgscf_which_root; state++)
+    {
+        if(state > 0){ DMRGCI->newExcitation(fabs(Energy));}
+        Energy = DMRGCI->Solve();
+        if(dmrgscf_state_avg)
+        {
+            DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+            CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
+        }
+    
+    if((state == 0) && (dmrgscf_which_root > 1)) { DMRGCI->activateExcitations( dmrgscf_which_root-1);}
+        {
+
+            DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+            CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
+        }
+    }
+    if( !(dmrgscf_state_avg) ) {
+        DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+    }
+    if(dmrg_print_corr)
+    {
+        DMRGCI->getCorrelations()->Print();
+    }
+    CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
+    if( max_rdm_ > 2)
+    {
+        CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
+    }
+    compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
+
+    delete DMRG1DM;
+    delete DMRG2DM;
+    if(max_rdm_ > 2){delete DMRG3DM;}
+
+}
+int DMRGSolver::chemps2_groupnumber(const string SymmLabel){
+
+    int SyGroup = 0;
+    bool stopFindGN = false;
+    const int magic_number_max_groups_chemps2 = 8;
+    do {
+        if ( SymmLabel.compare(CheMPS2::Irreps::getGroupName(SyGroup)) == 0 ){ stopFindGN = true; }
+        else { SyGroup++; }
+    } while (( !stopFindGN ) && ( SyGroup < magic_number_max_groups_chemps2 ));
+
+    (*outfile) << "Psi4 symmetry group was found to be <" << SymmLabel.c_str() << ">." << endl;
+    if ( SyGroup >= magic_number_max_groups_chemps2 ){
+        (*outfile) << "CheMPS2 did not recognize this symmetry group name. CheMPS2 only knows:" << endl;
+        for (int cnt=0; cnt<magic_number_max_groups_chemps2; cnt++){
+            (*outfile) << "   <" << (CheMPS2::Irreps::getGroupName(cnt)).c_str() << ">" << endl;
+        }
+        throw PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
+    }
+    return SyGroup;
+
+}
+//void DMRGSolver::fill_integrals(std::shared_ptr<CheMPS2::Hamiltonian> dmrg)
+//{
+//    
+//}
+
+
+}} // End Namespaces

@@ -1,0 +1,47 @@
+#! Generated using commit GITCOMMIT
+#! Perform a DF-DSRG-MRPT2 on N2
+import forte
+
+refrhf     = -108.95379624015762 
+refdsrgpt2 = -109.25189866738
+refdsrgpt2_ref_relax = -109.253503109379110
+
+memory 500 mb
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.1
+}
+
+set globals{
+   basis                   cc-pvdz
+   df_basis_mp2            cc-pvdz-ri
+   df_basis_scf            cc-pvdz-jkfit
+   reference               rhf
+   scf_type                pk
+   d_convergence           12
+   e_convergence           15
+}
+
+set forte {
+   restricted_docc         [2,0,0,0,0,2,0,0]
+   active                  [1,0,1,1,0,1,1,1]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  1.0
+   semi_canonical          true
+   int_type                df
+   job_type                three-dsrg-mrpt2
+   NTRIAL_PER_ROOT         100
+   RELAX_REF               ONCE
+   FCI_ITERATIONS          50
+}
+
+scf = energy('scf')
+compare_values(refrhf, scf,10,"SCF energy")
+
+energy('forte')
+compare_values(refdsrgpt2_ref_relax, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+

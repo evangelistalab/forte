@@ -89,8 +89,8 @@ def generate_makefile(args):
             addons += "#LDFLAGS += -Wl,-rpath -L$(CHEMPS2_BINDIR)/lib64 -lchemps2 -Wl,-rpath $(CHEMPS2_BINDIR)/lib64\n"
             addons += "CXXFLAGS += -DHAVE_CHEMPS2\n"
         else:
-            addons += "CXXSRC = $(filter-out dmrgscf.cc, $(notdir $(wildcard *.cc)))\n"
-            addons += "DEPENDINCLUDE = $(filter-out dmrgscf.h, $(notdir $(wildcard *.h*)))\n"
+            addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
+            addons += "DEPENDINCLUDE = $(filter-out dmrgscf.h dmrgsolver.h, $(notdir $(wildcard *.h*)))\n"
 
 
         re_addons = re.compile(r"DEPENDINCLUDE")

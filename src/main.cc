@@ -336,7 +336,7 @@ read_options(std::string name, Options &options)
         options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE DMRGSCF
+        ///         OPTIONS FOR THE DMRGSolver
         //////////////////////////////////////////////////////////////
 
         options.add_int("DMRG_WFN_MULTP", -1);
@@ -369,6 +369,8 @@ read_options(std::string name, Options &options)
         /*- The maximum number of sweeps to stop an instruction
             during successive DMRG instructions -*/
         options.add_array("DMRG_MAXSWEEPS");
+        /*- The Davidson R tolerance (Wouters says this will cause RDms to be close to exact -*/
+        options.add_double("DMRG_DAVIDSON_RTOL", 1e-6);
 
         /*- The noiseprefactors for successive DMRG instructions -*/
         options.add_array("DMRG_NOISEPREFACTORS");
@@ -483,7 +485,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV DELTA");
+        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -517,6 +519,8 @@ read_options(std::string name, Options &options)
         options.add_bool("INITIATOR_APPROX",false);
         /*- The initiator approximation factor -*/
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
+        /*- Do result perturbation analysis -*/
+        options.add_bool("PERTURB_ANALYSIS",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
@@ -929,11 +933,13 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             if(options.get_bool("SEMI_CANONICAL")){
 
                 auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+                dmrg->set_iterations(1);
                 dmrg->compute_energy();
                 Reference dmrg_reference = dmrg->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
             auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+            dmrg->set_iterations(1);
             dmrg->compute_energy();
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
@@ -1000,11 +1006,14 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             if(options.get_bool("SEMI_CANONICAL")){
 
                 auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+                dmrg->set_iterations(1);
                 dmrg->compute_energy();
+
                 Reference dmrg_reference = dmrg->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
             auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+            dmrg->set_iterations(1);
             dmrg->compute_energy();
             Reference dmrg_reference = dmrg->reference();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));

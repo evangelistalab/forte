@@ -49,6 +49,7 @@ enum PropagatorType {LinearPropagator,
                      DavidsonLiuPropagator,
                      ExpChebyshevPropagator,
                      DeltaChebyshevPropagator,
+                     ChebyshevPropagator,
                      DeltaPropagator};
 
 /**
@@ -178,6 +179,10 @@ private:
     int energy_estimate_freq_;
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
+    /// Flag for conducting CHC energy estimation
+    bool CHC_flag_;
+    double CHC_energy_;
+
 
     // * Energy extrapolation
     /// Estimated variational energy at each step
@@ -203,6 +208,8 @@ private:
     double lambda_h_;
     /// Characteristic function coefficients
     std::vector<double> cha_func_coefs_;
+    /// Do result perturbation analysis
+    bool do_perturb_analysis_;
 
     // ==> Class functions <==
 
@@ -253,7 +260,8 @@ private:
     /// The Davidson-Liu propagator
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// The Chebyshev propagator
-    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Chebyshev(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+//    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Polynomial propagator
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
 
@@ -287,7 +295,7 @@ private:
     /// @param tollerance The accuracy of the estimate.  Used to impose |C_I C_J| < tollerance
     double estimate_var_energy_sparse(det_vec& dets, std::vector<double>& C, double tollerance = 1.0e-14);
     /// Estimate the pertubation energy for the result
-    std::tuple<double, double, double, double> estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+    std::tuple<double, double> estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// Estimate the 1st order pertubation energy for the result.
     double estimate_1st_order_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// Estimate the 2nd order pertubation energy for the result within subspace

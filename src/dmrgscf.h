@@ -27,9 +27,14 @@ public:
     {
         return dmrg_ref_;
     }
+    void set_iterations(int dmrg_iterations)
+    {
+        dmrg_iterations_ = dmrg_iterations;
+    }
 
 private:
     Reference dmrg_ref_;
+    int dmrg_iterations_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<ForteIntegrals> ints_;
     void set_up_ints();
