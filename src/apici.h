@@ -180,8 +180,8 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
     /// Flag for conducting CHC energy estimation
-    bool CHC_flag_;
-    double CHC_energy_;
+    bool approx_E_flag_;
+    double approx_energy_, old_approx_energy_;
 
 
     // * Energy extrapolation
