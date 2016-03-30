@@ -195,6 +195,16 @@ private:
 	/// The CI coeffiecients
 	SharedMatrix evecs_;
 
+
+    /// Vector of alpha strings
+    std::vector<STLBitsetString> alfa_list_;
+    /// Vector of beta strings
+    std::vector<STLBitsetString> beta_list_;
+    /// Map from alpha to beta
+    std::vector<std::vector<size_t>> a_to_b_; 
+    /// Map from beta to alpha
+    std::vector<std::vector<size_t>> b_to_a_; 
+
     /// A map of determinants in the P space
     std::unordered_map<STLBitsetDeterminant,int, STLBitsetDeterminant::Hash> P_space_map_;
 	/// A History of Determinants
@@ -321,6 +331,10 @@ private:
 
 	/// Print natural orbitals
 	void print_nos();
+
+    /// Convert from determinant to string representation
+    void convert_to_string( const std::vector<STLBitsetDeterminant> space );
+
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

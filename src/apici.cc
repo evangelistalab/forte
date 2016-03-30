@@ -54,6 +54,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
 void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
@@ -160,6 +161,7 @@ void AdaptivePathIntegralCI::startup()
     do_dynamic_prescreening_ = options_.get_bool("DYNAMIC_PRESCREENING");
     do_schwarz_prescreening_ = options_.get_bool("SCHWARZ_PRESCREENING");
     do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
+    do_perturb_analysis_ = options_.get_bool("PERTURB_ANALYSIS");
     chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
@@ -201,6 +203,14 @@ void AdaptivePathIntegralCI::startup()
     }else if (options_.get_str("PROPAGATOR") == "DELTA-CHEBYSHEV"){
         propagator_ = DeltaChebyshevPropagator;
         propagator_description_ = "Delta-Chebyshev";
+        time_step_ = 1.0;
+        if (chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
+    }else if (options_.get_str("PROPAGATOR") == "CHEBYSHEV"){
+        propagator_ = ChebyshevPropagator;
+        propagator_description_ = "Chebyshev";
         time_step_ = 1.0;
         if (chebyshev_order_ <= 0) {
             outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
@@ -249,6 +259,7 @@ void AdaptivePathIntegralCI::print_info()
         {"Schwarz prescreening",do_schwarz_prescreening_ ? "YES" : "NO"},
         {"Initiator approximation",do_initiator_approx_ ? "YES" : "NO"},
         {"Fast variational estimate",fast_variational_estimate_ ? "YES" : "NO"},
+        {"Result perturbation analysis",do_perturb_analysis_ ? "YES" : "NO"},
         {"Using OpenMP", have_omp_ ? "YES" : "NO"},
     };
 //    {"Number of electrons",nel},
@@ -309,6 +320,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
             }
         }
         obt_energies.push_back(temp);
+
     }
     std::sort(obt_energies.begin(),obt_energies.end());
 //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
@@ -320,7 +332,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
     }
     if (ne % 2)
         high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
-    lambda_h_ = high_obt_energy;
+    lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
     return lambda_h_;
 }
 
@@ -355,6 +367,9 @@ void AdaptivePathIntegralCI::compute_characteristic_function()
         break;
     case ExpChebyshevPropagator:
         Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
+        break;
+    case ChebyshevPropagator:
+        Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
         break;
     case DeltaPropagator:
     case DeltaChebyshevPropagator:
@@ -476,6 +491,14 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
     Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
 }
 
+void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
+    coefs.clear();
+    std::vector<double> poly_coefs;
+    Chebyshev_polynomial_coefs(poly_coefs, order);
+
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+}
+
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
 {
     coefs.clear();
@@ -531,7 +554,6 @@ double AdaptivePathIntegralCI::compute_energy()
     pqpq_bb_ = new double[ncmo_*ncmo_];
 
     for (size_t i=0; i < (size_t)ncmo_; ++i) {
-////        pqpq_row_max_.push_back(0.0);
         for (size_t j=0; j < (size_t)ncmo_; ++j) {
             double temp_aa = sqrt(fabs(fci_ints_->tei_aa(i,j,i,j)));
             pqpq_aa_[i*ncmo_+j] = temp_aa;
@@ -545,71 +567,8 @@ double AdaptivePathIntegralCI::compute_energy()
             pqpq_bb_[i*ncmo_+j] = temp_bb;
             if (temp_bb > pqpq_max_bb_)
                 pqpq_max_bb_=temp_bb;
-////            if (temp_aa > pqpq_row_max_[i])
-////                pqpq_row_max_[i]=temp;
         }
     }
-
-//    Determinant detI(reference_determinant_);
-
-//    std::vector<int> aocc = detI.get_alfa_occ();
-//    std::vector<int> bocc = detI.get_beta_occ();
-//    std::vector<int> avir = detI.get_alfa_vir();
-//    std::vector<int> bvir = detI.get_beta_vir();
-//    std::vector<int> aocc_offset(nirrep_ + 1);
-//    std::vector<int> bocc_offset(nirrep_ + 1);
-//    std::vector<int> avir_offset(nirrep_ + 1);
-//    std::vector<int> bvir_offset(nirrep_ + 1);
-
-//    int noalpha = aocc.size();
-//    int nobeta  = bocc.size();
-//    int nvalpha = avir.size();
-//    int nvbeta  = bvir.size();
-
-//    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
-//    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
-//    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
-//    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
-//    for (int h = 1; h < nirrep_ + 1; ++h){
-//        aocc_offset[h] += aocc_offset[h-1];
-//        avir_offset[h] += avir_offset[h-1];
-//        bocc_offset[h] += bocc_offset[h-1];
-//        bvir_offset[h] += bvir_offset[h-1];
-//    }
-
-//    for (int h = 0; h < nirrep_; ++h){
-//        for (int i = aocc_offset[h], a = avir_offset[h + 1] - 1 ; i < aocc_offset[h + 1] && a >= avir_offset[h] ; ++i, --a){
-//            int ii = aocc[i];
-//            int aa = avir[a];
-//            detI.set_alfa_bit(ii,false);
-//            detI.set_alfa_bit(aa,true);
-//        }
-//        for (int i = bocc_offset[h], a = bvir_offset[h + 1] - 1 ; i < bocc_offset[h + 1] && a >= bvir_offset[h] ; ++i, --a){
-//            int ii = bocc[i];
-//            int aa = bvir[a];
-//            detI.set_beta_bit(ii,false);
-//            detI.set_beta_bit(aa,true);
-//        }
-//    }
-//    double ref_energy = reference_determinant_.energy();
-//    outfile->Printf("\nreference energy:%.12lf", ref_energy);
-//    reference_determinant_.print();
-//    detI.print();
-//    double max_energy = detI.energy();
-//    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
-//    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
-
-
-//    outfile->Printf("\nhigh obt energy:%.12lf", high_obt_energy);
-
-//    double ref_energy = reference_determinant_.energy();
-////    outfile->Printf("\nreference energy:%.12lf", ref_energy);
-////    reference_determinant_.print();
-//    double max_energy = high_obt_energy * ne;
-////    outfile->Printf("\nmax_excit energy:%.12lf", max_energy);
-//    double power_shift = 5./8. * max_energy + 3./8. * ref_energy;
-//    range_ = (power_shift-ref_energy)*1.2*time_step_;
-////    outfile->Printf("\nshift:%.12lf\trange:%.12f", power_shift, range_);
 
     // Compute the initial guess
     outfile->Printf("\n\n  ==> Initial Guess <==");
@@ -624,19 +583,12 @@ double AdaptivePathIntegralCI::compute_energy()
 
     convergence_analysis();
 
-//    if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-//        print_characteristic_function(propagator_, time_step_, power_shift, var_energy, 0.0, max_energy);
-//    } else {
-//        print_characteristic_function(propagator_, time_step_, 0.0, var_energy, 0.0, max_energy);
-//    }
-
-
     // Main iterations
     outfile->Printf("\n\n  ==> APIFCI Iterations <==");
 
-    outfile->Printf("\n\n  ------------------------------------------------------------------------------------------");
-    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh  |dEp/dt|      Var. Energy/Eh   |dEv/dt|");
-    outfile->Printf("\n  ------------------------------------------------------------------------------------------");
+    outfile->Printf("\n\n  -----------------------------------------------------------------------------------------------------------------------------");
+    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Var. Energy/Eh      dEv/dt      Approx. Energy/Eh   dEv/dt");
+    outfile->Printf("\n  -----------------------------------------------------------------------------------------------------------------------------");
 
     int maxcycle = maxiter_;
     double old_var_energy = 0.0;
@@ -649,13 +601,6 @@ double AdaptivePathIntegralCI::compute_energy()
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
-//        double shift = do_shift_ ? var_energy - nuclear_repulsion_energy_ : 0.0;
-
-//        if (propagator_ == PowerPropagator || propagator_ == ChebyshevPropagator) {
-//            shift = power_shift;
-//        }
-
-        // Compute |n+1> = exp(-tau H)|n>
 
         timer_on("PIFCI:Step");
         if (use_inter_norm_) {
@@ -679,6 +624,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
         // Compute the energy and check for convergence
         if (cycle % energy_estimate_freq_ == 0){
+            CHC_flag_ = true;
             timer_on("PIFCI:<E>");
             std::map<std::string,double> results = estimate_energy(dets,C);
             timer_off("PIFCI:<E>");
@@ -686,10 +632,10 @@ double AdaptivePathIntegralCI::compute_energy()
             var_energy = results["VARIATIONAL ENERGY"];
             proj_energy = results["PROJECTIVE ENERGY"];
 
-            double var_energy_gradient = std::fabs((var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_));
-            double proj_energy_gradient = std::fabs((proj_energy - old_proj_energy) / (time_step_ * energy_estimate_freq_));
+            double var_energy_gradient = (var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_);
+            double proj_energy_gradient = (proj_energy - old_proj_energy) / (time_step_ * energy_estimate_freq_);
 
-            outfile->Printf("\n%9d %8.2f %10zu %20.12f %.3e %20.12f %.3e",cycle,beta,C.size(),
+            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e %20.12f %10.3e",cycle,beta,C.size(),
                             proj_energy,proj_energy_gradient,
                             var_energy,var_energy_gradient);
 
@@ -698,12 +644,12 @@ double AdaptivePathIntegralCI::compute_energy()
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(var_energy_gradient) < e_convergence_){
+            if (std::fabs(proj_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
             }
             if (do_shift_) {
-                lambda_1_ = var_energy - nuclear_repulsion_energy_;
+                lambda_1_ = CHC_energy_ - nuclear_repulsion_energy_;
                 compute_characteristic_function();
             }
         }
@@ -711,7 +657,11 @@ double AdaptivePathIntegralCI::compute_energy()
         outfile->Flush();
     }
 
-    outfile->Printf("\n  ------------------------------------------------------------------------------------------");
+    det_hash<> dets_C_hash;
+    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, 0.0);
+    dets_C_hash.clear();
+
+    outfile->Printf("\n  -----------------------------------------------------------------------------------------------------------------------------");
     outfile->Printf("\n\n  Calculation %s",converged ? "converged." : "did not converge!");
 
     if (do_shift_) {
@@ -731,14 +681,16 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n  * Adaptive-CI Variational Energy     = %18.12f Eh",1,var_energy);
     outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %18.12f Eh",1,proj_energy);
 
+    outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,CHC_energy_);
+    outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - CHC_energy_);
+
+    if (do_perturb_analysis_) {
+        double error_2nd_perturb_sub, error_2nd_perturb_full;
+        std::tie(error_2nd_perturb_sub, error_2nd_perturb_full) = estimate_perturbation(dets, C, spawning_threshold_);
+        outfile->Printf("\n  * 2nd order perturbation est. Energy = %18.12f Eh",1,error_2nd_perturb_sub);
+    }
+
     outfile->Printf("\n\n  * Size of CI space                   = %zu",C.size());
-
-    double eff_var_energy, error_1st_perturbation, error_2nd_perturb_sub, error_2nd_perturb_full;
-    std::tie(eff_var_energy, error_1st_perturbation, error_2nd_perturb_sub, error_2nd_perturb_full) = estimate_perturbation(dets, C, spawning_threshold_);
-    outfile->Printf("\n\n  * Variational Energy no perturbation = %18.12f Eh",1,eff_var_energy);
-    outfile->Printf("\n  * 1st order perturbation est. Error  = %18.12f Eh",1,error_1st_perturbation);
-    outfile->Printf("\n  * 2nd order perturbation est. Error  = %18.12f Eh",1,error_2nd_perturb_sub);
-
 
     if (do_schwarz_prescreening_) {
         outfile->Printf("\n  * Schwarz prescreening total attempt= %zu",schwarz_total_);
@@ -877,6 +829,9 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     }
 
     switch (propagator) {
+    case ChebyshevPropagator:
+        propagate_Chebyshev(dets,C,spawning_threshold);
+        break;
     case DeltaPropagator:
         propagate_delta(dets,C,spawning_threshold,S);
         break;
@@ -1015,6 +970,24 @@ void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& 
 
 }
 
+void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
+{
+    // A map that contains the pair (determinant,coefficient)
+    det_hash<> dets_C_hash;
+    for (int i = 0; i < chebyshev_order_; i++) {
+        double root = 0.0;
+        if (i < 0) {
+            root = 1.0;
+        } else {
+            root = cos((2.0*i+1)/(2.0*chebyshev_order_));
+        }
+
+        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        copy_hash_to_vec(dets_C_hash,dets,C);
+        dets_C_hash.clear();
+        normalize(C);
+    }
+}
 
 void AdaptivePathIntegralCI::propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
@@ -1112,53 +1085,6 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     copy_hash_to_vec(dets_sum_map,dets,C);
 }
 
-void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
-{
-    // A map that contains the pair (determinant,coefficient)
-    det_hash<> dets_C_hash;
-    det_hash<> spawned;
-    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
-        dets_C_hash[dets[I]] = C[I];
-    }
-    det_hash<> T_p2;
-    det_hash<> T_p1;
-    combine_hashes(dets_C_hash, T_p1);
-    det_hash<> Ck;
-    combine_hashes(T_p1, Ck);
-    scale(Ck,boost::math::cyl_bessel_i(0, range_));
-    combine_hashes(Ck, spawned);
-    Ck.clear();
-
-    det_hash<> Tk;
-    det_vec sub_dets;
-    std::vector<double> sub_C;
-    copy_hash_to_vec(T_p1,sub_dets,sub_C);
-    apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,Tk,S);
-//    det_hash<> C1;
-    combine_hashes(Tk, Ck);
-    scale(Ck, 2.0 * boost::math::cyl_bessel_i(1, range_));
-    combine_hashes(Ck, spawned);
-    Ck.clear();
-
-    for (int i = 2; i<= chebyshev_order_; i++){
-        Ck.clear();
-        T_p2 = T_p1;
-        T_p1 = Tk;
-        Tk.clear();
-        det_hash<> HT_p1;
-        copy_hash_to_vec(T_p1, sub_dets,sub_C);
-        apply_tau_H(-tau/range_,spawning_threshold,sub_dets,sub_C,HT_p1,S);
-        scale(HT_p1, 2.0);
-        combine_hashes(HT_p1, Tk);
-        add(Tk, -1.0, T_p2);
-        combine_hashes(Tk, Ck);
-        scale(Ck, 2.0 * boost::math::cyl_bessel_i(i, range_));
-        combine_hashes(Ck, spawned);
-    }
-    normalize(spawned);
-
-    copy_hash_to_vec(spawned,dets,C);
-}
 
 void AdaptivePathIntegralCI::propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
@@ -1688,7 +1614,19 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             new_max_two_HJI_ = std::max(thread_max_HJI[t].second,new_max_two_HJI_);
         }
     }
-
+    if (CHC_flag_) {
+        size_t max_I = dets.size();
+        double CHC_energy = 0.0;
+#pragma omp parallel for reduction(+:CHC_energy)
+        for (size_t I = 0; I < max_I; ++I){
+            CHC_energy += C[I] * dets_C_hash[dets[I]];
+        }
+        CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
+        double CHC_energy_gradient = (CHC_energy - CHC_energy_) / (time_step_ * energy_estimate_freq_);
+        CHC_energy_ = CHC_energy;
+        CHC_flag_ = false;
+        outfile->Printf(" %20.12f %10.3e",CHC_energy_,CHC_energy_gradient);
+    }
 }
 
 void AdaptivePathIntegralCI::apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0)
@@ -2765,25 +2703,24 @@ double AdaptivePathIntegralCI::estimate_2nd_order_perturbation_sub(det_vec& dets
     return perturbation_energy_estimator;
 }
 
-std::tuple<double, double, double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold)
+std::tuple<double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold)
 {
 //    double first_order_perturb = estimate_1st_order_perturbation(dets, C, spawning_threshold);
 //    return std::make_tuple(first_order_perturb, 0.0, 0.0);
     // Compute a variational estimator of the energy
     size_t size = dets.size();
-    double variational_energy_estimator = 0.0;
-    double perturbation_1st_energy_estimator = 0.0;
-#pragma omp parallel for reduction(+:variational_energy_estimator, perturbation_1st_energy_estimator)
-    for (size_t I = 0; I < size; ++I){
-        for (size_t J = 0; J < size; ++J){
-            double HIJ = dets[I].slater_rules(dets[J]);
-            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
-                perturbation_1st_energy_estimator += C[I] * HIJ * C[J];
-            } else {
-                variational_energy_estimator += C[I] * HIJ * C[J];
-            }
-        }
-    }
+    double variational_energy_estimator = CHC_energy_ - nuclear_repulsion_energy_;
+//#pragma omp parallel for reduction(+:variational_energy_estimator, perturbation_1st_energy_estimator)
+//    for (size_t I = 0; I < size; ++I){
+//        for (size_t J = 0; J < size; ++J){
+//            double HIJ = dets[I].slater_rules(dets[J]);
+//            if (std::fabs(C[I] * HIJ) < spawning_threshold && J != I){
+//                perturbation_1st_energy_estimator += C[I] * HIJ * C[J];
+//            } else {
+//                variational_energy_estimator += C[I] * HIJ * C[J];
+//            }
+//        }
+//    }
     double perturbation_2nd_energy_estimator_sub = 0.0;
 #pragma omp parallel for reduction(+:perturbation_2nd_energy_estimator_sub)
     for (size_t I = 0; I < size; ++I){
@@ -2798,7 +2735,7 @@ std::tuple<double, double, double, double> AdaptivePathIntegralCI::estimate_pert
         double delta = dets[I].energy() - variational_energy_estimator;
         perturbation_2nd_energy_estimator_sub += 0.5* (delta - sqrt(delta * delta + 4 * current_V * current_V));
     }
-    return std::make_tuple(variational_energy_estimator + nuclear_repulsion_energy_, perturbation_1st_energy_estimator, perturbation_2nd_energy_estimator_sub, 0.0);
+    return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
 
 void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C)

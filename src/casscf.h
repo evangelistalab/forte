@@ -124,6 +124,7 @@ private:
     std::vector<size_t> nmo_abs_;
     ///Transform the active integrals
     ambit::Tensor transform_integrals();
+    std::pair<ambit::Tensor, std::vector<double> > CI_Integrals();
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
     int print_;
