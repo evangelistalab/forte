@@ -2385,6 +2385,11 @@ void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const doub
 
     C1["IP"] += alpha * H1["AP"] * T1["IA"];
     C1["QA"] -= alpha * T1["IA"] * H1["QI"];
+    //C1["ij"] += alpha * H1["aj"] * T1["ia"];
+    //C1["kj"] -= alpha * T1["ij"] * H1["ki"];
+
+    //C1["IJ"] += alpha * H1["AJ"] * T1["IA"];
+    //C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());
