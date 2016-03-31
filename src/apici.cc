@@ -648,7 +648,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(approx_energy_gradient) < e_convergence_){
+            if (std::fabs(approx_energy_gradient) < e_convergence_ && std::fabs(proj_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
             }
