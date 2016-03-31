@@ -146,6 +146,9 @@ void AdaptiveCI::startup()
 	nalpha_ = (nactel_ + ms) / 2;
 	nbeta_  = nactel_ - nalpha_; 
 
+    outfile->Printf("\n  nbeta = %d", nbeta_);
+    outfile->Printf("\n  nalpha = %d", nalpha_);
+
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
 	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
@@ -645,6 +648,12 @@ double AdaptiveCI::compute_energy()
         if (converged){
            // if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
             if( !quiet_mode_ )outfile->Printf("\n  ***** Calculation Converged *****");
+            break;
+        }
+
+        bool stuck = check_stuck( energy_history, PQ_evals );
+        if( stuck ){
+            outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
         }
     
@@ -1914,6 +1923,60 @@ void AdaptiveCI::compute_H_expectation_val( const std::vector<STLBitsetDetermina
             }
         }
     }
+}
+
+void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> space)
+{
+    size_t space_size = space.size();
+    size_t nalfa_str = 0;
+    size_t nbeta_str = 0;
+
+    alfa_list_.clear();
+    beta_list_.clear();
+    
+    a_to_b_.clear();
+    b_to_a_.clear();
+
+    string_hash<size_t> alfa_map;
+    string_hash<size_t> beta_map;
+
+    for( size_t I = 0; I < space_size; ++I ){
+    
+        STLBitsetString alfa( space[I].get_alfa_bits_vector_bool());
+        STLBitsetString beta( space[I].get_beta_bits_vector_bool());
+
+        size_t a_id;
+        size_t b_id;
+    
+        // Once we find a new alfa string, add it to the list
+        string_hash<size_t>::iterator a_it = alfa_map.find(alfa);
+        if( a_it == alfa_map.end() ){
+            a_id = nalfa_str;
+            alfa_map[alfa] = a_id;
+            alfa_list_[a_id] = alfa;
+            nalfa_str++;
+        }else{
+            a_id = a_it->second;
+        } 
+
+        string_hash<size_t>::iterator b_it = beta_map.find(beta);
+        if( b_it == beta_map.end() ){
+            b_id = nbeta_str;
+            beta_map[beta] = b_id;
+            beta_list_[b_id] = beta;
+            nbeta_str++;
+        }else{
+            b_id = b_it->second; 
+        }
+
+        a_to_b_.resize(nalfa_str);
+        b_to_a_.resize(nbeta_str);
+ 
+        a_to_b_[a_id].push_back(b_id);
+        b_to_a_[b_id].push_back(a_id);
+
+    }
+    
 }
 
 
