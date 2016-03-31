@@ -357,6 +357,9 @@ read_options(std::string name, Options &options)
             7: d2h                      Ag 	B1g 	B2g 	B3g 	Au 	B1u 	B2u 	B3u
         -*/
         options.add_int("DMRG_WFN_IRREP", -1);
+        /*- FrozenDocc for DMRG (frozen means restricted) -*/
+        options.add_array("DMRG_FROZEN_DOCC");
+
 
         /*- The number of reduced renormalized basis states to be
             retained during successive DMRG instructions -*/
@@ -778,6 +781,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+        dmrg->set_iterations(1);
         dmrg->compute_energy();
 #else
         throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
