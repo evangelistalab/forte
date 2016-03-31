@@ -11,6 +11,7 @@
 
 #include "helpers.h"
 #include "stl_bitset_determinant.h"
+#include "stl_bitset_string.h"
 #include "reference.h"
 #include "string_lists.h"
 
@@ -25,6 +26,14 @@ public:
 
 	// Class constructor and destructor
     CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints, std::shared_ptr<MOSpaceInfo> mo_space_info, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs);
+
+    CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints, 
+            std::shared_ptr<MOSpaceInfo> mo_space_info, 
+            std::vector<STLBitsetString> alfa_strings, 
+            std::vector<STLBitsetString> beta_strings, 
+            std::vector<std::vector<size_t>> a_to_b, 
+            std::vector<std::vector<size_t>> b_to_a,
+            SharedMatrix evecs);
 
 	~CI_RDMS();
 
@@ -58,6 +67,18 @@ private:
 
 	// The CI coefficients
 	SharedMatrix evecs_;
+
+    // The alpha strings
+    std::vector<STLBitsetString> alfa_strings_;
+
+    // The beta strings
+    std::vector<STLBitsetString> beta_strings_;
+
+    // Alpha to beta map
+    std::vector<std::vector<size_t>> a_to_b_;
+
+    // beta to alpha map
+    std::vector<std::vector<size_t>> b_to_a_;
 
 	// The wavefunction symmetry
 	int symmetry_;
@@ -133,6 +154,10 @@ private:
 
 	// Generate three-particle map
 	void get_three_map();
+    
+    // convert to strings
+    void convert_to_string( std::vector<STLBitsetDeterminant>& space ); 
+
 };
 
 }} // End namepaces

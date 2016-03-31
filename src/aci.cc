@@ -1942,8 +1942,18 @@ void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> spac
 
     for( size_t I = 0; I < space_size; ++I ){
     
-        STLBitsetString alfa( space[I].get_alfa_bits_vector_bool());
-        STLBitsetString beta( space[I].get_beta_bits_vector_bool());
+        STLBitsetDeterminant det = space[I];
+        STLBitsetString alfa;
+        STLBitsetString beta;
+        
+        alfa.set_nmo( ncmo_ );
+        beta.set_nmo( ncmo_ );
+
+        for( int i = 0; i < ncmo_ ; ++i ){
+            alfa.set_bit( i , det.get_alfa_bit(i) );
+            beta.set_bit( i , det.get_alfa_bit(i) );
+        }
+
 
         size_t a_id;
         size_t b_id;
@@ -1953,7 +1963,6 @@ void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> spac
         if( a_it == alfa_map.end() ){
             a_id = nalfa_str;
             alfa_map[alfa] = a_id;
-            alfa_list_[a_id] = alfa;
             nalfa_str++;
         }else{
             a_id = a_it->second;
@@ -1963,7 +1972,6 @@ void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> spac
         if( b_it == beta_map.end() ){
             b_id = nbeta_str;
             beta_map[beta] = b_id;
-            beta_list_[b_id] = beta;
             nbeta_str++;
         }else{
             b_id = b_it->second; 
@@ -1972,6 +1980,12 @@ void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> spac
         a_to_b_.resize(nalfa_str);
         b_to_a_.resize(nbeta_str);
  
+        alfa_list_.resize(nalfa_str);
+        beta_list_.resize(nbeta_str);
+
+        alfa_list_[a_id] = alfa;
+        beta_list_[b_id] = beta;
+
         a_to_b_[a_id].push_back(b_id);
         b_to_a_[b_id].push_back(a_id);
 

@@ -1,4 +1,4 @@
-#include <cmath>
+
 
 #include <liboptions/liboptions.h>
 #include <libmints/molecule.h>
@@ -27,7 +27,29 @@ CI_RDMS::CI_RDMS(Options &options,
       evecs_(evecs)
 {
     startup();
+    convert_to_string(det_space_);
 }
+
+CI_RDMS::CI_RDMS( Options &options,
+                  std::shared_ptr<FCIIntegrals> fci_ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::vector<STLBitsetString> alfa_strings,
+                  std::vector<STLBitsetString> beta_strings,
+                  std::vector<std::vector<size_t>> a_to_b,
+                  std::vector<std::vector<size_t>> b_to_a,
+                  SharedMatrix evecs)
+    : options_(options),
+      fci_ints_(fci_ints),
+      mo_space_info_(mo_space_info),
+      evecs_(evecs),
+      alfa_strings_(alfa_strings),
+      beta_strings_(beta_strings),
+      a_to_b_(a_to_b),
+      b_to_a_(b_to_a)
+{
+    startup();
+}
+                  
 
 CI_RDMS::~CI_RDMS()
 {
@@ -96,6 +118,70 @@ void CI_RDMS::startup()
 	    outfile->Printf("\n  Number of active beta electrons: %zu", nb_);
 	    outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
 	}
+
+}
+
+void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
+{
+    size_t space_size = space.size();
+    size_t nalfa_str = 0;
+    size_t nbeta_str = 0;
+    
+    a_to_b_.clear();
+    b_to_a_.clear();
+
+    string_hash<size_t> alfa_map;
+    string_hash<size_t> beta_map;
+
+    for( size_t I = 0; I < space_size; ++I ){
+        STLBitsetDeterminant det = space[I];
+        STLBitsetString alfa;
+        STLBitsetString beta;
+
+        alfa.set_nmo( ncmo_ );
+        beta.set_nmo( ncmo_ );
+    
+        for( int i = 0; i < ncmo_; ++i ){
+            alfa.set_bit(i, det.get_alfa_bit(i)); 
+            beta.set_bit(i, det.get_beta_bit(i)); 
+        }
+
+        size_t a_id;
+        size_t b_id;
+    
+        // Once we find a new alfa string, add it to the list
+        string_hash<size_t>::iterator a_it = alfa_map.find(alfa);
+        if( a_it == alfa_map.end() ){
+            a_id = nalfa_str;
+            alfa_map[alfa] = a_id;
+            nalfa_str++;
+        }else{
+            a_id = a_it->second;
+        } 
+
+        string_hash<size_t>::iterator b_it = beta_map.find(beta);
+        if( b_it == beta_map.end() ){
+            b_id = nbeta_str;
+            beta_map[beta] = b_id;
+            nbeta_str++;
+        }else{
+            b_id = b_it->second; 
+        }
+
+        a_to_b_.resize(nalfa_str);
+        b_to_a_.resize(nbeta_str);
+
+        alfa_strings_.resize(nalfa_str);
+        beta_strings_.resize(nbeta_str);
+ 
+        alfa_strings_[a_id] = alfa;
+        beta_strings_[b_id] = beta;
+
+        a_to_b_[a_id].push_back(b_id);
+        b_to_a_[b_id].push_back(a_id);
+
+    }
+    
 
 }
 
