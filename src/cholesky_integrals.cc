@@ -163,7 +163,7 @@ void CholeskyIntegrals::gather_integrals()
 
     if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);}
     SharedMatrix Lao = Ch->L();
-    SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
+    SharedMatrix L(new Matrix("Lmo", nL, (nso_)*(nso_)));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix aotoso = wfn_->aotoso();
@@ -185,8 +185,8 @@ void CholeskyIntegrals::gather_integrals()
     }
 //    Ca_ = Ca_ao;
 
-    ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
-    ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
+    ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nso_, nso_ });
+    ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nso_,nmo_});
     ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
 
     Cpq_tensor.iterate([&](const std::vector<size_t>& i,double& value){
