@@ -185,6 +185,9 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagV(){
     }else if(H0th_string == "FDIAG_VDIAG"){
         V0th = BTF_->build(tensor_type_,"V0th",diag_two_labels());
     }
+//    for(auto& x: V0th.block_labels()){
+//        outfile->Printf("\n  V0th block %s", x.c_str());
+//    }
     V0th["pqrs"] = V_["pqrs"];
     V0th["pQrS"] = V_["pQrS"];
     V0th["PQRS"] = V_["PQRS"];
