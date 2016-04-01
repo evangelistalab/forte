@@ -80,6 +80,12 @@ private:
     // beta to alpha map
     std::vector<std::vector<size_t>> b_to_a_;
 
+    // Map strings to coefficients
+    std::vector<double> c_map_;
+
+    //Buffer to access cre_list
+    std::vector<std::vector<size_t>> cre_list_buffer_;
+
 	// The wavefunction symmetry
 	int symmetry_;
 
@@ -113,9 +119,17 @@ private:
 	std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;
 	std::vector<std::vector<std::pair<size_t,short>>> b_ann_list_;
 
+	// The list of a_p |N>
+	std::vector<std::pair<size_t,short>> a_ann_list_s_;
+	std::vector<std::pair<size_t,short>> b_ann_list_s_;
+
 	// The list of a^(+)_q |N-1>
 	std::vector<std::vector<std::pair<size_t,short>>> a_cre_list_;
 	std::vector<std::vector<std::pair<size_t,short>>> b_cre_list_;
+
+	// The list of a^(+)_q |N-1>
+	std::vector<std::pair<size_t,short>> a_cre_list_s_;
+	std::vector<std::pair<size_t,short>> b_cre_list_s_;
 
 	// The list of a_q a_p|N>
 	std::vector<std::vector<std::tuple<size_t,short,short>>> aa_ann_list_;
@@ -148,6 +162,7 @@ private:
 
 	// Generate one-particle map
 	void get_one_map();	
+	void get_one_map_str();	
 	
 	// Generate two-particle map
 	void get_two_map();
