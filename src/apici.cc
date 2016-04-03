@@ -662,7 +662,7 @@ double AdaptivePathIntegralCI::compute_energy()
     }
 
     det_hash<> dets_C_hash;
-    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, 0.0);
+    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, shift_);
     dets_C_hash.clear();
 
     outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
