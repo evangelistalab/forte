@@ -1,4 +1,4 @@
-#include <cmath>
+
 
 #include <liboptions/liboptions.h>
 #include <libmints/molecule.h>
@@ -27,7 +27,29 @@ CI_RDMS::CI_RDMS(Options &options,
       evecs_(evecs)
 {
     startup();
+    convert_to_string(det_space_);
 }
+
+CI_RDMS::CI_RDMS( Options &options,
+                  std::shared_ptr<FCIIntegrals> fci_ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::vector<STLBitsetString> alfa_strings,
+                  std::vector<STLBitsetString> beta_strings,
+                  std::vector<std::vector<size_t>> a_to_b,
+                  std::vector<std::vector<size_t>> b_to_a,
+                  SharedMatrix evecs)
+    : options_(options),
+      fci_ints_(fci_ints),
+      mo_space_info_(mo_space_info),
+      evecs_(evecs),
+      alfa_strings_(alfa_strings),
+      beta_strings_(beta_strings),
+      a_to_b_(a_to_b),
+      b_to_a_(b_to_a)
+{
+    startup();
+}
+                  
 
 CI_RDMS::~CI_RDMS()
 {
@@ -99,6 +121,79 @@ void CI_RDMS::startup()
 
 }
 
+void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
+{
+    size_t space_size = space.size();
+    size_t nalfa_str = 0;
+    size_t nbeta_str = 0;
+    
+    a_to_b_.clear();
+    b_to_a_.clear();
+
+    string_hash<size_t> alfa_map;
+    string_hash<size_t> beta_map;
+
+    for( size_t I = 0; I < space_size; ++I ){
+        STLBitsetDeterminant det = space[I];
+        STLBitsetString alfa;
+        STLBitsetString beta;
+
+        alfa.set_nmo( ncmo_ );
+        beta.set_nmo( ncmo_ );
+    
+        for( size_t i = 0; i < ncmo_; ++i ){
+            alfa.set_bit(i, det.get_alfa_bit(i)); 
+            beta.set_bit(i, det.get_beta_bit(i)); 
+        }
+
+        size_t a_id;
+        size_t b_id;
+    
+        // Once we find a new alfa string, add it to the list
+        string_hash<size_t>::iterator a_it = alfa_map.find(alfa);
+        if( a_it == alfa_map.end() ){
+            a_id = nalfa_str;
+            alfa_map[alfa] = a_id;
+            nalfa_str++;
+        }else{
+            a_id = a_it->second;
+        } 
+
+        string_hash<size_t>::iterator b_it = beta_map.find(beta);
+        if( b_it == beta_map.end() ){
+            b_id = nbeta_str;
+            beta_map[beta] = b_id;
+            nbeta_str++;
+        }else{
+            b_id = b_it->second; 
+        }
+
+        a_to_b_.resize(nalfa_str);
+        b_to_a_.resize(nbeta_str);
+
+        alfa_strings_.resize(nalfa_str);
+        beta_strings_.resize(nbeta_str);
+ 
+        alfa_strings_[a_id] = alfa;
+        beta_strings_[b_id] = beta;
+
+        a_to_b_[a_id].push_back(b_id);
+        b_to_a_[b_id].push_back(a_id);
+
+
+    }
+    
+    c_map_.resize(nalfa_str*nbeta_str);
+
+    int root = options_.get_int("ROOT");
+    for( int a = 0, I = 0 ; a < nalfa_str; ++a){
+        auto bvec = a_to_b_[a];
+        for( int b = 0, maxb = bvec.size(); b < maxb; ++b, ++I){
+            c_map_[a*nalfa_str + bvec[b]] =  evecs_->get(I, root);
+        }
+    }
+}
+
 double CI_RDMS::get_energy( std::vector<double>& oprdm_a, 
 							std::vector<double>& oprdm_b, 
 							std::vector<double>& tprdm_aa,
@@ -144,6 +239,21 @@ double CI_RDMS::get_energy( std::vector<double>& oprdm_a,
 	return total_energy;
 }
 
+//void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root)
+//{
+//    Timer one;
+//    get_one_map_str();
+//    if(print_) outfile->Printf("\n Time spent forming 1-map:  %1.6f", one.get());
+//    size_t nalfa = alfa_strings_.size();
+//    size_t nbeta = beta_strings_.size();
+//
+//    for( size_t A = 0, I = 0; A < nalfa; ++A ){
+//        auto bvec = a_to_b_[A]; 
+//        for( size_t B = 0, maxb = bvec.size(); B < bvec; ++B, ++I ){
+//            
+//        }
+//    }
+//}
 
 void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root )
 {
@@ -460,6 +570,136 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 
 	if( print_ ) outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
+
+void CI_RDMS::get_one_map_str()
+{
+    size_t nalfa = alfa_strings_.size();
+    size_t nbeta = beta_strings_.size();
+
+    // First the alpha
+    {
+        a_ann_list_s_.resize(dim_space_ * na_);
+        size_t na_ann = 0;
+
+        for( int B = 0, I = 0; B < nbeta; ++B){
+            string_hash<size_t> map_a_ann;
+            std::vector<size_t> a_list = b_to_a_[B];
+                
+            int max_a = a_list.size();
+            if( max_a < 2 ) continue;
+
+            for( int A = 0; A < max_a; ++A, ++I ){
+                size_t a_ptr = a_list[A];
+                STLBitsetString a_str = alfa_strings_[a_ptr];
+                std::vector<int> aocc = a_str.get_occ();
+    
+                for( int i = 0; i < na_; ++i ){
+                    int ii = aocc[i];
+                    a_str.set_bit(ii,false);
+                    size_t s_add;
+                    
+                    string_hash<size_t>::iterator a_it = map_a_ann.find(a_str);
+                    if( a_it == map_a_ann.end() ){
+                        s_add = na_ann;
+                        map_a_ann[a_str] = na_ann;
+                        cre_list_buffer_[0].push_back(1);
+                        na_ann++;
+                    }else{
+                        s_add = a_it->second;
+                        cre_list_buffer_[0][s_add]++;
+                    }
+                    a_ann_list_s_[I*na_ + i] = std::make_pair(s_add, ii);
+                    a_str.set_bit(ii, true);
+                }
+            }
+        } 
+    
+        size_t sum = 0;
+        for( size_t i = 0; i < na_ann; ++i ){
+            size_t current = cre_list_buffer_[0][i];
+            cre_list_buffer_[0][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[0][na_ann] = a_ann_list_s_.size();
+        std::vector<int> buffer(na_ann,0);
+        
+        //Build the creation list
+        a_cre_list_s_.resize(a_ann_list_.size(), std::make_pair(0,0) );
+        for( size_t B = 0, I = 0 ; B < nbeta; ++B){
+            if( b_to_a_[B].size() < 2 ) continue;
+            for( size_t A = 0; A < nalfa; ++A, ++I){
+                for( size_t a = 0; a < na_; ++a){
+                    auto apair = a_cre_list_s_[I*na_ + a];
+                    size_t adet = apair.first;
+                    a_cre_list_s_[cre_list_buffer_[0][adet] + buffer[adet]] = std::make_pair( I, apair.second);
+                    buffer[adet]++;
+                }
+            } 
+        } 
+
+    }
+    // Then beta
+    {
+        b_ann_list_s_.resize(dim_space_ * nb_);
+        size_t nb_ann = 0;
+
+        for( int A = 0, I = 0; A < nalfa; ++A){
+            string_hash<size_t> map_b_ann;
+            std::vector<size_t> b_list = a_to_b_[A];
+                
+            int max_b = b_list.size();
+            if( max_b < 2 ) continue;
+
+            for( int B = 0; B < max_b; ++B, ++I ){
+                size_t b_ptr = b_list[B];
+                STLBitsetString b_str = beta_strings_[b_ptr];
+                std::vector<int> bocc = b_str.get_occ();
+    
+                for( int i = 0; i < nb_; ++i ){
+                    int ii = bocc[i];
+                    b_str.set_bit(ii,false);
+                    size_t s_add;
+                    
+                    string_hash<size_t>::iterator b_it = map_b_ann.find(b_str);
+                    if( b_it == map_b_ann.end() ){
+                        s_add = nb_ann;
+                        map_b_ann[b_str] = nb_ann;
+                        cre_list_buffer_[1].push_back(1);
+                        nb_ann++;
+                    }else{
+                        s_add = b_it->second;
+                        cre_list_buffer_[1][s_add]++;
+                    }
+                    b_ann_list_s_[I*nb_ + i] = std::make_pair(s_add, ii);
+                    b_str.set_bit(ii, true);
+                }
+            }
+        } 
+    
+        size_t sum = 0;
+        for( size_t i = 0; i < nb_ann; ++i ){
+            size_t current = cre_list_buffer_[1][i];
+            cre_list_buffer_[1][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[1][nb_ann] = b_ann_list_s_.size();
+        std::vector<int> buffer(nb_ann,0);
+        
+        //Build the creation list
+        b_cre_list_s_.resize(b_ann_list_.size(), std::make_pair(0,0) );
+        for( size_t A = 0, I = 0 ; A < nalfa; ++A){
+            if( a_to_b_[A].size() < 2 ) continue;
+            for( size_t B = 0; B < nbeta; ++B, ++I){
+                for( size_t a = 0; a < na_; ++a){
+                    auto apair = a_cre_list_s_[I*na_ + a];
+                }
+            } 
+        } 
+
+    }
+
+}
+
 
 void CI_RDMS::get_one_map()
 {
