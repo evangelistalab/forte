@@ -230,8 +230,8 @@ void THREE_DSRG_MRPT2::startup()
 
     Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
-    Fa_.reserve(ncmo_);
-    Fb_.reserve(ncmo_);
+    Fa_.resize(ncmo_);
+    Fb_.resize(ncmo_);
 
     for(size_t p = 0; p < ncmo_; p++)
     {
