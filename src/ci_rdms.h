@@ -43,7 +43,9 @@ public:
 
 	// Compute rdms
 	void compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root);
+	void compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root);
 	void compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
+	void compute_2rdm_str( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
 	void compute_3rdm( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
 	
 	double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
@@ -136,10 +138,20 @@ private:
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list_;
 	
+	// The list of a_q a_p|N>
+	std::vector<std::tuple<size_t,short,short>> aa_ann_list_s_;
+	std::vector<std::tuple<size_t,short,short>> ab_ann_list_s_;
+	std::vector<std::tuple<size_t,short,short>> bb_ann_list_s_;
+
 	// The list of a_q^(+) a_p^(+)|N-1>
 	std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list_;
+
+	// The list of a_q^(+) a_p^(+)|N-1>
+	std::vector<std::tuple<size_t,short,short>> aa_cre_list_s_;
+	std::vector<std::tuple<size_t,short,short>> ab_cre_list_s_;
+	std::vector<std::tuple<size_t,short,short>> bb_cre_list_s_;
 
 	// The list of a_r a_q a_p |N>
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_ann_list_;
@@ -166,9 +178,11 @@ private:
 	
 	// Generate two-particle map
 	void get_two_map();
+	void get_two_map_str();
 
 	// Generate three-particle map
 	void get_three_map();
+	void get_three_map_str();
     
     // convert to strings
     void convert_to_string( std::vector<STLBitsetDeterminant>& space ); 
