@@ -136,11 +136,11 @@ double STLBitsetString::get_nocc()
 }
 
 
-double STLBitsetString::SlaterSign(const bit_t& I,int n)
+double STLBitsetString::SlaterSign(int n)
 {
     double sign = 1.0;
     for(int i = 0; i < n; ++i){  // This runs up to the operator before n
-        if(I[i]) sign *= -1.0;
+        if(bits_[i]) sign *= -1.0;
     }
     return(sign);
 }
