@@ -289,11 +289,11 @@ void DMRGSolver::compute_energy()
 
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
         if(
-        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[2]] ) 
-        == CheMPS2::Irreps::directProd(orbitalIrreps[i[1]], orbitalIrreps[i[3]] ) )
+        CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[1]] ) 
+        == CheMPS2::Irreps::directProd(orbitalIrreps[i[2]], orbitalIrreps[i[3]] ) )
         {
-            Ham->setVmat(i[0], i[2], i[1], i[3], value);
-            //outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[2], i[1], i[3], value);
+            Ham->setVmat(i[0], i[1], i[2], i[3], value);
+            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[1], i[2], i[3], value);
         } ;});
     //int shift = iHandler->getDMRGcumulative(h);
     int shift = 0;
