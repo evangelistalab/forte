@@ -273,6 +273,8 @@ void DMRGSolver::compute_energy()
     int counterFillOrbitalIrreps = 0;
     for (int h=0; h<nirrep; h++){
        for (int cnt=0; cnt<active[h]; cnt++){ //Only the active space is treated with DMRG-SCF!
+          outfile->Printf("\n h: %d cnt: %d", h, cnt);
+          
           orbitalIrreps[counterFillOrbitalIrreps] = h;
           counterFillOrbitalIrreps++;
        }
@@ -282,6 +284,7 @@ void DMRGSolver::compute_energy()
 
     std::shared_ptr<CheMPS2::Problem> Prob = std::make_shared<CheMPS2::Problem>(Ham.get(), wfn_multp - 1, nDMRGelectrons, wfn_irrep);
 
+    if ( !(Prob->checkConsistency()) ){ throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector compatible with all symmetry sectors!"); }
     Prob->SetupReorderD2h();
 
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
@@ -290,7 +293,7 @@ void DMRGSolver::compute_energy()
         == CheMPS2::Irreps::directProd(orbitalIrreps[i[1]], orbitalIrreps[i[3]] ) )
         {
             Ham->setVmat(i[0], i[2], i[1], i[3], value);
-            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[2], i[1], i[3], value);
+            //outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[2], i[1], i[3], value);
         } ;});
     //int shift = iHandler->getDMRGcumulative(h);
     int shift = 0;
@@ -323,14 +326,14 @@ void DMRGSolver::compute_energy()
         Energy = DMRGCI->Solve();
         if(dmrgscf_state_avg)
         {
-            DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+            DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
             CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
         }
     
     if((state == 0) && (dmrgscf_which_root > 1)) { DMRGCI->activateExcitations( dmrgscf_which_root-1);}
         {
 
-            DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+            DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
             CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
         }
     }
@@ -347,9 +350,11 @@ void DMRGSolver::compute_energy()
         CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
     }
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
+    dmrg_ref_.set_Eref(Energy);
 
     delete DMRG1DM;
     delete DMRG2DM;
+    delete orbitalIrreps;
     if(max_rdm_ > 2){delete DMRG3DM;}
 
 }

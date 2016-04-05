@@ -734,6 +734,7 @@ void CASSCF::set_up_fci()
     }
 
 
+
     E_casscf_ = fcisolver.compute_energy();
     /// Get the CIVector for each iteration
     std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
@@ -813,6 +814,8 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
             //double h_value = H->get(absolute_active[u], absolute_active[v]);
             oei_a[u * na_ + v ] = value;
             oei_b[u * na_ + v ] = value;
+            if(casscf_debug_print_)
+                outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
         }
     }
     Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
@@ -954,6 +957,7 @@ std::pair<ambit::Tensor, std::vector<double> > CASSCF::CI_Integrals()
 
     active_ab.iterate([&](const std::vector<size_t>& i,double& value){
         value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
+    outfile->Printf("\n active_ab: %8.8f",active_ab.norm(2.0));
     std::pair<ambit::Tensor, std::vector<double> > pair_return = std::make_pair(active_ab, oei_vector[0]);
     return pair_return;
     
