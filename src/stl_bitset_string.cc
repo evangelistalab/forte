@@ -29,7 +29,13 @@ STLBitsetString::STLBitsetString(const std::vector<int>& occupation)
 
 STLBitsetString::STLBitsetString(const std::vector<bool>& occupation)
 {
-    for(int p = 0; p < nmo_; ++p) bits_[p] = occupation[p];
+    for(int p = 0; p < nmo_; ++p){
+        if(occupation[p]){
+             bits_[p] = 1;
+        }else{
+            bits_[p] = 0;
+        }
+    }
 }
 
 STLBitsetString::STLBitsetString(const std::bitset<128>& bits )
@@ -95,7 +101,11 @@ void STLBitsetString::print() const
 {
     outfile->Printf("\n  |");
     for(int p = 0; p < nmo_; ++p){
-        outfile->Printf("%d",bits_[p]);
+        if( bits_[p] ){
+            outfile->Printf("1");
+        }else{
+            outfile->Printf("0");
+        }
     }
     outfile->Printf(">");
     outfile->Flush();
