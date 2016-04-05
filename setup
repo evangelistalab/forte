@@ -82,11 +82,11 @@ def generate_makefile(args):
         addons = "# Added by FORTE setup\n"
         if chemps2:
             addons += "CHEMPS2_BINDIR = %s\n" % args.chemps2_bindir
-            addons += "INCLUDES +=  -I$(CHEMPS2_BINDIR)/include\n"
-            addons += "LDFLAGS +=   -L$(CHEMPS2_BINDIR)/lib -lchemps2\n"
+            #addons += "INCLUDES +=  -I$(CHEMPS2_BINDIR)/include\n"
+            #addons += "LDFLAGS +=   -L$(CHEMPS2_BINDIR)/lib -lchemps2\n"
             addons += "#This works on our cluster\n"
-            addons += "#INCLUDES += -I$(CHEMPS2_BINDIR)/include\n"
-            addons += "#LDFLAGS += -Wl,-rpath -L$(CHEMPS2_BINDIR)/lib64 -lchemps2 -Wl,-rpath $(CHEMPS2_BINDIR)/lib64\n"
+            addons += "INCLUDES += -I$(CHEMPS2_BINDIR)/include\n"
+            addons += "LDFLAGS += -L$(CHEMPS2_BINDIR)/lib64 -lchemps2" 
             addons += "CXXFLAGS += -DHAVE_CHEMPS2\n"
         else:
             addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
