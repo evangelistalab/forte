@@ -38,6 +38,7 @@
 #include "finite_temperature.h"
 #include "active_dsrgpt2.h"
 #include "dsrg_mrpt.h"
+#include "localize.h"
 
 INIT_PLUGIN
 
@@ -251,6 +252,11 @@ read_options(std::string name, Options &options)
 
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER",100);
+
+        /*- Use localized basis? -*/
+        options.add_bool("LOCALIZE", false);
+        /*- Type of localization -*/
+        options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
@@ -754,6 +760,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if (options.get_bool("MP2_NOS")){
         auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn,options,ints_, mo_space_info);
+    }
+
+    if (options.get_bool("LOCALIZE")){
+        auto localize = std::make_shared<LOCALIZE>(ref_wfn,options,ints_,mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
