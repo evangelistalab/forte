@@ -8,6 +8,8 @@
 #include <libmints/wavefunction.h>
 #include <libmints/mints.h>
 #include <libmints/typedefs.h>
+#include <libmints/matrix.h>
+#include <libmints/factory.h>
 //Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
 #include <libciomr/libciomr.h>
 #include <liboptions/liboptions.h>
@@ -200,7 +202,6 @@ void DMRGSolver::compute_energy()
     Dimension active                  = mo_space_info_->get_dimension("ACTIVE");
     Dimension virtual_orbs                 = mo_space_info_->get_dimension("RESTRICTED_UOCC");
     const double dmrgscf_convergence  = options_.get_double("D_CONVERGENCE");
-    const double dmrg_davidson_r_tol  = options_.get_double("DMRG_DAVIDSON_RTOL");
     const bool dmrgscf_store_unit     = options_.get_bool("DMRG_STORE_UNIT");
     const bool dmrgscf_do_diis        = options_.get_bool("DMRG_DO_DIIS");
     const double dmrgscf_diis_branch  = options_.get_double("DMRG_DIIS_BRANCH");
@@ -273,7 +274,6 @@ void DMRGSolver::compute_energy()
     int counterFillOrbitalIrreps = 0;
     for (int h=0; h<nirrep; h++){
        for (int cnt=0; cnt<active[h]; cnt++){ //Only the active space is treated with DMRG-SCF!
-          outfile->Printf("\n h: %d cnt: %d", h, cnt);
           
           orbitalIrreps[counterFillOrbitalIrreps] = h;
           counterFillOrbitalIrreps++;
@@ -293,23 +293,24 @@ void DMRGSolver::compute_energy()
         == CheMPS2::Irreps::directProd(orbitalIrreps[i[2]], orbitalIrreps[i[3]] ) )
         {
             Ham->setVmat(i[0], i[1], i[2], i[3], value);
-            outfile->Printf("\n %d %d %d %d %8.8f", i[0], i[1], i[2], i[3], value);
         } ;});
     //int shift = iHandler->getDMRGcumulative(h);
     int shift = 0;
-    for(int u = 0; u < nOrbDMRG; u++)
+    if(one_body_integrals_.empty())
     {
-        for(int v = u; v < nOrbDMRG; v++)
-        {
-            if(orbitalIrreps[u] == orbitalIrreps[v])
-            {
-                Ham->setTmat(shift + u, shift + v, one_body_integrals_[u * nOrbDMRG + v]);
-                outfile->Printf("\n %d  %d %8.8f", u, v, one_body_integrals_[u * nOrbDMRG + v]);
+        one_body_integrals_ = one_body_operator();
+    }
+    
+    for(int h = 0; h < iHandler->getNirreps(); h++){
+        const int NOCC = frozen_docc[h];
+        for(int orb1 = 0; orb1 < active[h]; orb1++){
+            for(int orb2 = orb1; orb2 < active[h]; orb2++){
+                Ham->setTmat(shift + orb1, shift + orb2, one_body_integrals_[(shift + orb1) * nOrbDMRG + (orb2 + shift)]);
             }
         }
+        shift += active[h];
     }
     Ham->setEconst(scalar_energy_);
-    outfile->Printf("\n scalar_energy_: %8.8f", scalar_energy_);
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 
@@ -379,10 +380,111 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel){
     return SyGroup;
 
 }
-//void DMRGSolver::fill_integrals(std::shared_ptr<CheMPS2::Hamiltonian> dmrg)
-//{
-//    
-//}
+std::vector<double> DMRGSolver::one_body_operator()
+{
+    ///
+    Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    Dimension nsopi           = wfn_->nsopi();
+    int nirrep               = wfn_->nirrep();
+    Dimension nmopi = mo_space_info_->get_dimension("ALL");
+
+    SharedMatrix Cdocc(new Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
+    SharedMatrix Ca = wfn_->Ca();
+    for(int h = 0; h < nirrep; h++)
+    {
+        for(int i = 0; i < restricted_docc_dim[h]; i++)
+        {
+                Cdocc->set_column(h, i, Ca->get_column(h,i));
+        }
+    }
+    ///F_frozen = D_{uv}^{frozen} * (2<uv|rs> - <ur | vs>)
+    ///F_restricted = D_{uv}^{restricted} * (2<uv|rs> - <ur | vs>)
+    ///F_inactive = F_frozen + F_restricted + H_{pq}^{core}
+    /// D_{uv}^{frozen} = \sum_{i = 0}^{frozen}C_{ui} * C_{vi}
+    /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
+    /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
+
+    boost::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+
+    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
+    JK_inactive->initialize();
+
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_inactive->C_left();
+    Cl.clear();
+    Cl.push_back(Cdocc);
+    JK_inactive->compute();
+    SharedMatrix J_restricted = JK_inactive->J()[0];
+    SharedMatrix K_restricted = JK_inactive->K()[0];
+
+    J_restricted->scale(2.0);
+    SharedMatrix F_restricted = J_restricted->clone();
+    F_restricted->subtract(K_restricted);
+
+    ///Just create the OneInt integrals from scratch
+    boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
+    SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
+    SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
+    SharedMatrix OneInt = T;
+    OneInt->zero();
+
+    T->load(psio_, PSIF_OEI);
+    V->load(psio_, PSIF_OEI);
+    SharedMatrix Hcore_ = wfn_->matrix_factory()->create_shared_matrix("Core Hamiltonian");
+    Hcore_->add(T);
+    Hcore_->add(V);
+
+    SharedMatrix Hcore(Hcore_->clone());
+    F_restricted->add(Hcore);
+    F_restricted->transform(Ca);
+    Hcore->transform(Ca);
+
+    size_t all_nmo = mo_space_info_->size("ALL");
+    SharedMatrix F_restric_c1(new Matrix("F_restricted", all_nmo, all_nmo));
+    size_t offset = 0;
+    for(int h = 0; h < nirrep; h++){
+        for(int p = 0; p < nmopi[h]; p++){
+            for(int q = 0; q < nmopi[h]; q++){
+                F_restric_c1->set(p + offset, q + offset, F_restricted->get(h, p, q ));
+            }
+        }
+        offset += nmopi[h];
+    }
+    size_t na_ = mo_space_info_->size("ACTIVE");
+    size_t nmo2 = na_ * na_;
+    std::vector<double> oei_a(nmo2);
+    std::vector<double> oei_b(nmo2);
+    bool casscf_debug_print_ = options_.get_bool("CASSCF_DEBUG_PRINTING");
+
+    auto absolute_active = mo_space_info_->get_absolute_mo("ACTIVE");
+    for(size_t u = 0; u < na_; u++){
+        for(size_t v = 0; v < na_; v++){
+            double value = F_restric_c1->get(absolute_active[u], absolute_active[v]);
+            //double h_value = H->get(absolute_active[u], absolute_active[v]);
+            oei_a[u * na_ + v ] = value;
+            //oei_b[u * na_ + v ] = value;
+            if(casscf_debug_print_)
+                outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
+        }
+    }
+    Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    double E_restricted = Process::environment.molecule()->nuclear_repulsion_energy();
+    for(int h = 0; h < nirrep; h++){
+        for(int rd = 0; rd < restricted_docc[h]; rd++){
+            E_restricted += Hcore->get(h, rd,rd) + F_restricted->get(h, rd, rd);
+        }
+    }
+    /// Since F^{INACTIVE} includes frozen_core in fock build, the energy contribution includes frozen_core_energy
+    scalar_energy_ = 0.000;
+    if(casscf_debug_print_)
+    {
+        outfile->Printf("\n Frozen Core Energy = %8.8f",ints_->frozen_core_energy());
+        outfile->Printf("\n Restricted Energy = %8.8f", E_restricted - ints_->frozen_core_energy());
+        outfile->Printf("\n Scalar Energy = %8.8f", ints_->scalar() + E_restricted - ints_->frozen_core_energy());
+    }
+    scalar_energy_ = E_restricted;
+    return oei_a;
+
+}
 
 
 }} // End Namespaces
