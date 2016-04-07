@@ -373,7 +373,7 @@ read_options(std::string name, Options &options)
             during successive DMRG instructions -*/
         options.add_array("DMRG_MAXSWEEPS");
         /*- The Davidson R tolerance (Wouters says this will cause RDms to be close to exact -*/
-        options.add_double("DMRG_DAVIDSON_RTOL", 1e-6);
+        options.add_array("DMRG_DAVIDSON_RTOL");
 
         /*- The noiseprefactors for successive DMRG instructions -*/
         options.add_array("DMRG_NOISEPREFACTORS");
@@ -781,7 +781,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-        dmrg->set_iterations(1);
+        dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
         throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");

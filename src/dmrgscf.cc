@@ -425,6 +425,8 @@ double DMRGSCF::compute_energy()
     int * dmrg_maxsweeps              = options_.get_int_array("DMRG_MAXSWEEPS");
     const int ndmrg_maxsweeps         = options_["DMRG_MAXSWEEPS"].size();
     double * dmrg_noiseprefactors     = options_.get_double_array("DMRG_NOISEPREFACTORS");
+    double * dmrg_davidson_tol        = options_.get_double_array("DMRG_DAVIDSON_RTOL");
+    const int      ndmrg_davidson_tol       = options_["DMRG_DAVIDSON_RTOL"].size();
     const int ndmrg_noiseprefactors   = options_["DMRG_NOISEPREFACTORS"].size();
     const bool dmrg_print_corr        = options_.get_bool("DMRG_PRINT_CORR");
     const bool mps_chkpt              = options_.get_bool("DMRG_CHKPT");
@@ -488,8 +490,11 @@ double DMRGSCF::compute_energy()
     CheMPS2::Initialize::Init();
     CheMPS2::ConvergenceScheme * OptScheme = new CheMPS2::ConvergenceScheme( ndmrg_states );
     for (int cnt=0; cnt<ndmrg_states; cnt++){
-       //OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], 1e-10);
-       OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt]);
+       if(ndmrg_davidson_tol != ndmrg_states)
+            OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt]);
+       else{
+            OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], dmrg_davidson_tol[cnt]);
+       }
     }
 
     /******************************************************************************
@@ -517,6 +522,7 @@ double DMRGSCF::compute_energy()
     (*outfile) << "virtual     = [ " << nvirtual[0];
     for (int cnt=1; cnt<nirrep; cnt++){ (*outfile) << " , " << nvirtual[cnt];    } (*outfile) << " ]" << endl;
     if ( !virtualsOK ){ throw PSIEXCEPTION("For at least one irrep: frozen_docc[ irrep ] + active[ irrep ] > numOrbitals[ irrep ]!"); }
+    (*outfile) << "DMRGSCF computation run with " << dmrg_iterations_ << "iterations" << endl;
 
     /**********************************************
      *   Create another bit of DMRGSCF preamble   *
