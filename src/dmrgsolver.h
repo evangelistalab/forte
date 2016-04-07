@@ -59,6 +59,7 @@ private:
     ambit::Tensor active_integrals_;
     std::vector<double> one_body_integrals_;
     double   scalar_energy_ = 0.0;
+    std::vector<double> one_body_operator();
 
 };
 

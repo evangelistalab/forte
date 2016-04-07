@@ -313,12 +313,11 @@ void CASSCF::cas_ci()
     {
 #ifdef  HAVE_CHEMPS2
         //ints_->retransform_integrals();
-        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_);
+        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-        outfile->Printf("\n Scalar_energy_: %8.8f", scalar_energy_ + ints_->frozen_core_energy());
-        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy());
+        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() + Process::environment.molecule()->nuclear_repulsion_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
