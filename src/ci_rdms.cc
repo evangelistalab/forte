@@ -1,4 +1,4 @@
-#include <cmath>
+
 
 #include <liboptions/liboptions.h>
 #include <libmints/molecule.h>
@@ -27,7 +27,29 @@ CI_RDMS::CI_RDMS(Options &options,
       evecs_(evecs)
 {
     startup();
+    convert_to_string(det_space_);
 }
+
+CI_RDMS::CI_RDMS( Options &options,
+                  std::shared_ptr<FCIIntegrals> fci_ints,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                  std::vector<STLBitsetString> alfa_strings,
+                  std::vector<STLBitsetString> beta_strings,
+                  std::vector<std::vector<size_t>> a_to_b,
+                  std::vector<std::vector<size_t>> b_to_a,
+                  SharedMatrix evecs)
+    : options_(options),
+      fci_ints_(fci_ints),
+      mo_space_info_(mo_space_info),
+      evecs_(evecs),
+      alfa_strings_(alfa_strings),
+      beta_strings_(beta_strings),
+      a_to_b_(a_to_b),
+      b_to_a_(b_to_a)
+{
+    startup();
+}
+                  
 
 CI_RDMS::~CI_RDMS()
 {
@@ -89,7 +111,9 @@ void CI_RDMS::startup()
     print_ = false;
 
 	one_map_done_ = false;
-	
+
+    cre_list_buffer_.resize(5);	
+
     if(print_){
 	    outfile->Printf("\n  Computing RDMS");
 	    outfile->Printf("\n  Number of active alpha electrons: %zu", na_);
@@ -97,6 +121,81 @@ void CI_RDMS::startup()
 	    outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
 	}
 
+}
+
+void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
+{
+    size_t space_size = space.size();
+    size_t nalfa_str = 0;
+    size_t nbeta_str = 0;
+    
+    a_to_b_.clear();
+    b_to_a_.clear();
+
+    string_hash<size_t> alfa_map;
+    string_hash<size_t> beta_map;
+
+    int root = options_.get_int("ROOT");
+
+    SharedMatrix tmp(new Matrix("tmp",space_size,space_size));
+    tmp->zero();
+
+    for( size_t I = 0; I < space_size; ++I ){
+        STLBitsetDeterminant det = space[I];
+        STLBitsetString alfa;
+        STLBitsetString beta;
+
+        alfa.set_nmo( ncmo_ );
+        beta.set_nmo( ncmo_ );
+    
+        for( size_t i = 0; i < ncmo_; ++i ){
+            alfa.set_bit(i, det.get_alfa_bit(i)); 
+            beta.set_bit(i, det.get_beta_bit(i)); 
+        }
+
+        size_t a_id;
+        size_t b_id;
+    
+        // Once we find a new alfa string, add it to the list
+        string_hash<size_t>::iterator a_it = alfa_map.find(alfa);
+        if( a_it == alfa_map.end() ){
+            a_id = nalfa_str;
+            alfa_map[alfa] = a_id;
+            nalfa_str++;
+        }else{
+            a_id = a_it->second;
+        } 
+
+        string_hash<size_t>::iterator b_it = beta_map.find(beta);
+        if( b_it == beta_map.end() ){
+            b_id = nbeta_str;
+            beta_map[beta] = b_id;
+            nbeta_str++;
+        }else{
+            b_id = b_it->second; 
+        }
+
+        a_to_b_.resize(nalfa_str);
+        b_to_a_.resize(nbeta_str);
+
+        alfa_strings_.resize(nalfa_str);
+        beta_strings_.resize(nbeta_str);
+ 
+        alfa_strings_[a_id] = alfa;
+        beta_strings_[b_id] = beta;
+
+        a_to_b_[a_id].push_back(b_id);
+        b_to_a_[b_id].push_back(a_id);
+
+        tmp->set(a_id, b_id, evecs_->get(I,root));
+
+    }
+    c_map_.assign(nalfa_str*nbeta_str,0.0);
+    for( size_t a = 0; a < nalfa_str; ++a){
+        for( size_t b = 0; b < nbeta_str; ++b){
+            c_map_[a*nbeta_str + b] = tmp->get(a,b);
+        }
+    }
 }
 
 double CI_RDMS::get_energy( std::vector<double>& oprdm_a, 
@@ -144,6 +243,61 @@ double CI_RDMS::get_energy( std::vector<double>& oprdm_a,
 	return total_energy;
 }
 
+void CI_RDMS::compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root)
+{
+    Timer one;
+    get_one_map_str();
+    if(print_) outfile->Printf("\n Time spent forming 1-map:  %1.6f", one.get());
+    size_t nalfa = alfa_strings_.size();
+    size_t nbeta = beta_strings_.size();
+
+    oprdm_a.resize(ncmo2_, 0.0);
+    oprdm_b.resize(ncmo2_, 0.0);
+
+    for( size_t B = 0; B < nbeta; ++B ){
+        auto avec = b_to_a_[B]; 
+        for( size_t A = 0, maxa = avec.size(); A < maxa; ++A ){
+            size_t AI = avec[A];
+            for( int a = 0; a < na_; ++a ){
+                std::pair<size_t, int> apair = a_ann_list_s_[AI*na_ + a];
+                const size_t a_add = apair.first;
+                const size_t p = std::abs(apair.second) - 1;
+                const double sign_p = apair.second > 0.0 ? 1.0 : -1.0; 
+                //if( a_add == 0 and p == 0 and J != 0 ) continue;
+                for( size_t adet = cre_list_buffer_[0][a_add]; adet < cre_list_buffer_[0][a_add+1]; ++adet){
+                    std::pair<size_t,int> aa_add = a_cre_list_s_[adet];
+                    size_t q = std::abs(aa_add.second) - 1;
+                    const double sign_q = aa_add.second > 0.0 ? 1.0 : -1.0;
+                    const size_t astr = aa_add.first;
+                   // outfile->Printf("\n  p: %d, q: %d,(%d,%d) c1: %f,(%d,%d) c2: %f",p,q,AI,B, c_map_[AI*nbeta + B], astr,B, c_map_[astr*nbeta + B]);
+                    oprdm_a[q*ncmo_ + p] += c_map_[AI*nbeta + B] * c_map_[astr*nbeta + B] * sign_p * sign_q;
+                }
+            }
+        }
+    }
+
+    for( size_t A = 0; A < nalfa; ++A ){
+        auto bvec = a_to_b_[A]; 
+        for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+            size_t BI = bvec[B];
+            for( int b = 0; b < nb_; ++b ){
+                std::pair<size_t, int> bpair = b_ann_list_s_[BI*nb_ + b];
+                const size_t b_add = bpair.first;
+                const size_t p = std::abs(bpair.second) - 1;
+                const double sign_p = bpair.second > 0.0 ? 1.0 : -1.0; 
+                //if( b_add == 0 and p == 0 and J != 0 ) continue;
+                for( size_t bdet = cre_list_buffer_[1][b_add]; bdet < cre_list_buffer_[1][b_add+1]; ++bdet){
+                    std::pair<size_t,int> bb_add = b_cre_list_s_[bdet];
+                    size_t q = std::abs(bb_add.second) - 1;
+                    const double sign_q = bb_add.second > 0.0 ? 1.0 : -1.0;
+                    const size_t bstr = bb_add.first;
+                    oprdm_b[q*ncmo_ + p] += c_map_[A*nbeta + BI] * c_map_[A*nbeta + bstr] * sign_p * sign_q;
+                }
+            }
+        }
+    }
+}
+
 
 void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root )
 {
@@ -179,6 +333,84 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
     	}
 	}
 	if( print_ ) outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
+}
+
+void CI_RDMS::compute_2rdm_str( std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab, std::vector<double>& tprdm_bb, int root) 
+{
+    tprdm_aa.resize(ncmo4_, 0.0);
+    tprdm_ab.resize(ncmo4_, 0.0);
+    tprdm_bb.resize(ncmo4_, 0.0);
+
+    size_t nalfa = alfa_strings_.size();
+    size_t nbeta = beta_strings_.size();
+
+    Timer two;
+    get_two_map_str();
+    if( print_) outfile->Printf("\n Time spent forming 2-map:   %1.6f", two.get());
+
+    double nex = na_ * (na_ - 1)/2;
+
+    Timer build;
+
+    for( size_t B = 0; B < nbeta; ++B ){
+        auto avec = b_to_a_[B];
+        for( size_t A = 0, maxa = avec.size(); A < maxa; ++A ){
+            size_t AI = avec[A];
+            for( int a = 0; a < nex; ++a ){
+                std::tuple<size_t,short,short> aaJ = aa_ann_list_s_[AI*nex + a];
+                
+                size_t aaJ_add = std::get<0>(aaJ);
+                int p = std::abs( std::get<1>(aaJ) ) - 1;
+                int q = std::get<2>(aaJ);
+                double pq_sign = (std::get<1>(aaJ) > 0.0) ? 1.0 : -1.0;
+
+                for( size_t adet = cre_list_buffer_[2][aaJ_add]; adet < cre_list_buffer_[2][aaJ_add+1]; ++adet){
+                    std::tuple<size_t,short,short> aaaaJ = aa_cre_list_s_[adet];
+                    size_t A_new = std::get<0>(aaaaJ);
+                    int r = std::abs( std::get<1>(aaaaJ) ) - 1;
+                    int s = std::get<2>(aaaaJ);
+                    double rs_sign = (std::get<1>(aaaaJ) > 0.0) ? 1.0 : -1.0;
+
+                    double rdm_element = pq_sign * rs_sign * c_map_[A_new*nbeta + B] * c_map_[AI*nbeta + B];
+
+				    tprdm_aa[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s] += rdm_element;
+				    tprdm_aa[p*ncmo3_ + q*ncmo2_ + s*ncmo_ + r] -= rdm_element;
+				    tprdm_aa[q*ncmo3_ + p*ncmo2_ + r*ncmo_ + s] -= rdm_element;
+				    tprdm_aa[q*ncmo3_ + p*ncmo2_ + s*ncmo_ + r] += rdm_element;
+                } 
+            }
+        }
+    } 
+
+    for( size_t A = 0; A < nalfa; ++A ){
+        auto bvec = a_to_b_[A];
+        for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+            size_t BI = bvec[B];
+            for( int b = 0; b < nex; ++b ){
+                std::tuple<size_t,short,short> bbJ = bb_ann_list_s_[BI*nex + b];
+                
+                size_t bbJ_add = std::get<0>(bbJ);
+                int p = std::abs( std::get<1>(bbJ) ) - 1;
+                int q = std::get<2>(bbJ);
+                double pq_sign = (std::get<1>(bbJ) > 0.0) ? 1.0 : -1.0;
+
+                for( size_t bdet = cre_list_buffer_[3][bbJ_add]; bdet < cre_list_buffer_[3][bbJ_add+1]; ++bdet){
+                    std::tuple<size_t,short,short> bbbbJ = bb_cre_list_s_[bdet];
+                    size_t B_new = std::get<0>(bbbbJ);
+                    int r = std::abs( std::get<1>(bbbbJ) ) - 1;
+                    int s = std::get<2>(bbbbJ);
+                    double rs_sign = (std::get<1>(bbbbJ) > 0.0) ? 1.0 : -1.0;
+
+                    double rdm_element = pq_sign * rs_sign * c_map_[A*nbeta + BI] * c_map_[A*nbeta + B_new];
+
+				    tprdm_bb[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s] += rdm_element;
+				    tprdm_bb[p*ncmo3_ + q*ncmo2_ + s*ncmo_ + r] -= rdm_element;
+				    tprdm_bb[q*ncmo3_ + p*ncmo2_ + r*ncmo_ + s] -= rdm_element;
+				    tprdm_bb[q*ncmo3_ + p*ncmo2_ + s*ncmo_ + r] += rdm_element;
+                } 
+            }
+        }
+    } 
 }
 
 void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root )
@@ -461,6 +693,118 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 	if( print_ ) outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
+void CI_RDMS::get_one_map_str()
+{
+    size_t nalfa = alfa_strings_.size();
+    size_t nbeta = beta_strings_.size();
+
+    // First the alpha
+    {
+        a_ann_list_s_.resize(nalfa * na_);
+        size_t na_ann = 0;
+
+        string_hash<size_t> map_a_ann;
+        for( size_t A = 0; A < nalfa; ++A){
+            STLBitsetString a_str = alfa_strings_[A];
+            std::vector<int> aocc = a_str.get_occ();
+    
+            for( int i = 0; i < na_; ++i ){
+                int ii = aocc[i];
+                double sign = a_str.SlaterSign(ii); 
+                a_str.set_bit(ii,false);
+                size_t s_add;
+                
+    
+                string_hash<size_t>::iterator a_it = map_a_ann.find(a_str);
+                if( a_it == map_a_ann.end() ){
+                    s_add = na_ann;
+                    map_a_ann[a_str] = na_ann;
+                    cre_list_buffer_[0].push_back(1);
+                    na_ann++;
+                }else{
+                    s_add = a_it->second;
+                    cre_list_buffer_[0][s_add]++;
+                }
+                a_ann_list_s_[A*na_ + i] = std::make_pair(s_add, (sign > 0.0 ) ? (ii+1) : (-ii-1) );
+                a_str.set_bit(ii, true);
+            }
+        }
+    
+        size_t sum = 0;
+        for( size_t i = 0; i < na_ann; ++i ){
+            size_t current = cre_list_buffer_[0][i];
+            cre_list_buffer_[0][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[0].push_back(a_ann_list_s_.size());
+        std::vector<int> buffer(na_ann,0);
+        
+        //Build the creation list
+        a_cre_list_s_.resize(nalfa*na_);
+
+        for( size_t A = 0; A < nalfa; ++A){
+            for( int a = 0; a < na_; ++a){
+                auto apair = a_ann_list_s_[A*na_ + a];
+                size_t adet = apair.first;
+                a_cre_list_s_[cre_list_buffer_[0][adet] + buffer[adet]] = std::make_pair( A, apair.second);
+                buffer[adet]++;
+            }
+        } 
+    }
+    // Then beta
+    {
+        b_ann_list_s_.resize(nbeta * nb_);
+        size_t nb_ann = 0;
+
+        string_hash<size_t> map_b_ann;
+        for( size_t B = 0; B < nbeta; ++B ){
+            STLBitsetString b_str = beta_strings_[B];
+            std::vector<int> bocc = b_str.get_occ();
+    
+            for( int i = 0; i < nb_; ++i ){
+                int ii = bocc[i];
+                double sign = b_str.SlaterSign(ii);
+                b_str.set_bit(ii,false);
+                size_t s_add;
+                
+                string_hash<size_t>::iterator b_it = map_b_ann.find(b_str);
+                if( b_it == map_b_ann.end() ){
+                    s_add = nb_ann;
+                    map_b_ann[b_str] = nb_ann;
+                    cre_list_buffer_[1].push_back(1);
+                    nb_ann++;
+                }else{
+                    s_add = b_it->second;
+                    cre_list_buffer_[1][s_add]++;
+                }
+                b_ann_list_s_[B*nb_ + i] = std::make_pair(s_add, (sign > 0.0) ? (ii+1) : (-ii-1) );
+                b_str.set_bit(ii, true);
+            }
+        }
+    
+        size_t sum = 0;
+        for( size_t i = 0; i < nb_ann; ++i ){
+            size_t current = cre_list_buffer_[1][i];
+            cre_list_buffer_[1][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[1][nb_ann] = b_ann_list_s_.size();
+        std::vector<int> buffer(nb_ann,0);
+        
+        //Build the creation list
+        b_cre_list_s_.resize(b_ann_list_s_.size(), std::make_pair(0,0) );
+        for( size_t B = 0; B < nbeta; ++B){
+            for( int b = 0; b < nb_; ++b){
+                auto bpair = b_ann_list_s_[B*nb_ + b];
+                size_t bdet = bpair.first;
+                b_cre_list_s_[cre_list_buffer_[1][bdet] + buffer[bdet]] = std::make_pair( B, bpair.second);
+                buffer[bdet]++;
+            }
+        } 
+    }
+}
+
+
 void CI_RDMS::get_one_map()
 {
 	// The alpha and beta annihilation lists
@@ -554,6 +898,137 @@ void CI_RDMS::get_one_map()
 		}
 	}
 	one_map_done_ = true;
+}
+
+void CI_RDMS::get_two_map_str()
+{
+    size_t nalfa = alfa_strings_.size();
+    size_t nbeta = beta_strings_.size();
+
+    // Map alpha strings by two excitations
+    {
+        size_t naa_ann = 0;
+        size_t nex = na_* (na_ - 1)/2;
+        aa_ann_list_s_.resize(nalfa * nex);
+
+        string_hash<size_t> map_aa_ann;
+        for( size_t A = 0; A < nalfa; ++A){
+            STLBitsetString astr = alfa_strings_[A];
+            std::vector<int> aocc = astr.get_occ();
+
+            for( int i = 0, ij = 0; i < na_; ++i){
+                for( int j = i + 1; j < na_; ++j, ++ij){
+                    int ii = aocc[i];
+                    int jj = aocc[j];
+                    double sign = astr.SlaterSign(ii) * astr.SlaterSign(jj);
+                    
+                    astr.set_bit(ii,false); 
+                    astr.set_bit(jj,false); 
+      
+                    string_hash<size_t>::iterator a_it = map_aa_ann.find(astr); 
+                    size_t a_add;
+                
+                    if( a_it == map_aa_ann.end()) {
+                        a_add = naa_ann;
+                        map_aa_ann[astr] = naa_ann;
+                        naa_ann++;
+                        cre_list_buffer_[2].push_back(1);
+                    }else{
+                        a_add = a_it->second;    
+                        cre_list_buffer_[2][a_add]++;
+                    }
+
+                    aa_ann_list_s_[ A*nex + ij ] = std::make_tuple( a_add, (sign > 0.0) ? (ii+1) : (-ii-1), jj);
+                    astr.set_bit(ii, true); 
+                    astr.set_bit(jj, true); 
+                }
+            }    
+        }
+        size_t sum = 0; 
+        for( size_t i = 0; i < naa_ann; ++i){
+            size_t current = cre_list_buffer_[2][i];
+            cre_list_buffer_[2][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[2].push_back( aa_ann_list_s_.size() );
+
+        aa_cre_list_s_.resize( aa_ann_list_s_.size() );
+
+        std::vector<int> buffer(naa_ann, 0);
+        for( size_t A = 0; A < nalfa; ++A){
+            for( size_t a = 0; a < nex; ++ a ){
+                std::tuple<size_t, short, short> Ja = aa_ann_list_s_[A*nex + a];
+                size_t A_ann = std::get<0>(Ja);
+                short i = std::get<1>(Ja);
+                short j = std::get<2>(Ja);
+                aa_cre_list_s_[ cre_list_buffer_[2][A_ann] + buffer[A_ann] ] = std::make_tuple(A, i, j);
+                buffer[A_ann]++;
+            }
+        }
+    }
+
+    // Map beta strings by two beta excitations
+    {
+        size_t nbb_ann = 0;
+        size_t nex = nb_* (nb_ - 1)/2;
+        bb_ann_list_s_.resize(nbeta * nex);
+
+        string_hash<size_t> map_bb_ann;
+        for( size_t B = 0; B < nbeta; ++B){
+            STLBitsetString bstr = beta_strings_[B];
+            std::vector<int> bocc = bstr.get_occ();
+
+            for( int i = 0, ij = 0; i < nb_; ++i){
+                for( int j = i + 1; j < nb_; ++j, ++ij){
+                    int ii = bocc[i];
+                    int jj = bocc[j];
+                    double sign = bstr.SlaterSign(ii) * bstr.SlaterSign(jj);
+                    
+                    bstr.set_bit(ii,false); 
+                    bstr.set_bit(jj,false); 
+      
+                    string_hash<size_t>::iterator b_it = map_bb_ann.find(bstr); 
+                    size_t b_add;
+                
+                    if( b_it == map_bb_ann.end()) {
+                        b_add = nbb_ann;
+                        map_bb_ann[bstr] = nbb_ann;
+                        nbb_ann++;
+                        cre_list_buffer_[3].push_back(1);
+                    }else{
+                        b_add = b_it->second;    
+                        cre_list_buffer_[3][b_add]++;
+                    }
+
+                    bb_ann_list_s_[ B*nex + ij ] = std::make_tuple( b_add, (sign > 0.0) ? (ii+1) : (-ii-1), jj);
+                    bstr.set_bit(ii, true); 
+                    bstr.set_bit(jj, true); 
+                }
+            }    
+        }
+        size_t sum = 0; 
+        for( size_t i = 0; i < nbb_ann; ++i){
+            size_t current = cre_list_buffer_[3][i];
+            cre_list_buffer_[3][i] = sum;
+            sum += current;
+        }
+        cre_list_buffer_[3].push_back( bb_ann_list_s_.size() );
+
+        bb_cre_list_s_.resize( bb_ann_list_s_.size() );
+
+        std::vector<int> buffer(nbb_ann, 0);
+        for( size_t B = 0; B < nbeta; ++B){
+            for( size_t b = 0; b < nex; ++b ){
+                std::tuple<size_t, short, short> Jb = bb_ann_list_s_[B*nex + b];
+                size_t B_ann = std::get<0>(Jb);
+                short i = std::get<1>(Jb);
+                short j = std::get<2>(Jb);
+                bb_cre_list_s_[ cre_list_buffer_[3][B_ann] + buffer[B_ann] ] = std::make_tuple(B, i, j);
+                buffer[B_ann]++;
+            }
+        }
+    }
+
 }
 
 void CI_RDMS::get_two_map()
@@ -1120,6 +1595,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
 				}	
 				if (std::fabs(rdm) > 1.0e-12 ){
 					error_1rdm_a += std::fabs(rdm - oprdm_a[q*ncmo_ + p]);
+//outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q, rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
 				}
 			}
 		}
@@ -1142,6 +1618,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
 				}	
 				if (std::fabs(rdm) > 1.0e-12 ){
 					error_1rdm_b += std::fabs(rdm - oprdm_b[p*ncmo_ + q]);
+//outfile->Printf("\n  D1(b)[%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q, rdm-oprdm_b[p*ncmo_+q],rdm,oprdm_b[p*ncmo_+q]);
 				}
 			}
 		}
@@ -1168,7 +1645,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                         }}
                         if (std::fabs(rdm) > 1.0e-12){
                             error_2rdm_aa += std::fabs(rdm - tprdm_aa[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s]);
-//outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
+outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)", p,q,r,s,rdm-tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s],rdm,tprdm_aa[p*ncmo3_+q*ncmo2_+r*ncmo_+s]);
                         }
                     }
                 }
@@ -1203,7 +1680,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
             }
         }
         outfile->Printf("\n    BBBB 2-RDM Error :   %2.15f",error_2rdm_bb);
-
+/*
         double error_2rdm_ab = 0.0;
         for (size_t p = 0; p < ncmo_; ++p){
             for (size_t q = 0; q < ncmo_; ++q){
@@ -1391,7 +1868,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         }
         Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %+e",error_3rdm_bbb);
-
+*/
 }
 
 

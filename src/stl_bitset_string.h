@@ -92,6 +92,8 @@ public:
     void print() const;
     /// Save the occupation string  as a std::string
     std::string str() const;
+    /// Return the sign of a_n applied to string I
+    double SlaterSign(int n);
 
 public:
     // Object Data
@@ -101,8 +103,6 @@ public:
     // Static data
     /// Number of non-frozen molecular orbitals
     static int nmo_;
-    /// Return the sign of a_n applied to string I
-    static double SlaterSign(const bit_t& I,int n);
 
     /// Number of non-zero bits
     double get_nocc();
