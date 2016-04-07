@@ -354,16 +354,16 @@ void AdaptivePathIntegralCI::compute_characteristic_function()
         cha_func_coefs_.push_back(1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, shift_);
+        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, lambda_1_);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, shift_);
+        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, lambda_1_);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, shift_);
+        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, lambda_1_);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, shift_);
+        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, lambda_1_);
         break;
     case ExpChebyshevPropagator:
         Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
@@ -535,7 +535,8 @@ double AdaptivePathIntegralCI::compute_energy()
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
-    outfile->Printf("\n\t                   by Francesco A. Evangelista");
+    outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
+    outfile->Printf("\n\t                      version Apr. 5 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -591,13 +592,15 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
 
     int maxcycle = maxiter_;
-    double old_var_energy = 0.0;
-    double old_proj_energy = 0.0;
+    double old_var_energy = var_energy;
+    double old_proj_energy = proj_energy;
     double beta = 0.0;
     bool converged = false;
 
     schwarz_succ_=0;
     schwarz_total_=0;
+
+    approx_E_flag_ = true;
 
     for (int cycle = 0; cycle < maxcycle; ++cycle){
         iter_ = cycle;
@@ -662,7 +665,7 @@ double AdaptivePathIntegralCI::compute_energy()
     }
 
     det_hash<> dets_C_hash;
-    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, 0.0);
+    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, shift_);
     dets_C_hash.clear();
 
     outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
@@ -1630,7 +1633,8 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
         old_approx_energy_ = approx_energy_;
         approx_energy_ = CHC_energy;
         approx_E_flag_ = false;
-        outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
+        if (iter_ != 0)
+            outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
     }
 }
 

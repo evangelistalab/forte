@@ -38,6 +38,7 @@
 #include "finite_temperature.h"
 #include "active_dsrgpt2.h"
 #include "dsrg_mrpt.h"
+#include "localize.h"
 
 INIT_PLUGIN
 
@@ -251,6 +252,11 @@ read_options(std::string name, Options &options)
 
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER",100);
+
+        /*- Use localized basis? -*/
+        options.add_bool("LOCALIZE", false);
+        /*- Type of localization -*/
+        options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
 
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
@@ -488,7 +494,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
+        options.add_str("PROPAGATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -499,7 +505,7 @@ read_options(std::string name, Options &options)
             Note that the final energy is always estimated exactly. -*/
         options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
         /*- The time step in imaginary time (a.u.) -*/
-        options.add_double("TAU",0.01);
+        options.add_double("TAU",1.0);
         /*- The energy convergence criterion -*/
         options.add_double("E_CONVERGENCE",1.0e-8);
         /*- Use a fast (sparse) estimate of the energy -*/
@@ -754,6 +760,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if (options.get_bool("MP2_NOS")){
         auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn,options,ints_, mo_space_info);
+    }
+
+    if (options.get_bool("LOCALIZE")){
+        auto localize = std::make_shared<LOCALIZE>(ref_wfn,options,ints_,mo_space_info);
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
