@@ -165,7 +165,7 @@ public:
     void update_integrals(bool freeze_core = true);
 
     /// Update the integrals with a new set of MO coefficients
-    void retransform_integrals();
+    virtual void retransform_integrals();
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 
@@ -574,6 +574,7 @@ public:
     virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b);
 
     virtual size_t nthree() const {return nthree_;}
+    SharedMatrix L_ao_;
 
 private:
     /// Wavefuntion object    
@@ -586,6 +587,7 @@ private:
     virtual void make_diagonal_integrals();
     virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map);
     virtual void resort_integrals_after_freezing();
+    void transform_integrals();
     ///This is not used in Cholesky, but I have to have implementations for
     /// derived classes.
     virtual void resort_four(double *&, std::vector<size_t> &)
