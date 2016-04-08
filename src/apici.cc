@@ -350,7 +350,7 @@ void AdaptivePathIntegralCI::compute_characteristic_function()
     switch (propagator_) {
     case PowerPropagator:
         cha_func_coefs_.clear();
-        cha_func_coefs_.push_back(-shift_);
+        cha_func_coefs_.push_back(0.0);
         cha_func_coefs_.push_back(1.0);
         break;
     case LinearPropagator:
@@ -426,7 +426,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
     coefs.clear();
     std::vector<double> poly_coefs;
     Taylor_polynomial_coefs(poly_coefs, order);
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, tau * S);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, 0.0);
 //    coefs.clear();
 //    for (int i=0; i <= order; i++) {
 //        coefs.push_back(0.0);
@@ -488,7 +488,7 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
 }
 
 void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
@@ -518,7 +518,7 @@ void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, dou
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
 }
 
 double AdaptivePathIntegralCI::compute_energy()
@@ -536,7 +536,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Apr. 5 2016");
+    outfile->Printf("\n\t                      version Apr. 8 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -651,7 +651,7 @@ double AdaptivePathIntegralCI::compute_energy()
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(approx_energy_gradient) < e_convergence_ && std::fabs(proj_energy_gradient) < e_convergence_){
+            if (std::fabs(approx_energy_gradient) < e_convergence_){
                 converged = true;
                 break;
             }
@@ -1083,7 +1083,7 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
         double current_spawning = spawning_threshold * norm(dets_C_hash);
         dets_C_hash.clear();
 //        apply_tau_H(coef[j]/coef[j-1],spawning_threshold,dets,C,dets_C_hash,0.0);
-        apply_tau_H_subset(coef[j]/coef[j-1], current_spawning, dets, C, dets_sum_map, dets_C_hash, 0.0);
+        apply_tau_H_subset(coef[j]/coef[j-1], current_spawning, dets, C, dets_sum_map, dets_C_hash, shift_);
 
         // Add this term to the total vector
         combine_hashes(dets_C_hash,dets_sum_map);
