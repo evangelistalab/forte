@@ -11,6 +11,7 @@
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
+#include "mp2_nos.h"
 #ifdef HAVE_CHEMPS2
     #include "dmrgsolver.h"
 #endif
@@ -99,6 +100,7 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n Performing a CAS with %5s", options_.get_str("CAS_TYPE").c_str());
         }
         Timer cas_timer;
+        /// Perform a DMRG-CI, ACI, FCI inside an active space
         cas_ci();
         if(print_ > 0)
         {
@@ -203,6 +205,11 @@ void CASSCF::compute_casscf()
     if(print_ > 0)
     {
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
+    }
+
+    if(options_.get_str("JOB_TYPE") != "CASSCF")
+    {
+        SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
     }
 
 }
@@ -312,7 +319,6 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "DMRG")
     {
 #ifdef  HAVE_CHEMPS2
-        //ints_->retransform_integrals();
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
