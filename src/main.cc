@@ -518,6 +518,10 @@ read_options(std::string name, Options &options)
         options.add_bool("USE_INTER_NORM",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
+        /*- Estimate variational energy during calculation -*/
+        options.add_bool("VAR_ESTIMATE",false);
+        /*- Print full wavefunction when finish -*/
+        options.add_bool("PRINT_FULL_WAVEFUNCTION",false);
         /*- Prescreen the spawning of excitations -*/
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
