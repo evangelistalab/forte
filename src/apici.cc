@@ -164,6 +164,9 @@ void AdaptivePathIntegralCI::startup()
     do_perturb_analysis_ = options_.get_bool("PERTURB_ANALYSIS");
     chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
 
+    variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
+    print_full_wavefunction_ = options_.get_bool("PRINT_FULL_WAVEFUNCTION");
+
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
         propagator_description_ = "Linear";
@@ -586,10 +589,15 @@ double AdaptivePathIntegralCI::compute_energy()
 
     // Main iterations
     outfile->Printf("\n\n  ==> APIFCI Iterations <==");
-
-    outfile->Printf("\n\n  ------------------------------------------------------------------------------------------------");
-    outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt");
-    outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
+    if (variational_estimate_) {
+        outfile->Printf("\n\n  --------------------------------------------------------------------------------------------------------------------------------");
+        outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Var. Energy/Eh      dEp/dt      Approx. Energy/Eh   dEv/dt");
+        outfile->Printf("\n  --------------------------------------------------------------------------------------------------------------------------------");
+    } else {
+        outfile->Printf("\n\n  ------------------------------------------------------------------------------------------------");
+        outfile->Printf("\n    Steps  Beta/Eh      Ndets     Proj. Energy/Eh     dEp/dt      Approx. Energy/Eh   dEv/dt");
+        outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
+    }
 
     int maxcycle = maxiter_;
     double old_var_energy = var_energy;
@@ -632,19 +640,21 @@ double AdaptivePathIntegralCI::compute_energy()
             std::map<std::string,double> results = estimate_energy(dets,C);
             timer_off("PIFCI:<E>");
 
-//            var_energy = results["VARIATIONAL ENERGY"];
             proj_energy = results["PROJECTIVE ENERGY"];
 
-//            double var_energy_gradient = (var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_);
             double proj_energy_gradient = (proj_energy - old_proj_energy) / (time_step_ * energy_estimate_freq_);
             double approx_energy_gradient = (approx_energy_ - old_approx_energy_) / (time_step_ * energy_estimate_freq_);
             if (cycle == 0)  approx_energy_gradient = 10.0 * e_convergence_+1.0;
 
-//            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e %20.12f %10.3e",cycle,beta,C.size(),
-//                            proj_energy,proj_energy_gradient,
-//                            var_energy,var_energy_gradient);
+
             outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
                             proj_energy,proj_energy_gradient);
+
+            if (variational_estimate_) {
+                var_energy = results["VARIATIONAL ENERGY"];
+                double var_energy_gradient = (var_energy - old_var_energy) / (time_step_ * energy_estimate_freq_);
+                outfile->Printf(" %20.12f %10.3e",var_energy,var_energy_gradient);
+            }
 
             old_var_energy = var_energy;
             old_proj_energy = proj_energy;
@@ -667,8 +677,12 @@ double AdaptivePathIntegralCI::compute_energy()
     det_hash<> dets_C_hash;
     apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, shift_);
     dets_C_hash.clear();
+    if (variational_estimate_) {
+        outfile->Printf("\n  --------------------------------------------------------------------------------------------------------------------------------");
+    } else {
+        outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
+    }
 
-    outfile->Printf("\n  ------------------------------------------------------------------------------------------------");
     outfile->Printf("\n\n  Calculation %s",converged ? "converged." : "did not converge!");
 
     if (do_shift_) {
@@ -707,7 +721,13 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
     outfile->Flush();
 
-    print_wfn(dets,C);
+    if (print_full_wavefunction_) {
+        print_wfn(dets,C, C.size());
+    } else {
+        print_wfn(dets,C);
+    }
+
+
     if (current_root_ < nroot_ - 1){
         save_wfn(dets,C,solutions_);
     }
@@ -1622,6 +1642,7 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
         }
     }
     if (approx_E_flag_) {
+        timer_on("PIFCI:<E>a");
         size_t max_I = dets.size();
         double CHC_energy = 0.0;
 #pragma omp parallel for reduction(+:CHC_energy)
@@ -1629,6 +1650,7 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
             CHC_energy += C[I] * dets_C_hash[dets[I]];
         }
         CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
+        timer_off("PIFCI:<E>a");
         double CHC_energy_gradient = (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
         old_approx_energy_ = approx_energy_;
         approx_energy_ = CHC_energy;
@@ -2581,16 +2603,17 @@ std::map<std::string,double> AdaptivePathIntegralCI::estimate_energy(det_vec& de
     results["PROJECTIVE ENERGY"] = estimate_proj_energy(dets,C);
     timer_off("PIFCI:<E>p");
 
-//    if (fast_variational_estimate_){
-//        timer_on("PIFCI:<E>vs");
-//        results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(dets,C,energy_estimate_threshold_);
-//        timer_off("PIFCI:<E>vs");
-//    }else{
-//        timer_on("PIFCI:<E>v");
-//        results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C,energy_estimate_threshold_);
-//        timer_off("PIFCI:<E>v");
-//    }
-
+    if (variational_estimate_) {
+        if (fast_variational_estimate_){
+            timer_on("PIFCI:<E>vs");
+            results["VARIATIONAL ENERGY"] = estimate_var_energy_sparse(dets,C,energy_estimate_threshold_);
+            timer_off("PIFCI:<E>vs");
+        }else{
+            timer_on("PIFCI:<E>v");
+            results["VARIATIONAL ENERGY"] = estimate_var_energy(dets,C,energy_estimate_threshold_);
+            timer_off("PIFCI:<E>v");
+        }
+    }
     return results;
 }
 
@@ -2747,7 +2770,7 @@ std::tuple<double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
 }
 
-void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C)
+void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C, size_t max_output)
 {
     outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
@@ -2757,9 +2780,9 @@ void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C)
     }
     std::sort(det_weight.begin(),det_weight.end());
     std::reverse(det_weight.begin(),det_weight.end());
-    size_t max_dets = std::min(10,int(C.size()));
+    size_t max_dets = std::min(int(max_output),int(C.size()));
     for (size_t I = 0; I < max_dets; ++I){
-        outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s",
+        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s",
                         I,
                         C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first,
