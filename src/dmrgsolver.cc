@@ -73,6 +73,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
                 const double value = one_rdm[ shift + orb1 + nOrbDMRG * ( shift + orb2 ) ];
                 gamma1_data[ shift + orb1 + nOrbDMRG * ( shift + orb2 )] = 0.5 * value;
                 gamma1_data[ shift + orb2 + nOrbDMRG * ( shift + orb1 )] = 0.5 * value;
+                outfile->Printf("\n %d %d %8.8f", orb1, orb2, 0.5 * value);
 
             }
         }
@@ -107,7 +108,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
-    if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
+    //if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
+    if(max_rdm_ > 2)
     {
         ambit::Tensor gamma3_dmrg = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});
         ambit::Tensor gamma3_aaa = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aaa", {na, na, na, na, na, na});
@@ -287,6 +289,11 @@ void DMRGSolver::compute_energy()
     if ( !(Prob->checkConsistency()) ){ throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector compatible with all symmetry sectors!"); }
     Prob->SetupReorderD2h();
 
+    if(!use_user_integrals_)
+    {
+        std::vector<size_t> active_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        active_integrals_ = ints_->aptei_ab_block(active_array, active_array, active_array, active_array);
+    }
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
         if(
         CheMPS2::Irreps::directProd( orbitalIrreps[i[0]], orbitalIrreps[i[1]] ) 
@@ -325,27 +332,29 @@ void DMRGSolver::compute_energy()
     {
         if(state > 0){ DMRGCI->newExcitation(fabs(Energy));}
         Energy = DMRGCI->Solve();
-        if(dmrgscf_state_avg)
-        {
-            DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
-            CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
-        }
+        DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
+        //if(dmrgscf_state_avg)
+        //{
+        //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
+        //    CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
+        //}
     
-    if((state == 0) && (dmrgscf_which_root > 1)) { DMRGCI->activateExcitations( dmrgscf_which_root-1);}
-        {
+    //if((state == 0) && (dmrgscf_which_root > 1)) { DMRGCI->activateExcitations( dmrgscf_which_root-1);}
+    //    {
 
-            DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
-            CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
-        }
-    }
-    if( !(dmrgscf_state_avg) ) {
-        DMRGCI->calc_rdms_and_correlations(max_rdm_ < 3 ? true : false);
+    //        DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
+    //        CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
+    //    }
+    //}
+    //if( !(dmrgscf_state_avg) ) {
+    //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
     }
     if(dmrg_print_corr)
     {
         DMRGCI->getCorrelations()->Print();
     }
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
+    CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     if( max_rdm_ > 2)
     {
         CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
@@ -353,10 +362,10 @@ void DMRGSolver::compute_energy()
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
     dmrg_ref_.set_Eref(Energy);
 
-    delete DMRG1DM;
-    delete DMRG2DM;
-    delete orbitalIrreps;
-    if(max_rdm_ > 2){delete DMRG3DM;}
+    delete[] DMRG1DM;
+    delete[] DMRG2DM;
+    delete[] orbitalIrreps;
+    if(max_rdm_ > 2){delete[] DMRG3DM;}
 
 }
 int DMRGSolver::chemps2_groupnumber(const string SymmLabel){
