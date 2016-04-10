@@ -539,7 +539,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Apr. 8 2016");
+    outfile->Printf("\n\t                      version Apr. 10 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -2782,12 +2782,13 @@ void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C, si
     std::reverse(det_weight.begin(),det_weight.end());
     size_t max_dets = std::min(int(max_output),int(C.size()));
     for (size_t I = 0; I < max_dets; ++I){
-        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s",
+        outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f",
                         I,
                         C[det_weight[I].second],
                         det_weight[I].first * det_weight[I].first,
                         det_weight[I].second,
-                        space[det_weight[I].second].str().c_str());       
+                        space[det_weight[I].second].str().c_str(),
+                        space[det_weight[I].second].energy());
     }
 
     // Compute the expectation value of the spin
