@@ -911,7 +911,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         }
         if(options.get_str("CAS_TYPE")=="FCI")
         {
-            if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
+            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
+            if (options.get_bool("SEMI_CANONICAL"))
+            {
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
@@ -1031,6 +1033,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 Reference dmrg_reference = dmrg.reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
+
             DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
             dmrg.set_max_rdm(3);
             dmrg.compute_energy();

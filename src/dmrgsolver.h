@@ -55,7 +55,7 @@ private:
     ///Ported over codes from DMRGSCF plugin
     void startup();
     /// By default, compute the second rdm.  If you are doing MRPT2, may need to change this.
-    int max_rdm_ = 2;
+    int max_rdm_ = 3;
     int chemps2_groupnumber(const string SymmLabel);
     ambit::Tensor active_integrals_;
     std::vector<double> one_body_integrals_;

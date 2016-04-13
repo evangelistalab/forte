@@ -828,7 +828,7 @@ double DMRGSCF::compute_energy()
         bool wfn_co_updated = false;
         if (( dmrgscf_active_space.compare("NO")==0 ) && (theDIIS==NULL)){ //When the DIIS has started: stop
             CheMPS2::CASSCF::copy_active(DMRG1DM, theFmatrix, iHandler, true );
-            CheMPS2::CASSCF::block_diagonalize('A', theFmatrix, unitary, mem1, mem2, iHandler, true, DMRG2DM);
+            CheMPS2::CASSCF::block_diagonalize('A', theFmatrix, unitary, mem1, mem2, iHandler, true, DMRG2DM, nullptr, nullptr);
             CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
             update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
             wfn_co_updated = true;
