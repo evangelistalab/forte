@@ -73,7 +73,6 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
                 const double value = one_rdm[ shift + orb1 + nOrbDMRG * ( shift + orb2 ) ];
                 gamma1_data[ shift + orb1 + nOrbDMRG * ( shift + orb2 )] = 0.5 * value;
                 gamma1_data[ shift + orb2 + nOrbDMRG * ( shift + orb1 )] = 0.5 * value;
-                outfile->Printf("\n %d %d %8.8f", orb1, orb2, 0.5 * value);
 
             }
         }
@@ -82,6 +81,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     /// Gamma_b = 1_RDM / 2
     dmrg_ref.set_L1a(gamma1_a);
     dmrg_ref.set_L1b(gamma1_a);
+    outfile->Printf("\n gamma1_a_norm: %8.8f", gamma1_a.norm(2.0));
     /// Form 2_rdms
     {
         gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
@@ -107,6 +107,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2aa(cumulant2_aa);
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
+        outfile->Printf("\n gamma2_dmrg: %8.6f l2aa: %8.6f l2ab: %8.6f", gamma2_dmrg.norm(2.0), cumulant2_aa.norm(2.0), cumulant2_ab.norm(2.0));
     }
     //if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
     if(max_rdm_ > 2)
@@ -319,7 +320,6 @@ void DMRGSolver::compute_energy()
     }
     Ham->setEconst(scalar_energy_);
 
-    std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 
     double Energy = 1e-8;
     double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
@@ -328,6 +328,13 @@ void DMRGSolver::compute_energy()
     if(max_rdm_ > 2)
         DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
 
+    std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
+    //std::memset(DMRG1DM, 0.0, nOrbDMRG * nOrbDMRG);
+    std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
+    //if(max_rdm_ > 2)
+    //    std::memset(DMRG3DM, 0.0, nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
+    //for(int cnt = 0; cnt < nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG; cnt++)
+    //    DMRG2DM[cnt] = 0.0;
     for(int state = 0; state < dmrgscf_which_root; state++)
     {
         if(state > 0){ DMRGCI->newExcitation(fabs(Energy));}
@@ -353,12 +360,20 @@ void DMRGSolver::compute_energy()
     {
         DMRGCI->getCorrelations()->Print();
     }
-    CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
-    if( max_rdm_ > 2)
+    CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
+    for(int i = 0; i < nOrbDMRG * nOrbDMRG; i++)
+    {
+        if(std::fabs( DMRG1DM[i] ) > 2.0)
+        {
+            outfile->Printf("\n DMRG1DM[%d] = %8.6f", i, DMRG1DM[i]);
+        }
+    }
+    if( max_rdm_ == 3)
     {
         CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
     }
+
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
     dmrg_ref_.set_Eref(Energy);
 
