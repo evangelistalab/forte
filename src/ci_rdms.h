@@ -54,6 +54,8 @@ public:
                   std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
     void set_print( bool print ) {print_ = print;}
+
+    void set_max_rdm( int rdm );
 private:
    /* Class Variables*/  
 	
@@ -116,6 +118,8 @@ private:
 	bool one_map_done_;
 
     bool print_;
+
+    int max_rdm_;
 
 	// The list of a_p |N>
 	std::vector<std::vector<std::pair<size_t,short>>> a_ann_list_;

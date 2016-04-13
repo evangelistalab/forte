@@ -198,6 +198,11 @@ void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
     }
 }
 
+void CI_RDMS::set_max_rdm( int rdm )
+{
+    max_rdm_ = rdm;
+}
+
 double CI_RDMS::get_energy( std::vector<double>& oprdm_a, 
 							std::vector<double>& oprdm_b, 
 							std::vector<double>& tprdm_aa,
@@ -1393,8 +1398,6 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 {
 	Reference ci_ref;	
 
-    int max_rdm = options_.get_int("ACI_MAX_RDM");
-
 	ambit::Tensor L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {ncmo_,ncmo_});
 	ambit::Tensor L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {ncmo_,ncmo_});
 
@@ -1402,7 +1405,7 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 	ambit::Tensor L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
 	ambit::Tensor L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{ncmo_,ncmo_,ncmo_,ncmo_});
 
-    if( max_rdm >= 1 ){
+    if( max_rdm_ >= 1 ){
 	    // Form OPCM from 1-RDM
 	    
 	    if( na_ >= 1 ){
@@ -1416,7 +1419,7 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
     }
     
 	// Form TPCMs from 2-RDMs
-    if( max_rdm >= 2 ){
+    if( max_rdm_ >= 2 ){
 
 	    ambit::Tensor g2aa = ambit::Tensor::build(ambit::CoreTensor,"g2aa",{ncmo_,ncmo_,ncmo_,ncmo_});
 	    ambit::Tensor g2ab = ambit::Tensor::build(ambit::CoreTensor,"g2ab",{ncmo_,ncmo_,ncmo_,ncmo_});
@@ -1468,7 +1471,7 @@ Reference CI_RDMS::reference( std::vector<double>& oprdm_a,
 
     }
 
-    if( max_rdm >= 3 ){
+    if( max_rdm_ >= 3 ){
 	    // Form the 3-RCMs
 	    ambit::Tensor L3aaa = ambit::Tensor::build(ambit::CoreTensor,"L3aaa",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
 	    ambit::Tensor L3aab = ambit::Tensor::build(ambit::CoreTensor,"L3aab",{ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,ncmo_,});
