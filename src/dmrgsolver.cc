@@ -81,13 +81,12 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     /// Gamma_b = 1_RDM / 2
     dmrg_ref.set_L1a(gamma1_a);
     dmrg_ref.set_L1b(gamma1_a);
-    outfile->Printf("\n gamma1_a_norm: %8.8f", gamma1_a.norm(2.0));
     /// Form 2_rdms
     {
         gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
         /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
-        gamma2_aa.copy(gamma2_dmrg);
+        //gamma2_aa.copy(gamma2_dmrg);
         gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
         gamma2_aa.scale(1.0 / 6.0);
 
@@ -107,7 +106,6 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2aa(cumulant2_aa);
         dmrg_ref.set_L2ab(cumulant2_ab);
         dmrg_ref.set_L2bb(cumulant2_aa);
-        outfile->Printf("\n gamma2_dmrg: %8.6f l2aa: %8.6f l2ab: %8.6f", gamma2_dmrg.norm(2.0), cumulant2_aa.norm(2.0), cumulant2_ab.norm(2.0));
     }
     //if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
     if(max_rdm_ > 2)
@@ -163,17 +161,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         gamma3_aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
         gamma3_aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
 
-
-        //gamma3_abb("pQRsTU") -= L1a("ps") * L2aa("QRTU");
-
-        //gamma3_abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
-        //gamma3_abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
-
-        //gamma3_abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
-        //gamma3_abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
-
-        //gamma3_abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
-        //gamma3_abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+        /// KPH found notes from York's paper useful in deriving this relationship
         gamma3_abb("p, q, r, s, t, u") = gamma3_aab("q,r,p,t,u,s");
 
         dmrg_ref.set_L3aaa(gamma3_aaa);
@@ -214,6 +202,8 @@ void DMRGSolver::compute_energy()
     const bool dmrgscf_state_avg      = options_.get_bool("DMRG_AVG_STATES");
     const string dmrgscf_active_space = options_.get_str("DMRG_ACTIVE_SPACE");
     const bool dmrgscf_loc_random     = options_.get_bool("DMRG_LOC_RANDOM");
+    double * dmrg_davidson_tol        = options_.get_double_array("DMRG_DAVIDSON_RTOL");
+    const int      ndmrg_davidson_tol       = options_["DMRG_DAVIDSON_RTOL"].size();
     const int dmrgscf_num_vec_diis    = CheMPS2::DMRGSCF_numDIISvecs;
     const std::string unitaryname     = psi::get_writer_file_prefix(wfn_->molecule()->name() ) + ".unitary.h5";
     const std::string diisname        = psi::get_writer_file_prefix(wfn_->molecule()->name() ) + ".DIIS.h5";
@@ -258,7 +248,11 @@ void DMRGSolver::compute_energy()
     CheMPS2::Initialize::Init();
     std::shared_ptr<CheMPS2::ConvergenceScheme>  OptScheme = std::make_shared<CheMPS2::ConvergenceScheme>(ndmrg_states);
     for (int cnt=0; cnt<ndmrg_states; cnt++){
-       OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], dmrgscf_convergence);
+        if(ndmrg_davidson_tol != ndmrg_states) 
+            OptScheme->setInstruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt]);
+        else{
+            OptScheme->set_instruction( cnt, dmrg_states[cnt], dmrg_econv[cnt], dmrg_maxsweeps[cnt], dmrg_noiseprefactors[cnt], dmrg_davidson_tol[cnt]);
+        }
     }
     //CheMPS2::DMRGSCFindices * iHandler = new ChemP
     std::shared_ptr<CheMPS2::DMRGSCFindices> iHandler = std::make_shared<CheMPS2::DMRGSCFindices>(nmo, SyGroup, frozen_docc, active, virtual_orbs);
@@ -329,17 +323,21 @@ void DMRGSolver::compute_energy()
         DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
-    //std::memset(DMRG1DM, 0.0, nOrbDMRG * nOrbDMRG);
+    std::memset(DMRG1DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG);
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
-    //if(max_rdm_ > 2)
-    //    std::memset(DMRG3DM, 0.0, nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
+    if(max_rdm_ > 2)
+        std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     //for(int cnt = 0; cnt < nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG; cnt++)
     //    DMRG2DM[cnt] = 0.0;
     for(int state = 0; state < dmrgscf_which_root; state++)
     {
         if(state > 0){ DMRGCI->newExcitation(fabs(Energy));}
+        Timer DMRGSolve;
         Energy = DMRGCI->Solve();
+        outfile->Printf("\n Overall DMRG Solver took %6.5f s.", DMRGSolve.get());
+        Timer DMRGRDMs;
         DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
+        outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         //if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -362,14 +360,7 @@ void DMRGSolver::compute_energy()
     }
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
-    for(int i = 0; i < nOrbDMRG * nOrbDMRG; i++)
-    {
-        if(std::fabs( DMRG1DM[i] ) > 2.0)
-        {
-            outfile->Printf("\n DMRG1DM[%d] = %8.6f", i, DMRG1DM[i]);
-        }
-    }
-    if( max_rdm_ == 3)
+    if( max_rdm_ > 2)
     {
         CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
     }
