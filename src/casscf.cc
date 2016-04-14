@@ -175,7 +175,7 @@ void CASSCF::compute_casscf()
         Cb->copy(Cp);
 
         std::string diis_start_label = "";
-        if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
+        if(iter >= diis_start && do_diis==true && g_norm < diis_gradient_norm){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
         if(print_ > 0)
         {
@@ -348,6 +348,7 @@ void CASSCF::cas_ci()
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
+    if(options_.get_str("CAS_TYPE")=="DMRG") L2aa.scale(0.5);
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
@@ -962,7 +963,6 @@ std::pair<ambit::Tensor, std::vector<double> > CASSCF::CI_Integrals()
 
     active_ab.iterate([&](const std::vector<size_t>& i,double& value){
         value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
-    outfile->Printf("\n active_ab: %8.8f",active_ab.norm(2.0));
     std::pair<ambit::Tensor, std::vector<double> > pair_return = std::make_pair(active_ab, oei_vector[0]);
     return pair_return;
     
