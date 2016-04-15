@@ -298,6 +298,7 @@ void DMRGSolver::compute_energy()
         } ;});
     //int shift = iHandler->getDMRGcumulative(h);
     int shift = 0;
+    ///If user doesn't specify integrals, compute them yourself.  
     if(one_body_integrals_.empty())
     {
         one_body_integrals_ = one_body_operator();
@@ -316,21 +317,30 @@ void DMRGSolver::compute_energy()
 
 
     double Energy = 1e-8;
+    ///DMRG can compute the 2DM pretty simply.  Always compute it
     double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
     double * DMRG2DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
     double * DMRG3DM;
     if(max_rdm_ > 2)
         DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
 
-    std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
     std::memset(DMRG1DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG);
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     if(max_rdm_ > 2)
         std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
-    //for(int cnt = 0; cnt < nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG; cnt++)
-    //    DMRG2DM[cnt] = 0.0;
+
+    std::ofstream capturing;
+    std::streambuf * cout_buffer;
+    std::string chemps2filename = "DMRG.chemps2";
+    outfile->Printf("\n CheMPS2 output is temporarily written to the file");
+    capturing.open(chemps2filename.c_str(), ios::trunc);
+    cout_buffer = cout.rdbuf( capturing.rdbuf());
+
+    std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
+
     for(int state = 0; state < dmrgscf_which_root; state++)
     {
+
         if(state > 0){ DMRGCI->newExcitation(fabs(Energy));}
         Timer DMRGSolve;
         Energy = DMRGCI->Solve();
@@ -358,6 +368,17 @@ void DMRGSolver::compute_energy()
     {
         DMRGCI->getCorrelations()->Print();
     }
+    cout.rdbuf(cout_buffer);
+    capturing.close();
+    std::ifstream copying;
+    copying.open( chemps2filename , ios::in ); // read only
+    if (copying.is_open()){
+        string line;
+        while( getline( copying, line ) ){ (*outfile) << line << endl; }
+        copying.close();
+    }
+    //system(("rm " + chemps2filename).c_str());
+
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
     if( max_rdm_ > 2)

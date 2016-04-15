@@ -86,7 +86,7 @@ def generate_makefile(args):
             #addons += "LDFLAGS +=   -L$(CHEMPS2_BINDIR)/lib -lchemps2\n"
             addons += "#This works on our cluster\n"
             addons += "INCLUDES += -I$(CHEMPS2_BINDIR)/include\n"
-            addons += "LDFLAGS += -L$(CHEMPS2_BINDIR)/lib64 -lchemps2" 
+            addons += "LDFLAGS += -L$(CHEMPS2_BINDIR)/lib64 -lchemps2\n" 
             addons += "CXXFLAGS += -DHAVE_CHEMPS2\n"
         else:
             addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
