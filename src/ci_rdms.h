@@ -47,6 +47,7 @@ public:
 	void compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
 	void compute_2rdm_str( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
 	void compute_3rdm( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
+	void compute_3rdm_str( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
 	
 	double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
 	
@@ -92,10 +93,10 @@ private:
 	int symmetry_;
 
 	// The number of alpha electrons
-	int na_;
+	size_t na_;
 
 	// The number of beta electrons
-	int nb_;
+	size_t nb_;
 	
 	// The number of correlated mos
 	size_t ncmo_;
@@ -150,7 +151,7 @@ private:
 
 	// The list of a_q^(+) a_p^(+)|N-1>
 	std::vector<std::tuple<size_t,short,short>> aa_cre_list_s_;
-	std::vector<std::tuple<size_t,short,short>> ab_cre_list_s_;
+	std::vector<std::tuple<size_t,size_t,short,short>> ab_cre_list_s_;
 	std::vector<std::tuple<size_t,short,short>> bb_cre_list_s_;
 
 	// The list of a_r a_q a_p |N>
@@ -166,6 +167,17 @@ private:
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_cre_list_;
 
 
+	// The list of a_r a_q a_p |N>
+	std::vector<std::tuple<size_t,short,short,short>> aaa_ann_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> aab_ann_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> abb_ann_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> bbb_ann_list_s_;
+	
+	// The list of a^(+)_r a^(+)_q a^(+)_p |N-1>
+	std::vector<std::tuple<size_t,short,short,short>> aaa_cre_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> aab_cre_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> abb_cre_list_s_;
+	std::vector<std::tuple<size_t,short,short,short>> bbb_cre_list_s_;
 
 	/* Class functions*/ 
 
