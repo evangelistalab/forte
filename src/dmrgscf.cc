@@ -218,12 +218,11 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
             for (int orb1 = 0; orb1 < iHandler->getNDMRG(h); orb1++){
                 for (int orb2 = orb1; orb2 < iHandler->getNDMRG(h); orb2++){
                     HamDMRG->setTmat( shift+orb1, shift+orb2, theTmatrix->get(h, NOCC+orb1, NOCC+orb2)
-                                                  + theQmatOCC->get(h, NOCC+orb1, NOCC+orb2) );
+                                                  + theQmatOCC->get(h, NOCC+orb1, NOCC+orb2));
                 }
             }
         }
         HamDMRG->setEconst( Econstant );
-        //outfile->Printf("\n EConst = %8.8f", Econstant);
     }
 
     // Two-electron integrals
@@ -240,7 +239,6 @@ void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::sh
                 const int r = K.params->colorb[h][rs][0];
                 const int s = K.params->colorb[h][rs][1];
                 HamDMRG->setVmat( p, r, q, s, K.matrix[h][pq][rs] );
-                outfile->Printf("\n %d %d %d %d %8.8f", p, r, q, s, K.matrix[h][pq][rs]);
             }
         }
         global_dpd_->buf4_mat_irrep_close(&K, h);
@@ -434,7 +432,7 @@ double DMRGSCF::compute_energy()
     //int * frozen_docc                 = options_.get_int_array("FROZEN_DOCC");
     //int * active                      = options_.get_int_array("ACTIVE");
     /// Sebastian optimizes the frozen_docc
-    int * frozen_docc             = options_.get_int_array("DMRG_FROZEN_DOCC");
+    int * frozen_docc                 = options_.get_int_array("DMRG_FROZEN_DOCC");
     Dimension active                  = mo_space_info_->get_dimension("ACTIVE");
     const double dmrgscf_convergence  = options_.get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit     = options_.get_bool("DMRG_STORE_UNIT");
@@ -830,7 +828,7 @@ double DMRGSCF::compute_energy()
         bool wfn_co_updated = false;
         if (( dmrgscf_active_space.compare("NO")==0 ) && (theDIIS==NULL)){ //When the DIIS has started: stop
             CheMPS2::CASSCF::copy_active(DMRG1DM, theFmatrix, iHandler, true );
-            CheMPS2::CASSCF::block_diagonalize('A', theFmatrix, unitary, mem1, mem2, iHandler, true, DMRG2DM);
+            CheMPS2::CASSCF::block_diagonalize('A', theFmatrix, unitary, mem1, mem2, iHandler, true, DMRG2DM, nullptr, nullptr);
             CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
             update_WFNco( Coeff_orig, iHandler, unitary, work1, work2 );
             wfn_co_updated = true;
@@ -876,7 +874,6 @@ double DMRGSCF::compute_energy()
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler);
     for(int i = 0; i < nOrbDMRG; i++)
         for(int j = 0; j < nOrbDMRG; j++)
-            outfile->Printf("\n %d %d %8.8f", i, j, DMRG1DM[i*nOrbDMRG + j]);
 
 
     delete [] mem1;

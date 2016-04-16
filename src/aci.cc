@@ -689,6 +689,7 @@ double AdaptiveCI::compute_energy()
 
 	evecs_ = PQ_evecs;
     CI_RDMS ci_rdms_(options_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+    ci_rdms_.set_max_rdm(rdm_level_);
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
 		ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_,0);
@@ -1845,6 +1846,7 @@ void AdaptiveCI::set_max_rdm( int rdm )
 Reference AdaptiveCI::reference()
 {
     CI_RDMS ci_rdms(options_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
+    ci_rdms.set_max_rdm( rdm_level_ );
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
 }

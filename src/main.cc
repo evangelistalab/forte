@@ -23,6 +23,7 @@
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
 #endif
+#include "dmrgsolver.h"
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
@@ -518,6 +519,10 @@ read_options(std::string name, Options &options)
         options.add_bool("USE_INTER_NORM",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
+        /*- Estimate variational energy during calculation -*/
+        options.add_bool("VAR_ESTIMATE",false);
+        /*- Print full wavefunction when finish -*/
+        options.add_bool("PRINT_FULL_WAVEFUNCTION",false);
         /*- Prescreen the spawning of excitations -*/
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
@@ -906,7 +911,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         }
         if(options.get_str("CAS_TYPE")=="FCI")
         {
-            if (options.get_bool("SEMI_CANONICAL")){
+            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
+            if (options.get_bool("SEMI_CANONICAL"))
+            {
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
@@ -926,9 +933,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         }
 
         if(options.get_str("CAS_TYPE")=="ACI"){
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(3);
+                aci->set_max_rdm(1);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
@@ -944,18 +951,18 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         else if(options.get_str("CAS_TYPE")=="DMRG")
         {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-                dmrg->set_iterations(1);
-                dmrg->compute_energy();
-                Reference dmrg_reference = dmrg->reference();
+                DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+                dmrg.set_max_rdm(2);
+                dmrg.compute_energy();
+                Reference dmrg_reference = dmrg.reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-            dmrg->set_iterations(1);
-            dmrg->compute_energy();
-            Reference dmrg_reference = dmrg->reference();
+            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+            dmrg.set_max_rdm(3);
+            dmrg.compute_energy();
+            Reference dmrg_reference = dmrg.reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
 #endif
@@ -980,7 +987,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             three_dsrg_mrpt2->compute_energy();
         }
         if(options.get_str("CAS_TYPE")=="ACI"){
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
                 aci->set_max_rdm(3);
                 aci->compute_energy();
@@ -991,15 +998,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             aci->set_max_rdm(3);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
         }
 
         else if(options.get_str("CAS_TYPE")=="FCI")
         {
-            if (options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
@@ -1017,19 +1024,20 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-                dmrg->set_iterations(1);
-                dmrg->compute_energy();
+                DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+                dmrg.set_max_rdm(1);
+                dmrg.compute_energy();
 
-                Reference dmrg_reference = dmrg->reference();
+                Reference dmrg_reference = dmrg.reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-            dmrg->set_iterations(1);
-            dmrg->compute_energy();
-            Reference dmrg_reference = dmrg->reference();
+
+            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+            dmrg.set_max_rdm(3);
+            dmrg.compute_energy();
+            Reference dmrg_reference = dmrg.reference();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
             three_dsrg_mrpt2->compute_energy();
 #endif
