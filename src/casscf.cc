@@ -11,6 +11,7 @@
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
+#include "mp2_nos.h"
 #ifdef HAVE_CHEMPS2
     #include "dmrgsolver.h"
 #endif
@@ -99,6 +100,7 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n Performing a CAS with %5s", options_.get_str("CAS_TYPE").c_str());
         }
         Timer cas_timer;
+        /// Perform a DMRG-CI, ACI, FCI inside an active space
         cas_ci();
         if(print_ > 0)
         {
@@ -173,7 +175,7 @@ void CASSCF::compute_casscf()
         Cb->copy(Cp);
 
         std::string diis_start_label = "";
-        if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
+        if(iter >= diis_start && do_diis==true && g_norm < diis_gradient_norm){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
         if(print_ > 0)
         {
@@ -203,6 +205,11 @@ void CASSCF::compute_casscf()
     if(print_ > 0)
     {
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
+    }
+
+    if(options_.get_str("JOB_TYPE") != "CASSCF")
+    {
+        SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
     }
 
 }
@@ -312,13 +319,11 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "DMRG")
     {
 #ifdef  HAVE_CHEMPS2
-        //ints_->retransform_integrals();
-        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_);
+        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-        outfile->Printf("\n Scalar_energy_: %8.8f", scalar_energy_ + ints_->frozen_core_energy());
-        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy());
+        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() + Process::environment.molecule()->nuclear_repulsion_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -343,6 +348,7 @@ void CASSCF::cas_ci()
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
+    if(options_.get_str("CAS_TYPE")=="DMRG") L2aa.scale(0.5);
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
@@ -957,7 +963,6 @@ std::pair<ambit::Tensor, std::vector<double> > CASSCF::CI_Integrals()
 
     active_ab.iterate([&](const std::vector<size_t>& i,double& value){
         value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
-    outfile->Printf("\n active_ab: %8.8f",active_ab.norm(2.0));
     std::pair<ambit::Tensor, std::vector<double> > pair_return = std::make_pair(active_ab, oei_vector[0]);
     return pair_return;
     

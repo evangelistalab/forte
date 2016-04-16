@@ -1,5 +1,5 @@
-#ifndef DMRG_H
-#define DMRG_H
+#ifndef DMRGSOLVER_H
+#define DMRGSOLVER_H
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
@@ -36,6 +36,7 @@ public:
     {
         active_integrals_ = active_integrals;
         one_body_integrals_ = one_body;
+        use_user_integrals_ = true;
     }
     void set_scalar(double energy)
     {
@@ -54,11 +55,13 @@ private:
     ///Ported over codes from DMRGSCF plugin
     void startup();
     /// By default, compute the second rdm.  If you are doing MRPT2, may need to change this.
-    int max_rdm_ = 2;
+    int max_rdm_ = 3;
     int chemps2_groupnumber(const string SymmLabel);
     ambit::Tensor active_integrals_;
     std::vector<double> one_body_integrals_;
     double   scalar_energy_ = 0.0;
+    std::vector<double> one_body_operator();
+    bool use_user_integrals_ = false;
 
 };
 

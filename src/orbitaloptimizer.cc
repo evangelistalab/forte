@@ -415,14 +415,14 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     for(int h = 0; h < nirrep_;h++ ){
         for(int p = 0; p < S_tmp->rowspi(h); p++){
             for(int q = 0; q < S_tmp->colspi(h); q++){
-                if(D_grad->get(h, p, q) > 1e-6)
-                {
+                //if(std::fabs(D_grad->get(h, p, q)) > 1e-12)
+                //{
                     S_tmp->set(h, p, q, G_grad->get(h, p, q) / D_grad->get(h, p, q));
-                }
-                else{
-                    S_tmp->set(h, p, q, 0.0);
-                    outfile->Printf("\n Warning: D_grad(%d, %d, %d) is NAN", h, p, q);
-                }
+                //}
+                //else{
+                //    S_tmp->set(h, p, q, 0.0);
+                //    outfile->Printf("\n Warning: D_grad(%d, %d, %d) is NAN", h, p, q);
+                //}
             }
         }
     }
