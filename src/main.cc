@@ -935,7 +935,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(1);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
@@ -989,7 +989,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(3);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);

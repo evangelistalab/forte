@@ -30,6 +30,7 @@ set {
 set forte {
   job_type = aci
   multiplicity 1
+  select_type amp
   perturb_select false
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
