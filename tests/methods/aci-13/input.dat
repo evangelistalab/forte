@@ -32,6 +32,7 @@ set forte {
   job_type = aci
   multiplicity 1
   perturb_select false
+  select_type amp
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
   TAUP 0.01
