@@ -5,6 +5,7 @@
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include <libmints/matrix.h>
+#include <libfock/jk.h>
 
 using namespace psi;
 
@@ -75,6 +76,10 @@ public:
     /// Print a summary of timings
     void set_print_timings(bool timing){timings_ = timing;}
     void set_wavefunction(SharedWavefunction wfn){ wfn_ = wfn; }
+    void set_jk(boost::shared_ptr<JK>& JK)
+    {
+        JK_ = JK;
+    }
 protected:
     ///The 1-RDM (usually of size na_^2)
     ambit::Tensor gamma1_;
@@ -86,6 +91,7 @@ protected:
     SharedMatrix gamma2M_;
     ambit::Tensor integral_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    boost::shared_ptr<JK> JK_;
 
 
     Options options_;
@@ -129,6 +135,8 @@ protected:
     /// The F_act_ -> ie the fock matrix of nmo by nmo generated using the all active portion of the OPM
     /// Equation 10
     SharedMatrix F_act_;
+    ///The JK object 
+    SharedMatrix JK_fock_;
     /// Intermediate in forming orbital gradient matrix
     SharedMatrix Y_;
     /// Z intermediate
