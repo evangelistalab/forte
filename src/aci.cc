@@ -692,6 +692,7 @@ double AdaptiveCI::compute_energy()
     ci_rdms_.set_max_rdm(rdm_level_);
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
+	//	ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_,0);
 		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
 		if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
 		
@@ -702,11 +703,13 @@ double AdaptiveCI::compute_energy()
 	}
 	if( rdm_level_ >= 2 ){
 		Timer two_rdm;
+	//	ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_, 0);
 		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
 		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 	}
 	if( rdm_level_ >= 3 ){
 		Timer three;
+	//	ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
 		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
 		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 

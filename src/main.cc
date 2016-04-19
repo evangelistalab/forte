@@ -430,11 +430,11 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
 
         /*- The selection type for the Q-space-*/
-        options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
+        options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
         /*-Threshold for the selection of the P space -*/
         options.add_double("TAUP",0.01);
         /*- The threshold for the selection of the Q space -*/
-        options.add_double("TAUQ",0.000001);
+        options.add_double("TAUQ",0.01);
         /*- The SD-space prescreening threshold -*/
         options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
@@ -935,7 +935,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(1);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
@@ -989,7 +989,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(3);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
