@@ -3,6 +3,7 @@
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
+#include <libfock/jk.h>
 
 
 #include "integrals.h"
@@ -11,6 +12,7 @@
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "fci_vector.h"
+
 
 namespace psi{ namespace forte{
 
@@ -80,6 +82,8 @@ private:
     SharedMatrix F_froze_;
     /// The One Electron integrals (H = T + V)  (in AO basis)
     SharedMatrix Hcore_;
+    /// The JK object.  Built in constructor
+    boost::shared_ptr<JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
     /// Sets up the FCISolver
