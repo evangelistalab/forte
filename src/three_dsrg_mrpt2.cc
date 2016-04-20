@@ -1506,7 +1506,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 size_t na = acore_mos_[n];
                 size_t nb = bcore_mos_[n];
                 
-                if (n > m) continue;
                 std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
                 //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
                 std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnbVec[thread].data().begin());
