@@ -391,11 +391,11 @@ void DMRGSCF::copyUNITARYtoPSIMX( CheMPS2::DMRGSCFunitary * unitary, CheMPS2::DM
 }
 
 
-void DMRGSCF::update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::DMRGSCFunitary * unitary, SharedMatrix work1, SharedMatrix work2 ){
+void DMRGSCF::update_WFNco(SharedMatrix Coeff_orig, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::DMRGSCFunitary * unitary, SharedMatrix work1, SharedMatrix work2 ){
 
-    copyCHEMPS2MXtoPSIMX( Coeff_orig, iHandler, work1 );
+    //copyCHEMPS2MXtoPSIMX( Coeff_orig, iHandler, work1 );
     copyUNITARYtoPSIMX( unitary, iHandler, work2 );
-    this->Ca()->gemm(false, true, 1.0, work1, work2, 0.0);
+    this->Ca()->gemm(false, true, 1.0, Coeff_orig, work2, 0.0);
     this->Cb()->copy(this->Ca());
 }
 
@@ -588,8 +588,8 @@ double DMRGSCF::compute_energy()
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
-    CheMPS2::DMRGSCFmatrix * Coeff_orig  = new CheMPS2::DMRGSCFmatrix( iHandler );
-    copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, Coeff_orig);
+    SharedMatrix Coeff_orig = SharedMatrix( new Matrix (this->Ca() ) );
+    //copyPSIMXtoCHEMPS2MX(this->Ca(), iHandler, );
 
     std::vector<int> OAorbs; // Occupied + active
     std::vector<int> Aorbs;  // Only active
@@ -682,7 +682,7 @@ double DMRGSCF::compute_energy()
 
     /********************************
      ***   Actual DMRGSCF loops   ***
-     ********************************/
+     //********************************/
     while ((gradNorm > dmrgscf_convergence) && (nIterations < dmrg_iterations_)){
 
         nIterations++;
@@ -882,7 +882,6 @@ double DMRGSCF::compute_energy()
     if (theDIISparameterVector!=NULL){ delete [] theDIISparameterVector; }
     if (theLocalizer!=NULL){ delete theLocalizer; }
     if (theDIIS!=NULL){ delete theDIIS; }
-    delete Coeff_orig;
 
     delete wmattilde;
     delete theTmatrix;
