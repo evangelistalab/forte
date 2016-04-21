@@ -423,6 +423,9 @@ read_options(std::string name, Options &options)
 
         /*- Whether to start the active space localization process from a random unitary or the unit matrix. -*/
         options.add_bool("DMRG_LOC_RANDOM", true);
+        /*- Use the older DMRGSCF algorithm -*/
+        options.add_bool("USE_DMRGSCF", false);
+        
 
 
         //////////////////////////////////////////////////////////////
@@ -792,7 +795,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto fci = std::make_shared<FCI>(ref_wfn,options,ints_,mo_space_info);
         fci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "DMRG")
+    if (options.get_bool("USE_DMRGSCF"))
     {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);

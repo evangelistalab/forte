@@ -46,7 +46,6 @@ void CASSCF::compute_casscf()
     }
 
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
-    print_   = options_.get_int("PRINT");
 
     /// Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
@@ -218,6 +217,7 @@ void CASSCF::startup()
 {
     print_method_banner({"Complete Active Space Self Consistent Field","Kevin Hannon"});
     na_  = mo_space_info_->size("ACTIVE");
+    print_   = options_.get_int("PRINT");
     nsopi_ = this->nsopi();
     nirrep_ = this->nirrep();
     if(options_.get_str("SCF_TYPE") == "PK")
@@ -272,11 +272,13 @@ void CASSCF::startup()
     Hcore_->add(T);
     Hcore_->add(V);
 
+    Timer JK_initialize;
     JK_ = JK::build_JK(reference_wavefunction_->basisset(), options_);
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->initialize();
     JK_->C_left().clear();
     JK_->C_right().clear();
+    if(print_ > 0)  outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(), options_.get_str("SCF_TYPE").c_str());
 
 }
 void CASSCF::cas_ci()

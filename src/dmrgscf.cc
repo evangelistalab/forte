@@ -530,7 +530,7 @@ double DMRGSCF::compute_energy()
     CheMPS2::DMRGSCFunitary * unitary = new CheMPS2::DMRGSCFunitary(iHandler);
     CheMPS2::DIIS * theDIIS = NULL;
     CheMPS2::DMRGSCFintegrals * theRotatedTEI = new CheMPS2::DMRGSCFintegrals( iHandler );
-    const int nOrbDMRG = iHandler->getDMRGcumulative(nirrep);
+    size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
     double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
     double * DMRG2DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
     double * DMRG3DM;
