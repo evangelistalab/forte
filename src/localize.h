@@ -20,11 +20,25 @@ public:
 
     ~LOCALIZE();
     
+    void localize_orbitals();
 
 private:
-    
+
+    boost::shared_ptr<Wavefunction> wfn_;
+
+    std::shared_ptr<ForteIntegrals> ints_;
+
+    size_t nfrz_;
+    size_t nrst_;
+    size_t namo_;
+
+    int naocc_;
+    int navir_;
+
+    std::vector<size_t> abs_act_;
+        
     std::string local_type_;
-    void update_cmat(boost::shared_ptr<BasisSet> primary, SharedMatrix Ca, SharedMatrix Cb);
+    std::string local_method_;
 
 };
 

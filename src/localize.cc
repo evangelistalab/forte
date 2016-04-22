@@ -1,5 +1,6 @@
 #include <libpsio/psio.h>
 #include <libpsio/psio.hpp>
+#include <libmints/molecule.h>
 
 #include <liboptions/liboptions.h>
 #include <libmints/local.h> 
@@ -11,26 +12,65 @@
 namespace psi{ namespace forte{
 
 
-LOCALIZE::LOCALIZE(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+LOCALIZE::LOCALIZE(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info) : wfn_(wfn),ints_(ints)
 {
-    size_t nfrz = mo_space_info->size("FROZEN_DOCC");
-    size_t ncmo = mo_space_info->size("CORRELATED");
-    int nalpha = wfn->nalpha();
-    size_t nirrep = mo_space_info->nirrep();
-    
-    SharedMatrix Ca = wfn->Ca();
-    SharedMatrix Cb = wfn->Cb();
+    nfrz_ = mo_space_info->size("FROZEN_DOCC");
+    nrst_ = mo_space_info->size("RESTRICTED_DOCC");
+    namo_ = mo_space_info->size("ACTIVE");
 
+    int nel = 0;    
+    int natom = Process::environment.molecule()->natom();
+    for(int i=0; i < natom;i++){
+        nel += static_cast<int>(Process::environment.molecule()->Z(i));
+    }
+    nel -= options.get_int("CHARGE");
 
-    SharedMatrix Caocc = wfn->Ca_subset("MO", "ACTIVE_OCC");
-    SharedMatrix Cavir = wfn->Ca_subset("MO", "ACTIVE_VIR");
+    // The wavefunction multiplicity
+    int multiplicity = options.get_int("MULTIPLICITY");
+    int ms = multiplicity - 1;
 
-    Caocc->print();
+    // The number of active electrons
+    int nactel = nel - 2*nfrz_ - 2*nrst_;
 
-    boost::shared_ptr<BasisSet> primary = wfn->basisset();
+    naocc_ = ((nactel - (nactel % 2)) / 2 ) + (nactel % 2);
+    navir_ = namo_ - naocc_;
+
+    abs_act_ = mo_space_info->get_absolute_mo("ACTIVE");
 
     local_type_ = options.get_str("LOCALIZE_TYPE");
-//    update_cmat(primary, Ca_new, Cb_new);
+
+    if( local_type_ == "BOYS" or local_type_ == "SPLIT_BOYS" ){
+        local_method_ = "BOYS";
+    }
+    if( local_type_ == "PM" or local_type_ == "SPLIT_PM" ){
+        local_method_ = "PIPEK_MEZEY";
+    }
+
+}
+
+void LOCALIZE::localize_orbitals()
+{
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Cb = wfn_->Cb();
+
+    Dimension nsopi = wfn_->nsopi();
+    int nirrep = wfn_->nirrep();
+
+    SharedMatrix Caocc( new Matrix("Caocc", nsopi[0], naocc_ )); 
+    SharedMatrix Cavir( new Matrix("Cavir", nsopi[0], navir_ )); 
+
+    for(int h = 0; h < nirrep; h++){
+        for(int mu = 0; mu < nsopi[h]; mu++){
+            for(int i = 0; i < naocc_; i++){
+                Caocc->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
+            }
+            for(int i = 0; i < navir_; ++i){
+                Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i+naocc_]));
+            } 
+        }
+    }
+
+    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
 
     boost::shared_ptr<Localizer> loc_a = Localizer::build( local_type_, primary, Caocc); 
     loc_a->localize();
@@ -43,59 +83,23 @@ LOCALIZE::LOCALIZE(boost::shared_ptr<Wavefunction> wfn, Options &options, std::s
     SharedMatrix Lvir = loc_v->L();
 
     for( int h = 0; h < nirrep; ++h){
-        for( int i = 0; i < nalpha; ++i){
-            SharedVector vec = Laocc->get_column(h, i + nfrz);
-            Ca->set_column(h, i+nfrz, vec );
-            Cb->set_column(h, i+nfrz, vec );
+        for( int i = 0; i < naocc_; ++i){
+            SharedVector vec = Laocc->get_column(h, i);
+            Ca->set_column(h, i+nfrz_+nrst_, vec );
+            Cb->set_column(h, i+nfrz_+nrst_, vec );
         } 
-        for( int i = nalpha; i < ncmo; ++i){
-            SharedVector vec = Lvir->get_column(h, i-nalpha);
-//            Ca->set_column(h, i+nfrz, vec );
-//            Cb->set_column(h, i+nfrz, vec );
+        for( int i = 0 ; i < navir_; ++i){
+            SharedVector vec = Lvir->get_column(h, i);
+            Ca->set_column(h, i+nfrz_+nrst_+naocc_, vec );
+            Cb->set_column(h, i+nfrz_+nrst_+naocc_, vec );
         } 
     }
-    Ca->print();
    
-    ints->retransform_integrals();
+    ints_->retransform_integrals();
 }
 
 LOCALIZE::~LOCALIZE()
 {
 }
-
-//void LOCALIZE::update_cmat( boost::shared_ptr<BasisSet> primary,  SharedMatrix Ca, SharedMatrix Cb)
-//{
-//
-//    if( local_type_ == "BOYS" ){
-//        BoysLocalizer blr_a(primary, Ca);
-//        BoysLocalizer blr_b(primary, Cb);
-//        blr_a.localize();
-//        blr_b.localize();
-//
-//        Ca->copy(blr_a.L());
-//        Cb->copy(blr_b.L());
-//
-//    }else if( local_type_ == "PM" ){
-//        Ca->print();
-//        
-//        PMLocalizer pmr_a(primary, Ca);
-//        PMLocalizer pmr_b(primary, Cb);
-//        pmr_a.localize();
-//        pmr_b.localize();
-//        
-//        SharedMatrix Ua = pmr_a.L();
-//        SharedMatrix La = pmr_a.L();
-//        SharedMatrix Lb = pmr_b.L();
-//       
-//       
-//        Ca->copy(La);
-//        Cb->copy(pmr_b.L());
-//        Ca->print(); 
-//    }//else if( local_type_ == "SPLIT_BOYS" ){
-//   // }else if( local_type_ == "SPLIT_PM" ){
-//   // }else{
-//   // }
-//
-//}
 
 }} // End Namespaces
