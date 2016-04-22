@@ -150,16 +150,18 @@ void CholeskyIntegrals::gather_integrals()
     if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
     boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
     //Computes the cholesky integrals
-    Ch->choleskify();
+    if(L_ao_ == nullptr)
+    {
+        Ch->choleskify();
+        nthree_ = Ch->Q();
+    }
     if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
     //The number of vectors required to do cholesky factorization
-    size_t nL = Ch->Q();
-    nthree_ = nL;
-    if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );}
-    int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
+    if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nthree_ * nbf * nbf * sizeof(double) / 1073741824.0 );}
+    int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
-    if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);}
+    if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nthree_,tol_cd);}
     if(L_ao_ == nullptr)
     {
         L_ao_ = Ch->L();
