@@ -1027,7 +1027,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
 
                 DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
-                dmrg.set_max_rdm(1);
+                dmrg.set_max_rdm(2);
                 dmrg.compute_energy();
 
                 Reference dmrg_reference = dmrg.reference();
