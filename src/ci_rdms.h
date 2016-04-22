@@ -25,15 +25,20 @@ public:
 	using det_hash_it = det_hash::iterator; 
 
 	// Class constructor and destructor
-    CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints, std::shared_ptr<MOSpaceInfo> mo_space_info, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs);
+    CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals>& fci_ints, 
+            std::vector<STLBitsetDeterminant>& det_space, 
+            SharedMatrix evecs,
+            int root1,
+            int root2);
 
     CI_RDMS(Options &options, std::shared_ptr<FCIIntegrals> fci_ints, 
-            std::shared_ptr<MOSpaceInfo> mo_space_info, 
             std::vector<STLBitsetString> alfa_strings, 
             std::vector<STLBitsetString> beta_strings, 
             std::vector<std::vector<size_t>> a_to_b, 
             std::vector<std::vector<size_t>> b_to_a,
-            SharedMatrix evecs);
+            SharedMatrix evecs,
+            int root1,
+            int root2);
 
 	~CI_RDMS();
 
@@ -42,12 +47,12 @@ public:
 				  std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb); 
 
 	// Compute rdms
-	void compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root);
-	void compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root);
-	void compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
-	void compute_2rdm_str( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root);
-	void compute_3rdm( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
-	void compute_3rdm_str( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb, int root);
+	void compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+	void compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+	void compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb);
+	void compute_2rdm_str( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb);
+	void compute_3rdm( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+	void compute_3rdm_str( std::vector<double>& tprdm_aaa,std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 	
 	double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, std::vector<double>& tprdm_aa, std::vector<double>& tprdm_bb, std::vector<double>& tprdm_ab); 
 	
@@ -57,6 +62,8 @@ public:
     void set_print( bool print ) {print_ = print;}
 
     void set_max_rdm( int rdm );
+    // convert to strings
+    void convert_to_string( std::vector<STLBitsetDeterminant>& space ); 
 private:
    /* Class Variables*/  
 	
@@ -68,7 +75,7 @@ private:
 	std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
 	// The Determinant Space
-	std::vector<STLBitsetDeterminant> det_space_; 
+    std::vector<STLBitsetDeterminant> det_space_; 
 
 	// The CI coefficients
 	SharedMatrix evecs_;
@@ -100,6 +107,10 @@ private:
 	// The number of beta electrons
 	size_t nb_;
 	
+    // The  roots
+    int root1_;
+    int root2_;
+
 	// The number of correlated mos
 	size_t ncmo_;
 	size_t ncmo2_;
@@ -179,8 +190,8 @@ private:
 	
 	// The list of a^(+)_r a^(+)_q a^(+)_p |N-1>
 	std::vector<std::tuple<size_t,short,short,short>> aaa_cre_list_s_;
-	std::vector<std::tuple<size_t,short,short,short>> aab_cre_list_s_;
-	std::vector<std::tuple<size_t,short,short,short>> abb_cre_list_s_;
+	std::vector<std::tuple<size_t,size_t,short,short,short>> aab_cre_list_s_;
+	std::vector<std::tuple<size_t,size_t,short,short,short>> abb_cre_list_s_;
 	std::vector<std::tuple<size_t,short,short,short>> bbb_cre_list_s_;
 
 	/* Class functions*/ 
@@ -200,8 +211,6 @@ private:
 	void get_three_map();
 	void get_three_map_str();
     
-    // convert to strings
-    void convert_to_string( std::vector<STLBitsetDeterminant>& space ); 
 
 };
 

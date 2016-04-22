@@ -691,10 +691,10 @@ double ACIString::compute_energy()
 	}
 
 	evecs_ = PQ_evecs;
-    CI_RDMS ci_rdms_(options_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+    CI_RDMS ci_rdms_(options_,fci_ints_,PQ_space_,PQ_evecs, 0,0);
 	if( rdm_level_ >= 1 ){
 		Timer one_rdm;	
-		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
+		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_);
 		if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
 		
 		if( options_.get_bool("PRINT_NO") ){
@@ -704,12 +704,12 @@ double ACIString::compute_energy()
 	}
 	if( rdm_level_ >= 2 ){
 		Timer two_rdm;
-		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
+		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_);
 		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
 	}
 	if( rdm_level_ >= 3 ){
 		Timer three;
-		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
+		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
 
 		if(options_.get_bool("TEST_RDMS")){
@@ -1753,7 +1753,7 @@ void ACIString::set_max_rdm( int rdm )
 
 Reference ACIString::reference()
 {
-    CI_RDMS ci_rdms(options_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
+    CI_RDMS ci_rdms(options_, fci_ints_,PQ_space_, evecs_, 0,0);
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
 }

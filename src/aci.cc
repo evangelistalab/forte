@@ -664,6 +664,67 @@ double AdaptiveCI::compute_energy()
         if( !quiet_mode_ ) print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
     }// end iterations
 
+
+   // if( true ){
+   //     det_hash<int> single_map;
+   //     size_t a_count = 0;
+   //     size_t b_count = 0;
+
+   //     for( size_t I = 0, max_I = PQ_space_.size(); I < max_I; ++I){
+   //         STLBitsetDeterminant detI = PQ_space_[I];
+
+   //         std::vector<int> aocc = detI.get_alfa_occ();
+   //         std::vector<int> bocc = detI.get_beta_occ();
+   //         std::vector<int> avir = detI.get_alfa_vir();
+   //         std::vector<int> bvir = detI.get_beta_vir();
+
+   //         int noalpha = aocc.size();
+   //         int nobeta  = bocc.size();
+   //         int nvalpha = avir.size();
+   //         int nvbeta  = bvir.size();
+
+   //         // Alpha substitutions
+   //         for( int i = 0; i < noalpha; ++i ){
+   //             int ii = aocc[i];
+   //             for( int a  = 0; a < nvalpha; ++a ){
+   //                 int aa = avir[a];
+   //                 if( mo_symmetry_[ii] ^ mo_symmetry_[aa] == 0 ){
+   //                     STLBitsetDeterminant detJ(detI);
+   //                     detJ.set_alfa_bit(ii,false);
+   //                     detJ.set_alfa_bit(aa,true);
+
+   //                     if( single_map.count(detJ) == 0 ){
+   //                         single_map[detJ]++;
+   //                         a_count++;
+   //                     }
+   //                 }
+   //             }
+   //         }
+   //         // Beta substitutions
+   //         for( int i = 0; i < nobeta; ++i ){
+   //             int ii = bocc[i];
+   //             for( int a  = 0; a < nvbeta; ++a ){
+   //                 int aa = bvir[a];
+   //                 if( mo_symmetry_[ii] ^ mo_symmetry_[aa] == 0 ){
+   //                     STLBitsetDeterminant detJ(detI);
+   //                     detJ.set_beta_bit(ii,false);
+   //                     detJ.set_beta_bit(aa,true);
+
+   //                     if( single_map.count(detJ) == 0 ){
+   //                         single_map[detJ]++;
+   //                         b_count++;
+   //                     }
+   //                 }
+   //             }
+   //         }
+   //     }
+   //     outfile->Printf("\n\n Alpha excitations: %zu", a_count);
+   //     outfile->Printf("\n  Beta excitations: %zu", b_count);
+   //     outfile->Printf("\n             Total: %zu\n", a_count+b_count);
+   // }
+
+
+
 	if( det_save_ ) det_list_.close();
 
 	//STLBitsetDeterminant::check_uniqueness(P_space_);
@@ -687,14 +748,18 @@ double AdaptiveCI::compute_energy()
 
 
 
+    outfile->Flush();
 	evecs_ = PQ_evecs;
-    CI_RDMS ci_rdms_(options_,fci_ints_,mo_space_info_,PQ_space_,PQ_evecs);
+    CI_RDMS ci_rdms_(options_,fci_ints_,PQ_space_,PQ_evecs, 0,0);
     ci_rdms_.set_max_rdm(rdm_level_);
+    ci_rdms_.convert_to_string(PQ_space_);
 	if( rdm_level_ >= 1 ){
-		Timer one_rdm;	
-	//	ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_,0);
-		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_,0);
-		if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s", one_rdm.get());
+//		Timer one_rdm;	
+//		ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_);
+//		if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s (string)", one_rdm.get());
+        Timer one_r;
+		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_);
+    	if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 		
 		if( options_.get_bool("PRINT_NO") ){
 			print_nos();	
@@ -702,26 +767,25 @@ double AdaptiveCI::compute_energy()
 
 	}
 	if( rdm_level_ >= 2 ){
-		Timer two_rdm;
-	//	ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_, 0);
-		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_, 0);
-		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s", two_rdm.get());
+//		Timer two_rdm;
+//		ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_);
+//		if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)", two_rdm.get());
+		Timer two_r;
+		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_);
+		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
 	}
 	if( rdm_level_ >= 3 ){
-		Timer three;
-	//	ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
-		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_, 0); 
-		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s", three.get());
+//		Timer three;
+//		ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
+//		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s (string)", three.get());
+        Timer tr;
+		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
+		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
 
 		if(options_.get_bool("TEST_RDMS")){
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
-		//Timer energy;
-	    //double total_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-		//double rdm_energy = ci_rdms_.get_energy(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_); 
-		//outfile->Printf("\n  Energy took %2.6f s", energy.get());
-		//outfile->Printf("\n  Error in total energy:  %+e", std::fabs(rdm_energy - total_energy)); 
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -1845,7 +1909,7 @@ void AdaptiveCI::set_max_rdm( int rdm )
 
 Reference AdaptiveCI::reference()
 {
-    CI_RDMS ci_rdms(options_, fci_ints_, mo_space_info_, PQ_space_, evecs_);
+    CI_RDMS ci_rdms(options_, fci_ints_, PQ_space_, evecs_, 0,0);
     ci_rdms.set_max_rdm( rdm_level_ );
 	Reference aci_ref = ci_rdms.reference(ordm_a_, ordm_b_, trdm_aa_, trdm_ab_, trdm_bb_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_);
 	return aci_ref;
