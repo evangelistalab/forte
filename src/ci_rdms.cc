@@ -15,36 +15,40 @@ namespace psi{ namespace forte {
 
 
 CI_RDMS::CI_RDMS(Options &options,
-                 std::shared_ptr<FCIIntegrals> fci_ints,
-                 std::shared_ptr<MOSpaceInfo> mo_space_info,
-                 std::vector<STLBitsetDeterminant> det_space,
-                 SharedMatrix evecs)
+                 std::shared_ptr<FCIIntegrals>& fci_ints,
+                 std::vector<STLBitsetDeterminant>& det_space,
+                 SharedMatrix evecs,
+                 int root1,
+                 int root2)
     : options_(options),
       fci_ints_(fci_ints),
-      mo_space_info_(mo_space_info),
       det_space_(det_space),
-      evecs_(evecs)
+      evecs_(evecs),
+      root1_(root1),
+      root2_(root2)
 {
     startup();
-    convert_to_string(det_space_);
+//    convert_to_string( det_space_ );
 }
 
 CI_RDMS::CI_RDMS( Options &options,
                   std::shared_ptr<FCIIntegrals> fci_ints,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                   std::vector<STLBitsetString> alfa_strings,
                   std::vector<STLBitsetString> beta_strings,
                   std::vector<std::vector<size_t>> a_to_b,
                   std::vector<std::vector<size_t>> b_to_a,
-                  SharedMatrix evecs)
+                  SharedMatrix evecs,
+                  int root1,
+                  int root2)
     : options_(options),
       fci_ints_(fci_ints),
-      mo_space_info_(mo_space_info),
       evecs_(evecs),
       alfa_strings_(alfa_strings),
       beta_strings_(beta_strings),
       a_to_b_(a_to_b),
-      b_to_a_(b_to_a)
+      b_to_a_(b_to_a),
+      root1_(root1),
+      root2_(root2)
 {
     startup();
 }
@@ -59,45 +63,15 @@ void CI_RDMS::startup()
 	/* Get all of the required info from MOSpaceInfo to initialize the StringList*/	
 
 	// The number of correlated molecular orbitals
-	ncmo_ = mo_space_info_->size("ACTIVE");
+//	ncmo_ = mo_space_info_->size("ACTIVE");
+    ncmo_ = STLBitsetDeterminant::nmo_;
 	ncmo2_ = ncmo_ * ncmo_;
 	ncmo3_ = ncmo2_ * ncmo_;
 	ncmo4_ = ncmo3_ * ncmo_;
 	ncmo5_ = ncmo3_ * ncmo2_;
 
-	size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
-
-	// The restricted MOs	
-	std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"); 	
-
-	// The number of electrons
-    int nel = 0;	
-	int natom = Process::environment.molecule()->natom();
-    for(int i=0; i < natom;i++){
-        nel += static_cast<int>(Process::environment.molecule()->Z(i));
-    }
-	nel -= options_.get_int("CHARGE");
-
-	// The wavefunction multiplicity
-	int multiplicity = options_.get_int("MULTIPLICITY");
-	int ms = multiplicity - 1;
-
-	// The number of active electrons
-	int nactel = nel - 2*nfdocc - 2*rdocc.size();
-
-	// The number of alpha electrons 
-	na_ = (nactel + ms) / 2;
-	
-	// The number of beta electrons
-	nb_ = nactel - na_;	
-	
-
-	// The correlated MOs per irrep (active)
-	active_dim_ = mo_space_info_->get_dimension("ACTIVE");
-	
-
-	// The active MOs
-	active_mo_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    na_ = det_space_[0].get_alfa_occ().size();
+    nb_ = det_space_[0].get_beta_occ().size();
 
 	// Dimension of the determinant space
 	dim_space_ = det_space_.size();
@@ -119,11 +93,11 @@ void CI_RDMS::startup()
 	    outfile->Printf("\n  Number of active beta electrons: %zu", nb_);
 	    outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
 	}
-
 }
 
 void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
 {
+    Timer timer;
     size_t space_size = space.size();
     size_t nalfa_str = 0;
     size_t nbeta_str = 0;
@@ -134,7 +108,11 @@ void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
     string_hash<size_t> alfa_map;
     string_hash<size_t> beta_map;
 
-    int root = options_.get_int("ROOT");
+    int root = 0;
+   
+    if( options_["ROOT"].has_changed() ){     
+        root = options_.get_int("ROOT");
+    }
 
     SharedMatrix tmp(new Matrix("tmp",space_size,space_size));
     tmp->zero();
@@ -189,6 +167,7 @@ void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
         tmp->set(a_id, b_id, evecs_->get(I,root));
 
     }
+
     c_map_.assign(nalfa_str*nbeta_str,0.0);
     for( size_t a = 0; a < nalfa_str; ++a){
         for( size_t b = 0; b < nbeta_str; ++b){
@@ -196,11 +175,7 @@ void CI_RDMS::convert_to_string( std::vector<STLBitsetDeterminant>& space )
         }
     }
 
-//    for( auto a : alfa_strings_) a.print();
-//    outfile->Printf("\n");
-//    for( auto b : beta_strings_) b.print();
-//    outfile->Printf("\n");
-
+    outfile->Printf("\n  Time spent converting to strings: %f", timer.get());
 }
 
 void CI_RDMS::set_max_rdm( int rdm )
@@ -253,7 +228,7 @@ double CI_RDMS::get_energy( std::vector<double>& oprdm_a,
 	return total_energy;
 }
 
-void CI_RDMS::compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root)
+void CI_RDMS::compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b)
 {
     Timer one;
     get_one_map_str();
@@ -279,7 +254,6 @@ void CI_RDMS::compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double
                     size_t q = std::abs(aa_add.second) - 1;
                     const double sign_q = aa_add.second > 0.0 ? 1.0 : -1.0;
                     const size_t astr = aa_add.first;
-                   // outfile->Printf("\n  p: %d, q: %d,(%d,%d) c1: %f,(%d,%d) c2: %f",p,q,AI,B, c_map_[AI*nbeta + B], astr,B, c_map_[astr*nbeta + B]);
                     oprdm_a[q*ncmo_ + p] += c_map_[AI*nbeta + B] * c_map_[astr*nbeta + B] * sign_p * sign_q;
                 }
             }
@@ -309,7 +283,7 @@ void CI_RDMS::compute_1rdm_str( std::vector<double>& oprdm_a, std::vector<double
 }
 
 
-void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, int root )
+void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& oprdm_b)
 {
 	Timer one;
 	get_one_map();
@@ -327,7 +301,7 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
     	        size_t q = std::abs(aaJ_mo_sign.second) - 1;
     	        const double sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
     	        const size_t I = aaJ_mo_sign.first;
-    	        oprdm_a[q*ncmo_ + p] += evecs_->get(J, root) * evecs_->get(I, root) * sign_p * sign_q;
+    	        oprdm_a[q*ncmo_ + p] += evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
     	    }
     	}
 		for (auto& bJ_mo_sign : b_ann_list_[J]){
@@ -338,14 +312,14 @@ void CI_RDMS::compute_1rdm( std::vector<double>& oprdm_a, std::vector<double>& o
     	        const size_t q = std::abs(bbJ_mo_sign.second) - 1;
     	        const double sign_q = bbJ_mo_sign.second > 0 ? 1.0 : -1.0;
     	        const size_t I = bbJ_mo_sign.first;
-    	        oprdm_b[q*ncmo_ + p] += evecs_->get(J, root) * evecs_->get(I, root) * sign_p * sign_q;
+    	        oprdm_b[q*ncmo_ + p] += evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
     	    }
     	}
 	}
 	if( print_ ) outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_2rdm_str( std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab, std::vector<double>& tprdm_bb, int root) 
+void CI_RDMS::compute_2rdm_str( std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab, std::vector<double>& tprdm_bb) 
 {
     tprdm_aa.resize(ncmo4_, 0.0);
     tprdm_ab.resize(ncmo4_, 0.0);
@@ -465,7 +439,7 @@ void CI_RDMS::compute_2rdm_str( std::vector<double>& tprdm_aa, std::vector<doubl
 
 }
 
-void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb, int root )
+void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& tprdm_ab,std::vector<double>& tprdm_bb)
 {
 	tprdm_aa.resize(ncmo4_, 0.0);	
 	tprdm_ab.resize(ncmo4_, 0.0);	
@@ -490,7 +464,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 				const size_t s = std::get<2>(aaaaJ_mo_sign);
 				const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(aaaaJ_mo_sign);
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J, root) * sign_pq * sign_rs;	
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;	
 
 				tprdm_aa[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s] += rdm_element;
 				tprdm_aa[p*ncmo3_ + q*ncmo2_ + s*ncmo_ + r] -= rdm_element;
@@ -512,7 +486,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 				const size_t s = std::get<2>(bbbbJ_mo_sign);
 				const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(bbbbJ_mo_sign);
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J, root) * sign_pq * sign_rs;	
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;	
 
 				tprdm_bb[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s] += rdm_element;
 				tprdm_bb[p*ncmo3_ + q*ncmo2_ + s*ncmo_ + r] -= rdm_element;
@@ -533,7 +507,7 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 				const size_t s = std::get<2>(aabbJ_mo_sign);
 				const double sign_rs = std::get<1>(aabbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(aabbJ_mo_sign);
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J, root) * sign_pq * sign_rs;	
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;	
 
 				tprdm_ab[p*ncmo3_ + q*ncmo2_ + r*ncmo_ + s] += rdm_element;
 
@@ -547,13 +521,16 @@ void CI_RDMS::compute_2rdm( std::vector<double>& tprdm_aa,std::vector<double>& t
 void CI_RDMS::compute_3rdm_str( std::vector<double>& tprdm_aaa,
 							     std::vector<double>& tprdm_aab,
 							     std::vector<double>& tprdm_abb, 
-							     std::vector<double>& tprdm_bbb, int root)
+							     std::vector<double>& tprdm_bbb)
 {
     size_t nalfa = alfa_strings_.size();
     size_t nbeta = beta_strings_.size();
 
 	size_t ncmo5 = ncmo4_ * ncmo_;
 	size_t ncmo6 = ncmo3_ * ncmo3_;
+
+    size_t naa = na_ * (na_-1) / 2;
+    size_t nbb = nb_ * (nb_-1) / 2;
 
     size_t naaa = na_ * (na_-1) * (na_-2)/6;
     size_t naab = na_ * (na_-1) *  nb_/2;
@@ -649,8 +626,8 @@ void CI_RDMS::compute_3rdm_str( std::vector<double>& tprdm_aaa,
                 
                 size_t bbJ_add = std::get<0>(bbJ);
                 int p = std::abs( std::get<1>(bbJ) ) - 1;
-                int q = std::get<2>(bbJ);
-                int r = std::get<3>(bbJ);
+                int q =std::get<2>(bbJ);
+                int r =std::get<3>(bbJ);
                 double pqr_sign = (std::get<1>(bbJ) > 0.0) ? 1.0 : -1.0;
 
                 for( size_t bdet = cre_list_buffer_[6][bbJ_add]; bdet < cre_list_buffer_[6][bbJ_add+1]; ++bdet){
@@ -708,12 +685,99 @@ void CI_RDMS::compute_3rdm_str( std::vector<double>& tprdm_aaa,
 			}
 		}
     }
+    // AAB
+
+    for( size_t A = 0; A < nalfa; ++A ){
+        auto bvec = a_to_b_[A];
+        for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+            size_t BI = bvec[B];
+            for( size_t a = 0; a < naa; ++a ){
+                for( size_t b = 0; b < nb_; ++b ){
+                    std::tuple<size_t,short,short,short> aabJ_ann = aab_ann_list_s_[A*naa*nb_*nbeta + BI*naa*nb_ + a*nb_ + b];
+
+			        const size_t aabJ_add = std::get<0>(aabJ_ann);
+
+			        const size_t p = std::abs(std::get<1>(aabJ_ann)) - 1;
+			        const size_t q = std::get<2>(aabJ_ann);
+			        const size_t r = std::abs(std::get<3>(aabJ_ann)) - 1;
+			        double sign_pqr = std::get<1>(aabJ_ann) > 0.0 ? 1.0 : -1.0;			
+			        sign_pqr *= std::get<3>(aabJ_ann) > 0.0 ? 1.0 : -1.0;			
+			        
+                    for( size_t aab_det = cre_list_buffer_[7][aabJ_add]; aab_det < cre_list_buffer_[7][aabJ_add+1]; ++aab_det ){
+                        std::tuple<size_t,size_t,short,short,short> aabJ = aab_cre_list_s_[aab_det];
+
+			        	const size_t s = std::abs(std::get<2>(aabJ)) - 1;
+			        	const size_t t = std::get<3>(aabJ);
+			        	const size_t u = std::abs(std::get<4>(aabJ)) - 1;
+
+			        	double sign_stu = std::get<2>(aabJ) > 0.0 ? 1.0 : -1.0;
+			        //	sign_stu *= std::get<3>(aabJ) > 0.0 ? 1.0 : -1.0;
+			        	sign_stu *= std::get<4>(aabJ) > 0.0 ? 1.0 : -1.0;
+
+			        	const size_t A_new = std::get<0>(aabJ);
+			        	const size_t B_new = std::get<1>(aabJ);
+
+                        double rdm_element = sign_pqr * sign_stu * c_map_[A*nbeta + BI] * c_map_[A_new*nbeta + B_new];
+
+			        	tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+			        	tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
+			        	tprdm_aab[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+			        	tprdm_aab[ q*ncmo5 + p*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] += rdm_element; 
+
+			        }
+                }
+            }
+		}
+    }
+    // ABB
+
+    for( size_t A = 0; A < nalfa; ++A ){
+        auto bvec = a_to_b_[A];
+        for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+            size_t BI = bvec[B];
+            for( size_t b = 0; b < nbb; ++b ){
+                for( size_t a = 0; a < na_; ++a ){
+                    std::tuple<size_t,short,short,short> abbJ_ann = abb_ann_list_s_[A*nbb*na_*nbeta + BI*nbb*na_ + a*nbb + b];
+
+			        const size_t abbJ_add = std::get<0>(abbJ_ann);
+
+			        const size_t p = std::abs(std::get<1>(abbJ_ann)) - 1;
+			        const size_t q = std::abs(std::get<2>(abbJ_ann)) - 1;
+			        const size_t r = std::get<3>(abbJ_ann);
+			        double sign_pqr = std::get<1>(abbJ_ann) > 0.0 ? 1.0 : -1.0;			
+			        sign_pqr *= std::get<2>(abbJ_ann) > 0.0 ? 1.0 : -1.0;			
+			        
+                    for( size_t abb_det = cre_list_buffer_[8][abbJ_add]; abb_det < cre_list_buffer_[8][abbJ_add+1]; ++abb_det ){
+                        std::tuple<size_t,size_t,short,short,short> abbJ = abb_cre_list_s_[abb_det];
+
+			        	const size_t s = std::abs(std::get<2>(abbJ)) - 1;
+			        	const size_t t = std::abs(std::get<3>(abbJ)) - 1;
+			        	const size_t u = std::get<4>(abbJ);
+
+			        	double sign_stu = std::get<2>(abbJ) > 0.0 ? 1.0 : -1.0;
+			        	sign_stu *= std::get<3>(abbJ) > 0.0 ? 1.0 : -1.0;
+
+			        	const size_t A_new = std::get<0>(abbJ);
+			        	const size_t B_new = std::get<1>(abbJ);
+
+                        double rdm_element = sign_pqr * sign_stu * c_map_[A*nbeta + BI] * c_map_[A_new*nbeta + B_new];
+
+				        tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
+				        tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
+				        tprdm_abb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] -= rdm_element; 
+				        tprdm_abb[ p*ncmo5 + r*ncmo4_ + q*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] += rdm_element; 
+
+			        }
+                }
+            }
+		}
+    }
 }
 
 void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 							std::vector<double>& tprdm_aab,
 							std::vector<double>& tprdm_abb, 
-							std::vector<double>& tprdm_bbb, int root)
+							std::vector<double>& tprdm_bbb)
 {
 	size_t ncmo5 = ncmo4_ * ncmo_;
 	size_t ncmo6 = ncmo3_ * ncmo3_;
@@ -746,7 +810,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(a6J);
 
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J,root2_) * sign_pqr * sign_stu;
 
 				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
 				tprdm_aaa[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
@@ -808,7 +872,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(aabJ);
 
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J,root2_) * sign_pqr * sign_stu;
 
 				tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
 				tprdm_aab[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + t*ncmo2_ + s*ncmo_ + u ] -= rdm_element; 
@@ -833,7 +897,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(abbJ);
 
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J,root2_) * sign_pqr * sign_stu;
 
 				tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
 				tprdm_abb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
@@ -858,7 +922,7 @@ void CI_RDMS::compute_3rdm( std::vector<double>& tprdm_aaa,
 				const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
 				const size_t I = std::get<0>(b6J);
 
-				double rdm_element = evecs_->get(I,root) * evecs_->get(J,root) * sign_pqr * sign_stu;
+				double rdm_element = evecs_->get(I,root1_) * evecs_->get(J,root2_) * sign_pqr * sign_stu;
 
 				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + u ] += rdm_element; 
 				tprdm_bbb[ p*ncmo5 + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + u*ncmo_ + t ] -= rdm_element; 
@@ -923,6 +987,7 @@ void CI_RDMS::get_one_map_str()
         string_hash<size_t> map_a_ann;
         for( size_t A = 0; A < nalfa; ++A){
             STLBitsetString a_str = alfa_strings_[A];
+            a_str.set_nmo(ncmo_);
             std::vector<int> aocc = a_str.get_occ();
     
             for( size_t i = 0; i < na_; ++i ){
@@ -976,6 +1041,7 @@ void CI_RDMS::get_one_map_str()
         string_hash<size_t> map_b_ann;
         for( size_t B = 0; B < nbeta; ++B ){
             STLBitsetString b_str = beta_strings_[B];
+            b_str.set_nmo( ncmo_ );
             std::vector<int> bocc = b_str.get_occ();
     
             for( size_t i = 0; i < nb_; ++i ){
@@ -1131,6 +1197,7 @@ void CI_RDMS::get_two_map_str()
         string_hash<size_t> map_aa_ann;
         for( size_t A = 0; A < nalfa; ++A){
             STLBitsetString astr = alfa_strings_[A];
+            astr.set_nmo(ncmo_);
             std::vector<int> aocc = astr.get_occ();
 
             for( size_t i = 0, ij = 0; i < na_; ++i){
@@ -1193,6 +1260,7 @@ void CI_RDMS::get_two_map_str()
         string_hash<size_t> map_bb_ann;
         for( size_t B = 0; B < nbeta; ++B){
             STLBitsetString bstr = beta_strings_[B];
+            bstr.set_nmo(ncmo_);
             std::vector<int> bocc = bstr.get_occ();
 
             for( size_t i = 0, ij = 0; i < nb_; ++i){
@@ -1482,6 +1550,7 @@ void CI_RDMS::get_three_map_str()
         string_hash<size_t> map_aaa_ann;
         for( size_t A = 0; A < nalfa; ++A){
             STLBitsetString astr = alfa_strings_[A];
+            astr.set_nmo(ncmo_);
             std::vector<int> aocc = astr.get_occ();
 
             for( size_t i = 0, ijk = 0; i < na_; ++i){
@@ -1551,6 +1620,7 @@ void CI_RDMS::get_three_map_str()
         string_hash<size_t> map_bbb_ann;
         for( size_t B = 0; B < nbeta; ++B){
             STLBitsetString bstr = beta_strings_[B];
+            bstr.set_nmo(ncmo_);
             std::vector<int> bocc = bstr.get_occ();
 
             for( size_t i = 0, ijk = 0; i < nb_; ++i){
@@ -1610,6 +1680,147 @@ void CI_RDMS::get_three_map_str()
             }
         }
     }
+
+    // AAB
+    {
+        size_t naa_ex = na_*(na_-1)/2;
+        size_t naab_ann = 0;
+
+        aab_ann_list_s_.resize(nalfa*naa_ex * nbeta*nb_);
+        std::vector<int> counter(nalfa*naa_ex * nbeta*nb_, -1);
+    
+        for( size_t A = 0; A < nalfa; ++A){
+            auto bvec = a_to_b_[A];
+            for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+                size_t detB = bvec[B];
+                for( size_t a = 0; a < naa_ex; ++a ){
+                    std::tuple<size_t,short, short> JA = aa_ann_list_s_[A*naa_ex + a];
+                    int iia = std::get<1>(JA);
+                    int jja = std::get<2>(JA);
+                    size_t n_JA = std::get<0>(JA);
+                    for( size_t b = 0; b < nb_; ++b ){
+                        std::pair<size_t, short> JB = b_ann_list_s_[detB*nb_ + b];
+                        int iib = JB.second;
+                        size_t n_JB = JB.first;
+
+                        size_t aab_add;                        
+
+                        if( counter[n_JA*b_ann_list_s_.size() + n_JB] == -1 ){
+                            aab_add = naab_ann;
+                            counter[n_JA*b_ann_list_s_.size() + n_JB] = naab_ann;    
+                            naab_ann++;
+                            cre_list_buffer_[7].push_back(1);
+                        }else{
+                            aab_add = counter[n_JA*b_ann_list_s_.size() + n_JB];
+                            cre_list_buffer_[7][aab_add]++;
+                        }
+
+                        aab_ann_list_s_[A*naa_ex*nb_*nbeta + detB*naa_ex*nb_ + b*naa_ex + a] = std::make_tuple(aab_add, iia, jja, iib);
+                    }
+                }        
+            }
+        }
+
+
+        size_t sum = 0; 
+        for( size_t i = 0; i <= naab_ann; ++i){
+            size_t current = cre_list_buffer_[7][i];
+            cre_list_buffer_[7][i] = sum;
+            sum += current;
+        }
+
+        aab_cre_list_s_.resize( aab_ann_list_s_.size() );
+        
+        std::vector<int> buffer(naab_ann, 0);
+        for( size_t A = 0; A < nalfa; ++A){
+            auto bvec = a_to_b_[A];
+            for( size_t B = 0, maxB = bvec.size(); B < maxB; ++B){
+                for( size_t a = 0; a < naa_ex ; ++a){
+                    for( size_t b = 0; b < nb_ ; ++b){
+                        std::tuple<size_t,short, short, short> Jaab = aab_ann_list_s_[A*naa_ex*nb_*nbeta + bvec[B]*naa_ex*nb_ + b*naa_ex + a];
+                        size_t AAB_ann = std::get<0>(Jaab);
+                        short ia = std::get<1>(Jaab);
+                        short ja = std::get<2>(Jaab);
+                        short kb = std::get<3>(Jaab);
+                        aab_cre_list_s_[ cre_list_buffer_[7][AAB_ann] + buffer[AAB_ann] ] = std::make_tuple(A,bvec[B], ia, ja,kb);
+                        buffer[AAB_ann]++;
+                    }
+                }
+            }
+        }
+
+    }
+
+    // ABB
+
+    {
+        size_t nbb_ex = nb_*(nb_-1)/2;
+        size_t nabb_ann = 0;
+
+        abb_ann_list_s_.resize(nalfa*na_ * nbeta*nbb_ex);
+        std::vector<int> counter(nalfa*na_ * nbeta*nbb_ex, -1);
+    
+        for( size_t A = 0; A < nalfa; ++A){
+            auto bvec = a_to_b_[A];
+            for( size_t B = 0, maxb = bvec.size(); B < maxb; ++B ){
+                size_t detB = bvec[B];
+                for( size_t b = 0; b < nbb_ex; ++b ){
+                    std::tuple<size_t,short, short> JB = bb_ann_list_s_[detB*nbb_ex + b];
+                    int iib = std::get<1>(JB);
+                    int jjb = std::get<2>(JB);
+                    size_t n_JB = std::get<0>(JB);
+                    for( size_t a = 0; a < na_; ++a ){
+                        std::pair<size_t, short> JA = a_ann_list_s_[A*na_ + a];
+                        int iia = JA.second;
+                        size_t n_JA = JA.first;
+
+                        size_t abb_add;                        
+
+                        if( counter[n_JA*bb_ann_list_s_.size() + n_JB] == -1 ){
+                            abb_add = nabb_ann;
+                            counter[n_JA*bb_ann_list_s_.size() + n_JB] = nabb_ann;    
+                            nabb_ann++;
+                            cre_list_buffer_[8].push_back(1);
+                        }else{
+                            abb_add = counter[n_JA*bb_ann_list_s_.size() + n_JB];
+                            cre_list_buffer_[8][abb_add]++;
+                        }
+
+                        abb_ann_list_s_[A*na_*nbb_ex*nbeta + detB*na_*nbb_ex + a*nbb_ex + b] = std::make_tuple(abb_add, iia, iib, jjb);
+                    }
+                }        
+            }
+        }
+
+
+        size_t sum = 0; 
+        for( size_t i = 0; i <= nabb_ann; ++i){
+            size_t current = cre_list_buffer_[8][i];
+            cre_list_buffer_[8][i] = sum;
+            sum += current;
+        }
+
+        abb_cre_list_s_.resize( abb_ann_list_s_.size() );
+        
+        std::vector<int> buffer(nabb_ann, 0);
+        for( size_t A = 0; A < nalfa; ++A){
+            auto bvec = a_to_b_[A];
+            for( size_t B = 0, maxB = bvec.size(); B < maxB; ++B){
+                for( size_t b = 0; b < nbb_ex ; ++b){
+                    for( size_t a = 0; a < na_ ; ++a){
+                        std::tuple<size_t,short, short, short> Jabb = abb_ann_list_s_[A*na_*nbb_ex*nbeta + bvec[B]*na_*nbb_ex + a*nbb_ex + b];
+                        size_t ABB_ann = std::get<0>(Jabb);
+                        short ia = std::get<1>(Jabb);
+                        short jb = std::get<2>(Jabb);
+                        short kb = std::get<3>(Jabb);
+                        abb_cre_list_s_[ cre_list_buffer_[8][ABB_ann] + buffer[ABB_ann] ] = std::make_tuple(A,bvec[B], ia, jb,kb);
+                        buffer[ABB_ann]++;
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 void CI_RDMS::get_three_map()
@@ -2035,7 +2246,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
 					sign *= I.create_alfa_bit(p);
 					for(size_t j = 0; j < dim_space_; ++j){
 						if( I == det_space_[j] ){
-							rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+							rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
 						}
 					}	
 				}	
@@ -2058,7 +2269,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
 					sign *= I.create_beta_bit(p);
 					for(size_t j = 0; j < dim_space_; ++j){
 						if( I == det_space_[j] ){
-							rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+							rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
 						}
 					}	
 				}	
@@ -2086,7 +2297,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                             sign *= I.create_alfa_bit(p);
                             for(size_t j = 0; j < dim_space_; ++j){
                             if (I == det_space_[j]){
-                                rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                             }
                         }}
                         if (std::fabs(rdm) > 1.0e-12){
@@ -2114,7 +2325,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                             sign *= I.create_beta_bit(p);
                             for(size_t j = 0; j < dim_space_; ++j){
                             if (I == det_space_[j]){
-                                rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                             }
                         }}
                         if (std::fabs(rdm) > 1.0e-12){
@@ -2142,7 +2353,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                             sign *= I.create_alfa_bit(p);
                             for(size_t j = 0; j < dim_space_; ++j){
                             if (I == det_space_[j]){
-                                rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                             }
                         }}
                         if (std::fabs(rdm) > 1.0e-12){
@@ -2154,7 +2365,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
             }
         }
         outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f",error_2rdm_ab);
-/*
+
 // aaa aaa
         double error_3rdm_aaa = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
@@ -2176,14 +2387,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     sign *= I.create_alfa_bit(p);
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
-                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                            rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_aaa[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-//                                                                        outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-//                                                                                        p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                   // outfile->Printf("\n  D3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_aaa += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -2216,14 +2427,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     sign *= I.create_alfa_bit(p);
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
-                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                            rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_aab[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                   //                                     outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+                                    //outfile->Printf("\n  D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+                                    //                p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_aab += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -2256,14 +2467,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     sign *= I.create_alfa_bit(p);
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
-                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                            rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                                         }
                                     }
                                 }
                                 if (std::fabs(rdm) > 1.0e-12){
                                     double rdm_comp = tprdm_abb[p*ncmo4_*ncmo_ + q*ncmo4_ + r*ncmo3_ + s*ncmo2_ + t*ncmo_ + a];
-                                   //                                     outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
-                                   //                                                     p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
+//                                   outfile->Printf("\n  D3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = %18.12lf (%18.12lf,%18.12lf)",
+//                                                   p,q,r,s,t,a,rdm-rdm_comp,rdm,rdm_comp);
                                     error_3rdm_abb += std::fabs(rdm-rdm_comp);
                                 }
                             }
@@ -2296,7 +2507,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     sign *= I.create_beta_bit(p);
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
-                                            rdm += sign * evecs_->get(i,0) * evecs_->get(j,0);
+                                            rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
                                         }
                                     }
                                 }
@@ -2314,7 +2525,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         }
         Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f",error_3rdm_bbb);
-*/
+
 }
 
 
