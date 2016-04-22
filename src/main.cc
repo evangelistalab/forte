@@ -22,8 +22,8 @@
 #include "fci_mo.h"
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
-#endif
 #include "dmrgsolver.h"
+#endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
