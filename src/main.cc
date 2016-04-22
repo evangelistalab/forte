@@ -769,6 +769,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     if (options.get_bool("LOCALIZE")){
         auto localize = std::make_shared<LOCALIZE>(ref_wfn,options,ints_,mo_space_info);
+        localize->localize_orbitals();
     }
 
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
