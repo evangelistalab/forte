@@ -75,7 +75,7 @@ private:
                                   boost::shared_ptr<MOSpace> Vorbs_ptr, CheMPS2::DMRGSCFintegrals * theRotatedTEI,
                                   CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio );
     void copyUNITARYtoPSIMX( CheMPS2::DMRGSCFunitary * unitary, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix target );
-    void update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSCFindices * iHandler,
+    void update_WFNco( SharedMatrix orig_coeff, CheMPS2::DMRGSCFindices * iHandler,
                        CheMPS2::DMRGSCFunitary * unitary,
                        SharedMatrix work1, SharedMatrix work2 );
 
