@@ -144,6 +144,8 @@ private:
     int current_root_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
+    /// Print full wavefunction in the APIFCI basis after running a ground state calculation?
+    bool print_full_wavefunction_;
 
     // * Simple Prescreening
     /// Prescreen spawning using general integral upper bounds
@@ -173,6 +175,8 @@ private:
     std::unordered_map<Determinant,std::pair<double,double>,Determinant::Hash> dets_max_couplings_;
 
     // * Energy estimation
+    /// Estimate the variational energy?
+    bool variational_estimate_;
     /// Estimate the variational energy via a fast procedure?
     bool fast_variational_estimate_;
     /// The frequency of approximate variational estimation of the energy
@@ -180,8 +184,8 @@ private:
     /// The threshold with which we estimate the energy during the iterations
     double energy_estimate_threshold_;
     /// Flag for conducting CHC energy estimation
-    bool CHC_flag_;
-    double CHC_energy_;
+    bool approx_E_flag_;
+    double approx_energy_, old_approx_energy_;
 
 
     // * Energy extrapolation
@@ -220,7 +224,7 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(det_vec &space, std::vector<double> &C);
+    void print_wfn(det_vec &space, std::vector<double> &C, size_t max_output = 10);
 
     /// Save a wave function
     void save_wfn(det_vec &space, std::vector<double> &C,std::vector<det_hash<>>& solutions);

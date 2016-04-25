@@ -602,7 +602,7 @@ FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
 
     std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>> guess;
 
-    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et"});
+    std::vector<string> s2_labels({"singlet","doublet","triplet","quartet","quintet","sextet","septet","octet","nonet","decaet","11-et","12-et", "13-et", "14-et", "15-et", "16-et", "17-et", "18-et", "19-et", "20-et", "21-et", "22-et", "23-et", "24-et"});
     std::vector<string> table;
 
     for (size_t r = 0; r < num_dets; ++r){

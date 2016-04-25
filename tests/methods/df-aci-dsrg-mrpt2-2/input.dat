@@ -43,6 +43,7 @@ set forte {
    int_type                df
    job_type                three-dsrg-mrpt2
    cas_type                ACI
+   select_type             amp
    taup					   0.001
    tauq					   0.001
 }

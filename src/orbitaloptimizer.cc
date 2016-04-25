@@ -415,14 +415,14 @@ SharedMatrix OrbitalOptimizer::approx_solve()
     for(int h = 0; h < nirrep_;h++ ){
         for(int p = 0; p < S_tmp->rowspi(h); p++){
             for(int q = 0; q < S_tmp->colspi(h); q++){
-                if(D_grad->get(h, p, q) > 1e-6)
-                {
+                //if(std::fabs(D_grad->get(h, p, q)) > 1e-12)
+                //{
                     S_tmp->set(h, p, q, G_grad->get(h, p, q) / D_grad->get(h, p, q));
-                }
-                else{
-                    S_tmp->set(h, p, q, 0.0);
-                    outfile->Printf("\n Warning: D_grad(%d, %d, %d) is NAN", h, p, q);
-                }
+                //}
+                //else{
+                //    S_tmp->set(h, p, q, 0.0);
+                //    outfile->Printf("\n Warning: D_grad(%d, %d, %d) is NAN", h, p, q);
+                //}
             }
         }
     }
@@ -702,12 +702,12 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
     }
     ///Back transform 1-RDM to AO basis
     C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
-    boost::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
-    JK_fock->set_memory(Process::environment.get_memory() * 0.8);
-    JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_fock->initialize();
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_fock->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_fock->C_right();
+    //boost::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
+    //JK_fock->set_memory(Process::environment.get_memory() * 0.8);
+    //JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    //JK_fock->initialize();
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
 
     ///Since this is CASSCF this will always be an active fock matrix
     SharedMatrix Identity(new Matrix("I", nirrep_, nsopi_, nsopi_));
@@ -735,10 +735,10 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
 
     }
 
-    JK_fock->compute();
+    JK_->compute();
 
-    SharedMatrix J_act  = JK_fock->J()[0];
-    SharedMatrix K_act  = JK_fock->K()[0];
+    SharedMatrix J_act  = JK_->J()[0];
+    SharedMatrix K_act  = JK_->K()[0];
     SharedMatrix F_act = J_act->clone();
     K_act->scale(0.5);
     F_act->subtract(K_act);
@@ -747,8 +747,8 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
 
     if(restricted_docc_dim_.sum() > 0)
     {
-        SharedMatrix J_core = JK_fock->J()[1];
-        SharedMatrix K_core = JK_fock->K()[1];
+        SharedMatrix J_core = JK_->J()[1];
+        SharedMatrix K_core = JK_->K()[1];
         J_core->scale(2.0);
         F_core = J_core->clone();
         F_core->subtract(K_core);

@@ -11,6 +11,7 @@
 #include "fci_mo.h"
 #include "orbitaloptimizer.h"
 #include "sa_fcisolver.h"
+#include "mp2_nos.h"
 #ifdef HAVE_CHEMPS2
     #include "dmrgsolver.h"
 #endif
@@ -45,7 +46,6 @@ void CASSCF::compute_casscf()
     }
 
     int maxiter = options_.get_int("CASSCF_ITERATIONS");
-    print_   = options_.get_int("PRINT");
 
     /// Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
@@ -99,6 +99,7 @@ void CASSCF::compute_casscf()
             outfile->Printf("\n\n Performing a CAS with %5s", options_.get_str("CAS_TYPE").c_str());
         }
         Timer cas_timer;
+        /// Perform a DMRG-CI, ACI, FCI inside an active space
         cas_ci();
         if(print_ > 0)
         {
@@ -113,6 +114,7 @@ void CASSCF::compute_casscf()
                                            options_,
                                            mo_space_info_);
 
+        
         orbital_optimizer.set_wavefunction(reference_wavefunction_);
         orbital_optimizer.set_frozen_one_body(F_froze_);
         orbital_optimizer.set_symmmetry_mo(Ca);
@@ -123,7 +125,7 @@ void CASSCF::compute_casscf()
         {
             orbital_optimizer.set_print_timings(true);
         }
-
+        orbital_optimizer.set_jk(JK_);
         orbital_optimizer.update();
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
@@ -173,7 +175,7 @@ void CASSCF::compute_casscf()
         Cb->copy(Cp);
 
         std::string diis_start_label = "";
-        if(iter >= diis_start && do_diis==true && g_norm < 1e-4){diis_start_label = "DIIS";}
+        if(iter >= diis_start && do_diis==true && g_norm < diis_gradient_norm){diis_start_label = "DIIS";}
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
         if(print_ > 0)
         {
@@ -205,11 +207,17 @@ void CASSCF::compute_casscf()
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
     }
 
+    if(options_.get_str("JOB_TYPE") != "CASSCF")
+    {
+        SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
+    }
+
 }
 void CASSCF::startup()
 {
     print_method_banner({"Complete Active Space Self Consistent Field","Kevin Hannon"});
     na_  = mo_space_info_->size("ACTIVE");
+    print_   = options_.get_int("PRINT");
     nsopi_ = this->nsopi();
     nirrep_ = this->nirrep();
     if(options_.get_str("SCF_TYPE") == "PK")
@@ -264,6 +272,13 @@ void CASSCF::startup()
     Hcore_->add(T);
     Hcore_->add(V);
 
+    Timer JK_initialize;
+    JK_ = JK::build_JK(reference_wavefunction_->basisset(), options_);
+    JK_->set_memory(Process::environment.get_memory() * 0.8);
+    JK_->initialize();
+    JK_->C_left().clear();
+    JK_->C_right().clear();
+    if(print_ > 0)  outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(), options_.get_str("SCF_TYPE").c_str());
 
 }
 void CASSCF::cas_ci()
@@ -312,13 +327,11 @@ void CASSCF::cas_ci()
     else if(options_.get_str("CAS_TYPE") == "DMRG")
     {
 #ifdef  HAVE_CHEMPS2
-        //ints_->retransform_integrals();
-        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_);
+        DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-        outfile->Printf("\n Scalar_energy_: %8.8f", scalar_energy_ + ints_->frozen_core_energy());
-        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy());
+        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() + Process::environment.molecule()->nuclear_repulsion_energy());
         dmrg.compute_energy();
 
         cas_ref_ = dmrg.reference();
@@ -343,6 +356,7 @@ void CASSCF::cas_ci()
 
     L2bb("pqrs") += L1b("pr") * L1b("qs");
     L2bb("pqrs") -= L1b("ps") * L1b("qr");
+    if(options_.get_str("CAS_TYPE")=="DMRG") L2aa.scale(0.5);
 
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
 
@@ -446,26 +460,29 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
         }
     }
 
-    boost::shared_ptr<JK> JK_core = JK::build_JK(this->basisset(), this->options_);
+    //boost::shared_ptr<JK> JK_core = JK::build_JK(this->basisset(), this->options_);
 
-    JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
     //JK_core->set_allow_desymmetrization(false);
 
     /////TODO: Make this an option in my code
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->initialize();
+    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    //JK_core->initialize();
 
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+    JK_->set_do_K(true);
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
 
     Cl.clear();
     Cl.push_back(C_core);
+    Cr.clear();
+    Cr.push_back(C_core);
 
-    JK_core->compute();
+    JK_->compute();
 
-    SharedMatrix F_core = JK_core->J()[0];
-    SharedMatrix K_core = JK_core->K()[0];
+    SharedMatrix F_core = JK_->J()[0];
+    SharedMatrix K_core = JK_->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -551,13 +568,13 @@ ambit::Tensor CASSCF::transform_integrals()
     {
         outfile->Printf("\n C_DGER takes %8.5f", c_dger.get());
     }
-    boost::shared_ptr<JK> JK_trans = JK::build_JK(this->basisset(), this->options_);
-    JK_trans->set_memory(Process::environment.get_memory() * 0.8);
-    JK_trans->set_allow_desymmetrization(false);
-    JK_trans->set_do_K(false);
-    JK_trans->initialize();
-    std::vector<boost::shared_ptr<Matrix> > &Cl = JK_trans->C_left();
-    std::vector<boost::shared_ptr<Matrix> > &Cr = JK_trans->C_right();
+    //boost::shared_ptr<JK> JK_trans = JK::build_JK(this->basisset(), this->options_);
+    JK_->set_memory(Process::environment.get_memory() * 0.8);
+    JK_->set_allow_desymmetrization(false);
+    JK_->set_do_K(false);
+    //JK_->initialize();
+    std::vector<boost::shared_ptr<Matrix> > &Cl = JK_->C_left();
+    std::vector<boost::shared_ptr<Matrix> > &Cr = JK_->C_right();
     Cl.clear();
     Cr.clear();
     for(size_t d = 0; d < D_vec.size(); d++)
@@ -566,7 +583,7 @@ ambit::Tensor CASSCF::transform_integrals()
         Cr.push_back(Identity);
     }
     Timer jk_build;
-    JK_trans->compute();
+    JK_->compute();
     if(print_ > 1)
     {
         outfile->Printf("\n JK builder takes %8.6f s", jk_build.get());
@@ -580,7 +597,7 @@ ambit::Tensor CASSCF::transform_integrals()
     {
         int i = d.second[0];
         int j = d.second[1];
-        SharedMatrix J = JK_trans->J()[count];
+        SharedMatrix J = JK_->J()[count];
         half_trans->zero();
         half_trans = Matrix::triplet(Call, J, CAct, true, false, false);
         count++;
@@ -734,6 +751,7 @@ void CASSCF::set_up_fci()
     }
 
 
+
     E_casscf_ = fcisolver.compute_energy();
     /// Get the CIVector for each iteration
     std::vector<std::shared_ptr<FCIWfn> > FCIWfnSolution(1);
@@ -768,17 +786,22 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
     /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
     /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    boost::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(), this->options_);
-
-    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
-    JK_inactive->initialize();
-
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_inactive->C_left();
+//    boost::shared_ptr<JK> JK_inactive = JK::build_JK(this->basisset(), this->options_);
+//
+//    JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
+//    JK_inactive->initialize();
+//
+    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
+    JK_->set_allow_desymmetrization(true);
+    JK_->set_do_K(true);
     Cl.clear();
     Cl.push_back(Cdocc);
-    JK_inactive->compute();
-    SharedMatrix J_restricted = JK_inactive->J()[0];
-    SharedMatrix K_restricted = JK_inactive->K()[0];
+    Cr.clear();
+    Cr.push_back(Cdocc);
+    JK_->compute();
+    SharedMatrix J_restricted = JK_->J()[0];
+    SharedMatrix K_restricted = JK_->K()[0];
 
     J_restricted->scale(2.0);
     SharedMatrix F_restricted = J_restricted->clone();
@@ -813,6 +836,8 @@ std::vector<std::vector<double> > CASSCF::compute_restricted_docc_operator()
             //double h_value = H->get(absolute_active[u], absolute_active[v]);
             oei_a[u * na_ + v ] = value;
             oei_b[u * na_ + v ] = value;
+            if(casscf_debug_print_)
+                outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
         }
     }
     Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
