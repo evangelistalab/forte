@@ -150,20 +150,29 @@ void CholeskyIntegrals::gather_integrals()
     if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
     boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
     //Computes the cholesky integrals
-    Ch->choleskify();
+    if(L_ao_ == nullptr)
+    {
+        Ch->choleskify();
+        nthree_ = Ch->Q();
+    }
     if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
     //The number of vectors required to do cholesky factorization
-    size_t nL = Ch->Q();
-    nthree_ = nL;
-    if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nL * nbf * nbf * sizeof(double) / 1073741824.0 );}
-    int_mem_ = (nL * nbf * nbf * sizeof(double) / 1073741824.0);
+    if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nthree_ * nbf * nbf * sizeof(double) / 1073741824.0 );}
+    int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
+    if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nthree_,tol_cd);}
+    if(L_ao_ == nullptr)
+    {
+        L_ao_ = Ch->L();
+    }
+    transform_integrals();
+}
+void CholeskyIntegrals::transform_integrals()
+{
     TensorType tensor_type = CoreTensor;
-
-    if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nL,tol_cd);}
-    SharedMatrix Lao = Ch->L();
-    SharedMatrix L(new Matrix("Lmo", nL, (nmo_)*(nmo_)));
+    
+    SharedMatrix L(new Matrix("Lmo", nthree_, (nso_)*(nso_)));
     SharedMatrix Ca_ao(new Matrix("Ca_ao",nso_,nmopi_.sum()));
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix aotoso = wfn_->aotoso();
@@ -185,17 +194,17 @@ void CholeskyIntegrals::gather_integrals()
     }
 //    Ca_ = Ca_ao;
 
-    ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
-    ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nbf,nmo_});
+    ambit::Tensor ThreeIntegral_ao = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nso_, nso_ });
+    ambit::Tensor Cpq_tensor = ambit::Tensor::build(tensor_type,"C_sorted",{nso_,nmo_});
     ambit::Tensor ThreeIntegral = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,nmo_, nmo_ });
 
     Cpq_tensor.iterate([&](const std::vector<size_t>& i,double& value){
         value = Ca_ao->get(i[0],i[1]);
     });
     ThreeIntegral_ao.iterate([&](const std::vector<size_t>& i,double& value){
-        value = Lao->get(i[0],i[1]*nbf + i[2]);
+        value = L_ao_->get(i[0],i[1]*nso_ + i[2]);
     });
-    SharedMatrix ThreeInt(new Matrix("Lmo", (nmo_)*(nmo_), nL));
+    SharedMatrix ThreeInt(new Matrix("Lmo", (nmo_)*(nmo_), nthree_));
     ThreeIntegral_ =ThreeInt;
 
 
@@ -329,5 +338,4 @@ void CholeskyIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bo
     outfile->Printf("\n If you are using this, you are ruining the advantages of DF/CD");
     throw PSIEXCEPTION("Don't use DF/CD if you use set_tei");
 }
-
 }}

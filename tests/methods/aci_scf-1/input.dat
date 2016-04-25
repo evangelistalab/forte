@@ -48,6 +48,7 @@ set forte{
    taup                     0.0
    tauq                     0.0
    job_type                 CASSCF
+   select_type              amp
 }
 
 

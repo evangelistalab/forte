@@ -230,8 +230,8 @@ void THREE_DSRG_MRPT2::startup()
 
     Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
-    Fa_.reserve(ncmo_);
-    Fb_.reserve(ncmo_);
+    Fa_.resize(ncmo_);
+    Fb_.resize(ncmo_);
 
     for(size_t p = 0; p < ncmo_; p++)
     {
@@ -2385,6 +2385,11 @@ void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const doub
 
     C1["IP"] += alpha * H1["AP"] * T1["IA"];
     C1["QA"] -= alpha * T1["IA"] * H1["QI"];
+    //C1["ij"] += alpha * H1["aj"] * T1["ia"];
+    //C1["kj"] -= alpha * T1["ij"] * H1["ki"];
+
+    //C1["IJ"] += alpha * H1["AJ"] * T1["IA"];
+    //C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());

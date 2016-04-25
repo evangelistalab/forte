@@ -286,7 +286,7 @@ double FCI_MO::compute_energy(){
     for(int i = 0; i < eigen_.size(); ++i){
         evecs->set_column(0,i,(eigen_[i]).first);
     }
-    CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
+    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
 
     // form density
     FormDensity(ci_rdms, root_, Da_, Db_);
@@ -772,7 +772,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         for(int i = 0; i < eigen_.size(); ++i){
             evecs->set_column(0,i,(eigen_[i]).first);
         }
-        CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
+        CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
 
         // Form Density
         Da_ = d2(ncmo_, d1(ncmo_));
@@ -943,7 +943,7 @@ void FCI_MO::FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B){
     vector<double> opdm_a (dim, 0.0);
     vector<double> opdm_b (dim, 0.0);
 
-    ci_rdms.compute_1rdm(opdm_a,opdm_b,root);
+    ci_rdms.compute_1rdm(opdm_a,opdm_b);
 
     for(size_t p = 0; p < na_; ++p){
         size_t np = idx_a_[p];
@@ -1012,7 +1012,7 @@ void FCI_MO::FormCumulant2(CI_RDMS &ci_rdms, const int &root, d4 &AA, d4 &AB, d4
     vector<double> tpdm_ab (dim, 0.0);
     vector<double> tpdm_bb (dim, 0.0);
 
-    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb,root);
+    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
 
     FormCumulant2AA(tpdm_aa, tpdm_bb, AA, BB);
     FormCumulant2AB(tpdm_ab, AB);
@@ -1151,7 +1151,7 @@ void FCI_MO::FormCumulant3(CI_RDMS &ci_rdms, const int &root, d6 &AAA, d6 &AAB, 
     vector<double> tpdm_abb (dim, 0.0);
     vector<double> tpdm_bbb (dim, 0.0);
 
-    ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb,root);
+    ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb);
 
     FormCumulant3AAA(tpdm_aaa, tpdm_bbb, AAA, BBB, DC);
     FormCumulant3AAB(tpdm_aab, tpdm_abb, AAB, ABB, DC);
@@ -1832,7 +1832,7 @@ void FCI_MO::compute_ref(){
     for(int i = 0; i < eigen_.size(); ++i){
         evecs->set_column(0,i,(eigen_[i]).first);
     }
-    CI_RDMS ci_rdms (options_,fci_ints_,mo_space_info_,determinant_,evecs);
+    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
 
     // 2-PDC
     L2aa_ = d4(na_, d3(na_, d2(na_, d1(na_))));

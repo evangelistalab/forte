@@ -34,7 +34,7 @@ public:
 
 private:
     Reference dmrg_ref_;
-    int dmrg_iterations_;
+    int dmrg_iterations_ = 1;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<ForteIntegrals> ints_;
     void set_up_ints();
@@ -59,7 +59,7 @@ private:
                       SharedMatrix Cmat,
                       boost::shared_ptr<JK> myJK);
 
-    void buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> Aorbs_ptr,
+    void buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix,
                   CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler,
                   CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<PSIO> psio);
     void buildHamDMRGForte(
@@ -75,7 +75,7 @@ private:
                                   boost::shared_ptr<MOSpace> Vorbs_ptr, CheMPS2::DMRGSCFintegrals * theRotatedTEI,
                                   CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio );
     void copyUNITARYtoPSIMX( CheMPS2::DMRGSCFunitary * unitary, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix target );
-    void update_WFNco( CheMPS2::DMRGSCFmatrix * Coeff_orig, CheMPS2::DMRGSCFindices * iHandler,
+    void update_WFNco( SharedMatrix orig_coeff, CheMPS2::DMRGSCFindices * iHandler,
                        CheMPS2::DMRGSCFunitary * unitary,
                        SharedMatrix work1, SharedMatrix work2 );
 

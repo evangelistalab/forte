@@ -22,6 +22,7 @@
 #include "fci_mo.h"
 #ifdef HAVE_CHEMPS2
 #include "dmrgscf.h"
+#include "dmrgsolver.h"
 #endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
@@ -39,6 +40,7 @@
 #include "active_dsrgpt2.h"
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
+#include "localize.h"
 
 INIT_PLUGIN
 
@@ -253,6 +255,11 @@ read_options(std::string name, Options &options)
         /*- The maximum number of iterations -*/
         options.add_int("MAXITER",100);
 
+        /*- Use localized basis? -*/
+        options.add_bool("LOCALIZE", false);
+        /*- Type of localization -*/
+        options.add_str("LOCALIZE_TYPE", "PIPEK_MEZEY", "BOYS");
+
         // Options for the Genetic Algorithm CI //
         /*- The size of the population -*/
         options.add_int("NPOP",100);
@@ -358,6 +365,9 @@ read_options(std::string name, Options &options)
             7: d2h                      Ag 	B1g 	B2g 	B3g 	Au 	B1u 	B2u 	B3u
         -*/
         options.add_int("DMRG_WFN_IRREP", -1);
+        /*- FrozenDocc for DMRG (frozen means restricted) -*/
+        options.add_array("DMRG_FROZEN_DOCC");
+
 
         /*- The number of reduced renormalized basis states to be
             retained during successive DMRG instructions -*/
@@ -371,7 +381,7 @@ read_options(std::string name, Options &options)
             during successive DMRG instructions -*/
         options.add_array("DMRG_MAXSWEEPS");
         /*- The Davidson R tolerance (Wouters says this will cause RDms to be close to exact -*/
-        options.add_double("DMRG_DAVIDSON_RTOL", 1e-6);
+        options.add_array("DMRG_DAVIDSON_RTOL");
 
         /*- The noiseprefactors for successive DMRG instructions -*/
         options.add_array("DMRG_NOISEPREFACTORS");
@@ -414,6 +424,9 @@ read_options(std::string name, Options &options)
 
         /*- Whether to start the active space localization process from a random unitary or the unit matrix. -*/
         options.add_bool("DMRG_LOC_RANDOM", true);
+        /*- Use the older DMRGSCF algorithm -*/
+        options.add_bool("USE_DMRGSCF", false);
+        
 
 
         //////////////////////////////////////////////////////////////
@@ -421,11 +434,11 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
 
         /*- The selection type for the Q-space-*/
-        options.add_str("SELECT_TYPE","AMP","ENERGY AMP AIMED_AMP AIMED_ENERGY");
+        options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
         /*-Threshold for the selection of the P space -*/
         options.add_double("TAUP",0.01);
         /*- The threshold for the selection of the Q space -*/
-        options.add_double("TAUQ",0.000001);
+        options.add_double("TAUQ",0.01);
         /*- The SD-space prescreening threshold -*/
         options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
@@ -486,7 +499,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","LINEAR","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
+        options.add_str("PROPAGATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -497,7 +510,7 @@ read_options(std::string name, Options &options)
             Note that the final energy is always estimated exactly. -*/
         options.add_double("ENERGY_ESTIMATE_THRESHOLD",1.0e-6);
         /*- The time step in imaginary time (a.u.) -*/
-        options.add_double("TAU",0.01);
+        options.add_double("TAU",1.0);
         /*- The energy convergence criterion -*/
         options.add_double("E_CONVERGENCE",1.0e-8);
         /*- Use a fast (sparse) estimate of the energy -*/
@@ -510,6 +523,10 @@ read_options(std::string name, Options &options)
         options.add_bool("USE_INTER_NORM",false);
         /*- Use a shift in the exponential -*/
         options.add_bool("USE_SHIFT",false);
+        /*- Estimate variational energy during calculation -*/
+        options.add_bool("VAR_ESTIMATE",false);
+        /*- Print full wavefunction when finish -*/
+        options.add_bool("PRINT_FULL_WAVEFUNCTION",false);
         /*- Prescreen the spawning of excitations -*/
         options.add_bool("SIMPLE_PRESCREENING",false);
         /*- Use dynamic prescreening -*/
@@ -757,6 +774,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto mp2_nos = std::make_shared<MP2_NOS>(ref_wfn,options,ints_, mo_space_info);
     }
 
+    if (options.get_bool("LOCALIZE")){
+        auto localize = std::make_shared<LOCALIZE>(ref_wfn,options,ints_,mo_space_info);
+        localize->localize_orbitals();
+    }
+
     if (options.get_str("JOB_TYPE") == "MR-DSRG-PT2"){
         MCSRGPT2_MO mcsrgpt2_mo(ref_wfn, options, ints_, mo_space_info);
     }
@@ -778,10 +800,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto fci = std::make_shared<FCI>(ref_wfn,options,ints_,mo_space_info);
         fci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "DMRG")
+    if (options.get_bool("USE_DMRGSCF"))
     {
 #ifdef HAVE_CHEMPS2
         auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
+        dmrg->set_iterations(options.get_int("DMRGSCF_MAX_ITER"));
         dmrg->compute_energy();
 #else
         throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
@@ -898,7 +921,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "FCI")
         {
-            if (options.get_bool("SEMI_CANONICAL")){
+            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
+            if (options.get_bool("SEMI_CANONICAL"))
+            {
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
@@ -926,9 +951,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         }
 
         if(cas_type == "ACI"){
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(3);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
@@ -944,18 +969,18 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         else if(cas_type == "DMRG")
         {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-                dmrg->set_iterations(1);
-                dmrg->compute_energy();
-                Reference dmrg_reference = dmrg->reference();
+                DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+                dmrg.set_max_rdm(2);
+                dmrg.compute_energy();
+                Reference dmrg_reference = dmrg.reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-            dmrg->set_iterations(1);
-            dmrg->compute_energy();
-            Reference dmrg_reference = dmrg->reference();
+            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+            dmrg.set_max_rdm(3);
+            dmrg.compute_energy();
+            Reference dmrg_reference = dmrg.reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
             dsrg_mrpt2->compute_energy();
 #endif
@@ -980,9 +1005,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             three_dsrg_mrpt2->compute_energy();
         }
         if(options.get_str("CAS_TYPE")=="ACI"){
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
-                aci->set_max_rdm(3);
+                aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
@@ -991,15 +1016,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             aci->set_max_rdm(3);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
-            dsrg_mrpt2->compute_energy();
+            boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
+            three_dsrg_mrpt2->compute_energy();
         }
 
         else if(options.get_str("CAS_TYPE")=="FCI")
         {
-            if (options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(3);
+                fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
@@ -1017,19 +1042,20 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         {
 #ifdef HAVE_CHEMPS2
-            if(options.get_bool("SEMI_CANONICAL")){
+            if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
 
-                auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-                dmrg->set_iterations(1);
-                dmrg->compute_energy();
+                DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+                dmrg.set_max_rdm(2);
+                dmrg.compute_energy();
 
-                Reference dmrg_reference = dmrg->reference();
+                Reference dmrg_reference = dmrg.reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,dmrg_reference);
             }
-            auto dmrg = std::make_shared<DMRGSCF>(ref_wfn, options, mo_space_info, ints_);
-            dmrg->set_iterations(1);
-            dmrg->compute_energy();
-            Reference dmrg_reference = dmrg->reference();
+
+            DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+            dmrg.set_max_rdm(3);
+            dmrg.compute_energy();
+            Reference dmrg_reference = dmrg.reference();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(dmrg_reference,ref_wfn,options,ints_,mo_space_info));
             three_dsrg_mrpt2->compute_energy();
 #endif
