@@ -38,6 +38,7 @@
 #include "finite_temperature.h"
 #include "active_dsrgpt2.h"
 #include "dsrg_mrpt.h"
+#include "v2rdm.h"
 
 INIT_PLUGIN
 
@@ -594,7 +595,7 @@ read_options(std::string name, Options &options)
         /*- Threshold for printing CI vectors -*/
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
-        options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD");
+        options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
         /*- Semicanonicalize orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
         /*- Two-particle density cumulant -*/
@@ -642,10 +643,13 @@ read_options(std::string name, Options &options)
         /*- Intruder State Avoidance b Parameter -*/
         options.add_double("ISA_B", 0.02);
         /*- The code used to do CAS-CI.
-         *  - CAS York's code
-         *  - FCI Francesco's string based FCI code
-         *  - DMRG DMRG code (not yet available) -*/
-        options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG");
+         *  - CAS   determinant based CI code
+         *  - FCI   string based FCI code
+         *  - DMRG  DMRG code
+         *  - V2RDM V2RDM interface -*/
+        options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
+        /*- Average densities of different spins -*/
+        options.add_bool("AVG_DENS_SPIN", false);
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
         /*- Detailed timing printings -*/
@@ -878,7 +882,8 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     }
     if (options.get_str("JOB_TYPE") == "DSRG-MRPT2"){
-        if(options.get_str("CAS_TYPE")=="CAS")
+        std::string cas_type = options.get_str("CAS_TYPE");
+        if(cas_type == "CAS")
         {
             boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             fci_mo->compute_energy();
@@ -890,7 +895,8 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 dsrg_mrpt2->compute_energy();
             }
         }
-        if(options.get_str("CAS_TYPE")=="FCI")
+
+        if(cas_type == "FCI")
         {
             if (options.get_bool("SEMI_CANONICAL")){
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
@@ -911,7 +917,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             }
         }
 
-        if(options.get_str("CAS_TYPE")=="ACI"){
+        if(cas_type == "V2RDM")
+        {
+            std::shared_ptr<V2RDM> v2rdm(new V2RDM(ref_wfn,options,ints_,mo_space_info));
+            Reference reference = v2rdm->reference();
+            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+            dsrg_mrpt2->compute_energy();
+        }
+
+        if(cas_type == "ACI"){
             if(options.get_bool("SEMI_CANONICAL")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
                 aci->set_max_rdm(3);
@@ -927,7 +941,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             dsrg_mrpt2->compute_energy();
 
         }
-        else if(options.get_str("CAS_TYPE")=="DMRG")
+        else if(cas_type == "DMRG")
         {
 #ifdef HAVE_CHEMPS2
             if(options.get_bool("SEMI_CANONICAL")){

@@ -247,7 +247,7 @@ double FCI_MO::compute_energy(){
     determinant_.clear();
 
     // form determinants
-    if(active_space_type_ == "COMPLETE"){
+    if(active_space_type_ == "COMPLETE" || active_space_type_ == "DOCI"){
         form_det();
     }else if(active_space_type_ == "CIS"){
         form_det_cis();
@@ -337,13 +337,27 @@ void FCI_MO::form_det(){
     Timer tdet;
     str = "Forming determinants";
     if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
-    for(int i = 0; i != nirrep_; ++i){
-        int j = i ^ root_sym_;
-        size_t sa = a_string[i].size();
-        size_t sb = b_string[j].size();
-        for(size_t alfa = 0; alfa < sa; ++alfa){
-            for(size_t beta = 0; beta < sb; ++beta){
-                determinant_.push_back(STLBitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
+    if(options_.get_str("ACTIVE_SPACE_TYPE") == "DOCI"){
+        if(root_sym_ != 0 || multi_ != 1){
+            outfile->Printf("\n  State must be totally symmetric for DOCI.");
+            throw PSIEXCEPTION("State must be totally symmetric for DOCI.");
+        } else {
+            for(int i = 0; i != nirrep_; ++i){
+                size_t sa = a_string[i].size();
+                for(size_t alfa = 0; alfa < sa; ++alfa){
+                    determinant_.push_back(STLBitsetDeterminant(a_string[i][alfa], a_string[i][alfa]));
+                }
+            }
+        }
+    } else {
+        for(int i = 0; i != nirrep_; ++i){
+            int j = i ^ root_sym_;
+            size_t sa = a_string[i].size();
+            size_t sb = b_string[j].size();
+            for(size_t alfa = 0; alfa < sa; ++alfa){
+                for(size_t beta = 0; beta < sb; ++beta){
+                    determinant_.push_back(STLBitsetDeterminant(a_string[i][alfa], b_string[j][beta]));
+                }
             }
         }
     }
@@ -642,67 +656,67 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool> &ref
     timer_on("FORM String Doubles");
     vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-        // occupied and unoccupied indices, symmetry (active)
-        int symmetry = 0;
-        vector<int> uocc, occ;
-        for(int i = 0; i < na_; ++i){
-            if(ref_string[i]){
-                occ.push_back(i);
-                symmetry ^= sym_active_[i];
-            }else{
-                uocc.push_back(i);
-            }
+    // occupied and unoccupied indices, symmetry (active)
+    int symmetry = 0;
+    vector<int> uocc, occ;
+    for(int i = 0; i < na_; ++i){
+        if(ref_string[i]){
+            occ.push_back(i);
+            symmetry ^= sym_active_[i];
+        }else{
+            uocc.push_back(i);
         }
+    }
 
-        // doubles
-        for(const int& a: uocc){
-            vector<bool> string_a(ref_string);
-            string_a[a] = true;
-            int sym_a = symmetry ^ sym_active_[a];
+    // doubles
+    for(const int& a: uocc){
+        vector<bool> string_a(ref_string);
+        string_a[a] = true;
+        int sym_a = symmetry ^ sym_active_[a];
 
-            for(const int& b: uocc){
-                if(b > a){
-                    vector<bool> string_b(string_a);
-                    string_b[b] = true;
-                    int sym_b = sym_a ^ sym_active_[b];
+        for(const int& b: uocc){
+            if(b > a){
+                vector<bool> string_b(string_a);
+                string_b[b] = true;
+                int sym_b = sym_a ^ sym_active_[b];
 
-                    for(const int& i: occ){
-                        vector<bool> string_i(string_b);
-                        string_i[i] = false;
-                        int sym_i = sym_b ^ sym_active_[i];
+                for(const int& i: occ){
+                    vector<bool> string_i(string_b);
+                    string_i[i] = false;
+                    int sym_i = sym_b ^ sym_active_[i];
 
-                        for(const int& j: occ){
-                            if(j > i){
-                                vector<bool> string_j(string_i);
-                                string_j[j] = false;
-                                int sym_j = sym_i ^ sym_active_[j];
-                                String[sym_j].push_back(string_j);
-                            }
+                    for(const int& j: occ){
+                        if(j > i){
+                            vector<bool> string_j(string_i);
+                            string_j[j] = false;
+                            int sym_j = sym_i ^ sym_active_[j];
+                            String[sym_j].push_back(string_j);
                         }
                     }
                 }
             }
         }
+    }
 
-        if(print){
-            print_h2("Doubles String");
-            for(size_t i = 0; i != String.size(); ++i){
-                if(String[i].size() != 0){
-                    outfile->Printf("\n  symmetry = %lu \n", i);
+    if(print){
+        print_h2("Doubles String");
+        for(size_t i = 0; i != String.size(); ++i){
+            if(String[i].size() != 0){
+                outfile->Printf("\n  symmetry = %lu \n", i);
+            }
+            for(size_t j = 0; j != String[i].size(); ++j){
+                outfile->Printf("    ");
+                for(bool b: String[i][j]){
+                    outfile->Printf("%d ", b);
                 }
-                for(size_t j = 0; j != String[i].size(); ++j){
-                    outfile->Printf("    ");
-                    for(bool b: String[i][j]){
-                        outfile->Printf("%d ", b);
-                    }
-                    outfile->Printf("\n");
-                }
+                outfile->Printf("\n");
             }
         }
-
-        timer_off("FORM String Doubles");
-        return String;
     }
+
+    timer_off("FORM String Doubles");
+    return String;
+}
 
 void FCI_MO::semi_canonicalize(const size_t& count){
     outfile->Printf("\n  Use semi-canonical orbitals.\n");
@@ -1432,7 +1446,7 @@ void FCI_MO::Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count
     if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
     if(!quiet_){outfile->Printf("\n  Nonzero criteria: > %.2E", E);}
     Check_FockBlock(A, B, E, count, nc_, idx_c_, "CORE");
-    if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE"){
+    if(options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE" || options_.get_str("ACTIVE_SPACE_TYPE") == "DOCI"){
         Check_FockBlock(A, B, E, count, na_, idx_a_, "ACTIVE");
     }else{
         vector<size_t> idx_a_o, idx_a_v;
@@ -1526,8 +1540,8 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
     }
     // active
     SharedMatrix Fa_a, Fa_b, Fao_a, Fao_b, Fav_a, Fav_b;
-    bool cas = options_.get_str("ACTIVE_SPACE_TYPE") == "COMPLETE";
-    if(cas){
+    std::string active_type = options_.get_str("ACTIVE_SPACE_TYPE");
+    if(active_type == "COMPLETE" || active_type == "DOCI"){
         Fa_a = SharedMatrix(new Matrix("Fock active alpha",active_,active_));
         Fa_b = SharedMatrix(new Matrix("Fock active beta",active_,active_));
         for (size_t h = 0, offset = 0; h < nirrep_; ++h){
@@ -1573,7 +1587,7 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
     std::vector<SharedMatrix> blocks;
     std::vector<SharedMatrix> evecs;
     std::vector<SharedVector> evals;
-    if(cas){
+    if(active_type == "COMPLETE" || active_type == "DOCI"){
         blocks = {Fc_a,Fc_b,Fv_a,Fv_b,Fa_a,Fa_b};
     }else{
         blocks = {Fc_a,Fc_b,Fv_a,Fv_b,Fao_a,Fao_b,Fav_a,Fav_b};
@@ -1608,7 +1622,7 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         offset += core_[h];
 
         // active
-        if(cas){
+        if(active_type == "COMPLETE" || active_type == "DOCI"){
             for (int u = 0; u < active_[h]; ++u){
                 for (int v = 0; v < active_[h]; ++v){
                     Ua->set(h,offset + u, offset + v,evecs[4]->get(h,u,v));

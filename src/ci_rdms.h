@@ -101,7 +101,7 @@ private:
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_ann_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_ann_list_;
 	
-	// The list of a_q^(+) a_p^(+)|N-1>
+    // The list of a_q^(+) a_p^(+)|N-2>
 	std::vector<std::vector<std::tuple<size_t,short,short>>> aa_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> ab_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short>>> bb_cre_list_;
@@ -112,7 +112,7 @@ private:
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_ann_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> bbb_ann_list_;
 	
-	// The list of a^(+)_r a^(+)_q a^(+)_p |N-1>
+    // The list of a^(+)_r a^(+)_q a^(+)_p |N-3>
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aaa_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> aab_cre_list_;
 	std::vector<std::vector<std::tuple<size_t,short,short,short>>> abb_cre_list_;
