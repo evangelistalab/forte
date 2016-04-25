@@ -25,44 +25,8 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options &options,
 
     print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});
 
-//    vector<double> vec_V (2001);
-//    vector<double> vec_D (2001);
-//    std::iota(vec_V.begin(), vec_V.end(), 0);
-//    std::iota(vec_D.begin(), vec_D.end(), 0);
-
-//    ofstream out_V;
-//    out_V.open("T_V0.1");
-////    out_V << "     D        value" << endl;
-//    for(const double& n: vec_D){
-//        double D = n * 0.0001 - 0.1;
-//        double value = ElementT(source_,D,0.1);
-//        out_V << boost::format("%.5f %20.15f\n") % D % value;
-//    }   
-//    out_V.close();
-//    out_V.open("H_V0.1");
-//    for(const double& n: vec_D){
-//        double D = n * 0.0001 - 0.1;
-//        double value = ElementRH(source_,D,0.1);
-//        out_V << boost::format("%.5f %20.15f\n") % D % value;
-//    }
-//    out_V.close();
-
-//    ofstream out_D;
-//    out_D.open("D_0.1");
-////    out_D << "     V        value" << endl;
-//    for(const double& n: vec_V){
-//        double V = n * 0.0001 - 0.1;
-//        double value = ElementT(source_,0.1,V);
-//        out_D << boost::format("%.5f %20.15f\n") % V % value;
-//    }
-//    out_D.close();
-
-    test_D1_RE();
-    test_D2_Dyall();
-
     startup(options);
     Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
-
 }
 
 MCSRGPT2_MO::~MCSRGPT2_MO()
@@ -90,7 +54,11 @@ void MCSRGPT2_MO::startup(Options &options){
     }
 
     // Print Delta
-    if(print_ > 1)  PrintDelta();
+    if(print_ > 1){
+        PrintDelta();
+        test_D1_RE();
+        test_D2_RE();
+    }
 
     // DSRG Parameters
     s_ = options.get_double("DSRG_S");
@@ -852,60 +820,92 @@ void MCSRGPT2_MO::test_D1_RE(){
     double small_threshold = 0.1;
     std::vector<std::pair<std::vector<size_t>, double>> smallD1;
 
-    // core-virtual block
-    for(size_t n = 0; n < nc_; ++n){
-        size_t nn = idx_c_[n];
-        for(size_t f = 0; f < nv_; ++f){
-            size_t nf = idx_v_[f];
-            if((sym_ncmo_[nn] ^ sym_ncmo_[nf]) != 0) continue;
+    for(size_t i = 0; i < nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t a = 0; a < npt_; ++a){
+            size_t na = idx_p_[a];
 
-            double Da = Fa_[nn][nn] - Fa_[nf][nf];
-            Da -= integral_->aptei_aa(nn, nf, nf, nn);
+            // must belong to the same irrep
+            if((sym_ncmo_[ni] ^ sym_ncmo_[na]) != 0) continue;
 
-            if(std::fabs(Da) < small_threshold){
-                smallD1.push_back(std::make_pair(std::vector<size_t> {nn,nf}, Da));
+            // cannot be all active
+            if(std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
+               std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end()) {
+                continue;
+            }else{
+                double Da = Fa_[ni][ni] - Fa_[na][na];
+
+                for(size_t k = 0; k < nh_; ++k){
+                    size_t nk = idx_h_[k];
+                    Da -= integral_->aptei_aa(ni, na, na, nk) * Da_[nk][ni];
+                }
+
+                for(size_t v = 0; v < na_; ++v){
+                    size_t nv = idx_a_[v];
+                    Da += integral_->aptei_aa(ni, nv, na, ni) * Da_[na][nv];
+                }
+
+                if(std::fabs(Da) < small_threshold){
+                    smallD1.push_back(std::make_pair(std::vector<size_t> {ni,na}, Da));
+                }
             }
         }
     }
 
-    // core-active block
-    for(size_t n = 0; n < nc_; ++n){
-        size_t nn = idx_c_[n];
-        for(size_t v = 0; v < na_; ++v){
-            size_t nv = idx_a_[v];
-            if((sym_ncmo_[nn] ^ sym_ncmo_[nv]) != 0) continue;
+//    // core-virtual block
+//    for(size_t n = 0; n < nc_; ++n){
+//        size_t nn = idx_c_[n];
+//        for(size_t f = 0; f < nv_; ++f){
+//            size_t nf = idx_v_[f];
+//            if((sym_ncmo_[nn] ^ sym_ncmo_[nf]) != 0) continue;
 
-            double Da = Fa_[nn][nn] - Fa_[nv][nv];
-            Da -= integral_->aptei_aa(nn, nv, nv, nn);
-            for(size_t y = 0; y < na_; ++y){
-                size_t ny = idx_a_[y];
-                Da += Da_[nv][ny] * integral_->aptei_aa(nn, ny, nv, nn);
-            }
+//            double Da = Fa_[nn][nn] - Fa_[nf][nf];
+//            Da -= integral_->aptei_aa(nn, nf, nf, nn);
 
-            if(std::fabs(Da) < small_threshold){
-                smallD1.push_back(std::make_pair(std::vector<size_t> {nn,nv}, Da));
-            }
-        }
-    }
+//            if(std::fabs(Da) < small_threshold){
+//                smallD1.push_back(std::make_pair(std::vector<size_t> {nn,nf}, Da));
+//            }
+//        }
+//    }
 
-    // active-virtual block
-    for(size_t x = 0; x < na_; ++x){
-        size_t nx = idx_a_[x];
-        for(size_t f = 0; f < nv_; ++f){
-            size_t nf = idx_v_[f];
-            if((sym_ncmo_[nx] ^ sym_ncmo_[nf]) != 0) continue;
+//    // core-active block
+//    for(size_t n = 0; n < nc_; ++n){
+//        size_t nn = idx_c_[n];
+//        for(size_t v = 0; v < na_; ++v){
+//            size_t nv = idx_a_[v];
+//            if((sym_ncmo_[nn] ^ sym_ncmo_[nv]) != 0) continue;
 
-            double Da = Fa_[nx][nx] - Fa_[nf][nf];
-            for(size_t u = 0; u < na_; ++u){
-                size_t nu = idx_a_[u];
-                Da -= Da_[nu][nx] * integral_->aptei_aa(nx, nf, nf, nu);
-            }
+//            double Da = Fa_[nn][nn] - Fa_[nv][nv];
+//            Da -= integral_->aptei_aa(nn, nv, nv, nn);
+//            for(size_t y = 0; y < na_; ++y){
+//                size_t ny = idx_a_[y];
+//                Da += Da_[nv][ny] * integral_->aptei_aa(nn, ny, nv, nn);
+//            }
 
-            if(std::fabs(Da) < small_threshold){
-                smallD1.push_back(std::make_pair(std::vector<size_t> {nx,nf}, Da));
-            }
-        }
-    }
+//            if(std::fabs(Da) < small_threshold){
+//                smallD1.push_back(std::make_pair(std::vector<size_t> {nn,nv}, Da));
+//            }
+//        }
+//    }
+
+//    // active-virtual block
+//    for(size_t x = 0; x < na_; ++x){
+//        size_t nx = idx_a_[x];
+//        for(size_t f = 0; f < nv_; ++f){
+//            size_t nf = idx_v_[f];
+//            if((sym_ncmo_[nx] ^ sym_ncmo_[nf]) != 0) continue;
+
+//            double Da = Fa_[nx][nx] - Fa_[nf][nf];
+//            for(size_t u = 0; u < na_; ++u){
+//                size_t nu = idx_a_[u];
+//                Da -= Da_[nu][nx] * integral_->aptei_aa(nx, nf, nf, nu);
+//            }
+
+//            if(std::fabs(Da) < small_threshold){
+//                smallD1.push_back(std::make_pair(std::vector<size_t> {nx,nf}, Da));
+//            }
+//        }
+//    }
 
     // print
     print_h2("Small Denominators for T1 with RE Partitioning");
@@ -924,6 +924,157 @@ void MCSRGPT2_MO::test_D1_RE(){
             double D = pair.second;
             double Dold = Fa_[i][i] - Fa_[j][j];
             outfile->Printf("\n    %4zu %4zu    %15.12f    %15.12f", i, j, D, Dold);
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+    }
+}
+
+void MCSRGPT2_MO::test_D2_RE(){
+    double small_threshold = 0.5;
+    std::vector<std::pair<std::vector<size_t>, double>> smallD2aa;
+    std::vector<std::pair<std::vector<size_t>, double>> smallD2ab;
+
+    for(size_t i = 0; i < nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t j = i; j < nh_; ++j){
+            size_t nj = idx_h_[j];
+            for(size_t a = 0; a < npt_; ++a){
+                size_t na = idx_p_[a];
+                for(size_t b = a; b < npt_; ++b){
+                    size_t nb = idx_p_[b];
+
+                    // product must be all symmetric
+                    if((sym_ncmo_[ni] ^ sym_ncmo_[nj] ^ sym_ncmo_[na] ^ sym_ncmo_[nb]) != 0) continue;
+
+                    // cannot be all active
+                    if(std::find(idx_a_.begin(), idx_a_.end(), ni) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), nj) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), na) != idx_a_.end() &&
+                       std::find(idx_a_.begin(), idx_a_.end(), nb) != idx_a_.end()) {
+                        continue;
+                    }else{
+                        double Daa = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                        double Dab = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+
+                        for(size_t c = 0; c < npt_; ++c){
+                            size_t nc = idx_p_[c];
+                            for(size_t d = 0; d < npt_; ++d){
+                                size_t nd = idx_p_[d];
+                                Daa -= 0.5 * integral_->aptei_aa(nc, nd, na, nb) * (1.0 - Da_[na][nc]) * (1.0 - Da_[nb][nd]);
+                                Dab -= integral_->aptei_ab(nc, nd, na, nb) * (1.0 - Da_[na][nc]) * (1.0 - Db_[nb][nd]);
+                            }
+                        }
+
+                        for(size_t v = 0; v < na_; ++v){
+                            size_t nv = idx_a_[v];
+                            for(size_t y = 0; y < na_; ++y){
+                                size_t ny = idx_a_[y];
+                                Daa += 0.5 * integral_->aptei_aa(nv, ny, na, nb) * Da_[na][nv] * Da_[nb][ny];
+                                Dab += integral_->aptei_ab(nv, ny, na, nb) * Da_[na][nv] * Db_[nb][ny];
+                            }
+                        }
+
+                        for(size_t k = 0; k < nh_; ++k){
+                            size_t nk = idx_h_[k];
+                            for(size_t l = 0; l < nh_; ++l){
+                                size_t nl = idx_h_[l];
+                                Daa -= 0.5 * integral_->aptei_aa(ni, nj, nk, nl) * Da_[nk][ni] * Da_[nl][nj];
+                                Dab -= integral_->aptei_ab(ni, nj, nk, nl) * Da_[nk][ni] * Db_[nl][nj];
+                            }
+                        }
+
+                        for(size_t u = 0; u < na_; ++u){
+                            size_t nu = idx_a_[u];
+                            for(size_t x = 0; x < na_; ++x){
+                                size_t nx = idx_a_[x];
+                                Daa += 0.5 * integral_->aptei_aa(ni, nj, nu, nx) * (1.0 - Da_[nu][ni]) * (1.0 - Da_[nx][nj]);
+                                Dab += integral_->aptei_ab(ni, nj, nu, nx) * (1.0 - Da_[nu][ni]) * (1.0 - Db_[nx][nj]);
+                            }
+                        }
+
+                        for(size_t k = 0; k < nh_; ++k){
+                            size_t nk = idx_h_[k];
+
+                            Daa -= integral_->aptei_aa(na, ni, nk, na) * Da_[nk][ni];
+                            Daa -= integral_->aptei_aa(nb, ni, nk, nb) * Da_[nk][ni];
+                            Daa -= integral_->aptei_aa(na, nj, nk, na) * Da_[nk][nj];
+                            Daa -= integral_->aptei_aa(nb, nj, nk, nb) * Da_[nk][nj];
+
+                            Dab -= integral_->aptei_aa(na, ni, nk, na) * Da_[nk][ni];
+                            Dab += integral_->aptei_ab(ni, nb, nk, nb) * Da_[nk][ni];
+                            Dab += integral_->aptei_ab(na, nj, na, nk) * Db_[nk][nj];
+                            Dab -= integral_->aptei_bb(nb, nj, nk, nb) * Da_[nk][nj];
+                        }
+
+                        for(size_t y = 0; y < na_; ++y){
+                            size_t ny = idx_a_[y];
+
+                            Daa += integral_->aptei_aa(ny, ni, ni, na) * Da_[na][ny];
+                            Daa += integral_->aptei_aa(ny, ni, ni, nb) * Da_[nb][ny];
+                            Daa += integral_->aptei_aa(ny, nj, nj, na) * Da_[na][ny];
+                            Daa += integral_->aptei_aa(ny, nj, nj, nb) * Da_[nb][ny];
+
+                            Dab -= integral_->aptei_aa(ny, ni, ni, na) * Da_[na][ny];
+                            Dab += integral_->aptei_ab(ni, ny, ni, nb) * Db_[nb][ny];
+                            Dab += integral_->aptei_ab(ny, nj, na, nj) * Da_[na][ny];
+                            Dab -= integral_->aptei_bb(ny, nj, nj, nb) * Db_[nb][ny];
+                        }
+
+                        if(std::fabs(Daa) < small_threshold && ni != nj && na != nb){
+                            smallD2aa.push_back(std::make_pair(std::vector<size_t> {ni,nj,na,nb}, Daa));
+                        }
+                        if(std::fabs(Dab) < small_threshold){
+                            smallD2ab.push_back(std::make_pair(std::vector<size_t> {ni,nj,na,nb}, Dab));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // print
+    print_h2("Small Denominators for T2aa with RE Partitioning");
+    if(smallD2aa.size() == 0){
+        outfile->Printf("\n    NULL.");
+    }else{
+        std::string indent(4, ' ');
+        std::string dash(57, '-');
+        std::string title = indent +
+                str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" % "Denominator"
+                    % "Original Denom.") + indent + dash;
+        outfile->Printf("\n%s", title.c_str());
+        for(const auto& pair: smallD2aa){
+            size_t i = pair.first[0];
+            size_t j = pair.first[1];
+            size_t k = pair.first[2];
+            size_t l = pair.first[3];
+            double D = pair.second;
+            double Dold = Fa_[i][i] + Fa_[j][j] - Fa_[k][k] - Fa_[l][l];
+            outfile->Printf("\n    %4zu %4zu %4zu %4zu    %15.12f    %15.12f",
+                            i, j, k, l, D, Dold);
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+    }
+
+    print_h2("Small Denominators for T2ab with RE Partitioning");
+    if(smallD2ab.size() == 0){
+        outfile->Printf("\n    NULL.");
+    }else{
+        std::string indent(4, ' ');
+        std::string dash(57, '-');
+        std::string title = indent +
+                str(boost::format("%=19s    %=15s    %=15s\n") % "Indices" % "Denominator"
+                    % "Original Denom.") + indent + dash;
+        outfile->Printf("\n%s", title.c_str());
+        for(const auto& pair: smallD2ab){
+            size_t i = pair.first[0];
+            size_t j = pair.first[1];
+            size_t k = pair.first[2];
+            size_t l = pair.first[3];
+            double D = pair.second;
+            double Dold = Fa_[i][i] + Fb_[j][j] - Fa_[k][k] - Fb_[l][l];
+            outfile->Printf("\n    %4zu %4zu %4zu %4zu    %15.12f    %15.12f",
+                            i, j, k, l, D, Dold);
         }
         outfile->Printf("\n    %s", dash.c_str());
     }
