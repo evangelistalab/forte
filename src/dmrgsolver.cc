@@ -377,7 +377,7 @@ void DMRGSolver::compute_energy()
         while( getline( copying, line ) ){ (*outfile) << line << endl; }
         copying.close();
     }
-    //system(("rm " + chemps2filename).c_str());
+    system(("rm " + chemps2filename).c_str());
 
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
