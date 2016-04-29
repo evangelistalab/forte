@@ -448,95 +448,106 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
 void MRDSRG::update_t2_std(){
     T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
-    // create a temporary tensor
-    BlockedTensor R2 = ambit::BlockedTensor::build(tensor_type_,"R2",spin_cases({"hhpp"}));
-    R2["ijab"] = T2_["ijab"];
-    R2["iJaB"] = T2_["iJaB"];
-    R2["IJAB"] = T2_["IJAB"];
-    // transform to semi-canonical basis
+    // use the delta_t algorithm as the old Hbar and T will be modified
+    // Step 1: work on Hbar2 and DT2 is treated as intermediate
+
+    // transform Hbar2 to semi-canonical basis
     if(!semi_canonical_){
-        BlockedTensor tempR2 = ambit::BlockedTensor::build(tensor_type_,"Temp R2",spin_cases({"hhpp"}));
-        tempR2["klab"] = U_["ki"] * U_["lj"] * R2["ijab"];
-        tempR2["kLaB"] = U_["ki"] * U_["LJ"] * R2["iJaB"];
-        tempR2["KLAB"] = U_["KI"] * U_["LJ"] * R2["IJAB"];
-        R2["ijcd"] = tempR2["ijab"] * U_["db"] * U_["ca"];
-        R2["iJcD"] = tempR2["iJaB"] * U_["DB"] * U_["ca"];
-        R2["IJCD"] = tempR2["IJAB"] * U_["DB"] * U_["CA"];
-
-        BlockedTensor tempH2 = ambit::BlockedTensor::build(tensor_type_,"Temp Hbar2",spin_cases({"hhpp"}));
-        tempH2["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
-        tempH2["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
-        tempH2["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
-        Hbar2_["ijcd"] = tempH2["ijab"] * U_["db"] * U_["ca"];
-        Hbar2_["iJcD"] = tempH2["iJaB"] * U_["DB"] * U_["ca"];
-        Hbar2_["IJCD"] = tempH2["IJAB"] * U_["DB"] * U_["CA"];
+        DT2_["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
+        DT2_["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
+        DT2_["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
+        Hbar2_["ijcd"] = DT2_["ijab"] * U_["db"] * U_["ca"];
+        Hbar2_["iJcD"] = DT2_["iJaB"] * U_["DB"] * U_["ca"];
+        Hbar2_["IJCD"] = DT2_["IJAB"] * U_["DB"] * U_["CA"];
     }
-    // scale by delta
-    R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-            value *= Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
-        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-            value *= Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];
-        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-            value *= Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]];
-        }
-    });
-    // add Hbar2
-    R2["ijab"] += Hbar2_["ijab"];
-    R2["iJaB"] += Hbar2_["iJaB"];
-    R2["IJAB"] += Hbar2_["IJAB"];
 
-    R2.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    // scale Hbar2 by renormalized denominator
+    Hbar2_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
             value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-            t2aa_norm_ += value * value;
         }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
             value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-            t2ab_norm_ += value * value;
         }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
             value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+        }
+    });
+
+    // copy renormalized Hbar2 to DT2
+    DT2_["ijab"] = Hbar2_["ijab"];
+    DT2_["iJaB"] = Hbar2_["iJaB"];
+    DT2_["IJAB"] = Hbar2_["IJAB"];
+
+    // Step 2: work on T2 and Hbar2 is treated as intermediate
+
+    // copy T2 to Hbar2
+    Hbar2_["ijab"] = T2_["ijab"];
+    Hbar2_["iJaB"] = T2_["iJaB"];
+    Hbar2_["IJAB"] = T2_["IJAB"];
+
+    // transform T2 to semi-canonical basis
+    if(!semi_canonical_){
+        BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp for T2 update",spin_cases({"hhpp"}));
+        temp["klab"] = U_["ki"] * U_["lj"] * Hbar2_["ijab"];
+        temp["kLaB"] = U_["ki"] * U_["LJ"] * Hbar2_["iJaB"];
+        temp["KLAB"] = U_["KI"] * U_["LJ"] * Hbar2_["IJAB"];
+        Hbar2_["ijcd"] = temp["ijab"] * U_["db"] * U_["ca"];
+        Hbar2_["iJcD"] = temp["iJaB"] * U_["DB"] * U_["ca"];
+        Hbar2_["IJCD"] = temp["IJAB"] * U_["DB"] * U_["CA"];
+    }
+
+    // scale T2 by delta exponential
+    Hbar2_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
+            value *= dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+        }
+    });
+
+    // minus the renormalized T2 from renormalized Hbar2
+    DT2_["ijab"] -= Hbar2_["ijab"];
+    DT2_["iJaB"] -= Hbar2_["iJaB"];
+    DT2_["IJAB"] -= Hbar2_["IJAB"];
+
+    // zero internal amplitudes
+    for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+        DT2_.block(block).iterate([&](const std::vector<size_t>&, double& value){
+            value = 0.0;
+        });
+    }
+
+    // compute RMS
+    T2rms_ = DT2_.norm();
+
+    // transform DT2 back to original basis
+    if(!semi_canonical_){
+        Hbar2_["klab"] = U_["ik"] * U_["jl"] * DT2_["ijab"];
+        Hbar2_["kLaB"] = U_["ik"] * U_["JL"] * DT2_["iJaB"];
+        Hbar2_["KLAB"] = U_["IK"] * U_["JL"] * DT2_["IJAB"];
+        DT2_["ijcd"] = Hbar2_["ijab"] * U_["bd"] * U_["ac"];
+        DT2_["iJcD"] = Hbar2_["iJaB"] * U_["BD"] * U_["ac"];
+        DT2_["IJCD"] = Hbar2_["IJAB"] * U_["BD"] * U_["AC"];
+    }
+
+    // Step 3: update and analyze T2
+    T2_["ijab"] += DT2_["ijab"];
+    T2_["iJaB"] += DT2_["iJaB"];
+    T2_["IJAB"] += DT2_["IJAB"];
+
+    // compute norm and find maximum
+    T2_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
+            t2aa_norm_ += value * value;
+        }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
+            t2ab_norm_ += value * value;
+        }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
             t2bb_norm_ += value * value;
         }
         if (std::fabs(value) > std::fabs(T2max_)) T2max_ = value;
     });
 
-    // transform back to non-canonical basis
-    if(!semi_canonical_){
-        BlockedTensor tempR2 = ambit::BlockedTensor::build(tensor_type_,"Temp R2",spin_cases({"hhpp"}));
-        tempR2["klab"] = U_["ik"] * U_["jl"] * R2["ijab"];
-        tempR2["kLaB"] = U_["ik"] * U_["JL"] * R2["iJaB"];
-        tempR2["KLAB"] = U_["IK"] * U_["JL"] * R2["IJAB"];
-        R2["ijcd"] = tempR2["ijab"] * U_["bd"] * U_["ac"];
-        R2["iJcD"] = tempR2["iJaB"] * U_["BD"] * U_["ac"];
-        R2["IJCD"] = tempR2["IJAB"] * U_["BD"] * U_["AC"];
-    }
-
-    // zero internal amplitudes
-    R2.block("aaaa").iterate([&](const std::vector<size_t>& i,double& value){
-        t2aa_norm_ -= value * value;
-        value = 0.0;
-    });
-    R2.block("aAaA").iterate([&](const std::vector<size_t>& i,double& value){
-        t2ab_norm_ -= value * value;
-        value = 0.0;
-    });
-    R2.block("AAAA").iterate([&](const std::vector<size_t>& i,double& value){
-        t2bb_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // compute RMS
-    DT2_["ijab"] = T2_["ijab"] - R2["ijab"];
-    DT2_["iJaB"] = T2_["iJaB"] - R2["iJaB"];
-    DT2_["IJAB"] = T2_["IJAB"] - R2["IJAB"];
-    T2rms_ = DT2_.norm();
-
-    // copy R2 to T2
-    T2_["ijab"] = R2["ijab"];
-    T2_["iJaB"] = R2["iJaB"];
-    T2_["IJAB"] = R2["IJAB"];
-
-    // norms
     T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
     t2aa_norm_ = std::sqrt(t2aa_norm_);
     t2ab_norm_ = std::sqrt(t2ab_norm_);
@@ -546,77 +557,90 @@ void MRDSRG::update_t2_std(){
 void MRDSRG::update_t1_std(){
     T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
-    // create a temporary tensor
-    BlockedTensor R1 = ambit::BlockedTensor::build(tensor_type_,"R1",spin_cases({"hp"}));
-    R1["ia"] = T1_["ia"];
-    R1["IA"] = T1_["IA"];
-    // transform to semi-canonical basis
+    // use the delta_t algorithm as the old Hbar and T will be modified
+    // Step 1: work on Hbar1 and DT1 is treated as intermediate
+
+    // transform Hbar1 to semi-canonical basis
     if(!semi_canonical_){
-        BlockedTensor tempR1 = ambit::BlockedTensor::build(tensor_type_,"Temp R1",spin_cases({"hp"}));
-        tempR1["jb"] = U_["ji"] * R1["ia"] * U_["ba"];
-        tempR1["JB"] = U_["JI"] * R1["IA"] * U_["BA"];
-        R1["ia"] = tempR1["ia"];
-        R1["IA"] = tempR1["IA"];
-
-        BlockedTensor tempH1 = ambit::BlockedTensor::build(tensor_type_,"Temp Hbar1",spin_cases({"hp"}));
-        tempH1["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
-        tempH1["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
-        Hbar1_["ia"] = tempH1["ia"];
-        Hbar1_["IA"] = tempH1["IA"];
+        DT1_["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
+        DT1_["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
+        Hbar1_["ia"] = DT1_["ia"];
+        Hbar1_["IA"] = DT1_["IA"];
     }
-    // scale by delta
-    R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin){
-            value *= Fa_[i[0]] - Fa_[i[1]];
-        }else{
-            value *= Fb_[i[0]] - Fb_[i[1]];
-        }
-    });
-    // add Hbar1
-    R1["ia"] += Hbar1_["ia"];
-    R1["IA"] += Hbar1_["IA"];
 
-    R1.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+    // scale Hbar1 by renormalized denominator
+    Hbar1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin){
             value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-            t1a_norm_ += value * value;
         }else{
             value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+        }
+    });
+
+    // copy renormalized Hbar1 to DT1
+    DT1_["ia"] = Hbar1_["ia"];
+    DT1_["IA"] = Hbar1_["IA"];
+
+    // Step 2: work on T1 and Hbar1 is treated as intermediate
+
+    // copy T1 to Hbar1
+    Hbar1_["ia"] = T1_["ia"];
+    Hbar1_["IA"] = T1_["IA"];
+
+    // transform T1 to semi-canonical basis
+    if(!semi_canonical_){
+        BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp for T1 update",spin_cases({"hp"}));
+        temp["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
+        temp["JB"] = U_["JI"] * Hbar1_["IA"] * U_["BA"];
+        Hbar1_["ia"] = temp["ia"];
+        Hbar1_["IA"] = temp["IA"];
+    }
+
+    // scale T1 by delta exponential
+    Hbar1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
+        }else{
+            value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
+        }
+    });
+
+    // minus the renormalized T1 from renormalized Hbar1
+    DT1_["ia"] -= Hbar1_["ia"];
+    DT1_["IA"] -= Hbar1_["IA"];
+
+    // zero internal amplitudes
+    for(const std::string& block: {"aa", "AA"}){
+        DT1_.block(block).iterate([&](const std::vector<size_t>&, double& value){
+            value = 0.0;
+        });
+    }
+
+    // compute RMS
+    T1rms_ = DT1_.norm();
+
+    // transform DT1 back to original basis
+    if(!semi_canonical_){
+        Hbar1_["jb"] = U_["ji"] * DT1_["ia"] * U_["ba"];
+        Hbar1_["JB"] = U_["JI"] * DT1_["IA"] * U_["BA"];
+        DT1_["ia"] = Hbar1_["ia"];
+        DT1_["IA"] = Hbar1_["IA"];
+    }
+
+    // Step 3: update and analyze T1
+    T1_["ia"] += DT1_["ia"];
+    T1_["IA"] += DT1_["IA"];
+
+    // compute norm and find maximum
+    T1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            t1a_norm_ += value * value;
+        }else{
             t1b_norm_ += value * value;
         }
-
         if (std::fabs(value) > std::fabs(T1max_)) T1max_ = value;
     });
 
-    // transform back to non-canonical basis
-    if(!semi_canonical_){
-        BlockedTensor tempR1 = ambit::BlockedTensor::build(tensor_type_,"Temp R1",spin_cases({"hp"}));
-        tempR1["jb"] = U_["ij"] * R1["ia"] * U_["ab"];
-        tempR1["JB"] = U_["IJ"] * R1["IA"] * U_["AB"];
-        R1["ia"] = tempR1["ia"];
-        R1["IA"] = tempR1["IA"];
-    }
-
-    // zero internal amplitudes
-    R1.block("aa").iterate([&](const std::vector<size_t>& i,double& value){
-        t1a_norm_ -= value * value;
-        value = 0.0;
-    });
-    R1.block("AA").iterate([&](const std::vector<size_t>& i,double& value){
-        t1b_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // compute RMS
-    DT1_["ia"] = T1_["ia"] - R1["ia"];
-    DT1_["IA"] = T1_["IA"] - R1["IA"];
-    T1rms_ = DT1_.norm();
-
-    // copy R1 to T1
-    T1_["ia"] = R1["ia"];
-    T1_["IA"] = R1["IA"];
-
-    // norms
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
     t1b_norm_ = std::sqrt(t1b_norm_);

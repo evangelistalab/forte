@@ -48,7 +48,7 @@ protected:
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
 
-    /// The RDM
+    /// The 2-RDMs
     ambit::Tensor g2aa_;
     ambit::Tensor g2ab_;
     ambit::Tensor g2bb_;
@@ -62,7 +62,6 @@ public:
 
     /// Obtain reference energy
     double get_Eref() {return Eref_;}
-    /// Use RDM as reference rather than cumulants
 
     /// Obtain density cumulants
     ambit::Tensor L1a() {return L1a_;}
@@ -74,7 +73,8 @@ public:
     ambit::Tensor L3aab() {return L3aab_;}
     ambit::Tensor L3abb() {return L3abb_;}
     ambit::Tensor L3bbb() {return L3bbb_;}
-    /// The RDM
+
+    /// Obtain 2-RDMs
     ambit::Tensor g2aa() {return g2aa_;}
     ambit::Tensor g2ab() {return g2ab_;}
     ambit::Tensor g2bb() {return g2bb_;}
