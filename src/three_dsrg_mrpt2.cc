@@ -283,18 +283,6 @@ void THREE_DSRG_MRPT2::startup()
     Lambda2_aA("pqrs") = reference_.L2ab()("pqrs");
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
-    Lambda3_ = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
-    if(options_.get_str("THREEPDC") != "ZERO"){
-        ambit::Tensor Lambda3_aaa = Lambda3_.block("aaaaaa");
-        ambit::Tensor Lambda3_aaA = Lambda3_.block("aaAaaA");
-        ambit::Tensor Lambda3_aAA = Lambda3_.block("aAAaAA");
-        ambit::Tensor Lambda3_AAA = Lambda3_.block("AAAAAA");
-        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-    }
-
     // Prepare exponential tensors for effective Fock matrix and integrals
 
     RExp1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -316,9 +304,6 @@ void THREE_DSRG_MRPT2::startup()
     }
     if(print_ > 2){
         Lambda2_.print(stdout);
-    }
-    if(print_ > 3){
-        Lambda3_.print(stdout);
     }
 
     integral_type_ = ints_->integral_type();
@@ -1231,6 +1216,22 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     std::string str = "Computing [V, T2] λ3";
     outfile->Printf("\n    %-36s ...", str.c_str());
     double E = 0.0;
+    BlockedTensor Lambda3;
+
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        Lambda3 = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
+        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
+    }
+    if(print_ > 3)
+        Lambda3.print(stdout);
+
 
     if(options_.get_str("THREEPDC") != "ZERO"){
         BlockedTensor temp;
@@ -1240,8 +1241,8 @@ double THREE_DSRG_MRPT2::E_VT2_6()
         temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
         temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
         temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
-        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
-        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
+        E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
+        E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
         temp["uvWxyZ"] -= V_["uviy"] * T2_["iWxZ"];      //  aaAaaA from hole
         temp["uvWxyZ"] -= V_["uWiZ"] * T2_["ivxy"];      //  aaAaaA from hole
@@ -1253,7 +1254,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
         temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
         temp["uvWxyZ"] -= V_["vAxZ"] * T2_["uWyA"];      //  aaAaaA from particle
 
-        E += 0.50 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
+        E += 0.50 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
         temp["uVWxYZ"] -= V_["VWIZ"] * T2_["uIxY"];      //  aAAaAA from hole
         temp["uVWxYZ"] -= V_["uVxI"] * T2_["IWYZ"];      //  aAAaAA from hole
@@ -1265,7 +1266,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
         temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
         temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
 
-        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+        E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
     }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -2333,17 +2334,26 @@ void THREE_DSRG_MRPT2::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const doub
     temp["uVxY"] += Eta1_["ZW"] * H2["WVMY"] * T2["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    // <[Hbar2, T2]> C_6 C_2
+    // <[Hbar2, T2]> C_6 C_2_
     if(options_.get_str("THREEPDC") != "ZERO"){
+        BlockedTensor Lambda3 = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
+        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
+        ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
+        ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
+        ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
+        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
+        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
+        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
+        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];      //  aaaaaa from hole
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];      //  aaaaaa from particle
-        E += 0.25 * temp["uvwxyz"] * Lambda3_["xyzuvw"];
+        E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
 
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
         temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
         temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
-        E += 0.25 * temp["UVWXYZ"] * Lambda3_["XYZUVW"];
+        E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
         temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
@@ -2355,7 +2365,7 @@ void THREE_DSRG_MRPT2::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const doub
         temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
         temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
         temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-        E += 0.5 * temp["uvWxyZ"] * Lambda3_["xyZuvW"];
+        E += 0.5 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
 
         temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
         temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
@@ -2367,7 +2377,7 @@ void THREE_DSRG_MRPT2::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const doub
         temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
         temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
         temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-        E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
+        E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
     }
 
     // multiply prefactor and copy to C0
