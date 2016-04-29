@@ -1412,7 +1412,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BmaVec[thread] = ints_->three_integral_block_two_index(naux, ma, virt_mos);
                 BmbVec[thread] = ints_->three_integral_block_two_index(naux, ma, virt_mos);
             }
-            for(size_t n = 0; n < core_; ++n){
+            for(size_t n = m; n < core_; ++n){
                 size_t na = acore_mos_[n];
                 size_t nb = bcore_mos_[n];
                 #pragma omp critical
@@ -1420,6 +1420,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                     BnaVec[thread] = ints_->three_integral_block_two_index(naux, na, virt_mos);
                     BnbVec[thread] = ints_->three_integral_block_two_index(naux, na, virt_mos);
                 }
+                double factor = (m < n) ? 2.0 : 1.0;
 
                 // alpha-aplha
                 BefVec[thread].zero();
@@ -1432,7 +1433,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ealpha += 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+                Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 BefVec[thread].zero();
                 BefJKVec[thread].zero();
@@ -1456,7 +1457,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Emixed += BefJKVec[thread]("eF") * RDVec[thread]("eF");
+                Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }
         }
     }
@@ -1502,13 +1503,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             //std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
             std::copy(&Ba.data()[m * dim], &Ba.data()[m * dim + dim], BmbVec[thread].data().begin());
 
-            for(size_t n = 0; n < core_; ++n){
+            for(size_t n = m; n < core_; ++n){
                 size_t na = acore_mos_[n];
                 size_t nb = bcore_mos_[n];
                 
                 std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnaVec[thread].data().begin());
                 //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
                 std::copy(&Ba.data()[n * dim], &Ba.data()[n * dim + dim], BnbVec[thread].data().begin());
+
+                double factor = (m < n) ? 2.0 : 1.0;
 
                 // alpha-aplha
                 BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
@@ -1517,7 +1520,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Ealpha += 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+                Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 // beta-beta
                 //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
@@ -1534,7 +1537,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                Emixed += BefJKVec[thread]("eF") * RDVec[thread]("eF");
+                Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }  
         }
     }

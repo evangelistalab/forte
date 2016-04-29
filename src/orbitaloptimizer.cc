@@ -111,7 +111,7 @@ void OrbitalOptimizer::startup()
             cas_ = true;
         }
         else{
-            cas_ = false;
+            cas_ = true;
         }
     }
     else if(options_.get_str("CAS_TYPE") == "DMRG")
@@ -123,6 +123,7 @@ void OrbitalOptimizer::startup()
         outfile->Printf("\n\n You set your CAS_TYPE to %s.", options_.get_str("CAS_TYPE").c_str());
         throw PSIEXCEPTION("You did not specify your CAS_TYPE correctly.");
     }
+    cas_ = true;
 }
 void OrbitalOptimizer::orbital_gradient()
 {
@@ -702,10 +703,14 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates()
     }
     ///Back transform 1-RDM to AO basis
     C_active_ao = Matrix::triplet(C_active, gamma1_sym, C_active, false, false, true);
+    if(casscf_debug_print_)
+        C_active_ao->print();
     //boost::shared_ptr<JK> JK_fock = JK::build_JK(wfn_->basisset(),options_ );
     //JK_fock->set_memory(Process::environment.get_memory() * 0.8);
     //JK_fock->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     //JK_fock->initialize();
+    JK_->set_allow_desymmetrization(true);
+    JK_->set_do_K(true);
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
     std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
 
