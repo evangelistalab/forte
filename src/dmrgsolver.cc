@@ -329,12 +329,12 @@ void DMRGSolver::compute_energy()
     if(max_rdm_ > 2)
         std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
 
-    std::ofstream capturing;
-    std::streambuf * cout_buffer;
-    std::string chemps2filename = "DMRG.chemps2";
-    outfile->Printf("\n CheMPS2 output is temporarily written to the file");
-    capturing.open(chemps2filename.c_str(), ios::trunc);
-    cout_buffer = cout.rdbuf( capturing.rdbuf());
+    //std::ofstream capturing;
+    //std::streambuf * cout_buffer;
+    //std::string chemps2filename = "DMRG.chemps2";
+    //outfile->Printf("\n CheMPS2 output is temporarily written to the file");
+    //capturing.open(chemps2filename.c_str(), ios::trunc);
+    //cout_buffer = cout.rdbuf( capturing.rdbuf());
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 
@@ -368,15 +368,15 @@ void DMRGSolver::compute_energy()
     {
         DMRGCI->getCorrelations()->Print();
     }
-    cout.rdbuf(cout_buffer);
-    capturing.close();
-    std::ifstream copying;
-    copying.open( chemps2filename , ios::in ); // read only
-    if (copying.is_open()){
-        string line;
-        while( getline( copying, line ) ){ (*outfile) << line << endl; }
-        copying.close();
-    }
+    //cout.rdbuf(cout_buffer);
+    //capturing.close();
+    //std::ifstream copying;
+    //copying.open( chemps2filename , ios::in ); // read only
+    //if (copying.is_open()){
+    //    string line;
+    //    while( getline( copying, line ) ){ (*outfile) << line << endl; }
+    //    copying.close();
+    //}
     //system(("rm " + chemps2filename).c_str());
 
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);

@@ -319,7 +319,7 @@ void CASSCF::cas_ci()
         ints_->retransform_integrals();
         AdaptiveCI aci(reference_wavefunction_, options_, ints_, mo_space_info_);
         aci.set_max_rdm(2);
-        aci.set_quiet(quiet);
+//        aci.set_quiet(quiet);
         aci.compute_energy();
         cas_ref_ = aci.reference();
         E_casscf_ = cas_ref_.get_Eref();
