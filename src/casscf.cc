@@ -329,6 +329,7 @@ void CASSCF::cas_ci()
 #ifdef  HAVE_CHEMPS2
         DMRGSolver dmrg(reference_wavefunction_, options_, mo_space_info_, ints_);
         dmrg.set_max_rdm(2);
+        dmrg.spin_free_rdm(true);
         std::pair<ambit::Tensor, std::vector<double> > integral_pair = CI_Integrals();
         dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
         dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() + Process::environment.molecule()->nuclear_repulsion_energy());
@@ -377,6 +378,10 @@ void CASSCF::cas_ci()
     gamma_no_spin("i,j") = (gamma1a("i,j") + gamma1b("i,j"));
 
     gamma1_ = gamma_no_spin;
+    if(options_.get_str("CAS_TYPE") == "DMRG")
+    {
+        gamma2_ = cas_ref_.SFg2();
+    }
 
 }
 
