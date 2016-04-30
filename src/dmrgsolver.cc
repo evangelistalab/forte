@@ -85,6 +85,10 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     {
         gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
+        if(spin_free_rdm_)
+        {
+            dmrg_ref.set_SFg2(gamma2_dmrg);
+        }
         /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
         //gamma2_aa.copy(gamma2_dmrg);
         gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
@@ -328,13 +332,6 @@ void DMRGSolver::compute_energy()
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     if(max_rdm_ > 2)
         std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
-
-    //std::ofstream capturing;
-    //std::streambuf * cout_buffer;
-    //std::string chemps2filename = "DMRG.chemps2";
-    //outfile->Printf("\n CheMPS2 output is temporarily written to the file");
-    //capturing.open(chemps2filename.c_str(), ios::trunc);
-    //cout_buffer = cout.rdbuf( capturing.rdbuf());
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 
