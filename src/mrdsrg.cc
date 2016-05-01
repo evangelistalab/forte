@@ -396,6 +396,9 @@ double MRDSRG::compute_energy_relaxed(){
         FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
         fcisolver.set_max_rdm_level(2);
+        fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+        fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
 //        boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
 //        Erelax = fci_mo->compute_energy();
@@ -436,6 +439,9 @@ double MRDSRG::compute_energy_relaxed(){
             fcisolver.set_nroot(options_.get_int("NROOT"));
             fcisolver.set_root(options_.get_int("ROOT"));
             Erelax = fcisolver.compute_energy();
+            fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
+            fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
             Erelax_vec.push_back(Erelax);
             double Edelta_relax = Erelax - Etemp;
             Edelta_relax_vec.push_back(Edelta_relax);
