@@ -241,45 +241,53 @@ void CholeskyIntegrals::deallocate()
 void CholeskyIntegrals::make_fock_matrix(SharedMatrix gamma_aM,SharedMatrix gamma_bM)
 {
     TensorType tensor_type = CoreTensor;
-    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{nthree_,ncmo_, ncmo_ });
+    ambit::Tensor ThreeIntegralTensor = ambit::Tensor::build(tensor_type,"ThreeIndex",{ncmo_, ncmo_, nthree_ });
     ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a",{ncmo_, ncmo_});
     ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b",{ncmo_, ncmo_});
     ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a",{ncmo_, ncmo_});
     ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b",{ncmo_, ncmo_});
 
-    ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
-        value = ThreeIntegral_->get(i[1]*aptei_idx_ + i[2], i[0]);
-    });
-    gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
-        value = gamma_aM->get(i[0],i[1]);
-    });
-    gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
-        value = gamma_bM->get(i[0],i[1]);
-    });
-
-    fock_a.iterate([&](const std::vector<size_t>& i,double& value){
-        value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
-    });
-
-    fock_b.iterate([&](const std::vector<size_t>& i,double& value){
-        value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
-    });
+    //ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = ThreeIntegral_->get(i[0]*aptei_idx_ + i[1], i[2]);
+    //});
+    //gamma_a.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = gamma_aM->get(i[0],i[1]);
+    //});
+    //gamma_b.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = gamma_bM->get(i[0],i[1]);
+    //});
+    std::memcpy(&ThreeIntegralTensor.data()[0], ThreeIntegral_->pointer()[0], sizeof(double) * nthree_ * ncmo_ * ncmo_);
+    std::memcpy(&gamma_a.data()[0], gamma_aM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
+    std::memcpy(&gamma_b.data()[0], gamma_bM->pointer()[0], sizeof(double) * ncmo_ * ncmo_);
+    std::memcpy(&fock_a.data()[0], one_electron_integrals_a, sizeof(double) * ncmo_ * ncmo_);
+    std::memcpy(&fock_b.data()[0], one_electron_integrals_b, sizeof(double) * ncmo_ * ncmo_);
 
 
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_a("r,s");
-    fock_a("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
+    //fock_a.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = one_electron_integrals_a[i[0] * aptei_idx_ + i[1]];
+    //});
 
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -= ThreeIntegralTensor("Q,p,r") * ThreeIntegralTensor("Q,q,s") * gamma_b("r,s");
-    fock_b("p,q") +=  ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
+    //fock_b.iterate([&](const std::vector<size_t>& i,double& value){
+    //    value = one_electron_integrals_b[i[0] * aptei_idx_ + i[1]];
+    //});
 
-    fock_a.iterate([&](const std::vector<size_t>& i,double& value){
-        fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
-    });
-    fock_b.iterate([&](const std::vector<size_t>& i,double& value){
-        fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
-    });
+
+    fock_a("p,q") +=  ThreeIntegralTensor("p,q,Q") * ThreeIntegralTensor("r,s,Q") * gamma_a("r,s");
+    fock_a("p,q") -= ThreeIntegralTensor ("p,r,Q") * ThreeIntegralTensor("q,s,Q") * gamma_a("r,s");
+    fock_a("p,q") +=  ThreeIntegralTensor("p,q,Q") * ThreeIntegralTensor("r,s,Q") * gamma_b("r,s");
+
+    fock_b("p,q") +=  ThreeIntegralTensor("p,q,Q") * ThreeIntegralTensor("r,s,Q") * gamma_b("r,s");
+    fock_b("p,q") -= ThreeIntegralTensor ("p,r,Q") * ThreeIntegralTensor("q,s,Q") * gamma_b("r,s");
+    fock_b("p,q") +=  ThreeIntegralTensor("p,q,Q") * ThreeIntegralTensor("r,s,Q") * gamma_a("r,s");
+
+    //fock_a.iterate([&](const std::vector<size_t>& i,double& value){
+    //    fock_matrix_a[i[0] * aptei_idx_ + i[1]] = value;
+    //});
+    //fock_b.iterate([&](const std::vector<size_t>& i,double& value){
+    //    fock_matrix_b[i[0] * aptei_idx_ + i[1]] = value;
+    //});
+    std::memcpy(fock_matrix_a, &fock_a.data()[0], sizeof(double) * ncmo_ * ncmo_);
+    std::memcpy(fock_matrix_b, &fock_b.data()[0], sizeof(double) * ncmo_ * ncmo_);
 }
 
 void CholeskyIntegrals::resort_integrals_after_freezing()
