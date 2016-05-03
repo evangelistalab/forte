@@ -305,7 +305,9 @@ void DMRGSolver::compute_energy()
     ///If user doesn't specify integrals, compute them yourself.  
     if(one_body_integrals_.empty())
     {
+        Timer one_body_timer;
         one_body_integrals_ = one_body_operator();
+        outfile->Printf("\n OneBody integrals takes %6.5f s", one_body_timer.get());
     }
     
     for(int h = 0; h < iHandler->getNirreps(); h++){
