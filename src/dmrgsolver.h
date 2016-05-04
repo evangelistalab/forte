@@ -32,6 +32,10 @@ public:
     {
         max_rdm_ = max_rdm;
     }
+    void spin_free_rdm(bool spin_free)
+    {
+        spin_free_rdm_ = spin_free;
+    }
     void set_up_integrals(const ambit::Tensor& active_integrals, const std::vector<double>& one_body)
     {
         active_integrals_ = active_integrals;
@@ -56,6 +60,7 @@ private:
     void startup();
     /// By default, compute the second rdm.  If you are doing MRPT2, may need to change this.
     int max_rdm_ = 3;
+    bool spin_free_rdm_ = false;
     int chemps2_groupnumber(const string SymmLabel);
     ambit::Tensor active_integrals_;
     std::vector<double> one_body_integrals_;
