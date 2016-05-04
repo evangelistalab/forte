@@ -11,6 +11,10 @@
 #define PSIF_V2RDM_D2AA       270
 #define PSIF_V2RDM_D2AB       271
 #define PSIF_V2RDM_D2BB       272
+#define PSIF_V2RDM_D3AAA      273
+#define PSIF_V2RDM_D3AAB      274
+#define PSIF_V2RDM_D3BBA      275
+#define PSIF_V2RDM_D3BBB      276
 
 using namespace ambit;
 namespace psi{ namespace forte{
@@ -80,15 +84,10 @@ protected:
     ambit::Tensor D1b_;    // only in active
 
     /// Two particle density matrix
-    ambit::Tensor D2aa_;
-    ambit::Tensor D2ab_;
-    ambit::Tensor D2bb_;
+    std::vector<ambit::Tensor> D2_; // D2aa, D2ab, D2bb
 
     /// Three particle density matrix
-    ambit::Tensor D3aaa_;
-    ambit::Tensor D3aab_;
-    ambit::Tensor D3abb_;
-    ambit::Tensor D3bbb_;
+    std::vector<ambit::Tensor> D3_; // D3aaa, D3aab, D3abb, D3bbb
 };
 
 }}

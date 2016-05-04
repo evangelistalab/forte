@@ -625,4 +625,127 @@ void MRDSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("222",timer.get());
 }
 
+void MRDSRG::H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, double& C0){
+    Timer timer;
+
+    double E = 0.0;
+    E += H1["qm"] * G1["mq"];
+    E += H1["qu"] * G1["vq"] * Gamma1_["uv"];
+    E -= H1["mp"] * G1["pm"];
+    E -= H1["vp"] * G1["pu"] * Gamma1_["uv"];
+
+    E += H1["QM"] * G1["MQ"];
+    E += H1["QU"] * G1["VQ"] * Gamma1_["UV"];
+    E -= H1["MP"] * G1["PM"];
+    E -= H1["VP"] * G1["PU"] * Gamma1_["UV"];
+
+    E *= alpha;
+    C0 += E;
+
+    dsrg_time_.add("110",timer.get());
+}
+
+void MRDSRG::H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, double& C0){
+    Timer timer;
+
+    BlockedTensor temp;
+    double E = 0.0;
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaa"});
+    temp["xyuv"] += H1["qu"] * G2["xyqv"];
+    temp["xyuv"] -= H1["xp"] * G2["pyuv"];
+    E += 0.5 * temp["xyuv"] * Lambda2_["uvxy"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAA"});
+    temp["XYUV"] += H1["QU"] * G2["XYQV"];
+    temp["XYUV"] -= H1["XP"] * G2["PYUV"];
+    E += 0.5 * temp["XYUV"] * Lambda2_["UVXY"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAaA"});
+    temp["xYuV"] += H1["qu"] * G2["xYqV"];
+    temp["xYuV"] += H1["QV"] * G2["xYuQ"];
+    temp["xYuV"] -= H1["xp"] * G2["pYuV"];
+    temp["xYuV"] -= H1["YP"] * G2["xPuV"];
+    E += temp["xYuV"] * Lambda2_["uVxY"];
+
+    E  *= alpha;
+    C0 += E;
+    dsrg_time_.add("120",timer.get());
+}
+
+void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0){
+    Timer timer;
+
+    dsrg_time_.add("220",timer.get());
+}
+
+void MRDSRG::H1_G1_C1(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, BlockedTensor& C1){
+    Timer timer;
+
+    C1["sp"] += alpha * H1["qp"] * G1["sq"];
+    C1["qr"] -= alpha * H1["qp"] * G1["pr"];
+
+    C1["SP"] += alpha * H1["QP"] * G1["SQ"];
+    C1["QR"] -= alpha * H1["QP"] * G1["PR"];
+
+    dsrg_time_.add("111",timer.get());
+}
+
+void MRDSRG::H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C1){
+    Timer timer;
+
+    C1["os"] += alpha * H1["qm"] * G2["moqs"];
+    C1["os"] += alpha * H1["qu"] * G2["voqs"] * Gamma1_["uv"];
+    C1["os"] -= alpha * H1["mp"] * G2["poms"];
+    C1["os"] -= alpha * H1["vp"] * G2["pous"] * Gamma1_["uv"];
+    C1["os"] += alpha * H1["QM"] * G2["oMsQ"];
+    C1["os"] += alpha * H1["QU"] * G2["oVsQ"] * Gamma1_["UV"];
+    C1["os"] -= alpha * H1["MP"] * G2["oPsM"];
+    C1["os"] -= alpha * H1["VP"] * G2["oPsU"] * Gamma1_["UV"];
+
+    C1["OS"] += alpha * H1["qm"] * G2["mOqS"];
+    C1["OS"] += alpha * H1["qu"] * G2["vOqS"] * Gamma1_["uv"];
+    C1["OS"] -= alpha * H1["mp"] * G2["pOmS"];
+    C1["OS"] -= alpha * H1["vp"] * G2["pOuS"] * Gamma1_["uv"];
+    C1["OS"] += alpha * H1["QM"] * G2["MOQS"];
+    C1["OS"] += alpha * H1["QU"] * G2["VOQS"] * Gamma1_["UV"];
+    C1["OS"] -= alpha * H1["MP"] * G2["POMS"];
+    C1["OS"] -= alpha * H1["VP"] * G2["POUS"] * Gamma1_["UV"];
+
+    dsrg_time_.add("121",timer.get());
+}
+
+void MRDSRG::H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C1){
+    Timer timer;
+
+    dsrg_time_.add("221",timer.get());
+}
+
+void MRDSRG::H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C2){
+    Timer timer;
+
+//    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
+//    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
+//    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
+//    C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
+
+//    C2["iJpB"] += alpha * T2["iJaB"] * H1["ap"];
+//    C2["iJaP"] += alpha * T2["iJaB"] * H1["BP"];
+//    C2["qJaB"] -= alpha * T2["iJaB"] * H1["qi"];
+//    C2["iQaB"] -= alpha * T2["iJaB"] * H1["QJ"];
+
+//    C2["IJPB"] += alpha * T2["IJAB"] * H1["AP"];
+//    C2["IJAP"] += alpha * T2["IJAB"] * H1["BP"];
+//    C2["QJAB"] -= alpha * T2["IJAB"] * H1["QI"];
+//    C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
+
+    dsrg_time_.add("122",timer.get());
+}
+
+void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2){
+    Timer timer;
+
+    dsrg_time_.add("222",timer.get());
+}
+
 }}
