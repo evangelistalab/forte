@@ -21,6 +21,9 @@ namespace psi{ namespace forte{
 
 class MRDSRG : public Wavefunction
 {
+    friend class MRSRG_ODEInt;
+    friend class MRSRG_Print;
+    friend class SRGPT2_ODEInt;
 public:
     /**
      * MRDSRG Constructor
@@ -114,12 +117,12 @@ protected:
     // => DSRG related <= //
 
     /// Correlation level
-    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, CEPA0};
+    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, CEPA0, LSRG2, SRG_PT2};
     std::map<std::string, CORR_LV> corrlevelmap =
             boost::assign::map_list_of("LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)
-            ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)
+            ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)("CEPA0", CORR_LV::CEPA0)
             ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3)
-            ("CEPA0", CORR_LV::CEPA0);
+            ("LSRG2", CORR_LV::LSRG2)("SRG_PT2", CORR_LV::SRG_PT2);
 
     /// The flow parameter
     double s_;
@@ -209,6 +212,7 @@ protected:
     /// Update T2 in every iteration
     void update_t2_std();
     void update_t2_noccvv();
+    void update_t2_pt();
 
     /// RMS of T1
     double T1rms_;
@@ -296,6 +300,8 @@ protected:
     std::vector<std::string> diag_one_labels();
     /// Compute diagonal blocks labels of a two-body operator
     std::vector<std::string> diag_two_labels();
+    /// Compute retaining excitation blocks labels of a two-body operator
+    std::vector<std::string> re_two_labels();
     /// Compute off-diagonal blocks labels of a one-body operator
     std::vector<std::string> od_one_labels();
     std::vector<std::string> od_one_labels_hp();
@@ -339,6 +345,34 @@ protected:
     std::vector<std::pair<std::string,double>> compute_energy_pt2_FdiagVdiag();
 
 
+    // => MR-SRG <= //
+
+    /// Compute MR-LSRG(2) energy;
+    double compute_energy_lsrg2();
+    /// Compute SRG-MRPT2 energy
+    double compute_energy_srgpt2();
+    /// Time spent for each step
+    double srg_time_;
+
+    /// Compute zero-body term of commutator [H1, G1]
+    void H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H1, G2]
+    void H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, G2]
+    void H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0);
+
+    /// Compute one-body term of commutator [H1, G1]
+    void H1_G1_C1(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H1, G2]
+    void H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, G2]
+    void H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [H1, G2]
+    void H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, G2]
+    void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
+
     // => Reference relaxation <= //
 
     /// Transfer integrals for FCI
@@ -368,6 +402,41 @@ protected:
     void check_density(BlockedTensor& D, const std::string& name);
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
+};
+
+/// The type of container used to hold the state vector used by boost::odeint
+using odeint_state_type = std::vector<double> ;
+
+/// The functor used for boost ODE integrator in MR-SRG.
+class MRSRG_ODEInt {
+public:
+    MRSRG_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) { }
+    void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
+
+protected:
+    MRDSRG& mrdsrg_obj_;
+};
+
+/// The functor used for boost ODE integrator in SRG-MRPT2.
+class SRGPT2_ODEInt {
+public:
+    SRGPT2_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) { }
+    void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
+
+protected:
+    MRDSRG& mrdsrg_obj_;
+};
+
+/// The functor used to print in each ODE integration step
+class MRSRG_Print {
+public:
+    MRSRG_Print(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) { }
+    void operator() (const odeint_state_type& x,const double t);
+    std::vector<double> energies() {return energies_;}
+
+protected:
+    MRDSRG& mrdsrg_obj_;
+    std::vector<double> energies_;
 };
 
 }}
