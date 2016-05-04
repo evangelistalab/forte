@@ -102,7 +102,6 @@ protected:
     ambit::BlockedTensor Gamma1_;
     ambit::BlockedTensor Eta1_;
     ambit::BlockedTensor Lambda2_;
-    ambit::BlockedTensor Lambda3_;
     ambit::BlockedTensor Delta1_;
     ambit::BlockedTensor RDelta1_;
     ambit::BlockedTensor T1_;
