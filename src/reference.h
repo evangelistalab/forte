@@ -48,10 +48,12 @@ protected:
     ambit::Tensor L3abb_;
     ambit::Tensor L3bbb_;
 
-    /// The RDM
+    /// The 2-RDMs
     ambit::Tensor g2aa_;
     ambit::Tensor g2ab_;
     ambit::Tensor g2bb_;
+    /// The Spin-free 2-RDM
+    ambit::Tensor SFg2_;
 
 public:
     /// Default constructor
@@ -62,7 +64,6 @@ public:
 
     /// Obtain reference energy
     double get_Eref() {return Eref_;}
-    /// Use RDM as reference rather than cumulants
 
     /// Obtain density cumulants
     ambit::Tensor L1a() {return L1a_;}
@@ -74,10 +75,12 @@ public:
     ambit::Tensor L3aab() {return L3aab_;}
     ambit::Tensor L3abb() {return L3abb_;}
     ambit::Tensor L3bbb() {return L3bbb_;}
-    /// The RDM
+
+    /// Obtain 2-RDMs
     ambit::Tensor g2aa() {return g2aa_;}
     ambit::Tensor g2ab() {return g2ab_;}
     ambit::Tensor g2bb() {return g2bb_;}
+    ambit::Tensor SFg2() {return SFg2_;}
 
     /// Set functions
     void set_Eref(double value) {Eref_ = value;}
@@ -95,6 +98,8 @@ public:
     void set_g2aa(ambit::Tensor g2aa) {g2aa_ = g2aa;}
     void set_g2ab(ambit::Tensor g2ab) {g2ab_ = g2ab;}
     void set_g2bb(ambit::Tensor g2bb) {g2bb_ = g2bb;}
+    /// Spin-free 2-RDM
+    void set_SFg2(ambit::Tensor SFg2) {SFg2_ = SFg2;}
 };
 
 }} // End Namespaces

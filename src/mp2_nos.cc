@@ -359,6 +359,7 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
                              std::shared_ptr<MOSpaceInfo> mo_space_info, Reference &reference)
 {
     print_method_banner({"Semi-Canonical Orbitals","Francesco A. Evangelista"});
+    Timer SemiCanonicalize;
 
     // 1. Build the Fock matrix
     int nirrep = wfn->nirrep();
@@ -396,7 +397,9 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
         offset += ncmopi[h] - rdocc[h];
     }
 
+    Timer FockTime;
     ints->make_fock_matrix(Da,Db);
+    outfile->Printf("\n Took %8.6f s to build fock matrix", FockTime.get());
 
     // 2. Diagonalize the diagonal blocks of the Fock matrix
     SharedMatrix Fc_a(new Matrix("Fock core alpha",rdocc,rdocc));
@@ -506,6 +509,7 @@ SemiCanonical::SemiCanonical(boost::shared_ptr<Wavefunction> wfn,
     // 5. Retransform the integrals in the new basis
     print_h2("Integral transformation");
     ints->retransform_integrals();
+    outfile->Printf("\n SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
 }
 
 }} // End Namespaces
