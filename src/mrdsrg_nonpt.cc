@@ -127,7 +127,7 @@ double MRDSRG::compute_energy_ldsrg2(){
     // print title
     outfile->Printf("\n\n  ==> Computing MR-LDSRG(2) Energy <==\n");
     outfile->Printf("\n    Reference:");
-    outfile->Printf("\n      J. Chem. Phys. (in preparation)\n");
+    outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
     if(options_.get_str("THREEPDC") == "ZERO"){
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
@@ -221,6 +221,11 @@ double MRDSRG::compute_energy_ldsrg2(){
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
         if(fabs(Edelta) < e_conv && rms < r_conv){
             converged = true;
+
+            // rebuild Hbar because it is destroyed when updating amplitudes
+            if(options_.get_str("RELAX_REF") != "NONE"){
+                compute_hbar();
+            }
         }
         if(cycle > maxiter){
             outfile->Printf("\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);

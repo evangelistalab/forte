@@ -85,6 +85,10 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
     {
         gamma2_dmrg.iterate([&](const::vector<size_t>& i,double& value){
             value = two_rdm[i[0] * na * na * na + i[1] * na * na + i[2] * na + i[3]]; });
+        if(spin_free_rdm_)
+        {
+            dmrg_ref.set_SFg2(gamma2_dmrg);
+        }
         /// gamma2_aa = 1 / 6 * (Gamma2(pqrs) - Gamma2(pqsr))
         //gamma2_aa.copy(gamma2_dmrg);
         gamma2_aa("p, q, r, s") = gamma2_dmrg("p, q, r, s") - gamma2_dmrg("p, q, s, r");
@@ -301,7 +305,9 @@ void DMRGSolver::compute_energy()
     ///If user doesn't specify integrals, compute them yourself.  
     if(one_body_integrals_.empty())
     {
+        Timer one_body_timer;
         one_body_integrals_ = one_body_operator();
+        outfile->Printf("\n OneBody integrals takes %6.5f s", one_body_timer.get());
     }
     
     for(int h = 0; h < iHandler->getNirreps(); h++){
@@ -328,13 +334,6 @@ void DMRGSolver::compute_energy()
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
     if(max_rdm_ > 2)
         std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
-
-    std::ofstream capturing;
-    std::streambuf * cout_buffer;
-    std::string chemps2filename = "DMRG.chemps2";
-    outfile->Printf("\n CheMPS2 output is temporarily written to the file");
-    capturing.open(chemps2filename.c_str(), ios::trunc);
-    cout_buffer = cout.rdbuf( capturing.rdbuf());
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
 
@@ -368,16 +367,16 @@ void DMRGSolver::compute_energy()
     {
         DMRGCI->getCorrelations()->Print();
     }
-    cout.rdbuf(cout_buffer);
-    capturing.close();
-    std::ifstream copying;
-    copying.open( chemps2filename , ios::in ); // read only
-    if (copying.is_open()){
-        string line;
-        while( getline( copying, line ) ){ (*outfile) << line << endl; }
-        copying.close();
-    }
-    system(("rm " + chemps2filename).c_str());
+    //cout.rdbuf(cout_buffer);
+    //capturing.close();
+    //std::ifstream copying;
+    //copying.open( chemps2filename , ios::in ); // read only
+    //if (copying.is_open()){
+    //    string line;
+    //    while( getline( copying, line ) ){ (*outfile) << line << endl; }
+    //    copying.close();
+    //}
+    //system(("rm " + chemps2filename).c_str());
 
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);

@@ -31,6 +31,7 @@ ConventionalIntegrals::ConventionalIntegrals(psi::Options &options, SharedWavefu
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     Timer ConvTime;
     allocate();
+
     gather_integrals();
     make_diagonal_integrals();
     if (ncmo_ < nmo_){
