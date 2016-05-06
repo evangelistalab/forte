@@ -2367,6 +2367,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         outfile->Printf("\n    ABAB 2-RDM Error :   %2.15f",error_2rdm_ab);
 
 // aaa aaa
+//SharedMatrix three_rdm(new Matrix("three", dim_space_, dim_space_));
+//three_rdm->zero();    
         double error_3rdm_aaa = 0.0;
                 for (size_t p = 0; p < ncmo_; ++p){
         //for (size_t p = 0; p < 1; ++p){
@@ -2388,6 +2390,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
                                             rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
+                                           // three_rdm->set(i,j,three_rdm->get(i,j) + 1);
                                         }
                                     }
                                 }
@@ -2428,6 +2431,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
                                             rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
+                                           // three_rdm->set(i,j,three_rdm->get(i,j) + 1);
                                         }
                                     }
                                 }
@@ -2468,6 +2472,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
                                             rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
+                                            //three_rdm->set(i,j,three_rdm->get(i,j) + 1);
                                         }
                                     }
                                 }
@@ -2508,6 +2513,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
                                     for( size_t j = 0; j < dim_space_; ++j){
                                         if (I == det_space_[j]){
                                             rdm += sign * evecs_->get(i,root1_) * evecs_->get(j,root2_);
+                                           // three_rdm->set(i,j,three_rdm->get(i,j) + 1);
                                         }
                                     }
                                 }
@@ -2525,7 +2531,7 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a,
         }
         Process::environment.globals["BBBBBB 3-RDM ERROR"] = error_3rdm_bbb;
         outfile->Printf("\n    BBBBBB 3-RDM Error : %2.15f",error_3rdm_bbb);
-
+//three_rdm->print_to_mathematica();
 }
 
 

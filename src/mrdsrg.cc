@@ -313,20 +313,29 @@ void MRDSRG::print_options()
 }
 
 double MRDSRG::compute_energy(){
-    // build initial amplitudes
-    print_h2("Build Initial Amplitude from DSRG-MRPT2");
-    T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-    T2_ = BTF_->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
-    guess_t(V_,T2_,F_,T1_);
+    // guess amplitudes when necessary
+    bool initialize_T = true;
+    std::string corrlv_string = options_.get_str("CORR_LEVEL");
+    if(corrlv_string == "LSRG2" || corrlv_string == "SRG_PT2") {
+        initialize_T = false;
+    }
 
-    // check initial amplitudes
-    analyze_amplitudes("First-Order",T1_,T2_);
+    if(initialize_T) {
+        // build initial amplitudes
+        print_h2("Build Initial Amplitude from DSRG-MRPT2");
+        T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
+        T2_ = BTF_->build(tensor_type_,"T2 Amplitudes",spin_cases({"hhpp"}));
+        guess_t(V_,T2_,F_,T1_);
+
+        // check initial amplitudes
+        analyze_amplitudes("First-Order",T1_,T2_);
+    }
 
     // get reference energy
     double Etotal = Eref_;
 
     // compute energy
-    switch (corrlevelmap[options_.get_str("CORR_LEVEL")]){
+    switch (corrlevelmap[corrlv_string]){
     case CORR_LV::LDSRG2:{
         Etotal += compute_energy_ldsrg2();
         break;
@@ -342,6 +351,14 @@ double MRDSRG::compute_energy(){
         break;
     }
     case CORR_LV::QDSRG2_P3:{
+        break;
+    }
+    case CORR_LV::LSRG2:{
+        Etotal += compute_energy_lsrg2();
+        break;
+    }
+    case CORR_LV::SRG_PT2:{
+
         break;
     }
     case CORR_LV::PT3:{
@@ -995,7 +1012,7 @@ std::vector<std::string> MRDSRG::diag_one_labels(){
     return labels;
 }
 
-std::vector<std::string> MRDSRG::diag_two_labels(){
+std::vector<std::string> MRDSRG::re_two_labels(){
     std::vector<std::string> labels;
     std::vector<std::string> labels_aa {acore_label_ + acore_label_ + acore_label_ + acore_label_,
                 aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
@@ -1035,12 +1052,85 @@ std::vector<std::string> MRDSRG::diag_two_labels(){
     return labels;
 }
 
+std::vector<std::string> MRDSRG::diag_two_labels(){
+    std::vector<std::string> general {acore_label_,aactv_label_,avirt_label_};
+    std::vector<std::string> hole {acore_label_,aactv_label_};
+    std::vector<std::string> particle {aactv_label_,avirt_label_};
+
+    std::vector<std::string> d_aa;
+    for(const std::string& p: general){
+        for(const std::string& q: general){
+            for(const std::string& r: general){
+                for(const std::string& s: general){
+                    d_aa.push_back(p+q+r+s);
+                }
+            }
+        }
+    }
+
+    for(const std::string& p: hole){
+        for(const std::string& q: hole){
+            for(const std::string& r: particle){
+                for(const std::string& s: particle){
+                    if(p == aactv_label_ && q == aactv_label_ && r == aactv_label_ && s == aactv_label_){
+                        continue;
+                    }
+
+                    std::vector<std::string> od_aa {p+q+r+s, r+s+p+q};
+                    d_aa.erase(std::remove_if(d_aa.begin(), d_aa.end(),
+                                              [&](std::string i) {return std::find(od_aa.begin(), od_aa.end(), i) != od_aa.end();}),
+                            d_aa.end());
+
+                }
+            }
+        }
+    }
+
+    std::vector<std::string> labels;
+    for(const std::string& label: d_aa){
+        std::string aa (label);
+        std::string ab (label);
+        std::string bb (label);
+
+        for(const int& idx: {1,3}){
+            ab[idx] = std::toupper(ab[idx]);
+            bb[idx] = std::toupper(bb[idx]);
+        }
+        for(const int& idx: {0,2}){
+            bb[idx] = std::toupper(bb[idx]);
+        }
+
+        labels.push_back(aa);
+        labels.push_back(ab);
+        labels.push_back(bb);
+    }
+
+    return labels;
+}
+
 std::vector<std::string> MRDSRG::od_one_labels_hp(){
-    std::vector<std::string> blocks1 (T1_.block_labels());
-    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_, bactv_label_ + bactv_label_};
-    blocks1.erase(std::remove_if(blocks1.begin(), blocks1.end(),
-                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
-            blocks1.end());
+    std::vector<std::string> labels_a;
+    for(const std::string& p: {acore_label_,aactv_label_}){
+        for(const std::string& q: {aactv_label_,avirt_label_}){
+            if(p == aactv_label_ && q == aactv_label_){
+                continue;
+            }
+            labels_a.push_back(p+q);
+        }
+    }
+
+    std::vector<std::string> blocks1;
+    for(const std::string& label: labels_a){
+        std::string a (label);
+        std::string b (label);
+
+        for(const int& idx: {0,1}){
+            b[idx] = std::toupper(b[idx]);
+        }
+
+        blocks1.push_back(a);
+        blocks1.push_back(b);
+    }
     return blocks1;
 }
 
@@ -1063,13 +1153,39 @@ std::vector<std::string> MRDSRG::od_one_labels(){
 }
 
 std::vector<std::string> MRDSRG::od_two_labels_hhpp(){
-    std::vector<std::string> blocks2 (T2_.block_labels());
-    std::vector<std::string> actv_blocks {aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_,
-                aactv_label_ + bactv_label_ + aactv_label_ + bactv_label_,
-                bactv_label_ + bactv_label_ + bactv_label_ + bactv_label_};
-    blocks2.erase(std::remove_if(blocks2.begin(), blocks2.end(),
-                                 [&](std::string i) {return std::find(actv_blocks.begin(), actv_blocks.end(), i) != actv_blocks.end();}),
-            blocks2.end());
+    std::vector<std::string> labels_aa;
+    for(const std::string& p: {acore_label_,aactv_label_}){
+        for(const std::string& q: {acore_label_,aactv_label_}){
+            for(const std::string& r: {aactv_label_,avirt_label_}){
+                for(const std::string& s: {aactv_label_,avirt_label_}){
+                    if(p == aactv_label_ && q == aactv_label_ && r == aactv_label_ && s == aactv_label_){
+                        continue;
+                    }
+                    labels_aa.push_back(p+q+r+s);
+                }
+            }
+        }
+    }
+
+    std::vector<std::string> blocks2;
+    for(const std::string& label: labels_aa){
+        std::string aa (label);
+        std::string ab (label);
+        std::string bb (label);
+
+        for(const int& idx: {1,3}){
+            ab[idx] = std::toupper(ab[idx]);
+            bb[idx] = std::toupper(bb[idx]);
+        }
+        for(const int& idx: {0,2}){
+            bb[idx] = std::toupper(bb[idx]);
+        }
+
+        blocks2.push_back(aa);
+        blocks2.push_back(ab);
+        blocks2.push_back(bb);
+    }
+
     return blocks2;
 }
 
