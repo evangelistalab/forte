@@ -1416,7 +1416,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
     energy_history.push_back(new_energies);
 
     // Check for convergence
-    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("E_CONVERGENCE"));
+    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("ACI_CONVERGENCE"));
     //        // Check the history of energies to avoid cycling in a loop
     //        if(cycle > 3){
     //            bool stuck = true;
