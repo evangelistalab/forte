@@ -67,6 +67,8 @@ public:
     double oei_a(size_t p,size_t q) const {return oei_a_[p * nmo_ + q];}
     /// Return the beta effective one-electron integral
     double oei_b(size_t p,size_t q) const {return oei_b_[p * nmo_ + q];}
+    std::vector<double> oei_a_vector() {return oei_a_;}
+    std::vector<double> oei_b_vector() {return oei_b_;}
 
     /// Return the alpha-alpha antisymmetrized two-electron integral <pq||rs>
     double tei_aa(size_t p,size_t q,size_t r,size_t s) const {return tei_aa_[nmo3_ * p + nmo2_ * q + nmo_ * r + s];}
