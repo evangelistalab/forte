@@ -432,6 +432,9 @@ read_options(std::string name, Options &options)
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE CI
         //////////////////////////////////////////////////////////////
+        
+        /* Convergence Threshold -*/
+        options.add_double("ACI_CONVERGENCE", 1e-9);
 
         /*- The selection type for the Q-space-*/
         options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
