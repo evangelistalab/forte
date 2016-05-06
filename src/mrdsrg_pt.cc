@@ -183,7 +183,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagV(){
     if(H0th_string == "FDIAG_VACTV"){
         V0th = BTF_->build(tensor_type_,"V0th",spin_cases({"aaaa"}));
     }else if(H0th_string == "FDIAG_VDIAG"){
-        V0th = BTF_->build(tensor_type_,"V0th",diag_two_labels());
+        V0th = BTF_->build(tensor_type_,"V0th",re_two_labels());
     }
 //    for(auto& x: V0th.block_labels()){
 //        outfile->Printf("\n  V0th block %s", x.c_str());
@@ -426,7 +426,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagVdiag
     BlockedTensor::set_expert_mode(true);
 
     // two-body zeroth-order Hamiltonian
-    BlockedTensor V0th = BTF_->build(tensor_type_,"V0th",diag_two_labels());
+    BlockedTensor V0th = BTF_->build(tensor_type_,"V0th",re_two_labels());
     V0th["pqrs"] = V_["pqrs"];
     V0th["pQrS"] = V_["pQrS"];
     V0th["PQRS"] = V_["PQRS"];

@@ -8,6 +8,11 @@ struct tpdm {
     double val;
 };
 
+struct dm3 {
+    int i, j, k, l, m ,n;
+    double val;
+};
+
 V2RDM::V2RDM(SharedWavefunction ref_wfn, Options &options,
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : Wavefunction(options), ints_(ints), mo_space_info_(mo_space_info)
@@ -61,17 +66,21 @@ void V2RDM::startup(){
 }
 
 void V2RDM::read_2pdm(){
+    // map file names
+    std::map<unsigned int, std::string> filename;
+    filename[PSIF_V2RDM_D2AA] = "D2aa";
+    filename[PSIF_V2RDM_D2AB] = "D2ab";
+    filename[PSIF_V2RDM_D2BB] = "D2bb";
+
+    // test if files exist
     std::string str = "Testing if 2RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
     boost::shared_ptr<PSIO> psio (new PSIO());
-    if ( !psio->exists(PSIF_V2RDM_D2AB) ) {
-        throw PSIEXCEPTION("V2RDM_D2AB does not exist.");
-    }
-    if ( !psio->exists(PSIF_V2RDM_D2AA) ) {
-        throw PSIEXCEPTION("V2RDM_D2AA does not exist.");
-    }
-    if ( !psio->exists(PSIF_V2RDM_D2BB) ) {
-        throw PSIEXCEPTION("V2RDM_D2BB does not exist.");
+    for(const auto& file: {PSIF_V2RDM_D2AA,PSIF_V2RDM_D2AB,PSIF_V2RDM_D2BB}) {
+        if ( !psio->exists(file) ) {
+            std::string error = "V2RDM file for " + filename[file] + " does not exist";
+            throw PSIEXCEPTION(error);
+        }
     }
     outfile->Printf("    OK.");
 
@@ -79,19 +88,13 @@ void V2RDM::read_2pdm(){
     size_t nactv = mo_space_info_->size("ACTIVE");
     size_t nactv2 = nactv * nactv;
     size_t nactv3 = nactv * nactv2;
-    D2ab_ = ambit::Tensor::build(ambit::CoreTensor,"D2ab",{nactv,nactv,nactv,nactv});
-    D2aa_ = ambit::Tensor::build(ambit::CoreTensor,"D2aa",{nactv,nactv,nactv,nactv});
-    D2bb_ = ambit::Tensor::build(ambit::CoreTensor,"D2bb",{nactv,nactv,nactv,nactv});
 
-    // 2PDM AB spin
-    str = "Reading 2RDM AB block";
-    outfile->Printf("\n  %-45s ...", str.c_str());
+    // test if active orbitals are consistent in forte and v2rdm-casscf
     long int nab;
     psio_address addr_ab = PSIO_ZERO;
     psio->open(PSIF_V2RDM_D2AB,PSIO_OPEN_OLD);
     psio->read_entry(PSIF_V2RDM_D2AB,"length",(char*)&nab,sizeof(long int));
 
-    // test if active orbitals are consistent in forte and v2rdm-casscf
     size_t nsymgem = 0; // number of totally symmetric geminals
     for(int h = 0; h < nirrep_; ++h){
         nsymgem += active_[h] * active_[h];
@@ -106,78 +109,52 @@ void V2RDM::read_2pdm(){
             throw PSIEXCEPTION("The active block of FORTE is different from V2RDM-CASSCF.");
         }
     }
-    addr_ab = PSIO_ZERO; // reset address to the beginning of the file
-
-    for (int n = 0; n < nab; ++n) {
-        tpdm d2;
-        psio->read(PSIF_V2RDM_D2AB,"D2ab",(char*)&d2,sizeof(tpdm),addr_ab,&addr_ab);
-        size_t i = abs_to_rel_[static_cast<size_t> (d2.i)];
-        size_t j = abs_to_rel_[static_cast<size_t> (d2.j)];
-        size_t k = abs_to_rel_[static_cast<size_t> (d2.k)];
-        size_t l = abs_to_rel_[static_cast<size_t> (d2.l)];
-
-        size_t idx = i * nactv3 + j * nactv2 + k * nactv + l;
-        D2ab_.data()[idx] = d2.val;
-    }
     psio->close(PSIF_V2RDM_D2AB,1);
-    outfile->Printf("    Done.");
 
-    // 2PDM AA spin
-    str = "Reading 2RDM AA block";
+    // Read 2RDM
+    str = "Reading 2RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
-    long int naa;
-    psio_address addr_aa = PSIO_ZERO;
-    psio->open(PSIF_V2RDM_D2AA,PSIO_OPEN_OLD);
-    psio->read_entry(PSIF_V2RDM_D2AA,"length",(char*)&naa,sizeof(long int));
-    for (int n = 0; n < naa; ++n) {
-        tpdm d2;
-        psio->read(PSIF_V2RDM_D2AA,"D2aa",(char*)&d2,sizeof(tpdm),addr_aa,&addr_aa);
-        size_t i = abs_to_rel_[static_cast<size_t> (d2.i)];
-        size_t j = abs_to_rel_[static_cast<size_t> (d2.j)];
-        size_t k = abs_to_rel_[static_cast<size_t> (d2.k)];
-        size_t l = abs_to_rel_[static_cast<size_t> (d2.l)];
+    for(const auto& file: {PSIF_V2RDM_D2AA, PSIF_V2RDM_D2AB, PSIF_V2RDM_D2BB}){
+        ambit::Tensor D2 = ambit::Tensor::build(ambit::CoreTensor,filename[file],{nactv,nactv,nactv,nactv});
 
-        size_t idx = i * nactv3 + j * nactv2 + k * nactv + l;
-        D2aa_.data()[idx] = d2.val;
+        long int nline;
+        psio_address addr = PSIO_ZERO;
+        psio->open(file,PSIO_OPEN_OLD);
+        psio->read_entry(file,"length",(char*)&nline,sizeof(long int));
+
+        for (int n = 0; n < nline; ++n) {
+            tpdm d2;
+            psio->read(file,filename[file].c_str(),(char*)&d2,sizeof(tpdm),addr,&addr);
+            size_t i = abs_to_rel_[static_cast<size_t> (d2.i)];
+            size_t j = abs_to_rel_[static_cast<size_t> (d2.j)];
+            size_t k = abs_to_rel_[static_cast<size_t> (d2.k)];
+            size_t l = abs_to_rel_[static_cast<size_t> (d2.l)];
+
+            size_t idx = i * nactv3 + j * nactv2 + k * nactv + l;
+            D2.data()[idx] = d2.val;
+        }
+        psio->close(file,1);
+
+        D2_.push_back(D2);
     }
-    psio->close(PSIF_V2RDM_D2AA,1);
-    outfile->Printf("    Done.");
-
-    // 2PDM BB spin
-    str = "Reading 2RDM BB block";
-    outfile->Printf("\n  %-45s ...", str.c_str());
-    long int nbb;
-    psio_address addr_bb = PSIO_ZERO;
-    psio->open(PSIF_V2RDM_D2BB,PSIO_OPEN_OLD);
-    psio->read_entry(PSIF_V2RDM_D2BB,"length",(char*)&nbb,sizeof(long int));
-    for (int n = 0; n < nbb; ++n) {
-        tpdm d2;
-        psio->read(PSIF_V2RDM_D2BB,"D2bb",(char*)&d2,sizeof(tpdm),addr_bb,&addr_bb);
-        size_t i = abs_to_rel_[static_cast<size_t> (d2.i)];
-        size_t j = abs_to_rel_[static_cast<size_t> (d2.j)];
-        size_t k = abs_to_rel_[static_cast<size_t> (d2.k)];
-        size_t l = abs_to_rel_[static_cast<size_t> (d2.l)];
-
-        size_t idx = i * nactv3 + j * nactv2 + k * nactv + l;
-        D2bb_.data()[idx] = d2.val;
-    }
-    psio->close(PSIF_V2RDM_D2BB,1);
     outfile->Printf("    Done.");
 
     // average Daa and Dbb
     if(options_.get_bool("AVG_DENS_SPIN")){
+        // reference D2aa, D2ab, D2bb to D2_ element
+        ambit::Tensor& D2aa = D2_[0];
+        ambit::Tensor& D2bb = D2_[2];
+
         str = "Averaging 2RDM AA and BB blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
         ambit::Tensor D2 = ambit::Tensor::build(ambit::CoreTensor,"D2avg_aa",{nactv,nactv,nactv,nactv});
-        D2("pqrs")  = D2aa_("pqrs");
-        D2("pqrs") += D2bb_("pqrs");
-        D2("pqrs") += D2ab_("pqrs");
-        D2("pqrs") -= D2ab_("pqsr");
-        D2.scale(1.0/3.0);
+        D2("pqrs")  = 0.5 * D2aa("pqrs");
+        D2("pqrs") += 0.5 * D2bb("pqrs");
 
-        D2aa_("pqrs")  = D2("pqrs");
-        D2bb_("pqrs")  = D2("pqrs");
+        D2aa("pqrs") = D2("pqrs");
+        D2bb("pqrs") = D2("pqrs");
         outfile->Printf("    Done.");
+
     }
 }
 
@@ -198,17 +175,22 @@ void V2RDM::build_opdm(){
     size_t nbeta = this->nbeta() - mo_space_info_->size("FROZEN_DOCC")
             - mo_space_info_->size("RESTRICTED_DOCC");
 
+    // reference D2aa, D2ab, D2bb to D2_ element
+    ambit::Tensor& D2aa = D2_[0];
+    ambit::Tensor& D2ab = D2_[1];
+    ambit::Tensor& D2bb = D2_[2];
+
     // compute OPDM
     for(size_t u = 0; u < nactv; ++u){
         for(size_t v = 0; v < nactv; ++v){
 
             double va = 0, vb = 0;
             for(size_t x = 0; x < nactv; ++x){
-                va += D2aa_.data()[u * nactv3 + x * nactv2 + v * nactv + x];
-                va += D2ab_.data()[u * nactv3 + x * nactv2 + v * nactv + x];
+                va += D2aa.data()[u * nactv3 + x * nactv2 + v * nactv + x];
+                va += D2ab.data()[u * nactv3 + x * nactv2 + v * nactv + x];
 
-                vb += D2bb_.data()[u * nactv3 + x * nactv2 + v * nactv + x];
-                vb += D2ab_.data()[x * nactv3 + u * nactv2 + x * nactv + v];
+                vb += D2bb.data()[u * nactv3 + x * nactv2 + v * nactv + x];
+                vb += D2ab.data()[x * nactv3 + u * nactv2 + x * nactv + v];
             }
 
             D1a_.data()[u * nactv + v] = va / (nalfa + nbeta - 1.0);
@@ -232,12 +214,23 @@ void V2RDM::build_opdm(){
 }
 
 void V2RDM::read_3pdm(){
+    // map file names
+    std::map<unsigned int, std::string> filename;
+    filename[PSIF_V2RDM_D3AAA] = "D3aaa";
+    filename[PSIF_V2RDM_D3AAB] = "D3aab";
+    filename[PSIF_V2RDM_D3BBA] = "D3bba";
+    filename[PSIF_V2RDM_D3BBB] = "D3bbb";
+
+    // test if files exist
     std::string str = "Testing if 3RDM files exist";
     outfile->Printf("\n  %-45s ...", str.c_str());
     boost::shared_ptr<PSIO> psio (new PSIO());
-//    if ( !psio->exists(PSIF_V2RDM_D2AB) ) {
-//        throw PSIEXCEPTION("V2RDM_D2AB does not exist.");
-//    }
+    for(const auto& file: {PSIF_V2RDM_D3AAA,PSIF_V2RDM_D3AAB,PSIF_V2RDM_D3BBA,PSIF_V2RDM_D3BBB}) {
+        if ( !psio->exists(file) ) {
+            std::string error = "V2RDM file for " + filename[file] + " does not exist";
+            throw PSIEXCEPTION(error);
+        }
+    }
     outfile->Printf("    OK.");
 
     // initialization of 3PDM
@@ -246,63 +239,73 @@ void V2RDM::read_3pdm(){
     size_t nactv3 = nactv * nactv2;
     size_t nactv4 = nactv * nactv3;
     size_t nactv5 = nactv * nactv4;
-    D3aaa_ = ambit::Tensor::build(ambit::CoreTensor,"D3aaa",{nactv,nactv,nactv,nactv,nactv,nactv});
-    D3aab_ = ambit::Tensor::build(ambit::CoreTensor,"D3aab",{nactv,nactv,nactv,nactv,nactv,nactv});
-    D3abb_ = ambit::Tensor::build(ambit::CoreTensor,"D3abb",{nactv,nactv,nactv,nactv,nactv,nactv});
-    D3bbb_ = ambit::Tensor::build(ambit::CoreTensor,"D3bbb",{nactv,nactv,nactv,nactv,nactv,nactv});
 
-    // 3PDM AAA spin
-    str = "Reading 3RDM AAA block";
+    // Read 3RDM
+    str = "Reading 3RDMs";
     outfile->Printf("\n  %-45s ...", str.c_str());
-//    long int naa;
-//    psio_address addr_aa = PSIO_ZERO;
-//    psio->open(PSIF_V2RDM_D2AA,PSIO_OPEN_OLD);
-//    psio->read_entry(PSIF_V2RDM_D2AA,"length",(char*)&naa,sizeof(long int));
-//    for (int n = 0; n < naa; ++n) {
-//        tpdm d2;
-//        psio->read(PSIF_V2RDM_D2AA,"D2aa",(char*)&d2,sizeof(tpdm),addr_aa,&addr_aa);
-//        size_t i = abs_to_rel_[static_cast<size_t> (d2.i)];
-//        size_t j = abs_to_rel_[static_cast<size_t> (d2.j)];
-//        size_t k = abs_to_rel_[static_cast<size_t> (d2.k)];
-//        size_t l = abs_to_rel_[static_cast<size_t> (d2.l)];
+    for(const auto& file: {PSIF_V2RDM_D3AAA,PSIF_V2RDM_D3AAB,PSIF_V2RDM_D3BBA,PSIF_V2RDM_D3BBB}){
+        ambit::Tensor D3 = ambit::Tensor::build(ambit::CoreTensor,filename[file],{nactv,nactv,nactv,nactv,nactv,nactv});
 
-//        size_t idx = i * nactv3 + j * nactv2 + k * nactv + l;
-//        D2aa_.data()[idx] = d2.val;
-//    }
-//    psio->close(PSIF_V2RDM_D2AA,1);
-    outfile->Printf("    Done.");
+        long int nline;
+        psio_address addr = PSIO_ZERO;
+        psio->open(file,PSIO_OPEN_OLD);
+        psio->read_entry(file,"length",(char*)&nline,sizeof(long int));
 
-    // 3PDM AAB spin
-    str = "Reading 3RDM AAB block";
-    outfile->Printf("\n  %-45s ...", str.c_str());
+        if(file != PSIF_V2RDM_D3BBA){
+            for (int nl = 0; nl < nline; ++nl) {
+                dm3 d3;
+                psio->read(file,filename[file].c_str(),(char*)&d3,sizeof(dm3),addr,&addr);
+                size_t i = abs_to_rel_[static_cast<size_t> (d3.i)];
+                size_t j = abs_to_rel_[static_cast<size_t> (d3.j)];
+                size_t k = abs_to_rel_[static_cast<size_t> (d3.k)];
+                size_t l = abs_to_rel_[static_cast<size_t> (d3.l)];
+                size_t m = abs_to_rel_[static_cast<size_t> (d3.m)];
+                size_t n = abs_to_rel_[static_cast<size_t> (d3.n)];
 
-    outfile->Printf("    Done.");
+                size_t idx = i * nactv5 + j * nactv4 + k * nactv3 + l * nactv2 + m * nactv + n;
+                D3.data()[idx] = d3.val;
+            }
+        } else {
+            for (int nl = 0; nl < nline; ++nl) {
+                dm3 d3;
+                psio->read(file,filename[file].c_str(),(char*)&d3,sizeof(dm3),addr,&addr);
+                size_t i = abs_to_rel_[static_cast<size_t> (d3.i)];
+                size_t j = abs_to_rel_[static_cast<size_t> (d3.j)];
+                size_t k = abs_to_rel_[static_cast<size_t> (d3.k)];
+                size_t l = abs_to_rel_[static_cast<size_t> (d3.l)];
+                size_t m = abs_to_rel_[static_cast<size_t> (d3.m)];
+                size_t n = abs_to_rel_[static_cast<size_t> (d3.n)];
 
-    // 3PDM ABB spin
-    str = "Reading 3RDM ABB block";
-    outfile->Printf("\n  %-45s ...", str.c_str());
+                size_t idx = k * nactv5 + i * nactv4 + j * nactv3 + n * nactv2 + l * nactv + m;
+                D3.data()[idx] = d3.val;
+            }
+        }
+        psio->close(file,1);
 
-    outfile->Printf("    Done.");
-
-    // 3PDM BBB spin
-    str = "Reading 3RDM BBB block";
-    outfile->Printf("\n  %-45s ...", str.c_str());
-
+        D3_.push_back(D3);
+    }
     outfile->Printf("    Done.");
 
     // average Daaa and Dbbb, Daab and Dabb
     if(options_.get_bool("AVG_DENS_SPIN")){
+        // reference D3aaa, D3aab, D3abb, D3bbb to D3_ element
+        ambit::Tensor& D3aaa = D3_[0];
+        ambit::Tensor& D3aab = D3_[1];
+        ambit::Tensor& D3abb = D3_[2];
+        ambit::Tensor& D3bbb = D3_[3];
+
         str = "Averaging 3RDM AAA & BBB, AAB & ABB blocks";
         outfile->Printf("\n  %-45s ...", str.c_str());
-//        ambit::Tensor D2 = ambit::Tensor::build(ambit::CoreTensor,"D2avg_aa",{nactv,nactv,nactv,nactv});
-//        D2("pqrs")  = D2aa_("pqrs");
-//        D2("pqrs") += D2bb_("pqrs");
-//        D2("pqrs") += D2ab_("pqrs");
-//        D2("pqrs") -= D2ab_("pqsr");
-//        D2.scale(1.0/3.0);
+        ambit::Tensor D3 = ambit::Tensor::build(ambit::CoreTensor,"D3avg_aa",{nactv,nactv,nactv,nactv,nactv,nactv});
+        D3("pqrstu")  = 0.5 * D3aaa("pqrstu");
+        D3("pqrstu") += 0.5 * D3bbb("pqrstu");
+        D3aaa("pqrstu") = D3("pqrstu");
+        D3bbb("pqrstu") = D3("pqrstu");
 
-//        D2aa_("pqrs")  = D2("pqrs");
-//        D2bb_("pqrs")  = D2("pqrs");
+        D3("pqrstu")  = 0.5 * D3aab("pqrstu");
+        D3("pqrstu") += 0.5 * D3abb("rpqust");
+        D3aab("pqrstu") = D3("pqrstu");
+        D3abb("rpqust") = D3("pqrstu");
         outfile->Printf("    Done.");
     }
 }
@@ -364,6 +367,9 @@ double V2RDM::compute_ref_energy(){
     Eref += sum("uv") * D1b_("uv");
 
     // 0.25 * \sum_{uvxy} v^{xy}_{uv} * D^{uv}_{xy}
+    ambit::Tensor& D2aa = D2_[0];
+    ambit::Tensor& D2ab = D2_[1];
+    ambit::Tensor& D2bb = D2_[2];
     sum = ambit::Tensor::build(ambit::CoreTensor,"sum_aa",{nactv,nactv,nactv,nactv});
     sum.iterate([&](const std::vector<size_t>& i,double& value){
         size_t nu = actv_mos_[i[0]];
@@ -372,7 +378,7 @@ double V2RDM::compute_ref_energy(){
         size_t ny = actv_mos_[i[3]];
         value = ints_->aptei_aa(nu,nv,nx,ny);
     });
-    Eref += 0.25 * sum("uvxy") * D2aa_("uvxy");
+    Eref += 0.25 * sum("uvxy") * D2aa("uvxy");
 
     sum.zero();
     sum.iterate([&](const std::vector<size_t>& i,double& value){
@@ -382,7 +388,7 @@ double V2RDM::compute_ref_energy(){
         size_t ny = actv_mos_[i[3]];
         value = ints_->aptei_bb(nu,nv,nx,ny);
     });
-    Eref += 0.25 * sum("uvxy") * D2bb_("uvxy");
+    Eref += 0.25 * sum("uvxy") * D2bb("uvxy");
 
     sum.zero();
     sum.iterate([&](const std::vector<size_t>& i,double& value){
@@ -392,7 +398,7 @@ double V2RDM::compute_ref_energy(){
         size_t ny = actv_mos_[i[3]];
         value = ints_->aptei_ab(nu,nv,nx,ny);
     });
-    Eref += sum("uvxy") * D2ab_("uvxy");
+    Eref += sum("uvxy") * D2ab("uvxy");
 
     outfile->Printf("    Done.");
     return Eref;
@@ -406,29 +412,105 @@ Reference V2RDM::reference(){
     outfile->Printf("\n  %-45s ...", str.c_str());
 
     // compute 2-cumulants
-    D2aa_("pqrs") -= D1a_("pr") * D1a_("qs");
-    D2aa_("pqrs") += D1a_("ps") * D1a_("qr");
+    ambit::Tensor& D2aa = D2_[0];
+    ambit::Tensor& D2ab = D2_[1];
+    ambit::Tensor& D2bb = D2_[2];
 
-    D2bb_("pqrs") -= D1b_("pr") * D1b_("qs");
-    D2bb_("pqrs") += D1b_("ps") * D1b_("qr");
+    D2aa("pqrs") -= D1a_("pr") * D1a_("qs");
+    D2aa("pqrs") += D1a_("ps") * D1a_("qr");
 
-    D2ab_("pqrs") -= D1a_("pr") * D1b_("qs");
+    D2bb("pqrs") -= D1b_("pr") * D1b_("qs");
+    D2bb("pqrs") += D1b_("ps") * D1b_("qr");
 
-    // compute 3-cumulants
-
+    D2ab("pqrs") -= D1a_("pr") * D1b_("qs");
 
     // fill out values
     return_ref.set_Eref(Eref);
     return_ref.set_L1a(D1a_);
     return_ref.set_L1b(D1b_);
-    return_ref.set_L2aa(D2aa_);
-    return_ref.set_L2ab(D2ab_);
-    return_ref.set_L2bb(D2bb_);
+    return_ref.set_L2aa(D2aa);
+    return_ref.set_L2ab(D2ab);
+    return_ref.set_L2bb(D2bb);
+
+    // if 3-cumulants are needed
     if(options_.get_str("THREEPDC") != "ZERO"){
-        return_ref.set_L3aaa(D3aaa_);
-        return_ref.set_L3aab(D3aab_);
-        return_ref.set_L3abb(D3abb_);
-        return_ref.set_L3bbb(D3bbb_);
+        // compute 3-cumulants
+        ambit::Tensor& D3aaa = D3_[0];
+        ambit::Tensor& D3aab = D3_[1];
+        ambit::Tensor& D3abb = D3_[2];
+        ambit::Tensor& D3bbb = D3_[3];
+
+        // aaa
+        D3aaa("pqrstu") -= D1a_("ps") * D2aa("qrtu");
+        D3aaa("pqrstu") += D1a_("pt") * D2aa("qrsu");
+        D3aaa("pqrstu") += D1a_("pu") * D2aa("qrts");
+
+        D3aaa("pqrstu") -= D1a_("qt") * D2aa("prsu");
+        D3aaa("pqrstu") += D1a_("qs") * D2aa("prtu");
+        D3aaa("pqrstu") += D1a_("qu") * D2aa("prst");
+
+        D3aaa("pqrstu") -= D1a_("ru") * D2aa("pqst");
+        D3aaa("pqrstu") += D1a_("rs") * D2aa("pqut");
+        D3aaa("pqrstu") += D1a_("rt") * D2aa("pqsu");
+
+        D3aaa("pqrstu") -= D1a_("ps") * D1a_("qt") * D1a_("ru");
+        D3aaa("pqrstu") -= D1a_("pt") * D1a_("qu") * D1a_("rs");
+        D3aaa("pqrstu") -= D1a_("pu") * D1a_("qs") * D1a_("rt");
+
+        D3aaa("pqrstu") += D1a_("ps") * D1a_("qu") * D1a_("rt");
+        D3aaa("pqrstu") += D1a_("pu") * D1a_("qt") * D1a_("rs");
+        D3aaa("pqrstu") += D1a_("pt") * D1a_("qs") * D1a_("ru");
+
+        // aab
+        D3aab("pqRstU") -= D1a_("ps") * D2ab("qRtU");
+        D3aab("pqRstU") += D1a_("pt") * D2ab("qRsU");
+
+        D3aab("pqRstU") -= D1a_("qt") * D2ab("pRsU");
+        D3aab("pqRstU") += D1a_("qs") * D2ab("pRtU");
+
+        D3aab("pqRstU") -= D1b_("RU") * D2aa("pqst");
+
+        D3aab("pqRstU") -= D1a_("ps") * D1a_("qt") * D1b_("RU");
+        D3aab("pqRstU") += D1a_("pt") * D1a_("qs") * D1b_("RU");
+
+        // abb
+        D3abb("pQRsTU") -= D1a_("ps") * D2bb("QRTU");
+
+        D3abb("pQRsTU") -= D1b_("QT") * D2ab("pRsU");
+        D3abb("pQRsTU") += D1b_("QU") * D2ab("pRsT");
+
+        D3abb("pQRsTU") -= D1b_("RU") * D2ab("pQsT");
+        D3abb("pQRsTU") += D1b_("RT") * D2ab("pQsU");
+
+        D3abb("pQRsTU") -= D1a_("ps") * D1b_("QT") * D1b_("RU");
+        D3abb("pQRsTU") += D1a_("ps") * D1b_("QU") * D1b_("RT");
+
+        // bbb
+        D3bbb("pqrstu") -= D1b_("ps") * D2bb("qrtu");
+        D3bbb("pqrstu") += D1b_("pt") * D2bb("qrsu");
+        D3bbb("pqrstu") += D1b_("pu") * D2bb("qrts");
+
+        D3bbb("pqrstu") -= D1b_("qt") * D2bb("prsu");
+        D3bbb("pqrstu") += D1b_("qs") * D2bb("prtu");
+        D3bbb("pqrstu") += D1b_("qu") * D2bb("prst");
+
+        D3bbb("pqrstu") -= D1b_("ru") * D2bb("pqst");
+        D3bbb("pqrstu") += D1b_("rs") * D2bb("pqut");
+        D3bbb("pqrstu") += D1b_("rt") * D2bb("pqsu");
+
+        D3bbb("pqrstu") -= D1b_("ps") * D1b_("qt") * D1b_("ru");
+        D3bbb("pqrstu") -= D1b_("pt") * D1b_("qu") * D1b_("rs");
+        D3bbb("pqrstu") -= D1b_("pu") * D1b_("qs") * D1b_("rt");
+
+        D3bbb("pqrstu") += D1b_("ps") * D1b_("qu") * D1b_("rt");
+        D3bbb("pqrstu") += D1b_("pu") * D1b_("qt") * D1b_("rs");
+        D3bbb("pqrstu") += D1b_("pt") * D1b_("qs") * D1b_("ru");
+
+        // fill out values
+        return_ref.set_L3aaa(D3aaa);
+        return_ref.set_L3aab(D3aab);
+        return_ref.set_L3abb(D3abb);
+        return_ref.set_L3bbb(D3bbb);
     }
 
     outfile->Printf("    Done.");
