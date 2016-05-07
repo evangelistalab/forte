@@ -31,6 +31,7 @@
 #include "dmrgsolver.h"
 #include "helpers.h"
 #include "integrals.h"
+#include "fci_vector.h"
 
 using namespace std;
 
@@ -308,6 +309,15 @@ void DMRGSolver::compute_energy()
         Timer one_body_timer;
         one_body_integrals_ = one_body_operator();
         outfile->Printf("\n OneBody integrals takes %6.5f s", one_body_timer.get());
+    }
+    else if(options_.get_str("SCF_TYPE")=="CD")
+    {
+        Timer one_body_fci_ints;
+        std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        fci_ints->set_active_integrals_and_restricted_docc();
+        one_body_integrals_ = fci_ints->oei_a_vector();
+        scalar_energy_ = fci_ints->scalar_energy();
     }
     
     for(int h = 0; h < iHandler->getNirreps(); h++){

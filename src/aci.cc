@@ -146,8 +146,8 @@ void AdaptiveCI::startup()
 	nalpha_ = (nactel_ + ms) / 2;
 	nbeta_  = nactel_ - nalpha_; 
 
-    outfile->Printf("\n  nbeta = %d", nbeta_);
-    outfile->Printf("\n  nalpha = %d", nalpha_);
+  //  outfile->Printf("\n  nbeta = %d", nbeta_);
+  //  outfile->Printf("\n  nalpha = %d", nalpha_);
 
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
@@ -489,7 +489,7 @@ double AdaptiveCI::compute_energy()
 	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
         print_info();
     }
-    boost::timer t_iamrcisd;
+    Timer aci_elapse;
 
     SharedMatrix P_evecs;
     SharedMatrix PQ_evecs;
@@ -752,32 +752,31 @@ double AdaptiveCI::compute_energy()
 	evecs_ = PQ_evecs;
     CI_RDMS ci_rdms_(options_,fci_ints_,PQ_space_,PQ_evecs, 0,0);
     ci_rdms_.set_max_rdm(rdm_level_);
-    ci_rdms_.convert_to_string(PQ_space_);
+    //ci_rdms_.convert_to_string(PQ_space_);
 	if( rdm_level_ >= 1 ){
-//		Timer one_rdm;	
-//		ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_);
-//		if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s (string)", one_rdm.get());
+	//	Timer one_rdm;	
+	//	ci_rdms_.compute_1rdm_str(ordm_a_,ordm_b_);
+	//	if(!quiet_mode_) outfile->Printf("\n  1-RDMs took %2.6f s (string)", one_rdm.get());
         Timer one_r;
-		ci_rdms_.compute_1rdm(ordm_a_,ordm_b_);
+    	ci_rdms_.compute_1rdm(ordm_a_,ordm_b_);
     	if(!quiet_mode_) outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 		
 		if( options_.get_bool("PRINT_NO") ){
 			print_nos();	
 		}
-
 	}
 	if( rdm_level_ >= 2 ){
-//		Timer two_rdm;
-//		ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_);
-//		if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)", two_rdm.get());
+		//Timer two_rdm;
+		//ci_rdms_.compute_2rdm_str( trdm_aa_, trdm_ab_, trdm_bb_);
+		//if(!quiet_mode_) outfile->Printf("\n  2-RDMs took %2.6f s (string)", two_rdm.get());
 		Timer two_r;
 		ci_rdms_.compute_2rdm( trdm_aa_, trdm_ab_, trdm_bb_);
 		if(!quiet_mode_) outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
 	}
 	if( rdm_level_ >= 3 ){
-//		Timer three;
-//		ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
-//		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s (string)", three.get());
+	//	Timer three;
+	//	ci_rdms_.compute_3rdm_str(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
+	//	if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s (string)", three.get());
         Timer tr;
 		ci_rdms_.compute_3rdm(trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		if(!quiet_mode_) outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
@@ -832,7 +831,7 @@ double AdaptiveCI::compute_energy()
 	    	}
 	    }
 
-        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
+        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
         outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     }
     outfile->Flush();
@@ -1417,7 +1416,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
     energy_history.push_back(new_energies);
 
     // Check for convergence
-    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("E_CONVERGENCE"));
+    return (std::fabs(new_avg_energy - old_avg_energy) < options_.get_double("ACI_CONVERGENCE"));
     //        // Check the history of energies to avoid cycling in a loop
     //        if(cycle > 3){
     //            bool stuck = true;
