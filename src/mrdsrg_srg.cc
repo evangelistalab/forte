@@ -46,71 +46,51 @@ void MRSRG_ODEInt::operator() (const odeint_state_type& x, odeint_state_type& dx
     }
 
     //     b) T1_ and T2_ are the non-diagonal part
-    T1["ia"] = C1["ia"];
-    T1["IA"] = C1["IA"];
-    T1.block("aa").zero();
-    T1.block("AA").zero();
-
-    T2["ijab"] = C2["ijab"];
-    T2["iJaB"] = C2["iJaB"];
-    T2["IJAB"] = C2["IJAB"];
-    T2.block("aaaa").zero();
-    T2.block("aAaA").zero();
-    T2.block("AAAA").zero();
+    for(const auto& block: mrdsrg_obj_.od_one_labels()){
+        T1.block(block)("pq") = C1.block(block)("pq");
+    }
+    for(const auto& block: mrdsrg_obj_.od_two_labels()){
+        T2.block(block)("pqrs") = C2.block(block)("pqrs");
+    }
 
     //     c) compute [Hd, Hod], need to turn on ambit expert mode
     Hbar1.zero();
-    mrdsrg_obj_.H1_T1_C1(O1,T1,1.0,Hbar1);
-    mrdsrg_obj_.H1_T2_C1(O1,T2,1.0,Hbar1);
-    mrdsrg_obj_.H2_T1_C1(O2,T1,1.0,Hbar1);
-    mrdsrg_obj_.H2_T2_C1(O2,T2,1.0,Hbar1);
+    mrdsrg_obj_.H1_G1_C1(O1,T1,1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C1(O1,T2,1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C1(T1,O2,-1.0,Hbar1);
+    mrdsrg_obj_.H2_G2_C1(O2,T2,1.0,Hbar1);
 
     Hbar2.zero();
-    mrdsrg_obj_.H1_T2_C2(O1,T2,1.0,Hbar2);
-    mrdsrg_obj_.H2_T1_C2(O2,T1,1.0,Hbar2);
-    mrdsrg_obj_.H2_T2_C2(O2,T2,1.0,Hbar2);
+    mrdsrg_obj_.H1_G2_C2(O1,T2,1.0,Hbar2);
+    mrdsrg_obj_.H1_G2_C2(T1,O2,-1.0,Hbar2);
+    mrdsrg_obj_.H2_G2_C2(O2,T2,1.0,Hbar2);
 
     //     d) copy Hbar1_ and Hbar2_ to T1_ and T2_, respectively
-    T1["ia"] = Hbar1["ia"];
-    T1["IA"] = Hbar1["IA"];
+    T1["pq"] = Hbar1["pq"];
+    T1["PQ"] = Hbar1["PQ"];
 
-    T2["ijab"] = Hbar2["ijab"];
-    T2["iJaB"] = Hbar2["iJaB"];
-    T2["IJAB"] = Hbar2["IJAB"];
+    T2["pqrs"] = Hbar2["pqrs"];
+    T2["pQrS"] = Hbar2["pQrS"];
+    T2["PQRS"] = Hbar2["PQRS"];
 
     // Step 3: compute d[H(s)] / d(s) = -[H(s), eta(s)]
 
-    //     a) compute -[H(s), eta(s)], where eta(s) contains only hp (or hhpp) blocks
     Hbar0 = 0.0;
-    mrdsrg_obj_.H1_T1_C0(C1,T1,-1.0,Hbar0);
-    mrdsrg_obj_.H1_T2_C0(C1,T2,-1.0,Hbar0);
-    mrdsrg_obj_.H2_T1_C0(C2,T1,-1.0,Hbar0);
-    mrdsrg_obj_.H2_T2_C0(C2,T2,-1.0,Hbar0);
+    mrdsrg_obj_.H1_G1_C0(C1,T1,-1.0,Hbar0);
+    mrdsrg_obj_.H1_G2_C0(C1,T2,-1.0,Hbar0);
+    mrdsrg_obj_.H1_G2_C0(T1,C2,1.0,Hbar0);
+    mrdsrg_obj_.H2_G2_C0(C2,T2,-1.0,Hbar0);
 
     Hbar1.zero();
-    mrdsrg_obj_.H1_T1_C1(C1,T1,-1.0,Hbar1);
-    mrdsrg_obj_.H1_T2_C1(C1,T2,-1.0,Hbar1);
-    mrdsrg_obj_.H2_T1_C1(C2,T1,-1.0,Hbar1);
-    mrdsrg_obj_.H2_T2_C1(C2,T2,-1.0,Hbar1);
+    mrdsrg_obj_.H1_G1_C1(C1,T1,-1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C1(C1,T2,-1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C1(T1,C2,1.0,Hbar1);
+    mrdsrg_obj_.H2_G2_C1(C2,T2,-1.0,Hbar1);
 
     Hbar2.zero();
-    mrdsrg_obj_.H1_T2_C2(C1,T2,-1.0,Hbar2);
-    mrdsrg_obj_.H2_T1_C2(C2,T1,-1.0,Hbar2);
-    mrdsrg_obj_.H2_T2_C2(C2,T2,-1.0,Hbar2);
-
-    //     b) add Hermitian conjugate
-    Hbar0 *= 2.0;
-    C1["pq"] = Hbar1["pq"];
-    C1["PQ"] = Hbar1["PQ"];
-    Hbar1["pq"] += C1["qp"];
-    Hbar1["PQ"] += C1["QP"];
-
-    C2["pqrs"] = Hbar2["pqrs"];
-    C2["pQrS"] = Hbar2["pQrS"];
-    C2["PQRS"] = Hbar2["PQRS"];
-    Hbar2["pqrs"] += C2["rspq"];
-    Hbar2["pQrS"] += C2["rSpQ"];
-    Hbar2["PQRS"] += C2["RSPQ"];
+    mrdsrg_obj_.H1_G2_C2(C1,T2,-1.0,Hbar2);
+    mrdsrg_obj_.H1_G2_C2(T1,C2,1.0,Hbar2);
+    mrdsrg_obj_.H2_G2_C2(C2,T2,-1.0,Hbar2);
 
     // Step 4: set values for the rhs of the ODE
     dxdt[0] = Hbar0;
@@ -192,10 +172,10 @@ double MRDSRG::compute_energy_lsrg2(){
     Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
     C1_ = BTF_->build(tensor_type_,"C1",spin_cases({"gg"}));
     C2_ = BTF_->build(tensor_type_,"C2",spin_cases({"gggg"}));
-//    O1_ = BTF_->build(tensor_type_,"O1",spin_cases({"gg"}));
-//    O2_ = BTF_->build(tensor_type_,"O2",spin_cases({"gggg"}));
     O1_ = BTF_->build(tensor_type_,"O1",diag_one_labels());
     O2_ = BTF_->build(tensor_type_,"O2",diag_two_labels());
+    T1_ = BTF_->build(tensor_type_,"T1",od_one_labels());
+    T2_ = BTF_->build(tensor_type_,"T2",od_two_labels());
     BlockedTensor::set_expert_mode(true);
 
     // set up ODE initial conditions
