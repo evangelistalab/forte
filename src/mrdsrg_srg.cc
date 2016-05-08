@@ -53,7 +53,7 @@ void MRSRG_ODEInt::operator() (const odeint_state_type& x, odeint_state_type& dx
         T2.block(block)("pqrs") = C2.block(block)("pqrs");
     }
 
-    //     c) compute [Hd, Hod], need to turn on ambit expert mode
+    //     c) compute [Hd, Hod]
     Hbar1.zero();
     mrdsrg_obj_.H1_G1_C1(O1,T1,1.0,Hbar1);
     mrdsrg_obj_.H1_G2_C1(O1,T2,1.0,Hbar1);
@@ -249,21 +249,128 @@ void SRGPT2_ODEInt::operator() (const odeint_state_type& x,odeint_state_type& dx
     ambit::BlockedTensor& T2 = mrdsrg_obj_.T2_;
 
     // Step 1: read from x
-    size_t nelement = 0;
+    size_t nelement = 1;
+    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        value = x[nelement];
+        ++nelement;
+    });
+    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        value = x[nelement];
+        ++nelement;
+    });
     for(const auto& block: mrdsrg_obj_.od_one_labels()){
-        C1.block(block).iterate([&](const std::vector<size_t>&, double& value){
-            value = x[nelement];
-            ++nelement;
-        });
+        Hbar1.block(block)("pq") = C1.block(block)("pq");
     }
     for(const auto& block: mrdsrg_obj_.od_two_labels()){
-        C2.block(block).iterate([&](const std::vector<size_t>&, double& value){
-            value = x[nelement];
-            ++nelement;
-        });
+        Hbar2.block(block)("pqrs") = C2.block(block)("pqrs");
     }
 
+//    size_t nelement = 1;
+//    Hbar1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        value = x[nelement];
+//        ++nelement;
+//    });
+//    Hbar2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        value = x[nelement];
+//        ++nelement;
+//    });
+//    C1.zero();
+//    C2.zero();
+//    for(const auto& block: mrdsrg_obj_.od_one_labels()){
+//        C1.block(block)("pq") = Hbar1.block(block)("pq");
+//    }
+//    for(const auto& block: mrdsrg_obj_.od_two_labels()){
+//        C2.block(block)("pqrs") = Hbar2.block(block)("pqrs");
+//    }
+
     // Step 2: compute first-order eta
+    T1.zero();
+    T2.zero();
+    mrdsrg_obj_.H1_G1_C1(O1,C1,1.0,T1);
+    mrdsrg_obj_.H1_G2_C1(O1,C2,1.0,T1);
+    mrdsrg_obj_.H1_G2_C2(O1,C2,1.0,T2);
+
+    std::string Hzero = options_.get_str("H0TH");
+    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
+        mrdsrg_obj_.H1_G2_C1(C1,O2,-1.0,T1);
+        mrdsrg_obj_.H2_G2_C1(O2,C2,1.0,T1);
+
+        mrdsrg_obj_.H1_G2_C2(C1,O2,-1.0,T2);
+        mrdsrg_obj_.H2_G2_C2(O2,C2,1.0,T2);
+    }
+
+    // Step 3: compute first-order d[H(s)] / d(s) = [eta(s), H(s)]
+    C1.zero();
+    C2.zero();
+    mrdsrg_obj_.H1_G1_C1(T1,O1,1.0,C1);
+    mrdsrg_obj_.H1_G2_C1(O1,T2,-1.0,C1);
+    mrdsrg_obj_.H1_G2_C2(O1,T2,-1.0,C2);
+
+    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
+        mrdsrg_obj_.H1_G2_C1(T1,O2,1.0,C1);
+        mrdsrg_obj_.H2_G2_C1(T2,O2,1.0,C1);
+
+        mrdsrg_obj_.H1_G2_C2(T1,O2,1.0,C2);
+        mrdsrg_obj_.H2_G2_C2(T2,O2,1.0,C2);
+    }
+
+    // Step 4: set values for the rhs of the ODE
+    nelement = 1;
+    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        dxdt[nelement] = value;
+        ++nelement;
+    });
+    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        dxdt[nelement] = value;
+        ++nelement;
+    });
+
+//    nelement = 1;
+//    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        dxdt[nelement] = value;
+//        ++nelement;
+//    });
+//    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        dxdt[nelement] = value;
+//        ++nelement;
+//    });
+
+    // Step 5: compute second-order energy
+
+    // a) set up first order Hbar
+//    for(const auto& block: C1.block_labels()){
+//        Hbar1.block(block)("pq") = C1.block(block)("pq");
+//    }
+
+//    Hbar2["pqrs"]  = mrdsrg_obj_.V_["pqrs"];
+//    Hbar2["pQrS"]  = mrdsrg_obj_.V_["pQrS"];
+//    Hbar2["PQRS"]  = mrdsrg_obj_.V_["PQRS"];
+//    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
+//        Hbar2["pqrs"] -= O2["pqrs"];
+//        Hbar2["pQrS"] -= O2["pQrS"];
+//        Hbar2["PQRS"] -= O2["PQRS"];
+//    }
+//    for(const auto& block: C2.block_labels()){
+//        Hbar2.block(block)("pqrs") = C2.block(block)("pqrs");
+//    }
+
+//    Hbar1["pq"]  = C1["pq"];
+//    Hbar1["PQ"]  = C1["PQ"];
+//    Hbar2["pqrs"]  = C2["pqrs"];
+//    Hbar2["pQrS"]  = C2["pQrS"];
+//    Hbar2["PQRS"]  = C2["PQRS"];
+
+    // b) compute commutator
+    Hbar0 = 0.0;
+    mrdsrg_obj_.H1_G1_C0(T1,Hbar1,1.0,Hbar0);
+    mrdsrg_obj_.H1_G2_C0(T1,Hbar2,1.0,Hbar0);
+    mrdsrg_obj_.H1_G2_C0(Hbar1,T2,-1.0,Hbar0);
+    mrdsrg_obj_.H2_G2_C0(T2,Hbar2,1.0,Hbar0);
+    dxdt[0] = Hbar0;
+
+    auto t_end = std::chrono::high_resolution_clock::now();
+    auto t_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
+    mrdsrg_obj_.srg_time_ += t_ms / 1000.0;
 }
 
 double MRDSRG::compute_energy_srgpt2(){
@@ -274,10 +381,155 @@ double MRDSRG::compute_energy_srgpt2(){
     if(options_.get_str("THREEPDC") == "ZERO"){
         outfile->Printf("\n    Skip Lambda3 contributions in [O2, T2].");
     }
-    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",od_one_labels());
-    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",od_two_labels());
 
-    return 0.0;
+    double start_time = 0.0;
+    double end_time = options_.get_double("DSRG_S");
+    if(end_time > 1000.0){
+        end_time = 1000.0;
+        outfile->Printf("\n    Set max s to 1000.");
+    }
+
+    double initial_step = options_.get_double("SRG_DT");
+    std::string srg_odeint = options_.get_str("SRG_ODEINT");
+    outfile->Printf("\n    Max s:             %10.6f", end_time);
+    outfile->Printf("\n    ODE algorithm:     %10s", srg_odeint.c_str());
+    outfile->Printf("\n    Initial time step: %10.6f", initial_step);
+    outfile->Printf("\n");
+
+    std::string title;
+    std::string indent(4, ' ');
+    std::string dash(79, '-');
+    title += indent + str(boost::format("%5c  %10c  %=27s  %=21s  %=8s\n")
+                          % ' ' % ' ' % "Energy (a.u.)" % "Non-Diagonal Norm" % " ");
+    title += indent + std::string (19, ' ') + std::string (27, '-') + "  "
+            + std::string (21, '-') + "  " + std::string (8, ' ') + "\n";
+    title += indent + str(boost::format("%5s  %=10s  %=16s %=10s  %=10s %=10s  %=8s\n")
+                          % "Iter." % "s" % "Corr." % "Delta" % "Hbar1" % "Hbar2" % "Time (s)");
+    title += indent + dash;
+    outfile->Printf("\n%s", title.c_str());
+
+    // initialize tensors
+    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
+    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
+    C1_ = BTF_->build(tensor_type_,"C1",od_one_labels());
+    C2_ = BTF_->build(tensor_type_,"C2",od_two_labels());
+    T1_ = BTF_->build(tensor_type_,"T1",od_one_labels());
+    T2_ = BTF_->build(tensor_type_,"T2",od_two_labels());
+    BlockedTensor::set_expert_mode(true);
+
+    // copy zeroth order Hamiltonian
+    O1_ = BTF_->build(tensor_type_,"O1",diag_one_labels());
+    O1_["pq"] = F_["pq"];
+    O1_["PQ"] = F_["PQ"];
+
+    std::string Hzero = options_.get_str("H0TH");
+    if(Hzero == "FDIAG_VDIAG"){
+        O2_ = BTF_->build(tensor_type_,"O2",re_two_labels());
+        O2_["pqrs"] = V_["pqrs"];
+        O2_["pQrS"] = V_["pQrS"];
+        O2_["PQRS"] = V_["PQRS"];
+    }else if(Hzero == "FDIAG_VACTV"){
+        O2_ = BTF_->build(tensor_type_,"O2",spin_cases({"aaaa"}));
+        O2_["pqrs"] = V_["pqrs"];
+        O2_["pQrS"] = V_["pQrS"];
+        O2_["PQRS"] = V_["PQRS"];
+    }
+
+    // set up ODE initial conditions
+    odeint_state_type x;
+    Hbar0_ = 0.0;
+    x.push_back(Hbar0_);
+
+    C1_["pq"]  = F_["pq"];
+    C1_["PQ"]  = F_["PQ"];
+    C1_["pq"] -= O1_["pq"];
+    C1_["PQ"] -= O1_["PQ"];
+    Hbar1_["pq"]  = C1_["pq"];
+    Hbar1_["PQ"]  = C1_["PQ"];
+
+    C2_["pqrs"]  = V_["pqrs"];
+    C2_["pQrS"]  = V_["pQrS"];
+    C2_["PQRS"]  = V_["PQRS"];
+    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
+        C2_["pqrs"] -= O2_["pqrs"];
+        C2_["pQrS"] -= O2_["pQrS"];
+        C2_["PQRS"] -= O2_["PQRS"];
+    }
+    Hbar2_["pqrs"]  = C2_["pqrs"];
+    Hbar2_["pQrS"]  = C2_["pQrS"];
+    Hbar2_["PQRS"]  = C2_["PQRS"];
+
+    C1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        x.push_back(value);
+    });
+    C2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        x.push_back(value);
+    });
+
+//    for(const auto& block: od_one_labels()){
+//        F_.block(block).iterate([&](const std::vector<size_t>&, double& value){
+//            x.push_back(value);
+//        });
+//    }
+//    for(const auto& block: od_two_labels()){
+//        V_.block(block).iterate([&](const std::vector<size_t>&, double& value){
+//            x.push_back(value);
+//        });
+//    }
+
+    if(options_.get_str("RELAX_REF") != "NONE"){
+
+    }
+
+//    F_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        x.push_back(value);
+//    });
+//    V_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+//        x.push_back(value);
+//    });
+
+    double absolute_error = options_.get_double("SRG_ODEINT_ABSERR");
+    double relative_error = options_.get_double("SRG_ODEINT_RELERR");
+    srg_time_ = 0.0;
+    SRGPT2_ODEInt mrsrg_flow_computer(*this,options_);
+    MRSRG_Print mrsrg_printer(*this);
+
+    // start iterations
+    if (srg_odeint == "FEHLBERG78"){
+        integrate_adaptive(
+                    make_controlled(absolute_error, relative_error,
+                                    runge_kutta_fehlberg78<odeint_state_type>()),
+                    mrsrg_flow_computer,
+                    x,start_time,end_time,initial_step,
+                    mrsrg_printer);
+    } else if (srg_odeint == "CASHKARP"){
+        integrate_adaptive(
+                    make_controlled(absolute_error, relative_error,
+                                    runge_kutta_cash_karp54<odeint_state_type>()),
+                    mrsrg_flow_computer,
+                    x,start_time,end_time,initial_step,
+                    mrsrg_printer);
+    } else if (srg_odeint == "DOPRI5"){
+        integrate_adaptive(
+                    make_controlled(absolute_error, relative_error,
+                                    runge_kutta_dopri5<odeint_state_type>()),
+                    mrsrg_flow_computer,
+                    x,start_time,end_time,initial_step,
+                    mrsrg_printer);
+    }
+
+    // print summary
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n\n  ==> SRG-MRPT2 Energy Summary <==\n");
+    std::vector<std::pair<std::string,double>> energy;
+    energy.push_back({"E0 (reference)", Eref_});
+    energy.push_back({"SRG-MRPT2 correlation energy", Hbar0_});
+    energy.push_back({"SRG-MRPT2 total energy", Eref_ + Hbar0_});
+    for (auto& str_dim: energy){
+        outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(), str_dim.second);
+    }
+
+    return Hbar0_;
 }
 
 }}

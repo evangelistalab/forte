@@ -420,11 +420,13 @@ protected:
 /// The functor used for boost ODE integrator in SRG-MRPT2.
 class SRGPT2_ODEInt {
 public:
-    SRGPT2_ODEInt(MRDSRG& mrdsrg_obj) : mrdsrg_obj_(mrdsrg_obj) { }
+    SRGPT2_ODEInt(MRDSRG& mrdsrg_obj, Options& options)
+        : mrdsrg_obj_(mrdsrg_obj), options_(options) { }
     void operator() (const odeint_state_type& x,odeint_state_type& dxdt,const double t);
 
 protected:
     MRDSRG& mrdsrg_obj_;
+    Options& options_;
 };
 
 /// The functor used to print in each ODE integration step
