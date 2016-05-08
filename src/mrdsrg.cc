@@ -358,7 +358,7 @@ double MRDSRG::compute_energy(){
         break;
     }
     case CORR_LV::SRG_PT2:{
-
+        Etotal += compute_energy_srgpt2();
         break;
     }
     case CORR_LV::PT3:{
