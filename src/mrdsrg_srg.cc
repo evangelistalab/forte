@@ -241,8 +241,6 @@ void SRGPT2_ODEInt::operator() (const odeint_state_type& x,odeint_state_type& dx
     double& Hbar0 = mrdsrg_obj_.Hbar0_;
     ambit::BlockedTensor& Hbar1 = mrdsrg_obj_.Hbar1_;
     ambit::BlockedTensor& Hbar2 = mrdsrg_obj_.Hbar2_;
-    ambit::BlockedTensor& C1 = mrdsrg_obj_.C1_;
-    ambit::BlockedTensor& C2 = mrdsrg_obj_.C2_;
     ambit::BlockedTensor& O1 = mrdsrg_obj_.O1_;
     ambit::BlockedTensor& O2 = mrdsrg_obj_.O2_;
     ambit::BlockedTensor& T1 = mrdsrg_obj_.T1_;
@@ -250,123 +248,101 @@ void SRGPT2_ODEInt::operator() (const odeint_state_type& x,odeint_state_type& dx
 
     // Step 1: read from x
     size_t nelement = 1;
-    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         value = x[nelement];
         ++nelement;
     });
-    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         value = x[nelement];
         ++nelement;
     });
-    for(const auto& block: mrdsrg_obj_.od_one_labels()){
-        Hbar1.block(block)("pq") = C1.block(block)("pq");
-    }
-    for(const auto& block: mrdsrg_obj_.od_two_labels()){
-        Hbar2.block(block)("pqrs") = C2.block(block)("pqrs");
-    }
-
-//    size_t nelement = 1;
-//    Hbar1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        value = x[nelement];
-//        ++nelement;
-//    });
-//    Hbar2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        value = x[nelement];
-//        ++nelement;
-//    });
-//    C1.zero();
-//    C2.zero();
-//    for(const auto& block: mrdsrg_obj_.od_one_labels()){
-//        C1.block(block)("pq") = Hbar1.block(block)("pq");
-//    }
-//    for(const auto& block: mrdsrg_obj_.od_two_labels()){
-//        C2.block(block)("pqrs") = Hbar2.block(block)("pqrs");
-//    }
 
     // Step 2: compute first-order eta
     T1.zero();
     T2.zero();
-    mrdsrg_obj_.H1_G1_C1(O1,C1,1.0,T1);
-    mrdsrg_obj_.H1_G2_C1(O1,C2,1.0,T1);
-    mrdsrg_obj_.H1_G2_C2(O1,C2,1.0,T2);
+    mrdsrg_obj_.H1_G1_C1(O1,Hbar1,1.0,T1);
+    mrdsrg_obj_.H1_G2_C1(O1,Hbar2,1.0,T1);
+    mrdsrg_obj_.H1_G2_C2(O1,Hbar2,1.0,T2);
 
-    std::string Hzero = options_.get_str("H0TH");
-    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
-        mrdsrg_obj_.H1_G2_C1(C1,O2,-1.0,T1);
-        mrdsrg_obj_.H2_G2_C1(O2,C2,1.0,T1);
+    if(Hzero_ == "FDIAG_VDIAG" || Hzero_ == "FDIAG_VACTV"){
+        mrdsrg_obj_.H1_G2_C1(Hbar1,O2,-1.0,T1);
+        mrdsrg_obj_.H2_G2_C1(O2,Hbar2,1.0,T1);
 
-        mrdsrg_obj_.H1_G2_C2(C1,O2,-1.0,T2);
-        mrdsrg_obj_.H2_G2_C2(O2,C2,1.0,T2);
+        mrdsrg_obj_.H1_G2_C2(Hbar1,O2,-1.0,T2);
+        mrdsrg_obj_.H2_G2_C2(O2,Hbar2,1.0,T2);
     }
 
     // Step 3: compute first-order d[H(s)] / d(s) = [eta(s), H(s)]
-    C1.zero();
-    C2.zero();
-    mrdsrg_obj_.H1_G1_C1(T1,O1,1.0,C1);
-    mrdsrg_obj_.H1_G2_C1(O1,T2,-1.0,C1);
-    mrdsrg_obj_.H1_G2_C2(O1,T2,-1.0,C2);
+    Hbar1.zero();
+    Hbar2.zero();
+    mrdsrg_obj_.H1_G1_C1(T1,O1,1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C1(O1,T2,-1.0,Hbar1);
+    mrdsrg_obj_.H1_G2_C2(O1,T2,-1.0,Hbar2);
 
-    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
-        mrdsrg_obj_.H1_G2_C1(T1,O2,1.0,C1);
-        mrdsrg_obj_.H2_G2_C1(T2,O2,1.0,C1);
+    if(Hzero_ == "FDIAG_VDIAG" || Hzero_ == "FDIAG_VACTV"){
+        mrdsrg_obj_.H1_G2_C1(T1,O2,1.0,Hbar1);
+        mrdsrg_obj_.H2_G2_C1(T2,O2,1.0,Hbar1);
 
-        mrdsrg_obj_.H1_G2_C2(T1,O2,1.0,C2);
-        mrdsrg_obj_.H2_G2_C2(T2,O2,1.0,C2);
+        mrdsrg_obj_.H1_G2_C2(T1,O2,1.0,Hbar2);
+        mrdsrg_obj_.H2_G2_C2(T2,O2,1.0,Hbar2);
     }
 
     // Step 4: set values for the rhs of the ODE
     nelement = 1;
-    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         dxdt[nelement] = value;
         ++nelement;
     });
-    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         dxdt[nelement] = value;
         ++nelement;
     });
-
-//    nelement = 1;
-//    C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        dxdt[nelement] = value;
-//        ++nelement;
-//    });
-//    C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        dxdt[nelement] = value;
-//        ++nelement;
-//    });
 
     // Step 5: compute second-order energy
+    //      a) need to reset Hbar to first-order Hamiltonian
+    nelement = 1;
+    Hbar1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        value = x[nelement];
+        ++nelement;
+    });
+    Hbar2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+        value = x[nelement];
+        ++nelement;
+    });
 
-    // a) set up first order Hbar
-//    for(const auto& block: C1.block_labels()){
-//        Hbar1.block(block)("pq") = C1.block(block)("pq");
-//    }
-
-//    Hbar2["pqrs"]  = mrdsrg_obj_.V_["pqrs"];
-//    Hbar2["pQrS"]  = mrdsrg_obj_.V_["pQrS"];
-//    Hbar2["PQRS"]  = mrdsrg_obj_.V_["PQRS"];
-//    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
-//        Hbar2["pqrs"] -= O2["pqrs"];
-//        Hbar2["pQrS"] -= O2["pQrS"];
-//        Hbar2["PQRS"] -= O2["PQRS"];
-//    }
-//    for(const auto& block: C2.block_labels()){
-//        Hbar2.block(block)("pqrs") = C2.block(block)("pqrs");
-//    }
-
-//    Hbar1["pq"]  = C1["pq"];
-//    Hbar1["PQ"]  = C1["PQ"];
-//    Hbar2["pqrs"]  = C2["pqrs"];
-//    Hbar2["pQrS"]  = C2["pQrS"];
-//    Hbar2["PQRS"]  = C2["PQRS"];
-
-    // b) compute commutator
+    //      b) compute 2nd-order energy
     Hbar0 = 0.0;
     mrdsrg_obj_.H1_G1_C0(T1,Hbar1,1.0,Hbar0);
     mrdsrg_obj_.H1_G2_C0(T1,Hbar2,1.0,Hbar0);
     mrdsrg_obj_.H1_G2_C0(Hbar1,T2,-1.0,Hbar0);
     mrdsrg_obj_.H2_G2_C0(T2,Hbar2,1.0,Hbar0);
     dxdt[0] = Hbar0;
+
+    // Step 6: if relax reference
+    if(relax_ref_){
+        ambit::BlockedTensor& C1 = mrdsrg_obj_.C1_;
+        ambit::BlockedTensor& C2 = mrdsrg_obj_.C2_;
+
+        C1.zero();
+        mrdsrg_obj_.H1_G1_C1(T1,Hbar1,1.0,C1);
+        mrdsrg_obj_.H1_G2_C1(T1,Hbar2,1.0,C1);
+        mrdsrg_obj_.H1_G2_C1(Hbar1,T2,-1.0,C1);
+        mrdsrg_obj_.H2_G2_C1(T2,Hbar2,1.0,C1);
+
+        C2.zero();
+        mrdsrg_obj_.H1_G2_C2(T1,Hbar2,1.0,C2);
+        mrdsrg_obj_.H1_G2_C2(Hbar1,T2,-1.0,C2);
+        mrdsrg_obj_.H2_G2_C2(T2,Hbar2,1.0,C2);
+
+        C1.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+            dxdt[nelement] = value;
+            ++nelement;
+        });
+        C2.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+            dxdt[nelement] = value;
+            ++nelement;
+        });
+    }
 
     auto t_end = std::chrono::high_resolution_clock::now();
     auto t_ms = std::chrono::duration_cast<std::chrono::milliseconds>(t_end - t_start).count();
@@ -408,21 +384,28 @@ double MRDSRG::compute_energy_srgpt2(){
     title += indent + dash;
     outfile->Printf("\n%s", title.c_str());
 
-    // initialize tensors
-    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",spin_cases({"gg"}));
-    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",spin_cases({"gggg"}));
-    C1_ = BTF_->build(tensor_type_,"C1",od_one_labels());
-    C2_ = BTF_->build(tensor_type_,"C2",od_two_labels());
-    T1_ = BTF_->build(tensor_type_,"T1",od_one_labels());
-    T2_ = BTF_->build(tensor_type_,"T2",od_two_labels());
-    BlockedTensor::set_expert_mode(true);
+    // some options
+    std::string Hzero = options_.get_str("H0TH");
+    bool relax_ref = options_.get_str("RELAX_REF") != "NONE";
 
-    // copy zeroth order Hamiltonian
+    // initialize tensors
+    BlockedTensor::set_expert_mode(true);
+    T1_ = BTF_->build(tensor_type_,"T1",od_one_labels()); // one-body flow generator
+    T2_ = BTF_->build(tensor_type_,"T2",od_two_labels()); // two-body flow generator
+    Hbar1_ = BTF_->build(tensor_type_,"Hbar1",od_one_labels()); // one-body 1st-order Hamiltonian
+    Hbar2_ = BTF_->build(tensor_type_,"Hbar2",od_two_labels()); // two-body 1st-order Hamiltonian
+
+    // include active part (2nd-order) if relax reference
+    if(relax_ref) {
+        C1_ = BTF_->build(tensor_type_,"C1",spin_cases({"aa"}));
+        C2_ = BTF_->build(tensor_type_,"C2",spin_cases({"aaaa"}));
+    }
+
+    // prepare zeroth-order Hamiltonian
     O1_ = BTF_->build(tensor_type_,"O1",diag_one_labels());
     O1_["pq"] = F_["pq"];
     O1_["PQ"] = F_["PQ"];
 
-    std::string Hzero = options_.get_str("H0TH");
     if(Hzero == "FDIAG_VDIAG"){
         O2_ = BTF_->build(tensor_type_,"O2",re_two_labels());
         O2_["pqrs"] = V_["pqrs"];
@@ -440,58 +423,35 @@ double MRDSRG::compute_energy_srgpt2(){
     Hbar0_ = 0.0;
     x.push_back(Hbar0_);
 
-    C1_["pq"]  = F_["pq"];
-    C1_["PQ"]  = F_["PQ"];
-    C1_["pq"] -= O1_["pq"];
-    C1_["PQ"] -= O1_["PQ"];
-    Hbar1_["pq"]  = C1_["pq"];
-    Hbar1_["PQ"]  = C1_["PQ"];
+    // note that Hbar contains only non-diagonal part
+    // so it is safe to do the following
+    Hbar1_["pq"]  = F_["pq"];
+    Hbar1_["PQ"]  = F_["PQ"];
 
-    C2_["pqrs"]  = V_["pqrs"];
-    C2_["pQrS"]  = V_["pQrS"];
-    C2_["PQRS"]  = V_["PQRS"];
-    if(Hzero == "FDIAG_VDIAG" || Hzero == "FDIAG_VACTV"){
-        C2_["pqrs"] -= O2_["pqrs"];
-        C2_["pQrS"] -= O2_["pQrS"];
-        C2_["PQRS"] -= O2_["PQRS"];
-    }
-    Hbar2_["pqrs"]  = C2_["pqrs"];
-    Hbar2_["pQrS"]  = C2_["pQrS"];
-    Hbar2_["PQRS"]  = C2_["PQRS"];
+    Hbar2_["pqrs"]  = V_["pqrs"];
+    Hbar2_["pQrS"]  = V_["pQrS"];
+    Hbar2_["PQRS"]  = V_["PQRS"];
 
-    C1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         x.push_back(value);
     });
-    C2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+    Hbar2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
         x.push_back(value);
     });
 
-//    for(const auto& block: od_one_labels()){
-//        F_.block(block).iterate([&](const std::vector<size_t>&, double& value){
-//            x.push_back(value);
-//        });
-//    }
-//    for(const auto& block: od_two_labels()){
-//        V_.block(block).iterate([&](const std::vector<size_t>&, double& value){
-//            x.push_back(value);
-//        });
-//    }
-
-    if(options_.get_str("RELAX_REF") != "NONE"){
-
+    if(relax_ref){
+        C1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+            x.push_back(value);
+        });
+        C2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
+            x.push_back(value);
+        });
     }
-
-//    F_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        x.push_back(value);
-//    });
-//    V_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value){
-//        x.push_back(value);
-//    });
 
     double absolute_error = options_.get_double("SRG_ODEINT_ABSERR");
     double relative_error = options_.get_double("SRG_ODEINT_RELERR");
     srg_time_ = 0.0;
-    SRGPT2_ODEInt mrsrg_flow_computer(*this,options_);
+    SRGPT2_ODEInt mrsrg_flow_computer(*this,Hzero,relax_ref);
     MRSRG_Print mrsrg_printer(*this);
 
     // start iterations
@@ -527,6 +487,26 @@ double MRDSRG::compute_energy_srgpt2(){
     energy.push_back({"SRG-MRPT2 total energy", Eref_ + Hbar0_});
     for (auto& str_dim: energy){
         outfile->Printf("\n    %-30s = %23.15f", str_dim.first.c_str(), str_dim.second);
+    }
+
+    // set up all active Hbar
+    if(relax_ref) {
+        // a) reset Hbar to active only
+        Hbar1_ = BTF_->build(tensor_type_,"C1",spin_cases({"aa"}));
+        Hbar2_ = BTF_->build(tensor_type_,"C2",spin_cases({"aaaa"}));
+
+        // b) copy C to Hbar
+        Hbar1_["uv"]  = F_["uv"];
+        Hbar1_["UV"]  = F_["UV"];
+        Hbar1_["uv"] += C1_["uv"];
+        Hbar1_["UV"] += C1_["UV"];
+
+        Hbar2_["uvxy"]  = V_["uvxy"];
+        Hbar2_["uVxY"]  = V_["uVxY"];
+        Hbar2_["UVXY"]  = V_["UVXY"];
+        Hbar2_["uvxy"] += C2_["uvxy"];
+        Hbar2_["uVxY"] += C2_["uVxY"];
+        Hbar2_["UVXY"] += C2_["UVXY"];
     }
 
     return Hbar0_;
