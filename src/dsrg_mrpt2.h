@@ -35,6 +35,7 @@
 #include "helpers.h"
 #include "blockedtensorfactory.h"
 #include "dsrg_time.h"
+#include "dsrg_source.h"
 
 using namespace ambit;
 namespace psi{ namespace forte{
@@ -45,19 +46,42 @@ namespace psi{ namespace forte{
  */
 class DSRG_MRPT2 : public Wavefunction
 {
+public:
+    /**
+     * DSRG_MRPT2 Constructor
+     * @param ref_wfn The reference wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /// Destructor
+    ~DSRG_MRPT2();
+
+    /// Compute the DSRG-MRPT2 energy
+    double compute_energy();
+
+    /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
+    double compute_energy_relaxed();
+
 protected:
+    // => Class initialization and termination <= //
 
-    // => Class data <= //
-
-    enum sourceop{STANDARD, AMP, EMP2, LAMP, LEMP2};
-    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)("AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
+    /// Called in the constructor
+    void startup();
+    /// Called in the destructor
+    void cleanup();
+    /// Print a summary of the options
+    void print_summary();
+    /// Print levels
+    int print_;
 
     /// The reference object
     Reference reference_;
-
     /// The energy of the reference
     double Eref_;
-
     /// The frozen-core energy
     double frozen_core_energy_;
 
@@ -67,111 +91,120 @@ protected:
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
-    /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
-    Dimension ncmopi_;
-    /// The number of restricted doubly occupied orbitals per irrep (core)
-    Dimension rdoccpi_;
-    /// The number of active orbitals per irrep (active)
-    Dimension actvpi_;
-    /// The number of restricted unoccupied orbitals per irrep (virtual)
-    Dimension ruoccpi_;
-
     /// List of alpha core MOs
-    std::vector<size_t> acore_mos;
+    std::vector<size_t> acore_mos_;
     /// List of alpha active MOs
-    std::vector<size_t> aactv_mos;
+    std::vector<size_t> aactv_mos_;
     /// List of alpha virtual MOs
-    std::vector<size_t> avirt_mos;
+    std::vector<size_t> avirt_mos_;
     /// List of beta core MOs
-    std::vector<size_t> bcore_mos;
+    std::vector<size_t> bcore_mos_;
     /// List of beta active MOs
-    std::vector<size_t> bactv_mos;
+    std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
-    std::vector<size_t> bvirt_mos;
+    std::vector<size_t> bvirt_mos_;
 
     /// Alpha core label
-    std::string acore_label;
+    std::string acore_label_;
     /// Alpha active label
-    std::string aactv_label;
+    std::string aactv_label_;
     /// Alpha virtual label
-    std::string avirt_label;
+    std::string avirt_label_;
     /// Beta core label
-    std::string bcore_label;
+    std::string bcore_label_;
     /// Beta active label
-    std::string bactv_label;
+    std::string bactv_label_;
     /// Beta virtual label
-    std::string bvirt_label;
-
-    /// Map from all the MOs to the alpha core
-    std::map<size_t,size_t> mos_to_acore;
-    /// Map from all the MOs to the alpha active
-    std::map<size_t,size_t> mos_to_aactv;
-    /// Map from all the MOs to the alpha virtual
-    std::map<size_t,size_t> mos_to_avirt;
-
-    /// Map from all the MOs to the beta core
-    std::map<size_t,size_t> mos_to_bcore;
-    /// Map from all the MOs to the beta active
-    std::map<size_t,size_t> mos_to_bactv;
-    /// Map from all the MOs to the beta virtual
-    std::map<size_t,size_t> mos_to_bvirt;
+    std::string bvirt_label_;
 
     /// Map from space label to list of MOs
-    std::map<char, std::vector<size_t>> label_to_spacemo;
+    std::map<char, std::vector<size_t>> label_to_spacemo_;
+
+    /// Fill up two-electron integrals
+    void build_ints();
+    /// Fill up density matrix and density cumulants
+    void build_density();
+    /// Build Fock matrix and diagonal Fock matrix elements
+    void build_fock();
+
+    /// Are orbitals semi-canonicalized?
+    bool semi_canonical_;
+    /// Check if orbitals are semi-canonicalized
+    bool check_semicanonical();
+    /// Diagonal elements of Fock matrices
+    std::vector<double> Fa_;
+    std::vector<double> Fb_;
+
+    // => DSRG related <= //
 
     /// The flow parameter
     double s_;
-
     /// Source operator
     std::string source_;
-
+    /// The dsrg source operator
+    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
-    /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    int taylor_order_;
 
-    ambit::TensorType tensor_type_;
-    std::shared_ptr<BlockedTensorFactory> BTF;
+    /// Renormalize Fock matrix
+    void renormalize_F();
+    /// Renormalize two-electron integrals
+    void renormalize_V();
 
     // => Tensors <= //
 
-    ambit::BlockedTensor H;
-    ambit::BlockedTensor F;
-    ambit::BlockedTensor V;
-    ambit::BlockedTensor DFL;
-    ambit::BlockedTensor Gamma1;
-    ambit::BlockedTensor Eta1;
-    ambit::BlockedTensor Lambda2;
-    ambit::BlockedTensor Lambda3;
-    ambit::BlockedTensor Delta1;
-    ambit::BlockedTensor Delta2;
-    ambit::BlockedTensor RDelta1;
-    ambit::BlockedTensor RDelta2;
-    ambit::BlockedTensor T1;
-    ambit::BlockedTensor T2;
-    ambit::BlockedTensor RExp1;  // < one-particle exponential for renormalized Fock matrix
-    ambit::BlockedTensor RExp2;  // < two-particle exponential for renormalized integral
-    ambit::BlockedTensor Hbar1;  // < one-body term of effective Hamiltonian
-    ambit::BlockedTensor Hbar2;  // < two-body term of effective Hamiltonian
-    ambit::BlockedTensor C1;
-    ambit::BlockedTensor C2;
+    /// Kevin's Tensor Wrapper
+    std::shared_ptr<BlockedTensorFactory> BTF_;
+    /// Tensor type for AMBIT
+    TensorType tensor_type_;
 
-    // => Class initialization and termination <= //
+    /// One-particle density matrix
+    ambit::BlockedTensor Gamma1_;
+    /// One-hole density matrix
+    ambit::BlockedTensor Eta1_;
+    /// Two-body denisty cumulant
+    ambit::BlockedTensor Lambda2_;
+    /// Three-body density cumulant
+    ambit::BlockedTensor Lambda3_;
 
-    /// Called in the constructor
-    void startup();
-    /// Called in the destructor
-    void cleanup();
-    /// Print a summary of the options
-    void print_summary();
+    /// Generalized Fock matrix (bare or renormalized)
+    ambit::BlockedTensor F_;
+    /// Two-electron integral (bare or renormalized)
+    ambit::BlockedTensor V_;
+    /// Single excitation amplitude
+    ambit::BlockedTensor T1_;
+    /// Double excitation amplitude
+    ambit::BlockedTensor T2_;
+    /// One-body transformed Hamiltonian (active only)
+    ambit::BlockedTensor Hbar1_;
+    /// Two-body transformed Hamiltonian (active only)
+    ambit::BlockedTensor Hbar2_;
 
-    /// Renormalized denominator
-    double renormalized_denominator(double D);
-    double renormalized_denominator_ts(double D);
-    double renormalized_denominator_amp(double V,double D);
-    double renormalized_denominator_emp2(double V,double D);
-    double renormalized_denominator_lamp(double V,double D);
-    double renormalized_denominator_lemp2(double V,double D);
+    /// Diagonal blocks of Fock matrix
+    ambit::BlockedTensor Fdiag_;
+    /// Unitary matrix to block diagonal Fock
+    ambit::BlockedTensor U_;
+
+
+    // => Amplitude <= //
+
+    /// Compute T2 amplitudes
+    void compute_t2();
+    /// Check T2 and store large amplitudes
+    void check_t2();
+    /// Norm of T2
+    double T2norm_;
+    /// Max (with sign) of T2
+    double T2max_;
+
+    /// Compute T1 amplitudes
+    void compute_t1();
+    /// Check T1 and store large amplitudes
+    void check_t1();
+    /// Norm of T1
+    double T1norm_;
+    /// Max (with sign) of T1
+    double T1max_;
 
     /// Number of amplitudes will be printed in amplitude summary
     int ntamp_;
@@ -182,39 +215,20 @@ protected:
 
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
-    /// Diagonal elements of Fock matrices
-    std::vector<double> Fa;
-    std::vector<double> Fb;
     /// List of large amplitudes
-    std::vector<std::pair<std::vector<size_t>, double>> lt1a;
-    std::vector<std::pair<std::vector<size_t>, double>> lt1b;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2aa;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2ab;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2bb;
+    std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt1b_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2aa_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2ab_;
+    std::vector<std::pair<std::vector<size_t>, double>> lt2bb_;
     /// Print intruder analysis
     void print_intruder(const std::string& name,
                         const std::vector<std::pair<std::vector<size_t>, double>>& list);
 
-    /// Computes the t2 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t2();
-    void check_t2();
-    double T2norm;
-    double T2max;
 
-    /// Computes the t1 amplitudes for three different cases of spin (alpha all, beta all, and alpha beta)
-    void compute_t1();
-    void check_t1();
-    double T1norm;
-    double T1max;
-
-    /// Renormalize Fock matrix and two-electron integral
-    void renormalize_F();
-    void renormalize_V();
-    double renormalized_exp(double D) {return std::exp(-s_ * pow(D, 2.0));}
-    double renormalized_exp_linear(double D) {return std::exp(-s_ * fabs(D));}
+    // => Energy terms <= //
 
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate individual pieces of energy
-    double compute_ref();
     double E_FT1();
     double E_VT1();
     double E_FT2();
@@ -223,6 +237,12 @@ protected:
     double E_VT2_4HH();
     double E_VT2_4PH();
     double E_VT2_6();
+
+
+    // => Reference relaxation <= //
+
+    /// Relaxation type
+    std::string relax_ref_;
 
     /// Timings for computing the commutators
     DSRG_TIME dsrg_time_;
@@ -245,67 +265,14 @@ protected:
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
-    // => Reference relaxation <= //
-
-    /// Fill up integrals
-    void build_ints();
-    /// Fill up density matrix and density cumulants
-    void build_density();
-    /// Build Fock matrix and diagonal Fock matrix elements
-    void build_fock(BlockedTensor& H, BlockedTensor& V);
     /// Transfer integrals for FCI
     void transfer_integrals();
-    /// Reset integrals to bare Hamiltonian
-    void reset_ints(BlockedTensor& H, BlockedTensor& V);
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
     ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
-
-    // Print levels
-    int print_;
-
-    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
-            double value = Z, tmp = Z;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= -1.0 * pow(Z, 2.0) / (x+2);
-                value += tmp;
-            }
-            return value;
-        }else{return 0.0;}
-    }
-
-    // Taylor Expansion of [1 - exp(-s * |Z|)] / Z
-    double Taylor_Exp_Linear(const double& Z, const int& n){
-        bool Zabs = Z > 0.0 ? 1 : 0;
-        if(n > 0){
-            double value = 1, tmp = 1;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= pow(-1.0, Zabs) * Z / (x+2);
-                value += tmp;
-            }
-            return value * pow(-1.0, Zabs + 1);
-        }else{return 0.0;}
-    }
-
-public:
-
-    // => Constructors <= //
-
-    DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-    ~DSRG_MRPT2();
-
-    /// Compute the DSRG-MRPT2 energy
-    double compute_energy();
-
-    /// Compute the corr_level energy with relaxed reference
-    double compute_energy_relaxed();
 };
 
 }} // End Namespaces
