@@ -179,8 +179,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
 }
 void DMRGSolver::compute_energy()
 {
-    const int wfn_irrep               = options_.get_int("DMRG_WFN_IRREP");
-    const int wfn_multp               = options_.get_int("DMRG_WFN_MULTP");
+    const int wfn_irrep               = options_.get_int("ROOT_SYM");
+    const int wfn_multp               = options_.get_int("MULTIPLICITY");
     int * dmrg_states                 = options_.get_int_array("DMRG_STATES");
     const int ndmrg_states            = options_["DMRG_STATES"].size();
     double * dmrg_econv               = options_.get_double_array("DMRG_ECONV");

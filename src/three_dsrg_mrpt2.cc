@@ -1332,6 +1332,10 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             temp["uVWxYZ"] -= V_["aWxY"] * T2_["uVaZ"];      //  aAAaAA from particle
 
             //E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
+            double Econtrib = 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
+            outfile->Printf("\n Econtrib: %8.8f", Econtrib);
+            outfile->Printf("\n L3aAANorm: %8.8f", Lambda3.block("aAAaAA").norm(2.0) * Lambda3.block("aAAaAA").norm(2.0));
+            outfile->Printf("\n temp: %8.8f", temp.block("aAAaAA").norm(2.0) * temp.block("aAAaAA").norm(2.0));
             ambit::Tensor temp_uVWz = ambit::Tensor::build(tensor_type_, "VWxz", {active_, active_, active_, active_});
             std::vector<double>& temp_uVWz_data = temp.block("aAAaAA").data();
             ambit::Tensor L3_ZuVW = ambit::Tensor::build(tensor_type_, "L3Slice", {active_, active_, active_, active_});
@@ -1341,6 +1345,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             size_t active5 = active4 * active_;
             double normTemp = 0.0;
             double normCumulant = 0.0;
+            double Econtrib2 = 0.0;
             for(size_t x = 0; x < active_; x++){
                 for(size_t y = 0; y < active_; y++){
                     
@@ -1349,11 +1354,13 @@ double THREE_DSRG_MRPT2::E_VT2_6()
                     fseek(fl3aAA, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
                     fread(&(L3_ZuVW.data()[0]), sizeof(double), active4, fl3aAA);
                     E += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
-                    normTemp += temp_uVWz.norm(2.0);
-                    normCumulant += L3_ZuVW.norm(2.0);
+                    Econtrib2 += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
+                    normTemp += temp_uVWz.norm(2.0) * temp_uVWz.norm(2.0);
+                    normCumulant += L3_ZuVW.norm(2.0) * L3_ZuVW.norm(2.0);
                     
                 }
             }
+            outfile->Printf("\n Econtrib2: %8.8f", Econtrib2);
             outfile->Printf("\n Temp: %8.8f Cumulant: %8.8f", normTemp, normCumulant);
                 
         }
