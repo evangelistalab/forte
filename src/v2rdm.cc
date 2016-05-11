@@ -522,7 +522,7 @@ Reference V2RDM::reference(){
     }
 
     if(options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT"){
-        write_cumulant_to_file();
+        write_density_to_file();
     }
 
     outfile->Printf("    Done.");
@@ -533,89 +533,48 @@ void V2RDM::write_density_to_file(){
     std::string str = "Writing density matrices to files";
     outfile->Printf("\n  %-45s ...", str.c_str());
 
-    std::ofstream outfstr;
-    outfstr.open("file_opdm_a");
-    D1a_.iterate([&](const std::vector<size_t>& i,double& value){
-        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
-    });
-    outfstr.close();
-    outfstr.clear();
-    outfstr.open("file_opdm_b");
-    D1b_.iterate([&](const std::vector<size_t>& i,double& value){
-        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
-    });
-    outfstr.close();
-    outfstr.clear();
-
-    std::map<int, std::string> d2_to_filename;
-    d2_to_filename[0] = "file_2pdm_aa";
-    d2_to_filename[1] = "file_2pdm_ab";
-    d2_to_filename[2] = "file_2pdm_bb";
-
-    for(int i = 0; i < D2_.size(); ++i){
-        outfstr.open(d2_to_filename[i]);
-
-        ambit::Tensor& D2 = D2_[i];
-        D2.iterate([&](const std::vector<size_t>& i,double& value){
-            outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n")
-                       % i[0] % i[1] % i[2] % i[3] % value;
-        });
-
-        outfstr.close();
-        outfstr.clear();
+    std::vector<std::string> filenames;
+    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+        for(const std::string& spin: {"a", "b"}){
+            filenames.push_back("file_opdm_" + spin);
+        }
+        for(const std::string& spin: {"aa", "ab", "bb"}){
+            filenames.push_back("file_2pdm_" + spin);
+        }
+        for(const std::string& spin: {"aaa", "aab", "abb", "bbb"}){
+            filenames.push_back("file_3pdm_" + spin);
+        }
     }
-
-    if(options_.get_str("THREEPDC") != "ZERO"){
-        std::map<int, std::string> d3_to_filename;
-        d3_to_filename[0] = "file_3pdm_aaa";
-        d3_to_filename[1] = "file_3pdm_aab";
-        d3_to_filename[2] = "file_3pdm_abb";
-        d3_to_filename[3] = "file_3pdm_bbb";
-
-        for(int i = 0; i < D3_.size(); ++i){
-            outfstr.open(d3_to_filename[i]);
-
-            ambit::Tensor& D3 = D3_[i];
-            D3.iterate([&](const std::vector<size_t>& i,double& value){
-                outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n")
-                           % i[0] % i[1] % i[2] % i[3] % i[4] % i[5] % value;
-            });
-
-            outfstr.close();
-            outfstr.clear();
+    else if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+        for(const std::string& spin: {"a", "b"}){
+            filenames.push_back("file_opdc_" + spin);
+        }
+        for(const std::string& spin: {"aa", "ab", "bb"}){
+            filenames.push_back("file_2pdc_" + spin);
+        }
+        for(const std::string& spin: {"aaa", "aab", "abb", "bbb"}){
+            filenames.push_back("file_3pdc_" + spin);
         }
     }
 
-    outfile->Printf("    Done.");
-}
-
-void V2RDM::write_cumulant_to_file(){
-    std::string str = "Writing cumulants to files";
-    outfile->Printf("\n  %-45s ...", str.c_str());
-
     std::ofstream outfstr;
-    outfstr.open("file_opdc_a");
+    outfstr.open(filenames[0]);
     D1a_.iterate([&](const std::vector<size_t>& i,double& value){
         outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
     });
     outfstr.close();
     outfstr.clear();
-    outfstr.open("file_opdc_b");
+    outfstr.open(filenames[1]);
     D1b_.iterate([&](const std::vector<size_t>& i,double& value){
         outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
     });
     outfstr.close();
     outfstr.clear();
 
-    std::map<int, std::string> d2_to_filename;
-    d2_to_filename[0] = "file_2pdc_aa";
-    d2_to_filename[1] = "file_2pdc_ab";
-    d2_to_filename[2] = "file_2pdc_bb";
+    for(int m = 0; m < 3; ++m){
+        outfstr.open(filenames[m + 2]);
 
-    for(int i = 0; i < D2_.size(); ++i){
-        outfstr.open(d2_to_filename[i]);
-
-        ambit::Tensor& D2 = D2_[i];
+        ambit::Tensor& D2 = D2_[m];
         D2.iterate([&](const std::vector<size_t>& i,double& value){
             outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n")
                        % i[0] % i[1] % i[2] % i[3] % value;
@@ -626,16 +585,10 @@ void V2RDM::write_cumulant_to_file(){
     }
 
     if(options_.get_str("THREEPDC") != "ZERO"){
-        std::map<int, std::string> d3_to_filename;
-        d3_to_filename[0] = "file_3pdc_aaa";
-        d3_to_filename[1] = "file_3pdc_aab";
-        d3_to_filename[2] = "file_3pdc_abb";
-        d3_to_filename[3] = "file_3pdc_bbb";
+        for(int m = 0; m < 4; ++m){
+            outfstr.open(filenames[m + 5]);
 
-        for(int i = 0; i < D3_.size(); ++i){
-            outfstr.open(d3_to_filename[i]);
-
-            ambit::Tensor& D3 = D3_[i];
+            ambit::Tensor& D3 = D3_[m];
             D3.iterate([&](const std::vector<size_t>& i,double& value){
                 outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n")
                            % i[0] % i[1] % i[2] % i[3] % i[4] % i[5] % value;
