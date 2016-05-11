@@ -79,15 +79,27 @@ protected:
     /// Compute the reference energy
     double compute_ref_energy();
 
-    /// One particle density matrix
-    ambit::Tensor D1a_;    // only in active
-    ambit::Tensor D1b_;    // only in active
+    /// One particle density matrix (active only)
+    ambit::Tensor D1a_;
+    ambit::Tensor D1b_;
 
-    /// Two particle density matrix
+    /// Two particle density matrix (active only)
     std::vector<ambit::Tensor> D2_; // D2aa, D2ab, D2bb
 
-    /// Three particle density matrix
+    /// Three particle density matrix (active only)
     std::vector<ambit::Tensor> D3_; // D3aaa, D3aab, D3abb, D3bbb
+
+    /// Write densities to files
+    /// 1PDM: file_opdm_a, file_opdm_b
+    /// 2PDM: file_2pdm_aa, file_2pdm_ab, file_2pdm_bb
+    /// 3PDM: file_3pdm_aaa, file_3pdm_aab, file_3pdm_abb, file_3pdm_bbb
+    void write_density_to_file();
+
+    /// Write cumulants to files
+    /// 1PDC: file_opdc_a, file_opdc_b
+    /// 2PDC: file_2pdc_aa, file_2pdc_ab, file_2pdc_bb
+    /// 3PDC: file_3pdc_aaa, file_3pdc_aab, file_3pdc_abb, file_3pdc_bbb
+    void write_cumulant_to_file();
 };
 
 }}

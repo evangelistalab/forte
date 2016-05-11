@@ -628,6 +628,12 @@ read_options(std::string name, Options &options)
         options.add_double("D_CONVERGENCE",1.0e-8);
 
         //////////////////////////////////////////////////////////////
+        ///         OPTIONS FOR THE V2RDM INTERFACE
+        //////////////////////////////////////////////////////////////
+        /*- Write Density Matrices or Cumulants to File -*/
+        options.add_str("WRITE_DENSITY_TYPE", "NONE", "NONE DENSITY CUMULANT");
+
+        //////////////////////////////////////////////////////////////
         ///              OPTIONS FOR THE MR-DSRG MODULE
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
