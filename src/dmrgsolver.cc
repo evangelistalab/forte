@@ -31,6 +31,7 @@
 #include "dmrgsolver.h"
 #include "helpers.h"
 #include "integrals.h"
+#include "fci_vector.h"
 
 using namespace std;
 
@@ -178,8 +179,8 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
 }
 void DMRGSolver::compute_energy()
 {
-    const int wfn_irrep               = options_.get_int("DMRG_WFN_IRREP");
-    const int wfn_multp               = options_.get_int("DMRG_WFN_MULTP");
+    const int wfn_irrep               = options_.get_int("ROOT_SYM");
+    const int wfn_multp               = options_.get_int("MULTIPLICITY");
     int * dmrg_states                 = options_.get_int_array("DMRG_STATES");
     const int ndmrg_states            = options_["DMRG_STATES"].size();
     double * dmrg_econv               = options_.get_double_array("DMRG_ECONV");
@@ -308,6 +309,15 @@ void DMRGSolver::compute_energy()
         Timer one_body_timer;
         one_body_integrals_ = one_body_operator();
         outfile->Printf("\n OneBody integrals takes %6.5f s", one_body_timer.get());
+    }
+    else if(options_.get_str("SCF_TYPE")=="CD")
+    {
+        Timer one_body_fci_ints;
+        std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        fci_ints->set_active_integrals_and_restricted_docc();
+        one_body_integrals_ = fci_ints->oei_a_vector();
+        scalar_energy_ = fci_ints->scalar_energy();
     }
     
     for(int h = 0; h < iHandler->getNirreps(); h++){

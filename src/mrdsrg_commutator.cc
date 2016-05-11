@@ -675,6 +675,228 @@ void MRDSRG::H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
 
 void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0){
     Timer timer;
+    double E = 0.0;
+
+    // <[Hbar2, T2]> (C_2)^4
+    // No gamma nor eta
+    E += H2["eFmN"] * G2["mNeF"];
+    E += 0.25 * H2["efmn"] * G2["mnef"];
+    E += 0.25 * H2["EFMN"] * G2["MNEF"];
+    E -= G2["eFmN"] * H2["mNeF"];
+    E -= 0.25 * G2["efmn"] * H2["mnef"];
+    E -= 0.25 * G2["EFMN"] * H2["MNEF"];
+
+    // one gamma
+    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
+    temp["vu"] += 0.5 * H2["efmu"] * G2["mvef"];
+    temp["vu"] += H2["fEuM"] * G2["vMfE"];
+    temp["vu"] -= 0.5 * G2["efmu"] * H2["mvef"];
+    temp["vu"] -= G2["fEuM"] * H2["vMfE"];
+    E += temp["vu"] * Gamma1_["uv"];
+
+    temp["VU"] += 0.5 * H2["EFMU"] * G2["MVEF"];
+    temp["VU"] += H2["eFmU"] * G2["mVeF"];
+    temp["VU"] -= 0.5 * G2["EFMU"] * H2["MVEF"];
+    temp["VU"] -= G2["eFmU"] * H2["mVeF"];
+    E += temp["VU"] * Gamma1_["UV"];
+
+    // one eta
+    temp.zero();
+    temp["vu"] += 0.5 * H2["vemn"] * G2["mnue"];
+    temp["vu"] += H2["vEmN"] * G2["mNuE"];
+    temp["vu"] -= 0.5 * G2["vemn"] * H2["mnue"];
+    temp["vu"] -= G2["vEmN"] * H2["mNuE"];
+    E += temp["vu"] * Eta1_["uv"];
+
+    temp["VU"] += 0.5 * H2["VEMN"] * G2["MNUE"];
+    temp["VU"] += H2["eVnM"] * G2["nMeU"];
+    temp["VU"] -= 0.5 * G2["VEMN"] * H2["MNUE"];
+    temp["VU"] -= G2["eVnM"] * H2["nMeU"];
+    E += temp["VU"] * Eta1_["UV"];
+
+    // two gamma
+    temp = ambit::BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
+    temp["yvxu"] += H2["efxu"] * G2["yvef"];
+    temp["yVxU"] += H2["eFxU"] * G2["yVeF"];
+    temp["YVXU"] += H2["EFXU"] * G2["YVEF"];
+    temp["yvxu"] -= G2["efxu"] * H2["yvef"];
+    temp["yVxU"] -= G2["eFxU"] * H2["yVeF"];
+    temp["YVXU"] -= G2["EFXU"] * H2["YVEF"];
+    E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
+    E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
+    E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
+
+    // two eta
+    temp.zero();
+    temp["vyux"] += H2["vymn"] * G2["mnux"];
+    temp["vYuX"] += H2["vYmN"] * G2["mNuX"];
+    temp["VYUX"] += H2["VYMN"] * G2["MNUX"];
+    temp["vyux"] -= G2["vymn"] * H2["mnux"];
+    temp["vYuX"] -= G2["vYmN"] * H2["mNuX"];
+    temp["VYUX"] -= G2["VYMN"] * H2["MNUX"];
+    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
+    E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
+    E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
+
+    // one gamma, one eta
+    temp.zero();
+    temp["vyux"] += H2["vemx"] * G2["myue"];
+    temp["vyux"] += H2["vExM"] * G2["yMuE"];
+    temp["vyux"] -= G2["vemx"] * H2["myue"];
+    temp["vyux"] -= G2["vExM"] * H2["yMuE"];
+    E += temp["vyux"] * Gamma1_["xy"] * Eta1_["uv"];
+
+    temp["VYUX"] += H2["eVmX"] * G2["mYeU"];
+    temp["VYUX"] += H2["VEXM"] * G2["YMUE"];
+    temp["VYUX"] -= G2["eVmX"] * H2["mYeU"];
+    temp["VYUX"] -= G2["VEXM"] * H2["YMUE"];
+    E += temp["VYUX"] * Gamma1_["XY"] * Eta1_["UV"];
+
+    temp["yVxU"]  = H2["eVxM"] * G2["yMeU"];
+    temp["yVxU"] -= G2["eVxM"] * H2["yMeU"];
+    E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
+
+    temp["vYuX"]  = H2["vEmX"] * G2["mYuE"];
+    temp["vYuX"] -= G2["vEmX"] * H2["mYuE"];
+    E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
+
+    // one gamma, two eta; two gamma, one eta
+    temp.zero();
+    temp["yvxu"] += 0.5 * Gamma1_["wz"] * H2["vexw"] * G2["yzue"];
+    temp["yvxu"] += Gamma1_["WZ"] * H2["vExW"] * G2["yZuE"];
+    temp["yvxu"] -= 0.5 * Gamma1_["wz"] * G2["vexw"] * H2["yzue"];
+    temp["yvxu"] -= Gamma1_["WZ"] * G2["vExW"] * H2["yZuE"];
+
+    temp["yvxu"] += 0.5 * Eta1_["wz"] * G2["myuw"] * H2["vzmx"];
+    temp["yvxu"] += Eta1_["WZ"] * G2["yMuW"] * H2["vZxM"];
+    temp["yvxu"] -= 0.5 * Eta1_["wz"] * H2["myuw"] * G2["vzmx"];
+    temp["yvxu"] -= Eta1_["WZ"] * H2["yMuW"] * G2["vZxM"];
+    E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
+
+    temp["YVXU"] += 0.5 * Gamma1_["WZ"] * H2["VEXW"] * G2["YZUE"];
+    temp["YVXU"] += Gamma1_["wz"] * H2["eVwX"] * G2["zYeU"];
+    temp["YVXU"] -= 0.5 * Gamma1_["WZ"] * G2["VEXW"] * H2["YZUE"];
+    temp["YVXU"] -= Gamma1_["wz"] * G2["eVwX"] * H2["zYeU"];
+
+    temp["YVXU"] += 0.5 * Eta1_["WZ"] * G2["MYUW"] * H2["VZMX"];
+    temp["YVXU"] += Eta1_["wz"] * H2["zVmX"] * G2["mYwU"];
+    temp["YVXU"] -= 0.5 * Eta1_["WZ"] * H2["MYUW"] * G2["VZMX"];
+    temp["YVXU"] -= Eta1_["wz"] * G2["zVmX"] * H2["mYwU"];
+    E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
+
+    // <[Hbar2, T2]> C_4 (C_2)^2 ++,--
+    temp.zero();
+    temp["xyuv"] += 0.125 * H2["xypq"] * G2["pquv"];
+    temp["xyuv"] -= 0.25  * H2["xype"] * G2["peuv"];
+    temp["xyuv"] -= 0.25  * H2["xypw"] * G2["pzuv"] * Eta1_["wz"];
+
+    temp["xYuV"] += H2["xYpQ"] * G2["pQuV"];
+    temp["xYuV"] -= H2["xYpE"] * G2["pEuV"];
+    temp["xYuV"] -= H2["xYeP"] * G2["ePuV"];
+    temp["xYuV"] -= H2["xYpW"] * G2["pZuV"] * Eta1_["WZ"];
+    temp["xYuV"] -= H2["xYwP"] * G2["zPuV"] * Eta1_["wz"];
+
+    temp["XYUV"] += 0.125 * H2["XYPQ"] * G2["PQUV"];
+    temp["XYUV"] -= 0.25  * H2["XYPE"] * G2["PEUV"];
+    temp["XYUV"] -= 0.25  * H2["XYPW"] * G2["PZUV"] * Eta1_["WZ"];
+
+    // <[Hbar2, T2]> C_4 (C_2)^2 --,++
+    temp["xyuv"] += 0.125 * H2["pquv"] * G2["xypq"];
+    temp["xyuv"] -= 0.25  * H2["pmuv"] * G2["xypm"];
+    temp["xyuv"] -= 0.25  * H2["pzuv"] * G2["xypw"] * Gamma1_["wz"];
+
+    temp["xYuV"] += H2["pQuV"] * G2["xYpQ"];
+    temp["xYuV"] -= H2["pMuV"] * G2["xYpM"];
+    temp["xYuV"] -= H2["mPuV"] * G2["xYmP"];
+    temp["xYuV"] -= H2["pZuV"] * G2["xYpW"] * Gamma1_["WZ"];
+    temp["xYuV"] -= H2["zPuV"] * G2["xYwP"] * Gamma1_["wz"];
+
+    temp["XYUV"] += 0.125 * H2["PQUV"] * G2["XYPQ"];
+    temp["XYUV"] -= 0.25  * H2["PMUV"] * G2["XYPM"];
+    temp["XYUV"] -= 0.25  * H2["PZUV"] * G2["XYPW"] * Gamma1_["WZ"];
+
+    // <[Hbar2, T2]> C_4 (C_2)^2 +-,+-
+    temp["xyuv"] += H2["pxum"] * G2["myvp"];
+    temp["xyuv"] += H2["pxuw"] * G2["zyvp"] * Gamma1_["wz"];
+    temp["xyuv"] += H2["xPuW"] * G2["yZvP"] * Gamma1_["WZ"];
+    temp["xyuv"] -= H2["mxup"] * G2["pyvm"];
+    temp["xyuv"] -= H2["zxup"] * G2["pyvw"] * Gamma1_["wz"];
+    temp["xyuv"] -= H2["xZuP"] * G2["yPvW"] * Gamma1_["WZ"];
+    E += temp["xyuv"] * Lambda2_["xyuv"];
+
+    temp["XYUV"] += H2["PYUM"] * G2["MYVP"];
+    temp["XYUV"] += H2["pXwU"] * G2["zYpV"] * Gamma1_["wz"];
+    temp["XYUV"] += H2["XPUW"] * G2["YZVP"] * Gamma1_["WZ"];
+    temp["XYUV"] -= H2["MXUP"] * G2["PYVM"];
+    temp["XYUV"] -= H2["zXpU"] * G2["pYwV"] * Gamma1_["wz"];
+    temp["XYUV"] -= H2["XZUP"] * G2["YPVW"] * Gamma1_["WZ"];
+    E += temp["XYUV"] * Lambda2_["XYUV"];
+
+    temp["xYuV"] += H2["xpum"] * G2["mYpV"];
+    temp["xYuV"] += H2["xPuM"] * G2["MYPV"];
+    temp["xYuV"] -= H2["pYuM"] * G2["xMpV"];
+    temp["xYuV"] -= H2["xPmV"] * G2["mYuP"];
+    temp["xYuV"] += H2["pYmV"] * G2["xmup"];
+    temp["xYuV"] += H2["PYMV"] * G2["xMuP"];
+
+    temp["xYuV"] += H2["xpuw"] * G2["zYpV"] * Gamma1_["wz"];
+    temp["xYuV"] += H2["xPuW"] * G2["ZYPV"] * Gamma1_["WZ"];
+    temp["xYuV"] -= H2["pYuW"] * G2["xZpV"] * Gamma1_["WZ"];
+    temp["xYuV"] -= H2["xPwV"] * G2["zYuP"] * Gamma1_["wz"];
+    temp["xYuV"] += H2["pYwV"] * G2["xzup"] * Gamma1_["wz"];
+    temp["xYuV"] += H2["PYWV"] * G2["xZuP"] * Gamma1_["WZ"];
+
+    temp["xYuV"] -= H2["xmup"] * G2["pYmV"];
+    temp["xYuV"] -= H2["xMuP"] * G2["PYMV"];
+    temp["xYuV"] += H2["mYuP"] * G2["xPmV"];
+    temp["xYuV"] += H2["xMpV"] * G2["pYuM"];
+    temp["xYuV"] -= H2["mYpV"] * G2["xpum"];
+    temp["xYuV"] -= H2["MYPV"] * G2["xPuM"];
+
+    temp["xYuV"] -= H2["xzup"] * G2["pYwV"] * Gamma1_["wz"];
+    temp["xYuV"] -= H2["xZuP"] * G2["PYWV"] * Gamma1_["WZ"];
+    temp["xYuV"] += H2["zYuP"] * G2["xPwV"] * Gamma1_["wz"];
+    temp["xYuV"] += H2["xZpV"] * G2["pYuW"] * Gamma1_["WZ"];
+    temp["xYuV"] -= H2["zYpV"] * G2["xpuw"] * Gamma1_["wz"];
+    temp["xYuV"] -= H2["ZYPV"] * G2["xPuW"] * Gamma1_["WZ"];
+    E += temp["xYuV"] * Lambda2_["xYuV"];
+
+    // <[Hbar2, T2]> C_6 C_2
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
+        temp["xyzuvw"] += H2["yzpu"] * G2["pxvw"];
+        temp["xyzuvw"] -= H2["zpuv"] * G2["xywp"];
+        E += 0.25 * temp["xyzuvw"] * Lambda3_["xyzuvw"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
+        temp["XYZUVW"] += H2["YZPU"] * G2["PXVW"];
+        temp["XYZUVW"] -= H2["ZPUV"] * G2["XYWP"];
+        E += 0.25 * temp["XYZUVW"] * Lambda3_["XYZUVW"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
+        temp["xyZuvW"] += 2.0 * H2["yZuP"] * G2["xPvW"];
+        temp["xyZuvW"] += H2["xypu"] * G2["pZvW"];
+        temp["xyZuvW"] += H2["yZpW"] * G2["pxuv"];
+
+        temp["xyZuvW"] -= 2.0 * H2["yPuW"] * G2["xZvP"];
+        temp["xyZuvW"] -= H2["pZuW"] * G2["xyvp"];
+        temp["xyZuvW"] -= H2["ypuv"] * G2["xZpW"];
+        E += 0.5 * temp["xyZuvW"] * Lambda3_["xyZuvW"];
+
+        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
+        temp["xYZuVW"] += 2.0 * H2["xZpV"] * G2["pYuW"];
+        temp["xYZuVW"] += H2["YZPV"] * G2["xPuW"];
+        temp["xYZuVW"] += H2["xZuP"] * G2["PYVW"];
+
+        temp["xYZuVW"] -= 2.0 * H2["pZuV"] * G2["xYpW"];
+        temp["xYZuVW"] -= H2["xPuV"] * G2["YZWP"];
+        temp["xYZuVW"] -= H2["ZPVW"] * G2["xYuP"];
+        E += 0.5 * temp["xYZuVW"] * Lambda3_["xYZuVW"];
+    }
+
+    // multiply prefactor and copy to C0
+    E  *= alpha;
+    C0 += E;
 
     dsrg_time_.add("220",timer.get());
 }
@@ -718,32 +940,345 @@ void MRDSRG::H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha,
 void MRDSRG::H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C1){
     Timer timer;
 
+    // [Hbar2, T2] (C_2)^3 -> C1 +--,++-
+    C1["pq"] += 0.5 * alpha * H2["rsqm"] * G2["pmrs"];
+    C1["pq"] += alpha * H2["rSqM"] * G2["pMrS"];
+    C1["PQ"] += 0.5 * alpha * H2["RSQM"] * G2["PMRS"];
+    C1["PQ"] += alpha * H2["rSmQ"] * G2["mPrS"];
+
+    C1["pq"] += 0.5 * alpha * H2["rsqu"] * G2["pvrs"] * Gamma1_["uv"];
+    C1["pq"] += alpha * H2["rSqU"] * G2["pVrS"] * Gamma1_["UV"];
+    C1["PQ"] += 0.5 * alpha * H2["RSQU"] * G2["PVRS"] * Gamma1_["UV"];
+    C1["PQ"] += alpha * H2["rSuQ"] * G2["vPrS"] * Gamma1_["uv"];
+
+    C1["pq"] += 0.5 * alpha * H2["mnqr"] * G2["prmn"];
+    C1["pq"] += alpha * H2["mNqR"] * G2["pRmN"];
+    C1["PQ"] += 0.5 * alpha * H2["MNQR"] * G2["PRMN"];
+    C1["PQ"] += alpha * H2["mNrQ"] * G2["rPmN"];
+
+    C1["pq"] += alpha * H2["mvqr"] * G2["prmu"] * Gamma1_["uv"];
+    C1["pq"] += alpha * H2["mVqR"] * G2["pRmU"] * Gamma1_["UV"];
+    C1["pq"] += alpha * H2["vMqR"] * G2["pRuM"] * Gamma1_["uv"];
+    C1["PQ"] += alpha * H2["mVrQ"] * G2["rPmU"] * Gamma1_["UV"];
+    C1["PQ"] += alpha * H2["vMrQ"] * G2["rPuM"] * Gamma1_["uv"];
+    C1["PQ"] += alpha * H2["MVQR"] * G2["PRMU"] * Gamma1_["UV"];
+
+    C1["pq"] += 0.5 * alpha * H2["vyqr"] * G2["prux"] * Gamma1_["xy"] * Gamma1_["uv"];
+    C1["pq"] += alpha * H2["vYqR"] * G2["pRuX"] * Gamma1_["XY"] * Gamma1_["uv"];
+    C1["PQ"] += 0.5 * alpha * H2["VYQR"] * G2["PRUX"] * Gamma1_["XY"] * Gamma1_["UV"];
+    C1["PQ"] += alpha * H2["vYrQ"] * G2["rPuX"] * Gamma1_["XY"] * Gamma1_["uv"];
+
+    C1["pq"] -= alpha * H2["rnqm"] * G2["pmrn"];
+    C1["pq"] -= alpha * H2["rNqM"] * G2["pMrN"];
+    C1["pq"] -= alpha * H2["nRqM"] * G2["pMnR"];
+    C1["PQ"] -= alpha * H2["rNmQ"] * G2["mPrN"];
+    C1["PQ"] -= alpha * H2["nRmQ"] * G2["mPnR"];
+    C1["PQ"] -= alpha * H2["RNQM"] * G2["MPNR"];
+
+    C1["pq"] -= alpha * H2["rvqm"] * G2["pmru"] * Gamma1_["uv"];
+    C1["pq"] -= alpha * H2["rVqM"] * G2["pMrU"] * Gamma1_["UV"];
+    C1["pq"] -= alpha * H2["vRqM"] * G2["pMuR"] * Gamma1_["uv"];
+    C1["PQ"] -= alpha * H2["rVmQ"] * G2["mPrU"] * Gamma1_["UV"];
+    C1["PQ"] -= alpha * H2["vRmQ"] * G2["mPuR"] * Gamma1_["uv"];
+    C1["PQ"] -= alpha * H2["RVQM"] * G2["MPUR"] * Gamma1_["UV"];
+
+    C1["pq"] -= alpha * H2["rnqu"] * G2["pvrn"] * Gamma1_["uv"];
+    C1["pq"] -= alpha * H2["rNqU"] * G2["pVrN"] * Gamma1_["UV"];
+    C1["pq"] -= alpha * H2["nRqU"] * G2["pVnR"] * Gamma1_["UV"];
+    C1["PQ"] -= alpha * H2["rNuQ"] * G2["vPrN"] * Gamma1_["uv"];
+    C1["PQ"] -= alpha * H2["nRuQ"] * G2["vPnR"] * Gamma1_["uv"];
+    C1["PQ"] -= alpha * H2["RNQU"] * G2["VPNR"] * Gamma1_["UV"];
+
+    C1["pq"] -= alpha * H2["ryqu"] * G2["pvrx"] * Gamma1_["uv"] * Gamma1_["xy"];
+    C1["pq"] -= alpha * H2["rYqU"] * G2["pVrX"] * Gamma1_["UV"] * Gamma1_["XY"];
+    C1["pq"] -= alpha * H2["yRqU"] * G2["pVxR"] * Gamma1_["UV"] * Gamma1_["xy"];
+    C1["PQ"] -= alpha * H2["yRuQ"] * G2["vPxR"] * Gamma1_["uv"] * Gamma1_["xy"];
+    C1["PQ"] -= alpha * H2["rYuQ"] * G2["vPrX"] * Gamma1_["uv"] * Gamma1_["XY"];
+    C1["PQ"] -= alpha * H2["RYUQ"] * G2["VPRX"] * Gamma1_["UV"] * Gamma1_["XY"];
+
+    // [Hbar2, T2] (C_2)^3 -> C1 ++-,+--
+    C1["pq"] -= 0.5 * alpha * H2["epsr"] * G2["rsqe"];
+    C1["pq"] -= alpha * H2["pErS"] * G2["rSqE"];
+    C1["PQ"] -= 0.5 * alpha * H2["EPSR"] * G2["RSQE"];
+    C1["PQ"] -= alpha * H2["ePrS"] * G2["rSeQ"];
+
+    C1["pq"] -= 0.5 * alpha * H2["vpsr"] * G2["rsqu"] * Eta1_["uv"];
+    C1["pq"] -= alpha * H2["pVrS"] * G2["rSqU"] * Eta1_["UV"];
+    C1["PQ"] -= 0.5 * alpha * H2["VPSR"] * G2["RSQU"] * Eta1_["UV"];
+    C1["PQ"] -= alpha * H2["vPrS"] * G2["rSuQ"] * Eta1_["uv"];
+
+    C1["pq"] -= 0.5 * alpha * H2["rpfe"] * G2["efqr"];
+    C1["pq"] -= alpha * H2["pReF"] * G2["eFqR"];
+    C1["PQ"] -= 0.5 * alpha * H2["RPFE"] * G2["EFQR"];
+    C1["PQ"] -= alpha * H2["rPeF"] * G2["eFrQ"];
+
+    C1["pq"] -= alpha * H2["rpue"] * G2["evqr"] * Eta1_["uv"];
+    C1["pq"] -= alpha * H2["pRuE"] * G2["vEqR"] * Eta1_["uv"];
+    C1["pq"] -= alpha * H2["pReU"] * G2["eVqR"] * Eta1_["UV"];
+    C1["PQ"] -= alpha * H2["rPuE"] * G2["vErQ"] * Eta1_["uv"];
+    C1["PQ"] -= alpha * H2["rPeU"] * G2["eVrQ"] * Eta1_["UV"];
+    C1["PQ"] -= alpha * H2["RPUE"] * G2["EVQR"] * Eta1_["UV"];
+
+    C1["pq"] -= 0.5 * alpha * H2["rpxu"] * G2["vyqr"] * Eta1_["uv"] * Eta1_["xy"];
+    C1["pq"] -= alpha * H2["pRxU"] * G2["yVqR"] * Eta1_["UV"] * Eta1_["xy"];
+    C1["PQ"] -= 0.5 * alpha * H2["RPXU"] * G2["VYQR"] * Eta1_["UV"] * Eta1_["XY"];
+    C1["PQ"] -= alpha * H2["rPxU"] * G2["yVrQ"] * Eta1_["UV"] * Eta1_["xy"];
+
+    C1["pq"] += alpha * H2["fper"] * G2["reqf"];
+    C1["pq"] += alpha * H2["pFrE"] * G2["rEqF"];
+    C1["pq"] += alpha * H2["pFeR"] * G2["eRqF"];
+    C1["PQ"] += alpha * H2["fPeR"] * G2["eRfQ"];
+    C1["PQ"] += alpha * H2["fPrE"] * G2["rEfQ"];
+    C1["PQ"] += alpha * H2["FPER"] * G2["REQF"];
+
+    C1["pq"] += alpha * H2["vper"] * G2["requ"] * Eta1_["uv"];
+    C1["pq"] += alpha * H2["pVrE"] * G2["rEqU"] * Eta1_["UV"];
+    C1["pq"] += alpha * H2["pVeR"] * G2["eRqU"] * Eta1_["UV"];
+    C1["PQ"] += alpha * H2["vPeR"] * G2["eRuQ"] * Eta1_["uv"];
+    C1["PQ"] += alpha * H2["vPrE"] * G2["rEuQ"] * Eta1_["uv"];
+    C1["PQ"] += alpha * H2["VPER"] * G2["REQU"] * Eta1_["UV"];
+
+    C1["pq"] += alpha * H2["fpur"] * G2["rvqf"] * Eta1_["uv"];
+    C1["pq"] += alpha * H2["pFrU"] * G2["rVqF"] * Eta1_["UV"];
+    C1["pq"] += alpha * H2["pFuR"] * G2["vRqF"] * Eta1_["uv"];
+    C1["PQ"] += alpha * H2["fPrU"] * G2["rVfQ"] * Eta1_["UV"];
+    C1["PQ"] += alpha * H2["fPuR"] * G2["vRfQ"] * Eta1_["uv"];
+    C1["PQ"] += alpha * H2["FPUR"] * G2["RVQF"] * Eta1_["UV"];
+
+    C1["pq"] += alpha * H2["ypur"] * G2["rvqx"] * Eta1_["uv"] * Eta1_["xy"];
+    C1["pq"] += alpha * H2["pYrU"] * G2["rVqX"] * Eta1_["UV"] * Eta1_["XY"];
+    C1["pq"] += alpha * H2["pYuR"] * G2["vRqX"] * Eta1_["uv"] * Eta1_["XY"];
+    C1["PQ"] += alpha * H2["yPuR"] * G2["vRxQ"] * Eta1_["uv"] * Eta1_["xy"];
+    C1["PQ"] += alpha * H2["yPrU"] * G2["rVxQ"] * Eta1_["UV"] * Eta1_["xy"];
+    C1["PQ"] += alpha * H2["YPUR"] * G2["RVQX"] * Eta1_["UV"] * Eta1_["XY"];
+
+    // [Hbar2, T2] C_4 C_2 2:2 -> C1
+    C1["pq"] += 0.25 * alpha * H2["xyqr"] * G2["pruv"] * Lambda2_["vuyx"];
+    C1["pq"] += alpha * H2["xYqR"] * G2["pRuV"] * Lambda2_["uVxY"];
+    C1["PQ"] += 0.25 * alpha * H2["XYQR"] * G2["PRUV"] * Lambda2_["VUYX"];
+    C1["PQ"] += alpha * H2["xYrQ"] * G2["rPuV"] * Lambda2_["uVxY"];
+
+    C1["pq"] -= 0.25 * alpha * G2["xyqr"] * H2["pruv"] * Lambda2_["vuyx"];
+    C1["pq"] -= alpha * G2["xYqR"] * H2["pRuV"] * Lambda2_["uVxY"];
+    C1["PQ"] -= 0.25 * alpha * G2["XYQR"] * H2["PRUV"] * Lambda2_["VUYX"];
+    C1["PQ"] -= alpha * G2["xYrQ"] * H2["rPuV"] * Lambda2_["uVxY"];
+
+    C1["pq"] += alpha * H2["rxqu"] * G2["pyrv"] * Lambda2_["uvxy"];
+    C1["pq"] += alpha * H2["rxqu"] * G2["pYrV"] * Lambda2_["uVxY"];
+    C1["pq"] += alpha * H2["rXqU"] * G2["pyrv"] * Lambda2_["vUyX"];
+    C1["pq"] += alpha * H2["rXqU"] * G2["pYrV"] * Lambda2_["UVXY"];
+    C1["pq"] -= alpha * H2["xRqU"] * G2["pYvR"] * Lambda2_["vUxY"];
+    C1["PQ"] -= alpha * H2["rXuQ"] * G2["yPrV"] * Lambda2_["uVyX"];
+    C1["PQ"] += alpha * H2["xRuQ"] * G2["yPvR"] * Lambda2_["uvxy"];
+    C1["PQ"] += alpha * H2["xRuQ"] * G2["PYRV"] * Lambda2_["uVxY"];
+    C1["PQ"] += alpha * H2["RXQU"] * G2["yPvR"] * Lambda2_["vUyX"];
+    C1["PQ"] += alpha * H2["RXQU"] * G2["PYRV"] * Lambda2_["UVXY"];
+
+    C1["pq"] -= alpha * G2["rxqu"] * H2["pyrv"] * Lambda2_["uvxy"];
+    C1["pq"] -= alpha * G2["rxqu"] * H2["pYrV"] * Lambda2_["uVxY"];
+    C1["pq"] -= alpha * G2["rXqU"] * H2["pyrv"] * Lambda2_["vUyX"];
+    C1["pq"] -= alpha * G2["rXqU"] * H2["pYrV"] * Lambda2_["UVXY"];
+    C1["pq"] += alpha * G2["xRqU"] * H2["pYvR"] * Lambda2_["vUxY"];
+    C1["PQ"] += alpha * G2["rXuQ"] * H2["yPrV"] * Lambda2_["uVyX"];
+    C1["PQ"] -= alpha * G2["xRuQ"] * H2["yPvR"] * Lambda2_["uvxy"];
+    C1["PQ"] -= alpha * G2["xRuQ"] * H2["PYRV"] * Lambda2_["uVxY"];
+    C1["PQ"] -= alpha * G2["RXQU"] * H2["yPvR"] * Lambda2_["vUyX"];
+    C1["PQ"] -= alpha * G2["RXQU"] * H2["PYRV"] * Lambda2_["UVXY"];
+
+    // [Hbar2, T2] C_4 C_2 1:3 -> C1
+    C1["pq"] += 0.5 * alpha * H2["rpuq"] * G2["xyrv"] * Lambda2_["vuyx"];
+    C1["pq"] += 0.5 * alpha * H2["pRqU"] * G2["XYRV"] * Lambda2_["VUYX"];
+    C1["PQ"] += 0.5 * alpha * H2["RPUQ"] * G2["XYRV"] * Lambda2_["VUYX"];
+    C1["PQ"] += 0.5 * alpha * H2["rPuQ"] * G2["xyrv"] * Lambda2_["vuyx"];
+    C1["pq"] += alpha * H2["rpuq"] * G2["xYrV"] * Lambda2_["uVxY"];
+    C1["pq"] += alpha * H2["pRqU"] * G2["xYvR"] * Lambda2_["vUxY"];
+    C1["PQ"] += alpha * H2["RPUQ"] * G2["yXvR"] * Lambda2_["vUyX"];
+    C1["PQ"] += alpha * H2["rPuQ"] * G2["xYrV"] * Lambda2_["uVxY"];
+
+    C1["pq"] -= 0.5 * alpha * G2["rpuq"] * H2["xyrv"] * Lambda2_["vuyx"];
+    C1["pq"] -= 0.5 * alpha * G2["pRqU"] * H2["XYRV"] * Lambda2_["VUYX"];
+    C1["PQ"] -= 0.5 * alpha * G2["RPUQ"] * H2["XYRV"] * Lambda2_["VUYX"];
+    C1["PQ"] -= 0.5 * alpha * G2["rPuQ"] * H2["xyrv"] * Lambda2_["vuyx"];
+    C1["pq"] -= alpha * G2["rpuq"] * H2["xYrV"] * Lambda2_["uVxY"];
+    C1["pq"] -= alpha * G2["pRqU"] * H2["xYvR"] * Lambda2_["vUxY"];
+    C1["PQ"] -= alpha * G2["RPUQ"] * H2["yXvR"] * Lambda2_["vUyX"];
+    C1["PQ"] -= alpha * G2["rPuQ"] * H2["xYrV"] * Lambda2_["uVxY"];
+
+    C1["pq"] -= 0.5 * alpha * H2["xprq"] * G2["ryuv"] * Lambda2_["vuyx"];
+    C1["pq"] -= 0.5 * alpha * H2["pXqR"] * G2["RYUV"] * Lambda2_["VUYX"];
+    C1["PQ"] -= 0.5 * alpha * H2["XPRQ"] * G2["RYUV"] * Lambda2_["VUYX"];
+    C1["PQ"] -= 0.5 * alpha * H2["xPrQ"] * G2["ryuv"] * Lambda2_["vuyx"];
+    C1["pq"] -= alpha * H2["xprq"] * G2["rYuV"] * Lambda2_["uVxY"];
+    C1["pq"] -= alpha * H2["pXqR"] * G2["yRuV"] * Lambda2_["uVyX"];
+    C1["PQ"] -= alpha * H2["XPRQ"] * G2["yRvU"] * Lambda2_["vUyX"];
+    C1["PQ"] -= alpha * H2["xPrQ"] * G2["rYuV"] * Lambda2_["uVxY"];
+
+    C1["pq"] += 0.5 * alpha * G2["xprq"] * H2["ryuv"] * Lambda2_["vuyx"];
+    C1["pq"] += 0.5 * alpha * G2["pXqR"] * H2["RYUV"] * Lambda2_["VUYX"];
+    C1["PQ"] += 0.5 * alpha * G2["XPRQ"] * H2["RYUV"] * Lambda2_["VUYX"];
+    C1["PQ"] += 0.5 * alpha * G2["xPrQ"] * H2["ryuv"] * Lambda2_["vuyx"];
+    C1["pq"] += alpha * G2["xprq"] * H2["rYuV"] * Lambda2_["uVxY"];
+    C1["pq"] += alpha * G2["pXqR"] * H2["yRuV"] * Lambda2_["uVyX"];
+    C1["PQ"] += alpha * G2["XPRQ"] * H2["yRvU"] * Lambda2_["vUyX"];
+    C1["PQ"] += alpha * G2["xPrQ"] * H2["rYuV"] * Lambda2_["uVxY"];
+
     dsrg_time_.add("221",timer.get());
 }
 
 void MRDSRG::H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C2){
     Timer timer;
 
-//    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
-//    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
-//    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
-//    C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
+    C2["tops"] += alpha * H1["rp"] * G2["tors"];
+    C2["torp"] += alpha * H1["sp"] * G2["tors"];
+    C2["qors"] -= alpha * H1["qt"] * G2["tors"];
+    C2["tqrs"] -= alpha * H1["qo"] * G2["tors"];
 
-//    C2["iJpB"] += alpha * T2["iJaB"] * H1["ap"];
-//    C2["iJaP"] += alpha * T2["iJaB"] * H1["BP"];
-//    C2["qJaB"] -= alpha * T2["iJaB"] * H1["qi"];
-//    C2["iQaB"] -= alpha * T2["iJaB"] * H1["QJ"];
+    C2["tOpS"] += alpha * H1["rp"] * G2["tOrS"];
+    C2["tOrP"] += alpha * H1["SP"] * G2["tOrS"];
+    C2["qOrS"] -= alpha * H1["qt"] * G2["tOrS"];
+    C2["tQrS"] -= alpha * H1["QO"] * G2["tOrS"];
 
-//    C2["IJPB"] += alpha * T2["IJAB"] * H1["AP"];
-//    C2["IJAP"] += alpha * T2["IJAB"] * H1["BP"];
-//    C2["QJAB"] -= alpha * T2["IJAB"] * H1["QI"];
-//    C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
+    C2["TOPS"] += alpha * H1["RP"] * G2["TORS"];
+    C2["TORP"] += alpha * H1["SP"] * G2["TORS"];
+    C2["QORS"] -= alpha * H1["QT"] * G2["TORS"];
+    C2["TQRS"] -= alpha * H1["QO"] * G2["TORS"];
 
     dsrg_time_.add("122",timer.get());
 }
 
 void MRDSRG::H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2){
     Timer timer;
+
+    // --,++
+    C2["pqrs"] += 0.5 * alpha * H2["tors"] * G2["pqto"];
+    C2["pQrS"] += alpha * H2["tOrS"] * G2["pQtO"];
+    C2["PQRS"] += 0.5 * alpha * H2["TORS"] * G2["PQTO"];
+
+    C2["pqrs"] -= alpha * H2["mtrs"] * G2["pqmt"];
+    C2["pQrS"] -= alpha * H2["mTrS"] * G2["pQmT"];
+    C2["pQrS"] -= alpha * H2["tMrS"] * G2["pQtM"];
+    C2["PQRS"] -= alpha * H2["MTRS"] * G2["PQMT"];
+
+    C2["pqrs"] -= alpha * H2["vtrs"] * G2["pqut"] * Gamma1_["uv"];
+    C2["pQrS"] -= alpha * H2["vTrS"] * G2["pQuT"] * Gamma1_["uv"];
+    C2["pQrS"] -= alpha * H2["tVrS"] * G2["pQtU"] * Gamma1_["UV"];
+    C2["PQRS"] -= alpha * H2["VTRS"] * G2["PQUT"] * Gamma1_["UV"];
+
+    // ++,--
+    C2["pqrs"] += 0.5 * alpha * H2["pqto"] * G2["tors"];
+    C2["pQrS"] += alpha * H2["pQtO"] * G2["tOrS"];
+    C2["PQRS"] += 0.5 * alpha * H2["PQTO"] * G2["TORS"];
+
+    C2["pqrs"] -= alpha * H2["pqet"] * G2["etrs"];
+    C2["pQrS"] -= alpha * H2["pQeT"] * G2["eTrS"];
+    C2["pQrS"] -= alpha * H2["pQtE"] * G2["tErS"];
+    C2["PQRS"] -= alpha * H2["PQET"] * G2["ETRS"];
+
+    C2["pqrs"] -= alpha * H2["pqut"] * G2["vtrs"] * Eta1_["uv"];
+    C2["pQrS"] -= alpha * H2["pQuT"] * G2["vTrS"] * Eta1_["uv"];
+    C2["pQrS"] -= alpha * H2["pQtU"] * G2["tVrS"] * Eta1_["UV"];
+    C2["PQRS"] -= alpha * H2["PQUT"] * G2["VTRS"] * Eta1_["UV"];
+
+    // +-,+-
+    C2["pqrs"] += alpha * H2["tprm"] * G2["mqst"];
+    C2["pqrs"] += alpha * H2["pTrM"] * G2["qMsT"];
+    C2["pqrs"] -= alpha * H2["tqrm"] * G2["mpst"];
+    C2["pqrs"] -= alpha * H2["qTrM"] * G2["pMsT"];
+    C2["pqrs"] -= alpha * H2["tpsm"] * G2["mqrt"];
+    C2["pqrs"] -= alpha * H2["pTsM"] * G2["qMrT"];
+    C2["pqrs"] += alpha * H2["tqsm"] * G2["mprt"];
+    C2["pqrs"] += alpha * H2["qTsM"] * G2["pMrT"];
+
+    C2["pQrS"] += alpha * H2["tpmr"] * G2["mQtS"];
+    C2["pQrS"] += alpha * H2["pTrM"] * G2["MQTS"];
+    C2["pQrS"] -= alpha * H2["tQrM"] * G2["pMtS"];
+    C2["pQrS"] -= alpha * H2["pTmS"] * G2["mQrT"];
+    C2["pQrS"] += alpha * H2["tQmS"] * G2["pmrt"];
+    C2["pQrS"] += alpha * H2["TQMS"] * G2["pMrT"];
+
+    C2["PQRS"] += alpha * H2["tPmR"] * G2["mQtS"];
+    C2["PQRS"] += alpha * H2["TPRM"] * G2["MQST"];
+    C2["PQRS"] -= alpha * H2["tQmR"] * G2["mPtS"];
+    C2["PQRS"] -= alpha * H2["TQRM"] * G2["MPST"];
+    C2["PQRS"] -= alpha * H2["tPmS"] * G2["mQtR"];
+    C2["PQRS"] -= alpha * H2["TPSM"] * G2["MQRT"];
+    C2["PQRS"] += alpha * H2["tQmS"] * G2["mPtR"];
+    C2["PQRS"] += alpha * H2["TQSM"] * G2["MPRT"];
+
+    C2["pqrs"] += alpha * H2["tpru"] * G2["vqst"] * Gamma1_["uv"];
+    C2["pqrs"] += alpha * H2["pTrU"] * G2["qVsT"] * Gamma1_["UV"];
+    C2["pqrs"] -= alpha * H2["tqru"] * G2["vpst"] * Gamma1_["uv"];
+    C2["pqrs"] -= alpha * H2["qTrU"] * G2["pVsT"] * Gamma1_["UV"];
+    C2["pqrs"] -= alpha * H2["tpsu"] * G2["vqrt"] * Gamma1_["uv"];
+    C2["pqrs"] -= alpha * H2["pTsU"] * G2["qVrT"] * Gamma1_["UV"];
+    C2["pqrs"] += alpha * H2["tqsu"] * G2["vprt"] * Gamma1_["uv"];
+    C2["pqrs"] += alpha * H2["qTsU"] * G2["pVrT"] * Gamma1_["UV"];
+
+    C2["pQrS"] += alpha * H2["tpur"] * G2["vQtS"] * Gamma1_["uv"];
+    C2["pQrS"] += alpha * H2["pTrU"] * G2["VQTS"] * Gamma1_["UV"];
+    C2["pQrS"] -= alpha * H2["tQrU"] * G2["pVtS"] * Gamma1_["UV"];
+    C2["pQrS"] -= alpha * H2["pTuS"] * G2["vQrT"] * Gamma1_["uv"];
+    C2["pQrS"] += alpha * H2["tQuS"] * G2["pvrt"] * Gamma1_["uv"];
+    C2["pQrS"] += alpha * H2["TQUS"] * G2["pVrT"] * Gamma1_["UV"];
+
+    C2["PQRS"] += alpha * H2["tPuR"] * G2["vQtS"] * Gamma1_["uv"];
+    C2["PQRS"] += alpha * H2["TPRU"] * G2["VQST"] * Gamma1_["UV"];
+    C2["PQRS"] -= alpha * H2["tQuR"] * G2["vPtS"] * Gamma1_["uv"];
+    C2["PQRS"] -= alpha * H2["TQRU"] * G2["VPST"] * Gamma1_["UV"];
+    C2["PQRS"] -= alpha * H2["tPuS"] * G2["vQtR"] * Gamma1_["uv"];
+    C2["PQRS"] -= alpha * H2["TPSU"] * G2["VQRT"] * Gamma1_["UV"];
+    C2["PQRS"] += alpha * H2["tQuS"] * G2["vPtR"] * Gamma1_["uv"];
+    C2["PQRS"] += alpha * H2["TQSU"] * G2["VPRT"] * Gamma1_["UV"];
+
+    C2["pqrs"] -= alpha * G2["tprm"] * H2["mqst"];
+    C2["pqrs"] -= alpha * G2["pTrM"] * H2["qMsT"];
+    C2["pqrs"] += alpha * G2["tqrm"] * H2["mpst"];
+    C2["pqrs"] += alpha * G2["qTrM"] * H2["pMsT"];
+    C2["pqrs"] += alpha * G2["tpsm"] * H2["mqrt"];
+    C2["pqrs"] += alpha * G2["pTsM"] * H2["qMrT"];
+    C2["pqrs"] -= alpha * G2["tqsm"] * H2["mprt"];
+    C2["pqrs"] -= alpha * G2["qTsM"] * H2["pMrT"];
+
+    C2["pQrS"] -= alpha * G2["tpmr"] * H2["mQtS"];
+    C2["pQrS"] -= alpha * G2["pTrM"] * H2["MQTS"];
+    C2["pQrS"] += alpha * G2["tQrM"] * H2["pMtS"];
+    C2["pQrS"] += alpha * G2["pTmS"] * H2["mQrT"];
+    C2["pQrS"] -= alpha * G2["tQmS"] * H2["pmrt"];
+    C2["pQrS"] -= alpha * G2["TQMS"] * H2["pMrT"];
+
+    C2["PQRS"] -= alpha * G2["tPmR"] * H2["mQtS"];
+    C2["PQRS"] -= alpha * G2["TPRM"] * H2["MQST"];
+    C2["PQRS"] += alpha * G2["tQmR"] * H2["mPtS"];
+    C2["PQRS"] += alpha * G2["TQRM"] * H2["MPST"];
+    C2["PQRS"] += alpha * G2["tPmS"] * H2["mQtR"];
+    C2["PQRS"] += alpha * G2["TPSM"] * H2["MQRT"];
+    C2["PQRS"] -= alpha * G2["tQmS"] * H2["mPtR"];
+    C2["PQRS"] -= alpha * G2["TQSM"] * H2["MPRT"];
+
+    C2["pqrs"] -= alpha * G2["tpru"] * H2["vqst"] * Gamma1_["uv"];
+    C2["pqrs"] -= alpha * G2["pTrU"] * H2["qVsT"] * Gamma1_["UV"];
+    C2["pqrs"] += alpha * G2["tqru"] * H2["vpst"] * Gamma1_["uv"];
+    C2["pqrs"] += alpha * G2["qTrU"] * H2["pVsT"] * Gamma1_["UV"];
+    C2["pqrs"] += alpha * G2["tpsu"] * H2["vqrt"] * Gamma1_["uv"];
+    C2["pqrs"] += alpha * G2["pTsU"] * H2["qVrT"] * Gamma1_["UV"];
+    C2["pqrs"] -= alpha * G2["tqsu"] * H2["vprt"] * Gamma1_["uv"];
+    C2["pqrs"] -= alpha * G2["qTsU"] * H2["pVrT"] * Gamma1_["UV"];
+
+    C2["pQrS"] -= alpha * G2["tpur"] * H2["vQtS"] * Gamma1_["uv"];
+    C2["pQrS"] -= alpha * G2["pTrU"] * H2["VQTS"] * Gamma1_["UV"];
+    C2["pQrS"] += alpha * G2["tQrU"] * H2["pVtS"] * Gamma1_["UV"];
+    C2["pQrS"] += alpha * G2["pTuS"] * H2["vQrT"] * Gamma1_["uv"];
+    C2["pQrS"] -= alpha * G2["tQuS"] * H2["pvrt"] * Gamma1_["uv"];
+    C2["pQrS"] -= alpha * G2["TQUS"] * H2["pVrT"] * Gamma1_["UV"];
+
+    C2["PQRS"] -= alpha * G2["tPuR"] * H2["vQtS"] * Gamma1_["uv"];
+    C2["PQRS"] -= alpha * G2["TPRU"] * H2["VQST"] * Gamma1_["UV"];
+    C2["PQRS"] += alpha * G2["tQuR"] * H2["vPtS"] * Gamma1_["uv"];
+    C2["PQRS"] += alpha * G2["TQRU"] * H2["VPST"] * Gamma1_["UV"];
+    C2["PQRS"] += alpha * G2["tPuS"] * H2["vQtR"] * Gamma1_["uv"];
+    C2["PQRS"] += alpha * G2["TPSU"] * H2["VQRT"] * Gamma1_["UV"];
+    C2["PQRS"] -= alpha * G2["tQuS"] * H2["vPtR"] * Gamma1_["uv"];
+    C2["PQRS"] -= alpha * G2["TQSU"] * H2["VPRT"] * Gamma1_["UV"];
 
     dsrg_time_.add("222",timer.get());
 }
