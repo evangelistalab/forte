@@ -358,7 +358,7 @@ double MRDSRG::compute_energy(){
         break;
     }
     case CORR_LV::SRG_PT2:{
-
+        Etotal += compute_energy_srgpt2();
         break;
     }
     case CORR_LV::PT3:{
@@ -614,29 +614,7 @@ void MRDSRG::transfer_integrals(){
     // printing
     print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
-//    BlockedTensor X1 = BTF_->build(tensor_type_,"X1",spin_cases({"aa"}));
-//    BlockedTensor X2 = BTF_->build(tensor_type_,"X1",spin_cases({"aaaa"}));
-//    X1["uv"] = Hbar1_["uv"];
-//    X1["UV"] = Hbar1_["UV"];
-//    X2["uvxy"] = Hbar2_["uvxy"];
-//    X2["uVxY"] = Hbar2_["uVxY"];
-//    X2["UVXY"] = Hbar2_["UVXY"];
-
-//        Hbar1_.zero();
-//        Hbar2_.zero();
-////    Hbar1_["ij"] = F_["ij"];
-////    Hbar1_["IJ"] = F_["IJ"];
-////    Hbar2_["ijkl"] = V_["ijkl"];
-////    Hbar2_["iJkL"] = V_["iJkL"];
-////    Hbar2_["IJKL"] = V_["IJKL"];
-
-//    Hbar1_["uv"] = X1["uv"];
-//    Hbar1_["UV"] = X1["UV"];
-//    Hbar2_["uvxy"] = X2["uvxy"];
-//    Hbar2_["uVxY"] = X2["uVxY"];
-//    Hbar2_["UVXY"] = X2["UVXY"];
-
-    // compute scalar term
+    // compute scalar term (all active only)
     Timer t_scalar;
     std::string str = "Computing the scalar term   ...";
     outfile->Printf("\n    %-35s", str.c_str());
@@ -645,44 +623,18 @@ void MRDSRG::transfer_integrals(){
 
     // scalar from Hbar1
     double scalar1 = 0.0;
-    Hbar1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar1 -= value;
-    });
-    Hbar1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar1 -= value;
-    });
     scalar1 -= Hbar1_["vu"] * Gamma1_["uv"];
     scalar1 -= Hbar1_["VU"] * Gamma1_["UV"];
 
     // scalar from Hbar2
     double scalar2 = 0.0;
-    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
-    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
-    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
-    Hbar2_.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
-    });
-    Hbar2_.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += value;
-    });
-    Hbar2_.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
-    });
-
-    O1_.zero();
-    O1_["ij"] += Hbar2_["iujv"] * Gamma1_["vu"];
-    O1_["ij"] += Hbar2_["iUjV"] * Gamma1_["VU"];
-    O1_["IJ"] += Hbar2_["uIvJ"] * Gamma1_["vu"];
-    O1_["IJ"] += Hbar2_["IUJV"] * Gamma1_["VU"];
-    O1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar2 += value;
-    });
-    O1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar2 += value;
-    });
     scalar2 += 0.5 * Gamma1_["uv"] * Hbar2_["vyux"] * Gamma1_["xy"];
     scalar2 += 0.5 * Gamma1_["UV"] * Hbar2_["VYUX"] * Gamma1_["XY"];
     scalar2 += Gamma1_["uv"] * Hbar2_["vYuX"] * Gamma1_["XY"];
+
+    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
+    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
+    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
     double scalar = scalar0 + scalar1 + scalar2;
     outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
@@ -691,17 +643,13 @@ void MRDSRG::transfer_integrals(){
     Timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    O1_.scale(-1.0);
-    O1_["ij"] += Hbar1_["ij"];
-    O1_["IJ"] += Hbar1_["IJ"];
-    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"cc"}));
-    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
-        if (i[0] == i[1]) value = 1.0;
-    });
-    O1_["ij"] -= Hbar2_["imjn"] * temp["nm"];
-    O1_["ij"] -= Hbar2_["iMjN"] * temp["NM"];
-    O1_["IJ"] -= Hbar2_["mInJ"] * temp["nm"];
-    O1_["IJ"] -= Hbar2_["IMJN"] * temp["NM"];
+    BlockedTensor temp1 = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
+    temp1["uv"]  = Hbar1_["uv"];
+    temp1["UV"]  = Hbar1_["UV"];
+    temp1["uv"] -= Hbar2_["uxvy"] * Gamma1_["yx"];
+    temp1["uv"] -= Hbar2_["uXvY"] * Gamma1_["YX"];
+    temp1["UV"] -= Hbar2_["xUyV"] * Gamma1_["yx"];
+    temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
     outfile->Printf("  Done. Timing %10.3f s", t_one.get());
 
     // update integrals
@@ -709,14 +657,38 @@ void MRDSRG::transfer_integrals(){
     str = "Updating integrals          ...";
     outfile->Printf("\n    %-35s", str.c_str());
     ints_->set_scalar(scalar);
-    O1_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+
+    //   a) zero hole integrals
+    std::vector<size_t> hole_mos = acore_mos_;
+    hole_mos.insert(hole_mos.end(),aactv_mos_.begin(),aactv_mos_.end());
+    for(const size_t& i: hole_mos){
+        for(const size_t& j: hole_mos){
+            ints_->set_oei(i,j,0.0,true);
+            ints_->set_oei(i,j,0.0,false);
+            for(const size_t& k: hole_mos){
+                for(const size_t& l: hole_mos){
+                    ints_->set_tei(i,j,k,l,0.0,true,true);
+                    ints_->set_tei(i,j,k,l,0.0,true,false);
+                    ints_->set_tei(i,j,k,l,0.0,false,false);
+                }
+            }
+        }
+    }
+
+    //   b) copy all active part
+    temp1.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         if (spin[0] == AlphaSpin){
             ints_->set_oei(i[0],i[1],value,true);
         }else{
             ints_->set_oei(i[0],i[1],value,false);
         }
     });
-    Hbar2_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+
+    BlockedTensor temp2 = BTF_->build(tensor_type_,"temp2",spin_cases({"aaaa"}));
+    temp2["uvxy"] = Hbar2_["uvxy"];
+    temp2["uVxY"] = Hbar2_["uVxY"];
+    temp2["UVXY"] = Hbar2_["UVXY"];
+    temp2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
             ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
         }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
@@ -741,21 +713,9 @@ void MRDSRG::transfer_integrals(){
     double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
 
     double Etest1 = 0.0;
-    O1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
-    O1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
-    Etest1 += O1_["uv"] * Gamma1_["vu"];
-    Etest1 += O1_["UV"] * Gamma1_["VU"];
+    Etest1 += temp1["uv"] * Gamma1_["vu"];
+    Etest1 += temp1["UV"] * Gamma1_["VU"];
 
-    Hbar1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
-    Hbar1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
     Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
     Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
     Etest1 *= 0.5;
