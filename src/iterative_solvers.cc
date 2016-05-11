@@ -146,7 +146,8 @@ SharedVector DavidsonLiuSolver::eigenvector(size_t n) const
 SolverStatus DavidsonLiuSolver::update()
 {
     // If converged or exceeded the maximum number of iterations return true
-    if ((converged_ >= nroot_) or (iter_ > maxiter_)) return SolverStatus::Converged;
+    //if ((converged_ >= nroot_) or (iter_ > maxiter_)) return SolverStatus::Converged;
+    if ((converged_ >= nroot_)) return SolverStatus::Converged;
 
     PRINT_VARS("update")
 
