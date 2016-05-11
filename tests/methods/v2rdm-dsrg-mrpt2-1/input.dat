@@ -4,11 +4,11 @@ import v2rdm_casscf
 import forte
 
 #! cc-pvdz N2 (6,6) active space Test DQG
-refscf     = -108.95379624015767 # RHF
-refv2rdm   = -109.094784621661   # V2RDM-CASSCF r_convergence 4
-refpt2     = -109.24553794062221 # DSRG-MRPT2
-refv2rdm_5 = -109.094713285348   # V2RDM-CASSCF r_convergence 5
-refpt2_5   = -109.24552776396096 # DSRG-MRPT2 
+refscf     = -108.953796240158  # RHF
+refv2rdm_4 = -109.094685844148  # V2RDM-CASSCF r_convergence 4
+refpt2_4   = -109.245629804471  # DSRG-MRPT2
+refv2rdm   = -109.094651151711  # V2RDM-CASSCF r_convergence 5
+refpt2     = -109.245618929207  # DSRG-MRPT2 
 
 molecule N2 {
   0 1
@@ -28,11 +28,12 @@ set {
 }
 
 set v2rdm_casscf {
-  positivity      dqg
-  r_convergence   1e-4
-  e_convergence   1e-4
-  maxiter         100000
-  tpdm_write      true
+  positivity                dqg
+  r_convergence             1e-5
+  e_convergence             1e-5
+  maxiter                   100000
+  semicanonicalize_orbitals false
+  tpdm_write                true
 }
 
 set forte{

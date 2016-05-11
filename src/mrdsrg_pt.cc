@@ -94,18 +94,23 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Fdiag(){
     energy.push_back({"E0 (reference)", Eref_});
     double Ecorr = 0.0, Etemp = 0.0;
 
-    H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
+//    H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
+    BlockedTensor::set_expert_mode(true);
+    H1_G1_C0(Hbar1_,T1_,1.0,Ecorr);
     energy.push_back({"<[F, A1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H1_T2_C0(Hbar1_,T2_,1.0,Ecorr);
+//    H1_T2_C0(Hbar1_,T2_,1.0,Ecorr);
+    H1_G2_C0(Hbar1_,T2_,1.0,Ecorr);
     energy.push_back({"<[F, A2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
-    H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
+//    H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
+    H1_G2_C0(T1_,Hbar2_,-1.0,Ecorr);
     energy.push_back({"<[V, A1]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
 
+//    H2_T2_C0(Hbar2_,T2_,1.0,Ecorr);
     H2_T2_C0(Hbar2_,T2_,1.0,Ecorr);
     energy.push_back({"<[V, A2]>", 2 * (Ecorr - Etemp)});
     Etemp = Ecorr;
@@ -121,14 +126,23 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Fdiag(){
         O1_.zero();
         O2_.zero();
 
-        H1_T1_C1(Hbar1_,T1_,1.0,O1_);
-        H1_T2_C1(Hbar1_,T2_,1.0,O1_);
-        H2_T1_C1(Hbar2_,T1_,1.0,O1_);
-        H2_T2_C1(Hbar2_,T2_,1.0,O1_);
+//        H1_T1_C1(Hbar1_,T1_,1.0,O1_);
+//        H1_T2_C1(Hbar1_,T2_,1.0,O1_);
+//        H2_T1_C1(Hbar2_,T1_,1.0,O1_);
+//        H2_T2_C1(Hbar2_,T2_,1.0,O1_);
 
-        H1_T2_C2(Hbar1_,T2_,1.0,O2_);
-        H2_T1_C2(Hbar2_,T1_,1.0,O2_);
-        H2_T2_C2(Hbar2_,T2_,1.0,O2_);
+//        H1_T2_C2(Hbar1_,T2_,1.0,O2_);
+//        H2_T1_C2(Hbar2_,T1_,1.0,O2_);
+//        H2_T2_C2(Hbar2_,T2_,1.0,O2_);
+
+        H1_G1_C1(Hbar1_,T1_,1.0,O1_);
+        H1_G2_C1(Hbar1_,T2_,1.0,O1_);
+        H1_G2_C1(T1_,Hbar2_,-1.0,O1_);
+        H2_G2_C1(Hbar2_,T2_,1.0,O1_);
+
+        H1_G2_C2(Hbar1_,T2_,1.0,O2_);
+        H1_G2_C2(T1_,Hbar2_,-1.0,O2_);
+        H2_G2_C2(Hbar2_,T2_,1.0,O2_);
 
         Hbar1_["pq"] += O1_["pq"];
         Hbar1_["pq"] += O1_["qp"];

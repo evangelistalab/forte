@@ -5,8 +5,8 @@ import forte
 
 #! cc-pvdz N2 (6,6) active space Test DQG
 refscf     = -108.953796240158  # RHF
-refv2rdm   = -109.094599199193  # V2RDM-CASSCF r_convergence 4
-refpt2     = -109.249687889288  # DSRG-MRPT2
+refv2rdm   = -109.094571064115  # V2RDM-CASSCF r_convergence 4
+refpt2     = -109.249741617217  # DSRG-MRPT2
 
 molecule N2 {
   0 1
@@ -26,13 +26,14 @@ set {
 }
 
 set v2rdm_casscf {
-  positivity      dqg
-  r_convergence   1e-4
-  e_convergence   1e-4
-  maxiter         100000
-  tpdm_write      true
-  3pdm_write      true
-  constrain_d3    true
+  positivity                dqg
+  r_convergence             1e-4
+  e_convergence             1e-4
+  maxiter                   100000
+  tpdm_write                true
+  3pdm_write                true
+  constrain_d3              true
+  semicanonicalize_orbitals false
 }
 
 set forte{
@@ -59,4 +60,4 @@ set forte{
 }
 Ept2_avg = energy('forte',ref_wfn=wfn)
 Ediff = Ept2_noavg - Ept2_avg
-compare_values(Ediff, 0.0, 4, "Energy difference using spin-averaged densities")
+compare_values(Ediff, 0.0, 5, "Energy difference using spin-averaged densities")
