@@ -60,6 +60,8 @@ void CASSCF::compute_casscf()
     int diis_freq = options_.get_int("CASSCF_DIIS_FREQ");
     int diis_start = options_.get_int("CASSCF_DIIS_START");
     int diis_max_vec = options_.get_int("CASSCF_DIIS_MAX_VEC");
+    int casscf_freq  = options_.get_int("CASSCF_CI_FREQ");
+    bool ci_step     = options_.get_bool("CASSCF_CI_STEP");
     bool do_diis = options_.get_bool("CASSCF_DO_DIIS");
     double diis_gradient_norm = options_.get_double("CASSCF_DIIS_NORM");
     double rotation_max_value = options_.get_double("CASSCF_MAX_ROTATION");
@@ -100,7 +102,20 @@ void CASSCF::compute_casscf()
         }
         Timer cas_timer;
         /// Perform a DMRG-CI, ACI, FCI inside an active space
-        cas_ci();
+        /// If casscf_freq is on, do the CI step every casscf_iteration
+        /// Ie, every 5 iterations, run a CAS_CI.
+        /// TODO:  Maybe make this run the orbital optimization
+        if(ci_step)
+        {
+            if ((iter < casscf_freq) || (iter % casscf_freq) == 0)
+            {
+                cas_ci();
+            }
+        }
+        else
+        {
+            cas_ci();
+        }
         if(print_ > 0)
         {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
@@ -176,11 +191,8 @@ void CASSCF::compute_casscf()
 
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < diis_gradient_norm){diis_start_label = "DIIS";}
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f   %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_, diis_start_label.c_str());
-        if(print_ > 0)
-        {
-            outfile->Printf("\n\n CASSCF Iteration takes %8.3f s.", casscf_total_iter.get());
-        }
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f %10.6f  %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_,
+        casscf_total_iter.get(), diis_start_label.c_str());
     }
     //if(casscf_debug_print_)
     //{
