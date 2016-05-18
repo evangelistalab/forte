@@ -107,7 +107,7 @@ void CASSCF::compute_casscf()
         /// TODO:  Maybe make this run the orbital optimization
         if(ci_step)
         {
-            if ((iter < casscf_freq) || (iter % casscf_freq) == 0)
+            if ( (iter < casscf_freq) || (iter % casscf_freq) == 0)
             {
                 cas_ci();
             }
@@ -191,7 +191,7 @@ void CASSCF::compute_casscf()
 
         std::string diis_start_label = "";
         if(iter >= diis_start && do_diis==true && g_norm < diis_gradient_norm){diis_start_label = "DIIS";}
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f %10.6f  %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_,
+        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s", iter, g_norm, fabs(E_casscf_ - E_casscf_old), E_casscf_,
         casscf_total_iter.get(), diis_start_label.c_str());
     }
     //if(casscf_debug_print_)
