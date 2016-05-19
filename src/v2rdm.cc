@@ -1,3 +1,6 @@
+#include <fstream>
+#include <iostream>
+#include <boost/format.hpp>
 #include <libmints/molecule.h>
 #include "v2rdm.h"
 
@@ -63,6 +66,11 @@ void V2RDM::startup(){
     // orbital spaces
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+
+    // write density to files
+    if(options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY"){
+        write_density_to_file();
+    }
 }
 
 void V2RDM::read_2pdm(){
@@ -513,8 +521,85 @@ Reference V2RDM::reference(){
         return_ref.set_L3bbb(D3bbb);
     }
 
+    if(options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT"){
+        write_density_to_file();
+    }
+
     outfile->Printf("    Done.");
     return return_ref;
+}
+
+void V2RDM::write_density_to_file(){
+    std::string str = "Writing density matrices to files";
+    outfile->Printf("\n  %-45s ...", str.c_str());
+
+    std::vector<std::string> filenames;
+    if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {
+        for(const std::string& spin: {"a", "b"}){
+            filenames.push_back("file_opdm_" + spin);
+        }
+        for(const std::string& spin: {"aa", "ab", "bb"}){
+            filenames.push_back("file_2pdm_" + spin);
+        }
+        for(const std::string& spin: {"aaa", "aab", "abb", "bbb"}){
+            filenames.push_back("file_3pdm_" + spin);
+        }
+    }
+    else if (options_.get_str("WRITE_DENSITY_TYPE") == "CUMULANT") {
+        for(const std::string& spin: {"a", "b"}){
+            filenames.push_back("file_opdc_" + spin);
+        }
+        for(const std::string& spin: {"aa", "ab", "bb"}){
+            filenames.push_back("file_2pdc_" + spin);
+        }
+        for(const std::string& spin: {"aaa", "aab", "abb", "bbb"}){
+            filenames.push_back("file_3pdc_" + spin);
+        }
+    }
+
+    std::ofstream outfstr;
+    outfstr.open(filenames[0]);
+    D1a_.iterate([&](const std::vector<size_t>& i,double& value){
+        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
+    });
+    outfstr.close();
+    outfstr.clear();
+    outfstr.open(filenames[1]);
+    D1b_.iterate([&](const std::vector<size_t>& i,double& value){
+        outfstr << boost::format("%4d %4d  %20.15f\n") % i[0] % i[1] % value;
+    });
+    outfstr.close();
+    outfstr.clear();
+
+    for(int m = 0; m < 3; ++m){
+        outfstr.open(filenames[m + 2]);
+
+        ambit::Tensor& D2 = D2_[m];
+        D2.iterate([&](const std::vector<size_t>& i,double& value){
+            outfstr << boost::format("%4d %4d %4d %4d  %20.15f\n")
+                       % i[0] % i[1] % i[2] % i[3] % value;
+        });
+
+        outfstr.close();
+        outfstr.clear();
+    }
+
+    if(options_.get_str("THREEPDC") != "ZERO"){
+        for(int m = 0; m < 4; ++m){
+            outfstr.open(filenames[m + 5]);
+
+            ambit::Tensor& D3 = D3_[m];
+            D3.iterate([&](const std::vector<size_t>& i,double& value){
+                outfstr << boost::format("%4d %4d %4d %4d %4d %4d  %20.15f\n")
+                           % i[0] % i[1] % i[2] % i[3] % i[4] % i[5] % value;
+            });
+
+            outfstr.close();
+            outfstr.clear();
+        }
+    }
+
+    outfile->Printf("    Done.");
 }
 
 }}

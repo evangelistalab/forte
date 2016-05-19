@@ -152,7 +152,7 @@ void MRDSRG::startup()
     });
     semi_canonical_ = check_semicanonical();
     if(!semi_canonical_){
-        outfile->Printf("\n    MR-DSRG will be computed in an arbitrary basis. Orbital invariant formulasm is employed.");
+        outfile->Printf("\n    MR-DSRG will be computed in an arbitrary basis. Orbital invariant formalism is employed.");
         outfile->Printf("\n    We recommend using semi-canonical for all denominator-based source operator.");
         if(options_.get_str("RELAX_REF") != "NONE"){
             outfile->Printf("\n\n    Currently, only RELAX_REF = NONE is available for orbital invariant formalism.");
@@ -412,7 +412,7 @@ double MRDSRG::compute_energy_relaxed(){
         // diagonalize the Hamiltonian
         FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
-        fcisolver.set_max_rdm_level(2);
+        fcisolver.set_max_rdm_level(1);
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
@@ -500,15 +500,19 @@ double MRDSRG::compute_energy_relaxed(){
 
                 // transform O1 to new basis and copy to ints_
                 BlockedTensor O = ambit::BlockedTensor::build(tensor_type_,"Temp One",spin_cases({"gg"}));
-                O["rs"] = U_["rp"] * O1_["pq"] * U_["sq"];
-                O["RS"] = U_["RP"] * O1_["PQ"] * U_["SQ"];
-                O.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-                    if (spin[0] == AlphaSpin){
-                        ints_->set_oei(i[0],i[1],value,true);
-                    }else{
-                        ints_->set_oei(i[0],i[1],value,false);
+                O["xy"] = U_["xu"] * O1_["uv"] * U_["yv"];
+                O["XY"] = U_["XU"] * O1_["UV"] * U_["YV"];
+                for(const std::string& block: {"aa","AA"}){
+                    bool spin = islower(block[0]);
+                    std::vector<size_t> mo_idx (aactv_mos_);
+                    if(!spin) {
+                        mo_idx = bactv_mos_;
                     }
-                });
+
+                    O.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
+                        ints_->set_oei(mo_idx[i[0]], mo_idx[i[1]], value, spin);
+                    });
+                }
 
                 // transform bare one-body Hamiltonian
                 O["rs"] = U_["rp"] * H_["pq"] * U_["sq"];
@@ -520,21 +524,28 @@ double MRDSRG::compute_energy_relaxed(){
 
                 // transform Hbar2 to new basis and copy to ints_
                 O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",spin_cases({"gggg"}));
-                O["tors"] = U_["tp"] * U_["oq"] * Hbar2_["pqrs"];
-                O["tOrS"] = U_["tp"] * U_["OQ"] * Hbar2_["pQrS"];
-                O["TORS"] = U_["TP"] * U_["OQ"] * Hbar2_["PQRS"];
-                Hbar2_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
-                Hbar2_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
-                Hbar2_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
-                Hbar2_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-                    if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
-                        ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
-                    }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){
-                        ints_->set_tei(i[0],i[1],i[2],i[3],value,true,false);
-                    }else if ((spin[0] == BetaSpin)  && (spin[1] == BetaSpin)){
-                        ints_->set_tei(i[0],i[1],i[2],i[3],value,false,false);
-                    }
-                });
+                O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
+                O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
+                O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
+                Hbar2_["uvwz"] = O["uvxy"] * U_["zy"] * U_["wx"];
+                Hbar2_["uVwZ"] = O["uVxY"] * U_["ZY"] * U_["wx"];
+                Hbar2_["UVWZ"] = O["UVXY"] * U_["ZY"] * U_["WX"];
+                for(const std::string& block: {"aaaa","aAaA","AAAA"}){
+                    std::map<bool,std::vector<size_t>> spin_to_mo;
+                    spin_to_mo[true]  = aactv_mos_;
+                    spin_to_mo[false] = bactv_mos_;
+
+                    bool spin0 = islower(block[0]);
+                    bool spin1 = islower(block[1]);
+
+                    Hbar2_.block(block).citerate([&](const std::vector<size_t>& i,const double& value){
+                        size_t p = spin_to_mo[spin0][i[0]];
+                        size_t q = spin_to_mo[spin1][i[1]];
+                        size_t r = spin_to_mo[spin0][i[2]];
+                        size_t s = spin_to_mo[spin1][i[3]];
+                        ints_->set_tei(p,q,r,s,value,spin0,spin1);
+                    });
+                }
                 ints_->update_integrals(false);
 
                 // transform bare two-body Hamiltonian
@@ -683,6 +694,8 @@ void MRDSRG::transfer_integrals(){
             ints_->set_oei(i[0],i[1],value,false);
         }
     });
+    O1_["uv"] = temp1["uv"];
+    O1_["UV"] = temp1["UV"];
 
     BlockedTensor temp2 = BTF_->build(tensor_type_,"temp2",spin_cases({"aaaa"}));
     temp2["uvxy"] = Hbar2_["uvxy"];
