@@ -670,17 +670,14 @@ double DSRG_MRPT3::compute_energy_pt3_2(){
     //     d) compute contraction in batches of spin cases
     for(const std::string& block: {"gggg", "gGgG", "GGGG"}){
         // spin cases: 0 -> AA; 1 -> AB; 2 -> BB
-        int spin = 0;
         std::string abij {"abij"};
         std::string ijab {"ijab"};
 
         if (isupper(block[1])) {
-            spin = 1;
             abij = "aBiJ";
             ijab = "iJaB";
         }
         if (isupper(block[0])) {
-            spin = 2;
             abij = "ABIJ";
             ijab = "IJAB";
         }
