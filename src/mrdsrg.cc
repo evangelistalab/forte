@@ -152,7 +152,7 @@ void MRDSRG::startup()
     });
     semi_canonical_ = check_semicanonical();
     if(!semi_canonical_){
-        outfile->Printf("\n    MR-DSRG will be computed in an arbitrary basis. Orbital invariant formulasm is employed.");
+        outfile->Printf("\n    MR-DSRG will be computed in an arbitrary basis. Orbital invariant formalism is employed.");
         outfile->Printf("\n    We recommend using semi-canonical for all denominator-based source operator.");
         if(options_.get_str("RELAX_REF") != "NONE"){
             outfile->Printf("\n\n    Currently, only RELAX_REF = NONE is available for orbital invariant formalism.");

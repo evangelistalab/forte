@@ -27,6 +27,7 @@
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
+#include "dsrg_mrpt3.h"
 #include "three_dsrg_mrpt2.h"
 #include "tensorsrg.h"
 #include "mcsrgpt2_mo.h"
@@ -107,7 +108,7 @@ read_options(std::string name, Options &options)
         -*/
         options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS DMRG"
                                               " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
-                                              " DSRG-MRPT2 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
+                                              " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
                                               " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
 
@@ -505,6 +506,8 @@ read_options(std::string name, Options &options)
         options.add_bool("QUIET_MODE", false);
         /*- Control streamlining -*/
         options.add_bool("STREAMLINE_Q", false);
+        /*- Initial reference wavefunction -*/
+        options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -1105,6 +1108,45 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
             apici->compute_energy();
+        }
+    }
+
+    if (options.get_str("JOB_TYPE") == "DSRG-MRPT3"){
+        std::string cas_type = options.get_str("CAS_TYPE");
+        if(cas_type == "CAS")
+        {
+            boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
+            fci_mo->compute_energy();
+            Reference reference = fci_mo->reference();
+            boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt3->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt3->compute_energy();
+            }
+        }
+
+        if(cas_type == "FCI")
+        {
+            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
+            if (options.get_bool("SEMI_CANONICAL"))
+            {
+                boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                fci->set_max_rdm_level(1);
+                fci->compute_energy();
+                Reference reference2 = fci->reference();
+                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+            }
+            boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            fci->set_max_rdm_level(3);
+            fci->compute_energy();
+            Reference reference = fci->reference();
+            boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            if(options.get_str("RELAX_REF") != "NONE"){
+                dsrg_mrpt3->compute_energy_relaxed();
+            }else{
+                dsrg_mrpt3->compute_energy();
+            }
         }
     }
 
