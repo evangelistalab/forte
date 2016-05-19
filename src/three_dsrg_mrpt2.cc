@@ -1306,8 +1306,8 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
             temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
             temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
-            E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
-            E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
+            //E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
+            //E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
             temp["uvWxyZ"] -= V_["uviy"] * T2_["iWxZ"];      //  aaAaaA from hole
             temp["uvWxyZ"] -= V_["uWiZ"] * T2_["ivxy"];      //  aaAaaA from hole
@@ -1348,16 +1348,22 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             double Econtrib2 = 0.0;
             for(size_t x = 0; x < active_; x++){
                 for(size_t y = 0; y < active_; y++){
-                    
-                    temp_uVWz.iterate([&](const std::vector<size_t>& i,double& value){
-                        value = temp_uVWz_data[i[0] * active5 + i[1] * active4 + i[2] * active3 + x * active2 + y * active_ + i[3]];});
-                    fseek(fl3aAA, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
-                    fread(&(L3_ZuVW.data()[0]), sizeof(double), active4, fl3aAA);
-                    E += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
-                    Econtrib2 += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
-                    normTemp += temp_uVWz.norm(2.0) * temp_uVWz.norm(2.0);
-                    normCumulant += L3_ZuVW.norm(2.0) * L3_ZuVW.norm(2.0);
-                    
+
+                    BlockedTensor V_wa = BTF_->build(tensor_type_, "V_wa", {"ah", "AH"}, true);
+                    BlockedTensor T_iw = BTF_->build(tensor_type_, "T_iw", {"ha", "HA"}, true);
+                    BlockedTensor temp_uvwz = BTF_->build(tensor_type_, "T_uvwz",{"AAAA", "aaaa"});
+                    BlockedTensor L3_zuvw = BTF_->build(tensor_type_, "L3_zuvw",{"AAAA", "aaaa"});
+                    temp_uvwz["uvwz"] += V_["uviz"] * T_iw["iw"];
+                    temp_uvwz["uvwz"] += V_wa["wa"] * T2_["uvaz"];
+                    temp_uvwz["UVWZ"] += T_iw["IW"] * V_["UVIZ"];
+                    temp_uvwz["uvwz"] += V_wa["WA"] * T2_["UVAZ"];
+
+                    fseek(fl3aaa, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
+                    fread(&(L3_zuvw.block("aaaa").data()[0]), sizeof(double), active4, fl3aaa);
+                    fseek(fl3AAA, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
+                    fread(&(L3_zuvw.block("AAAA").data()[0]), sizeof(double), active4, fl3AAA);
+                    E += 0.25 * temp_uvwz["uvwz"] * L3_zuvw["zuvw"];
+                    E += 0.25 * temp_uvwz["UVWZ"] * L3_zuvw["ZUVW"];
                 }
             }
             outfile->Printf("\n Econtrib2: %8.8f", Econtrib2);
