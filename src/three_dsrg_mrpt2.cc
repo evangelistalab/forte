@@ -1012,7 +1012,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eFmU"] * T2_["mVeF"];
         E += temp["vu"] * Gamma1_["uv"];
         E += temp["VU"] * Gamma1_["UV"];
-        outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
+        //outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
         temp.zero();
         temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
         temp["vu"] += V_["vEmN"] * T2_["mNuE"];
@@ -1020,7 +1020,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eVnM"] * T2_["nMeU"];
         E += temp["vu"] * Eta1_["uv"];
         E += temp["VU"] * Eta1_["UV"];
-        outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
+        //outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
     }
     else
     {
@@ -1035,7 +1035,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
     E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
     E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
-    outfile->Printf("\n V_{xu}^{ef} * T2_{ef}^{yv} * G1 * G1: %8.6f", E);
+    //outfile->Printf("\n V_{xu}^{ef} * T2_{ef}^{yv} * G1 * G1: %8.6f", E);
 
     temp.zero();
     temp["vyux"] += V_["vymn"] * T2_["mnux"];
@@ -1044,7 +1044,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
     E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
     E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
-    outfile->Printf("\n V_{vy}^{ux} * T2_{ef}^{yv} * E1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{vy}^{ux} * T2_{ef}^{yv} * E1 * E1: %8.6f", E);
 
     temp.zero();
     temp["vyux"] += V_["vemx"] * T2_["myue"];
@@ -1057,7 +1057,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
     temp["vYuX"] = V_["vEmX"] * T2_["mYuE"];
     E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
-    outfile->Printf("\n V_{ve}^{mx} * T2_{ue}^{my} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{ve}^{mx} * T2_{ue}^{my} * G1 * E1: %8.6f", E);
 
     temp.zero();
     temp["yvxu"] += 0.5 * Gamma1_["wz"] * V_["vexw"] * T2_["yzue"];
@@ -1065,14 +1065,14 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     temp["yvxu"] += 0.5 * Eta1_["wz"] * T2_["myuw"] * V_["vzmx"];
     temp["yvxu"] += Eta1_["WZ"] * T2_["yMuW"] * V_["vZxM"];
     E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
-    outfile->Printf("\n V_{ve}^{xw} * T2_{ue}^{yz} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{ve}^{xw} * T2_{ue}^{yz} * G1 * E1: %8.6f", E);
 
     temp["YVXU"] += 0.5 * Gamma1_["WZ"] * V_["VEXW"] * T2_["YZUE"];
     temp["YVXU"] += Gamma1_["wz"] * V_["eVwX"] * T2_["zYeU"];
     temp["YVXU"] += 0.5 * Eta1_["WZ"] * T2_["MYUW"] * V_["VZMX"];
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
-    outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
 
     //Calculates all but ccvv, cCvV, and CCVV energies
 
@@ -1106,7 +1106,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         throw PSIEXCEPTION("Specify either CORE FLY_LOOP or FLY_AMBIT");
     }
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
-    outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
+    //outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
 
     return (E + Eccvv);
 }
@@ -1306,8 +1306,8 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             temp["uvwxyz"] += V_["waxy"] * T2_["uvaz"];      //  aaaaaa from particle
             temp["UVWXYZ"] += V_["UVIZ"] * T2_["IWXY"];      //  AAAAAA from hole
             temp["UVWXYZ"] += V_["WAXY"] * T2_["UVAZ"];      //  AAAAAA from particle
-            E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
-            E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
+            //E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
+            //E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
 
             temp["uvWxyZ"] -= V_["uviy"] * T2_["iWxZ"];      //  aaAaaA from hole
             temp["uvWxyZ"] -= V_["uWiZ"] * T2_["ivxy"];      //  aaAaaA from hole
@@ -1348,16 +1348,22 @@ double THREE_DSRG_MRPT2::E_VT2_6()
             double Econtrib2 = 0.0;
             for(size_t x = 0; x < active_; x++){
                 for(size_t y = 0; y < active_; y++){
-                    
-                    temp_uVWz.iterate([&](const std::vector<size_t>& i,double& value){
-                        value = temp_uVWz_data[i[0] * active5 + i[1] * active4 + i[2] * active3 + x * active2 + y * active_ + i[3]];});
-                    fseek(fl3aAA, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
-                    fread(&(L3_ZuVW.data()[0]), sizeof(double), active4, fl3aAA);
-                    E += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
-                    Econtrib2 += 0.5 * temp_uVWz("uVWZ") * L3_ZuVW("WZuV");
-                    normTemp += temp_uVWz.norm(2.0) * temp_uVWz.norm(2.0);
-                    normCumulant += L3_ZuVW.norm(2.0) * L3_ZuVW.norm(2.0);
-                    
+
+                    BlockedTensor V_wa = BTF_->build(tensor_type_, "V_wa", {"ah", "AH"}, true);
+                    BlockedTensor T_iw = BTF_->build(tensor_type_, "T_iw", {"ha", "HA"}, true);
+                    BlockedTensor temp_uvwz = BTF_->build(tensor_type_, "T_uvwz",{"AAAA", "aaaa"});
+                    BlockedTensor L3_zuvw = BTF_->build(tensor_type_, "L3_zuvw",{"AAAA", "aaaa"});
+                    temp_uvwz["uvwz"] += V_["uviz"] * T_iw["iw"];
+                    temp_uvwz["uvwz"] += V_wa["wa"] * T2_["uvaz"];
+                    temp_uvwz["UVWZ"] += T_iw["IW"] * V_["UVIZ"];
+                    temp_uvwz["uvwz"] += V_wa["WA"] * T2_["UVAZ"];
+
+                    fseek(fl3aaa, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
+                    fread(&(L3_zuvw.block("aaaa").data()[0]), sizeof(double), active4, fl3aaa);
+                    fseek(fl3AAA, (x * active5 + y * active4) * sizeof(double), SEEK_SET);
+                    fread(&(L3_zuvw.block("AAAA").data()[0]), sizeof(double), active4, fl3AAA);
+                    E += 0.25 * temp_uvwz["uvwz"] * L3_zuvw["zuvw"];
+                    E += 0.25 * temp_uvwz["UVWZ"] * L3_zuvw["ZUVW"];
                 }
             }
             outfile->Printf("\n Econtrib2: %8.8f", Econtrib2);

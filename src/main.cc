@@ -336,6 +336,14 @@ read_options(std::string name, Options &options)
         options.add_int("CASSCF_DIIS_FREQ", 1);
         /// When the norm of the orbital gradient is below this value, do diis
         options.add_double("CASSCF_DIIS_NORM", 1e-4);
+        /// Do a CAS step for every CASSCF_CI_FREQ
+        options.add_bool("CASSCF_CI_STEP", false);
+        /// How often should you do the CI_FREQ
+        options.add_int("CASSCF_CI_FREQ", 1);
+        /// When to start skipping CI steps
+        options.add_int("CASSCF_CI_STEP_START", -1);
+
+
         /*- SA-CASSCF -*/
         /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
         options.add("SA_STATES", new ArrayType());
@@ -498,6 +506,8 @@ read_options(std::string name, Options &options)
         options.add_bool("QUIET_MODE", false);
         /*- Control streamlining -*/
         options.add_bool("STREAMLINE_Q", false);
+        /*- Initial reference wavefunction -*/
+        options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI

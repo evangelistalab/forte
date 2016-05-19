@@ -197,6 +197,10 @@ void AdaptiveCI::startup()
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 
+    reference_type_ = "SR";
+    if( options_["ACI_INITIAL_SPACE"].has_changed() ){
+        reference_type_ = options_.get_str("ACI_INITIAL_SPACE");
+    }
 
     diag_method_ = DLSolver;
     if(options_["DIAG_ALGORITHM"].has_changed()){
@@ -497,14 +501,15 @@ double AdaptiveCI::compute_energy()
     SharedVector PQ_evals;
 
     // Use the reference determinant as a starting point
-    std::vector<bool> alfa_bits = reference_determinant_.get_alfa_bits_vector_bool();
-    std::vector<bool> beta_bits = reference_determinant_.get_beta_bits_vector_bool();
-    STLBitsetDeterminant bs_det(alfa_bits,beta_bits);
-	P_space_.push_back(bs_det);
-    P_space_map_[bs_det] = 1;
+	P_space_.push_back(reference_determinant_);
+    P_space_map_[reference_determinant_] = 1;
+	det_history_[reference_determinant_].push_back(std::make_pair(0, "I"));
 	
-	det_history_[bs_det].push_back(std::make_pair(0, "I"));
-	
+    if( reference_type_ != "SR" ){
+        build_initial_reference();
+    }
+
+
     outfile->Flush();
 
     std::vector<std::vector<double> > energy_history;
@@ -603,6 +608,11 @@ double AdaptiveCI::compute_energy()
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
+
+        //for( size_t I = 0; I < PQ_space_.size(); ++I){
+        //    outfile->Printf("\n  %zu  %s", I, PQ_space_[I].str().c_str());
+        //}
+
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
@@ -2061,6 +2071,115 @@ void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> spac
     
 }
 
+void AdaptiveCI::build_initial_reference()
+{
+    STLBitsetDeterminant det = P_space_[0];
+
+    std::vector<int> aocc = det.get_alfa_occ();
+    std::vector<int> bocc = det.get_beta_occ();
+    std::vector<int> avir = det.get_alfa_vir();
+    std::vector<int> bvir = det.get_beta_vir();
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    if( reference_type_ == "CIS" or reference_type_ == "CISD" ){
+        // Generate alpha excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    STLBitsetDeterminant ndet(det);
+                    ndet.set_alfa_bit(ii,false);
+                    ndet.set_alfa_bit(aa,true);
+                    P_space_.push_back(ndet);
+                }
+            }
+        }
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    STLBitsetDeterminant ndet(det);
+                    ndet.set_beta_bit(ii,false);
+                    ndet.set_beta_bit(aa,true);
+                    P_space_.push_back(ndet);
+                }
+            }
+        }
+    }
+
+    if( reference_type_ == "CID" or reference_type_ == "CISD" ){
+        // Generate alpha-alpha excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = i + 1; j < noalpha; ++j){
+                int jj = aocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = a + 1; b < nvalpha; ++b){
+                        int bb = avir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_alfa_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_alfa_bit(bb,true);
+                            P_space_.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+        // Then the alpha-beta
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = 0; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = 0; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
+                            P_space_.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+        // Lastly the beta-beta
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int j = i + 1; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvbeta; ++a){
+                    int aa = bvir[a];
+                    for (int b = a + 1; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                            STLBitsetDeterminant new_det(det);
+                            new_det.set_beta_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_beta_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
+                            P_space_.push_back(new_det);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 }} // EndNamespaces
 

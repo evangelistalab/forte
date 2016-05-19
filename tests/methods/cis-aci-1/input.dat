@@ -1,0 +1,39 @@
+# HF, RHF canonical orbitals, CAS-CI(2,2)
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -108.71420304902
+refaci = -108.874166965644
+refacipt2 = -108.895740462661 
+
+molecule hf{
+   N
+   N 1 1.732878731527
+units bohr
+}
+
+set {
+  basis dz
+  scf_type pk
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  reference rhf
+}
+
+set forte {
+  job_type aci
+  frozen_docc [1,0,0,0,0,1,0,0]
+  taup 0.05
+  tauq 0.05
+  charge 0
+  nroot 2
+  ACI_INITIAL_SPACE CIS
+}
+
+energy('scf')
+compare_values(refscf, get_variable("SCF total energy"),10, "SCF energy") #TEST
+energy('forte')
+compare_values(refaci, get_variable("ACI ENERGY"),10, "ACI energy") #TEST
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST
