@@ -29,8 +29,8 @@ energy('scf')
 
 set forte {
     active      [3, 0, 0, 0]
-    dmrg_wfn_irrep    0
-    dmrg_wfn_multp    1
+    root_sym    0
+    multiplicity    1
     dmrg_states       [200, 500, 1000, 1000]
     dmrg_econv        [1e-8, 1e-8, 1e-8, 1e-8]
     dmrg_maxsweeps    [5, 5, 5, 100]
