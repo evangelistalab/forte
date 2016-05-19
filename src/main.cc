@@ -497,6 +497,8 @@ read_options(std::string name, Options &options)
         options.add_bool("QUIET_MODE", false);
         /*- Control streamlining -*/
         options.add_bool("STREAMLINE_Q", false);
+        /*- Initial reference wavefunction -*/
+        options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI

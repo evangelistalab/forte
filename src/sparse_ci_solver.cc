@@ -25,8 +25,10 @@ namespace psi{ namespace forte{
 SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& space, bool print_details , bool disk)
     : SigmaVector(space.size()), space_(space)
 {
+//    for( auto& I : space) I.print();
     using det_hash = std::unordered_map<STLBitsetDeterminant,size_t,STLBitsetDeterminant::Hash>;
     using bstmap_it = det_hash::iterator;
+
 
     int ntd = omp_get_max_threads();
     outfile->Printf("\n  Using %d threads.", ntd);
@@ -530,7 +532,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 }
 
 
-/*  Single/double creation/annihilaton are labeled as follows:
+/*  Single/double creation/annihilaton are labeled as follows
  *  a_ann_list:  0
  *  b_ann_list:  1
  *   
@@ -639,6 +641,10 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
             }
         }
     }
+//   outfile->Printf("\n  Printing sigma:");
+//   for (size_t J = 0; J < size_; ++J){
+//       outfile->Printf("\n  %12.9f", sigma_p[J]);
+//   }
 
     // bb singles
     if( use_disk_ ){
@@ -796,6 +802,7 @@ SigmaVectorList::SigmaVectorList(const std::vector<STLBitsetDeterminant>& space,
     
     size_t max_I = space.size();
 
+  //  for( auto& I : space) I.print();
 
     size_t naa_ann = 0;
     size_t nab_ann = 0;
@@ -1230,6 +1237,12 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             }
         }
 
+ //   outfile->Printf("\n  Printing sigma:");
+ //   for (size_t J = 0; J < size_; ++J){
+ //       outfile->Printf("\n  %12.9f", sigma_p[J]);
+ //   }
+
+ //   for (size_t J = 0; J < size_; ++J){
         // bb singles
         for (auto& bJ_mo_sign : b_ann_list[J]){
             const size_t bJ_add = bJ_mo_sign.first;
@@ -1533,7 +1546,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             H.set(J,I,HIJ);
         }
     }
-
+   // H.print();
     // Project H onto the spin-adapted subspace
     H.transform(S2evecs);
 
@@ -1624,6 +1637,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     dls.set_e_convergence(e_convergence_);
     dls.set_print_level(0);
 
+
     // allocate vectors
     SharedVector b(new Vector("b",fci_size));
     SharedVector sigma(new Vector("sigma",fci_size));
@@ -1666,6 +1680,14 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     dls.set_project_out(bad_roots);
 
     SolverStatus converged = SolverStatus::NotConverged;
+    
+//    for( int i = 0; i < fci_size; ++i ){
+//        if( b->get(i) > 0 ){
+//        outfile->Printf("\n b: %f", b->get(i));
+//        space[i].print();
+//        outfile->Printf("\n");
+//        }
+//    }
 
     if(print_details_){
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
@@ -1676,6 +1698,9 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
 
     double old_avg_energy = 0.0;
     int real_cycle = 1;
+
+//    maxiter_davidson_ = 2;
+//    b->print();
     for (int cycle = 0; cycle < maxiter_davidson_; ++cycle){
         bool add_sigma = true;
         do{
