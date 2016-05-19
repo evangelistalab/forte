@@ -1012,7 +1012,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eFmU"] * T2_["mVeF"];
         E += temp["vu"] * Gamma1_["uv"];
         E += temp["VU"] * Gamma1_["UV"];
-        outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
+        //outfile->Printf("\n E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
         temp.zero();
         temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
         temp["vu"] += V_["vEmN"] * T2_["mNuE"];
@@ -1020,7 +1020,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         temp["VU"] += V_["eVnM"] * T2_["nMeU"];
         E += temp["vu"] * Eta1_["uv"];
         E += temp["VU"] * Eta1_["UV"];
-        outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
+        //outfile->Printf("\n E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
     }
     else
     {
@@ -1035,7 +1035,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
     E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
     E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
-    outfile->Printf("\n V_{xu}^{ef} * T2_{ef}^{yv} * G1 * G1: %8.6f", E);
+    //outfile->Printf("\n V_{xu}^{ef} * T2_{ef}^{yv} * G1 * G1: %8.6f", E);
 
     temp.zero();
     temp["vyux"] += V_["vymn"] * T2_["mnux"];
@@ -1044,7 +1044,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
     E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
     E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
-    outfile->Printf("\n V_{vy}^{ux} * T2_{ef}^{yv} * E1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{vy}^{ux} * T2_{ef}^{yv} * E1 * E1: %8.6f", E);
 
     temp.zero();
     temp["vyux"] += V_["vemx"] * T2_["myue"];
@@ -1057,7 +1057,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
     temp["vYuX"] = V_["vEmX"] * T2_["mYuE"];
     E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
-    outfile->Printf("\n V_{ve}^{mx} * T2_{ue}^{my} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{ve}^{mx} * T2_{ue}^{my} * G1 * E1: %8.6f", E);
 
     temp.zero();
     temp["yvxu"] += 0.5 * Gamma1_["wz"] * V_["vexw"] * T2_["yzue"];
@@ -1065,14 +1065,14 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     temp["yvxu"] += 0.5 * Eta1_["wz"] * T2_["myuw"] * V_["vzmx"];
     temp["yvxu"] += Eta1_["WZ"] * T2_["yMuW"] * V_["vZxM"];
     E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
-    outfile->Printf("\n V_{ve}^{xw} * T2_{ue}^{yz} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{ve}^{xw} * T2_{ue}^{yz} * G1 * E1: %8.6f", E);
 
     temp["YVXU"] += 0.5 * Gamma1_["WZ"] * V_["VEXW"] * T2_["YZUE"];
     temp["YVXU"] += Gamma1_["wz"] * V_["eVwX"] * T2_["zYeU"];
     temp["YVXU"] += 0.5 * Eta1_["WZ"] * T2_["MYUW"] * V_["VZMX"];
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
-    outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
+    //outfile->Printf("\n V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
 
     //Calculates all but ccvv, cCvV, and CCVV energies
 
@@ -1106,7 +1106,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         throw PSIEXCEPTION("Specify either CORE FLY_LOOP or FLY_AMBIT");
     }
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
-    outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
+    //outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
 
     return (E + Eccvv);
 }
