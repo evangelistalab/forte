@@ -129,6 +129,8 @@ private:
 	int max_cycle_;
 
     // ==> ACI Options <==
+    /// The initial reference
+    std::string reference_type_;
     /// The threshold applied to the primary space
     double tau_p_;
     /// The threshold applied to the secondary space
@@ -335,6 +337,8 @@ private:
     /// Convert from determinant to string representation
     void convert_to_string( const std::vector<STLBitsetDeterminant> space );
 
+    /// Build initial reference
+    void build_initial_reference();
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
