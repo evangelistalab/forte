@@ -67,6 +67,7 @@ private:
     double   scalar_energy_ = 0.0;
     std::vector<double> one_body_operator();
     bool use_user_integrals_ = false;
+    void print_natural_orbitals(double * one_rdm);
 
 };
 
