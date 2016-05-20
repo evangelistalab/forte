@@ -340,8 +340,8 @@ double MRDSRG::compute_energy(){
         Etotal += compute_energy_ldsrg2();
         break;
     }
-    case CORR_LV::CEPA0:{
-        Etotal += compute_energy_cepa0();
+    case CORR_LV::LDSRG2_QC:{
+        Etotal += compute_energy_ldsrg2_qc();
         break;
     }
     case CORR_LV::LDSRG2_P3:{

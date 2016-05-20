@@ -117,10 +117,10 @@ protected:
     // => DSRG related <= //
 
     /// Correlation level
-    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, CEPA0, LSRG2, SRG_PT2};
+    enum class CORR_LV {LDSRG2, LDSRG2_P3, PT2, PT3, QDSRG2, QDSRG2_P3, LDSRG2_QC, LSRG2, SRG_PT2};
     std::map<std::string, CORR_LV> corrlevelmap =
             boost::assign::map_list_of("LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)
-            ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)("CEPA0", CORR_LV::CEPA0)
+            ("PT2", CORR_LV::PT2)("PT3", CORR_LV::PT3)("LDSRG2_QC", CORR_LV::LDSRG2_QC)
             ("QDSRG2", CORR_LV::QDSRG2)("QDSRG2_P3", CORR_LV::QDSRG2_P3)
             ("LSRG2", CORR_LV::LSRG2)("SRG_PT2", CORR_LV::SRG_PT2);
 
@@ -253,6 +253,8 @@ protected:
 
     /// Compute DSRG-transformed Hamiltonian Hbar
     void compute_hbar();
+    /// Compute DSRG-transformed Hamiltonian Hbar truncated to quadratic nested commutator
+    void compute_hbar_qc();
     /// Zero-body Hbar
     double Hbar0_;
     /// One-body Hbar
@@ -321,8 +323,13 @@ protected:
                          BlockedTensor& T2, const std::vector<std::string>& label2,
                          const std::vector<double>& data);
 
-    /// Compute MR-DSRG-CEPA0
-    double compute_energy_cepa0();
+    /// Add H2's Hermitian conjugate to itself, H2 need to contain gggg (or GGGG) block
+    void tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha = true);
+    /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
+    void tensor_add_HC_ab(BlockedTensor& H2);
+
+    /// Compute MR-LDSRG(2) truncated to quadratic commutator
+    double compute_energy_ldsrg2_qc();
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
