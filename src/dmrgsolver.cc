@@ -9,6 +9,7 @@
 #include <libmints/mints.h>
 #include <libmints/typedefs.h>
 #include <libmints/matrix.h>
+#include <libmints/mintshelper.h>
 #include <libmints/factory.h>
 //Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
 #include <libciomr/libciomr.h>
@@ -289,10 +290,28 @@ void DMRGSolver::compute_energy()
     if ( !(Prob->checkConsistency()) ){ throw PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector compatible with all symmetry sectors!"); }
     Prob->SetupReorderD2h();
 
+    ///If one does not provide integrals when they call solver, compute them yourself
     if(!use_user_integrals_)
     {
         std::vector<size_t> active_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
         active_integrals_ = ints_->aptei_ab_block(active_array, active_array, active_array, active_array);
+        ///SCF_TYPE CD tends to be slow.  Avoid it and use integral class
+        if(options_.get_str("SCF_TYPE")!="CD")
+        {
+            Timer one_body_timer;
+            one_body_integrals_ = one_body_operator();
+            outfile->Printf("\n OneBody integrals (though one_body_operator) takes %6.5f s", one_body_timer.get());
+        }
+        else {
+            Timer one_body_fci_ints;
+            std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+            mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+            fci_ints->set_active_integrals_and_restricted_docc();
+            one_body_integrals_ = fci_ints->oei_a_vector();
+            scalar_energy_ = fci_ints->scalar_energy();
+            scalar_energy_ += Process::environment.molecule()->nuclear_repulsion_energy() + ints_->frozen_core_energy();
+            outfile->Printf("\n OneBody integrals (fci_ints) takes %6.5f s", one_body_fci_ints.get());
+        }
     }
     active_integrals_.iterate([&](const std::vector<size_t>& i,double& value){
         if(
@@ -303,22 +322,6 @@ void DMRGSolver::compute_energy()
         } ;});
     //int shift = iHandler->getDMRGcumulative(h);
     int shift = 0;
-    ///If user doesn't specify integrals, compute them yourself.  
-    if(one_body_integrals_.empty())
-    {
-        Timer one_body_timer;
-        one_body_integrals_ = one_body_operator();
-        outfile->Printf("\n OneBody integrals takes %6.5f s", one_body_timer.get());
-    }
-    else if(options_.get_str("SCF_TYPE")=="CD")
-    {
-        Timer one_body_fci_ints;
-        std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-        fci_ints->set_active_integrals_and_restricted_docc();
-        one_body_integrals_ = fci_ints->oei_a_vector();
-        scalar_energy_ = fci_ints->scalar_energy();
-    }
     
     for(int h = 0; h < iHandler->getNirreps(); h++){
         const int NOCC = frozen_docc[h];
@@ -357,6 +360,7 @@ void DMRGSolver::compute_energy()
         Timer DMRGRDMs;
         DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
+        outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
         //if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -396,6 +400,10 @@ void DMRGSolver::compute_energy()
     }
 
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
+    if(options_.get_bool("PRINT_NO"))
+    {
+        print_natural_orbitals(DMRG1DM);
+    }
     dmrg_ref_.set_Eref(Energy);
 
     delete[] DMRG1DM;
@@ -530,6 +538,48 @@ std::vector<double> DMRGSolver::one_body_operator()
     return oei_a;
 
 }
+void DMRGSolver::print_natural_orbitals(double* opdm)
+{
+    print_h2("NATURAL ORBITALS");
+    Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+    int nirrep = wfn_->nirrep();
+    size_t na_ = mo_space_info_->size("ACTIVE");
 
+    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep,active_dim, active_dim));
+
+    int offset = 0;
+    for(int h = 0; h < nirrep; h++){
+        for(int u = 0; u < active_dim[h]; u++){
+            for(int v = 0; v < active_dim[h]; v++){
+                opdm_a->set(h, u, v, opdm[(u + offset) * na_ + v + offset]);
+            }
+        }
+        offset += active_dim[h];
+    }
+    SharedVector OCC_A(new Vector("ALPHA OCCUPATION", nirrep, active_dim));
+    SharedMatrix NO_A(new Matrix (nirrep, active_dim, active_dim));
+
+    opdm_a->diagonalize(NO_A, OCC_A, descending);
+    std::vector< std::pair<double, std::pair< int, int > > >vec_irrep_occupation;
+    for(int h = 0; h < nirrep; h++)
+    {
+        for(int u = 0; u < active_dim[h]; u++){
+            auto irrep_occ = std::make_pair(OCC_A->get(h, u), std::make_pair(h, u + 1));
+            vec_irrep_occupation.push_back(irrep_occ);
+        }
+    }
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(), std::greater<std::pair<double, std::pair<int, int> > >());
+
+    int count = 0;
+    outfile->Printf( "\n    ");
+    for(auto vec : vec_irrep_occupation)
+    {
+        outfile->Printf( " %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(), vec.first);
+        if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
+            outfile->Printf( "\n    ");
+    }
+    outfile->Printf( "\n\n");
+}
 
 }} // End Namespaces

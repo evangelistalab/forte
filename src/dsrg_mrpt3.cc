@@ -357,7 +357,7 @@ bool DSRG_MRPT3::check_semicanonical(){
     });
 
     bool semi = false;
-    double threshold = 0.01 * std::sqrt(options_.get_double("E_CONVERGENCE"));
+    double threshold = 0.1 * std::sqrt(options_.get_double("E_CONVERGENCE"));
     if(Foff_sum > threshold){
         std::string sep(3 + 16 * 3, '-');
         outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
@@ -670,17 +670,14 @@ double DSRG_MRPT3::compute_energy_pt3_2(){
     //     d) compute contraction in batches of spin cases
     for(const std::string& block: {"gggg", "gGgG", "GGGG"}){
         // spin cases: 0 -> AA; 1 -> AB; 2 -> BB
-        int spin = 0;
         std::string abij {"abij"};
         std::string ijab {"ijab"};
 
         if (isupper(block[1])) {
-            spin = 1;
             abij = "aBiJ";
             ijab = "iJaB";
         }
         if (isupper(block[0])) {
-            spin = 2;
             abij = "ABIJ";
             ijab = "IJAB";
         }
