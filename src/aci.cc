@@ -196,6 +196,7 @@ void AdaptiveCI::startup()
     post_diagonalize_ = options_.get_bool("POST_DIAGONALIZE");
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
+	ref_root_ = options_.get_int("ROOT");
 
     reference_type_ = "SR";
     if( options_["ACI_INITIAL_SPACE"].has_changed() ){
@@ -263,7 +264,7 @@ void AdaptiveCI::print_info()
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"Determinant selection criterion",energy_selection_ ? "Second-order Energy" : "First-order Coefficients"},
         {"Selection criterion",aimed_selection_ ? "Aimed selection" : "Threshold"},
-        {"PQ Function", options_.get_str("PQ_FUNCTION")},
+        {"Excited Algorithm", options_.get_str("EXCITED_ALGORITHM")},
         {"Q Type", q_rel_ ? "Relative Energy" : "Absolute Energy"},
         {"PT2 Parameters", options_.get_bool("PERTURB_SELECT") ? "True" : "False"},
         {"Project out spin contaminants",project_out_spin_contaminants_ ? "True" : "False"},
@@ -500,6 +501,9 @@ double AdaptiveCI::compute_energy()
     SharedVector P_evals;
     SharedVector PQ_evals;
 
+    // This will store part of the wavefunction for computing an overlap
+    std::vector<std::pair<STLBitsetDeterminant,double>> P_ref; 
+
     // Use the reference determinant as a starting point
 	P_space_.push_back(reference_determinant_);
     P_space_map_[reference_determinant_] = 1;
@@ -508,7 +512,6 @@ double AdaptiveCI::compute_energy()
     if( reference_type_ != "SR" ){
         build_initial_reference();
     }
-
 
     outfile->Flush();
 
@@ -559,6 +562,19 @@ double AdaptiveCI::compute_energy()
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
+
+
+        // If doing root-following, grab the initial root
+        if( ex_alg_ == "ROOT_SELECT" and cycle == 0 ){
+            for( size_t I = 0, maxI = P_space_.size(); I < maxI; ++I){
+                P_ref.push_back( std::make_pair( P_space_[I], P_evecs->get(I, ref_root_) ));
+            } 
+        }
+
+        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 1){
+            ref_root_ = root_follow( P_ref, P_space_, P_evecs, num_ref_roots);
+        } 
+
 		// Save the dimention of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
 
@@ -585,12 +601,13 @@ double AdaptiveCI::compute_energy()
         	for (int i = 0; i < num_ref_roots; ++i){
         	    double abs_energy = P_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         	    double exc_energy = pc_hartree2ev * (P_evals->get(i) - P_evals->get(0));
-        	    outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
+        	    outfile->Printf("\n    P-space  CI Energy Root %3d        = %.12f Eh = %8.4f eV",i,abs_energy,exc_energy);
         	}
         	outfile->Printf("\n");
         	outfile->Flush();
 		}
 
+        if( !quiet_mode_ ) print_wfn(P_space_,P_evecs,num_ref_roots);
 
         // Step 2. Find determinants in the Q space        
         
@@ -641,8 +658,8 @@ double AdaptiveCI::compute_energy()
         	for (int i = 0; i < num_ref_roots; ++ i){
         	    double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         	    double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-        	    outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-        	    outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+        	    outfile->Printf("\n    PQ-space CI Energy Root %3d        = %.12f Eh = %8.4f eV",i,abs_energy,exc_energy);
+        	    outfile->Printf("\n    PQ-space CI Energy + EPT2 Root %3d = %.12f Eh = %8.4f eV",i,abs_energy + multistate_pt2_energy_correction_[i],
         	                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
         	}
         	outfile->Printf("\n");
@@ -665,6 +682,10 @@ double AdaptiveCI::compute_energy()
         if( stuck ){
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
+        }
+
+        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
+            ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
     
         // Step 5. Prune the P + Q space to get an updated P space
@@ -814,11 +835,11 @@ double AdaptiveCI::compute_energy()
         for (int i = 0; i < nroot_; ++ i){
             double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-            outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i + 1,abs_energy,exc_energy);
-            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i + 1,abs_energy + multistate_pt2_energy_correction_[i],
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i,abs_energy,exc_energy);
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i,abs_energy + multistate_pt2_energy_correction_[i],
                     exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
 	    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
-            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i + 1,abs_energy + davidson[i],
+            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
                     exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
 	    	}
         }
@@ -842,7 +863,7 @@ double AdaptiveCI::compute_energy()
 	    }
 
         outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
-        outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
+        outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
     }
     outfile->Flush();
 
@@ -1074,7 +1095,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
     outfile->Flush();
 }
 
-double AdaptiveCI::average_q_values( int nroot,std::vector<double> C1, std::vector<double>E2)
+double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vector<double>& E2)
 {
 	// f_E2 and f_C1 will store the selected function of the chosen q criteria
 	// This functions should only be called when nroot_ > 1
@@ -1136,11 +1157,10 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double> C1, std::vect
 	return select_value;
 }
 
-double AdaptiveCI::root_select( int nroot, std::vector<double> C1, std::vector<double> E2)
+double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<double>& E2)
 {
 	double select_value;
-	ref_root_ = options_.get_int("ROOT");
-
+    
 	if(ref_root_ + 1 > nroot_){
 		throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
 	}
@@ -2179,6 +2199,62 @@ void AdaptiveCI::build_initial_reference()
             }
         }
     }
+}
+
+int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>>& P_ref, 
+                             std::vector<STLBitsetDeterminant>& det_space,
+                             SharedMatrix evecs, 
+                             int num_ref_roots)
+{
+    int ndets = det_space.size();
+    int max_dim = std::min( ndets, 20 );
+    int new_root;
+    double old_overlap = 0.0;
+    std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
+
+    for( int n = 0; n < num_ref_roots; ++n ){
+        outfile->Printf("\n\n  Computing overlap for root %d", n);
+        double new_overlap = 0.0;
+
+        // First, grab the most important subset of the determinant space
+        std::vector<std::pair<double,size_t> > det_weight;
+        for( size_t I = 0; I < ndets; ++I ){
+            det_weight.push_back(std::make_pair(std::fabs(evecs->get(I,n)),I));
+        }
+        std::sort(det_weight.begin(), det_weight.end());
+        // Compute the overlap of the ~20 most important determinants
+        for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+            std::pair<double,size_t> detI = det_weight[I];
+            for( int J = 0; J < max_dim; ++J ){
+                if( det_space[detI.second] == P_ref[J].first ){
+                    new_overlap += std::abs(P_ref[J].second * detI.first);
+                } 
+            } 
+        }
+        outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
+        // If the overlap is larger, set it as the new root and reference, for now
+        if( new_overlap > old_overlap ){
+            new_root = n;
+            P_int.clear();
+            
+            outfile->Printf("\n  Saving reference for root %d", n);
+            for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+                P_int.push_back( std::make_pair( det_space[det_weight[I].second], det_weight[I].first ));
+            }
+        }
+        old_overlap = new_overlap;
+    }
+
+    // Update the reference P_ref
+    
+    P_ref.clear();
+    for( auto& I : P_int ){
+        P_ref.push_back(I);
+    }
+
+    outfile->Printf("\n  Setting reference root to: %d", new_root);
+
+    return new_root;
 }
 
 }} // EndNamespaces
