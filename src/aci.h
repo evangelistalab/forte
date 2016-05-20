@@ -267,10 +267,10 @@ private:
     void find_q_space(int nroot, SharedVector evals, SharedMatrix evecs);
 
 	/// Generate set of state-averaged q-criteria and determinants
-	double average_q_values(int nroot, std::vector<double> C1, std::vector<double> E2);
+	double average_q_values(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
 	/// Get criteria for a specific root
-	double root_select(int nroot, std::vector<double> C1, std::vector<double> E2);
+	double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);
 
     /// Find all the relevant excitations out of the P space - single root version
     void find_q_space_single_root(int nroot, SharedVector evals, SharedMatrix evecs);
@@ -339,6 +339,12 @@ private:
 
     /// Build initial reference
     void build_initial_reference();
+
+    /// Compute overlap for root following
+    int root_follow( std::vector<std::pair<STLBitsetDeterminant, double>>& P_ref,
+                     std::vector<STLBitsetDeterminant>& det_space,
+                     SharedMatrix evecs,
+                     int num_ref_roots);
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
