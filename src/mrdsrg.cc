@@ -523,7 +523,7 @@ double MRDSRG::compute_energy_relaxed(){
                 timings.push_back(timer.get());
 
                 // transform Hbar2 to new basis and copy to ints_
-                O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",spin_cases({"gggg"}));
+                O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",spin_cases({"aaaa"}));
                 O["wzxy"] = U_["wu"] * U_["zv"] * Hbar2_["uvxy"];
                 O["wZxY"] = U_["wu"] * U_["ZV"] * Hbar2_["uVxY"];
                 O["WZXY"] = U_["WU"] * U_["ZV"] * Hbar2_["UVXY"];
@@ -549,11 +549,16 @@ double MRDSRG::compute_energy_relaxed(){
                 ints_->update_integrals(false);
 
                 // transform bare two-body Hamiltonian
+                O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",{"gggg"});
                 O["tors"] = U_["tp"] * U_["oq"] * V_["pqrs"];
-                O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
-                O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
                 V_["pqot"] = O["pqrs"] * U_["ts"] * U_["or"];
+
+                O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",{"gGgG"});
+                O["tOrS"] = U_["tp"] * U_["OQ"] * V_["pQrS"];
                 V_["pQoT"] = O["pQrS"] * U_["TS"] * U_["or"];
+
+                O = ambit::BlockedTensor::build(tensor_type_,"Temp Two",{"GGGG"});
+                O["TORS"] = U_["TP"] * U_["OQ"] * V_["PQRS"];
                 V_["PQOT"] = O["PQRS"] * U_["TS"] * U_["OR"];
                 outfile->Printf("\n    %-47s %8.3f", "Timing for transforming two-electron integral:", timer.get() - timings.back());
                 timings.push_back(timer.get());
