@@ -4,11 +4,10 @@ import os
 import inputparser
 import math
 import warnings
-from driver import *
-from wrappers import *
+import driver 
 from molutil import *
 import p4util
-from p4xcpt import *
+from p4util.exceptions import *
 
 plugdir = os.path.split(os.path.abspath(__file__))[0]
 sofile = plugdir + "/forte.so"
@@ -33,4 +32,4 @@ def run_forte(name, **kwargs):
     return returnvalue
 
 # Integration with driver routines
-procedures['energy']['forte'] = run_forte
+driver.procedures['energy']['forte'] = run_forte

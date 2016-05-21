@@ -1351,6 +1351,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
 
                     BlockedTensor V_wa = BTF_->build(tensor_type_, "V_wa", {"ah", "AH"}, true);
                     BlockedTensor T_iw = BTF_->build(tensor_type_, "T_iw", {"ha", "HA"}, true);
+
                     BlockedTensor temp_uvwz = BTF_->build(tensor_type_, "T_uvwz",{"AAAA", "aaaa"});
                     BlockedTensor L3_zuvw = BTF_->build(tensor_type_, "L3_zuvw",{"AAAA", "aaaa"});
                     temp_uvwz["uvwz"] += V_["uviz"] * T_iw["iw"];
