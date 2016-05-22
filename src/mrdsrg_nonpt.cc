@@ -271,7 +271,7 @@ void MRDSRG::compute_hbar_qc(){
     Hbar2_["IJAB"] = V_["IJAB"];
 
     // compute S1 = H + 0.5 * [H, A]
-    BlockedTensor S1 = BTF_->build(tensor_type_,"S1",spin_cases({"gg"}));
+    BlockedTensor S1 = BTF_->build(tensor_type_,"S1",spin_cases({"gg"}),true);
     H1_T1_C1(F_,T1_,0.5,S1);
     H1_T2_C1(F_,T2_,0.5,S1);
     H2_T1_C1(V_,T1_,0.5,S1);
@@ -279,7 +279,7 @@ void MRDSRG::compute_hbar_qc(){
 
     BlockedTensor temp;
     if(dsrg_op == "UNITARY"){
-        temp = BTF_->build(tensor_type_,"temp",spin_cases({"gg"}));
+        temp = BTF_->build(tensor_type_,"temp",spin_cases({"gg"}),true);
         temp["pq"] = S1["pq"];
         temp["PQ"] = S1["PQ"];
         S1["pq"] += temp["qp"];
@@ -299,7 +299,7 @@ void MRDSRG::compute_hbar_qc(){
 
     //   Step 2: [S1, T]_{ij}^{ab}
     if(dsrg_op == "UNITARY"){
-        temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}));
+        temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}),true);
         H1_T1_C1(S1,T1_,1.0,temp);
         H1_T2_C1(S1,T2_,1.0,temp);
         Hbar1_["ia"] += temp["ai"];
@@ -318,7 +318,7 @@ void MRDSRG::compute_hbar_qc(){
                 abij = "ABIJ";
             }
 
-            temp = BTF_->build(tensor_type_,"temp",{block});
+            temp = BTF_->build(tensor_type_,"temp",{block},true);
             H1_T2_C2(S1,T2_,1.0,temp);
             Hbar2_[ijab] += temp[abij];
         }
@@ -340,7 +340,7 @@ void MRDSRG::compute_hbar_qc(){
         }
 
         // 0.5 * [H, T]
-        BlockedTensor S2 = BTF_->build(tensor_type_,"S2",{block});
+        BlockedTensor S2 = BTF_->build(tensor_type_,"S2",{block},true);
         H1_T2_C2(F_,T2_,0.5,S2);
         H2_T1_C2(V_,T1_,0.5,S2);
         H2_T2_C2(V_,T2_,0.5,S2);
@@ -370,7 +370,7 @@ void MRDSRG::compute_hbar_qc(){
 
         //   Step 2: [S2, T]_{ij}^{ab}
         if(dsrg_op == "UNITARY"){
-            temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}));
+            temp = BTF_->build(tensor_type_,"temp",spin_cases({"ph"}),true);
             H2_T1_C1(S2,T1_,1.0,temp);
             H2_T2_C1(S2,T2_,1.0,temp);
             Hbar1_["ia"] += temp["ai"];
@@ -389,7 +389,7 @@ void MRDSRG::compute_hbar_qc(){
                     abij = "ABIJ";
                 }
 
-                temp = BTF_->build(tensor_type_,"temp",{block});
+                temp = BTF_->build(tensor_type_,"temp",{block},true);
                 H2_T1_C2(S2,T1_,1.0,temp);
                 H2_T2_C2(S2,T2_,1.0,temp);
                 Hbar2_[ijab] += temp[abij];
@@ -469,9 +469,9 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
 
         // DIIS amplitudes
         if(diis_manager){
-            if(cycle >= min_diis_vectors){
+//            if(cycle >= min_diis_vectors){
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
-            }
+//            }
             if (cycle > max_diis_vectors){
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
                     outfile->Printf(" -> DIIS");
