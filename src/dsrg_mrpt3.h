@@ -167,8 +167,10 @@ protected:
 
     /// Generalized Fock matrix (bare or renormalized)
     ambit::BlockedTensor F_;
-    /// Two-electron integral (bare or renormalized)
+    /// Two-electron integrals (bare or renormalized)
     ambit::BlockedTensor V_;
+    /// Three-center integrals
+    ambit::BlockedTensor B_;
     /// Single excitation amplitude
     ambit::BlockedTensor T1_;
     /// Double excitation amplitude
@@ -270,24 +272,14 @@ protected:
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
-    /// Compute zero-body term of commutator [H1, G1]
-    void H1_G1_C0(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H1, G2]
-    void H1_G2_C0(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, G2]
-    void H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, double& C0);
-
-    /// Compute one-body term of commutator [H1, G1]
-    void H1_G1_C1(BlockedTensor& H1, BlockedTensor& G1, const double& alpha, BlockedTensor& C1);
-    /// Compute one-body term of commutator [H1, G2]
-    void H1_G2_C1(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C1);
-    /// Compute one-body term of commutator [H2, G2]
-    void H2_G2_C1(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C1);
-
-    /// Compute two-body term of commutator [H1, G2]
-    void H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [H2, G2]
-    void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
+    /// Compute one-body term of commutator [V, T1], V is constructed from B (DF / CD)
+    void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [V, T2], V is constructed from B (DF / CD)
+    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute two-body term of commutator [V, T1], V is constructed from B (DF / CD)
+    void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF / CD)
+    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
 
     // => Reference relaxation <= //
