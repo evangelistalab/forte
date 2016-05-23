@@ -2223,9 +2223,9 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
         }
         std::sort(det_weight.begin(), det_weight.end());
         // Compute the overlap of the ~20 most important determinants
-        for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+        for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
             std::pair<double,size_t> detI = det_weight[I];
-            for( int J = 0; J < max_dim; ++J ){
+            for( int J = 0, maxJ = P_ref.size(); J < maxJ; ++J ){
                 if( det_space[detI.second] == P_ref[J].first ){
                     new_overlap += std::abs(P_ref[J].second * detI.first);
                 } 
@@ -2238,7 +2238,7 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             P_int.clear();
             
             outfile->Printf("\n  Saving reference for root %d", n);
-            for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+            for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
                 P_int.push_back( std::make_pair( det_space[det_weight[I].second], det_weight[I].first ));
             }
         }
