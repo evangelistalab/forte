@@ -24,7 +24,7 @@ def run_forte(name, **kwargs):
 
     ref_wfn = kwargs.get('ref_wfn', None)
     if ref_wfn is None:
-        ref_wfn = scf_helper(name, **kwargs)
+        ref_wfn = driver.scf_helper(name, **kwargs)
 
     # Run FORTE
     returnvalue = psi4.plugin(sofile,ref_wfn)

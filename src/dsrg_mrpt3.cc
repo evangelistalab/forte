@@ -1841,29 +1841,61 @@ void DSRG_MRPT3::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& al
     C2["PQAB"] -= alpha * Eta1_["XY"] * T2["YJAB"] * H2["PQXJ"];
 
     // hole-particle contractions
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"ghgp"});
-    temp["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
-    temp["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
-    temp["qjsb"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
-    temp["qjsb"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
-    temp["qjsb"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
-    temp["qjsb"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
-    C2["qjsb"] += temp["qjsb"];
-    C2["jqsb"] -= temp["qjsb"];
-    C2["qjbs"] -= temp["qjsb"];
-    C2["jqbs"] += temp["qjsb"];
+    C2["qjsb"] += alpha * H2["aqms"] * T2["mjab"];
+    C2["qjsb"] += alpha * H2["qAsM"] * T2["jMbA"];
+    C2["qjsb"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
+    C2["qjsb"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
+    C2["qjsb"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
+    C2["qjsb"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"GHGP"});
-    temp["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
-    temp["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];
-    temp["QJSB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
-    temp["QJSB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
-    temp["QJSB"] -= alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
-    temp["QJSB"] -= alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
-    C2["QJSB"] += temp["QJSB"];
-    C2["JQSB"] -= temp["QJSB"];
-    C2["QJBS"] -= temp["QJSB"];
-    C2["JQBS"] += temp["QJSB"];
+    C2["jqsb"] -= alpha * H2["aqms"] * T2["mjab"];
+    C2["jqsb"] -= alpha * H2["qAsM"] * T2["jMbA"];
+    C2["jqsb"] -= alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
+    C2["jqsb"] -= alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
+    C2["jqsb"] += alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
+    C2["jqsb"] += alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
+
+    C2["qjbs"] -= alpha * H2["aqms"] * T2["mjab"];
+    C2["qjbs"] -= alpha * H2["qAsM"] * T2["jMbA"];
+    C2["qjbs"] -= alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
+    C2["qjbs"] -= alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
+    C2["qjbs"] += alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
+    C2["qjbs"] += alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
+
+    C2["jqbs"] += alpha * H2["aqms"] * T2["mjab"];
+    C2["jqbs"] += alpha * H2["qAsM"] * T2["jMbA"];
+    C2["jqbs"] += alpha * Gamma1_["xy"] * T2["yjab"] * H2["aqxs"];
+    C2["jqbs"] += alpha * Gamma1_["XY"] * T2["jYbA"] * H2["qAsX"];
+    C2["jqbs"] -= alpha * Gamma1_["xy"] * H2["yqis"] * T2["ijxb"];
+    C2["jqbs"] -= alpha * Gamma1_["XY"] * H2["qYsI"] * T2["jIbX"];
+
+    C2["QJSB"] += alpha * H2["AQMS"] * T2["MJAB"];
+    C2["QJSB"] += alpha * H2["aQmS"] * T2["mJaB"];
+    C2["QJSB"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
+    C2["QJSB"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
+    C2["QJSB"] -= alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
+    C2["QJSB"] -= alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
+
+    C2["JQSB"] -= alpha * H2["AQMS"] * T2["MJAB"];
+    C2["JQSB"] -= alpha * H2["aQmS"] * T2["mJaB"];
+    C2["JQSB"] -= alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
+    C2["JQSB"] -= alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
+    C2["JQSB"] += alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
+    C2["JQSB"] += alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
+
+    C2["QJBS"] -= alpha * H2["AQMS"] * T2["MJAB"];
+    C2["QJBS"] -= alpha * H2["aQmS"] * T2["mJaB"];
+    C2["QJBS"] -= alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
+    C2["QJBS"] -= alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
+    C2["QJBS"] += alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
+    C2["QJBS"] += alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
+
+    C2["JQBS"] += alpha * H2["AQMS"] * T2["MJAB"];
+    C2["JQBS"] += alpha * H2["aQmS"] * T2["mJaB"];
+    C2["JQBS"] += alpha * Gamma1_["XY"] * T2["YJAB"] * H2["AQXS"];
+    C2["JQBS"] += alpha * Gamma1_["xy"] * T2["yJaB"] * H2["aQxS"];
+    C2["JQBS"] -= alpha * Gamma1_["XY"] * H2["YQIS"] * T2["IJXB"];
+    C2["JQBS"] -= alpha * Gamma1_["xy"] * H2["yQiS"] * T2["iJxB"];
 
     C2["qJsB"] += alpha * H2["aqms"] * T2["mJaB"];
     C2["qJsB"] += alpha * H2["qAsM"] * T2["MJAB"];
@@ -1891,6 +1923,22 @@ void DSRG_MRPT3::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& al
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f",timer.get());
     }
     dsrg_time_.add("222",timer.get());
+}
+
+void DSRG_MRPT3::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
+
+}
+
+void DSRG_MRPT3::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2){
+
+}
+
+void DSRG_MRPT3::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
+
+}
+
+void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
+
 }
 
 std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(BlockedTensor& U){

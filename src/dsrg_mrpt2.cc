@@ -397,7 +397,6 @@ double DSRG_MRPT2::compute_energy()
         T2_.print(stdout);
         V_.print(stdout);
     }
-    outfile->Printf("\n  norm of V: %20.15f",V_.norm());
 
     // Compute DSRG-MRPT2 correlation energy
     double Etemp  = 0.0;
@@ -489,8 +488,6 @@ double DSRG_MRPT2::compute_energy()
         H1_T2_C2(F_,T2_,0.5,C2);
         H2_T1_C2(V_,T1_,0.5,C2);
         H2_T2_C2(V_,T2_,0.5,C2);
-        outfile->Printf("\n  norm of C1: %20.15f",C1.norm());
-        outfile->Printf("\n  norm of C2: %20.15f",C2.norm());
 
         Hbar1_["ij"] += C1["ij"];
         Hbar1_["ij"] += C1["ji"];
