@@ -816,6 +816,9 @@ double AdaptiveCI::compute_energy()
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
+            
+    // Print the energy of the correct root
+    ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, nroot_);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -842,6 +845,11 @@ double AdaptiveCI::compute_energy()
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
                     exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
 	    	}
+        }
+
+        if( ex_alg_ == "ROOT_SELECT" ){
+            outfile->Printf("\n\n  Energy optimized for Root %d: %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+            outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy()+ multistate_pt2_energy_correction_[ref_root_]);
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
@@ -2223,9 +2231,9 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
         }
         std::sort(det_weight.begin(), det_weight.end());
         // Compute the overlap of the ~20 most important determinants
-        for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+        for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
             std::pair<double,size_t> detI = det_weight[I];
-            for( int J = 0; J < max_dim; ++J ){
+            for( int J = 0, maxJ = P_ref.size(); J < maxJ; ++J ){
                 if( det_space[detI.second] == P_ref[J].first ){
                     new_overlap += std::abs(P_ref[J].second * detI.first);
                 } 
@@ -2238,11 +2246,11 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             P_int.clear();
             
             outfile->Printf("\n  Saving reference for root %d", n);
-            for( size_t I = ndets - 1; I > (ndets - 1 - max_dim); --I ){
+            for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
                 P_int.push_back( std::make_pair( det_space[det_weight[I].second], det_weight[I].first ));
             }
+            old_overlap = new_overlap;
         }
-        old_overlap = new_overlap;
     }
 
     // Update the reference P_ref
