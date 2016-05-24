@@ -148,7 +148,7 @@ void CholeskyIntegrals::gather_integrals()
 
     //This is creates the cholesky decomposed AO integrals
     Timer timer;
-    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
+    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),options_.get_double("INTS_TOLERANCE"),tol_cd, Process::environment.get_memory()));
     if(options_.get_str("DF_INTS_IO") == "LOAD")
     {
         std::string str= "Reading CD Integrals";
