@@ -2241,8 +2241,8 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
                 P_int.push_back( std::make_pair( det_space[det_weight[I].second], det_weight[I].first ));
             }
+            old_overlap = new_overlap;
         }
-        old_overlap = new_overlap;
     }
 
     // Update the reference P_ref
