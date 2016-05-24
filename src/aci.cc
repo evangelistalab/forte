@@ -816,6 +816,9 @@ double AdaptiveCI::compute_energy()
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
+            
+    // Print the energy of the correct root
+    ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, nroot_);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -842,6 +845,11 @@ double AdaptiveCI::compute_energy()
             outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
                     exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
 	    	}
+        }
+
+        if( ex_alg_ == "ROOT_SELECT" ){
+            outfile->Printf("\n\n  Energy optimized for Root %d: %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+            outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy()+ multistate_pt2_energy_correction_[ref_root_]);
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
