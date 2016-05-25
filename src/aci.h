@@ -127,6 +127,7 @@ private:
 	int cycle_;
 	/// The last iteration
 	int max_cycle_;
+    int pre_iter_;
 
     // ==> ACI Options <==
     /// The initial reference
