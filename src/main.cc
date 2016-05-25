@@ -835,7 +835,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #endif
 
     }
-#ifdef HAVE_CHEMPS2
     if(options.get_str("JOB_TYPE") == "DMRG")
     {
 #ifdef HAVE_CHEMPS2
