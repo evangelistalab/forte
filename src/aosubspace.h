@@ -8,8 +8,7 @@
 
 #define _DEBUG_AOSUBSPACE_ 0
 
-namespace psi{
-namespace aosubspace {
+namespace psi{ namespace forte{
 
 /**
  * @brief The AOInfo class
@@ -195,6 +194,9 @@ private:
     /// Parse the AO basis set
     void parse_basis_set();
 };
+
+// Helper function to create a projector using info in wfn and options
+SharedMatrix create_projector(SharedWavefunction wfn, Options& options);
 
 }}
 
