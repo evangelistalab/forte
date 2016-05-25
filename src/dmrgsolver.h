@@ -36,6 +36,10 @@ public:
     {
         spin_free_rdm_ = spin_free;
     }
+    void disk_3_rdm(bool use_disk_for_3rdm)
+    {
+        disk_3_rdm_ = use_disk_for_3rdm;
+    }
     void set_up_integrals(const ambit::Tensor& active_integrals, const std::vector<double>& one_body)
     {
         active_integrals_ = active_integrals;
@@ -53,6 +57,7 @@ private:
     Options& options_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     std::shared_ptr<ForteIntegrals> ints_;
+    bool disk_3_rdm_ = false;
     /// Form CAS-CI Hamiltonian stuff
 
     void compute_reference(double* one_rdm, double* two_rdm, double* three_rdm, CheMPS2::DMRGSCFindices * iHandler);
