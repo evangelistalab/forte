@@ -508,6 +508,8 @@ read_options(std::string name, Options &options)
         options.add_bool("STREAMLINE_Q", false);
         /*- Initial reference wavefunction -*/
         options.add_str("ACI_INITIAL_SPACE", "SR", "SR CIS CISD CID");
+        /*- Number of iterations to run SA-ACI before SS-ACI -*/
+        options.add_int("ACI_PREITERATIONS", 0);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
