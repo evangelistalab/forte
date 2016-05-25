@@ -114,7 +114,7 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
         dmrg_ref.set_L2bb(cumulant2_aa);
     }
     //if((options_.get_str("THREEPDC") != "ZERO") && (options_.get_str("JOB_TYPE") == "DSRG-MRPT2" or options_.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2"))
-    if(max_rdm_ > 2)
+    if(max_rdm_ > 2 && !disk_3_rdm_)
     {
         ambit::Tensor gamma3_dmrg = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_DMRG", {na, na, na, na, na, na});
         ambit::Tensor gamma3_aaa = ambit::Tensor::build(ambit::CoreTensor, "Gamma3_aaa", {na, na, na, na, na, na});
@@ -339,13 +339,18 @@ void DMRGSolver::compute_energy()
     ///DMRG can compute the 2DM pretty simply.  Always compute it
     double * DMRG1DM = new double[nOrbDMRG * nOrbDMRG];
     double * DMRG2DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
+    if(nOrbDMRG > 30)
+    {
+        outfile->Printf("\n Using a disk based 3 rdm storage");
+        disk_3_rdm_ = true;
+    }
     double * DMRG3DM;
-    if(max_rdm_ > 2)
+    if(max_rdm_ > 2 && !disk_3_rdm_)
         DMRG3DM = new double[nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG];
 
     std::memset(DMRG1DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG);
     std::memset(DMRG2DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
-    if(max_rdm_ > 2)
+    if(max_rdm_ > 2 && !disk_3_rdm_)
         std::memset(DMRG3DM, 0.0, sizeof(double) * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG * nOrbDMRG);
 
     std::shared_ptr<CheMPS2::DMRG> DMRGCI = std::make_shared<CheMPS2::DMRG>(Prob.get(), OptScheme.get());
@@ -358,9 +363,11 @@ void DMRGSolver::compute_energy()
         Energy = DMRGCI->Solve();
         outfile->Printf("\n Overall DMRG Solver took %6.5f s.", DMRGSolve.get());
         Timer DMRGRDMs;
-        DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
+        
+        DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false, disk_3_rdm_);
         outfile->Printf("\n Overall DMRG RDM computation took %6.5f s.", DMRGRDMs.get());
         outfile->Printf("\n @DMRG Energy = %8.12f", Energy);
+        Process::environment.globals["CURRENT ENERGY"] = Energy;
         //if(dmrgscf_state_avg)
         //{
         //    DMRGCI->calc_rdms_and_correlations(max_rdm_ > 2 ? true : false);
@@ -394,9 +401,9 @@ void DMRGSolver::compute_energy()
 
     CheMPS2::CASSCF::copy2DMover( DMRGCI->get2DM(), nOrbDMRG, DMRG2DM);
     CheMPS2::CASSCF::setDMRG1DM( nDMRGelectrons, nOrbDMRG, DMRG1DM, DMRG2DM);
-    if( max_rdm_ > 2)
+    if( max_rdm_ > 2 && !disk_3_rdm_)
     {
-        CheMPS2::CASSCF::copy3DMover( DMRGCI->get3DM(), nOrbDMRG, DMRG3DM);
+        DMRGCI->get3DM()->fill_ham_index(1.0, false, DMRG3DM, 0, nOrbDMRG);
     }
 
     compute_reference(DMRG1DM, DMRG2DM, DMRG3DM, iHandler.get());
