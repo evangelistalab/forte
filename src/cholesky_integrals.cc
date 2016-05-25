@@ -156,17 +156,28 @@ void CholeskyIntegrals::gather_integrals()
         boost::shared_ptr<PSIO> psio (new PSIO());
         psio_address addr = PSIO_ZERO;
         int file_unit = PSIF_DFSCF_BJ;
-        psio->open(file_unit, PSIO_OPEN_OLD);
-        psio->read_entry(file_unit, "length", (char*) &nthree_, sizeof(long int));
-
-        size_t n = nbf * nbf;
-        SharedMatrix L_ = SharedMatrix(new Matrix("Partial Cholesky", nthree_, n));
-
-        double** Lp = L_->pointer();
-        psio->read_entry(file_unit,"(Q|mn) Integrals",(char*) Lp[0], sizeof(double) * nthree_ * n);
-        psio->close(file_unit, 1);
-        L_ao_ = L_;
-        if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
+        if(psio->exists(file_unit))
+        {
+            psio->open(file_unit, PSIO_OPEN_OLD);
+            psio->read_entry(file_unit, "length", (char*) &nthree_, sizeof(long int));
+            size_t n = nbf * nbf;
+            SharedMatrix L_ = SharedMatrix(new Matrix("Partial Cholesky", nthree_, n));
+            double** Lp = L_->pointer();
+            psio->read_entry(file_unit,"(Q|mn) Integrals",(char*) Lp[0], sizeof(double) * nthree_ * n);
+            psio->close(file_unit, 1);
+            L_ao_ = L_;
+        }
+        else
+        {
+            outfile->Printf("\n File PSIF_DFSCF_BJ(cholesky integrals) was not generated");
+            outfile->Printf("\n");
+            std::string str= "Computing CD Integrals";
+            if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
+            Ch->choleskify();
+            nthree_ = Ch->Q();
+            L_ao_ = Ch->L();
+            if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
+        }
     }
     else {
         std::string str= "Computing CD Integrals";

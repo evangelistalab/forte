@@ -1,6 +1,6 @@
 import forte
 
-refcasscf = -109.090695044539
+refcasscf = -109.090434111089
 molecule N2 {
   N       0.0000   0.0000   0.0000
   N       0.0000   0.0000   2.1180
@@ -8,16 +8,16 @@ units au
 }
 
 set basis          cc-pVDZ
+set df_basis_scf   cc-pVDZ-jkfit
+set df_basis_mp2   cc-pVDZ-jkfit
 set reference      rhf
 set e_convergence  1e-12
 set d_convergence  1e-12
-set scf_type       direct
-set cholesky_tolerance 1e-10
+set scf_type       df
 
 set forte{
     root_sym                  0
     multiplicity              1
-    root_sym                  0
     restricted_docc           [ 2 , 0 , 0 , 0 , 0 , 2 , 0 , 0 ]
     active                    [ 1 , 0 , 1 , 1 , 0 , 1 , 1 , 1 ]
     dmrg_states          [   500,  1000,  2000 ]
@@ -28,7 +28,7 @@ set forte{
     dmrg_print_corr      false
     mps_chkpt            false
     dmrgscf_max_iter     1
-    int_type             conventional
+    int_type             df
     cas_type             dmrg
     job_type              casscf
     casscf_g_convergence  1e-7
@@ -38,8 +38,8 @@ set forte{
     casscf_debug_printing false
 } 
 
-energy('scf')
-dmrgscf = energy('forte')
+refenergy, refwfn = energy('scf', return_wfn=True)
+dmrgscf = energy('forte', ref_wfn=refwfn)
 
 compare_values(dmrgscf, refcasscf, 6, "DMRGSCF Energy")
 
