@@ -49,11 +49,15 @@ namespace psi{ namespace forte{
 
 void test_bitset_performance();
 
+void forte_options(std::string name, Options &options);
+
 extern "C" int
 read_options(std::string name, Options &options)
 {
+    forte_options(name,options);
+
     if (name == "FORTE" || options.read_globals()) {
-        /*- MODULEDESCRIPTION Libadaptive */
+        /*- MODULEDESCRIPTION Forte */
 
         /*- SUBSECTION Job Type */
 
@@ -713,10 +717,13 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     Timer overall_time;
 
-    //[forte-public]
+    // Create a MOSpaceInfo object
     Dimension nmopi = ref_wfn->nmopi();
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
+
+    // Create a subspace object
+    std::shared_ptr<AOSubspace> aosub = create_subspace(subspace_str,options,molecule);
 
     std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
