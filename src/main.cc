@@ -536,7 +536,7 @@ read_options(std::string name, Options &options)
         /*- Use a fast (sparse) estimate of the energy -*/
         options.add_bool("FAST_EVAR",false);
         /*- Iterations in between variational estimation of the energy -*/
-        options.add_int("ENERGY_ESTIMATE_FREQ",25);
+        options.add_int("ENERGY_ESTIMATE_FREQ",1);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use intermediate normalization -*/
@@ -844,11 +844,14 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if(options.get_str("JOB_TYPE") == "DMRG")
     {
+#ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
+#else
+        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+#endif
     }
-
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
