@@ -833,6 +833,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #endif
 
     }
+    if(options.get_str("JOB_TYPE") == "DMRG")
+    {
+        DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
+        dmrg.set_max_rdm(2);
+        dmrg.compute_energy();
+    }
 
     if(options.get_str("JOB_TYPE")=="CAS")
     {
