@@ -45,12 +45,12 @@
 #include "localize.h"
 
 INIT_PLUGIN
+void forte_options(std::string name, psi::Options &options);
 
 namespace psi{ namespace forte{
 
 void test_bitset_performance();
 
-void forte_options(std::string name, Options &options);
 
 extern "C" int
 read_options(std::string name, Options &options)
