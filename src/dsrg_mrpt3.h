@@ -116,8 +116,15 @@ protected:
     /// Map from space label to list of MOs
     std::map<char, std::vector<size_t>> label_to_spacemo_;
 
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
+    /// Auxiliary MOs
+    std::vector<size_t> aux_mos_;
+    /// Auxiliary space label
+    std::string aux_label_;
+
     /// Fill up two-electron integrals
-    void build_tei();
+    void build_tei(BlockedTensor& V);
     /// Fill up density matrix and density cumulants
     void build_density();
     /// Build Fock matrix and diagonal Fock matrix elements
@@ -144,6 +151,11 @@ protected:
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
+    /// Effective alpha one-electron integrals (used in denormal ordering)
+    std::vector<double> aone_eff_;
+    /// Effective beta one-electron integrals (used in denormal ordering)
+    std::vector<double> bone_eff_;
+
     /// Renormalize Fock matrix
     void renormalize_F(const bool& plusone = true);
     /// Renormalize two-electron integrals
@@ -167,9 +179,13 @@ protected:
 
     /// Generalized Fock matrix (bare or renormalized)
     ambit::BlockedTensor F_;
+    /// Zeroth-order Hamiltonian (bare diagonal blocks of Fock)
+    ambit::BlockedTensor F0th_;
+    /// Generalized Fock matrix (bare off-diagonal blocks)
+    ambit::BlockedTensor F1st_;
     /// Two-electron integrals (bare or renormalized)
     ambit::BlockedTensor V_;
-    /// Three-center integrals
+    /// Three-index integrals
     ambit::BlockedTensor B_;
     /// Single excitation amplitude
     ambit::BlockedTensor T1_;
@@ -179,10 +195,10 @@ protected:
     ambit::BlockedTensor Hbar1_;
     /// Two-body transformed Hamiltonian (active only)
     ambit::BlockedTensor Hbar2_;
-    /// Single excitation amplitude (first-order)
-    ambit::BlockedTensor T1_1st_;
-    /// Double excitation amplitude (first-order)
-    ambit::BlockedTensor T2_1st_;
+    /// One-body temp tensor ([[H0th,A1st],A1st] or 1st-order amplitudes)
+    ambit::BlockedTensor O1_;
+    /// Two-body temp tensor ([[H0th,A1st],A1st] or 1st-order amplitudes)
+    ambit::BlockedTensor O2_;
 
     /// Diagonal blocks of Fock matrix
     ambit::BlockedTensor Fdiag_;
