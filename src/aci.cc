@@ -173,6 +173,10 @@ void AdaptiveCI::startup()
 	if(options_["MAX_ACI_CYCLE"].has_changed()){
 		max_cycle_ = options_.get_int("MAX_ACI_CYCLE");
 	} 
+    pre_iter_ = 0;
+    if(options_["ACI_PREITERATIONS"].has_changed()){
+        pre_iter_ = options_.get_int("ACI_PREITERATIONS");
+    }
 
     do_smooth_ = options_.get_bool("SMOOTH");
     smooth_threshold_ = options_.get_double("SMOOTH_THRESHOLD");
@@ -562,14 +566,18 @@ double AdaptiveCI::compute_energy()
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
-
-
+        if( cycle < pre_iter_ ){
+             ex_alg_ = "AVERAGE";
+        }else if ( cycle == pre_iter_ ){
+            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+        }        
         // If doing root-following, grab the initial root
-        if( ex_alg_ == "ROOT_SELECT" and cycle == 0 ){
+        if( ex_alg_ == "ROOT_SELECT" and cycle == pre_iter_){
             for( size_t I = 0, maxI = P_space_.size(); I < maxI; ++I){
                 P_ref.push_back( std::make_pair( P_space_[I], P_evecs->get(I, ref_root_) ));
             } 
         }
+
 
         if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 1){
             ref_root_ = root_follow( P_ref, P_space_, P_evecs, num_ref_roots);
@@ -670,6 +678,10 @@ double AdaptiveCI::compute_energy()
        //     outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
        // }
 
+       // if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
+       //     ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
+       // }
+
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
         if (converged){
@@ -682,10 +694,6 @@ double AdaptiveCI::compute_energy()
         if( stuck ){
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
-        }
-
-        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
-            ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
     
         // Step 5. Prune the P + Q space to get an updated P space
@@ -817,8 +825,6 @@ double AdaptiveCI::compute_energy()
 		}
 	}
             
-    // Print the energy of the correct root
-    ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, nroot_);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -2215,7 +2221,7 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
                              int num_ref_roots)
 {
     int ndets = det_space.size();
-    int max_dim = std::min( ndets, 20 );
+    int max_dim = std::min( ndets, 50 );
     int new_root;
     double old_overlap = 0.0;
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
