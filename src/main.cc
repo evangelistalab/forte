@@ -530,7 +530,7 @@ read_options(std::string name, Options &options)
         /*- Use a fast (sparse) estimate of the energy -*/
         options.add_bool("FAST_EVAR",false);
         /*- Iterations in between variational estimation of the energy -*/
-        options.add_int("ENERGY_ESTIMATE_FREQ",25);
+        options.add_int("ENERGY_ESTIMATE_FREQ",1);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use intermediate normalization -*/
