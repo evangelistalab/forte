@@ -837,9 +837,13 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if(options.get_str("JOB_TYPE") == "DMRG")
     {
+#ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
+#else
+        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+#endif
     }
 
     if(options.get_str("JOB_TYPE")=="CAS")
