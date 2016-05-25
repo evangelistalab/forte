@@ -138,7 +138,7 @@ void AdaptivePathIntegralCI::startup()
     }
     nroot_ = options_.get_int("NROOT");
     current_root_ = -1;
-    post_diagonalization_ = false;
+    post_diagonalization_ = options_.get_bool("POST_DIAGONALIZE");
 //    /-> Define appropriate variable: post_diagonalization_ = options_.get_bool("EX_ALGORITHM");
 
     spawning_threshold_ = options_.get_double("SPAWNING_THRESHOLD");
@@ -539,7 +539,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Apr. 10 2016");
+    outfile->Printf("\n\t                      version May. 25 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -690,11 +690,15 @@ double AdaptivePathIntegralCI::compute_energy()
         print_characteristic_function();
     }
 
+
+    timer_on("PIFCI:<E>end_v");
+
     if (fast_variational_estimate_){
         var_energy = estimate_var_energy_sparse(dets,C,1.0e-14);
     }else{
         var_energy = estimate_var_energy(dets,C,1.0e-14);
     }
+    timer_off("PIFCI:<E>end_v");
 
     Process::environment.globals["APIFCI ENERGY"] = var_energy;
 
@@ -733,9 +737,32 @@ double AdaptivePathIntegralCI::compute_energy()
     }
 
     if (post_diagonalization_){
-        SharedMatrix apfci_evecs;
-        SharedVector apfci_evals;
+        outfile->Printf("\n\n  ==> Post-Diagonalization <==\n");
+        timer_on("PIFCI:Post_Diag");
 //        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,DavidsonLiuList);
+        SharedMatrix apfci_evecs(new Matrix("Eigenvectors",C.size(),nroot_));
+        SharedVector apfci_evals(new Vector("Eigenvalues",nroot_));
+
+        sparse_solver.diagonalize_hamiltonian(dets,apfci_evals,apfci_evecs,nroot_,wavefunction_multiplicity_,DLSolver);
+
+        timer_off("PIFCI:Post_Diag");
+
+        double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_;
+        Process::environment.globals["APIFCI POST DIAG ENERGY"] = post_diag_energy;
+
+        outfile->Printf("\n\n  * Adaptive-CI Post-diag   Energy     = %18.12f Eh",1,post_diag_energy);
+
+        std::vector<double> diag_C(C.size());
+
+        for (size_t I = 0; I < C.size(); ++I){
+            diag_C[I] = apfci_evecs->get(I,current_root_);
+        }
+
+        if (print_full_wavefunction_) {
+            print_wfn(dets,diag_C, diag_C.size());
+        } else {
+            print_wfn(dets,diag_C);
+        }
     }
 
     delete [] pqpq_aa_;
@@ -801,44 +828,7 @@ double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& 
     double var_energy = evals->get(current_root_) + nuclear_repulsion_energy_;
     outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",var_energy,current_root_ + 1);
     lambda_1_ = evals->get(current_root_);
-//    lambda_2_ = evals->get(current_root_ + 1);
-//    if (guess_size < 2)
-//        lambda_2_ = lambda_1_ + e_convergence_;
-//    if (guess_size < 100) {
-//        apply_tau_H(time_step_,spawning_threshold_,guess_dets,{1.0},dets_C,0.0);
 
-//        // Save the list of determinants
-//        copy_hash_to_vec(dets_C,dets,C);
-
-//        size_t guess_size = dets.size();
-//        if (guess_size > max_guess_size_){
-//            // Consider the 1000 largest contributions
-//            std::vector<std::pair<double,size_t> > det_weight;
-//            for (size_t I = 0, max_I = C.size(); I < max_I; ++I){
-//                det_weight.push_back(std::make_pair(std::fabs(C[I]),I));
-//            }
-//            std::sort(det_weight.begin(),det_weight.end());
-//            std::reverse(det_weight.begin(),det_weight.end());
-
-//            det_vec new_dets;
-//            for (size_t sI = 0; sI < max_guess_size_; ++sI){
-//                size_t I = det_weight[sI].second;
-//                new_dets.push_back(dets[I]);
-//            }
-//            dets = new_dets;
-//            C.resize(guess_size);
-//            guess_size = dets.size();
-//        }
-
-//        SparseCISolver sparse_solver;
-//        sparse_solver.set_parallel(true);
-
-//        SharedMatrix evecs(new Matrix("Eigenvectors",guess_size,nroot_ + 1));
-//        SharedVector evals(new Vector("Eigenvalues",nroot_ + 1));
-//        sparse_solver.diagonalize_hamiltonian(dets,evals,evecs,nroot_ + 1,wavefunction_multiplicity_,DavidsonLiuList);
-//        lambda_1_ = evals->get(current_root_);
-//        lambda_2_ = evals->get(current_root_ + 1);
-//    }
 
     // Copy the ground state eigenvector
     for (size_t I = 0; I < guess_size; ++I){

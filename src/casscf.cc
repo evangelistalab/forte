@@ -205,7 +205,7 @@ void CASSCF::compute_casscf()
     diis_manager->delete_diis_file();
     diis_manager.reset();
 
-    if(iter_con.size() == size_t(maxiter))
+    if(iter_con.size() == size_t(maxiter) && maxiter > 1)
     {
         outfile->Printf("\n CASSCF did not converged");
         throw PSIEXCEPTION("CASSCF did not converged.");
