@@ -835,6 +835,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #endif
 
     }
+#ifdef HAVE_CHEMPS2
     if(options.get_str("JOB_TYPE") == "DMRG")
     {
 #ifdef HAVE_CHEMPS2
@@ -845,7 +846,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
 #endif
     }
-
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
