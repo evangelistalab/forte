@@ -14,6 +14,8 @@
 
 #include "aosubspace.h"
 
+using namespace psi;
+
 std::vector<std::string> mysplit(const std::string& input, const std::string& regex);
 
 std::vector<std::string> mysplit(const std::string& input, const std::string& regex) {
@@ -24,6 +26,8 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
         last;
     return {first, last};
 }
+
+namespace psi{ namespace forte{
 
 SharedMatrix create_projector(SharedWavefunction wfn, Options& options)
 {
@@ -46,10 +50,42 @@ SharedMatrix create_projector(SharedWavefunction wfn, Options& options)
     // Compute the subspaces (right now this is required before any other call)
     aosub.find_subspace();
 
-    return aosub.build_projector(subspace,molecule,min_basis,wfn->basis());
-}
+    // Show minimal basis using custom formatting
+    outfile->Printf("\n  Minimal basis:\n");
+    outfile->Printf("    ==================================\n");
+    outfile->Printf("       AO    Atom    Label  AO type   \n");
+    outfile->Printf("    ----------------------------------\n");
+    {
+        std::vector<std::string> aolabels = aosub.aolabels("%1$4d       %2$-2s %3$-4d  %4$d%5$s");
 
-namespace psi{ namespace aosubspace {
+        int nbf = 0;
+        for (const auto& s : aolabels){
+            outfile->Printf("    %5d  %s\n",nbf + 1,s.c_str());
+            nbf++;
+        }
+    }
+    outfile->Printf("    ==================================\n");
+
+    const std::vector<int>& subspace = aosub.subspace();
+
+    SharedMatrix Ps =  aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
+
+    SharedMatrix CPsC = Ps->clone();
+    CPsC->transform(wfn->Ca());
+
+    outfile->Printf("\n  Orbital overlap with ao subspace:\n");
+    outfile->Printf("    ========================\n");
+    outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
+    outfile->Printf("    ------------------------\n");
+    for (int h = 0; h < CPsC->nirrep(); h++){
+        for (int i = 0; i < CPsC->rowspi(h); i++){
+            outfile->Printf("      %1d   %4d    %.6f\n",h,i + 1,CPsC->get(i,i));
+        }
+    }
+    outfile->Printf("    ========================\n");
+
+    return Ps;
+}
 
 AOSubspace::AOSubspace(boost::shared_ptr<Molecule> molecule,boost::shared_ptr<BasisSet> basis)
 {

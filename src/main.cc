@@ -14,6 +14,7 @@
 #include <libmints/molecule.h>
 
 #include "helpers.h"
+#include "aosubspace.h"
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
@@ -723,7 +724,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     mo_space_info->read_options(options);
 
     // Create a subspace object
-    std::shared_ptr<AOSubspace> aosub = create_subspace(subspace_str,options,molecule);
+    SharedMatrix aosub = create_projector(ref_wfn,options);
 
     std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){

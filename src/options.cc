@@ -1,3 +1,6 @@
+#include <liboptions/liboptions.h>
+
+using namespace psi;
 
 void forte_options(std::string name, Options &options)
 {
