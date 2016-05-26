@@ -30,5 +30,5 @@ compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refapifci, get_variable("APIFCI ENERGY"), 11, "APIFCI energy") #TEST
-compare_values(refpostdiag, get_variable("APIFCI POST DIAG ENERGY"), 11, "APIFCI POST DIAG ENERGY") #TEST
+compare_values(refpostdiag, get_variable("APIFCI POST DIAG ENERGY"), 10, "APIFCI POST DIAG ENERGY") #TEST
 
