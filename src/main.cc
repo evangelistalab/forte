@@ -14,6 +14,7 @@
 #include <libmints/molecule.h>
 
 #include "helpers.h"
+#include "aosubspace.h"
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
@@ -44,16 +45,20 @@
 #include "localize.h"
 
 INIT_PLUGIN
+void forte_options(std::string name, psi::Options &options);
 
 namespace psi{ namespace forte{
 
 void test_bitset_performance();
 
+
 extern "C" int
 read_options(std::string name, Options &options)
 {
+    forte_options(name,options);
+
     if (name == "FORTE" || options.read_globals()) {
-        /*- MODULEDESCRIPTION Libadaptive */
+        /*- MODULEDESCRIPTION Forte */
 
         /*- SUBSECTION Job Type */
 
@@ -532,7 +537,7 @@ read_options(std::string name, Options &options)
         /*- Use a fast (sparse) estimate of the energy -*/
         options.add_bool("FAST_EVAR",false);
         /*- Iterations in between variational estimation of the energy -*/
-        options.add_int("ENERGY_ESTIMATE_FREQ",25);
+        options.add_int("ENERGY_ESTIMATE_FREQ",1);
         /*- Use an adaptive time step? -*/
         options.add_bool("ADAPTIVE_BETA",false);
         /*- Use intermediate normalization -*/
@@ -713,10 +718,28 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     Timer overall_time;
 
-    //[forte-public]
+    // Create a MOSpaceInfo object
     Dimension nmopi = ref_wfn->nmopi();
     std::shared_ptr<MOSpaceInfo> mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
+
+    // Create a subspace object
+    SharedMatrix Ps = create_aosubspace_projector(ref_wfn,options);
+    if (Ps){
+        SharedMatrix CPsC = Ps->clone();
+        CPsC->transform(ref_wfn->Ca());
+
+        outfile->Printf("\n  Orbital overlap with ao subspace:\n");
+        outfile->Printf("    ========================\n");
+        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
+        outfile->Printf("    ------------------------\n");
+        for (int h = 0; h < CPsC->nirrep(); h++){
+            for (int i = 0; i < CPsC->rowspi(h); i++){
+                outfile->Printf("      %1d   %4d    %.6f\n",h,i + 1,CPsC->get(h,i,i));
+            }
+        }
+        outfile->Printf("    ========================\n");
+    }
 
     std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
@@ -837,11 +860,14 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if(options.get_str("JOB_TYPE") == "DMRG")
     {
+#ifdef HAVE_CHEMPS2
         DMRGSolver dmrg(ref_wfn, options, mo_space_info, ints_);
         dmrg.set_max_rdm(2);
         dmrg.compute_energy();
+#else
+        throw PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
+#endif
     }
-
     if(options.get_str("JOB_TYPE")=="CAS")
     {
         FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
