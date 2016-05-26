@@ -724,7 +724,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     mo_space_info->read_options(options);
 
     // Create a subspace object
-    SharedMatrix aosub = create_projector(ref_wfn,options);
+    SharedMatrix Ps = create_aosubspace_projector(ref_wfn,options);
+    if (Ps){
+        SharedMatrix CPsC = Ps->clone();
+        CPsC->transform(ref_wfn->Ca());
+
+        outfile->Printf("\n  Orbital overlap with ao subspace:\n");
+        outfile->Printf("    ========================\n");
+        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
+        outfile->Printf("    ------------------------\n");
+        for (int h = 0; h < CPsC->nirrep(); h++){
+            for (int i = 0; i < CPsC->rowspi(h); i++){
+                outfile->Printf("      %1d   %4d    %.6f\n",h,i + 1,CPsC->get(h,i,i));
+            }
+        }
+        outfile->Printf("    ========================\n");
+    }
 
     std::shared_ptr<ForteIntegrals> ints_;
     if (options.get_str("INT_TYPE") == "CHOLESKY"){
