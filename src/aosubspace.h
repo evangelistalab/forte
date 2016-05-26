@@ -196,7 +196,7 @@ private:
 };
 
 // Helper function to create a projector using info in wfn and options
-SharedMatrix create_projector(SharedWavefunction wfn, Options& options);
+SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options);
 
 }}
 
