@@ -233,10 +233,6 @@ void AdaptivePathIntegralCI::startup()
         propagator_ = DeltaPropagator;
         propagator_description_ = "Delta-Chebyshev-Iter-Power";
         time_step_ = 1.0;
-        if (chebyshev_order_ > 20 || chebyshev_order_ <= 0) {
-            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
-            chebyshev_order_ = 5;
-        }
     }
 
     num_threads_ = omp_get_max_threads();
@@ -562,6 +558,9 @@ double AdaptivePathIntegralCI::compute_energy()
 
     SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
+    sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+    sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+    sparse_solver.set_spin_project(true);
 
     pqpq_aa_ = new double[ncmo_*ncmo_];
     pqpq_ab_ = new double[ncmo_*ncmo_];
