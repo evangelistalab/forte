@@ -29,60 +29,49 @@ std::vector<std::string> mysplit(const std::string& input, const std::string& re
 
 namespace psi{ namespace forte{
 
-SharedMatrix create_projector(SharedWavefunction wfn, Options& options)
+SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& options)
 {
-    std::vector<std::string> subspace_str;
+    SharedMatrix Ps;
+
+    // Run this code only if user specified a subspace
     if (options["SUBSPACE"].size() > 0){
+        std::vector<std::string> subspace_str;
         for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry){
             std::string s = options["SUBSPACE"][entry].to_string();
             subspace_str.push_back(s);
         }
-    }
 
-    // Create a basis set parser object and read the minimal basis
-    boost::shared_ptr<Molecule> molecule = wfn->molecule();
-    boost::shared_ptr<BasisSetParser> parser(new Gaussian94BasisSetParser());
-    boost::shared_ptr<BasisSet> min_basis = BasisSet::pyconstruct_orbital(molecule,"BASIS",options.get_str("MIN_BASIS"));
+        // Create a basis set parser object and read the minimal basis
+        boost::shared_ptr<Molecule> molecule = wfn->molecule();
+        boost::shared_ptr<BasisSetParser> parser(new Gaussian94BasisSetParser());
+        boost::shared_ptr<BasisSet> min_basis = BasisSet::pyconstruct_orbital(molecule,"BASIS",options.get_str("MIN_BASIS"));
 
-    // Create an AOSubspace object
-    AOSubspace aosub(subspace_str,molecule,min_basis);
+        // Create an AOSubspace object
+        AOSubspace aosub(subspace_str,molecule,min_basis);
 
-    // Compute the subspaces (right now this is required before any other call)
-    aosub.find_subspace();
+        // Compute the subspaces (right now this is required before any other call)
+        aosub.find_subspace();
 
-    // Show minimal basis using custom formatting
-    outfile->Printf("\n  Minimal basis:\n");
-    outfile->Printf("    ==================================\n");
-    outfile->Printf("       AO    Atom    Label  AO type   \n");
-    outfile->Printf("    ----------------------------------\n");
-    {
-        std::vector<std::string> aolabels = aosub.aolabels("%1$4d       %2$-2s %3$-4d  %4$d%5$s");
+        // Show minimal basis using custom formatting
+        outfile->Printf("\n  Minimal basis:\n");
+        outfile->Printf("    ==================================\n");
+        outfile->Printf("       AO    Atom    Label  AO type   \n");
+        outfile->Printf("    ----------------------------------\n");
+        {
+            std::vector<std::string> aolabels = aosub.aolabels("%1$4d       %2$-2s %3$-4d  %4$d%5$s");
 
-        int nbf = 0;
-        for (const auto& s : aolabels){
-            outfile->Printf("    %5d  %s\n",nbf + 1,s.c_str());
-            nbf++;
+            int nbf = 0;
+            for (const auto& s : aolabels){
+                outfile->Printf("    %5d  %s\n",nbf + 1,s.c_str());
+                nbf++;
+            }
         }
+        outfile->Printf("    ==================================\n");
+
+        const std::vector<int>& subspace = aosub.subspace();
+
+        Ps =  aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
     }
-    outfile->Printf("    ==================================\n");
-
-    const std::vector<int>& subspace = aosub.subspace();
-
-    SharedMatrix Ps =  aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
-
-    SharedMatrix CPsC = Ps->clone();
-    CPsC->transform(wfn->Ca());
-
-    outfile->Printf("\n  Orbital overlap with ao subspace:\n");
-    outfile->Printf("    ========================\n");
-    outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
-    outfile->Printf("    ------------------------\n");
-    for (int h = 0; h < CPsC->nirrep(); h++){
-        for (int i = 0; i < CPsC->rowspi(h); i++){
-            outfile->Printf("      %1d   %4d    %.6f\n",h,i + 1,CPsC->get(i,i));
-        }
-    }
-    outfile->Printf("    ========================\n");
 
     return Ps;
 }
@@ -106,10 +95,10 @@ void AOSubspace::find_subspace()
 
 void AOSubspace::startup()
 {
-    outfile->Printf("  ---------------------------------------\n");
-    outfile->Printf("    Atomic Orbital Subspace\n");
-    outfile->Printf("    written by Francesco A. Evangelista\n");
-    outfile->Printf("  ---------------------------------------\n");
+//    outfile->Printf("  ---------------------------------------\n");
+//    outfile->Printf("    Atomic Orbital Subspace\n");
+//    outfile->Printf("    written by Francesco A. Evangelista\n");
+//    outfile->Printf("  ---------------------------------------\n");
 
     lm_labels_cartesian_ = {{"S"},
                             {"PX","PY","PZ"},
@@ -265,7 +254,7 @@ const std::vector<AOInfo>& AOSubspace::aoinfo() const
 
 void AOSubspace::parse_subspace()
 {
-    outfile->Printf("\n  List of subspaces:");
+    outfile->Printf("\n\n  List of subspaces:");
     for (const std::string& s : subspace_str_){
         outfile->Printf(" %s",s.c_str());
     }

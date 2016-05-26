@@ -1179,9 +1179,9 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 		throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
 	}
 
-	if(nroot == 1){
-		ref_root_ = 0;
-	}
+//	if(nroot == 1){
+//		ref_root_ = 0;
+//	}
 
 	if(aimed_selection_){
 		select_value = energy_selection_ ? E2[ref_root_] : (C1[ref_root_]*C1[ref_root_]);
