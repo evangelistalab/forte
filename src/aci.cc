@@ -678,9 +678,9 @@ double AdaptiveCI::compute_energy()
        //     outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
        // }
 
-       // if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
-       //     ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
-       // }
+        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
+            ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
+        }
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
@@ -1017,10 +1017,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	if(perturb_select_){
 		C1_eq = [](double A, double B, double C)->double {return -A / (B - C); }; 
 		E2_eq = [](double A, double B, double C)->double {return -A * A/ (B - C);}; 
-	}else if(!quiet_mode_) {
-		outfile->Printf("\n  Using non-perturbative energy estimates");
 	}
-	
 
     // Check the coupling between the reference and the SD space
     for (const auto& it : V_hash){
@@ -1114,6 +1111,13 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 	// f_E2 and f_C1 will store the selected function of the chosen q criteria
 	// This functions should only be called when nroot_ > 1
 	
+    int nav = options_.get_int("N_AVERAGE");
+    int off = options_.get_int("AVERAGE_OFFSET");
+
+    if( nav == 0 ) nav = nroot;
+    if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
+
+
 	double f_C1 = 0.0;
 	double f_E2 = 0.0;
 
@@ -1146,10 +1150,10 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 		double C1_average = 0.0;
 		double E2_average = 0.0;
 		double dE2_average = 0.0;
-		double dim_inv = 1.0 / nroot;
-		for(int n = 0; n < nroot; ++n){
-			C1_average += C1[n] * dim_inv;
-			E2_average += E2[n] * dim_inv;
+		double dim_inv = 1.0 / nav;
+		for(int n = 0; n < nav; ++n){
+			C1_average += C1[n+off] * dim_inv;
+			E2_average += E2[n+off] * dim_inv;
 		}
 		if(q_rel_){
 			double inv = 1.0 / (nroot - 1.0);
@@ -1482,18 +1486,24 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     pruned_space.clear();
     pruned_space_map.clear();
 
+    int nav = options_.get_int("N_AVERAGE");
+    int off = options_.get_int("AVERAGE_OFFSET");
+
+    if( nav == 0 ) nav = nroot;
+    if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
+
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double,size_t> > dm_det_list;
     for (size_t I = 0, max = large_space.size(); I < max; ++I){
         double criteria = 0.0;
-        for (int n = 0; n < nroot; ++n){
+        for (int n = 0; n < nav; ++n){
             if(pq_function_ == "MAX"){
 				criteria = std::max(criteria, std::fabs(evecs->get(I,n)));
 			}else if(pq_function_ == "AVERAGE"){
-				criteria += std::fabs(evecs->get(I,n));
+				criteria += std::fabs(evecs->get(I,n+off));
 			}
 		}
-		criteria /= static_cast<double>(nroot);
+		criteria /= static_cast<double>(nav);
         dm_det_list.push_back(std::make_pair(criteria,I));
     }
 
@@ -2221,7 +2231,7 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
                              int num_ref_roots)
 {
     int ndets = det_space.size();
-    int max_dim = std::min( ndets, 50 );
+    int max_dim = std::min( ndets, 100 );
     int new_root;
     double old_overlap = 0.0;
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
