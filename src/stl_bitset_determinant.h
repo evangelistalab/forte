@@ -77,7 +77,7 @@ public:
     /// XOR operator
     STLBitsetDeterminant operator^(const STLBitsetDeterminant& lhs) const;
 
-    /// Get a pointer to the alpha bits
+    /// Get a pointer to the bits
     const std::bitset<256>& bits() const;
 
     /// Return the value of an alpha bit
