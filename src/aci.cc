@@ -677,6 +677,7 @@ double AdaptiveCI::compute_energy()
        // 	double abs_energy = PQ_evals->get(0) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
        //     outfile->Printf("\n    %2d               %zu               %1.12f", cycle_, PQ_space_.size(), abs_energy );
        // }
+        num_ref_roots = std::min(nroot_,int(PQ_space_.size()));
 
         if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
@@ -1033,7 +1034,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 			e2[n] = E2_I;
         }
 
-		if(ex_alg_ == "STATE_AVERAGE" and nroot_ != 1){
+		if(ex_alg_ == "STATE_AVERAGE" and nroot > 1){
 			criteria = average_q_values(nroot, C1, E2);
 		}else{
 			criteria = root_select(nroot, C1, E2);

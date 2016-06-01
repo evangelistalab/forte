@@ -29,6 +29,7 @@ set forte {
   tauq 0.05
   charge 0
   nroot 2
+  n_average 2
   ACI_INITIAL_SPACE CIS
 }
 
