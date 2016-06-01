@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.05258982716603 
-refaci = -75.383689551004
-refacipt2 = -75.439718180829
+refaci = -75.383717530895
+refacipt2 = -75.439721740271
 
 molecule N2{
 C 
@@ -32,13 +32,15 @@ set forte {
   multiplicity 1
   perturb_select false
   SELECT_TYPE aimed_energy
-  DIAG_ALGORITHM dlstring
+#  DIAG_ALGORITHM dlstring
   frozen_docc [1,0,0,0,0,1,0,0]
   TAUP 0.05
   TAUQ 0.05
   nroot 3
   charge 0
   enforce_spin_complete true
+  n_average 3
+  average_offset 0
 }
 
 energy('scf')

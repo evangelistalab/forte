@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.37487863589541 
-refaci = -75.522945247792
-refacipt2 =-75.750318411025 
+refaci = -75.647649941730
+refacipt2 = -75.727514007633 
 
 molecule N2{
 C 
@@ -30,14 +30,14 @@ set {
 set forte {
   job_type = aci
   multiplicity 1
-  select_type amp
+  select_type aimed_energy
   perturb_select false
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
   enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
-  TAUP 0.05
-  TAUQ 0.05
+  TAUP 0.08
+  TAUQ 0.08
   nroot 3
   mp2_nos true
   charge 0
