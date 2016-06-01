@@ -1,67 +1,42 @@
 import forte
-molecule naphthlanene{
-    H   1.240557   2.492735   0.000000
-    H  -1.240557  -2.492735   0.000000
-    H  -1.240557   2.492735   0.000000
-    H   1.240557  -2.492735   0.000000
-    H   3.377213   1.246082   0.000000
-    H  -3.377213  -1.246082   0.000000
-    H  -3.377213   1.246082   0.000000
-    H   3.377213  -1.246082   0.000000
-    C   0.000000   0.716253   0.000000
-    C   0.000000  -0.716253   0.000000
-    C   1.241539   1.403577   0.000000
-    C  -1.241539  -1.403577   0.000000
-    C  -1.241539   1.403577   0.000000
-    C   1.241539  -1.403577   0.000000
-    C   2.432418   0.707325   0.000000
-    C  -2.432418  -0.707325   0.000000
-    C  -2.432418   0.707325   0.000000
-    C   2.432418  -0.707325   0.000000
-}
-set globals {
-  docc [9,6,1,1,1,2,7,7]
-  basis sto-3g
-  df_basis_mp2 cc-pvdz-ri
-  df_basis_scf cc-pvdz-jkfit
-  scf_type df
-  e_convergence 1e-12
-  d_convergence 1e-12
+
+fci_ref = -75.882960895972374
+
+molecule H2O {
+ 0 3
+   O   0.000000000   0.00   0.000000000
+   H   0.790689766   0.00   0.612217330
+   H  -0.790689766   0.00   0.612217330
+ units angstrom
 }
 
-energy('scf')
-set forte {
-  restricted_docc  [9, 6, 0, 0, 0, 0, 7, 7]
-  active       [0, 0, 2, 3, 2, 3, 0, 0]
-  job_type     three-dsrg-mrpt2
-  int_type     df
-  cholesky_tolerance 1e-14
-  PRINT_NO     true
-}
-#fci_dsrg_energy = energy('forte')
 
-set scf_type df
-set forte {
-  multiplicity               1
-  root_sym                   0
-  restricted_docc           [9, 6, 0, 0, 0, 0, 7, 7]
-  active                [0, 0, 2, 3, 2, 3, 0, 0]
-  cas_type               DMRG
-  int_type              df
-  cholesky_tolerance     1e-14
-  dmrgscf_max_iter        1
-  dmrg_print_corr         false
-  mps_chkpt               false
-  dmrg_states             [200, 500, 1000, 1000]
-  dmrg_econv              [1e-8, 1e-8, 1e-8, 1e-12]
-  dmrg_maxsweeps          [5, 5, 5, 100]
-  dmrg_noiseprefactors    [0.03, 0.03, 0.03, 0.0]
-  job_type                three-dsrg-mrpt2
-  print_no                true
-}
-dmrg_dsrg_energy = energy('forte')
+set basis          cc-pVDZ
+set reference      rohf
+set scf_type       direct
+set e_convergence  1e-13
+set d_convergence  1e-13
+set ints_tolerance 0.0
 
-#print fci_dsrg_energy - dmrg_dsrg_energy
-#compare_values(fci_dsrg_energy - dmrg_dsrg_energy, 0.00000000, 6, "DSRG(CAS) - DSRG(DMRG)")
-  
+set forte{
+    root_sym            0
+    multiplicity        3
+    restricted_docc      [ 1 , 0 , 0 , 0 ]
+    active               [ 5 , 0 , 4 , 2 ]
+    dmrg_states          [  200,  500, 1000, 1000 ]
+    dmrg_econv           [ 1e-8, 1e-8, 1e-8, 1e-8 ]
+    dmrg_maxsweeps       [    5,    5,    5,  100 ]
+    dmrg_noiseprefactors [ 0.03, 0.03, 0.03,  0.0 ]
+    dmrg_print_corr      true
+    mps_chkpt            false
+    int_type             conventional
+    cas_type             dmrg
+    job_type             dsrg-mrpt2
+    dsrg_s               0.5
+ }
+
+refscf, refwfn = energy('scf', return_wfn=True)
+dmrg_dsrg = energy('forte', ref_wfn=refwfn)
+
+compare_values(dmrg_dsrg, fci_ref, 8,"DMRG CI Energy")
 

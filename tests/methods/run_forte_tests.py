@@ -51,7 +51,8 @@ casscf_tests = ["casscf", "casscf-2","casscf-3", "casscf-4", "casscf-5", "casscf
 dmrg_tests = ["dmrgscf-1", "df-dmrgscf-1", "cd-dmrgscf-1", "dmrg-dsrg-mrpt2-1", "dmrg-dsrg-mrpt2-2"]
 
 #tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + adaptive_ci_tests + apifci_tests + fciqmc_tests + ct_tests + dsrg_tests
-tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + apifci_tests   
+#tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + dmrg_tests + mrdsrg_tests + adaptive_ci_tests + apifci_tests   
+tests =  fci_tests + casscf_tests + dsrg_mrpt2_tests + mrdsrg_tests + adaptive_ci_tests + apifci_tests   
 maindir = os.getcwd()
 if len(sys.argv) == 1:
     cmd = ["which","psi4"]
