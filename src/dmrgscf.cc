@@ -808,7 +808,7 @@ double DMRGSCF::compute_energy()
             //CheMPS2::CASSCF::calcNOON( iHandler, mem1, mem2, DMRG1DM );
             if(three_pdm)
             {
-                CheMPS2::CASSCF::copy3DMover( theDMRG->get3DM(), nOrbDMRG, DMRG3DM);
+                theDMRG->get3DM()->fill_ham_index(1.0, false, DMRG3DM, 0, nOrbDMRG);
             }
             delete theDMRG;
 

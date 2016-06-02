@@ -27,12 +27,12 @@ set globals {
     frozen_docc     [0]
     restricted_docc [4]
     active          [2]
+    df_ints_io      save
 }
-casscf = energy('casscf')
-#print casscf
-scf = energy('scf')
+scf,scfwfn = energy('scf', return_wfn=True)
 #compare_values(refscf, scf, 8, "SCF ENERGY")
 
+set scf_type direct
 set forte{
    CASSCF_REFERENCE        true
    int_type                conventional
@@ -41,13 +41,12 @@ set forte{
    restricted_docc         [4]
    active                  [2]
    multiplicity             1
-   cas_type                 FCI
    CASSCF_G_CONVERGENCE     1e-5
    CASSCF_E_CONVERGENCE     1e-6
-   CASSCF_DO_DIIS           true
-   print                    0
+   CASSCF_DO_DIIS           false
+   CASSCF_ITERATIONS        40
 }
-e_casscf = energy('forte')
+e_casscf = energy('forte', ref_wfn=scfwfn)
 
 compare_values(refcasscf, e_casscf, 4, "CASSCF_ENERGY")
 
