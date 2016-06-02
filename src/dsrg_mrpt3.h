@@ -297,6 +297,10 @@ protected:
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF / CD)
     void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
+    /// Compute two-body term of commutator [V, T2] in batching, particle-particle contraction
+    void V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
+    /// Compute two-body term of commutator [V, T2] in batching, particle-hole contraction (exchange part)
+    void V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
 
     // => Reference relaxation <= //
 
