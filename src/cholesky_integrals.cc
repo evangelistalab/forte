@@ -5,7 +5,10 @@
 #include <libmints/integral.h>
 #include <lib3index/cholesky.h>
 #include <libmints/basisset.h>
+#include <libmints/sieve.h>
 #include <libqt/qt.h>
+#include <libpsio/psio.hpp>
+#include <psifiles.h>
 
 #include "integrals.h"
 
@@ -132,40 +135,76 @@ ambit::Tensor CholeskyIntegrals::three_integral_block(const std::vector<size_t> 
 void CholeskyIntegrals::gather_integrals()
 {
     if(print_){outfile->Printf("\n Computing the Cholesky Vectors \n");}
-
-
-
     boost::shared_ptr<BasisSet> primary = wfn_->basisset();
-
-
     size_t nbf = primary->nbf();
 
-
+    /// Needed to generate sieve information
     boost::shared_ptr<IntegralFactory> integral(new IntegralFactory(primary, primary, primary, primary));
     double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
 
     //This is creates the cholesky decomposed AO integrals
     Timer timer;
-    std::string str= "Computing CD Integrals";
-    if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
-    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),0.0 ,tol_cd, Process::environment.get_memory()));
-    //Computes the cholesky integrals
-    if(L_ao_ == nullptr)
+    boost::shared_ptr<CholeskyERI> Ch (new CholeskyERI(boost::shared_ptr<TwoBodyAOInt>(integral->eri()),options_.get_double("INTS_TOLERANCE"),tol_cd, Process::environment.get_memory()));
+    if(options_.get_str("DF_INTS_IO") == "LOAD")
     {
+        boost::shared_ptr<ERISieve> sieve(new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
+        const std::vector<std::pair<int, int> >& function_pairs = sieve->function_pairs();
+        int ntri = sieve->function_pairs().size();
+        ULI nbf = primary->nbf();
+        std::string str= "Reading CD Integrals";
+        if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
+
+        boost::shared_ptr<PSIO> psio (new PSIO());
+        psio_address addr = PSIO_ZERO;
+        int file_unit = PSIF_DFSCF_BJ;
+
+        if(psio->exists(file_unit))
+        {
+            psio->open(file_unit, PSIO_OPEN_OLD);
+            psio->read_entry(file_unit, "length", (char*) &nthree_, sizeof(long int));
+            SharedMatrix L_tri = SharedMatrix(new Matrix("Partial Cholesky", nthree_, ntri));
+            double** Lp = L_tri->pointer();
+            psio->read_entry(file_unit,"(Q|mn) Integrals",(char*) Lp[0], sizeof(double) * nthree_ * ntri);
+            psio->close(file_unit, 1);
+            SharedMatrix  L_ao = SharedMatrix(new Matrix("Partial Cholesky", nthree_, nbf * nbf));
+            for(size_t mn = 0; mn < ntri; mn++){
+                size_t m = function_pairs[mn].first;
+                size_t n = function_pairs[mn].second;
+                for(size_t P = 0; P < nthree_; P++)
+                {
+                    L_ao->set(P, (m * nbf) + n, L_tri->get(P, mn));
+                    L_ao->set(P, (n * nbf) + m, L_tri->get(P, mn));
+                }
+            }
+            L_ao_ = L_ao;
+            if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
+        }
+        else
+        {
+            outfile->Printf("\n File PSIF_DFSCF_BJ(cholesky integrals) was not generated");
+            outfile->Printf("\n");
+            std::string str= "Computing CD Integrals";
+            if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
+            Ch->choleskify();
+            nthree_ = Ch->Q();
+            L_ao_ = Ch->L();
+            if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
+        }
+    }
+    else {
+        std::string str= "Computing CD Integrals";
+        if(print_){outfile->Printf("\n    %-36s ...", str.c_str());}
         Ch->choleskify();
         nthree_ = Ch->Q();
+        L_ao_ = Ch->L();
+        if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
     }
-    if(print_){outfile->Printf("...Done. Timing %15.6f s", timer.get());}
 
     //The number of vectors required to do cholesky factorization
     if(print_){outfile->Printf("\n Need %8.6f GB to store cd integrals in core\n",nthree_ * nbf * nbf * sizeof(double) / 1073741824.0 );}
     int_mem_ = (nthree_ * nbf * nbf * sizeof(double) / 1073741824.0);
 
     if(print_){outfile->Printf("\n Number of cholesky vectors %d to satisfy %20.12f tolerance\n", nthree_,tol_cd);}
-    if(L_ao_ == nullptr)
-    {
-        L_ao_ = Ch->L();
-    }
     transform_integrals();
 }
 void CholeskyIntegrals::transform_integrals()

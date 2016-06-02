@@ -34,6 +34,7 @@
 #include "integrals.h"
 #include "stl_bitset_determinant.h"
 #include "dynamic_bitset_determinant.h"
+#include "sparse_ci_solver.h"
 #include "helpers.h"
 #include "fci_vector.h"
 
@@ -144,6 +145,8 @@ private:
     int current_root_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
+    /// The eigensolver type
+    DiagonalizationMethod diag_method_;
     /// Print full wavefunction in the APIFCI basis after running a ground state calculation?
     bool print_full_wavefunction_;
 

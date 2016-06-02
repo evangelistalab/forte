@@ -5,6 +5,7 @@ import forte
 
 refscf = -14.6097447388741113 #TEST
 refapifci = -14.646162385366 #TEST
+refpostdiag = -14.646164789005 #TEST
 
 molecule li2{
    Li
@@ -32,6 +33,7 @@ set forte {
   PROPAGATOR POWER
   MP2_NOS true
   maxbeta 100000.00
+  POST_DIAGONALIZE true
 }
 
 energy('scf')
@@ -39,3 +41,4 @@ compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refapifci, get_variable("APIFCI ENERGY"), 10, "APIFCI energy") #TEST
+compare_values(refpostdiag, get_variable("APIFCI POST DIAG ENERGY"), 10, "POST DIAG energy") #TEST
