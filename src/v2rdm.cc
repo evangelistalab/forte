@@ -44,8 +44,8 @@ void V2RDM::startup(){
             size_t abs = fdoccpi_[h] + rdoccpi_[h] + u + offset_abs;
             size_t rel = u + offset_rel;
             abs_to_rel_[abs] = rel;
-            ++offset_rel;
         }
+        offset_rel += active_[h];
         offset_abs += nmopi_[h];
     }
 

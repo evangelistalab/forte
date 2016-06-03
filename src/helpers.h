@@ -191,6 +191,14 @@ double to_gb(T num_el){
     return static_cast<double>(num_el) * static_cast<double>(sizeof(T)) / 1073741824.0;
 }
 
+/**
+ * @brief Compute the memory requirement
+ * @param nele The number of elements for storage
+ * @param type_size The size of the data type
+ * @return A pair of size in appropriate unit (B, KB, MB, GB, TB)
+ */
+std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
+
 }} // End Namespaces
 
 #endif // _helpers_h_
