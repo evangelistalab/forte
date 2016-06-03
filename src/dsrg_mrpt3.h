@@ -23,6 +23,8 @@
 #ifndef _dsrg_mrpt3_h_
 #define _dsrg_mrpt3_h_
 
+#include <chrono>
+#include <ctime>
 #include <fstream>
 #include <boost/assign.hpp>
 
@@ -73,6 +75,16 @@ protected:
     void print_summary();
     /// Print levels
     int print_;
+    /// Profile printing for DF
+    bool profile_print_;
+    /// Time variable
+    std::chrono::time_point<std::chrono::system_clock> start_, end_;
+    std::time_t tt1_, tt2_;
+    /// Compute elapsed time
+    std::chrono::duration<double> compute_elapsed_time(std::chrono::time_point<std::chrono::system_clock> t1,
+                                                       std::chrono::time_point<std::chrono::system_clock> t2){
+        return t2 - t1;
+    }
 
     /// The reference object
     Reference reference_;
