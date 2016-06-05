@@ -638,6 +638,8 @@ read_options(std::string name, Options &options)
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
         options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
+        /*- Compute IP/EA in active-CI -*/
+        options.add_str("IPEA", "NONE", "NONE IP EA");
         /*- Semicanonicalize orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
         /*- Two-particle density cumulant -*/
