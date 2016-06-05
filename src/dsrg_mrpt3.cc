@@ -125,7 +125,7 @@ void DSRG_MRPT3::startup()
     if(eri_df_){
         aux_label_ = "L";
         aux_mos_ = std::vector<size_t> (ints_->nthree());
-        std::iota(aux_mos_.begin(), aux_mos_.end(),0);
+        std::iota(aux_mos_.begin(),aux_mos_.end(),0);
 
         BTF_->add_mo_space(aux_label_,"g",aux_mos_,NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
