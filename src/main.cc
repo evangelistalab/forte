@@ -564,6 +564,8 @@ read_options(std::string name, Options &options)
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- Do result perturbation analysis -*/
         options.add_bool("PERTURB_ANALYSIS",false);
+        /*- Use Symmetric Approximate Hamiltonian -*/
+        options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
