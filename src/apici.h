@@ -189,6 +189,7 @@ private:
     /// Flag for conducting CHC energy estimation
     bool approx_E_flag_;
     double approx_energy_, old_approx_energy_;
+    double approx_E_tau_, approx_E_S_;
 
 
     // * Energy extrapolation
@@ -217,6 +218,8 @@ private:
     std::vector<double> cha_func_coefs_;
     /// Do result perturbation analysis
     bool do_perturb_analysis_;
+    /// Use symmetric approximated hamiltonian
+    bool symm_approx_H_;
 
     // ==> Class functions <==
 
@@ -274,6 +277,10 @@ private:
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
+    /// Apply symmetric approx tau H to a set of determinants
+    void apply_tau_H_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash, double S);
+    /// Apply symmetric approx tau H to a determinant using dynamic screening
+    void apply_tau_H_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
     /// Apply tau H to a subset of determinants
     void apply_tau_H_subset(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<> &dets_sum_map, det_hash<>& dets_C_hash, double S);
     /// Apply tau H to a determinant using screening based on the maxim couplings
