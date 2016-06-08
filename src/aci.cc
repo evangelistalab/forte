@@ -682,6 +682,11 @@ double AdaptiveCI::compute_energy()
         if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
+        bool stuck = check_stuck( energy_history, PQ_evals );
+        if( stuck ){
+            outfile->Printf("\n  Procedure is stuck! Quitting...");
+            break;
+        } 
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
@@ -691,12 +696,6 @@ double AdaptiveCI::compute_energy()
             break;
         }
 
-        bool stuck = check_stuck( energy_history, PQ_evals );
-        if( stuck ){
-            outfile->Printf("\n  Procedure is stuck! Quitting...");
-            break;
-        }
-    
         // Step 5. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,num_ref_roots);        
 
@@ -1560,9 +1559,11 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
 bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
 {
+    outfile->Printf("\n thresh: %1.15f", options_.get_double("ACI_CONVERGENCE"));
+    bool stuck = false;
 	int nroot = evals->dim();
-	if(cycle_ < 3){
-		return false;
+	if(cycle_ < 4){
+        stuck = false;
 	}else{
 		std::vector<double> av_energies;
 		for(int i = 0; i < cycle_; ++i){
@@ -1574,13 +1575,12 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 			av_energies.push_back(energy);
 		}
 
-		if( std::fabs( av_energies[cycle_ - 1] - av_energies[ cycle_ - 3] ) < options_.get_double("ACI_CONVERGENCE") and
-			std::fabs( av_energies[cycle_] - av_energies[cycle_ - 2] ) < options_.get_double("ACI_CONVERGENCE") ){
-			return true;
-		}else{
-			return false;
+		if( std::fabs( av_energies[cycle_ - 1] - av_energies[ cycle_ - 3] ) < options_.get_double("ACI_CONVERGENCE")) {//and
+//			std::fabs( av_energies[cycle_-2] - av_energies[cycle_ - 4] ) < options_.get_double("ACI_CONVERGENCE") ){
+			stuck = true;
 		}
 	}
+    return stuck;
 }
 
 pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant> space,
