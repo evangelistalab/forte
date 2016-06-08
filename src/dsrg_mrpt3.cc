@@ -125,7 +125,7 @@ void DSRG_MRPT3::startup()
     if(eri_df_){
         aux_label_ = "L";
         aux_mos_ = std::vector<size_t> (ints_->nthree());
-        std::iota(aux_mos_.begin(), aux_mos_.end(),0);
+        std::iota(aux_mos_.begin(),aux_mos_.end(),0);
 
         BTF_->add_mo_space(aux_label_,"g",aux_mos_,NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
@@ -2323,22 +2323,30 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         }
 
         BlockedTensor H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"gghh"},true);
+        BlockedTensor X2 = BTF_->build(tensor_type_,"T2*Eta1",{"ahpp"},true);
         H2["pqij"] = B["gpi"] * B["gqj"];
+        X2["xjab"] = Eta1_["xy"] * T2["yjab"];
         C2["pqab"] += alpha * H2["pqij"] * T2["ijab"];
-        C2["pqab"] -= alpha * Eta1_["xy"] * H2["pqxj"] * T2["yjab"];
-        C2["pqab"] -= alpha * Eta1_["xy"] * H2["pqjx"] * T2["jyab"];
+        C2["pqab"] -= alpha * H2["pqxj"] * X2["xjab"];
+        C2["pqab"] += alpha * H2["pqjx"] * X2["xjab"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"gGhH"},true);
         H2["pQiJ"] = B["gpi"] * B["gQJ"];
         C2["pQaB"] += alpha * H2["pQiJ"] * T2["iJaB"];
-        C2["pQaB"] -= alpha * Eta1_["xy"] * H2["pQxJ"] * T2["yJaB"];
-        C2["pQaB"] -= alpha * Eta1_["XY"] * H2["pQjX"] * T2["jYaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Eta1",{"aHpP"},true);
+        X2["xJaB"] = Eta1_["xy"] * T2["yJaB"];
+        C2["pQaB"] -= alpha * H2["pQxJ"] * X2["xJaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Eta1",{"hApP"},true);
+        X2["jXaB"] = Eta1_["XY"] * T2["jYaB"];
+        C2["pQaB"] -= alpha * H2["pQjX"] * X2["jXaB"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"GGHH"},true);
+        X2 = BTF_->build(tensor_type_,"T2*Eta1",{"AHPP"},true);
         H2["PQIJ"] = B["gPI"] * B["gQJ"];
+        X2["XJAB"] = Eta1_["XY"] * T2["YJAB"];
         C2["PQAB"] += alpha * H2["PQIJ"] * T2["IJAB"];
-        C2["PQAB"] -= alpha * Eta1_["XY"] * H2["PQXJ"] * T2["YJAB"];
-        C2["PQAB"] -= alpha * Eta1_["XY"] * H2["PQJX"] * T2["JYAB"];
+        C2["PQAB"] -= alpha * H2["PQXJ"] * X2["XJAB"];
+        C2["PQAB"] += alpha * H2["PQJX"] * X2["XJAB"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -2378,22 +2386,30 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
 
         // if we can save four-index
         BlockedTensor H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"ggpp"},true);
+        BlockedTensor X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hhap"},true);
         H2["rsab"] = B["gar"] * B["gbs"];
+        X2["ijyb"] = Gamma1_["xy"] * T2["ijxb"];
         C2["ijrs"] += alpha * H2["rsab"] * T2["ijab"];
-        C2["ijrs"] -= alpha * Gamma1_["xy"] * H2["rsyb"] * T2["ijxb"];
-        C2["ijrs"] -= alpha * Gamma1_["xy"] * H2["rsby"] * T2["ijbx"];
+        C2["ijrs"] -= alpha * H2["rsyb"] * X2["ijyb"];
+        C2["ijrs"] += alpha * H2["rsby"] * X2["ijyb"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"gGpP"},true);
         H2["rSaB"] = B["gar"] * B["gBS"];
         C2["iJrS"] += alpha * H2["rSaB"] * T2["iJaB"];
-        C2["iJrS"] -= alpha * Gamma1_["xy"] * H2["rSyB"] * T2["iJxB"];
-        C2["iJrS"] -= alpha * Gamma1_["XY"] * H2["rSbY"] * T2["iJbX"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaP"},true);
+        X2["iJyB"] = Gamma1_["xy"] * T2["iJxB"];
+        C2["iJrS"] -= alpha * H2["rSyB"] * X2["iJyB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHpA"},true);
+        X2["iJbY"] = Gamma1_["XY"] * T2["iJbX"];
+        C2["iJrS"] -= alpha * H2["rSbY"] * X2["iJbY"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"GGPP"},true);
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"HHAP"},true);
         H2["RSAB"] = B["gAR"] * B["gBS"];
+        X2["IJYB"] = Gamma1_["XY"] * T2["IJXB"];
         C2["IJRS"] += alpha * H2["RSAB"] * T2["IJAB"];
-        C2["IJRS"] -= alpha * Gamma1_["XY"] * H2["RSYB"] * T2["IJXB"];
-        C2["IJRS"] -= alpha * Gamma1_["XY"] * H2["RSBY"] * T2["IJBX"];
+        C2["IJRS"] -= alpha * H2["RSYB"] * X2["IJYB"];
+        C2["IJRS"] += alpha * H2["RSBY"] * X2["IJYB"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -2494,43 +2510,67 @@ void DSRG_MRPT3::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& a
         BlockedTensor O2 = BTF_->build(tensor_type_,"VT2->H2 O2",{"ghgp"},true);
         H2["qsai"]  = B["gas"] * B["gqi"];
         O2["qjsb"] -= alpha * H2["qsam"] * T2["mjab"];
-        O2["qjsb"] -= alpha * H2["qsax"] * T2["yjab"] * Gamma1_["xy"];
-        O2["qjsb"] += alpha * H2["qsyi"] * T2["ijxb"] * Gamma1_["xy"];
+        BlockedTensor X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"ahpp"},true);
+        X2["xjab"] = T2["yjab"] * Gamma1_["xy"];
+        O2["qjsb"] -= alpha * H2["qsax"] * X2["xjab"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hhap"},true);
+        X2["ijyb"] = T2["ijxb"] * Gamma1_["xy"];
+        O2["qjsb"] += alpha * H2["qsyi"] * X2["ijyb"];
         C2["qjsb"] += O2["qjsb"];
         C2["jqsb"] -= O2["qjsb"];
         C2["qjbs"] -= O2["qjsb"];
         C2["jqbs"] += O2["qjsb"];
 
         C2["qJsB"] -= alpha * H2["qsam"] * T2["mJaB"];
-        C2["qJsB"] -= alpha * H2["qsax"] * T2["yJaB"] * Gamma1_["xy"];
-        C2["qJsB"] += alpha * H2["qsyi"] * T2["iJxB"] * Gamma1_["xy"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"aHpP"},true);
+        X2["xJaB"] = T2["yJaB"] * Gamma1_["xy"];
+        C2["qJsB"] -= alpha * H2["qsax"] * X2["xJaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaP"},true);
+        X2["iJyB"] = T2["iJxB"] * Gamma1_["xy"];
+        C2["qJsB"] += alpha * H2["qsyi"] * X2["iJyB"];
 
         H2 = BTF_->build(tensor_type_,"VT2->H2",{"GGPH"},true);
         O2 = BTF_->build(tensor_type_,"VT2->H2 O2",{"GHGP"},true);
         H2["QSAI"]  = B["gAS"] * B["gQI"];
         O2["QJSB"] -= alpha * H2["QSAM"] * T2["MJAB"];
-        O2["QJSB"] -= alpha * H2["QSAX"] * T2["YJAB"] * Gamma1_["XY"];
-        O2["QJSB"] += alpha * H2["QSYI"] * T2["IJXB"] * Gamma1_["XY"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"AHPP"},true);
+        X2["XJAB"] = T2["YJAB"] * Gamma1_["XY"];
+        O2["QJSB"] -= alpha * H2["QSAX"] * X2["XJAB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"HHAP"},true);
+        X2["IJYB"] = T2["IJXB"] * Gamma1_["XY"];
+        O2["QJSB"] += alpha * H2["QSYI"] * X2["IJYB"];
         C2["QJSB"] += O2["QJSB"];
         C2["JQSB"] -= O2["QJSB"];
         C2["QJBS"] -= O2["QJSB"];
         C2["JQBS"] += O2["QJSB"];
 
         C2["iQaS"] -= alpha * H2["QSBM"] * T2["iMaB"];
-        C2["iQaS"] -= alpha * H2["QSBX"] * T2["iYaB"] * Gamma1_["XY"];
-        C2["iQaS"] += alpha * H2["QSYJ"] * T2["iJaX"] * Gamma1_["XY"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hApP"},true);
+        X2["iXaB"] = T2["iYaB"] * Gamma1_["XY"];
+        C2["iQaS"] -= alpha * H2["QSBX"] * X2["iXaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHpA"},true);
+        X2["iJaY"] = T2["iJaX"] * Gamma1_["XY"];
+        C2["iQaS"] += alpha * H2["QSYJ"] * X2["iJaY"];
 
         H2 = BTF_->build(tensor_type_,"VT2->H2",{"gGpH"},true);
         H2["sQaI"]  = B["gas"] * B["gQI"];
         C2["iQsB"] -= alpha * H2["sQaM"] * T2["iMaB"];
-        C2["iQsB"] -= alpha * H2["sQaX"] * T2["iYaB"] * Gamma1_["XY"];
-        C2["iQsB"] += alpha * H2["sQyJ"] * T2["iJxB"] * Gamma1_["xy"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hApP"},true);
+        X2["iXaB"] = T2["iYaB"] * Gamma1_["XY"];
+        C2["iQsB"] -= alpha * H2["sQaX"] * X2["iXaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaP"},true);
+        X2["iJyB"] = T2["iJxB"] * Gamma1_["xy"];
+        C2["iQsB"] += alpha * H2["sQyJ"] * X2["iJyB"];
 
         H2 = BTF_->build(tensor_type_,"VT2->H2",{"gGhP"},true);
         H2["qSiA"]  = B["gAS"] * B["gqi"];
         C2["qJaS"] -= alpha * H2["qSmB"] * T2["mJaB"];
-        C2["qJaS"] -= alpha * H2["qSxB"] * T2["yJaB"] * Gamma1_["xy"];
-        C2["qJaS"] += alpha * H2["qSiY"] * T2["iJaX"] * Gamma1_["XY"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"aHpP"},true);
+        X2["xJaB"] = T2["yJaB"] * Gamma1_["xy"];
+        C2["qJaS"] -= alpha * H2["qSxB"] * X2["xJaB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHpA"},true);
+        X2["iJaY"] = T2["iJaX"] * Gamma1_["XY"];
+        C2["qJaS"] += alpha * H2["qSiY"] * X2["iJaY"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -2598,22 +2638,29 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
         }
 
         BlockedTensor H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"ggaa"},true);
+        BlockedTensor X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hhaa"},true);
+        X2["ijyv"] = Gamma1_["xy"] * T2["ijxv"];
         H2["rsuv"] = B["gur"] * B["gvs"];
         C2["ijrs"] += alpha * H2["rsuv"] * T2["ijuv"];
-        C2["ijrs"] -= alpha * Gamma1_["xy"] * H2["rsyv"] * T2["ijxv"];
-        C2["ijsr"] += alpha * Gamma1_["xy"] * H2["rsyv"] * T2["ijxv"];
+        C2["ijrs"] -= alpha * H2["rsyv"] * X2["ijyv"];
+        C2["ijsr"] += alpha * H2["rsyv"] * X2["ijyv"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"gGaA"},true);
         H2["rSuV"] = B["gur"] * B["gVS"];
         C2["iJrS"] += alpha * H2["rSuV"] * T2["iJuV"];
-        C2["iJrS"] -= alpha * Gamma1_["xy"] * H2["rSyV"] * T2["iJxV"];
-        C2["iJrS"] -= alpha * Gamma1_["XY"] * H2["rSvY"] * T2["iJvX"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaA"},true);
+        X2["iJyV"] = Gamma1_["xy"] * T2["iJxV"];
+        C2["iJrS"] -= alpha * H2["rSyV"] * X2["iJyV"];
+        X2["iJvY"] = Gamma1_["XY"] * T2["iJvX"];
+        C2["iJrS"] -= alpha * H2["rSvY"] * X2["iJvY"];
 
         H2 = BTF_->build(tensor_type_,"VT2->C2 H2",{"GGAA"},true);
         H2["RSUV"] = B["gUR"] * B["gVS"];
         C2["IJRS"] += alpha * H2["RSUV"] * T2["IJUV"];
-        C2["IJRS"] -= alpha * Gamma1_["XY"] * H2["RSYV"] * T2["IJXV"];
-        C2["IJSR"] += alpha * Gamma1_["XY"] * H2["RSYV"] * T2["IJXV"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"HHAA"},true);
+        X2["IJYV"] = Gamma1_["XY"] * T2["IJXV"];
+        C2["IJRS"] -= alpha * H2["RSYV"] * X2["IJYV"];
+        C2["IJSR"] += alpha * H2["RSYV"] * X2["IJYV"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -2724,8 +2771,11 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
                 });
 
                 C2.block(C2label)("ijrs") += alpha * H2("rsue") * T2small("ijue");
-                C2.block(C2label)("ijrs") -= alpha * Gamma1_.block(G1label)("xy")
-                        * H2("rsye") * T2small("ijxe");
+
+                ambit::Tensor X2 = ambit::Tensor::build(tensor_type_,"T2 small av * Gamma1",
+                                   {hole_size0, hole_size1, sizea, sub_virt_size});
+                X2("ijye") = Gamma1_.block(G1label)("xy") * T2small("ijxe");
+                C2.block(C2label)("ijrs") -= alpha * H2("rsye") * X2("ijye");
             }
 
             // va block
@@ -2762,8 +2812,11 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
                 });
 
                 C2.block(C2label)("ijrs") += alpha * H2("rseu") * T2small("ijeu");
-                C2.block(C2label)("ijrs") -= alpha * Gamma1_.block(G1label)("xy")
-                        * H2("rsey") * T2small("ijex");
+
+                ambit::Tensor X2 = ambit::Tensor::build(tensor_type_,"T2 small av * Gamma1",
+                                   {hole_size0, hole_size1, sub_virt_size, sizea});
+                X2("ijey") = Gamma1_.block(G1label)("xy") * T2small("ijex");
+                C2.block(C2label)("ijrs") -= alpha * H2("rsey") * X2("ijey");
             }
         }
 
@@ -2933,13 +2986,18 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             outfile->Printf("\n    [V, T2] DF -> C2aa PH exchange AA started: %s", std::ctime(&tt1_));
         }
 
+        BlockedTensor X2;
         BlockedTensor H2 = BTF_->build(tensor_type_,"VT2->H2",{"ggah"},true);
         {
             BlockedTensor O2 = BTF_->build(tensor_type_,"VT2->H2 O2",{"ghga"},true);
             H2["qsui"]  = B["gus"] * B["gqi"];
             O2["qjsv"] -= alpha * H2["qsum"] * T2["mjuv"];
-            O2["qjsv"] -= alpha * H2["qsux"] * T2["yjuv"] * Gamma1_["xy"];
-            O2["qjsv"] += alpha * H2["qsyi"] * T2["ijxv"] * Gamma1_["xy"];
+            X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"ahaa"},true);
+            X2["xjuv"] = T2["yjuv"] * Gamma1_["xy"];
+            O2["qjsv"] -= alpha * H2["qsux"] * X2["xjuv"];
+            X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hhaa"},true);
+            X2["ijyv"] = T2["ijxv"] * Gamma1_["xy"];
+            O2["qjsv"] += alpha * H2["qsyi"] * X2["ijyv"];
             C2["qjsv"] += O2["qjsv"];
             C2["jqsv"] -= O2["qjsv"];
             C2["qjvs"] -= O2["qjsv"];
@@ -2947,8 +3005,12 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         }
 
         C2["qJsB"] -= alpha * H2["qsum"] * T2["mJuB"];
-        C2["qJsB"] -= alpha * H2["qsux"] * T2["yJuB"] * Gamma1_["xy"];
-        C2["qJsB"] += alpha * H2["qsyi"] * T2["iJxB"] * Gamma1_["xy"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"aHaP"},true);
+        X2["xJuB"] = T2["yJuB"] * Gamma1_["xy"];
+        C2["qJsB"] -= alpha * H2["qsux"] * X2["xJuB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaP"},true);
+        X2["iJyB"] = T2["iJxB"] * Gamma1_["xy"];
+        C2["qJsB"] += alpha * H2["qsyi"] * X2["iJyB"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -3016,8 +3078,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                         value = T2.block(T2label_a).data()[idx];
                     });
 
-                    O2sub("qjse") -= alpha * Gamma1_.block("aa")("xy")
-                            * H2.block(H2label_a)("qsux") * T2sub("yjue");
+                    ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                    {sizea, sizeh, sizea, sub_virt_size});
+                    Y2("xjue") = Gamma1_.block("aa")("xy") * T2sub("yjue");
+                    O2sub("qjse") -= alpha * H2.block(H2label_a)("qsux") * Y2("xjue");
 
                     // T2[ijxb]
                     for(const std::string& idx_h0: {"c","a"}){
@@ -3032,8 +3096,9 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             value = T2.block(T2label_h1).data()[idx];
                         });
 
-                        O2sub("qjse") += alpha * Gamma1_.block("aa")("xy")
-                                * H2.block(H2label_h1)("qsyi") * T2sub("ijxe");
+                        Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",{sizeh1, sizeh, sizea, sub_virt_size});
+                        Y2("ijye") = Gamma1_.block("aa")("xy") * T2sub("ijxe");
+                        O2sub("qjse") += alpha * H2.block(H2label_h1)("qsyi") * Y2("ijye");
                     }
 
                     // adding O2sub to C2 with permutations
@@ -3083,8 +3148,12 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
             BlockedTensor O2 = BTF_->build(tensor_type_,"VT2->H2 O2",{"GHGA"},true);
             H2["QSUI"]  = B["gUS"] * B["gQI"];
             O2["QJSV"] -= alpha * H2["QSUM"] * T2["MJUV"];
-            O2["QJSV"] -= alpha * H2["QSUX"] * T2["YJUV"] * Gamma1_["XY"];
-            O2["QJSV"] += alpha * H2["QSYI"] * T2["IJXV"] * Gamma1_["XY"];
+            X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"AHAA"},true);
+            X2["XJUV"] = T2["YJUV"] * Gamma1_["XY"];
+            O2["QJSV"] -= alpha * H2["QSUX"] * X2["XJUV"];
+            X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"HHAA"},true);
+            X2["IJYV"] = T2["IJXV"] * Gamma1_["XY"];
+            O2["QJSV"] += alpha * H2["QSYI"] * X2["IJYV"];
             C2["QJSV"] += O2["QJSV"];
             C2["JQSV"] -= O2["QJSV"];
             C2["QJVS"] -= O2["QJSV"];
@@ -3092,8 +3161,12 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         }
 
         C2["iQaS"] -= alpha * H2["QSUM"] * T2["iMaU"];
-        C2["iQaS"] -= alpha * H2["QSUX"] * T2["iYaU"] * Gamma1_["XY"];
-        C2["iQaS"] += alpha * H2["QSYJ"] * T2["iJaX"] * Gamma1_["XY"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hApA"},true);
+        X2["iXaU"] = T2["iYaU"] * Gamma1_["XY"];
+        C2["iQaS"] -= alpha * H2["QSUX"] * X2["iXaU"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHpA"},true);
+        X2["iJaY"] = T2["iJaX"] * Gamma1_["XY"];
+        C2["iQaS"] += alpha * H2["QSYJ"] * X2["iJaY"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -3162,8 +3235,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                         value = T2.block(T2label_a).data()[idx];
                     });
 
-                    O2sub("qjse") -= alpha * Gamma1_.block("AA")("xy")
-                            * H2.block(H2label_a)("qsux") * T2sub("yjue");
+                    ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                    {sizea, sizeh, sizea, sub_virt_size});
+                    Y2("xjue") = Gamma1_.block("AA")("xy") * T2sub("yjue");
+                    O2sub("qjse") -= alpha * H2.block(H2label_a)("qsux") * Y2("xjue");
 
                     // T2[ijxb]
                     for(const std::string& idx_h0: {"C","A"}){
@@ -3179,8 +3254,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             value = T2.block(T2label_h1).data()[idx];
                         });
 
-                        O2sub("qjse") += alpha * Gamma1_.block("AA")("xy")
-                                * H2.block(H2label_h1)("qsyi") * T2sub("ijxe");
+                        Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                        {sizeh1, sizeh, sizea, sub_virt_size});
+                        Y2("ijye") = Gamma1_.block("AA")("xy") * T2sub("ijxe");
+                        O2sub("qjse") += alpha * H2.block(H2label_h1)("qsyi") * Y2("ijye");
                     }
 
                     // adding O2sub to C2 with permutations
@@ -3228,14 +3305,22 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         H2 = BTF_->build(tensor_type_,"VT2->H2",{"gGaH"},true);
         H2["sQuI"]  = B["gus"] * B["gQI"];
         C2["iQsB"] -= alpha * H2["sQuM"] * T2["iMuB"];
-        C2["iQsB"] -= alpha * H2["sQuX"] * T2["iYuB"] * Gamma1_["XY"];
-        C2["iQsB"] += alpha * H2["sQyJ"] * T2["iJxB"] * Gamma1_["xy"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hAaP"},true);
+        X2["iXuB"] = T2["iYuB"] * Gamma1_["XY"];
+        C2["iQsB"] -= alpha * H2["sQuX"] * X2["iXuB"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHaP"},true);
+        X2["iJyB"] = T2["iJxB"] * Gamma1_["xy"];
+        C2["iQsB"] += alpha * H2["sQyJ"] * X2["iJyB"];
 
         H2 = BTF_->build(tensor_type_,"VT2->H2",{"gGhA"},true);
         H2["qSiU"]  = B["gUS"] * B["gqi"];
         C2["qJaS"] -= alpha * H2["qSmU"] * T2["mJaU"];
-        C2["qJaS"] -= alpha * H2["qSxU"] * T2["yJaU"] * Gamma1_["xy"];
-        C2["qJaS"] += alpha * H2["qSiY"] * T2["iJaX"] * Gamma1_["XY"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"aHpA"},true);
+        X2["xJaU"] = T2["yJaU"] * Gamma1_["xy"];
+        C2["qJaS"] -= alpha * H2["qSxU"] * X2["xJaU"];
+        X2 = BTF_->build(tensor_type_,"T2*Gamma1",{"hHpA"},true);
+        X2["iJaY"] = T2["iJaX"] * Gamma1_["XY"];
+        C2["qJaS"] += alpha * H2["qSiY"] * X2["iJaY"];
 
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
@@ -3329,8 +3414,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                         if(idxh0 == "c" || idxh0 == "C"){
                             O2sub("qjsv") -= alpha * H2("qsam") * T2sub("mjav");
                         } else {
-                            O2sub("qjsv") -= alpha * Gamma1_.block(idxa + idxa)("xy")
-                                    * H2("qsax") * T2sub("yjav");
+                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                            {sizeh0,sizeh1,sub_virt_size0,sizea});
+                            Y2("xjav") = Gamma1_.block(idxa + idxa)("xy") * T2sub("yjav");
+                            O2sub("qjsv") -= alpha * H2("qsax") * Y2("xjav");
                         }
 
                         // adding O2sub to C2 with permutations
@@ -3385,8 +3472,11 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                             } else {
                                 std::string G1label = "aa";
                                 if(beta){ G1label = "AA"; }
-                                O2sub("qjse") -= alpha * Gamma1_.block(G1label)("xy")
-                                        * H2("qsax") * T2sub("yjae");
+
+                                ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                                {sizeh0,sizeh1,sub_virt_size0,sub_virt_size1});
+                                Y2("xjae") = Gamma1_.block(G1label)("xy") * T2sub("yjae");
+                                O2sub("qjse") -= alpha * H2("qsax") * Y2("xjae");
                             }
 
                             // adding O2sub to C2 with permutations
@@ -3440,8 +3530,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                         if(idxh0 == "c"){
                             C2.block(C2label)("qJsB") -= alpha * H2("qsam") * T2sub("mJaB");
                         } else {
-                            C2.block(C2label)("qJsB") -= alpha * Gamma1_.block("aa")("xy")
-                                    * H2("qsax") * T2sub("yJaB");
+                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                            {sizeh0,sizeh1,sub_virt_size0,sizep1});
+                            Y2("xJaB") = Gamma1_.block("aa")("xy") * T2sub("yJaB");
+                            C2.block(C2label)("qJsB") -= alpha * H2("qsax") * Y2("xJaB");
                         }
                     }
 
@@ -3468,8 +3560,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                         if(idxh0 == "C"){
                             C2.block(C2label)("iQaS") -= alpha * H2("QSBM") * T2sub("iMaB");
                         } else {
-                            C2.block(C2label)("iQaS") -= alpha * Gamma1_.block("AA")("XY")
-                                    * H2("QSBX") * T2sub("iYaB");
+                            ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                            {sizeh1,sizeh0,sizep1,sub_virt_size0});
+                            Y2("iXaB") = Gamma1_.block("AA")("XY") * T2sub("iYaB");
+                            C2.block(C2label)("iQaS") -= alpha * H2("QSBX") * Y2("iXaB");
                         }
                     }
                 }
@@ -3539,8 +3633,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                     if(idxh0 == "C"){
                         C2.block(C2label)("iQsB") -= alpha * H2("sQaM") * T2sub("iMaB");
                     } else {
-                        C2.block(C2label)("iQsB") -= alpha * Gamma1_.block("AA")("XY")
-                                * H2("sQaX") * T2sub("iYaB");
+                        ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                        {sizeh1,sizeh0,sub_virt_size,sizep1});
+                        Y2("iXaB") = Gamma1_.block("AA")("XY") * T2sub("iYaB");
+                        C2.block(C2label)("iQsB") -= alpha * H2("sQaX") * Y2("iXaB");
                     }
                 }
 
@@ -3609,8 +3705,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const dou
                     if(idxh0 == "c"){
                         C2.block(C2label)("qJaS") -= alpha * H2("qSmB") * T2sub("mJaB");
                     } else {
-                        C2.block(C2label)("qJaS") -= alpha * Gamma1_.block("aa")("xy")
-                                * H2("qSxB") * T2sub("yJaB");
+                        ambit::Tensor Y2 = ambit::Tensor::build(tensor_type_,"T2 sub * Gamma1",
+                        {sizeh0,sizeh1,sizep1,sub_virt_size});
+                        Y2("xJaB") = Gamma1_.block("aa")("xy") * T2sub("yJaB");
+                        C2.block(C2label)("qJaS") -= alpha * H2("qSxB") * Y2("xJaB");
                     }
                 }
 

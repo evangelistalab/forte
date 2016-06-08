@@ -82,6 +82,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     double pt2 = 0.0;
                     if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
                         auto dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                        dsrg->ignore_semicanonical(true);
                         pt2 = dsrg->compute_energy();
                     }else{
                         auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
