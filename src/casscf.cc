@@ -610,6 +610,7 @@ ambit::Tensor CASSCF::transform_integrals()
     int count = 0;
     auto absolute_all = mo_space_info_->get_absolute_mo("CORRELATED");
     auto corr_abs     = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    int p = 0;
     for(auto d : D_vec)
     {
         int i = d.second[0];
@@ -622,6 +623,7 @@ ambit::Tensor CASSCF::transform_integrals()
             for(size_t q = 0; q < na_; q++){
                 active_int_data[corr_abs[p] * na_ * na_ * na_ + i * na_ * na_ + q * na_ + j] = half_trans->get(absolute_all[p], q);
                 active_int_data[corr_abs[p] * na_ * na_ * na_ + j * na_ * na_ + q * na_ + i] = half_trans->get(absolute_all[p], q);
+                
             }
         }
     }
@@ -724,7 +726,10 @@ void CASSCF::set_up_fci()
         const std::vector<double>& tei_paaa_data = tei_paaa_.data();
 
         active_ab.iterate([&](const std::vector<size_t>& i,double& value){
-            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;});
+            value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;
+            active_matrix->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
+            });
+
         active_aa.copy(active_ab);
         active_bb.copy(active_ab);
         active_aa("u,v,x,y") -= active_ab("u, v, y, x");
