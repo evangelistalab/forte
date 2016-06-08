@@ -1127,8 +1127,7 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 	// f_E2 and f_C1 will store the selected function of the chosen q criteria
 	// This functions should only be called when nroot_ > 1
 	
-    int nav = nroot;
-    if(options_["N_AVERAGE"].has_changed()) nav = options_.get_int("N_AVERAGE");
+    int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
 
     if( nav == 0 ) nav = nroot;
@@ -1503,11 +1502,10 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     pruned_space.clear();
     pruned_space_map.clear();
 
-    int nav = nroot;
-    if(options_["N_AVERAGE"].has_changed()) nav = options_.get_int("N_AVERAGE");
+    int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
+    if(nav == 0) nav = nroot;
 
-    if( nav == 0 ) nav = nroot;
     if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
@@ -1844,7 +1842,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f %)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,

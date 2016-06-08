@@ -5,8 +5,8 @@
 import forte 
 
 refscf = -14.5754349839908386 #TEST
-refaci = -14.630325036330 #TEST
-refacipt2 = -14.639814659274 #TEST
+refaci = -14.508218404628 #TEST
+refacipt2 = -14.515584073636 #TEST
 
 molecule li2{
    Li
@@ -37,9 +37,10 @@ set forte {
   TAUP 0.01
   TAUQ 0.01
   nroot 3
+  root 1 
   charge 0
-  enforce_spin_complete true
   aci_initial_space cis
+  enforce_spin_complete true
 }
 
 energy('scf')
