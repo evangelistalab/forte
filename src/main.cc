@@ -469,7 +469,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE","ROOT_SELECT SINGLE_STATE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE");
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/
@@ -564,6 +564,8 @@ read_options(std::string name, Options &options)
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- Do result perturbation analysis -*/
         options.add_bool("PERTURB_ANALYSIS",false);
+        /*- Use Symmetric Approximate Hamiltonian -*/
+        options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
@@ -638,6 +640,8 @@ read_options(std::string name, Options &options)
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
         options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
+        /*- Compute IP/EA in active-CI -*/
+        options.add_str("IPEA", "NONE", "NONE IP EA");
         /*- Semicanonicalize orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
         /*- Two-particle density cumulant -*/

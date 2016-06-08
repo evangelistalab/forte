@@ -40,6 +40,7 @@ set forte {
   TAUQ 0.08
   nroot 3
   mp2_nos true
+  average_offset 0
   charge 0
   enforce_spin_complete true
   aci_add_aimed_degenerate true
