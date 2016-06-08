@@ -498,6 +498,11 @@ double AdaptiveCI::compute_energy()
 	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
         print_info();
     }
+
+    if( ex_alg_ == "COMPOSITE" ){
+        ex_alg_ = "AVERAGE";
+    }
+
     Timer aci_elapse;
 
     SharedMatrix P_evecs;
@@ -542,6 +547,7 @@ double AdaptiveCI::compute_energy()
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
+        Timer cycle_time;
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
@@ -567,9 +573,9 @@ double AdaptiveCI::compute_energy()
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
         if( cycle < pre_iter_ ){
-             ex_alg_ = "AVERAGE";
-        }else if ( cycle == pre_iter_ ){
-            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+            ex_alg_ = "AVERAGE";
+        }else if ( cycle == pre_iter_ and (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") ){
+            ex_alg_ = "ROOT_SELECT";
         }        
         // If doing root-following, grab the initial root
         if( ex_alg_ == "ROOT_SELECT" and cycle == pre_iter_){
@@ -690,7 +696,13 @@ double AdaptiveCI::compute_energy()
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
-        if (converged){
+        if( converged and (ex_alg_ == "AVERAGE") and options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE"){
+            outfile->Printf("\n  Root averaging algorithm converged."); 
+            outfile->Printf("\n  Now optimizing PQ Space for root %d", options_.get_int("ROOT"));
+            ex_alg_ = "ROOT_SELECT";
+            pre_iter_ = cycle + 1;
+        }
+        else if (converged){
            // if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
             if( !quiet_mode_ )outfile->Printf("\n  ***** Calculation Converged *****");
             break;
@@ -700,7 +712,10 @@ double AdaptiveCI::compute_energy()
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,num_ref_roots);        
 
         // Print information about the wave function
-        if( !quiet_mode_ ) print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
+        if( !quiet_mode_ ){
+            print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
+            outfile->Printf("\n Cycle %d took: %1.6f s", cycle, cycle_time.get() );
+        }
     }// end iterations
 
 
@@ -1033,7 +1048,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 			e2[n] = E2_I;
         }
 
-		if(ex_alg_ == "STATE_AVERAGE" and nroot > 1){
+		if(ex_alg_ == "AVERAGE" and nroot > 1){
 			criteria = average_q_values(nroot, C1, E2);
 		}else{
 			criteria = root_select(nroot, C1, E2);
@@ -1488,8 +1503,8 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
+    if(nav == 0) nav = nroot;
 
-    if( nav == 0 ) nav = nroot;
     if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
@@ -1827,7 +1842,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f %)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,
