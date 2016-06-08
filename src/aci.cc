@@ -840,10 +840,10 @@ double AdaptiveCI::compute_energy()
 		}
 	}
 
-    std::vector<double> cI(PQ_space_.size());
-    for( size_t I = 0; I < PQ_space_.size(); ++I){
-        cI[I] = PQ_evecs->get(I,0);
-    }
+//    std::vector<double> cI(PQ_space_.size());
+//    for( size_t I = 0; I < PQ_space_.size(); ++I){
+//        cI[I] = PQ_evecs->get(I,0);
+//    }
 
 //    outfile->Printf("\n\n  Testing wfns");
 //    SparseCIWavefunction wfn( PQ_space_, cI ); 
