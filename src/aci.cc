@@ -839,7 +839,29 @@ double AdaptiveCI::compute_energy()
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
-            
+
+    std::vector<double> cI(PQ_space_.size());
+    for( size_t I = 0; I < PQ_space_.size(); ++I){
+        cI[I] = PQ_evecs->get(I,0);
+    }
+
+//    outfile->Printf("\n\n  Testing wfns");
+//    SparseCIWavefunction wfn( PQ_space_, cI ); 
+//
+//    double wfn_norm = wfn.wfn_norm();
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.scale(5.0);
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.normalize();
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.print();
+//    
+//    STLBitsetDeterminant ndet(PQ_space_[0]);
+//    ndet.zero_spin(0);
+//    wfn.add(ndet, 2.5);
+//    wfn.print();
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
