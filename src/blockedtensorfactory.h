@@ -55,6 +55,11 @@ public:
     void add_mo_space(const std::string& name,const std::string& mo_indices,std::vector<std::pair<size_t,ambit::SpinType>> mo_spin);
     //Adds a composite_mo_space -> combines mo_space -> h = c + a
     void add_composite_mo_space(const std::string& name,const std::string& mo_indices,const std::vector<std::string>& subspaces);
+    // Reset mo_space
+    void reset_mo_space() {
+        ambit::BlockedTensor::reset_mo_spaces();
+        molabel_to_index_.clear();
+    }
     void memory_info(ambit::BlockedTensor BT);
     /* - This function generates all possible MO spaces and spin components
     /// Param:  std::string is the lables - "cav"

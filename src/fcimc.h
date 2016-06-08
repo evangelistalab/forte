@@ -34,13 +34,14 @@
 
 #include "integrals.h"
 #include "dynamic_bitset_determinant.h"
+#include "stl_bitset_determinant.h"
 #include "fci_vector.h"
 
 namespace psi{ namespace forte{
 
 enum SpawnType {random, all, ground_and_random};
 
-typedef std::map<DynamicBitsetDeterminant,double> walker_map;
+typedef std::map<Determinant,double> walker_map;
 
 struct ObtCount {
     std::vector<int> naocc, nbocc, navir, nbvir;
@@ -83,9 +84,9 @@ private:
 
 
 
-//    int compute_pgen(DynamicBitsetDeterminant& detI);
+//    int compute_pgen(Determinant& detI);
     /// The reference determinant
-    DynamicBitsetDeterminant reference_;
+    Determinant reference_;
     /// The maximum number of threads
     int num_threads_;
     /// Do we have OpenMP?
@@ -163,31 +164,31 @@ private:
     // Spawning step
     void spawn(walker_map& walkers, walker_map& new_walkers);
     void spawn_generative(walker_map& walkers,walker_map& new_walkers);
-    void singleWalkerSpawn(DynamicBitsetDeterminant & new_det, const DynamicBitsetDeterminant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
+    void singleWalkerSpawn(Determinant & new_det, const Determinant &det, std::tuple<size_t,size_t,size_t,size_t,size_t> pgen, size_t sumgen);
     // Death/Clone step
     void death_clone(walker_map& walkers, double shift);
-    void detClone(walker_map& walkers, const DynamicBitsetDeterminant& det, double coef, double pDeathClone);
-    void detDeath(walker_map& walkers, const DynamicBitsetDeterminant& det, double coef, double pDeathClone);
+    void detClone(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
+    void detDeath(walker_map& walkers, const Determinant& det, double coef, double pDeathClone);
     // Merge step
     void merge(walker_map& walkers,walker_map& new_walkers);
     // Annihilation step
     void annihilate(walker_map& walkers, walker_map& new_walkers);
 
     // Count the number of allowed single and double excitations
-    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const DynamicBitsetDeterminant &det);
-    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen_C1(const DynamicBitsetDeterminant &det);
-    void compute_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
-    void compute_single_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
-    void compute_double_excitations(const DynamicBitsetDeterminant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
-    size_t compute_irrep_divided_excitations(const DynamicBitsetDeterminant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
-    bool detSingleRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
-    void detSingleExcitation(DynamicBitsetDeterminant &new_det, std::tuple<size_t,size_t>& rand_ext);
-    void detDoubleExcitation(DynamicBitsetDeterminant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
-    bool detDoubleSoloSpinRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
-    bool detDoubleMixSpinRandomExcitation(DynamicBitsetDeterminant &new_det, const std::vector<int> &aocc, const std::vector<int> &bocc, const std::vector<int> &avir, const std::vector<int> &bvir);
-    void detExcitation(DynamicBitsetDeterminant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
+    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen(const Determinant &det);
+    std::tuple<size_t,size_t,size_t,size_t,size_t> compute_pgen_C1(const Determinant &det);
+    void compute_excitations(const Determinant &det, std::vector<std::tuple<size_t, size_t> > &singleExcitations, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    void compute_single_excitations(const Determinant &det, std::vector<std::tuple<size_t,size_t>>& singleExcitations);
+    void compute_double_excitations(const Determinant &det, std::vector<std::tuple<size_t,size_t,size_t,size_t>>& doubleExcitations);
+    size_t compute_irrep_divided_excitations(const Determinant &det, std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
+    bool detSingleRandomExcitation(Determinant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
+    void detSingleExcitation(Determinant &new_det, std::tuple<size_t,size_t>& rand_ext);
+    void detDoubleExcitation(Determinant &new_det, std::tuple<size_t,size_t,size_t,size_t>& rand_ext);
+    bool detDoubleSoloSpinRandomExcitation(Determinant &new_det, const std::vector<int> &occ, const std::vector<int> &vir, bool isAlpha);
+    bool detDoubleMixSpinRandomExcitation(Determinant &new_det, const std::vector<int> &aocc, const std::vector<int> &bocc, const std::vector<int> &avir, const std::vector<int> &bvir);
+    void detExcitation(Determinant &new_det, size_t rand_ext,  std::vector<size_t> &excitationDivides, std::vector<std::tuple<int, int, int, int> > &excitationType, ObtCount &obtCount);
     double count_walkers(walker_map& walkers);
-    double compute_proj_energy(DynamicBitsetDeterminant& ref, walker_map& walkers);
+    double compute_proj_energy(Determinant& ref, walker_map& walkers);
     double compute_var_energy(walker_map& walkers);
     void print_iter_info(size_t iter);
     void compute_avg_Eproj(std::vector<double> Eprojs);
