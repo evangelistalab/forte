@@ -564,6 +564,8 @@ read_options(std::string name, Options &options)
         options.add_double("INITIATOR_APPROX_FACTOR",1.0);
         /*- Do result perturbation analysis -*/
         options.add_bool("PERTURB_ANALYSIS",false);
+        /*- Use Symmetric Approximate Hamiltonian -*/
+        options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
@@ -638,6 +640,8 @@ read_options(std::string name, Options &options)
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
         options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
+        /*- Compute IP/EA in active-CI -*/
+        options.add_str("IPEA", "NONE", "NONE IP EA");
         /*- Semicanonicalize orbitals -*/
         options.add_bool("SEMI_CANONICAL", true);
         /*- Two-particle density cumulant -*/
@@ -684,6 +688,8 @@ read_options(std::string name, Options &options)
         options.add_str("DSRG_TRANS_TYPE", "UNITARY", "UNITARY CC");
         /*- Automatic Adjusting Flow Parameter -*/
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
+        /*- Print DSRG-MRPT3 Timing Profile -*/
+        options.add_bool("PRINT_TIME_PROFILE", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Exponent of Energy Denominator -*/

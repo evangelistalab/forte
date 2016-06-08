@@ -23,6 +23,8 @@
 #ifndef _dsrg_mrpt3_h_
 #define _dsrg_mrpt3_h_
 
+#include <chrono>
+#include <ctime>
 #include <fstream>
 #include <boost/assign.hpp>
 
@@ -73,6 +75,16 @@ protected:
     void print_summary();
     /// Print levels
     int print_;
+    /// Profile printing for DF
+    bool profile_print_;
+    /// Time variable
+    std::chrono::time_point<std::chrono::system_clock> start_, end_;
+    std::time_t tt1_, tt2_;
+    /// Compute elapsed time
+    std::chrono::duration<double> compute_elapsed_time(std::chrono::time_point<std::chrono::system_clock> t1,
+                                                       std::chrono::time_point<std::chrono::system_clock> t2){
+        return t2 - t1;
+    }
 
     /// The reference object
     Reference reference_;
@@ -297,6 +309,10 @@ protected:
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF / CD)
     void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
+    /// Compute two-body term of commutator [V, T2] in batching, particle-particle contraction
+    void V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
+    /// Compute two-body term of commutator [V, T2] in batching, particle-hole contraction (exchange part)
+    void V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
 
     // => Reference relaxation <= //
 

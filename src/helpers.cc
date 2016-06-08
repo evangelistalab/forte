@@ -350,6 +350,28 @@ SharedMatrix tensor_to_matrix(ambit::Tensor t)
     return M;
 }
 
+std::pair<double, std::string> to_xb(size_t nele, size_t type_size){
+    // map the size
+    std::map<std::string, double> to_XB;
+    to_XB["B"]  = 1.0;
+    to_XB["KB"] = 1000.0; // use 1000.0 for safety
+    to_XB["MB"] = 1000000.0;
+    to_XB["GB"] = 1000000000.0;
+    to_XB["TB"] = 1000000000000.0;
+
+    // convert to appropriate unit
+    size_t bytes = nele * type_size;
+    std::pair<double, std::string> out;
+    for(auto& XB: to_XB){
+        double xb = bytes / XB.second;
+        if(xb >= 0.9 && xb < 900.0){
+            out = std::make_pair(xb, XB.first);
+            break;
+        }
+    }
+    return out;
+}
+
 void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matrix> &Ca, const boost::shared_ptr<Vector>& diag_F,const boost::shared_ptr<Vector>& occupation )
 {
         boost::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));

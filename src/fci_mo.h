@@ -150,6 +150,9 @@ protected:
     Dimension active_v_;  // active virtual for incomplete active space
     vector<size_t> av_;
 
+    /// Compute IP or EA
+    std::string ipea_;
+
     /// Number of Alpha and Beta Electrons
     long int nalfa_;
     long int nbeta_;
@@ -169,6 +172,8 @@ protected:
     vector<bool> Form_String_Ref(const bool &print = false);
     vector<vector<vector<bool>>> Form_String_Singles(const vector<bool> &ref_string, const bool &print = false);
     vector<vector<vector<bool>>> Form_String_Doubles(const vector<bool> &ref_string, const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_IP(const vector<bool> &ref_string, const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_EA(const vector<bool> &ref_string, const bool &print = false);
 
     /// Choice of Roots
     int nroot_;  // number of roots
@@ -255,6 +260,7 @@ protected:
     /// Fock Matrix
     d2 Fa_;
     d2 Fb_;
+    vector<double> Fa_diag_;
     void Form_Fock(d2 &A, d2 &B);
     void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);
