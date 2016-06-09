@@ -1596,7 +1596,6 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
 bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
 {
-    outfile->Printf("\n thresh: %1.15f", options_.get_double("ACI_CONVERGENCE"));
     bool stuck = false;
 	int nroot = evals->dim();
 	if(cycle_ < 4){
@@ -2269,7 +2268,8 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
                              int num_ref_roots)
 {
     int ndets = det_space.size();
-    int max_dim = std::min( ndets, 100 );
+    int max_dim = std::min( ndets, 1000 );
+//    int max_dim = ndets;
     int new_root;
     double old_overlap = 0.0;
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
@@ -2289,10 +2289,11 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             std::pair<double,size_t> detI = det_weight[I];
             for( int J = 0, maxJ = P_ref.size(); J < maxJ; ++J ){
                 if( det_space[detI.second] == P_ref[J].first ){
-                    new_overlap += std::abs(P_ref[J].second * detI.first);
+                    new_overlap += P_ref[J].second * evecs->get(detI.second, n);
                 } 
             } 
         }
+        new_overlap = std::fabs( new_overlap );
         outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
         // If the overlap is larger, set it as the new root and reference, for now
         if( new_overlap > old_overlap ){
