@@ -41,7 +41,7 @@ public:
     /// Default constructor
     SparseCIWavefunction();
     /// Copy constructor
-    SparseCIWavefunction(wfn_hash& wfn_);
+    SparseCIWavefunction(const wfn_hash& wfn_);
 
     /// @return The hash
     wfn_hash& wfn();
