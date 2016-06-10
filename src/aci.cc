@@ -839,7 +839,29 @@ double AdaptiveCI::compute_energy()
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
-            
+
+//    std::vector<double> cI(PQ_space_.size());
+//    for( size_t I = 0; I < PQ_space_.size(); ++I){
+//        cI[I] = PQ_evecs->get(I,0);
+//    }
+
+//    outfile->Printf("\n\n  Testing wfns");
+//    SparseCIWavefunction wfn( PQ_space_, cI ); 
+//
+//    double wfn_norm = wfn.wfn_norm();
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.scale(5.0);
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.normalize();
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.print();
+//    
+//    STLBitsetDeterminant ndet(PQ_space_[0]);
+//    ndet.zero_spin(0);
+//    wfn.add(ndet, 2.5);
+//    wfn.print();
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -1574,7 +1596,6 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
 bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
 {
-    outfile->Printf("\n thresh: %1.15f", options_.get_double("ACI_CONVERGENCE"));
     bool stuck = false;
 	int nroot = evals->dim();
 	if(cycle_ < 4){
@@ -2247,7 +2268,8 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
                              int num_ref_roots)
 {
     int ndets = det_space.size();
-    int max_dim = std::min( ndets, 100 );
+    int max_dim = std::min( ndets, 1000 );
+//    int max_dim = ndets;
     int new_root;
     double old_overlap = 0.0;
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
@@ -2267,10 +2289,11 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             std::pair<double,size_t> detI = det_weight[I];
             for( int J = 0, maxJ = P_ref.size(); J < maxJ; ++J ){
                 if( det_space[detI.second] == P_ref[J].first ){
-                    new_overlap += std::abs(P_ref[J].second * detI.first);
+                    new_overlap += P_ref[J].second * evecs->get(detI.second, n);
                 } 
             } 
         }
+        new_overlap = std::fabs( new_overlap );
         outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
         // If the overlap is larger, set it as the new root and reference, for now
         if( new_overlap > old_overlap ){
