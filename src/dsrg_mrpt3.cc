@@ -168,19 +168,6 @@ void DSRG_MRPT3::startup()
     F1st_["AI"] = F_["AI"];
     F1st_["IA"] = F_["AI"];
 
-    // check semi-canonical orbitals
-    print_h2("Checking Orbitals");
-    semi_canonical_ = check_semicanonical();
-    if(!semi_canonical_){
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
-        U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
-        std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
-        Fa_ = eigens[0];
-        Fb_ = eigens[1];
-    }else{
-        outfile->Printf("\n    Orbitals are semi-canonicalized.");
-    }
-
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
     if(relax_ref_ != "NONE"){
@@ -446,6 +433,24 @@ void DSRG_MRPT3::cleanup()
 
 double DSRG_MRPT3::compute_energy()
 {
+    // check semi-canonical orbitals
+    print_h2("Checking Orbitals");
+    semi_canonical_ = check_semicanonical();
+    if(!semi_canonical_){
+        if(!ignore_semicanonical_){
+            outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
+            U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+            Fa_ = eigens[0];
+            Fb_ = eigens[1];
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals. DSRG-MRPT3 energy may be meaningless.");
+            semi_canonical_ = true;
+        }
+    }else{
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    }
+
     // Compute first-order T2 and T1
     print_h2("First-Order Amplitudes");
     T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"cp","av"}));

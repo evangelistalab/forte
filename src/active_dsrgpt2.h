@@ -18,6 +18,7 @@
 #include "fci_mo.h"
 #include "stl_bitset_determinant.h"
 #include "dsrg_mrpt2.h"
+#include "dsrg_mrpt3.h"
 #include "three_dsrg_mrpt2.h"
 
 namespace psi{ namespace forte{
@@ -51,6 +52,9 @@ private:
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// Name of the code
+    std::string code_name_;
+
     /// Total number of roots
     int total_nroots_;
 
@@ -64,7 +68,7 @@ private:
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies
-    std::vector<std::vector<double>> pt2_energies_;
+    std::vector<std::vector<double>> pt_energies_;
 
     /// Singles (T1) percentage
     std::vector<std::vector<std::pair<int,double>>> t1_percentage_;

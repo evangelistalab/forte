@@ -1,5 +1,6 @@
 #include <map>
 #include <algorithm>
+#include <physconst.h>
 #include <libmints/pointgrp.h>
 
 #include "active_dsrgpt2.h"
@@ -15,10 +16,12 @@ ACTIVE_DSRGPT2::ACTIVE_DSRGPT2(SharedWavefunction ref_wfn, Options &options,
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-    print_method_banner({"ACTIVE-DSRGPT2", "Chenyang Li"});
+    code_name_ = "ACTIVE-DSRG" + options_.get_str("CORR_LEVEL");
+
+    print_method_banner({code_name_, "Chenyang Li"});
     outfile->Printf("\n    The orbitals are fixed throughout the process.");
     outfile->Printf("\n    If different orbitals (or reference) are desired for different roots,");
-    outfile->Printf("\n    you need to run those separately using the regular DSRG-MRPT2 (or DF/CD) code.\n");
+    outfile->Printf("\n    you need to run those separately using the regular DSRG-MRPT2 / MRPT3 (or DF/CD) code.\n");
     startup();
 }
 
@@ -26,11 +29,11 @@ ACTIVE_DSRGPT2::~ACTIVE_DSRGPT2(){}
 
 void ACTIVE_DSRGPT2::startup(){
     if(options_["NROOTPI"].size() == 0){
-        throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 jobs.");
+        throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 / PT3 jobs.");
     }else{
         int nirrep = this->nirrep();
         ref_energies_ = vector<vector<double>> (nirrep,vector<double>());
-        pt2_energies_ = vector<vector<double>> (nirrep,vector<double>());
+        pt_energies_ = vector<vector<double>> (nirrep,vector<double>());
         dominant_dets_ = vector<vector<STLBitsetDeterminant>> (nirrep,vector<STLBitsetDeterminant>());
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
@@ -65,8 +68,33 @@ double ACTIVE_DSRGPT2::compute_energy(){
             if(nrootpi_[h] == 0) continue;
             else{
                 fci_mo.set_root_sym(h);
+
+                // number of CISD root for <CISD|CIS>
                 int cisd_nroot = nrootpi_[h] < 5 ? 2 * nrootpi_[h] : nrootpi_[h] + 5;
-                Matrix overlap ("overlap", cisd_nroot, nrootpi_[h]); // CISD by CIS
+
+                // first figure out the size of p_space in CISD
+                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
+                    fci_mo.set_active_space_type("CISD");
+                    fci_mo.set_quite_mode(true);
+                    fci_mo.form_p_space();
+                    size_t p_space_size = fci_mo.p_space().size();
+                    if(cisd_nroot >= p_space_size){
+                        if(p_space_size == 1){
+                            cisd_nroot = 1;
+                        } else {
+                            cisd_nroot = p_space_size - 1; // TODO: this number should be the root found for a given multiplicity in space_ci_solve
+                        }
+                    }
+
+                    // set back to CIS computation
+                    fci_mo.set_active_space_type("CIS");
+                    fci_mo.set_quite_mode(false);
+                }
+
+                // setup overlap matrix of CISD and CIS
+                std::string matrix_name = "<CISD|CIS> in Irrep " + irrep_symbol_[h];
+                Matrix overlap (matrix_name, cisd_nroot, nrootpi_[h]); // CISD by CIS
+
                 for(int i = 0; i < nrootpi_[h]; ++i){
                     // CI routine
                     outfile->Printf("\n\n  %s", std::string(35,'=').c_str());
@@ -78,24 +106,31 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     Reference reference = fci_mo.reference();
                     dominant_dets_[h].push_back(fci_mo.dominant_det());
 
-                    // PT2 routine
-                    double pt2 = 0.0;
-                    if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
-                        auto dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                        dsrg->ignore_semicanonical(true);
-                        pt2 = dsrg->compute_energy();
-                    }else{
-                        auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                        pt2 = dsrg->compute_energy();
+                    // PT2 or PT3 routine
+                    double Ept = 0.0;
+                    if(options_.get_str("CORR_LEVEL") == "PT2"){
+                        if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
+                            auto dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                            dsrg->ignore_semicanonical(true);
+                            Ept = dsrg->compute_energy();
+                        }else{
+                            auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                            Ept = dsrg->compute_energy();
+                        }
                     }
-                    pt2_energies_[h].push_back(pt2);
+                    if(options_.get_str("CORR_LEVEL") == "PT3"){
+                        auto dsrg = std::make_shared<DSRG_MRPT3>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                        dsrg->ignore_semicanonical(true);
+                        Ept = dsrg->compute_energy();
+                    }
+                    pt_energies_[h].push_back(Ept);
 
                     // compute singles percentages
                     if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
                         std::vector<STLBitsetDeterminant> vecdet_cis = fci_mo.p_space();
                         SharedVector eigen_cis = fci_mo.eigen().back().first;
 
-                        // set quiet mode for CISD, use CIS semi-canonicalized orbitals
+                        // set quite mode for CISD, use CIS semi-canonicalized orbitals
                         fci_mo.set_active_space_type("CISD");
                         fci_mo.set_semicanonical(false);
                         fci_mo.set_quite_mode(true);
@@ -150,12 +185,22 @@ double ACTIVE_DSRGPT2::compute_energy(){
             }
         }
         print_summary();
+
+        // set the last energy to Process:environment
+        for(int h = nirrep; h > 0; --h){
+            int n = nrootpi_[h-1];
+            if(n != 0){
+                Process::environment.globals["CURRENT ENERGY"] = pt_energies_[h-1][n-1];
+                break;
+            }
+        }
     }
     return 0.0;
 }
 
 void ACTIVE_DSRGPT2::print_summary(){
-    print_h2("ACTIVE-DSRGPT2 Summary");
+    std::string h2 = code_name_ + " Summary";
+    print_h2(h2);
 
     std::string ref_type = options_.get_str("ACTIVE_SPACE_TYPE");
     if(ref_type == "COMPLETE") ref_type = std::string("CAS");
@@ -163,14 +208,15 @@ void ACTIVE_DSRGPT2::print_summary(){
     int nirrep = nrootpi_.size();
     if(ref_type != "CIS"){
         int total_width = 4 + 6 + 18 + 18 + 3 * 2;
-        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(), "PT2");
+        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT",
+                        ref_type.c_str(), std::string(7,' ').c_str(), options_.get_str("CORR_LEVEL").c_str());
         outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] != 0){
                 for(int i = nrootpi_[h]; i > 0; --i){
                     std::string sym(4,' ');
                     if(i == 1) sym = irrep_symbol_[h];
-                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt2_energies_[h][i-1]);
+                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt_energies_[h][i-1]);
                 }
                 outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
             }
@@ -178,7 +224,7 @@ void ACTIVE_DSRGPT2::print_summary(){
     }else{
         int total_width = 4 + 6 + 18 + 18 + 11 + 4 * 2;
         outfile->Printf("\n    %4s  %6s  %11s%7s  %11s%7s  %11s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(),
-                        "PT2", std::string(7,' ').c_str(), "% in CISD ");
+                        options_.get_str("CORR_LEVEL").c_str(), std::string(7,' ').c_str(), "% in CISD ");
         outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] != 0){
@@ -186,7 +232,7 @@ void ACTIVE_DSRGPT2::print_summary(){
                     std::string sym(4,' ');
                     if(i == 1) sym = irrep_symbol_[h];
                     outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f  %5.1f (%3d)", sym.c_str(), i-1, ref_energies_[h][i-1],
-                            pt2_energies_[h][i-1], t1_percentage_[h][i-1].second, t1_percentage_[h][i-1].first);
+                            pt_energies_[h][i-1], t1_percentage_[h][i-1].second, t1_percentage_[h][i-1].first);
                 }
                 outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
             }
@@ -196,10 +242,11 @@ void ACTIVE_DSRGPT2::print_summary(){
     if(nrootpi_[0] > 0 && total_nroots_ > 1){
         print_h2("Relative Energy WRT Totally Symmetric Ground State (eV)");
 
-        double ev = 27.211399;
+        double ev = pc_hartree2ev;
         if(ref_type == "CAS"){
             int width = 4 + 6 + 8 + 8 + 3 * 2;
-            outfile->Printf("\n    %4s  %6s  %6s%2s  %6s", "Sym.", "ROOT", ref_type.c_str(), std::string(2,' ').c_str(), "PT2");
+            outfile->Printf("\n    %4s  %6s  %6s%2s  %6s", "Sym.", "ROOT",
+                            ref_type.c_str(), std::string(2,' ').c_str(), options_.get_str("CORR_LEVEL").c_str());
             outfile->Printf("\n    %s", std::string(width,'-').c_str());
             for(int h = 0; h < nirrep; ++h){
                 if(nrootpi_[h] != 0){
@@ -210,7 +257,7 @@ void ACTIVE_DSRGPT2::print_summary(){
                         if(i == 1) sym = irrep_symbol_[h];
 
                         double Eci = (ref_energies_[h][i-1] - ref_energies_[0][0]) * ev;
-                        double Ept = (pt2_energies_[h][i-1] - pt2_energies_[0][0]) * ev;
+                        double Ept = (pt_energies_[h][i-1] - pt_energies_[0][0]) * ev;
                         outfile->Printf("\n    %4s  %6d  %8.3f  %8.3f", sym.c_str(), i-1, Eci, Ept);
                     }
                     if(h != 0 || nrootpi_[0] != 1)
@@ -220,7 +267,7 @@ void ACTIVE_DSRGPT2::print_summary(){
         }else{
             int width = 4 + 6 + 8 + 8 + 25 + 4 * 2;
             outfile->Printf("\n    %4s  %6s  %6s%2s  %6s%2s  %25s", "Sym.", "ROOT", ref_type.c_str(),
-                            "  ", "PT2", "  ", "Excitation Type");
+                            "  ", options_.get_str("CORR_LEVEL").c_str(), "  ", "Excitation Type");
             outfile->Printf("\n    %s", std::string(width,'-').c_str());
             for(int h = 0; h < nirrep; ++h){
                 if(nrootpi_[h] != 0){
@@ -231,7 +278,7 @@ void ACTIVE_DSRGPT2::print_summary(){
                         if(i == 1) sym = irrep_symbol_[h];
 
                         double Eci = (ref_energies_[h][i-1] - ref_energies_[0][0]) * ev;
-                        double Ept = (pt2_energies_[h][i-1] - pt2_energies_[0][0]) * ev;
+                        double Ept = (pt_energies_[h][i-1] - pt_energies_[0][0]) * ev;
                         std::string ex_type = compute_ex_type(dominant_dets_[h][i-1], dominant_dets_[0][0]);
                         outfile->Printf("\n    %4s  %6d  %8.3f  %8.3f  %25s", sym.c_str(), i-1, Eci, Ept, ex_type.c_str());
                     }
