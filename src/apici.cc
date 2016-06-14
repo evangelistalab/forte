@@ -368,16 +368,16 @@ void AdaptivePathIntegralCI::compute_characteristic_function()
         cha_func_coefs_.push_back(-1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, range_);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, range_);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, range_);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, range_);
         break;
     case ExpChebyshevPropagator:
         Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
@@ -440,7 +440,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
     coefs.clear();
     std::vector<double> poly_coefs;
     Taylor_polynomial_coefs(poly_coefs, order);
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, tau*S);
 //    coefs.clear();
 //    for (int i=0; i <= order; i++) {
 //        coefs.push_back(0.0);
@@ -550,7 +550,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 13b 2016");
+    outfile->Printf("\n\t                      version Jun. 13c 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
