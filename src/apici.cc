@@ -360,12 +360,12 @@ void AdaptivePathIntegralCI::convergence_analysis()
 void AdaptivePathIntegralCI::compute_characteristic_function()
 {
     shift_ = (lambda_h_ + lambda_1_)/2.0;
-    range_ = time_step_*(lambda_h_ - lambda_1_)/2.0;
+    range_ = (lambda_h_ - lambda_1_)/2.0;
     switch (propagator_) {
     case PowerPropagator:
         cha_func_coefs_.clear();
         cha_func_coefs_.push_back(0.0);
-        cha_func_coefs_.push_back(1.0);
+        cha_func_coefs_.push_back(-1.0);
         break;
     case LinearPropagator:
         Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, lambda_1_);
@@ -497,12 +497,12 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
 //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
 //        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
-            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, tau * range) * chbv_poly_coefs[j];
         }
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
@@ -510,7 +510,7 @@ void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double ta
     std::vector<double> poly_coefs;
     Chebyshev_polynomial_coefs(poly_coefs, order);
 
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
@@ -532,7 +532,7 @@ void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, dou
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 double AdaptivePathIntegralCI::compute_energy()
@@ -550,7 +550,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 6 2016");
+    outfile->Printf("\n\t                      version Jun. 13b 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
