@@ -64,6 +64,9 @@ public:
     /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
+    /// Ignore semi-canonical testing in DSRG-MRPT3
+    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+
 protected:
     // => Class initialization and termination <= //
 
@@ -146,6 +149,8 @@ protected:
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
+    /// Ignore semi-canonical testing result
+    bool ignore_semicanonical_ = false;
     /// Check if orbitals are semi-canonicalized
     bool check_semicanonical();
     /// Diagonal elements of Fock matrices
