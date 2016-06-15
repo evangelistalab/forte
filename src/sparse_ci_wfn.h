@@ -43,7 +43,7 @@ public:
     SparseCIWavefunction( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
 
     /// Copy constructor
-    SparseCIWavefunction(wfn_hash& wfn_);
+    SparseCIWavefunction(const wfn_hash& wfn_);
 
     /// @return The hash
     wfn_hash& wfn();
