@@ -34,7 +34,7 @@ std::vector<double> DeterminantMap::coefficients()
     return cI_;
 }
 
-double DeterminantMap::get_size()
+double DeterminantMap::wfn_size()
 {
     wfn_size_ = cI_.size();
     return wfn_size_;

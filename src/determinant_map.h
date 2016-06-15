@@ -72,7 +72,8 @@ public:
     /// Print the most important determinants
     void print();
 
-    double get_size();
+    /// Return the number of determinants
+    double wfn_size();
 protected:
 
     /// The dimension of the hash
