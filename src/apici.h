@@ -254,7 +254,7 @@ private:
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
     /// A first-order propagator
-    void propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An Trotter-decomposed propagator (H = H^d + H^od)
     void propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An experimental second-order propagator
