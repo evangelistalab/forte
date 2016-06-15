@@ -37,6 +37,7 @@
 #include "fci_vector.h"
 #include "ci_rdms.h"
 #include "sparse_ci_wfn.h"
+#include "determinant_map.h"
 
 namespace psi{ namespace forte{
 

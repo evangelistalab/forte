@@ -840,12 +840,25 @@ double AdaptiveCI::compute_energy()
 		}
 	}
 
-//    std::vector<double> cI(PQ_space_.size());
-//    for( size_t I = 0; I < PQ_space_.size(); ++I){
-//        cI[I] = PQ_evecs->get(I,0);
-//    }
+    std::vector<double> cI(PQ_space_.size());
+    for( size_t I = 0; I < PQ_space_.size(); ++I){
+        cI[I] = PQ_evecs->get(I,0);
+    }
+
+    std::vector<STLBitsetDeterminant> new_dets;
+    std::vector<double> new_cI;
+    size_t max_J = 300;
+    double normal = 1.0 / sqrt(static_cast<double>(max_J));
+    for( size_t J = 0; J < max_J; ++J ){
+        auto det = PQ_space_[J];
+        det.zero_spin(1);
+        new_dets.push_back(det);
+        new_cI.push_back(normal);
+    }
 
 //    outfile->Printf("\n\n  Testing wfns");
+//{
+//    Timer sparse;
 //    SparseCIWavefunction wfn( PQ_space_, cI ); 
 //
 //    double wfn_norm = wfn.wfn_norm();
@@ -856,12 +869,39 @@ double AdaptiveCI::compute_energy()
 //    wfn.normalize();
 //    wfn_norm = wfn.wfn_norm(); 
 //    outfile->Printf("\n  norm: %f", wfn_norm);
-//    wfn.print();
+//    //wfn.print();
 //    
 //    STLBitsetDeterminant ndet(PQ_space_[0]);
 //    ndet.zero_spin(0);
 //    wfn.add(ndet, 2.5);
-//    wfn.print();
+//
+//    SparseCIWavefunction new_wfn( new_dets, new_cI );
+//    wfn.merge( new_wfn ); 
+//
+//    outfile->Printf("\n Time for SparseCIWavefunction: %f", sparse.get());
+//}
+//{
+//    Timer det;
+//    DeterminantMap wfn( PQ_space_, cI ); 
+//    double wfn_norm = wfn.wfn_norm();
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.scale(5.0);
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.normalize();
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//   // wfn.print();
+//    
+//    STLBitsetDeterminant ndet(PQ_space_[0]);
+//    ndet.zero_spin(0);
+//    wfn.add(ndet, 2.5);
+//
+//    DeterminantMap nwfn( new_dets, new_cI );
+//    wfn.merge( nwfn );
+//
+//    outfile->Printf("\n Time for DeterminantMap: %f", det.get());
+//}
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -896,7 +936,7 @@ double AdaptiveCI::compute_energy()
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
-	    print_wfn(PQ_space_, PQ_evecs, nroot_);
+	//    print_wfn(PQ_space_, PQ_evecs, nroot_);
 	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
         wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
@@ -2319,6 +2359,12 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
 
     return new_root;
 }
+
+void test_ops()
+{
+    
+}
+
 
 }} // EndNamespaces
 
