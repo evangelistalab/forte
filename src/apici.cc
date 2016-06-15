@@ -318,11 +318,18 @@ double AdaptivePathIntegralCI::estimate_high_energy()
 {
     double high_obt_energy = 0.0;
     int ne = 0;
-    std::vector<double> obt_energies;
+    std::vector<std::pair<double, int>> obt_energies;
     auto bits_ = reference_determinant_.bits_;
+    Determinant high_det(reference_determinant_);
     for (int i = 0; i < ncmo_; i++) {
-        if (bits_[i]) ++ne;
-        if (bits_[ncmo_ +i]) ++ne;
+        if (bits_[i]) {
+            ++ne;
+            high_det.destroy_alfa_bit(i);
+        }
+        if (bits_[ncmo_ +i]){
+            ++ne;
+            high_det.destroy_beta_bit(i);
+        }
 
         double temp  = fci_ints_->oei_a(i,i);
         for(int p = 0; p < ncmo_; ++p){
@@ -333,8 +340,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
                 temp += fci_ints_->tei_ab(i,p,i,p);
             }
         }
-        obt_energies.push_back(temp);
-
+        obt_energies.push_back(std::make_pair(temp,i));
     }
     std::sort(obt_energies.begin(),obt_energies.end());
 //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
@@ -342,11 +348,125 @@ double AdaptivePathIntegralCI::estimate_high_energy()
 //        outfile -> Printf("  %lf", item);
     int Ndocc = ne/2;
     for (int i = 1; i <= Ndocc; i++) {
-        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i];
+        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i].first;
+        high_det.create_alfa_bit(obt_energies[obt_energies.size()-i].second);
+        high_det.create_beta_bit(obt_energies[obt_energies.size()-i].second);
     }
-    if (ne % 2)
-        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
+    if (ne % 2) {
+        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc].first;
+        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
+    }
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
+
+    double lambda_h_G = high_det.energy();
+    std::vector<int> aocc = high_det.get_alfa_occ();
+    std::vector<int> bocc = high_det.get_beta_occ();
+    std::vector<int> avir = high_det.get_alfa_vir();
+    std::vector<int> bvir = high_det.get_beta_vir();
+    std::vector<int> aocc_offset(nirrep_ + 1);
+    std::vector<int> bocc_offset(nirrep_ + 1);
+    std::vector<int> avir_offset(nirrep_ + 1);
+    std::vector<int> bvir_offset(nirrep_ + 1);
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+    for (int h = 1; h < nirrep_ + 1; ++h){
+        aocc_offset[h] += aocc_offset[h-1];
+        avir_offset[h] += avir_offset[h-1];
+        bocc_offset[h] += bocc_offset[h-1];
+        bvir_offset[h] += bvir_offset[h-1];
+    }
+
+    // Generate aa excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = aocc_offset[h]; i < aocc_offset[h + 1]; ++i){
+            int ii = aocc[i];
+            for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a){
+                int aa = avir[a];
+                double HJI = high_det.slater_rules_single_alpha(ii,aa);
+                lambda_h_G += fabs(HJI);
+            }
+        }
+    }
+    // Generate bb excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = bocc_offset[h]; i < bocc_offset[h + 1]; ++i){
+            int ii = bocc[i];
+            for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a){
+                int aa = bvir[a];
+                double HJI = high_det.slater_rules_single_beta(ii,aa);
+                lambda_h_G += fabs(HJI);
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : avir_offset[h];
+                int maxb = avir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = avir[b];
+                    double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                int minb = bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
+    outfile->Printf("\n  Highest Excited determinant:");
+    high_det.print();
+    outfile->Printf("\n  Determinant Energy                    :  %.12f", high_det.energy());
+    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_G);
+    lambda_h_ = lambda_h_G;
     return lambda_h_;
 }
 
@@ -440,7 +560,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
     coefs.clear();
     std::vector<double> poly_coefs;
     Taylor_polynomial_coefs(poly_coefs, order);
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, tau*S);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, -tau*S);
 //    coefs.clear();
 //    for (int i=0; i <= order; i++) {
 //        coefs.push_back(0.0);
@@ -550,7 +670,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version Jun. 13c 2016");
+    outfile->Printf("\n\t                      version Jun. 15 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -870,6 +990,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     case DeltaPropagator:
         propagate_delta(dets,C,spawning_threshold,S);
         break;
+    case LinearPropagator:
+        propagate_Linear(dets,C,tau,spawning_threshold,lambda_1_);
     case TrotterLinear:
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
         break;
@@ -948,17 +1070,12 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
     }
 }
 
-void AdaptivePathIntegralCI::propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void AdaptivePathIntegralCI::propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
 
-    // Term 1. |n>
-    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
-        dets_C_hash[dets[I]] = C[I];
-    }
-    // Term 2. -tau (H - S)|n>
-    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S);
+    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S+1.0/tau);
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);
