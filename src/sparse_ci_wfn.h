@@ -48,6 +48,9 @@ public:
     /// @return The hash
     wfn_hash& wfn();
 
+    /// Return the size of the wavefunction
+    size_t wfn_size();
+
     /// Scale the wavefunction
     void scale( double value );
 
