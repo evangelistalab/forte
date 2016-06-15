@@ -81,6 +81,15 @@ private:
 
     /// Print summary
     void print_summary();
+
+    /// Orbital extents of current state
+    std::vector<double> current_orb_extents_;
+
+    /// Orbital extents (nirrep BY nrootpi BY <r^2>)
+    std::vector<std::vector<std::vector<double>>> orb_extents_;
+
+    /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
+    std::vector<double> flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
 };
 }}
 

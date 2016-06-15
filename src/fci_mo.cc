@@ -44,6 +44,9 @@ void FCI_MO::startup(){
 
     // compute so quadrupole for orbital extents
     compute_SOquadrupole();
+
+    // compute orbital extents
+    compute_orbital_extents();
 }
 
 void FCI_MO::read_options(){
@@ -349,9 +352,6 @@ double FCI_MO::compute_energy(){
 }
 
 void FCI_MO::form_p_space(){
-    // compute orbital extents, necessary for IP/EA calculations
-    compute_orbital_extents();
-
     // clean previous determinants
     determinant_.clear();
 
@@ -910,69 +910,48 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         SharedMatrix Cb_new(Cb->clone());
         Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
         Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+
+        // overlap of original and semicanonical orbitals
+        SharedMatrix MOoverlap = Matrix::triplet(Ca,this->S(),Ca_new,true,false,false);
+        MOoverlap->set_name("MO overlap");
+
+        // copy semicanonical orbital to wavefunction
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
 
-        // test Ua (frozen orbitals should be zero)
-//        SharedMatrix Fa (new Matrix("Fa", Fa_.size(), Fa_[0].size()));
-//        for(size_t i = 0; i != Fa_.size(); ++i){
-//            for(size_t j = 0; j != Fa_[i].size(); ++j){
-//                Fa->pointer()[i][j] = Fa_[i][j];
-//            }
-//        }
-//        SharedMatrix X = Matrix::triplet(Ua,Fa,Ua,true);
-//        X->print();
-
-        // test if orbital ordering changed
-        compute_orbital_extents();
+        // test orbital ordering
         for(int h = 0; h < nirrep_; ++h){
-            for(size_t i = 0; i < active_[h]; ++i){
-                double diff_min = 1.0e6;
-                size_t corr_idx = 0;
-                for(size_t j = 0; j < active_[h]; ++j){
-                    double diff = 0.0;
-                    diff += fabs(orb_extents_[h][j][0] - orb_extents_ref_[h][i][0]); // xx
-                    diff += fabs(orb_extents_[h][j][1] - orb_extents_ref_[h][i][1]); // yy
-                    diff += fabs(orb_extents_[h][j][2] - orb_extents_ref_[h][i][2]); // zz
-                    if(diff < diff_min){
-                        diff_min = diff;
-                        corr_idx = j;
+            int nrow = MOoverlap->rowspi(h); // before semicanonical
+            int ncol = MOoverlap->colspi(h); // after semicanonical
+
+            for(int i = 0; i < nrow; ++i){
+                int ii = 0; // corresponding index in semicanonical basis
+                double smax = 0.0;
+
+                for(int j = 0; j < ncol; ++j){
+                    double s = MOoverlap->get(h,i,j);
+                    if(fabs(s) > smax){
+                        smax = fabs(s);
+                        ii = j;
                     }
                 }
 
-                // need to include frozen core to pass to Ca
-                size_t offset = frzcpi_[h] + core_[h];
-                size_t ii = i + offset;
-                corr_idx += offset;
-
-                // print warning if orbitals seems different (without frozen-core indices in printing)
-                size_t ni = i + core_[h], nj = corr_idx - frzcpi_[h];
-                int h_local = h;
-                while((--h_local) >= 0){
-                    ni += ncmopi_[h_local];
-                    nj += ncmopi_[h_local];
-                }
-                if(ii != corr_idx){
-                    outfile->Printf("\n    Warning: orbial ordering might changed. Semicanonicalized orbital %3zu has similar orbital extent to previous orbital %3zu",
-                                    nj, ni);
-                }
-
-                if(ipea_ != "NONE" && h == 0 && i == idx_diffused_){
-                    // swap ii and corr_idx
-                    if(ii != corr_idx){
-                        outfile->Printf("\n    Diffused orbital ordering changed (orbital %zu). Swapped back to orbital %zu",
-                                        nj, ni);
-                        Ca->set_column(h, ii, Ca_new->get_column(h, corr_idx));
-                        Ca->set_column(h, corr_idx, Ca_new->get_column(h, ii));
-
-                        Cb->set_column(h, ii, Cb_new->get_column(h, corr_idx));
-                        Cb->set_column(h, corr_idx, Cb_new->get_column(h, ii));
+                // swap orbitals if ordering changed
+                if(ii != i){
+                    int h_local = h;
+                    size_t ni = i  - frzcpi_[h];
+                    size_t nj = ii - frzcpi_[h];
+                    while((--h_local) >= 0){
+                        ni += ncmopi_[h_local];
+                        nj += ncmopi_[h_local];
                     }
+                    outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
+
+                    Ca->set_column(h, i, Ca_new->get_column(h, ii));
+                    Cb->set_column(h, i, Cb_new->get_column(h, ii));
                 }
             }
         }
-//        Ca_new->subtract(Cb_new);
-//        Ca_new->print();
 
         outfile->Printf("\n\n");
         integral_->retransform_integrals();
@@ -2029,27 +2008,10 @@ void FCI_MO::compute_orbital_extents(){
         offset += na;
     }
 
-    // save as original if this function is called for the first time
-    if(orb_extents_ref_.size() == 0){
-        orb_extents_ref_ = orb_extents_;
-    }
-
     // find the diffused orbital index (active zero based)
     if(ipea_ != "NONE"){
         size_t wrong = 999999999;
         idx_diffused_ = wrong;
-
-        for(size_t i = 0; i < active_[0]; ++i){
-            if(orb_extents_[0][i][0] > 1.0e6){
-                idx_diffused_ = i;
-                break;
-            }
-        }
-        if(idx_diffused_ == wrong){
-            outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
-            outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
-            throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
-        }
 
         diffused_orbs_.clear();
         size_t offset = 0;
@@ -2057,11 +2019,22 @@ void FCI_MO::compute_orbital_extents(){
             for(size_t i = 0; i < active_[h]; ++i){
                 double orbext = orb_extents_[h][i][0]
                         + orb_extents_[h][i][1] + orb_extents_[h][i][2];
+
                 if(orbext > 1.0e6){
                     diffused_orbs_.push_back(i + offset);
+
+                    if(h == 0){
+                        idx_diffused_ = i; // totally symmetric diffused orbital
+                    }
                 }
             }
             offset += active_[h];
+        }
+
+        if(idx_diffused_ == wrong){
+            outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
+            outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
+            throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
         }
     }
 }

@@ -1,5 +1,6 @@
 #include <map>
 #include <algorithm>
+#include <boost/format.hpp>
 #include <physconst.h>
 #include <libmints/pointgrp.h>
 
@@ -32,13 +33,16 @@ void ACTIVE_DSRGPT2::startup(){
         throw PSIEXCEPTION("Please specify NROOTPI for ACTIVE-DSRGPT2 / PT3 jobs.");
     }else{
         int nirrep = this->nirrep();
-        ref_energies_ = vector<vector<double>> (nirrep,vector<double>());
-        pt_energies_ = vector<vector<double>> (nirrep,vector<double>());
+        ref_energies_  = vector<vector<double>> (nirrep,vector<double>());
+        pt_energies_   = vector<vector<double>> (nirrep,vector<double>());
         dominant_dets_ = vector<vector<STLBitsetDeterminant>> (nirrep,vector<STLBitsetDeterminant>());
+        orb_extents_   = vector<vector<vector<double>>> (nirrep, vector<vector<double>>());
+
         CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
         if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
             t1_percentage_ = vector<vector<pair<int,double>>> (nirrep,vector<pair<int,double>>());
         }
+
         for(int h = 0; h < nirrep; ++h){
             nrootpi_.push_back(options_["NROOTPI"][h].to_integer());
             irrep_symbol_.push_back(std::string(ct.gamma(h).symbol()));
@@ -105,6 +109,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     ref_energies_[h].push_back(fci_mo.compute_energy());
                     Reference reference = fci_mo.reference();
                     dominant_dets_[h].push_back(fci_mo.dominant_det());
+                    orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
 
                     // PT2 or PT3 routine
                     double Ept = 0.0;
@@ -265,8 +270,8 @@ void ACTIVE_DSRGPT2::print_summary(){
                 }
             }
         }else{
-            int width = 4 + 6 + 8 + 8 + 25 + 4 * 2;
-            outfile->Printf("\n    %4s  %6s  %6s%2s  %6s%2s  %25s", "Sym.", "ROOT", ref_type.c_str(),
+            int width = 4 + 6 + 8 + 8 + 40 + 4 * 2;
+            outfile->Printf("\n    %4s  %6s  %6s%2s  %6s%2s  %40s", "Sym.", "ROOT", ref_type.c_str(),
                             "  ", options_.get_str("CORR_LEVEL").c_str(), "  ", "Excitation Type");
             outfile->Printf("\n    %s", std::string(width,'-').c_str());
             for(int h = 0; h < nirrep; ++h){
@@ -279,14 +284,17 @@ void ACTIVE_DSRGPT2::print_summary(){
 
                         double Eci = (ref_energies_[h][i-1] - ref_energies_[0][0]) * ev;
                         double Ept = (pt_energies_[h][i-1] - pt_energies_[0][0]) * ev;
+                        current_orb_extents_ = orb_extents_[h][i-1];
+
                         std::string ex_type = compute_ex_type(dominant_dets_[h][i-1], dominant_dets_[0][0]);
-                        outfile->Printf("\n    %4s  %6d  %8.3f  %8.3f  %25s", sym.c_str(), i-1, Eci, Ept, ex_type.c_str());
+                        outfile->Printf("\n    %4s  %6d  %8.3f  %8.3f  %40s", sym.c_str(), i-1, Eci, Ept, ex_type.c_str());
                     }
                     if(h != 0 || nrootpi_[0] != 1)
                         outfile->Printf("\n    %s", std::string(width,'-').c_str());
                 }
             }
             outfile->Printf("\n    Excitation type: orbitals are zero-based (active only).");
+            outfile->Printf("\n    <r^2> (in a.u.) is given in parentheses. \"Diffuse\" when <r^2> > 1.0e6.");
             outfile->Printf("\n    (S) for singles; (D) for doubles.");
         }
     }
@@ -329,43 +337,81 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det, con
 
     // CIS
     if(A + B == 1){
+        int idx_ref, idx_det;
         if (A == 1 && B == 0){
-            int idx_ref = occA_ref[0];
-            int idx_det = occA_det[0];
-            output = sym_active[idx_ref] + " -> " + sym_active[idx_det] + " (S)";
+            idx_ref = occA_ref[0];
+            idx_det = occA_det[0];
         }
         else if (A == 0 && B ==1){
-            int idx_ref = occB_ref[0];
-            int idx_det = occB_det[0];
-            output = sym_active[idx_ref] + " -> " + sym_active[idx_det] + " (S)";
+            idx_ref = occB_ref[0];
+            idx_det = occB_det[0];
         }
+        double orbex_det = current_orb_extents_[idx_det];
+        std::string r2_str = (orbex_det > 1.0e6 ?
+                                  " (Diffuse) " : str(boost::format(" (%7.2f) ") % orbex_det));
+
+        output = sym_active[idx_ref] + " -> " + sym_active[idx_det] + r2_str + "(S)";
     }else{
         // CISD
-        if (A == 2){
-            int i_ref = occA_ref[0], j_ref = occA_ref[1];
-            int i_det = occA_det[0], j_det = occA_det[1];
-            output = sym_active[i_ref] + "," + sym_active[j_ref] + " -> "
-                    + sym_active[i_det] + "," + sym_active[j_det];
-        }
-        else if (B == 2){
-            int i_ref = occB_ref[0], j_ref = occB_ref[1];
-            int i_det = occB_det[0], j_det = occB_det[1];
-            output = sym_active[i_ref] + "," + sym_active[j_ref] + " -> "
-                    + sym_active[i_det] + "," + sym_active[j_det];
-        }
-        else if (A == 1 && B == 1){
+        if (A == 1 && B == 1){
             int i_ref = occA_ref[0], j_ref = occB_ref[0];
             int i_det = occA_det[0], j_det = occB_det[0];
             if(i_ref == j_ref && i_det == j_det){
-                output = sym_active[i_ref] + " -> " + sym_active[i_det] + " (D)";
+                double orbex_det = current_orb_extents_[i_det];
+                std::string r2_str = (orbex_det > 1.0e6 ?
+                                          " (Diffuse) " : str(boost::format(" (%7.2f) ") % orbex_det));
+                output = sym_active[i_ref] + " -> " + sym_active[i_det] + r2_str + "(D)";
             }else{
+                double orbex_i_det = current_orb_extents_[i_det];
+                double orbex_j_det = current_orb_extents_[j_det];
+                std::string r2_str_i = (orbex_i_det > 1.0e6 ?
+                                            " (Diffuse) " : str(boost::format(" (%7.2f)") % orbex_i_det));
+                std::string r2_str_j = (orbex_j_det > 1.0e6 ?
+                                            " (Diffuse) " : str(boost::format(" (%7.2f)") % orbex_j_det));
+
                 output = sym_active[i_ref] + "," + sym_active[j_ref] + " -> "
-                        + sym_active[i_det] + "," + sym_active[j_det];
+                        + sym_active[i_det] + r2_str_i + "," + sym_active[j_det] + r2_str_j;
             }
+        } else {
+            int i_ref, j_ref, i_det, j_det;
+            if (A == 2){
+                i_ref = occA_ref[0], j_ref = occA_ref[1];
+                i_det = occA_det[0], j_det = occA_det[1];
+            }
+            else if (B == 2){
+                i_ref = occB_ref[0], j_ref = occB_ref[1];
+                i_det = occB_det[0], j_det = occB_det[1];
+            }
+
+            double orbex_i_det = current_orb_extents_[i_det];
+            double orbex_j_det = current_orb_extents_[j_det];
+            std::string r2_str_i = (orbex_i_det > 1.0e6 ?
+                                        " (Diffuse) " : str(boost::format(" (%7.2f)") % orbex_i_det));
+            std::string r2_str_j = (orbex_j_det > 1.0e6 ?
+                                        " (Diffuse) " : str(boost::format(" (%7.2f)") % orbex_j_det));
+
+            output = sym_active[i_ref] + "," + sym_active[j_ref] + " -> "
+                    + sym_active[i_det] + r2_str_i + "," + sym_active[j_det] + r2_str_j;
         }
     }
 
     return output;
+}
+
+std::vector<double> ACTIVE_DSRGPT2::flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents){
+    std::vector<double> out;
+
+    size_t nirrep = fci_orb_extents.size();
+    for(size_t h = 0; h < nirrep; ++h){
+        size_t nmo = fci_orb_extents[h].size();
+        for(size_t i = 0; i < nmo; ++i){
+            double r2 = fci_orb_extents[h][i][0]
+                    + fci_orb_extents[h][i][1] + fci_orb_extents[h][i][2];
+            out.push_back(r2);
+        }
+    }
+
+    return out;
 }
 
 }}
