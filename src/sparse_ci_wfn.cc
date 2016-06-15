@@ -23,6 +23,11 @@ wfn_hash& SparseCIWavefunction::wfn()
     return wfn_;
 }
 
+size_t SparseCIWavefunction::wfn_size()
+{
+    return wfn_size_;
+}
+
 void SparseCIWavefunction::scale( double value )
 {
     //Update each element with the scaled value
