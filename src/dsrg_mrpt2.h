@@ -135,7 +135,7 @@ protected:
     /// Check if orbitals are semi-canonicalized
     bool check_semicanonical();
     /// Ignore semi-canonical testing
-    bool ignore_semicanonical_;
+    bool ignore_semicanonical_ = false;
     /// Diagonal elements of Fock matrices
     std::vector<double> Fa_;
     std::vector<double> Fb_;

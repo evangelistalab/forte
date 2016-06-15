@@ -13,7 +13,7 @@ SparseCIWavefunction::SparseCIWavefunction( std::vector<STLBitsetDeterminant>& d
     }        
 }
 
-SparseCIWavefunction::SparseCIWavefunction(wfn_hash& wfn) : wfn_(wfn) 
+SparseCIWavefunction::SparseCIWavefunction(const wfn_hash& wfn) : wfn_(wfn)
 {
     wfn_size_ = wfn.size();
 }

@@ -32,15 +32,21 @@ void FCI_MO::startup(){
     read_options();
 
     // setup integrals
-    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+    fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
+                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
     fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints_->compute_restricted_one_body_operator();
     STLBitsetDeterminant::set_ints(fci_ints_);
     DynamicBitsetDeterminant::set_ints(fci_ints_);
+
+    // compute so quadrupole for orbital extents
+    compute_SOquadrupole();
+
+    // compute orbital extents
+    compute_orbital_extents();
 }
 
 void FCI_MO::read_options(){
@@ -200,16 +206,14 @@ void FCI_MO::read_options(){
     info.push_back({"number of molecular orbitals", nmo_});
 
     if(print_ > 0){print_h2("Input Summary");}
-    if(print_ > 0)
-    {
+    if(print_ > 0){
         for (auto& str_dim: info){
             outfile->Printf("\n    %-30s = %5zu",str_dim.first.c_str(),str_dim.second);
         }
     }
 
     // print orbital spaces
-    if(print_ > 0)
-    {
+    if(print_ > 0){
         print_h2("Orbital Spaces");
         print_irrep("TOTAL MO", nmopi_);
         print_irrep("FROZEN CORE", frzcpi_);
@@ -221,8 +225,7 @@ void FCI_MO::read_options(){
     }
 
     // print orbital indices
-    if(print_ > 0)
-    {
+    if(print_ > 0){
         print_h2("Correlated Subspace Indices");
         print_idx("CORE", idx_c_);
         print_idx("ACTIVE", idx_a_);
@@ -231,14 +234,6 @@ void FCI_MO::read_options(){
         print_idx("PARTICLE", idx_p_);
         outfile->Printf("\n");
         outfile->Flush();
-    }
-
-    SharedVector epsilon = this->epsilon_a();
-    for(int h = 0; h < nirrep_; ++h){
-        size_t size = epsilon->dim(h) - frzcpi_[h];
-        for(size_t i = 0; i < size; ++i){
-            Fa_diag_.push_back(epsilon->get(h, i + frzcpi_[h]));
-        }
     }
 }
 
@@ -253,17 +248,8 @@ double FCI_MO::compute_energy(){
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
 
-    // clean previous determinants
-    determinant_.clear();
-
     // form determinants
-    if(active_space_type_ == "COMPLETE" || active_space_type_ == "DOCI"){
-        form_det();
-    }else if(active_space_type_ == "CIS"){
-        form_det_cis();
-    }else if(active_space_type_ == "CISD"){
-        form_det_cisd();
-    }
+    form_p_space();
 
     // diagonalize the CASCI Hamiltonian
     diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
@@ -296,10 +282,9 @@ double FCI_MO::compute_energy(){
         evecs->set_column(0,i,(eigen_[i]).first);
     }
     CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
-    evecs->print();
 
     // form density
-    FormDensity(ci_rdms, root_, Da_, Db_);
+    FormDensity(ci_rdms, Da_, Db_);
     if(print_ > 1){
         print_d2("Da", Da_);
         print_d2("Db", Db_);
@@ -315,10 +300,47 @@ double FCI_MO::compute_energy(){
     }
 
     // Orbitals. If use Kevin's CASSCF, this part is ignored.
-    if(!default_orbitals_)
-    {
+    if(!default_orbitals_){
         if(semi_){
+            // Semi-canonicalize orbitals
             semi_canonicalize(count);
+
+            // Form and Diagonalize the CASCI Hamiltonian
+            Diagonalize_H(determinant_, eigen_);
+            if(print_ > 2){
+                for(pair<SharedVector, double> x: eigen_){
+                    outfile->Printf("\n\n  Spin selected CI vectors\n");
+                    (x.first)->print();
+                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+                }
+            }
+
+            // Store CI Vectors in eigen_
+            Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+            // prepare ci_rdms for one density
+            int dim = (eigen_[0].first)->dim();
+            SharedMatrix evecs (new Matrix("evecs",dim,dim));
+            for(int i = 0; i < eigen_.size(); ++i){
+                evecs->set_column(0,i,(eigen_[i]).first);
+            }
+            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
+
+            // Form Density
+            FormDensity(ci_rdms, Da_, Db_);
+            if(print_ > 1){
+                print_d2("Da", Da_);
+                print_d2("Db", Db_);
+            }
+
+            // Fock Matrix
+            size_t count = 0;
+            Form_Fock(Fa_,Fb_);
+            Check_Fock(Fa_,Fb_,dconv_,count);
+            if(print_ > 1){
+                print_d2("Fa", Fa_);
+                print_d2("Fb", Fb_);
+            }
         }else{
 //            nat_orbs();
         }
@@ -327,6 +349,20 @@ double FCI_MO::compute_energy(){
     Eref_ = eigen_[root_].second;
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
     return Eref_;
+}
+
+void FCI_MO::form_p_space(){
+    // clean previous determinants
+    determinant_.clear();
+
+    // form determinants
+    if(active_space_type_ == "COMPLETE" || active_space_type_ == "DOCI"){
+        form_det();
+    }else if(active_space_type_ == "CIS"){
+        form_det_cis();
+    }else if(active_space_type_ == "CISD"){
+        form_det_cisd();
+    }
 }
 
 void FCI_MO::form_det(){
@@ -446,13 +482,14 @@ void FCI_MO::form_det_cis(){
     }
 
     // singles string
+    // have to do full singles string because it sets up the ao_ and av_
     vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
-//    if(ipea_ == "IP"){
-//        string_singles = Form_String_IP(string_ref);
-//    }
-//    if(ipea_ == "EA"){
-//        string_singles = Form_String_EA(string_ref);
-//    }
+    if(ipea_ == "IP"){
+        string_singles = Form_String_IP(string_ref);
+    }
+    if(ipea_ == "EA"){
+        string_singles = Form_String_EA(string_ref);
+    }
 
     // symmetry of ref (just active)
     int symmetry = 0;
@@ -514,6 +551,13 @@ void FCI_MO::form_det_cisd(){
 
     // singles string
     vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
+    vector<vector<vector<bool>>> string_singles_ipea;
+    if(ipea_ == "IP"){
+        string_singles_ipea = Form_String_IP(string_ref);
+    }
+    if(ipea_ == "EA"){
+        string_singles_ipea = Form_String_EA(string_ref);
+    }
 
     // doubles string
     vector<vector<vector<bool>>> string_doubles = Form_String_Doubles(string_ref);
@@ -532,10 +576,18 @@ void FCI_MO::form_det_cisd(){
     if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
     int i = symmetry ^ root_sym_;
-    size_t single_size = string_singles[i].size();
-    for(size_t x = 0; x < single_size; ++x){
-        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+    if(ipea_ == "NONE"){
+        size_t single_size = string_singles[i].size();
+        for(size_t x = 0; x < single_size; ++x){
+            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        }
+    } else {
+        size_t single_size = string_singles_ipea[i].size();
+        for(size_t x = 0; x < single_size; ++x){
+            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+        }
     }
 
     // doubles
@@ -549,9 +601,18 @@ void FCI_MO::form_det_cisd(){
         size_t single_size_a = string_singles[h].size();
         for(size_t x = 0; x < single_size_a; ++x){
             int sym = h ^ root_sym_;
+
             size_t single_size_b = string_singles[sym].size();
             for(size_t y = 0; y < single_size_b; ++y){
                 determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+            }
+
+            if(ipea_ != "NONE"){
+                size_t single_ipea_size_b = string_singles_ipea[sym].size();
+                for(size_t y = 0; y < single_ipea_size_b; ++y){
+                    determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                    determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+                }
             }
         }
     }
@@ -625,7 +686,12 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     int symmetry = 0;
     vector<int> uocc, occ;
     ao_.clear();av_.clear();
-    for(int i = 0; i < na_; ++i){
+    for(size_t i = 0; i < na_; ++i){
+        if(ipea_ != "NONE" &&
+                std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()){
+            continue;
+        }
+
         if(ref_string[i]){
             occ.push_back(i);
             symmetry ^= sym_active_[i];
@@ -671,111 +737,94 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     return String;
 }
 
-//vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool> &ref_string, const bool &print){
-//    timer_on("FORM String Singles IP");
-//    vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
+vector<vector<vector<bool>>> FCI_MO::Form_String_IP(const vector<bool> &ref_string, const bool &print){
+    timer_on("FORM String Singles IP");
+    vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-//    // occupied and unoccupied indices, symmetry (active)
-//    int symmetry = 0;
-//    vector<int> uocc, occ;
-//    for(int i = 0; i < na_; ++i){
-//        if(ref_string[i]){
-//            occ.push_back(i);
-//            symmetry ^= sym_active_[i];
-//        }else{
-//            if(fabs(Fa_diag_[idx_a_[i]]) < 1.0e-6){
-//                uocc.push_back(i);
-//            }
-//        }
-//    }
+    // occupied and unoccupied indices, symmetry (active)
+    int symmetry = 0;
+    vector<int> occ;
+    for(int i = 0; i < na_; ++i){
+        if(ref_string[i]){
+            occ.push_back(i);
+            symmetry ^= sym_active_[i];
+        }
+    }
 
-//    // singles
-//    for(const int& a: uocc){
-//        vector<bool> string_local(ref_string);
-//        string_local[a] = true;
-//        int sym = symmetry ^ sym_active_[a];
-//        for(const int& i: occ){
-//            string_local[i] = false;
-//            sym ^= sym_active_[i];
-//            String[sym].push_back(string_local);
-//            // need to reset
-//            string_local[i] = true;
-//            sym ^= sym_active_[i];
-//        }
-//    }
+    // singles
+    for(const int& i: occ){
+        vector<bool> string_local(ref_string);
+        string_local[idx_diffused_] = true;
 
-//    if(print){
-//        print_h2("Singles String");
-//        for(size_t i = 0; i != String.size(); ++i){
-//            if(String[i].size() != 0){
-//                outfile->Printf("\n  symmetry = %lu \n", i);
-//            }
-//            for(size_t j = 0; j != String[i].size(); ++j){
-//                outfile->Printf("    ");
-//                for(bool b: String[i][j]){
-//                    outfile->Printf("%d ", b);
-//                }
-//                outfile->Printf("\n");
-//            }
-//        }
-//    }
+        string_local[i] = false;
+        int sym = symmetry ^ sym_active_[i];
+        String[sym].push_back(string_local);
+    }
 
-//    timer_off("FORM String Singles IP");
-//    return String;
-//}
+    if(print){
+        print_h2("Singles String IP");
+        for(size_t i = 0; i != String.size(); ++i){
+            if(String[i].size() != 0){
+                outfile->Printf("\n  symmetry = %lu \n", i);
+            }
+            for(size_t j = 0; j != String[i].size(); ++j){
+                outfile->Printf("    ");
+                for(bool b: String[i][j]){
+                    outfile->Printf("%d ", b);
+                }
+                outfile->Printf("\n");
+            }
+        }
+    }
 
-//vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool> &ref_string, const bool &print){
-//    timer_on("FORM String Singles EA");
-//    vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
+    timer_off("FORM String Singles IP");
+    return String;
+}
 
-//    // occupied and unoccupied indices, symmetry (active)
-//    int symmetry = 0;
-//    vector<int> uocc, occ;
-//    for(int i = 0; i < na_; ++i){
-//        if(ref_string[i]){
-//            if(fabs(Fa_diag_[idx_a_[i]]) < 1.0e-6){
-//                occ.push_back(i);
-//                symmetry ^= sym_active_[i];
-//            }
-//        }else{
-//            uocc.push_back(i);
-//        }
-//    }
+vector<vector<vector<bool>>> FCI_MO::Form_String_EA(const vector<bool> &ref_string, const bool &print){
+    timer_on("FORM String Singles EA");
+    vector<vector<vector<bool>>> String(nirrep_,vector<vector<bool>>());
 
-//    // singles
-//    for(const int& a: uocc){
-//        vector<bool> string_local(ref_string);
-//        string_local[a] = true;
-//        int sym = symmetry ^ sym_active_[a];
-//        for(const int& i: occ){
-//            string_local[i] = false;
-//            sym ^= sym_active_[i];
-//            String[sym].push_back(string_local);
-//            // need to reset
-//            string_local[i] = true;
-//            sym ^= sym_active_[i];
-//        }
-//    }
+    // occupied and unoccupied indices, symmetry (active)
+    int symmetry = 0;
+    vector<int> uocc;
+    for(int i = 0; i < na_; ++i){
+        if(!ref_string[i]){
+            uocc.push_back(i);
+        } else {
+            symmetry ^= sym_active_[i];
+        }
+    }
 
-//    if(print){
-//        print_h2("Singles String");
-//        for(size_t i = 0; i != String.size(); ++i){
-//            if(String[i].size() != 0){
-//                outfile->Printf("\n  symmetry = %lu \n", i);
-//            }
-//            for(size_t j = 0; j != String[i].size(); ++j){
-//                outfile->Printf("    ");
-//                for(bool b: String[i][j]){
-//                    outfile->Printf("%d ", b);
-//                }
-//                outfile->Printf("\n");
-//            }
-//        }
-//    }
+    // singles
+    for(const int& a: uocc){
+        vector<bool> string_local(ref_string);
+        string_local[a] = true;
+        int sym = symmetry ^ sym_active_[a];
 
-//    timer_off("FORM String Singles EA");
-//    return String;
-//}
+        string_local[idx_diffused_] = false;
+        String[sym].push_back(string_local);
+    }
+
+    if(print){
+        print_h2("Singles String EA");
+        for(size_t i = 0; i != String.size(); ++i){
+            if(String[i].size() != 0){
+                outfile->Printf("\n  symmetry = %lu \n", i);
+            }
+            for(size_t j = 0; j != String[i].size(); ++j){
+                outfile->Printf("    ");
+                for(bool b: String[i][j]){
+                    outfile->Printf("%d ", b);
+                }
+                outfile->Printf("\n");
+            }
+        }
+    }
+
+    timer_off("FORM String Singles EA");
+    return String;
+}
 
 vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool> &ref_string, const bool &print){
     timer_on("FORM String Doubles");
@@ -785,6 +834,11 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool> &ref
     int symmetry = 0;
     vector<int> uocc, occ;
     for(int i = 0; i < na_; ++i){
+        if(ipea_ != "NONE" && i != idx_diffused_ &&
+                std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()){
+            continue;
+        }
+
         if(ref_string[i]){
             occ.push_back(i);
             symmetry ^= sym_active_[i];
@@ -856,70 +910,56 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         SharedMatrix Cb_new(Cb->clone());
         Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
         Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+
+        // overlap of original and semicanonical orbitals
+        SharedMatrix MOoverlap = Matrix::triplet(Ca,this->S(),Ca_new,true,false,false);
+        MOoverlap->set_name("MO overlap");
+
+        // copy semicanonical orbital to wavefunction
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
 
-        // test Ua (frozen orbitals should be zero)
-//        SharedMatrix Fa (new Matrix("Fa", Fa_.size(), Fa_[0].size()));
-//        for(size_t i = 0; i != Fa_.size(); ++i){
-//            for(size_t j = 0; j != Fa_[i].size(); ++j){
-//                Fa->pointer()[i][j] = Fa_[i][j];
-//            }
-//        }
-//        SharedMatrix X = Matrix::triplet(Ua,Fa,Ua,true);
-//        X->print();
+        // test orbital ordering
+        for(int h = 0; h < nirrep_; ++h){
+            int nrow = MOoverlap->rowspi(h); // before semicanonical
+            int ncol = MOoverlap->colspi(h); // after semicanonical
 
-        integral_->retransform_integrals();
-        fci_ints_ = std::make_shared<FCIIntegrals>(integral_, mo_space_info_->get_corr_abs_mo("ACTIVE"), mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-        auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
+            for(int i = 0; i < nrow; ++i){
+                int ii = 0; // corresponding index in semicanonical basis
+                double smax = 0.0;
 
-        // Form and Diagonalize the CASCI Hamiltonian
-        Diagonalize_H(determinant_, eigen_);
-        if(print_ > 2){
-            for(pair<SharedVector, double> x: eigen_){
-                outfile->Printf("\n\n  Spin selected CI vectors\n");
-                (x.first)->print();
-                outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+                for(int j = 0; j < ncol; ++j){
+                    double s = MOoverlap->get(h,i,j);
+                    if(fabs(s) > smax){
+                        smax = fabs(s);
+                        ii = j;
+                    }
+                }
+
+                // swap orbitals if ordering changed
+                if(ii != i){
+                    int h_local = h;
+                    size_t ni = i  - frzcpi_[h];
+                    size_t nj = ii - frzcpi_[h];
+                    while((--h_local) >= 0){
+                        ni += ncmopi_[h_local];
+                        nj += ncmopi_[h_local];
+                    }
+                    outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
+
+                    Ca->set_column(h, i, Ca_new->get_column(h, ii));
+                    Cb->set_column(h, i, Cb_new->get_column(h, ii));
+                }
             }
         }
 
-        // Store CI Vectors in eigen_
-        Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
-
-        // prepare ci_rdms for one density
-        int dim = (eigen_[0].first)->dim();
-        SharedMatrix evecs (new Matrix("evecs",dim,dim));
-        for(int i = 0; i < eigen_.size(); ++i){
-            evecs->set_column(0,i,(eigen_[i]).first);
-        }
-        CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
-
-        // Form Density
-        Da_ = d2(ncmo_, d1(ncmo_));
-        Db_ = d2(ncmo_, d1(ncmo_));
-        L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a", {na_, na_});
-        L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b", {na_, na_});
-        FormDensity(ci_rdms, root_, Da_, Db_);
-        if(print_ > 1){
-            print_d2("Da", Da_);
-            print_d2("Db", Db_);
-        }
-
-        // Fock Matrix
-        size_t count = 0;
-        Fa_ = d2(ncmo_, d1(ncmo_));
-        Fb_ = d2(ncmo_, d1(ncmo_));
-        Form_Fock(Fa_,Fb_);
-        Check_Fock(Fa_,Fb_,dconv_,count);
-        if(print_ > 1){
-            print_d2("Fa", Fa_);
-            print_d2("Fb", Fb_);
-        }
+        outfile->Printf("\n\n");
+        integral_->retransform_integrals();
+        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+        fci_ints_->compute_restricted_one_body_operator();
     }
 }
 
@@ -947,6 +987,10 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     if(diag_algorithm_ == "FULL"){
         diag_method = Full;
     }
+    if(ipea_ != "NONE"){
+//        sparse_solver.set_print_details(true);
+        sparse_solver.set_force_diag_method(true);
+    }
     sparse_solver.diagonalize_hamiltonian(P_space,val_tmp,vec_tmp,nroot,multi_,diag_method);
 
     // add doubly occupied energy
@@ -959,11 +1003,11 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     // check spin
     int count = 0;
     if(!quiet_){outfile->Printf("\n\n  Reference type: %s", ref_type_.c_str());}
-    double threshold = 1.0e-4;
+    double threshold = 0.1;
     if(ref_type_ == "UHF" || ref_type_ == "UKS" || ref_type_ == "CUHF"){
-        threshold = 0.10 * multi_;    // 10% off from the multiplicity of the spin eigen state
+        threshold = 0.20 * multi_;    // 20% off from the multiplicity of the spin eigen state
     }
-    if(!quiet_){outfile->Printf("\n  Threshold for spin check: %.4f", threshold);}
+    if(!quiet_){outfile->Printf("\n  Threshold for spin check: %.2f", threshold);}
 
     for(int i = 0; i != nroot; ++i){
         double S2 = 0.0;
@@ -1033,17 +1077,15 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
                     bool b = det[index].get_beta_bit(x);
                     if(a == b){
                         if(!quiet_){outfile->Printf("%d", a==1 ? 2 : 0);}
-                    }
-                    else
-                    {
-                            if(!quiet_){outfile->Printf("%c", a==1 ? 'a' : 'b');}
+                    } else {
+                        if(!quiet_){outfile->Printf("%c", a==1 ? 'a' : 'b');}
                     }
                 }
                 if(active_[h] != 0)
                     if(!quiet_){outfile->Printf(" ");}
                 ncmopi += active_[h];
             }
-            if(!quiet_){outfile->Printf(" %20.17f", ci);}
+            if(!quiet_){outfile->Printf(" %20.10f", ci);}
         }
         if(!quiet_){outfile->Printf("\n\n    Total Energy:   %.15lf\n\n", eigen[i].second);}
         outfile->Flush();
@@ -1052,7 +1094,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
     timer_off("STORE CI Vectors");
 }
 
-void FCI_MO::FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B){
+void FCI_MO::FormDensity(CI_RDMS &ci_rdms, d2 &A, d2 &B){
     timer_on("FORM Density");
     Timer tdensity;
     std::string str = "Forming one-particle density";
@@ -1078,7 +1120,6 @@ void FCI_MO::FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B){
             if((sym_active_[p] ^ sym_active_[q]) != 0) continue;
 
             size_t index = p * na_ + q;
-
             A[np][nq] = opdm_a[index];
             B[np][nq] = opdm_b[index];
 
@@ -1563,13 +1604,11 @@ void FCI_MO::Form_Fock(d2 &A, d2 &B){
     V = integral_->aptei_bb_block(idx_corr,idx_a_,idx_corr,idx_a_);
     Fb("pq") += V("puqv") * L1b("vu");
 
-    Fa_diag_.clear();
     for(size_t p = 0; p < ncmo_; ++p){
         for(size_t q = 0; q < ncmo_; ++q){
             A[p][q] = Fa.data()[p * ncmo_ + q];
             B[p][q] = Fb.data()[p * ncmo_ + q];
         }
-        Fa_diag_.push_back(Fa.data()[p * ncmo_ + p]);
     }
     timer_off("Form Fock");
 }
@@ -1916,6 +1955,88 @@ bool FCI_MO::CheckDensity(){
         natural = true;
     }
     return natural;
+}
+
+void FCI_MO::compute_SOquadrupole(){
+    so_Qpole_.clear();
+    for(const auto& name: {"XX","XY","XZ","YY","YZ","ZZ"}){
+        so_Qpole_.push_back(SharedMatrix(new Matrix(name,this->nsopi(),this->nsopi()) ));
+    }
+
+    boost::shared_ptr<BasisSet> basisset = this->basisset();
+    boost::shared_ptr<IntegralFactory> ints = boost::shared_ptr<IntegralFactory>(
+                new IntegralFactory(basisset,basisset,basisset,basisset));
+    boost::shared_ptr<OneBodySOInt> soqOBI(ints->so_quadrupole());
+
+    soqOBI->compute(so_Qpole_);
+    soqOBI.reset();
+}
+
+void FCI_MO::compute_orbital_extents(){
+    // absolute indices of active orbitals before frozen core
+    vector<size_t> abs_mo_a = mo_space_info_->get_absolute_mo("ACTIVE");
+
+    // orbital coefficients
+    SharedMatrix Ca = this->Ca();
+
+    // initialize vector saving current orbital extents
+    orb_extents_ = vector<d2> (nirrep_, d2());
+
+    // compute active orbital extents
+    size_t offset = 0;
+    for(int h = 0; h < nirrep_; ++h){
+        size_t na = active_[h];
+        size_t nsopi = this->nsopi()[h];
+        d2 orb_extents_pi (na, d1());
+
+        for(size_t u = 0; u < na; ++u){
+            size_t u_abs = abs_mo_a[u + offset];
+
+            double sumx = 0.0, sumy = 0.0, sumz = 0.0;
+            for(size_t k = 0; k < nsopi; ++k){
+                for(size_t l = 0; l < nsopi; ++l){
+                    double tmp = Ca->get(h,k,u_abs) * Ca->get(h,l,u_abs);
+                    sumx += so_Qpole_[0]->get(h,k,l) * tmp;
+                    sumy += so_Qpole_[3]->get(h,k,l) * tmp;
+                    sumz += so_Qpole_[5]->get(h,k,l) * tmp;
+                }
+            }
+            orb_extents_pi[u] = {fabs(sumx), fabs(sumy), fabs(sumz)};
+        }
+
+        orb_extents_[h] = orb_extents_pi;
+        offset += na;
+    }
+
+    // find the diffused orbital index (active zero based)
+    if(ipea_ != "NONE"){
+        size_t wrong = 999999999;
+        idx_diffused_ = wrong;
+
+        diffused_orbs_.clear();
+        size_t offset = 0;
+        for(int h = 0; h < nirrep_; ++h){
+            for(size_t i = 0; i < active_[h]; ++i){
+                double orbext = orb_extents_[h][i][0]
+                        + orb_extents_[h][i][1] + orb_extents_[h][i][2];
+
+                if(orbext > 1.0e6){
+                    diffused_orbs_.push_back(i + offset);
+
+                    if(h == 0){
+                        idx_diffused_ = i; // totally symmetric diffused orbital
+                    }
+                }
+            }
+            offset += active_[h];
+        }
+
+        if(idx_diffused_ == wrong){
+            outfile->Printf("\n  Totally symmetric diffused orbital is not found.");
+            outfile->Printf("\n  Make sure a diffused s function is added to the basis.");
+            throw PSIEXCEPTION("Totally symmetric diffused orbital is not found.");
+        }
+    }
 }
 
 void FCI_MO::fill_density(){
