@@ -80,6 +80,12 @@ public:
     /// Return the vector of determinants
     vecdet p_space() {return determinant_;}
 
+    /// Return the orbital extents of the current state
+    vector<vector<vector<double>>> orb_extents() {
+        compute_orbital_extents();
+        return orb_extents_;
+    }
+
     /// Return the vector of eigen vectors
     vector<pair<SharedVector,double>> eigen() {return eigen_;}
 
@@ -283,8 +289,7 @@ protected:
 
     /// Orbital Extents
     void compute_orbital_extents();
-    d3 orb_extents_ref_;
-    d3 orb_extents_;
+    d3 orb_extents_; // irrep BY number of active orbitals in current irrep BY orbital extents in x, y, z directions
     size_t idx_diffused_;
     vector<size_t> diffused_orbs_;
 
