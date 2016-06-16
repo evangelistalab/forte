@@ -20,8 +20,8 @@
  *@END LICENSE
  */
 
-#ifndef _sparse_ci_wfn_h_
-#define _sparse_ci_wfn_h_
+#ifndef _determinant_map_h_
+#define _determinant_map_h_
 
 #include "stl_bitset_determinant.h"
 
@@ -33,23 +33,26 @@ namespace psi{ namespace forte{
  * Stores a hash of determinants.
  */
 
-using wfn_hash = det_hash<double>;
+using detmap = det_hash<size_t>;
 
-class SparseCIWavefunction
+class DeterminantMap
 {
 public:
 
     /// Default constructor
-    SparseCIWavefunction( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
+    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
 
     /// Copy constructor
-    SparseCIWavefunction(const wfn_hash& wfn_);
+    DeterminantMap(detmap& wfn_, std::vector<double>& cI);
 
     /// @return The hash
-    wfn_hash& wfn();
+    detmap& wfn();
 
-    /// Return the size of the wavefunction
-    size_t wfn_size();
+    /// The coefficients
+    std::vector<double> cI_; 
+
+    /// Return the coefficients
+    std::vector<double> coefficients();
 
     /// Scale the wavefunction
     void scale( double value );
@@ -64,19 +67,22 @@ public:
     void add( STLBitsetDeterminant& det, double value );
 
     /// Merge two wavefunctions, overwriting the original in the case of conflicts
-    void merge( SparseCIWavefunction& wfn ); 
+    void merge( DeterminantMap& wfn ); 
 
     /// Print the most important determinants
     void print();
+
+    /// Return the number of determinants
+    double wfn_size();
 protected:
 
     /// The dimension of the hash
     size_t wfn_size_;
 
     /// A hash of (determinants,coefficients)
-    wfn_hash wfn_;
+    detmap wfn_;
 };
 
 }}
 
-#endif // _sparse_ci_wfn_h_
+#endif // _determinant_map_h_
