@@ -428,7 +428,7 @@ read_options(std::string name, Options &options)
         options.add_int("DMRG_WHICH_ROOT", 1);
 
         /*- Whether or not to use state-averaging for roots >=2 with DMRG-SCF. -*/
-        options.add_bool("DMRG_STATE_AVG", true);
+        options.add_bool("DMRG_AVG_STATES", true);
 
         /*- Which active space to use for DMRGSCF calculations:
                --> input with SCF rotations (INPUT);

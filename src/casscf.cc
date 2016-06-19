@@ -727,7 +727,6 @@ void CASSCF::set_up_fci()
 
         active_ab.iterate([&](const std::vector<size_t>& i,double& value){
             value = tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]] ;
-            active_matrix->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
             });
 
         active_aa.copy(active_ab);
