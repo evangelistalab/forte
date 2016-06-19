@@ -18,6 +18,7 @@
 #include "fci_mo.h"
 #include "stl_bitset_determinant.h"
 #include "dsrg_mrpt2.h"
+#include "dsrg_mrpt3.h"
 #include "three_dsrg_mrpt2.h"
 
 namespace psi{ namespace forte{
@@ -51,6 +52,9 @@ private:
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// Name of the code
+    std::string code_name_;
+
     /// Total number of roots
     int total_nroots_;
 
@@ -64,7 +68,7 @@ private:
     std::vector<std::vector<double>> ref_energies_;
 
     /// DSRGPT2 energies
-    std::vector<std::vector<double>> pt2_energies_;
+    std::vector<std::vector<double>> pt_energies_;
 
     /// Singles (T1) percentage
     std::vector<std::vector<std::pair<int,double>>> t1_percentage_;
@@ -77,6 +81,15 @@ private:
 
     /// Print summary
     void print_summary();
+
+    /// Orbital extents of current state
+    std::vector<double> current_orb_extents_;
+
+    /// Orbital extents (nirrep BY nrootpi BY <r^2>)
+    std::vector<std::vector<std::vector<double>>> orb_extents_;
+
+    /// Flatten the structure of orbital extents in fci_mo and return a vector of <r^2>
+    std::vector<double> flatten_fci_orbextents(const std::vector<std::vector<std::vector<double>>>& fci_orb_extents);
 };
 }}
 

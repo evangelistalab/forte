@@ -153,9 +153,6 @@ void DSRG_MRPT2::startup()
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
-    // ignore semi-canonical checking
-    ignore_semicanonical_ = false;
-
     // Print levels
     print_ = options_.get_int("PRINT");
     if(print_ > 1){
@@ -372,20 +369,20 @@ double DSRG_MRPT2::compute_energy()
     // check semi-canonical orbitals
     print_h2("Checking Orbitals");
     semi_canonical_ = check_semicanonical();
-        if(!semi_canonical_){
-            if(!ignore_semicanonical_){
-                outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT2.");
-                U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
-                std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
-                Fa_ = eigens[0];
-                Fb_ = eigens[1];
-            } else {
-                outfile->Printf("\n    Warning: using general orbitals. DSRG-MRPT2 energy may be meaningless.");
-                semi_canonical_ = true;
-            }
-        }else{
-            outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    if(!semi_canonical_){
+        if(!ignore_semicanonical_){
+            outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT2.");
+            U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+            Fa_ = eigens[0];
+            Fb_ = eigens[1];
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals. DSRG-MRPT2 energy may be meaningless.");
+            semi_canonical_ = true;
         }
+    }else{
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    }
 
     Timer DSRG_energy;
     outfile->Printf("\n\n  ==> Computing DSRG-MRPT2 ... <==\n");

@@ -168,19 +168,6 @@ void DSRG_MRPT3::startup()
     F1st_["AI"] = F_["AI"];
     F1st_["IA"] = F_["AI"];
 
-    // check semi-canonical orbitals
-    print_h2("Checking Orbitals");
-    semi_canonical_ = check_semicanonical();
-    if(!semi_canonical_){
-        outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
-        U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
-        std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
-        Fa_ = eigens[0];
-        Fb_ = eigens[1];
-    }else{
-        outfile->Printf("\n    Orbitals are semi-canonicalized.");
-    }
-
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
     if(relax_ref_ != "NONE"){
@@ -446,6 +433,24 @@ void DSRG_MRPT3::cleanup()
 
 double DSRG_MRPT3::compute_energy()
 {
+    // check semi-canonical orbitals
+    print_h2("Checking Orbitals");
+    semi_canonical_ = check_semicanonical();
+    if(!semi_canonical_){
+        if(!ignore_semicanonical_){
+            outfile->Printf("\n    Orbital invariant formalism is employed for DSRG-MRPT3.");
+            U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+            Fa_ = eigens[0];
+            Fb_ = eigens[1];
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals. DSRG-MRPT3 energy may be meaningless.");
+            semi_canonical_ = true;
+        }
+    }else{
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    }
+
     // Compute first-order T2 and T1
     print_h2("First-Order Amplitudes");
     T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"cp","av"}));
@@ -1194,10 +1199,16 @@ double DSRG_MRPT3::compute_energy_relaxed(){
         // transfer integrals
         transfer_integrals();
 
+        // nroot and root
+        int root  = options_.get_int("ROOT");
+        int nroot = options_.get_int("NROOT");
+
         // diagonalize the Hamiltonian
         FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
         fcisolver.set_max_rdm_level(1);
+        fcisolver.set_nroot(nroot);
+        fcisolver.set_root(root);
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
@@ -1214,10 +1225,58 @@ double DSRG_MRPT3::compute_energy_relaxed(){
 
         Erelax = fcisolver.compute_energy();
 
+        // test the overlap of the relaxed wfn with original ref. wfn
+        if(fciwfn0_->size() != 0){
+            fciwfn_ = fcisolver.get_FCIWFN();
+            double overlap = fciwfn0_->dot(fciwfn_);
+            int more_roots = (fciwfn0_->size() < 5 ) ? fciwfn0_->size() : 5;
+
+            if(fabs(overlap) < 0.85){
+                outfile->Printf("\n    Warning: overlap <Phi0_unrelaxed|Phi0_relaxed> = %4.3f < 0.85.", fabs(overlap));
+                outfile->Printf("\n    FCI seems to find the wrong root. Try %d more roots.", more_roots);
+
+                bool find = false;
+                double Etemp = 0.0;
+                for(int i = 0; i < more_roots; ++i){
+                    if(root < nroot -1){
+                        ++root;
+                    } else {
+                        ++root;
+                        ++nroot;
+                    }
+                    fcisolver.set_nroot(nroot);
+                    fcisolver.set_root(root);
+                    Etemp = fcisolver.compute_energy();
+
+                    fciwfn_ = fcisolver.get_FCIWFN();
+                    overlap = fciwfn0_->dot(fciwfn_);
+
+                    outfile->Printf("\n    Current overlap <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.", fabs(overlap));
+                    if(fabs(overlap) >= 0.85){
+                        outfile->Printf("\n    This root seems to be OK. Stop trying more roots.");
+                        find = true;
+                        break;
+                    } else {
+                        outfile->Printf("\n    Keep looking for better overlap. Tries left: %d", more_roots - 1 - i);
+                    }
+                }
+
+                if(find){
+                    Erelax = Etemp;
+                } else {
+                    outfile->Printf("\n    Fatal Warning: Do not find root of enough overlap (> 0.85) with original FCI wavefunction.");
+                    outfile->Printf("\n    The DSRG-MRPT3 relaxed energy might be meaningless.");
+                }
+            } else {
+                outfile->Printf("\n    Overlap: <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.", fabs(overlap));
+            }
+
+        }
+
         // printing
         print_h2("MRDSRG Energy Summary");
-        outfile->Printf("\n    %-35s = %22.15f", "MRDSRG Total Energy (fixed)", Edsrg);
-        outfile->Printf("\n    %-35s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (fixed)", Edsrg);
+        outfile->Printf("\n    %-35s = %22.15f", "DSRG-MRPT3 Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
     }
 
