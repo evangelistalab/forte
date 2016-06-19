@@ -38,6 +38,7 @@
 #include "blockedtensorfactory.h"
 #include "dsrg_time.h"
 #include "dsrg_source.h"
+#include "fci_vector.h"
 
 using namespace ambit;
 namespace psi{ namespace forte{
@@ -63,6 +64,12 @@ public:
 
     /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
     double compute_energy_relaxed();
+
+    /// Ignore semi-canonical testing in DSRG-MRPT3
+    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+
+    /// Set FCIWfn before reference relaxation
+    void set_fciwfn0(std::shared_ptr<FCIWfn> fciwfn) {fciwfn0_ = fciwfn;}
 
 protected:
     // => Class initialization and termination <= //
@@ -146,6 +153,8 @@ protected:
 
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
+    /// Ignore semi-canonical testing result
+    bool ignore_semicanonical_ = false;
     /// Check if orbitals are semi-canonicalized
     bool check_semicanonical();
     /// Diagonal elements of Fock matrices
@@ -318,6 +327,11 @@ protected:
 
     /// Relaxation type
     std::string relax_ref_;
+
+    /// FCI wavefunction before reference relaxation
+    std::shared_ptr<FCIWfn> fciwfn0_;
+    /// FCI wavefunction after reference relaxation
+    std::shared_ptr<FCIWfn> fciwfn_;
 
     /// Transfer integrals for FCI
     void transfer_integrals();

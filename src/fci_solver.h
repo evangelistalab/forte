@@ -218,6 +218,8 @@ public:
     void print_no(bool value);
     /// Set Ms value
     void set_ms(int ms);
+    /// Get the pointer of FCIWfn
+    std::shared_ptr<FCIWfn> get_FCIWfn() {return fcisolver_->get_FCIWFN();}
 
 private:
 

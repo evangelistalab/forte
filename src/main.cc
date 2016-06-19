@@ -469,7 +469,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "STATE_AVERAGE","ROOT_SELECT SINGLE_STATE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE");
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/
@@ -1181,11 +1181,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
             }
+
             boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
+            std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
+
             boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            dsrg_mrpt3->set_fciwfn0(fciwfn_ref);
             if(options.get_str("RELAX_REF") != "NONE"){
                 dsrg_mrpt3->compute_energy_relaxed();
             }else{

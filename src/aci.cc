@@ -498,6 +498,11 @@ double AdaptiveCI::compute_energy()
 	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
         print_info();
     }
+
+    if( ex_alg_ == "COMPOSITE" ){
+        ex_alg_ = "AVERAGE";
+    }
+
     Timer aci_elapse;
 
     SharedMatrix P_evecs;
@@ -542,6 +547,7 @@ double AdaptiveCI::compute_energy()
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
+        Timer cycle_time;
         // Step 1. Diagonalize the Hamiltonian in the P space
         int num_ref_roots = std::min(nroot_,int(P_space_.size()));
 		cycle_ = cycle;
@@ -567,9 +573,9 @@ double AdaptiveCI::compute_energy()
 		if(det_save_) save_dets_to_file( P_space_, P_evecs );
 
         if( cycle < pre_iter_ ){
-             ex_alg_ = "AVERAGE";
-        }else if ( cycle == pre_iter_ ){
-            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+            ex_alg_ = "AVERAGE";
+        }else if ( cycle == pre_iter_ and (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") ){
+            ex_alg_ = "ROOT_SELECT";
         }        
         // If doing root-following, grab the initial root
         if( ex_alg_ == "ROOT_SELECT" and cycle == pre_iter_){
@@ -682,26 +688,34 @@ double AdaptiveCI::compute_energy()
         if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
+        bool stuck = check_stuck( energy_history, PQ_evals );
+        if( stuck ){
+            outfile->Printf("\n  Procedure is stuck! Quitting...");
+            break;
+        } 
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
-        if (converged){
+        if( converged and (ex_alg_ == "AVERAGE") and options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE"){
+            outfile->Printf("\n  Root averaging algorithm converged."); 
+            outfile->Printf("\n  Now optimizing PQ Space for root %d", options_.get_int("ROOT"));
+            ex_alg_ = "ROOT_SELECT";
+            pre_iter_ = cycle + 1;
+        }
+        else if (converged){
            // if(quiet_mode_) outfile->Printf(  "\n----------------------------------------------------------" ); 
             if( !quiet_mode_ )outfile->Printf("\n  ***** Calculation Converged *****");
             break;
         }
 
-        bool stuck = check_stuck( energy_history, PQ_evals );
-        if( stuck ){
-            outfile->Printf("\n  Procedure is stuck! Quitting...");
-            break;
-        }
-    
         // Step 5. Prune the P + Q space to get an updated P space
         prune_q_space(PQ_space_,P_space_,P_space_map_,PQ_evecs,num_ref_roots);        
 
         // Print information about the wave function
-        if( !quiet_mode_ ) print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
+        if( !quiet_mode_ ){
+            print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
+            outfile->Printf("\n Cycle %d took: %1.6f s", cycle, cycle_time.get() );
+        }
     }// end iterations
 
 
@@ -825,7 +839,69 @@ double AdaptiveCI::compute_energy()
 			ci_rdms_.rdm_test(ordm_a_,ordm_b_,trdm_aa_,trdm_bb_,trdm_ab_, trdm_aaa_, trdm_aab_, trdm_abb_, trdm_bbb_); 
 		}
 	}
-            
+
+    std::vector<double> cI(PQ_space_.size());
+    for( size_t I = 0; I < PQ_space_.size(); ++I){
+        cI[I] = PQ_evecs->get(I,0);
+    }
+
+    std::vector<STLBitsetDeterminant> new_dets;
+    std::vector<double> new_cI;
+    size_t max_J = 300;
+    double normal = 1.0 / sqrt(static_cast<double>(max_J));
+    for( size_t J = 0; J < max_J; ++J ){
+        auto det = PQ_space_[J];
+        det.zero_spin(1);
+        new_dets.push_back(det);
+        new_cI.push_back(normal);
+    }
+
+//    outfile->Printf("\n\n  Testing wfns");
+//{
+//    Timer sparse;
+//    SparseCIWavefunction wfn( PQ_space_, cI ); 
+//
+//    double wfn_norm = wfn.wfn_norm();
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.scale(5.0);
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.normalize();
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    //wfn.print();
+//    
+//    STLBitsetDeterminant ndet(PQ_space_[0]);
+//    ndet.zero_spin(0);
+//    wfn.add(ndet, 2.5);
+//
+//    SparseCIWavefunction new_wfn( new_dets, new_cI );
+//    wfn.merge( new_wfn ); 
+//
+//    outfile->Printf("\n Time for SparseCIWavefunction: %f", sparse.get());
+//}
+//{
+//    Timer det;
+//    DeterminantMap wfn( PQ_space_, cI ); 
+//    double wfn_norm = wfn.wfn_norm();
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.scale(5.0);
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//    wfn.normalize();
+//    wfn_norm = wfn.wfn_norm(); 
+//    outfile->Printf("\n  norm: %f", wfn_norm);
+//   // wfn.print();
+//    
+//    STLBitsetDeterminant ndet(PQ_space_[0]);
+//    ndet.zero_spin(0);
+//    wfn.add(ndet, 2.5);
+//
+//    DeterminantMap nwfn( new_dets, new_cI );
+//    wfn.merge( nwfn );
+//
+//    outfile->Printf("\n Time for DeterminantMap: %f", det.get());
+//}
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -860,7 +936,7 @@ double AdaptiveCI::compute_energy()
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
-	    print_wfn(PQ_space_, PQ_evecs, nroot_);
+	//    print_wfn(PQ_space_, PQ_evecs, nroot_);
 	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
         wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
@@ -1034,7 +1110,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 			e2[n] = E2_I;
         }
 
-		if(ex_alg_ == "STATE_AVERAGE" and nroot > 1){
+		if(ex_alg_ == "AVERAGE" and nroot > 1){
 			criteria = average_q_values(nroot, C1, E2);
 		}else{
 			criteria = root_select(nroot, C1, E2);
@@ -1489,8 +1565,8 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
+    if(nav == 0) nav = nroot;
 
-    if( nav == 0 ) nav = nroot;
     if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
@@ -1560,9 +1636,10 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
 bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals)
 {
+    bool stuck = false;
 	int nroot = evals->dim();
-	if(cycle_ < 3){
-		return false;
+	if(cycle_ < 4){
+        stuck = false;
 	}else{
 		std::vector<double> av_energies;
 		for(int i = 0; i < cycle_; ++i){
@@ -1574,13 +1651,12 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
 			av_energies.push_back(energy);
 		}
 
-		if( std::fabs( av_energies[cycle_ - 1] - av_energies[ cycle_ - 3] ) < options_.get_double("ACI_CONVERGENCE") and
-			std::fabs( av_energies[cycle_] - av_energies[cycle_ - 2] ) < options_.get_double("ACI_CONVERGENCE") ){
-			return true;
-		}else{
-			return false;
+		if( std::fabs( av_energies[cycle_ - 1] - av_energies[ cycle_ - 3] ) < options_.get_double("ACI_CONVERGENCE")) {//and
+//			std::fabs( av_energies[cycle_-2] - av_energies[cycle_ - 4] ) < options_.get_double("ACI_CONVERGENCE") ){
+			stuck = true;
 		}
 	}
+    return stuck;
 }
 
 pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant> space,
@@ -1827,7 +1903,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f%)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f %)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,
@@ -2232,7 +2308,8 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
                              int num_ref_roots)
 {
     int ndets = det_space.size();
-    int max_dim = std::min( ndets, 100 );
+    int max_dim = std::min( ndets, 1000 );
+//    int max_dim = ndets;
     int new_root;
     double old_overlap = 0.0;
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
@@ -2252,10 +2329,11 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             std::pair<double,size_t> detI = det_weight[I];
             for( int J = 0, maxJ = P_ref.size(); J < maxJ; ++J ){
                 if( det_space[detI.second] == P_ref[J].first ){
-                    new_overlap += std::abs(P_ref[J].second * detI.first);
+                    new_overlap += P_ref[J].second * evecs->get(detI.second, n);
                 } 
             } 
         }
+        new_overlap = std::fabs( new_overlap );
         outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
         // If the overlap is larger, set it as the new root and reference, for now
         if( new_overlap > old_overlap ){
@@ -2281,6 +2359,12 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
 
     return new_root;
 }
+
+void test_ops()
+{
+    
+}
+
 
 }} // EndNamespaces
 
