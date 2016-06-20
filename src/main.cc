@@ -428,7 +428,7 @@ read_options(std::string name, Options &options)
         options.add_int("DMRG_WHICH_ROOT", 1);
 
         /*- Whether or not to use state-averaging for roots >=2 with DMRG-SCF. -*/
-        options.add_bool("DMRG_STATE_AVG", true);
+        options.add_bool("DMRG_AVG_STATES", true);
 
         /*- Which active space to use for DMRGSCF calculations:
                --> input with SCF rotations (INPUT);
@@ -1181,11 +1181,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
             }
+
             boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
+            std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
+
             boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            dsrg_mrpt3->set_fciwfn0(fciwfn_ref);
             if(options.get_str("RELAX_REF") != "NONE"){
                 dsrg_mrpt3->compute_energy_relaxed();
             }else{
