@@ -42,6 +42,9 @@ public:
     /// Default constructor
     DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
 
+    /// Empty constructor
+    DeterminantMap();
+
     /// Copy constructor
     DeterminantMap(detmap& wfn_, std::vector<double>& cI);
 
@@ -54,11 +57,17 @@ public:
     /// Return the coefficients
     std::vector<double> coefficients();
 
+    /// Return a coefficient
+    double coefficient( size_t idx );
+
+    /// Update the coefficients
+    void update_coefficients( std::vector<double>& CI );
+
     /// Scale the wavefunction
     void scale( double value );
 
     /// Return the norm of the wavefunction
-    double wfn_norm();
+    double norm();
 
     /// Normalize the wavefunction
     void normalize();
@@ -69,11 +78,14 @@ public:
     /// Merge two wavefunctions, overwriting the original in the case of conflicts
     void merge( DeterminantMap& wfn ); 
 
+    /// Enlarge determinant space so that wfn is eigenfunction of total spin
+    void enforce_spin_completeness();
+
     /// Print the most important determinants
     void print();
 
     /// Return the number of determinants
-    double wfn_size();
+    double size();
 protected:
 
     /// The dimension of the hash
