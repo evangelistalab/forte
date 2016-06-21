@@ -38,6 +38,7 @@
 #include "ci_rdms.h"
 #include "sparse_ci_wfn.h"
 #include "determinant_map.h"
+#include "operator.h"
 
 namespace psi{ namespace forte{
 
@@ -255,7 +256,7 @@ private:
     void print_info();
 
     /// Print a wave function
-    void print_wfn(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot);
+    void print_wfn(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
 
     /// Diagonalize the Hamiltonian in a space of determinants
     void diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space, SharedVector &evals, SharedMatrix &evecs, int nroot);
@@ -299,16 +300,16 @@ private:
 	bool check_stuck(std::vector<std::vector<double>>& energy_history, SharedVector evals);
 
 	/// Analyze the wavefunction
-	void wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
+	void wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
 	/// Returns a vector of orbital energy, sym label pairs
 	std::vector<std::pair<double, std::pair<int,int> > > sym_labeled_orbitals(std::string type);
 
 	/// Computes spin
-	std::vector<std::pair<std::pair<double,double>, std::pair<size_t,double>>> compute_spin(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot);
+	std::vector<std::pair<std::pair<double,double>, std::pair<size_t,double>>> compute_spin(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
 
 	/// Compute 1-RDM
-	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot);
+	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
 	/// One-electron operator
 	double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q);
@@ -317,17 +318,17 @@ private:
 	double CheckSign(std::vector<int> I, const int &n);
 
 	/// Compute full S^2 matrix and diagonalize it
-	void full_spin_transform(std::vector<STLBitsetDeterminant> det_space, SharedMatrix cI, int nroot);
+	void full_spin_transform(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix cI, int nroot);
 
 	/// Check for spin contamination
-	double compute_spin_contamination(std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot);
+	double compute_spin_contamination(std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot);
 	
 	/// Save coefficients of lowest-root determinant	
-	void save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs );
+	void save_dets_to_file( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs );
 	/// Compute the Davidson correction
-	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant> P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals );   
+	std::vector<double> davidson_correction( std::vector<STLBitsetDeterminant>& P_dets, SharedVector P_evals, SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant>& PQ_dets, SharedVector PQ_evals );   
 
-    void compute_H_expectation_val(const std::vector<STLBitsetDeterminant> space,
+    void compute_H_expectation_val(const std::vector<STLBitsetDeterminant>& space,
                                     SharedVector& evals,
                                     const SharedMatrix evecs,
                                     int nroot,
@@ -338,7 +339,7 @@ private:
 	void print_nos();
 
     /// Convert from determinant to string representation
-    void convert_to_string( const std::vector<STLBitsetDeterminant> space );
+    void convert_to_string( const std::vector<STLBitsetDeterminant>& space );
 
     /// Build initial reference
     void build_initial_reference();
@@ -348,6 +349,8 @@ private:
                      std::vector<STLBitsetDeterminant>& det_space,
                      SharedMatrix evecs,
                      int num_ref_roots);
+
+    void test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs );
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

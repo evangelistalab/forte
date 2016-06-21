@@ -309,9 +309,9 @@ read_options(std::string name, Options &options)
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 30);
         /* - The convergence for the gradient for casscf -*/
-        options.add_double("CASSCF_G_CONVERGENCE", 1e-5);
+        options.add_double("CASSCF_G_CONVERGENCE", 1e-4);
         /* - The convergence of the energy for CASSCF -*/
-        options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
+        options.add_double("CASSCF_E_CONVERGENCE", 1e-6);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /* - Multiplicity for the CASSCF solution (if different from multiplicity)
@@ -340,7 +340,7 @@ read_options(std::string name, Options &options)
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
         /// When the norm of the orbital gradient is below this value, do diis
-        options.add_double("CASSCF_DIIS_NORM", 1e-4);
+        options.add_double("CASSCF_DIIS_NORM", 1e-3);
         /// Do a CAS step for every CASSCF_CI_FREQ
         options.add_bool("CASSCF_CI_STEP", false);
         /// How often should you do the CI_FREQ
@@ -705,7 +705,7 @@ read_options(std::string name, Options &options)
         /*- Average densities of different spins -*/
         options.add_bool("AVG_DENS_SPIN", false);
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP");
+        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH");
         /*- Algorithm for evaluating 3Cumulant -*/
         options.add_str("THREEPDC_ALGORITHM", "CORE", "CORE BATCH");
         /*- Detailed timing printings -*/

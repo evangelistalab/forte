@@ -107,6 +107,8 @@ public:
     const std::vector<bool> get_alfa_bits_vector_bool() const;
     /// Get the beta bits
     const std::vector<bool> get_beta_bits_vector_bool() const;
+    /// Return the number of alpha/beta pairs
+    int npair();
 
     /// Return a vector of occupied alpha orbitals
     std::vector<int> get_alfa_occ();
