@@ -16,6 +16,8 @@ DeterminantMap::DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::ve
     }        
 }
 
+DeterminantMap::DeterminantMap(){}
+
 DeterminantMap::DeterminantMap(detmap& wfn, std::vector<double>& cI) : wfn_(wfn) 
 {
     wfn_size_ = wfn.size();
@@ -34,7 +36,12 @@ std::vector<double> DeterminantMap::coefficients()
     return cI_;
 }
 
-double DeterminantMap::wfn_size()
+double DeterminantMap::coefficient( size_t value )
+{
+    return cI_[value];
+}
+
+double DeterminantMap::size()
 {
     wfn_size_ = cI_.size();
     return wfn_size_;
@@ -46,7 +53,7 @@ void DeterminantMap::scale( double value )
     std::transform( cI_.begin(), cI_.end(), cI_.begin(), std::bind1st(std::multiplies<double>(), value ));
 }
 
-double DeterminantMap::wfn_norm()
+double DeterminantMap::norm()
 {
     double norm = std::inner_product( cI_.begin(), cI_.end(), cI_.begin(), 0.0) ;
 
@@ -59,7 +66,7 @@ double DeterminantMap::wfn_norm()
 void DeterminantMap::normalize()
 {
     // Compute the norm
-    double norm = this->wfn_norm();
+    double norm = this->norm();
 
     // Take the inverse;
     norm = 1.0/norm;
@@ -110,6 +117,68 @@ void DeterminantMap::print()
                 det_weights[I].first*det_weights[I].first,
                 det_weights[I].second.str().c_str() );
     }
+}
+
+void DeterminantMap::enforce_spin_completeness()
+{
+    int nmo = wfn_.begin()->first.nmo_;
+    DeterminantMap new_dets;
+
+    std::vector<size_t> closed(nmo, 0);
+    std::vector<size_t> open(nmo, 0);
+    std::vector<size_t> open_bits(nmo, 0);
+    
+    for( auto& det_pair : wfn_ ){
+        const STLBitsetDeterminant& det = det_pair.first;
+    
+        for( int i = 0; i < nmo; ++i ){
+            closed[i] = open[i] = 0;
+            open_bits[i] = false;
+        }
+
+        int naopen = 0;
+        int nbopen = 0;
+        int nclosed = 0;
+
+        for( int i = 0; i < nmo; ++i ){
+            if( det.get_alfa_bit(i) and ( not det.get_beta_bit(i))){
+                open[naopen + nbopen] = i;
+                naopen++;
+            } else if ((not det.get_alfa_bit(i)) and det.get_beta_bit(i)){
+                open[naopen + nbopen] = i;
+                nbopen ++;
+            } else if ( det.get_alfa_bit(i) and det.get_beta_bit(i)){
+                closed[nclosed] = i;
+                nclosed++;
+            }
+        }
+
+        if( naopen + nbopen == 0 ) continue;
+
+        for( int i = 0; i < nbopen; ++i) open_bits[i] = false;
+        for( int i = nbopen; i < naopen + nbopen; ++i ) open_bits[i] = true;
+        
+        do{
+            STLBitsetDeterminant new_det;
+            for( int c = 0; c < nclosed; ++c ){
+                new_det.set_alfa_bit(closed[c],true);
+                new_det.set_beta_bit(closed[c],true);
+            }
+            for( int o = 0; o < naopen + nbopen; ++o ){
+                if( open_bits[o] ){
+                    new_det.set_alfa_bit(open[o], true);
+                }else{
+                    new_det.set_beta_bit(open[o], true);
+                }
+            }
+            new_dets.add( new_det, 0.0 );
+        } while ( std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
+    }
+    
+    size_t old_size = wfn_size_;
+    this->merge(new_dets);
+    outfile->Printf("\n  Added %zu determinants to acheive spin-completeness.", wfn_size_ - old_size);
+
 }
 
 }}

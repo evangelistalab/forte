@@ -840,68 +840,12 @@ double AdaptiveCI::compute_energy()
 		}
 	}
 
-    std::vector<double> cI(PQ_space_.size());
-    for( size_t I = 0; I < PQ_space_.size(); ++I){
-        cI[I] = PQ_evecs->get(I,0);
-    }
+   // std::vector<double> cI(PQ_space_.size());
+   // for( size_t I = 0; I < PQ_space_.size(); ++I){
+   //     cI[I] = PQ_evecs->get(I,0);
+   // }
 
-    std::vector<STLBitsetDeterminant> new_dets;
-    std::vector<double> new_cI;
-    size_t max_J = 300;
-    double normal = 1.0 / sqrt(static_cast<double>(max_J));
-    for( size_t J = 0; J < max_J; ++J ){
-        auto det = PQ_space_[J];
-        det.zero_spin(1);
-        new_dets.push_back(det);
-        new_cI.push_back(normal);
-    }
-
-//    outfile->Printf("\n\n  Testing wfns");
-//{
-//    Timer sparse;
-//    SparseCIWavefunction wfn( PQ_space_, cI ); 
-//
-//    double wfn_norm = wfn.wfn_norm();
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//    wfn.scale(5.0);
-//    wfn_norm = wfn.wfn_norm(); 
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//    wfn.normalize();
-//    wfn_norm = wfn.wfn_norm(); 
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//    //wfn.print();
-//    
-//    STLBitsetDeterminant ndet(PQ_space_[0]);
-//    ndet.zero_spin(0);
-//    wfn.add(ndet, 2.5);
-//
-//    SparseCIWavefunction new_wfn( new_dets, new_cI );
-//    wfn.merge( new_wfn ); 
-//
-//    outfile->Printf("\n Time for SparseCIWavefunction: %f", sparse.get());
-//}
-//{
-//    Timer det;
-//    DeterminantMap wfn( PQ_space_, cI ); 
-//    double wfn_norm = wfn.wfn_norm();
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//    wfn.scale(5.0);
-//    wfn_norm = wfn.wfn_norm(); 
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//    wfn.normalize();
-//    wfn_norm = wfn.wfn_norm(); 
-//    outfile->Printf("\n  norm: %f", wfn_norm);
-//   // wfn.print();
-//    
-//    STLBitsetDeterminant ndet(PQ_space_[0]);
-//    ndet.zero_spin(0);
-//    wfn.add(ndet, 2.5);
-//
-//    DeterminantMap nwfn( new_dets, new_cI );
-//    wfn.merge( nwfn );
-//
-//    outfile->Printf("\n Time for DeterminantMap: %f", det.get());
-//}
+   // test_ops(PQ_space_, cI);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -1659,7 +1603,7 @@ bool AdaptiveCI::check_stuck(std::vector<std::vector<double>>& energy_history, S
     return stuck;
 }
 
-pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant> space,
+pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute_spin(std::vector<STLBitsetDeterminant>& space,
 																					  SharedMatrix evecs,
 																					  int nroot)
 {
@@ -1720,7 +1664,7 @@ pVector<std::pair<double, double>, std::pair<size_t,double>> AdaptiveCI::compute
 	return spin_vec;
 }
 
-void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, SharedMatrix evecs, int nroot)
+void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot)
 {
 
     std::vector<bool> occ(2*nact_,0);
@@ -1762,7 +1706,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant> det_space, Share
 		int order = 0;
 		size_t det = 0;
 		for(auto& i : excitation_counter){
-			outfile->Printf("\n      %2d           %8zu           %.11f", order, i.first, i.second);
+			outfile->Printf("\n        %d           %8zu           %.11f", order, i.first, i.second);
 			det += i.first;
 			if(det == det_space.size()) break;
 			++order;
@@ -1875,7 +1819,7 @@ double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
 
 }
 
-void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix evecs,int nroot)
+void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix evecs,int nroot)
 {
 	std::string state_label;
 	std::vector<string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet", "sextet","septet","octet","nonet", "decatet"});
@@ -1903,7 +1847,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 		state_label = s2_labels[std::round(spins[n].first.first * 2.0)];
 		root_spin_vec_.clear();
 		root_spin_vec_[n] = make_pair(spins[n].first.first, spins[n].first.second);
-        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.3f, S = %5.3f, %s (from %zu determinants, %3.2f %)",
+        outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s (from %zu determinants, %3.2f)",
 			n,
 			spins[n].first.second,
 			spins[n].first.first,
@@ -1914,7 +1858,7 @@ void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant> space,SharedMatrix 
 	outfile->Flush();
 }
 
-void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant > det_space, SharedMatrix cI, int nroot )
+void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant >& det_space, SharedMatrix cI, int nroot )
 {
 	Timer timer;
 	outfile->Printf("\n  Performing spin projection...");
@@ -1977,7 +1921,7 @@ void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant > det_sp
 	outfile->Flush();
 }
 
-double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs, int nroot)
+double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, int nroot)
 {
 	auto spins = compute_spin(space, evecs, nroot);
 	double spin_contam = 0.0;
@@ -1990,7 +1934,7 @@ double AdaptiveCI::compute_spin_contamination( std::vector<STLBitsetDeterminant>
 	return spin_contam;
 }
 
-void AdaptiveCI::save_dets_to_file( std::vector<STLBitsetDeterminant> space, SharedMatrix evecs )
+void AdaptiveCI::save_dets_to_file( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs )
 {
 	//Use for single-root calculations only
 	for(size_t I = 0, max = space.size(); I < max; ++I){
@@ -2003,8 +1947,8 @@ void AdaptiveCI::save_dets_to_file( std::vector<STLBitsetDeterminant> space, Sha
 	det_list_ << "\n";
 }
 
-std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterminant> P_dets,  SharedVector P_evals, 
-													 SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant> PQ_dets, SharedVector PQ_evals)
+std::vector<double> AdaptiveCI::davidson_correction( std::vector<STLBitsetDeterminant>& P_dets,  SharedVector P_evals, 
+													 SharedMatrix PQ_evecs, std::vector<STLBitsetDeterminant>& PQ_dets, SharedVector PQ_evals)
 {
 	outfile->Printf("\n  There are %zu PQ dets.", PQ_dets.size());
 	outfile->Printf("\n  There are %zu P dets.", P_dets.size());
@@ -2094,7 +2038,7 @@ void AdaptiveCI::print_nos()
 
 }
 
-void AdaptiveCI::compute_H_expectation_val( const std::vector<STLBitsetDeterminant> space, SharedVector& evals, const SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method)
+void AdaptiveCI::compute_H_expectation_val( const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, const SharedMatrix evecs, int nroot, DiagonalizationMethod diag_method)
 {
     size_t space_size = space.size();
     SparseCISolver ssolver;
@@ -2124,7 +2068,7 @@ void AdaptiveCI::compute_H_expectation_val( const std::vector<STLBitsetDetermina
     }
 }
 
-void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant> space)
+void AdaptiveCI::convert_to_string( const std::vector<STLBitsetDeterminant>& space)
 {
     size_t space_size = space.size();
     size_t nalfa_str = 0;
@@ -2342,7 +2286,7 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
             
             outfile->Printf("\n  Saving reference for root %d", n);
             for( size_t I = ndets - 1; I > (ndets - max_dim); --I ){
-                P_int.push_back( std::make_pair( det_space[det_weight[I].second], det_weight[I].first ));
+                P_int.push_back( std::make_pair( det_space[det_weight[I].second], evecs->get(det_weight[I].second, n) ));
             }
             old_overlap = new_overlap;
         }
@@ -2360,9 +2304,18 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
     return new_root;
 }
 
-void test_ops()
+void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs )
 {
+    outfile->Printf("\n\n  Testing operators");
+
+    DeterminantMap aci_wfn( det_space, PQ_evecs );
+    aci_wfn.print();
+    WFNOperator op(mo_space_info_);
     
+    op.op_lists( aci_wfn );
+    op.tp_lists( aci_wfn );
+    double S2 = op.s2( aci_wfn );
+    outfile->Printf("\n S2 is %f", S2);
 }
 
 
