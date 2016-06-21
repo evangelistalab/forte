@@ -1666,9 +1666,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
     outfile->Printf("\n Batching algorithm is going over m and n");
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
-    #ifdef _OPENMP
-        nthread = omp_get_max_threads();
-    #endif
+    //#ifdef _OPENMP
+    //    nthread = omp_get_max_threads();
+    //#endif
 
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     outfile->Printf("\n\n====Blocking information==========\n");
@@ -1734,13 +1734,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         else
         {
             ///If last_block is shorter or long, fill the rest
-            block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
-            m_batch.resize(block_size);
+            size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
+            m_batch.resize(gimp_block_size);
             //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
-             std::copy(acore_mos_.begin() + m_blocks * core_ / num_block, acore_mos_.end(), m_batch.begin());
+             std::copy(acore_mos_.begin() + (m_blocks - 1)  * core_ / num_block, acore_mos_.end(), m_batch.begin());
         }
         ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
-        ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {block_size, nthree_, virtual_});
+        ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
         BmQe("mQe") = B("Qme");
         
 
@@ -1753,16 +1753,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                 /// Fill the mbatch from block_begin to block_end
                 /// This is done so I can pass a block to IntegralsAPI to read a chunk
                 n_batch.resize(block_size);
-                std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.end() + ((n_blocks + 1) * block_size), n_batch.begin());
+                std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.end() + ((n_blocks + 1) * block_size), n_batch.begin());
             }
             else
             {
                 ///If last_block is longer, block_size + remainder
-                block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
-                n_batch.resize(block_size);
-                std::copy(acore_mos_.begin() +(n_blocks  + core_ / num_block), acore_mos_.end(), n_batch.begin());
+                size_t gimp_block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
+                n_batch.resize(gimp_block_size);
+                std::copy(acore_mos_.begin() + (n_blocks - 1) * core_ / num_block, acore_mos_.end(), n_batch.begin());
             }
-            ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {block_size, nthree_, virtual_});
+            ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
             if(n_blocks == m_blocks)
             {
                 BnQf.copy(BmQe);
