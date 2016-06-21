@@ -458,7 +458,7 @@ double MRDSRG::compute_energy_relaxed(){
             Erelax = fcisolver.compute_energy();
             fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
             fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+            fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
             Erelax_vec.push_back(Erelax);
             double Edelta_relax = Erelax - Etemp;
             Edelta_relax_vec.push_back(Edelta_relax);
