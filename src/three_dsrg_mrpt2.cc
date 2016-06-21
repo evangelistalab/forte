@@ -1719,7 +1719,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
 
     ///Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
-    for(size_t m_blocks= 0; m_blocks < num_block; m_blocks++)
+    for(size_t m_blocks = 0; m_blocks < num_block; m_blocks++)
     {
         std::vector<size_t> m_batch;
         ///If core_ goes into num_block equally, all blocks are equal
@@ -1729,7 +1729,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
             /// This is done so I can pass a block to IntegralsAPI to read a chunk
             m_batch.resize(block_size);
             /// copy used to get correct indices for B.  
-            std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.end() + ((m_blocks + 1) * block_size), m_batch.begin());
+            std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
         }
         else
         {
@@ -1742,6 +1742,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
         BmQe("mQe") = B("Qme");
+        for(auto mb : m_batch)
+        {
+            outfile->Printf(" %d ", mb);
+        }
         
 
         for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
@@ -1753,7 +1757,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                 /// Fill the mbatch from block_begin to block_end
                 /// This is done so I can pass a block to IntegralsAPI to read a chunk
                 n_batch.resize(block_size);
-                std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.end() + ((n_blocks + 1) * block_size), n_batch.begin());
+                std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
             }
             else
             {
@@ -1775,6 +1779,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
 
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
+            outfile->Printf("\n mb \n");
+            for(auto nb : n_batch)
+            {
+                outfile->Printf(" %d ", nb);
+            }
             for(size_t mn = 0; mn < m_size * n_size; ++mn){
                 int thread = 0;
                 size_t m = mn / n_size + m_batch[0];
@@ -1797,10 +1806,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                 std::copy(&BnQf.data()[n * dim], &BnQf.data()[n * dim + dim], BnaVec[thread].data().begin());
                 //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
                 std::copy(&BnQf.data()[n * dim], &BnQf.data()[n * dim + dim], BnbVec[thread].data().begin());
-                outfile->Printf("\n m:%d BnaVec: %8.8f n:%d BmaVec: %8.8f", m,BmaVec[thread].norm(2.0), n, BnaVec[thread].norm(2.0));
+                //outfile->Printf("\n m:%d BnaVec: %8.8f n:%d BmaVec: %8.8f", m,BmaVec[thread].norm(2.0), n, BnaVec[thread].norm(2.0));
 
 
-                // alpha-aplha
+                //// alpha-aplha
                 BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
                 BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
@@ -1809,16 +1818,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
-                // beta-beta
-                //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                //BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                //BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                //RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                //    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                //    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                //Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+                //// beta-beta
+                ////BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+                ////BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+                ////BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+                ////RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                ////    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                ////Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
-                // alpha-beta
+                //// alpha-beta
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
