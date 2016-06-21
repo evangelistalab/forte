@@ -340,7 +340,7 @@ read_options(std::string name, Options &options)
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
         /// When the norm of the orbital gradient is below this value, do diis
-        options.add_double("CASSCF_DIIS_NORM", 1e-4);
+        options.add_double("CASSCF_DIIS_NORM", 1e-3);
         /// Do a CAS step for every CASSCF_CI_FREQ
         options.add_bool("CASSCF_CI_STEP", false);
         /// How often should you do the CI_FREQ
