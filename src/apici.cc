@@ -41,6 +41,7 @@ void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_
 void combine_hashes(det_hash<>& dets_C_hash_A,det_hash<>& dets_C_hash_B);
 void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash,det_hash<>& dets_C_hash);
 void copy_hash_to_vec(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>& C);
+void copy_vec_to_hash(det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash);
 void scale(std::vector<double>& A,double alpha);
 void scale(det_hash<>& A,double alpha);
 double normalize(std::vector<double>& C);
@@ -173,9 +174,13 @@ void AdaptivePathIntegralCI::startup()
     do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PERTURB_ANALYSIS");
     chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
+    symm_approx_H_ = options_.get_bool("SYMM_APPROX_H");
 
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
     print_full_wavefunction_ = options_.get_bool("PRINT_FULL_WAVEFUNCTION");
+
+    approx_E_tau_ = 1.0;
+    approx_E_S_ = 0.0;
 
     if (options_.get_str("PROPAGATOR") == "LINEAR"){
         propagator_ = LinearPropagator;
@@ -313,11 +318,18 @@ double AdaptivePathIntegralCI::estimate_high_energy()
 {
     double high_obt_energy = 0.0;
     int ne = 0;
-    std::vector<double> obt_energies;
+    std::vector<std::pair<double, int>> obt_energies;
     auto bits_ = reference_determinant_.bits_;
+    Determinant high_det(reference_determinant_);
     for (int i = 0; i < ncmo_; i++) {
-        if (bits_[i]) ++ne;
-        if (bits_[ncmo_ +i]) ++ne;
+        if (bits_[i]) {
+            ++ne;
+            high_det.destroy_alfa_bit(i);
+        }
+        if (bits_[ncmo_ +i]){
+            ++ne;
+            high_det.destroy_beta_bit(i);
+        }
 
         double temp  = fci_ints_->oei_a(i,i);
         for(int p = 0; p < ncmo_; ++p){
@@ -328,8 +340,7 @@ double AdaptivePathIntegralCI::estimate_high_energy()
                 temp += fci_ints_->tei_ab(i,p,i,p);
             }
         }
-        obt_energies.push_back(temp);
-
+        obt_energies.push_back(std::make_pair(temp,i));
     }
     std::sort(obt_energies.begin(),obt_energies.end());
 //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
@@ -337,11 +348,125 @@ double AdaptivePathIntegralCI::estimate_high_energy()
 //        outfile -> Printf("  %lf", item);
     int Ndocc = ne/2;
     for (int i = 1; i <= Ndocc; i++) {
-        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i];
+        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i].first;
+        high_det.create_alfa_bit(obt_energies[obt_energies.size()-i].second);
+        high_det.create_beta_bit(obt_energies[obt_energies.size()-i].second);
     }
-    if (ne % 2)
-        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc];
+    if (ne % 2) {
+        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc].first;
+        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
+    }
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
+
+    double lambda_h_G = high_det.energy();
+    std::vector<int> aocc = high_det.get_alfa_occ();
+    std::vector<int> bocc = high_det.get_beta_occ();
+    std::vector<int> avir = high_det.get_alfa_vir();
+    std::vector<int> bvir = high_det.get_beta_vir();
+    std::vector<int> aocc_offset(nirrep_ + 1);
+    std::vector<int> bocc_offset(nirrep_ + 1);
+    std::vector<int> avir_offset(nirrep_ + 1);
+    std::vector<int> bvir_offset(nirrep_ + 1);
+
+    int noalpha = aocc.size();
+    int nobeta  = bocc.size();
+    int nvalpha = avir.size();
+    int nvbeta  = bvir.size();
+
+    for (int i = 0; i < noalpha; ++i) aocc_offset[mo_symmetry_[aocc[i]] + 1] += 1;
+    for (int a = 0; a < nvalpha; ++a) avir_offset[mo_symmetry_[avir[a]] + 1] += 1;
+    for (int i = 0; i < nobeta; ++i) bocc_offset[mo_symmetry_[bocc[i]] + 1] += 1;
+    for (int a = 0; a < nvbeta; ++a) bvir_offset[mo_symmetry_[bvir[a]] + 1] += 1;
+    for (int h = 1; h < nirrep_ + 1; ++h){
+        aocc_offset[h] += aocc_offset[h-1];
+        avir_offset[h] += avir_offset[h-1];
+        bocc_offset[h] += bocc_offset[h-1];
+        bvir_offset[h] += bvir_offset[h-1];
+    }
+
+    // Generate aa excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = aocc_offset[h]; i < aocc_offset[h + 1]; ++i){
+            int ii = aocc[i];
+            for (int a = avir_offset[h]; a < avir_offset[h + 1]; ++a){
+                int aa = avir[a];
+                double HJI = high_det.slater_rules_single_alpha(ii,aa);
+                lambda_h_G += fabs(HJI);
+            }
+        }
+    }
+    // Generate bb excitations
+    for (int h = 0; h < nirrep_; ++h){
+        for (int i = bocc_offset[h]; i < bocc_offset[h + 1]; ++i){
+            int ii = bocc[i];
+            for (int a = bvir_offset[h]; a < bvir_offset[h + 1]; ++a){
+                int aa = bvir[a];
+                double HJI = high_det.slater_rules_single_beta(ii,aa);
+                lambda_h_G += fabs(HJI);
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = i + 1; j < noalpha; ++j){
+            int jj = aocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : avir_offset[h];
+                int maxb = avir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = avir[b];
+                    double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < noalpha; ++i){
+        int ii = aocc[i];
+        for (int j = 0; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                int minb = bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+    for (int i = 0; i < nobeta; ++i){
+        int ii = bocc[i];
+        for (int j = i + 1; j < nobeta; ++j){
+            int jj = bocc[j];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                int h = mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa];
+                if (h < mo_symmetry_[aa]) continue;
+                int minb = h == mo_symmetry_[aa] ? a + 1 : bvir_offset[h];
+                int maxb = bvir_offset[h + 1];
+                for (int b = minb; b < maxb; ++b){
+                    int bb = bvir[b];
+                    double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
+                    lambda_h_G += fabs(HJI);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
+    outfile->Printf("\n  Highest Excited determinant:");
+    high_det.print();
+    outfile->Printf("\n  Determinant Energy                    :  %.12f", high_det.energy());
+    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_G);
+    lambda_h_ = lambda_h_G;
     return lambda_h_;
 }
 
@@ -355,24 +480,24 @@ void AdaptivePathIntegralCI::convergence_analysis()
 void AdaptivePathIntegralCI::compute_characteristic_function()
 {
     shift_ = (lambda_h_ + lambda_1_)/2.0;
-    range_ = time_step_*(lambda_h_ - lambda_1_)/2.0;
+    range_ = (lambda_h_ - lambda_1_)/2.0;
     switch (propagator_) {
     case PowerPropagator:
         cha_func_coefs_.clear();
         cha_func_coefs_.push_back(0.0);
-        cha_func_coefs_.push_back(1.0);
+        cha_func_coefs_.push_back(-1.0);
         break;
     case LinearPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 1, time_step_, range_);
         break;
     case QuadraticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 2, time_step_, range_);
         break;
     case CubicPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 3, time_step_, range_);
         break;
     case QuarticPropagator:
-        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, lambda_1_);
+        Taylor_propagator_coefs(cha_func_coefs_, 4, time_step_, range_);
         break;
     case ExpChebyshevPropagator:
         Exp_Chebyshev_propagator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
@@ -435,7 +560,7 @@ void Taylor_propagator_coefs(std::vector<double>& coefs, int order, double tau, 
     coefs.clear();
     std::vector<double> poly_coefs;
     Taylor_polynomial_coefs(poly_coefs, order);
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -tau, -tau*S);
 //    coefs.clear();
 //    for (int i=0; i <= order; i++) {
 //        coefs.push_back(0.0);
@@ -492,12 +617,12 @@ void Exp_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, doubl
 //        outfile->Printf("\n\n  chebyshev poly in step %d", i);
 //        print_polynomial(chbv_poly_coefs);
         for (int j = 0; j <= i; j++) {
-            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, range) * chbv_poly_coefs[j];
+            poly_coefs[j] += (i == 0 ? 1.0 : 2.0) * boost::math::cyl_bessel_i(i, tau * range) * chbv_poly_coefs[j];
         }
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range) {
@@ -505,7 +630,7 @@ void Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double ta
     std::vector<double> poly_coefs;
     Chebyshev_polynomial_coefs(poly_coefs, order);
 
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, tau * S/range);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
@@ -527,7 +652,7 @@ void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, dou
 //        outfile->Printf("\n\n  propagate poly in step %d", i);
 //        print_polynomial(poly_coefs);
     }
-    Polynomial_propagator_coefs(coefs, poly_coefs, -tau/range, 0.0);
+    Polynomial_propagator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
 double AdaptivePathIntegralCI::compute_energy()
@@ -545,7 +670,7 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
     outfile->Printf("\n\t         by Francesco A. Evangelista and Tianyuan Zhang");
-    outfile->Printf("\n\t                      version May. 26 2016");
+    outfile->Printf("\n\t                      version Jun. 15 2016");
     outfile->Printf("\n\t                    %4d thread(s) %s",num_threads_,have_omp_ ? "(OMP)" : "");
     outfile->Printf("\n\t  ---------------------------------------------------------");
 
@@ -684,7 +809,11 @@ double AdaptivePathIntegralCI::compute_energy()
     }
 
     det_hash<> dets_C_hash;
-    apply_tau_H(1.0,spawning_threshold_,dets,C,dets_C_hash, shift_);
+    if (symm_approx_H_) {
+        apply_tau_H_symm(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
+    } else {
+        apply_tau_H(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
+    }
     dets_C_hash.clear();
     if (variational_estimate_) {
         outfile->Printf("\n  --------------------------------------------------------------------------------------------------------------------------------");
@@ -861,6 +990,8 @@ void AdaptivePathIntegralCI::propagate(PropagatorType propagator, det_vec& dets,
     case DeltaPropagator:
         propagate_delta(dets,C,spawning_threshold,S);
         break;
+    case LinearPropagator:
+        propagate_Linear(dets,C,tau,spawning_threshold,lambda_1_);
     case TrotterLinear:
         propagate_Trotter_linear(dets,C,tau,spawning_threshold,S);
         break;
@@ -908,7 +1039,11 @@ void AdaptivePathIntegralCI::propagate_delta(det_vec& dets,std::vector<double>& 
 //        outfile->Printf("\nCurrent root:%.12lf",range_ * root + shift_);
 //        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
         double root = -cos(((double)i)*PI/(chebyshev_order_ + 0.5));
-        apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        if (symm_approx_H_) {
+            apply_tau_H_symm(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        } else {
+            apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        }
         copy_hash_to_vec(dets_C_hash,dets,C);
         dets_C_hash.clear();
         normalize(C);
@@ -935,17 +1070,12 @@ void AdaptivePathIntegralCI::propagate_Chebyshev(det_vec& dets,std::vector<doubl
     }
 }
 
-void AdaptivePathIntegralCI::propagate_first_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
+void AdaptivePathIntegralCI::propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S)
 {
     // A map that contains the pair (determinant,coefficient)
     det_hash<> dets_C_hash;
 
-    // Term 1. |n>
-    for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
-        dets_C_hash[dets[I]] = C[I];
-    }
-    // Term 2. -tau (H - S)|n>
-    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S);
+    apply_tau_H(-tau,spawning_threshold,dets,C,dets_C_hash,S+1.0/tau);
 
     // Overwrite the input vectors with the updated wave function
     copy_hash_to_vec(dets_C_hash,dets,C);
@@ -1011,8 +1141,12 @@ void AdaptivePathIntegralCI::propagate_Polynomial(det_vec& dets,std::vector<doub
     for (size_t I = 0, max_I = dets.size(); I < max_I; ++I){
         dets_sum_map[dets[I]] = coef[0] * C[I];
     }
+    if (symm_approx_H_) {
+        apply_tau_H_symm(coef[1],spawning_threshold,dets,C,dets_C_hash,0.0);
+    } else {
+        apply_tau_H(coef[1],spawning_threshold,dets,C,dets_C_hash,0.0);
+    }
 
-    apply_tau_H(coef[1],spawning_threshold,dets,C,dets_C_hash,0.0);
     // Add this term to the total vector
     combine_hashes(dets_C_hash,dets_sum_map);
 
@@ -1425,6 +1559,230 @@ void AdaptivePathIntegralCI::propagate_DavidsonLiu(det_vec& dets,std::vector<dou
 //    outfile->Printf("\n  %s: %f s","Time spent diagonalizing H",t_davidson.elapsed());
 }
 
+
+void AdaptivePathIntegralCI::apply_tau_H_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, const Determinant &detI, double CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling)
+{
+    bool do_singles = (max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold);
+    bool do_doubles = (max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold);
+
+    // Diagonal contributions
+    double det_energy = detI.energy();
+    new_space_C_vec.push_back(std::make_pair(detI, tau * (det_energy - E0) * CI));
+
+    if (do_singles or do_doubles){
+
+        std::vector<int> aocc = detI.get_alfa_occ();
+        std::vector<int> bocc = detI.get_beta_occ();
+        std::vector<int> avir = detI.get_alfa_vir();
+        std::vector<int> bvir = detI.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta  = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta  = bvir.size();
+
+        if (do_singles){
+            // Generate alpha excitations
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                        Determinant detJ(detI);
+                        detJ.set_alfa_bit(ii,false);
+                        detJ.set_alfa_bit(aa,true);
+                        double HJI = detJ.slater_rules(detI);
+                        max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                            det_hash_it it = pre_dets_C_hash.find(detJ);
+                            if (it != pre_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
+//                                outfile->Printf("\nTouched: %.12f previous: %.12f",CI, new_space_C_vec[0].second);
+                                new_space_C_vec[0].second += tau * HJI * it -> second;
+//                                outfile->Printf(", then: %.12f", new_space_C_vec[0].second);
+                            }
+                        }
+                    }
+                }
+            }
+            // Generate beta excitations
+            for (int i = 0; i < nobeta; ++i){
+                int ii = bocc[i];
+                for (int a = 0; a < nvbeta; ++a){
+                    int aa = bvir[a];
+                    if ((mo_symmetry_[ii] ^ mo_symmetry_[aa])  == 0){
+                        Determinant detJ(detI);
+                        detJ.set_beta_bit(ii,false);
+                        detJ.set_beta_bit(aa,true);
+                        double HJI = detJ.slater_rules(detI);
+                        max_coupling.first = std::max(max_coupling.first,std::fabs(HJI));
+                        if (std::fabs(HJI * CI) >= spawning_threshold){
+                            new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                            det_hash_it it = pre_dets_C_hash.find(detJ);
+                            if (it != pre_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
+                                new_space_C_vec[0].second += tau * HJI * it -> second;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (do_doubles){
+            // Generate alpha-alpha excitations
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                for (int j = i + 1; j < noalpha; ++j){
+                    int jj = aocc[j];
+                    for (int a = 0; a < nvalpha; ++a){
+                        int aa = avir[a];
+                        for (int b = a + 1; b < nvalpha; ++b){
+                            int bb = avir[b];
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                                double HJI = fci_ints_->tei_aa(ii,jj,aa,bb);
+                                max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    HJI *= detJ.double_excitation_aa(ii,jj,aa,bb);
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    det_hash_it it = pre_dets_C_hash.find(detJ);
+                                    if (it != pre_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
+                                        new_space_C_vec[0].second += tau * HJI * it -> second;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Generate alpha-beta excitations
+            for (int i = 0; i < noalpha; ++i){
+                int ii = aocc[i];
+                for (int j = 0; j < nobeta; ++j){
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvalpha; ++a){
+                        int aa = avir[a];
+                        for (int b = 0; b < nvbeta; ++b){
+                            int bb = bvir[b];
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                                double HJI = fci_ints_->tei_ab(ii,jj,aa,bb);
+                                max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    HJI *= detJ.double_excitation_ab(ii,jj,aa,bb);
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    det_hash_it it = pre_dets_C_hash.find(detJ);
+                                    if (it != pre_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
+                                        new_space_C_vec[0].second += tau * HJI * it -> second;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Generate beta-beta excitations
+            for (int i = 0; i < nobeta; ++i){
+                int ii = bocc[i];
+                for (int j = i + 1; j < nobeta; ++j){
+                    int jj = bocc[j];
+                    for (int a = 0; a < nvbeta; ++a){
+                        int aa = bvir[a];
+                        for (int b = a + 1; b < nvbeta; ++b){
+                            int bb = bvir[b];
+                            if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                                double HJI = fci_ints_->tei_bb(ii,jj,aa,bb);
+                                max_coupling.second = std::max(max_coupling.second,std::fabs(HJI));
+                                if (std::fabs(HJI * CI) >= spawning_threshold){
+                                    Determinant detJ(detI);
+                                    HJI *= detJ.double_excitation_bb(ii,jj,aa,bb);
+                                    new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
+                                    det_hash_it it = pre_dets_C_hash.find(detJ);
+                                    if (it != pre_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
+                                        new_space_C_vec[0].second += tau * HJI * it -> second;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+void AdaptivePathIntegralCI::apply_tau_H_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash, double S)
+{
+    // A vector of maps that hold (determinant,coefficient)
+//    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
+    std::vector<std::pair<double,double>> thread_max_HJI(num_threads_);
+//    outfile->Printf("\nSymmetric used.\n");
+
+    if(do_dynamic_prescreening_){
+        det_hash<> pre_dets_C_hash;
+        copy_vec_to_hash(dets, C, pre_dets_C_hash);
+
+//        outfile->Printf("\nSize of pre: %zu", pre_dets_C_hash.size());
+
+        size_t max_I = dets.size();
+#pragma omp parallel for
+        for (size_t I = 0; I < max_I; ++I){
+            std::pair<double,double> zero_pair(0.0,0.0);
+            // Update the list of couplings
+            std::pair<double,double> max_coupling;
+            #pragma omp critical
+            {
+                max_coupling = dets_max_couplings_[dets[I]];
+            }
+            if (max_coupling == zero_pair){
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                apply_tau_H_symm_det_dynamic(tau,spawning_threshold, pre_dets_C_hash,dets[I],C[I],thread_det_C_vec,S,max_coupling);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
+                #pragma omp critical
+                {
+                    dets_max_couplings_[dets[I]] = max_coupling;
+                }
+            }else{
+                std::vector<std::pair<Determinant, double>> thread_det_C_vec;
+                apply_tau_H_symm_det_dynamic(tau,spawning_threshold, pre_dets_C_hash,dets[I],C[I],thread_det_C_vec,S,max_coupling);
+                #pragma omp critical
+                {
+                    for (auto det_C : thread_det_C_vec) {
+                        dets_C_hash[det_C.first] += det_C.second;
+                    }
+                }
+            }
+        }
+    } else {
+        outfile->Printf("Symmetric approximated hamiltonian only implemented on dynamic prescreening.");
+    }
+    if (approx_E_flag_) {
+        timer_on("PIFCI:<E>a");
+        size_t max_I = dets.size();
+        double CHC_energy = 0.0;
+#pragma omp parallel for reduction(+:CHC_energy)
+        for (size_t I = 0; I < max_I; ++I){
+            CHC_energy += C[I] * dets_C_hash[dets[I]];
+        }
+        CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
+        timer_off("PIFCI:<E>a");
+        double CHC_energy_gradient = (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+        old_approx_energy_ = approx_energy_;
+        approx_energy_ = CHC_energy;
+        approx_E_flag_ = false;
+        approx_E_tau_ = tau;
+        approx_E_S_ = S;
+        if (iter_ != 0)
+            outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
+    }
+}
+
 void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash, double S)
 {
     // A vector of maps that hold (determinant,coefficient)
@@ -1574,6 +1932,8 @@ void AdaptivePathIntegralCI::apply_tau_H(double tau,double spawning_threshold,de
         old_approx_energy_ = approx_energy_;
         approx_energy_ = CHC_energy;
         approx_E_flag_ = false;
+        approx_E_tau_ = tau;
+        approx_E_S_ = S;
         if (iter_ != 0)
             outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
     }
@@ -2815,6 +3175,14 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>&
         dets[I] = it->first;
         C[I] = it->second;
         I++;
+    }
+}
+
+void copy_vec_to_hash(det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash)
+{
+    size_t size = C.size();
+    for (size_t I = 0; I < size; ++I) {
+        dets_C_hash[dets[I]] = C[I];
     }
 }
 

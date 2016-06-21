@@ -553,7 +553,7 @@ void OrbitalOptimizer::fill_shared_density_matrices()
 
     SharedMatrix gamma2_matrix(new Matrix("Gamma2", na_ * na_, na_ * na_));
     gamma2_.iterate([&](const std::vector<size_t>& i,double& value){
-        gamma2_matrix->set(i[0] * i[1] + i[1], i[2] * i[3] + i[3], value);});
+        gamma2_matrix->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);});
     gamma2M_ = gamma2_matrix;
     if(casscf_debug_print_)
     {

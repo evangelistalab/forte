@@ -1,6 +1,7 @@
 #ifndef _fci_mo_h_
 #define _fci_mo_h_
 
+#include <physconst.h>
 #include <libqt/qt.h>
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
@@ -9,6 +10,9 @@
 #include <libmints/matrix.h>
 #include <libmints/wavefunction.h>
 #include <libmints/molecule.h>
+#include <libmints/basisset.h>
+#include <libmints/integral.h>
+#include <libmints/sointegral.h>
 #include <vector>
 #include <tuple>
 #include <string>
@@ -70,8 +74,17 @@ public:
     /// Use whatever orbitals passed to this code
     void use_default_orbitals(const bool& default_orbitals) {default_orbitals_ = default_orbitals;}
 
+    /// Form P space
+    void form_p_space();
+
     /// Return the vector of determinants
     vecdet p_space() {return determinant_;}
+
+    /// Return the orbital extents of the current state
+    vector<vector<vector<double>>> orb_extents() {
+        compute_orbital_extents();
+        return orb_extents_;
+    }
 
     /// Return the vector of eigen vectors
     vector<pair<SharedVector,double>> eigen() {return eigen_;}
@@ -81,6 +94,7 @@ public:
 
     /// Set to use semicanonical
     void set_semicanonical(const bool& semi) {semi_ = semi;}
+
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(const bool& quiet) {quiet_ = quiet;}
 
@@ -150,6 +164,9 @@ protected:
     Dimension active_v_;  // active virtual for incomplete active space
     vector<size_t> av_;
 
+    /// Compute IP or EA
+    std::string ipea_;
+
     /// Number of Alpha and Beta Electrons
     long int nalfa_;
     long int nbeta_;
@@ -169,6 +186,8 @@ protected:
     vector<bool> Form_String_Ref(const bool &print = false);
     vector<vector<vector<bool>>> Form_String_Singles(const vector<bool> &ref_string, const bool &print = false);
     vector<vector<vector<bool>>> Form_String_Doubles(const vector<bool> &ref_string, const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_IP(const vector<bool> &ref_string, const bool &print = false);
+    vector<vector<vector<bool>>> Form_String_EA(const vector<bool> &ref_string, const bool &print = false);
 
     /// Choice of Roots
     int nroot_;  // number of roots
@@ -226,7 +245,7 @@ protected:
     void print3PDC(const string &str, const d6 &ThreePDC, const int &PRINT);
 
     /// Form Density Matrix
-    void FormDensity(CI_RDMS &ci_rdms, const int &root, d2 &A, d2 &B);
+    void FormDensity(CI_RDMS &ci_rdms, d2 &A, d2 &B);
     /// Check Density Matrix
     bool CheckDensity();
 
@@ -263,6 +282,42 @@ protected:
     /// Reference Energy
     double Eref_;
     void compute_ref();
+
+    /// Compute AO quadrupole for orbital extents
+    void compute_SOquadrupole();
+    vector<SharedMatrix> so_Qpole_;
+
+    /// Orbital Extents
+    void compute_orbital_extents();
+    d3 orb_extents_; // irrep BY number of active orbitals in current irrep BY orbital extents in x, y, z directions
+    size_t idx_diffused_;
+    vector<size_t> diffused_orbs_;
+
+    /**
+     * @brief Return a vector of corresponding indices before the vector is sorted
+     * @typename T The data type of the sorted vector
+     * @param v The sorted vector
+     * @param decending Sort the vector v in decending order?
+     * @return The vector of indices before sorting v
+     */
+    template <typename T>
+    vector<size_t> sort_indexes(const vector<T>& v, const bool& decend = false) {
+
+      // initialize original index locations
+      vector<size_t> idx(v.size());
+      std::iota(idx.begin(), idx.end(), 0);
+
+      // sort indexes based on comparing values in v
+      if(decend){
+          sort(idx.begin(), idx.end(),
+               [&v](size_t i1, size_t i2) {return v[i1] > v[i2];});
+      } else {
+          sort(idx.begin(), idx.end(),
+               [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+      }
+
+      return idx;
+    }
 
     /// Check Sign (inline functons)
     double CheckSign(const vector<bool>& I, const int &n){

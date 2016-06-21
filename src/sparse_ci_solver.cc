@@ -1340,7 +1340,7 @@ void SparseCISolver::set_maxiter_davidson(int value)
 
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
-    if (space.size() <= 200){
+    if (space.size() <= 200 && !force_diag_method_){
         diagonalize_full(space,evals,evecs,nroot,multiplicity);
     }else{
         if (diag_method == Full){

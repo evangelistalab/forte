@@ -602,6 +602,17 @@ double STLBitsetDeterminant::spin_z() const
     return 0.5 * static_cast<double>(n);
 }
 
+int STLBitsetDeterminant::npair()
+{
+    int npair = 0;
+    for( int n = 0; n < nmo_; ++n ){
+        if( (bits_[n] == 1) and (bits_[nmo_ + n] == 1) ){
+            npair++;
+        } 
+    }
+    return npair;
+}
+
 double STLBitsetDeterminant::spin2_slow(const STLBitsetDeterminant& rhs) const
 {
     double s2 = 0.0;
