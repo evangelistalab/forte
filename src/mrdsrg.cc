@@ -415,7 +415,7 @@ double MRDSRG::compute_energy_relaxed(){
         fcisolver.set_max_rdm_level(1);
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
 //        boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(reference_wavefunction_,options_,ints_,mo_space_info_));
 //        Erelax = fci_mo->compute_energy();
