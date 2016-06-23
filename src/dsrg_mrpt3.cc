@@ -13,6 +13,7 @@
 #include "dsrg_mrpt3.h"
 #include "blockedtensorfactory.h"
 #include "fci_solver.h"
+#include "fci_mo.h"
 
 using namespace ambit;
 
@@ -26,7 +27,8 @@ DSRG_MRPT3::DSRG_MRPT3(Reference reference, SharedWavefunction ref_wfn, Options 
     // Copy the wavefunction information
     shallow_copy(ref_wfn);
 
-    print_method_banner({"Driven Similarity Renormalization Group MBPT3", "Chenyang Li"});
+    print_method_banner({"Driven Similarity Renormalization Group",
+                         "Third-Order Perturbation Theory", "Chenyang Li"});
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016 (in preparation)");
 
@@ -1211,11 +1213,12 @@ double DSRG_MRPT3::compute_energy_relaxed(){
         fcisolver.set_root(root);
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
 
         // create FCIIntegrals manually
+        std::shared_ptr<FCIIntegrals> fci_ints;
         if(eri_df_){
-            std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
+            fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
             fcisolver.use_user_integrals_and_restricted_docc(true);
             fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),Hbar2_.block("AAAA"));
             fci_ints->set_restricted_one_body_operator(aone_eff_,bone_eff_);
@@ -1229,10 +1232,13 @@ double DSRG_MRPT3::compute_energy_relaxed(){
         if(fciwfn0_->size() != 0){
             fciwfn_ = fcisolver.get_FCIWFN();
             double overlap = fciwfn0_->dot(fciwfn_);
-            int more_roots = (fciwfn0_->size() < 5 ) ? fciwfn0_->size() : 5;
+            const double threshold = 0.90;
+            int more_roots = (fciwfn0_->size() < 5) ? fciwfn0_->size() : 5;
 
-            if(fabs(overlap) < 0.85){
-                outfile->Printf("\n    Warning: overlap <Phi0_unrelaxed|Phi0_relaxed> = %4.3f < 0.85.", fabs(overlap));
+            if(fabs(overlap) > threshold){
+                outfile->Printf("\n    Overlap: <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.", fabs(overlap));
+            } else {
+                outfile->Printf("\n    Warning: overlap <Phi0_unrelaxed|Phi0_relaxed> = %4.3f < %.2f.", fabs(overlap), threshold);
                 outfile->Printf("\n    FCI seems to find the wrong root. Try %d more roots.", more_roots);
 
                 bool find = false;
@@ -1252,23 +1258,21 @@ double DSRG_MRPT3::compute_energy_relaxed(){
                     overlap = fciwfn0_->dot(fciwfn_);
 
                     outfile->Printf("\n    Current overlap <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.", fabs(overlap));
-                    if(fabs(overlap) >= 0.85){
+                    if(fabs(overlap) >= threshold){
                         outfile->Printf("\n    This root seems to be OK. Stop trying more roots.");
                         find = true;
                         break;
                     } else {
-                        outfile->Printf("\n    Keep looking for better overlap. Tries left: %d", more_roots - 1 - i);
+                        outfile->Printf("\n    Keep looking for better overlap. Tries left: %d.", more_roots - 1 - i);
                     }
                 }
 
                 if(find){
                     Erelax = Etemp;
                 } else {
-                    outfile->Printf("\n    Fatal Warning: Do not find root of enough overlap (> 0.85) with original FCI wavefunction.");
+                    outfile->Printf("\n    Fatal Warning: Do not find root of enough overlap (> %.2f) with original FCI wavefunction.", threshold);
                     outfile->Printf("\n    The DSRG-MRPT3 relaxed energy might be meaningless.");
                 }
-            } else {
-                outfile->Printf("\n    Overlap: <Phi0_unrelaxed|Phi0_relaxed> = %4.3f.", fabs(overlap));
             }
 
         }
