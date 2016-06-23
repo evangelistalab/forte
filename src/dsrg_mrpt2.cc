@@ -1135,7 +1135,7 @@ double DSRG_MRPT2::compute_energy_relaxed(){
         fcisolver.set_max_rdm_level(1);
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+        fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
         Erelax = fcisolver.compute_energy();
 
         // printing
