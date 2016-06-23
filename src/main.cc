@@ -309,9 +309,9 @@ read_options(std::string name, Options &options)
         /* - The number of iterations for CASSCF -*/
         options.add_int("CASSCF_ITERATIONS", 30);
         /* - The convergence for the gradient for casscf -*/
-        options.add_double("CASSCF_G_CONVERGENCE", 1e-5);
+        options.add_double("CASSCF_G_CONVERGENCE", 1e-4);
         /* - The convergence of the energy for CASSCF -*/
-        options.add_double("CASSCF_E_CONVERGENCE", 1e-8);
+        options.add_double("CASSCF_E_CONVERGENCE", 1e-6);
         /* - Debug printing for CASSCF -*/
         options.add_bool("CASSCF_DEBUG_PRINTING", false);
         /* - Multiplicity for the CASSCF solution (if different from multiplicity)
@@ -340,7 +340,7 @@ read_options(std::string name, Options &options)
         /// How often to do DIIS extrapolation
         options.add_int("CASSCF_DIIS_FREQ", 1);
         /// When the norm of the orbital gradient is below this value, do diis
-        options.add_double("CASSCF_DIIS_NORM", 1e-4);
+        options.add_double("CASSCF_DIIS_NORM", 1e-3);
         /// Do a CAS step for every CASSCF_CI_FREQ
         options.add_bool("CASSCF_CI_STEP", false);
         /// How often should you do the CI_FREQ
@@ -1012,9 +1012,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "V2RDM")
         {
-            std::shared_ptr<V2RDM> v2rdm(new V2RDM(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<V2RDM> v2rdm = std::make_shared<V2RDM>(ref_wfn,options,ints_,mo_space_info);
             Reference reference = v2rdm->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<DSRG_MRPT2>(reference,ref_wfn,options,ints_,mo_space_info);
             dsrg_mrpt2->compute_energy();
         }
 
@@ -1161,10 +1161,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         std::string cas_type = options.get_str("CAS_TYPE");
         if(cas_type == "CAS")
         {
-            boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference();
-            boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
             if(options.get_str("RELAX_REF") != "NONE"){
                 dsrg_mrpt3->compute_energy_relaxed();
             }else{
@@ -1177,20 +1177,20 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
             if (options.get_bool("SEMI_CANONICAL"))
             {
-                boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+                std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
                 fci->set_max_rdm_level(1);
                 fci->compute_energy();
                 Reference reference2 = fci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
             }
 
-            boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
             fci->set_max_rdm_level(3);
             fci->compute_energy();
             Reference reference = fci->reference();
             std::shared_ptr<FCIWfn> fciwfn_ref = fci->get_FCIWfn();
 
-            boost::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
             dsrg_mrpt3->set_fciwfn0(fciwfn_ref);
             if(options.get_str("RELAX_REF") != "NONE"){
                 dsrg_mrpt3->compute_energy_relaxed();

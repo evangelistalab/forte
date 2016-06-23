@@ -1647,7 +1647,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
-                outfile->Printf("\n m: %d n:%d %8.8f", m, n, Ealpha + Emixed);
             }  
         }
     }
@@ -1666,9 +1665,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
     outfile->Printf("\n Batching algorithm is going over m and n");
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
-    //#ifdef _OPENMP
-    //    nthread = omp_get_max_threads();
-    //#endif
+    #ifdef _OPENMP
+        nthread = omp_get_max_threads();
+    #endif
 
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     outfile->Printf("\n\n====Blocking information==========\n");
@@ -1752,7 +1751,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         //    outfile->Printf(" %d ", mb);
         //}
         
-
         for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
         {
             std::vector<size_t> n_batch;
@@ -1784,11 +1782,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
 
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
-            outfile->Printf("\n mb \n");
-            //for(auto nb : n_batch)
-            //{
-            //    outfile->Printf(" %d ", nb);
-            //}
+            #pragma omp parallel for \
+                schedule(static) \
+                reduction(+:Ealpha, Emixed) 
             for(size_t mn = 0; mn < m_size * n_size; ++mn){
                 int thread = 0;
                 size_t m = mn / n_size + m_batch[0];
