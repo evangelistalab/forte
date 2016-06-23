@@ -1676,6 +1676,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
     size_t memory_input = Process::environment.get_memory() * 0.75;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
 
+    if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
+    {
+        num_block = options_.get_int("CCVV_BATCH_NUMBER");
+    }
     size_t block_size = core_ / num_block;
 
     if(block_size < 1)
@@ -1689,6 +1693,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
         outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
     }
+
     
     std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> naux(nthree_);
@@ -1742,10 +1747,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
         BmQe("mQe") = B("Qme");
-        for(auto mb : m_batch)
-        {
-            outfile->Printf(" %d ", mb);
-        }
+        //for(auto mb : m_batch)
+        //{
+        //    outfile->Printf(" %d ", mb);
+        //}
         
 
         for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
@@ -1780,10 +1785,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
             outfile->Printf("\n mb \n");
-            for(auto nb : n_batch)
-            {
-                outfile->Printf(" %d ", nb);
-            }
+            //for(auto nb : n_batch)
+            //{
+            //    outfile->Printf(" %d ", nb);
+            //}
             for(size_t mn = 0; mn < m_size * n_size; ++mn){
                 int thread = 0;
                 size_t m = mn / n_size + m_batch[0];
@@ -1834,7 +1839,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
-                outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+//                outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
             }
         }
     }
