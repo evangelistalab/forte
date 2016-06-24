@@ -689,10 +689,15 @@ double AdaptiveCI::compute_energy()
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
         bool stuck = check_stuck( energy_history, PQ_evals );
-        if( stuck ){
+        if( stuck and (options_.get_str("EXCITED_ALGORITHM") != "COMPOSITE")  ){
             outfile->Printf("\n  Procedure is stuck! Quitting...");
             break;
-        } 
+        }else if ( stuck and (options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE") and ex_alg_ == "AVERAGE" ){
+            outfile->Printf("\n  Root averaging algorithm converged."); 
+            outfile->Printf("\n  Now optimizing PQ Space for root %d", options_.get_int("ROOT"));
+            ex_alg_ = "ROOT_SELECT";
+            pre_iter_ = cycle + 1;
+        }
 
         // Step 4. Check convergence and break if needed
         bool converged = check_convergence(energy_history,PQ_evals);
