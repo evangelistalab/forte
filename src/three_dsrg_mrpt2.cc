@@ -1655,6 +1655,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
 }
 double THREE_DSRG_MRPT2::E_VT2_2_batch()
 {
+    bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta  = 0.0;
@@ -1687,6 +1688,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
         outfile->Printf("\n Block size is %d", block_size);
         throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
+    if(num_block > core_)
+    {
+        outfile->Printf("\n Number of blocks can not be larger than core_");
+        throw PSIEXCEPTION("Number of blocks is larger than core.  Fix num_block or check source code");
+    }
+
     if(num_block >= 1)
     {
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
@@ -1720,7 +1727,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
 
     }
 
-
     ///Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
     for(size_t m_blocks = 0; m_blocks < num_block; m_blocks++)
@@ -1741,15 +1747,30 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
             size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
             m_batch.resize(gimp_block_size);
             //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
-             std::copy(acore_mos_.begin() + (m_blocks - 1)  * core_ / num_block, acore_mos_.end(), m_batch.begin());
+             std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
         }
+
         ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
         BmQe("mQe") = B("Qme");
-        //for(auto mb : m_batch)
-        //{
-        //    outfile->Printf(" %d ", mb);
-        //}
+        B.reset();
+
+        if(debug_print)
+        {
+            outfile->Printf("\n BmQe norm: %8.8f", BmQe.norm(2.0));
+            outfile->Printf("\n m_block: %d", m_blocks);
+            int count = 0;
+            for(auto mb : m_batch)
+            {
+                outfile->Printf("m_batch[%d] =  %d ",count, mb);
+                count++;
+            }
+            outfile->Printf("\n Core indice list");
+            for(auto coremo : acore_mos_)
+            {
+                outfile->Printf(" %d " , coremo);
+            }
+        }
         
         for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
         {
@@ -1767,7 +1788,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                 ///If last_block is longer, block_size + remainder
                 size_t gimp_block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
                 n_batch.resize(gimp_block_size);
-                std::copy(acore_mos_.begin() + (n_blocks - 1) * core_ / num_block, acore_mos_.end(), n_batch.begin());
+                std::copy(acore_mos_.begin() + (n_blocks) * block_size, acore_mos_.begin() + (n_blocks  * block_size) + gimp_block_size , n_batch.begin());
             }
             ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
             if(n_blocks == m_blocks)
@@ -1778,8 +1799,19 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
             {
                 ambit::Tensor B = ints_->three_integral_block(naux, n_batch, virt_mos);
                 BnQf("mQe") = B("Qme");
+                B.reset();
             }
-
+            if(debug_print)
+            {
+                outfile->Printf("\n BnQf norm: %8.8f", BnQf.norm(2.0));
+                outfile->Printf("\n m_block: %d", m_blocks);
+                int count = 0;
+                for(auto nb : n_batch)
+                {
+                    outfile->Printf("n_batch[%d] =  %d ", count, nb);
+                    count++;
+                }
+            }
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
             #pragma omp parallel for \
@@ -1794,20 +1826,22 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                 #ifdef _OPENMP
                     thread = omp_get_thread_num();
                 #endif
-                size_t ma = acore_mos_[m];
-                size_t mb = bcore_mos_[m];
+                ///Since loop over mn is collapsed, need to use fancy offset tricks
+                /// m_in_loop = mn / n_size -> corresponds to m increment (m++) 
+                /// n_in_loop = mn % n_size -> corresponds to n increment (n++)
+                /// m_batch[m_in_loop] corresponds to the absolute index
+                size_t m_in_loop = mn / n_size;
+                size_t n_in_loop = mn % n_size;
+                size_t ma = m_batch[m_in_loop ];
+                size_t mb = m_batch[m_in_loop ];
 
-                std::copy(&BmQe.data()[m * dim], &BmQe.data()[m * dim + dim], BmaVec[thread].data().begin());
-                //std::copy(&Bb.data()[m * dim], &Bb.data()[m * dim + dim], BmbVec[thread].data().begin());
-                std::copy(&BmQe.data()[m * dim], &BmQe.data()[m * dim + dim], BmbVec[thread].data().begin());
+                size_t na = n_batch[n_in_loop ];
+                size_t nb = n_batch[n_in_loop ];
 
-                size_t na = acore_mos_[n];
-                size_t nb = bcore_mos_[n];
+                std::copy(BmQe.data().begin() + (m_in_loop) * dim, BmQe.data().begin() +  (m_in_loop) * dim + dim, BmaVec[thread].data().begin());
 
-                std::copy(&BnQf.data()[n * dim], &BnQf.data()[n * dim + dim], BnaVec[thread].data().begin());
-                //std::copy(&Bb.data()[n * dim], &Bb.data()[n * dim + dim], BnbVec[thread].data().begin());
-                std::copy(&BnQf.data()[n * dim], &BnQf.data()[n * dim + dim], BnbVec[thread].data().begin());
-                //outfile->Printf("\n m:%d BnaVec: %8.8f n:%d BmaVec: %8.8f", m,BmaVec[thread].norm(2.0), n, BnaVec[thread].norm(2.0));
+                std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnaVec[thread].data().begin());
+                std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnbVec[thread].data().begin());
 
 
                 //// alpha-aplha
@@ -1835,7 +1869,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch()
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
                     value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
-//                outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+                if(debug_print)
+                {
+                    outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
+                    outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+                }
             }
         }
     }
