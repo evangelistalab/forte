@@ -706,6 +706,10 @@ read_options(std::string name, Options &options)
         options.add_bool("AVG_DENS_SPIN", false);
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH");
+        /*- Batches for CCVV_ALGORITHM -*/
+        options.add_int("CCVV_BATCH_NUMBER", -1);
+        /*- Excessive printing for DF_DSRG_MRPT2 -*/
+        options.add_bool("DSRG_MRPT2_DEBUG", false);
         /*- Algorithm for evaluating 3Cumulant -*/
         options.add_str("THREEPDC_ALGORITHM", "CORE", "CORE BATCH");
         /*- Detailed timing printings -*/
