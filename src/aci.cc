@@ -885,7 +885,7 @@ double AdaptiveCI::compute_energy()
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
-	//    print_wfn(PQ_space_, PQ_evecs, nroot_);
+	    print_wfn(PQ_space_, PQ_evecs, nroot_);
 	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
         wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
