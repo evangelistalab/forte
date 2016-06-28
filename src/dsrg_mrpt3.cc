@@ -2792,7 +2792,8 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
         start_ = std::chrono::system_clock::now();
         tt1_ = std::chrono::system_clock::to_time_t(start_);
         if(profile_print_){
-            outfile->Printf("\n    [V, T2] DF -> C2 PP AV/VA batching started: %s", std::ctime(&tt1_));
+            outfile->Printf("\n    [V, T2] DF -> C2 PP AV/VA block %s started: %s",
+                            C2_2nd_label.c_str(), std::ctime(&tt1_));
         }
 
         size_t sizea = aactv_mos_.size();
@@ -2886,16 +2887,18 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
         if(profile_print_){
-            outfile->Printf("    [V, T2] DF -> C2 PP AV/VA batching ended:   %s", std::ctime(&tt2_));
-            outfile->Printf("    [V, T2] DF -> C2 PP AV/VA batching wall time %.1f s.",
-                            compute_elapsed_time(start_,end_).count());
+            outfile->Printf("    [V, T2] DF -> C2 PP AV/VA block %s ended:   %s",
+                            C2_2nd_label.c_str(), std::ctime(&tt2_));
+            outfile->Printf("    [V, T2] DF -> C2 PP AV/VA block %s wall time %.1f s.",
+                            C2_2nd_label.c_str(), compute_elapsed_time(start_,end_).count());
         }
 
         // 3) vv block
         start_ = std::chrono::system_clock::now();
         tt1_ = std::chrono::system_clock::to_time_t(start_);
         if(profile_print_){
-            outfile->Printf("\n    [V, T2] DF -> C2 PP VV batching started: %s", std::ctime(&tt1_));
+            outfile->Printf("\n    [V, T2] DF -> C2 PP VV block %s started: %s",
+                            C2_2nd_label.c_str(), std::ctime(&tt1_));
         }
 
         for(const auto& sub_virt_mo0: sub_virt_mos){
@@ -2947,9 +2950,10 @@ void DSRG_MRPT3::V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double
         end_ = std::chrono::system_clock::now();
         tt2_ = std::chrono::system_clock::to_time_t(end_);
         if(profile_print_){
-            outfile->Printf("    [V, T2] DF -> C2 PP VV batching ended:   %s", std::ctime(&tt2_));
-            outfile->Printf("    [V, T2] DF -> C2 PP VV batching wall time %.1f s.",
-                            compute_elapsed_time(start_,end_).count());
+            outfile->Printf("    [V, T2] DF -> C2 PP VV block %s ended:   %s",
+                            C2_2nd_label.c_str(), std::ctime(&tt2_));
+            outfile->Printf("    [V, T2] DF -> C2 PP VV block %s wall time %.1f s.",
+                            C2_2nd_label.c_str(), compute_elapsed_time(start_,end_).count());
         }
     }
 }
