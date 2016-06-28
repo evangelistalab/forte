@@ -44,6 +44,15 @@ def parse_input():
             default=None,
             help="""The chemps2 binary installation directory.""",
             metavar='PATH')
+    group.add_argument('--mpi',
+            action='store_true',
+            default=False,
+            help="""Whether to build the MPI part of code""")
+    group.add_argument('--ga-bindir',
+            action='store',
+            default=None,
+            help="""The GA install directory.""",
+            metavar='PATH')
 
     return parser.parse_args()
 
@@ -52,6 +61,8 @@ def generate_makefile(args):
     print "   root directory: %s" % root_directory
     print "   psi4 executable: %s" % args.psi4
     print "   chemps2 binary installation directory: %s\n" % args.chemps2_bindir
+    print "   Do we use MPI to compile PSI4: %s" % args.mpi
+    print "   global arrays install directory: %s" % args.ga_bindir
 
     os.chdir(root_directory + "/src")
 
@@ -91,6 +102,15 @@ def generate_makefile(args):
         else:
             addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
             addons += "DEPENDINCLUDE = $(filter-out dmrgscf.h dmrgsolver.h, $(notdir $(wildcard *.h*)))\n"
+        if args.mpi and args.ga_bindir:
+            addons += "GA_DIR = %s\n" % args.ga_bindir
+            addons += "INCLUDES += -I$(GA_DIR)/include\n"
+            addons += "LDFLAGS += -L$(GA_DIR)/lib64 -lga\n"
+            addons += "CXXFLAGS += -DHAVE_GA\n"
+        else:
+            print "Need both GA and MPI for parallel computing"
+            return False
+            
 
 
         re_addons = re.compile(r"DEPENDINCLUDE")

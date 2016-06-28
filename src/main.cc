@@ -43,6 +43,10 @@
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
 #include "localize.h"
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#endif
 
 INIT_PLUGIN
 void forte_options(std::string name, psi::Options &options);
@@ -726,6 +730,15 @@ read_options(std::string name, Options &options)
 
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options)
 {
+    int my_proc = 0;
+    int n_nodes = 1;
+    #ifdef HAVE_GA
+        GA_Initialize();
+        outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
+        n_nodes = GA_Nnodes();
+        my_proc = GA_Nodeid();
+    #endif
+    
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();
         return ref_wfn;
@@ -991,7 +1004,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "FCI")
         {
-            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
             if (options.get_bool("SEMI_CANONICAL"))
             {
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
@@ -1094,15 +1106,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(1);
-                fci->compute_energy();
-                Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                if(my_proc == 0)
+                {
+                    fci->set_max_rdm_level(1);
+                    fci->compute_energy();
+                    Reference reference2 = fci->reference();
+                    SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                }
             }
             boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-            fci->set_max_rdm_level(3);
-            fci->compute_energy();
-            Reference reference = fci->reference();
+            Reference reference;
+            if(my_proc == 0)
+            {
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                reference = fci->reference();
+            }
 
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
@@ -1176,7 +1195,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "FCI")
         {
-            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
             if (options.get_bool("SEMI_CANONICAL"))
             {
                 std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
@@ -1236,6 +1254,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     STLBitsetDeterminant::reset_ints();
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
+    #ifdef HAVE_GA
+    GA_Terminate();
+    #endif
     return ref_wfn;
 }
 

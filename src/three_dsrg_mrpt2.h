@@ -274,6 +274,8 @@ private:
 	int num_threads_;
 	/// Do we have OpenMP?
 	static bool have_omp_;
+    /// Do we have MPI (actually use GA)
+    static bool have_mpi_;
 };
 
 }} // End Namespaces
