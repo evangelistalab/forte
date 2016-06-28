@@ -169,8 +169,11 @@ protected:
     double E_VT2_2_ambit();
     ///fly_open-> Code Kevin wrote at first with open mp threading
     double E_VT2_2_fly_openmp();
+    ///batch_core Reads only M*N (where M and N are size of batches)
     double E_VT2_2_batch_core();
+    double E_VT2_2_batch_core_mpi();
     double E_VT2_2_batch_virtual();
+    double E_VT2_2_batch_virtual_mpi();
     double E_VT2_4PP();
     double E_VT2_4HH();
     double E_VT2_4PH();
