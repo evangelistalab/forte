@@ -29,6 +29,10 @@
 #include "string_lists.h"
 #include "helpers.h"
 #include "reference.h"
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#endif
 
 #include <psi4-dec.h>
 
@@ -170,7 +174,7 @@ double FCI::compute_energy()
 
     size_t na = (nactel + ms_) / 2;
     size_t nb =  nactel - na;
-
+    
     fcisolver_ = new FCISolver(active_dim,rdocc,active,na,nb,multiplicity,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
     // tweak some options

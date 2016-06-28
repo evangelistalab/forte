@@ -13,9 +13,14 @@
 #include <algorithm>
 #include <numeric>
 #include "blockedtensorfactory.h"
+#include <libmints/mints.h>
 
 #include "integrals.h"
 #include "memory.h"
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#endif
 
 using namespace std;
 using namespace psi;
@@ -174,8 +179,10 @@ void ForteIntegrals::transform_one_electron_integrals()
     SharedMatrix OneInt = T;
     OneInt->zero();
 
-    T->load(psio_, PSIF_OEI);
-    V->load(psio_, PSIF_OEI);
+
+    MintsHelper mints(wfn_);
+    T = mints.so_kinetic();
+    V = mints.so_potential();
 
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Cb = wfn_->Cb();
@@ -300,8 +307,17 @@ void ForteIntegrals::retransform_integrals()
 {
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
-    gather_integrals();
-    update_integrals();
+    int my_proc = 0;
+    #ifdef HAVE_GA
+    my_proc = GA_Nodeid();
+    #endif
+    if(my_proc == 0)
+    {
+        outfile->Printf("\n Integrals are about to be computed.");
+        gather_integrals();
+        outfile->Printf("\n Integrals are about to be updated.");
+        update_integrals();
+    }
 }
 void ForteIntegrals::freeze_core_orbitals()
 {

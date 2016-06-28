@@ -6,6 +6,10 @@
 #include <libthce/thce.h>
 #include <libthce/lreri.h>
 #include <libqt/qt.h>
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#endif
 
 #include "blockedtensorfactory.h"
 
@@ -25,12 +29,19 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
     allocate();
-    gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
+    int my_proc = 0;
+    #ifdef HAVE_GA
+       my_proc = GA_Nodeid();
+    #endif
+    if(my_proc == 0)
+    {
+        gather_integrals();
+        make_diagonal_integrals();
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            // Set the new value of the number of orbitals to be used in indexing routines
+            aptei_idx_ = ncmo_;
+        }
     }
     outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
 }

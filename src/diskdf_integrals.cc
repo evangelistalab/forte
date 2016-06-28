@@ -7,6 +7,11 @@
 #include <libmints/basisset.h>
 #include <libthce/thce.h>
 #include <libqt/qt.h>
+#ifdef HAVE_GA
+    #include <ga.h>
+    #include <macdecls.h>
+#endif
+
 
 #include "blockedtensorfactory.h"
 
@@ -35,16 +40,23 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         q += frzvpi_[h]; // skip the frozen virtual
     }
     cmotomo_ = cmo2mo;
+    int my_proc = 0;
+    #ifdef HAVE_GA
+        my_proc = GA_Nodeid();
+    #endif
 
-    gather_integrals();
-    //make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
+    if(my_proc == 0)
+    {
+        gather_integrals();
+        //make_diagonal_integrals();
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            // Set the new value of the number of orbitals to be used in indexing routines
+            aptei_idx_ = ncmo_;
+        }
+
+        outfile->Printf("\n  DISKDFIntegrals take %15.8f s", DFInt.get());
     }
-
-    outfile->Printf("\n  DISKDFIntegrals take %15.8f s", DFInt.get());
 }
 
 DISKDFIntegrals::~DISKDFIntegrals()
