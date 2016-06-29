@@ -198,6 +198,14 @@ double to_gb(T num_el){
  * @return A pair of size in appropriate unit (B, KB, MB, GB, TB)
  */
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
+/**
+ * @brief split up a vector into different processors
+ * @param size_t size_of_tasks
+ * @param nproc (the global number of processors)
+ * @return a pair of vectors -> pair.0 -> start for each processor
+ *                           -> pair.1 -> end or each processor
+ */
+std::pair<std::vector<int>, std::vector<int> > split_up_tasks(size_t size_of_tasks,int nproc);
 
 }} // End Namespaces
 
