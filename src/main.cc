@@ -709,7 +709,7 @@ read_options(std::string name, Options &options)
         /*- Average densities of different spins -*/
         options.add_bool("AVG_DENS_SPIN", false);
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI");
+        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
         /*- Batches for CCVV_ALGORITHM -*/
         options.add_int("CCVV_BATCH_NUMBER", -1);
         /*- Excessive printing for DF_DSRG_MRPT2 -*/
