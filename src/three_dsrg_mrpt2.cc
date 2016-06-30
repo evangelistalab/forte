@@ -1162,7 +1162,19 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     {
         Eccvv = E_VT2_2_batch_core();
     }
-    else if(options_.get_str("ccvv_algorithm")=="BATCH_CORE_MPI")
+    else if(options_.get_str("ccvv_algorithm")=="BATCH_CORE_GA")
+    {
+        #ifdef HAVE_MPI
+        Eccvv = E_VT2_2_batch_core_ga();
+        #endif
+    }
+    else if(options_.get_str("CCVV_ALGORITHM") == "BATCH_CORE_MPI_REP")
+    {
+        #ifdef HAVE_MPI
+        Eccvv = E_VT2_2_batch_core_rep();
+        #endif
+    }
+    else if(options_.get_str("CCVV_ALGORITHM") == "BATCH_CORE_MPI")
     {
         #ifdef HAVE_MPI
         Eccvv = E_VT2_2_batch_core_mpi();
@@ -1172,7 +1184,19 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     {
         Eccvv = E_VT2_2_batch_virtual();
     }
-    else if(options_.get_str("CCVV_ALGORITHM")=="BATCH_VIRTUAL_MPI")
+    else if(options_.get_str("CCVV_ALGORITHM")=="BATCH_VIRTUAL_GA")
+    {
+        #ifdef HAVE_MPI
+        Eccvv = E_VT2_2_batch_virtual_ga();
+        #endif
+    }
+    else if(options_.get_str("CCVV_ALGORITHM") == "BATCH_VIRTUAL_MPI_REP")
+    {
+        #ifdef HAVE_MPI
+        Eccvv = E_VT2_2_batch_virtual_rep();
+        #endif
+    }
+    else if(options_.get_str("CCVV_ALGORITHM") == "BATCH_VIRTUAL_MPI")
     {
         #ifdef HAVE_MPI
         Eccvv = E_VT2_2_batch_virtual_mpi();
@@ -1181,7 +1205,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     else
     {
         outfile->Printf("\n Specify a correct algorithm string");
-        throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE BATCH_VIRTUAL BATCH_CORE_MPI or BATCH_VIRTUAL_MPI");
+        throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or other algorihm");
     }
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
     outfile->Printf("\n    %-36s ...", strccvv.c_str());
@@ -1956,7 +1980,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
     //return (Ealpha + Ebeta + Emixed);
     return (Ealpha + Ebeta + Emixed);
 }
-double THREE_DSRG_MRPT2::E_VT2_2_batch_core_mpi()
+double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
     double Ealpha = 0.0;
@@ -2021,7 +2045,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_mpi()
     int dims[3];
     int B_chunk[3];
     printf("\n myproc: %d block_size: %d", my_proc, block_size);
-    B_chunk[0] = block_size;
+    B_chunk[0] = -1; 
     B_chunk[1] = nthree_;
     B_chunk[2] = virtual_;
     dims[0] = core_;
@@ -2029,76 +2053,81 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_mpi()
     dims[2] = virtual_;
     #ifdef HAVE_GA
     int mBe = NGA_Create(C_DBL, 3, dims, (char *)"mBe", B_chunk);
-    if(!mBe) GA_Error((char *)"Create mBe failed", 0);
+    if(mBe==0)
+    {
+        GA_Error((char *)"Create mBe failed", 0);
+        throw PSIEXCEPTION("Error in creating GA for B");
+    }
     if(my_proc == 0) printf("Created mBe tensor");
     #endif
     std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
+    /// Take m_blocks and split it up between processors
     std::pair<std::vector<int>, std::vector<int> > my_tasks = split_up_tasks(num_block, num_proc);
-    if(my_proc == 0)
+    ///Since B is stored on disk on processor 0, only read from p0
+    for(int m_blocks = 0; m_blocks < num_block; m_blocks++)
     {
-        for(int iproc = 0; iproc < num_proc; iproc++)
+        std::vector<size_t> m_batch;
+        if(core_ % num_block == 0)
         {
-            for(int m_blocks = my_tasks.first[iproc]; m_blocks < my_tasks.second[iproc]; m_blocks++)
-            {
-                std::vector<size_t> m_batch;
-                if(core_ % num_block == 0)
-                {
-                    /// Fill the mbatch from block_begin to block_end
-                    /// This is done so I can pass a block to IntegralsAPI to read a chunk
-                    m_batch.resize(block_size);
-                    /// copy used to get correct indices for B.  
-                    std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
-                }
-                else
-                {
-                    ///If last_block is shorter or long, fill the rest
-                    size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
-                    m_batch.resize(gimp_block_size);
-                    //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
-                     std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
-                }
-                ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-                ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
-                BmQe("mQe") = B("Qme");
-                int begin_offset[3];
-                int end_offset[3];
-                NGA_Distribution(mBe, iproc, begin_offset, end_offset);
-                printf("\n my_proc: %d nthree_: %d core_: %d virtual_: %d", iproc,nthree_, core_, virtual_);
-                int ld[2];
-                ld[1] = virtual_;
-                ld[0] = nthree_ * virtual_;
-                NGA_Put(mBe, begin_offset, end_offset, &BmQe.data()[0], ld);
-                for(int i = 0; i < 3; i++)
-                {
-                    printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i, begin_offset[i], end_offset[i]);
-                }
-            }
-                //#ifdef HAVE_GA
-                //#endif
+            /// Fill the mbatch from block_begin to block_end
+            /// This is done so I can pass a block to IntegralsAPI to read a chunk
+            m_batch.resize(block_size);
+            /// copy used to get correct indices for B.  
+            std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
         }
+        else
+        {
+            ///If last_block is shorter or long, fill the rest
+            size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
+            m_batch.resize(gimp_block_size);
+            //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
+             std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
+        }
+        ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
+        ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
+        BmQe("mQe") = B("Qme");
+        int iproc = 0;
 
-        ambit::Tensor Bcorrect = ints_->three_integral_block(naux, acore_mos_, virt_mos);
-        ambit::Tensor Bcorrect_trans = ambit::Tensor::build(tensor_type_, "BFull", {core_, nthree_, virtual_});
-        Bcorrect_trans("mQe") = Bcorrect("Qme");
-        Bcorrect_trans.print(stdout);
+        int begin_offset[3];
+        int end_offset[3];
+        NGA_Distribution(mBe, iproc, begin_offset, end_offset);
+        int ld[2];
+        NGA_Put(mBe, begin_offset, end_offset, &BmQe.data()[0], ld);
+        for(int i = 0; i < 3; i++)
+        {
+            outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i, begin_offset[i], end_offset[i]);
+        }
+        
+        //#ifdef HAVE_GA
+        //#endif
     }
-    ambit::Tensor B_global = ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
-    int begin_offset[3];
-    int end_offset[3];
-    NGA_Distribution(mBe, my_proc, begin_offset, end_offset);
-    int ld[2];
-    ld[1] = virtual_;
-    ld[0] = nthree_ * virtual_;
-    NGA_Get(mBe, begin_offset, end_offset, &B_global.data()[my_proc * nthree_ * virtual_], ld);
-    if(my_proc)
-    {
-        B_global.print(stdout);
-    }
-    GA_Sync();
+    GA_Print(mBe);
 
+    ambit::Tensor Bcorrect = ints_->three_integral_block(naux, acore_mos_, virt_mos);
+    ambit::Tensor Bcorrect_trans = ambit::Tensor::build(tensor_type_, "BFull", {core_, nthree_, virtual_});
+    Bcorrect_trans("mQe") = Bcorrect("Qme");
+    Bcorrect_trans.print(stdout);
+    outfile->Printf("\n Bcorrect_trans: %8.8f", Bcorrect_trans.norm(2.0));
+    //ambit::Tensor B_global = ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
+    //for(int iproc = 0; iproc < num_proc; iproc++)
+    //{
+    //    int begin_offset[3];
+    //    int end_offset[3];
+    //    NGA_Distribution(mBe, iproc, begin_offset, end_offset);
+    //    int ld[2];
+    //    ld[1] = virtual_;
+    //    ld[0] = nthree_;
+    //    std::vector<double> local_buffer(nthree_ * virtual_, 0);
+    //    NGA_Get(mBe, begin_offset, end_offset, &local_buffer[0], ld);
+    //    std::copy(local_buffer.begin(), local_buffer.end(), B_global.data().begin() + begin_offset[0] * nthree_ * virtual_);
+    //}
+    //outfile->Printf("\n B_global: %8.8f", B_global.norm(2.0));
     GA_Destroy(mBe);
+    outfile->Printf("\n Destroyed mBe");
+
+
 
     //std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     //std::vector<size_t> naux(nthree_);

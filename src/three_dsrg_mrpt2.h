@@ -171,9 +171,17 @@ protected:
     double E_VT2_2_fly_openmp();
     ///batch_core Reads only M*N (where M and N are size of batches)
     double E_VT2_2_batch_core();
-    double E_VT2_2_batch_core_mpi();
+    ///batch_core Reads only E*F (where M and N are size of virtual batches)
     double E_VT2_2_batch_virtual();
+    ///Core MPI parallel algorithms (MPI -> distriubuted B)
+    /// ga->distrubuted B with Global Arrays API
+    /// rep->Broadcast B (debug version)
+    double E_VT2_2_batch_core_mpi();
+    double E_VT2_2_batch_core_ga();
+    double E_VT2_2_batch_core_rep();
     double E_VT2_2_batch_virtual_mpi();
+    double E_VT2_2_batch_virtual_ga();
+    double E_VT2_2_batch_virtual_rep();
     double E_VT2_4PP();
     double E_VT2_4HH();
     double E_VT2_4PH();
