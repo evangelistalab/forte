@@ -2342,11 +2342,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
     }
+    size_t block_size = core_ / num_block;
     if(memory_input > int_mem_int)
     {
-        num_block = core_ / num_proc;
+        block_size = core_ / num_proc;
+        num_block = core_ / block_size;
     }
-    size_t block_size = core_ / num_block;
 
     if(block_size < 1)
     {
