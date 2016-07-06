@@ -54,7 +54,7 @@ void MRDSRG::read_options(){
 
     source_ = options_.get_str("SOURCE");
     if(source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON"){
-        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented in DSRG_MRPT. Changed to STANDARD.", source_.c_str());
+        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented in MRDSRG. Changed to STANDARD.", source_.c_str());
         source_ = "STANDARD";
     }
     if(source_ == "STANDARD"){

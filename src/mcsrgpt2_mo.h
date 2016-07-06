@@ -9,6 +9,7 @@
 #include <cmath>
 #include "fci_mo.h"
 #include "integrals.h"
+#include "dsrg_source.h"
 
 using namespace std;
 
@@ -113,6 +114,25 @@ protected:
 
     /// Computes the DSRG-MRPT2 energy
     double compute_energy_dsrg();
+
+    /// Computes the SRG-MRPT2 energy
+    double compute_energy_srg();
+
+    /// Fock Matrix in SRG
+    d2 Fa_srg_;
+    d2 Fb_srg_;
+    void Form_Fock_SRG();
+
+    /// SRG-MRPT2 Energy Components
+    double ESRG_11();
+    double ESRG_12();
+    double ESRG_21();
+    double ESRG_22_2();
+    double ESRG_22_4();
+    double ESRG_22_6();
+
+    /// SRG source operator, just need the linear one
+    std::shared_ptr<DSRG_SOURCE> srg_source_;
 
     /// Energy Components
     void E_FT1(double &E);
