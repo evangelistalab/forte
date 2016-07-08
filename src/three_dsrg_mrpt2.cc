@@ -1995,7 +1995,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
-    Timer F_BCAST;
 
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     /// In Parallel, make sure to limit memory per core.  
@@ -2013,16 +2012,18 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         Fa_.resize(ncmo_);
         Fb_.resize(ncmo_);
     }
+    Timer F_BCAST;
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
-    printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
+    if(debug_print) printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
+    if(debug_print) printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
 
+    size_t block_size = 1;
     if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
     {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
+        block_size = core_ / num_block;
     }
-    size_t block_size = core_ / num_block;
     if(memory_input > int_mem_int)
     {
         block_size = core_ / num_proc;
@@ -2051,6 +2052,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     {
         outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
         outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
+        outfile->Printf("\n core_: %d num_proc: %d", core_, num_proc);
     }
     ///Create a Global Array with B_{me}^{Q}
     ///My algorithm assumes that the tensor is distributed as m(iproc)B_{e}^{Q}
@@ -2058,20 +2060,33 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     ///dims-> nthree_, core_, virtual_
     int dims[2];
     int B_chunk[2];
-    printf("\n myproc: %d block_size: %d", my_proc, block_size);
-    B_chunk[0] = -1; 
-    B_chunk[1] = nthree_ * virtual_;
+    if(debug_print) printf("\n myproc: %d block_size: %d", my_proc, block_size);
     dims[0] = core_;
     dims[1] = nthree_ * virtual_;
-    #ifdef HAVE_GA
-    int mBe = NGA_Create(C_DBL, 2, dims, (char *)"mBe", B_chunk);
+    int dim_chunk[2];
+    dim_chunk[0] = num_block;
+    dim_chunk[1] = 1;
+    int map[num_block + 1];
+    for(int i = 0; i < num_block - 1; i++)
+    {
+        map[i] = i * block_size;
+    }
+    map[num_block -1] = (num_block - 1) * block_size + core_ % num_block;
+    map[num_block] = 0;
+    if(debug_print)
+    {
+        outfile->Printf("\n dim_chunk[0]: %d dim_chunk[1]: %d", dim_chunk[0], dim_chunk[1]);
+        for(int i = 0; i < num_block + 1; i++)
+            outfile->Printf("\n map[%d] = %d", i, map[i]);
+    }
+    int mBe = NGA_Create_irreg(C_DBL, 2, dims, (char *)"mBe", dim_chunk, map);
     if(mBe==0)
     {
         GA_Error((char *)"Create mBe failed", 0);
         throw PSIEXCEPTION("Error in creating GA for B");
     }
-    if(my_proc == 0) printf("Created mBe tensor");
-    #endif
+    GA_Print_distribution(mBe);
+    if(my_proc == 0 && debug_print) printf("Created mBe tensor");
     std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
@@ -2150,10 +2165,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             }
         }
         GA_Sync();
-        if(my_proc == 0) B_global.print(stdout);
+        if(my_proc == 0 && debug_print) B_global.print(stdout);
     }
-    GA_Print(mBe);
-    GA_Print_distribution(mBe);
+    if(debug_print) GA_Print(mBe);
+    if(debug_print) GA_Print_distribution(mBe);
 
     /// Race condition if each thread access ambit tensors
     /// Force each thread to have its own copy of matrices (memory NQ * V)
@@ -2193,7 +2208,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     {
         int m_blocks = mn_tasks[tasks].first;
         int n_blocks = mn_tasks[tasks].second;
-        printf("\n my_proc: %d tasks: %d m_blocks: %d n_blocks: %d", my_proc, tasks, m_blocks, n_blocks);
+        if(debug_print) printf("\n my_proc: %d tasks: %d m_blocks: %d n_blocks: %d", my_proc, tasks, m_blocks, n_blocks);
         std::vector<size_t> m_batch;
         size_t gimp_block_size = 0;
         ///If core_ goes into num_block equally, all blocks are equal
@@ -2204,6 +2219,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             m_batch.resize(block_size);
             /// copy used to get correct indices for B.  
             std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
+            gimp_block_size = block_size;
         }
         else
         {
@@ -2217,36 +2233,45 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         ///Get the correct chunk for m_batch 
         ///Since every processor has different chunk (I can't assume locality)
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
+
         int ld[1];
-        int locate_offset[2];
         ld[0] = nthree_ * virtual_;
-        locate_offset[0] = m_blocks;
-        locate_offset[1] = 0;
-        int NGA_INFO = NGA_Locate(mBe, locate_offset);
+        int m_begin_offset[2];
+        int m_end_offset[2];
+        //int m_offset_start = m_blocks * block_size;
+        //int m_offset_end   = m_blocks * block_size + m_batch.size() - 1;
+        //m_begin_offset[0] = m_offset_start;
+        //m_begin_offset[1] = 0;
+        //m_end_offset[0]  = m_offset_end;
+        //m_end_offset[1]  = nthree_ * virtual_ - 1;
+        //if(debug_print)
+        //{
+        //    for(int i = 0; i < 2; i++)
+        //        printf("\n my_proc: %d offset[%d] = (%d, %d)", my_proc, i, m_begin_offset[i], m_end_offset[i]);
+        //}
+        //int* map_array;
+        //int proc_list[num_proc];
+        //int NGA_INFO = NGA_Locate_region(mBe, m_begin_offset, m_end_offset, map_array, proc_list);
+        int subscript[2];
+        subscript[0] = m_blocks * block_size;
+        subscript[1] = 0;
+        int NGA_INFO = NGA_Locate(mBe, subscript);
+        
+        if(NGA_INFO == -1)
+        {
+            printf("\n NGA_INFO: %d", NGA_INFO);
+            printf("\n Found multiple blocks that hold this region");
+            printf("\n Could not locate block of mBe");
+            printf("\n my_proc: %d block_size: %d m_blocks: %d", my_proc, block_size, m_blocks);
+            //for(int i = 0; i < num_proc; i++)
+            //    printf("\n PL[%d] = %d", i, proc_list[i]);
+            throw PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
+        }
         int begin_offset[2];
         int end_offset[2];
         NGA_Distribution(mBe, NGA_INFO, begin_offset, end_offset);
         NGA_Get(mBe, begin_offset, end_offset, &(BmQe.data()[0]), ld);
-        for(int i = 0; i < 2; i++)
-            printf("\n my_proc: %d m offset[%d] = (%d, %d)", my_proc, i, begin_offset[i], end_offset[i]);
 
-        //if(debug_print)
-        //{
-        //    outfile->Printf("\n BmQe norm: %8.8f", BmQe.norm(2.0));
-        //    outfile->Printf("\n m_block: %d", m_blocks);
-        //    int count = 0;
-        //    for(auto mb : m_batch)
-        //    {
-        //        outfile->Printf("m_batch[%d] =  %d ",count, mb);
-        //        count++;
-        //    }
-        //    outfile->Printf("\n Core indice list");
-        //    for(auto coremo : acore_mos_)
-        //    {
-        //        outfile->Printf(" %d " , coremo);
-        //    }
-        //}
-        
         std::vector<size_t> n_batch;
         ///If core_ goes into num_block equally, all blocks are equal
         if(core_ % num_block == 0)
@@ -2255,6 +2280,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             /// This is done so I can pass a block to IntegralsAPI to read a chunk
             n_batch.resize(block_size);
             std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
+            gimp_block_size = block_size;
         }
         else
         {
@@ -2263,7 +2289,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
              n_batch.resize(gimp_block_size);
              std::copy(acore_mos_.begin() + (n_blocks) * block_size, acore_mos_.begin() + (n_blocks  * block_size) + gimp_block_size , n_batch.begin());
          }
+
          ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
+
          if(n_blocks == m_blocks)
          {
              BnQf.copy(BmQe);
@@ -2272,28 +2300,21 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
          {
             int ld[1];
             int locate_offset[2];
-            locate_offset[0] = n_blocks;
+            locate_offset[0] = n_blocks * block_size;
             locate_offset[1] = 0;
             NGA_INFO = NGA_Locate(mBe, locate_offset);
+            if(NGA_INFO == -1)
+            {
+                printf("\n Could not locate block of mBe");
+                printf("\n locate_offset[0]: %d", locate_offset[0]);
+                printf("\n nblocks: %d block_size: %d", n_blocks, block_size);
+                throw PSIEXCEPTION("GA could not locate region of B_m^{Qe}");
+            }
             int begin_offset_n[2];
             int end_offset_n[2];
             ld[0] = nthree_ * virtual_;
             NGA_Distribution(mBe, NGA_INFO, begin_offset_n, end_offset_n);
             NGA_Get(mBe, begin_offset_n, end_offset_n, &(BnQf.data()[0]), ld);
-            printf("\n my_proc: %d NGA_INFO: %d begin_offset_n[0]:%d end_offset_n[0]:%d", my_proc, NGA_INFO, begin_offset_n[0], end_offset_n[0]);
-            for(int i = 0; i < 2; i++)
-                printf("\n my_proc: %d n_offset[%d] = (%d, %d)", my_proc, i, begin_offset[i], end_offset[i]);
-         }
-         if(debug_print)
-         {
-             outfile->Printf("\n BnQf norm: %8.8f", BnQf.norm(2.0));
-             outfile->Printf("\n m_block: %d", m_blocks);
-             int count = 0;
-             for(auto nb : n_batch)
-             {
-                 outfile->Printf("n_batch[%d] =  %d ", count, nb);
-                 count++;
-             }
          }
          size_t m_size = m_batch.size();
          size_t n_size = n_batch.size();
@@ -2378,7 +2399,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     outfile->Printf("\n Computing V_T2_2 in batch algorithm\n");
     outfile->Printf("\n Batching algorithm is going over m and n");
     if(my_proc > 0)
-        if(debug_print) printf("\n P%d is in batch_core_rep", my_proc);
+        if(true) printf("\n P%d is in batch_core_rep", my_proc);
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
     #ifdef _OPENMP
@@ -2480,11 +2501,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
         ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, virt_mos);
         BmQe("mQe") = B("Qme");
     }
-    if(debug_print) printf("\n B_Bcast for F and B about to start");
+    printf("\n B_Bcast for F and B about to start on P%d", my_proc);
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&BmQe.data()[0], nthree_ * virtual_ * core_, MPI_DOUBLE, 0,MPI_COMM_WORLD);
-    if(debug_print) printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
+    printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
     ///Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
 
