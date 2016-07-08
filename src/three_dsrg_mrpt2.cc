@@ -106,6 +106,7 @@ void THREE_DSRG_MRPT2::startup()
     ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
     ncmo_ = mo_space_info_->size("CORRELATED");
 
+
     s_ = options_.get_double("DSRG_S");
     if(s_ < 0){
         outfile->Printf("\n  S parameter for DSRG must >= 0!");
@@ -1994,6 +1995,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
+    Timer F_BCAST;
 
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     /// In Parallel, make sure to limit memory per core.  
@@ -2004,6 +2006,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     /// Memory keyword is global (compute per node memory here)
     size_t memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
     size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+
+    ///Since the integrals compute Fa_, need to make sure Fa is distributed to all cores
+    if(my_proc != 0)
+    {
+        Fa_.resize(ncmo_);
+        Fb_.resize(ncmo_);
+    }
+    MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
+    printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
 
     if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
     {
@@ -2114,7 +2127,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         ambit::Tensor Bcorrect = ints_->three_integral_block(naux, acore_mos_, virt_mos);
         ambit::Tensor Bcorrect_trans = ambit::Tensor::build(tensor_type_, "BFull", {core_, nthree_, virtual_});
         Bcorrect_trans("mQe") = Bcorrect("Qme");
-        if(my_proc == 0) Bcorrect_trans.print(stdout);
     }
     if(debug_print)
     {
@@ -2139,14 +2151,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         }
         GA_Sync();
         if(my_proc == 0) B_global.print(stdout);
-        outfile->Printf("\n Destroyed mBe");
     }
-
-
-
-    std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    std::vector<size_t> naux(nthree_);
-    std::iota(naux.begin(), naux.end(), 0);
+    GA_Print(mBe);
+    GA_Print_distribution(mBe);
 
     /// Race condition if each thread access ambit tensors
     /// Force each thread to have its own copy of matrices (memory NQ * V)
@@ -2178,13 +2185,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     std::pair<std::vector<int>, std::vector<int> > my_mn_tasks = split_up_tasks(mn_tasks.size(), num_proc);
     for(int p = 0; p < num_proc; p++)
     {
-        outfile->Printf("\n my_tasks[%d].first: %d my_tasks[%d].second: %d", p, my_mn_tasks[p].first, p, my_mn_tasks[p].second);
+        outfile->Printf("\n my_tasks[%d].first: %d my_tasks[%d].second: %d", p, my_mn_tasks.first[p], p, my_mn_tasks.second[p]);
     }
     ///Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
-    for(size_t m_blocks = my_mn_tasks[my_proc].first; m_blocks < my_mn_tasks[my_proc].second; m_blocks++)
+    for(size_t tasks = my_mn_tasks.first[my_proc]; tasks < my_mn_tasks.second[my_proc];tasks++)
     {
+        int m_blocks = mn_tasks[tasks].first;
+        int n_blocks = mn_tasks[tasks].second;
+        printf("\n tasks: %d m_blocks: %d n_blocks: %d", tasks, m_blocks, n_blocks);
         std::vector<size_t> m_batch;
+        size_t gimp_block_size = 0;
         ///If core_ goes into num_block equally, all blocks are equal
         if(core_ % num_block == 0)
         {
@@ -2197,22 +2208,26 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         else
         {
             ///If last_block is shorter or long, fill the rest
-            size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
+            gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
             m_batch.resize(gimp_block_size);
             //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
              std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
         }
 
-        ///Get the correct chunk
+        ///Get the correct chunk for m_batch 
+        ///Since every processor has different chunk (I can't assume locality)
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
-        NGA_Distribution(mBe, iproc, begin_offset, end_offset);
         int ld[1];
+        int locate_offset[2];
         ld[0] = nthree_ * virtual_;
-        for(int i = 0; i < 2; i++)
-        {
-            outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i, begin_offset[i], end_offset[i]);
-        }
-        NGA_Get(mBe, begin_offset, end_offset, &(BmQe.data()[begin_offset[0] * nthree_ * virtual_]), ld);
+        locate_offset[0] = m_blocks;
+        locate_offset[1] = 0;
+        int NGA_INFO = NGA_Locate(mBe, locate_offset);
+        int begin_offset[2];
+        int end_offset[2];
+        NGA_Distribution(mBe, NGA_INFO, begin_offset, end_offset);
+        printf("\n NGA_INFO: %d begin_offset[0]:%d end_offset[0]:%d", NGA_INFO, begin_offset[0], end_offset[0]);
+        NGA_Get(mBe, begin_offset, end_offset, &(BmQe.data()[0]), ld);
 
         //if(debug_print)
         //{
@@ -2231,110 +2246,115 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         //    }
         //}
         
-        for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
-        {
-            std::vector<size_t> n_batch;
+        std::vector<size_t> n_batch;
         ///If core_ goes into num_block equally, all blocks are equal
-            if(core_ % num_block == 0)
-            {
-                /// Fill the mbatch from block_begin to block_end
-                /// This is done so I can pass a block to IntegralsAPI to read a chunk
-                n_batch.resize(block_size);
-                std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
-            }
-            else
-            {
-    //            ///If last_block is longer, block_size + remainder
-    //            size_t gimp_block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
-    //            n_batch.resize(gimp_block_size);
-    //            std::copy(acore_mos_.begin() + (n_blocks) * block_size, acore_mos_.begin() + (n_blocks  * block_size) + gimp_block_size , n_batch.begin());
-    //        }
-    //        ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
-    //        if(n_blocks == m_blocks)
-    //        {
-    //            BnQf.copy(BmQe);
-    //        }
-    //        else
-    //        {
-    //            ambit::Tensor B = ints_->three_integral_block(naux, n_batch, virt_mos);
-    //            BnQf("mQe") = B("Qme");
-    //            B.reset();
-    //        }
-    //        if(debug_print)
-    //        {
-    //            outfile->Printf("\n BnQf norm: %8.8f", BnQf.norm(2.0));
-    //            outfile->Printf("\n m_block: %d", m_blocks);
-    //            int count = 0;
-    //            for(auto nb : n_batch)
-    //            {
-    //                outfile->Printf("n_batch[%d] =  %d ", count, nb);
-    //                count++;
-    //            }
-    //        }
-    //        size_t m_size = m_batch.size();
-    //        size_t n_size = n_batch.size();
-    //        #pragma omp parallel for \
-    //            schedule(static) \
-    //            reduction(+:Ealpha, Emixed) 
-    //        for(size_t mn = 0; mn < m_size * n_size; ++mn){
-    //            int thread = 0;
-    //            size_t m = mn / n_size + m_batch[0];
-    //            size_t n = mn % n_size + n_batch[0];
-    //            if(n > m) continue;
-    //            double factor = (m == n ? 1.0 : 2.0);
-    //            #ifdef _OPENMP
-    //                thread = omp_get_thread_num();
-    //            #endif
-    //            ///Since loop over mn is collapsed, need to use fancy offset tricks
-    //            /// m_in_loop = mn / n_size -> corresponds to m increment (m++) 
-    //            /// n_in_loop = mn % n_size -> corresponds to n increment (n++)
-    //            /// m_batch[m_in_loop] corresponds to the absolute index
-    //            size_t m_in_loop = mn / n_size;
-    //            size_t n_in_loop = mn % n_size;
-    //            size_t ma = m_batch[m_in_loop ];
-    //            size_t mb = m_batch[m_in_loop ];
+        if(core_ % num_block == 0)
+        {
+            /// Fill the mbatch from block_begin to block_end
+            /// This is done so I can pass a block to IntegralsAPI to read a chunk
+            n_batch.resize(block_size);
+            std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
+        }
+        else
+        {
+             ///If last_block is longer, block_size + remainder
+             gimp_block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
+             n_batch.resize(gimp_block_size);
+             std::copy(acore_mos_.begin() + (n_blocks) * block_size, acore_mos_.begin() + (n_blocks  * block_size) + gimp_block_size , n_batch.begin());
+         }
+         ambit::Tensor BnQf = ambit::Tensor::build(tensor_type_, "BnQf", {n_batch.size(), nthree_, virtual_});
+         if(n_blocks == m_blocks)
+         {
+             BnQf.copy(BmQe);
+         }
+         else
+         {
+            int ld[1];
+            int locate_offset[2];
+            locate_offset[0] = n_blocks;
+            locate_offset[1] = 0;
+            NGA_INFO = NGA_Locate(mBe, locate_offset);
+            int begin_offset_n[2];
+            int end_offset_n[2];
+            ld[0] = nthree_ * virtual_;
+            NGA_Get(mBe, begin_offset_n, end_offset_n, &(BnQf.data()[0]), ld);
+            printf("\n NGA_INFO: %d begin_offset_n[0]:%d end_offset_n[0]:%d", NGA_INFO, begin_offset_n[0], end_offset_n[0]);
+         }
+         if(debug_print)
+         {
+             outfile->Printf("\n BnQf norm: %8.8f", BnQf.norm(2.0));
+             outfile->Printf("\n m_block: %d", m_blocks);
+             int count = 0;
+             for(auto nb : n_batch)
+             {
+                 outfile->Printf("n_batch[%d] =  %d ", count, nb);
+                 count++;
+             }
+         }
+         size_t m_size = m_batch.size();
+         size_t n_size = n_batch.size();
+         #pragma omp parallel for \
+             schedule(static) \
+             reduction(+:Ealpha, Emixed) 
+         for(size_t mn = 0; mn < m_size * n_size; ++mn){
+             int thread = 0;
+             size_t m = mn / n_size + m_batch[0];
+             size_t n = mn % n_size + n_batch[0];
+             if(n > m) continue;
+             double factor = (m == n ? 1.0 : 2.0);
+             #ifdef _OPENMP
+                 thread = omp_get_thread_num();
+             #endif
+             ///Since loop over mn is collapsed, need to use fancy offset tricks
+             /// m_in_loop = mn / n_size -> corresponds to m increment (m++) 
+             /// n_in_loop = mn % n_size -> corresponds to n increment (n++)
+             /// m_batch[m_in_loop] corresponds to the absolute index
+             size_t m_in_loop = mn / n_size;
+             size_t n_in_loop = mn % n_size;
+             size_t ma = m_batch[m_in_loop ];
+             size_t mb = m_batch[m_in_loop ];
 
-    //            size_t na = n_batch[n_in_loop ];
-    //            size_t nb = n_batch[n_in_loop ];
+             size_t na = n_batch[n_in_loop ];
+             size_t nb = n_batch[n_in_loop ];
 
-    //            std::copy(BmQe.data().begin() + (m_in_loop) * dim, BmQe.data().begin() +  (m_in_loop) * dim + dim, BmaVec[thread].data().begin());
+             std::copy(BmQe.data().begin() + (m_in_loop) * dim, BmQe.data().begin() +  (m_in_loop) * dim + dim, BmaVec[thread].data().begin());
 
-    //            std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnaVec[thread].data().begin());
-    //            std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnbVec[thread].data().begin());
+             std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnaVec[thread].data().begin());
+             std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnbVec[thread].data().begin());
 
 
-    //            //// alpha-aplha
-    //            BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
-    //            BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
-    //            BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
-    //            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-    //                double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-    //                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-    //            Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
+             //// alpha-aplha
+             BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
+             BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
+             BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
+             RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                 double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
+                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+             Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
-    //            //// beta-beta
-    //            ////BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-    //            ////BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-    //            ////BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-    //            ////RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-    //            ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-    //            ////    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-    //            ////Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+             //// beta-beta
+             ////BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+             ////BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+             ////BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+             ////RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+             ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+             ////    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+             ////Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
-    //            //// alpha-beta
-    //            BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
-    //            BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
-    //            RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-    //                double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-    //                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-    //            Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
-    //            if(debug_print)
-    //            {
-    //                outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
-    //                outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
-    //            }
-    //        }
-    //    }
+             //// alpha-beta
+             BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
+             BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
+             RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+                 double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+             Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
+             if(debug_print)
+             {
+                 outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
+                 outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+             }
+         }
+     }
     //}
     //return (Ealpha + Ebeta + Emixed);
     return (Ealpha + Ebeta + Emixed);
