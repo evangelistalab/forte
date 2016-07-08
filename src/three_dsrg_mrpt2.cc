@@ -2193,7 +2193,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     {
         int m_blocks = mn_tasks[tasks].first;
         int n_blocks = mn_tasks[tasks].second;
-        printf("\n tasks: %d m_blocks: %d n_blocks: %d", tasks, m_blocks, n_blocks);
+        printf("\n my_proc: %d tasks: %d m_blocks: %d n_blocks: %d", my_proc, tasks, m_blocks, n_blocks);
         std::vector<size_t> m_batch;
         size_t gimp_block_size = 0;
         ///If core_ goes into num_block equally, all blocks are equal
@@ -2226,8 +2226,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         int begin_offset[2];
         int end_offset[2];
         NGA_Distribution(mBe, NGA_INFO, begin_offset, end_offset);
-        printf("\n NGA_INFO: %d begin_offset[0]:%d end_offset[0]:%d", NGA_INFO, begin_offset[0], end_offset[0]);
         NGA_Get(mBe, begin_offset, end_offset, &(BmQe.data()[0]), ld);
+        for(int i = 0; i < 2; i++)
+            printf("\n my_proc: %d m offset[%d] = (%d, %d)", my_proc, i, begin_offset[i], end_offset[i]);
 
         //if(debug_print)
         //{
@@ -2277,8 +2278,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             int begin_offset_n[2];
             int end_offset_n[2];
             ld[0] = nthree_ * virtual_;
+            NGA_Distribution(mBe, NGA_INFO, begin_offset_n, end_offset_n);
             NGA_Get(mBe, begin_offset_n, end_offset_n, &(BnQf.data()[0]), ld);
-            printf("\n NGA_INFO: %d begin_offset_n[0]:%d end_offset_n[0]:%d", NGA_INFO, begin_offset_n[0], end_offset_n[0]);
+            printf("\n my_proc: %d NGA_INFO: %d begin_offset_n[0]:%d end_offset_n[0]:%d", my_proc, NGA_INFO, begin_offset_n[0], end_offset_n[0]);
+            for(int i = 0; i < 2; i++)
+                printf("\n my_proc: %d n_offset[%d] = (%d, %d)", my_proc, i, begin_offset[i], end_offset[i]);
          }
          if(debug_print)
          {
@@ -2350,14 +2354,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
              Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
              if(debug_print)
              {
-                 outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
-                 outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+                 printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d", my_proc, m_size, n_size, m, n);
+                 printf("\n my_proc: %d m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", my_proc, m, n, Ealpha , Emixed, Ealpha + Emixed);
              }
          }
      }
-    //}
-    //return (Ealpha + Ebeta + Emixed);
-    return (Ealpha + Ebeta + Emixed);
+     double local_sum = Ealpha + Emixed;
+     double total_sum;
+     MPI_Reduce(&local_sum, &total_sum, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+     return total_sum;
 }
 double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
 {
@@ -2627,8 +2632,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
             Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             if(debug_print)
             {
-                outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
-                outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+                 printf("\n my_proc: %d m_size: %d n_size: %d m: %d n:%d", my_proc, m_size, n_size, m, n);
+                 printf("\n my_proc: %d m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", my_proc, m, n, Ealpha , Emixed, Ealpha + Emixed);
             }
         }
     }
