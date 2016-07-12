@@ -109,7 +109,8 @@ def generate_makefile(args):
             addons += "CXXFLAGS += -DHAVE_GA\n"
         else:
             print "Need both GA and MPI for parallel computing"
-            return False
+            print "Turning off MPI based code"
+            #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc, $(notdir $(wildcard *.cc)))\n"
             
 
 
