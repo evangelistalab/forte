@@ -236,10 +236,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             }
         }
         GA_Sync();
-    if(my_proc == 0 && debug_print) printf("\n B_Global norm: %8.8f", B_global.norm(2.0));
+    if(my_proc == 0 && debug_print) printf("\n B_Global 1norm: %8.8f", B_global.norm(1.0));
     }
     GA_Sync();
-    if(debug_print) GA_Print(mBe);
+    double one_norm = 0.0;
+    if(debug_print) GA_Norm1(mBe, &one_norm);
+    if(debug_print) printf("B_GA_Norm1: %8.8f", one_norm);
     if(debug_print) GA_Print_distribution(mBe);
 
     /// Race condition if each thread access ambit tensors
@@ -386,7 +388,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
          }
          size_t m_size = m_batch.size();
          size_t n_size = n_batch.size();
-         #pragma omp parallel for \
+         #pragma omp parallel for num_threads(num_threads_)\
              schedule(static) \
              reduction(+:Ealpha, Emixed) 
          for(size_t mn = 0; mn < m_size * n_size; ++mn){
