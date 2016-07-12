@@ -81,6 +81,8 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         detail_time_ = true;
     }
 
+    //printf("\n P%d about to enter startup", my_proc);
+    GA_Sync();
     startup();
     if(my_proc == 0)    
         print_summary();
@@ -164,17 +166,20 @@ void THREE_DSRG_MRPT2::startup()
     no_hhpp_ = hhpp_no_cv;
 
     if(my_proc == 0) nthree_ = ints_->nthree();
+    Timer naux_bcast;
     #ifdef HAVE_MPI
-    MPI_Bcast(&nthree_, 1, MPI::INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     #endif
-    std::vector<size_t> nauxpi(nthree_);
-    std::iota(nauxpi.begin(), nauxpi.end(),0);
+    printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
 
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
-    BTF_->add_mo_space("d","g",nauxpi,NoSpin);
+    //printf("\n Settingup stupid MO shit begin P%d", my_proc);
     if(my_proc == 0)
     {
+        std::vector<size_t> nauxpi(nthree_);
+        std::iota(nauxpi.begin(), nauxpi.end(),0);
+        BTF_->add_mo_space("d","g",nauxpi,NoSpin);
 
         H_ = BTF_->build(tensor_type_,"H",spin_cases({"gg"}));
 
@@ -230,6 +235,7 @@ void THREE_DSRG_MRPT2::startup()
         Eta1_AA("pq") -= reference_.L1b()("pq");
 
 
+        //printf("\n Settingup reference shit begin P%d", my_proc);
         //Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.  
         boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
         boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
@@ -243,7 +249,6 @@ void THREE_DSRG_MRPT2::startup()
         Gamma1_AA.iterate([&](const std::vector<size_t>& i,double& value){
          Gamma1_matrixB->set(bactv_mos_[i[0]], bactv_mos_[i[1]], value);   
          });
-
         ints_->make_fock_matrix(Gamma1_matrixA, Gamma1_matrixB);
 
         F_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value)
@@ -268,6 +273,8 @@ void THREE_DSRG_MRPT2::startup()
             Fb_[p] = ints_->get_fock_b(p,p);
         }
     }
+    //printf("\n Settingup stupid MO shit done P%d", my_proc);
+    MPI_Barrier(MPI_COMM_WORLD);
     //if(options_.get_bool("MOLDEN_WRITE_FORTE"))
     //{
     //    Dimension nmopi_ = mo_space_info_->get_dimension("ALL");
@@ -343,6 +350,8 @@ void THREE_DSRG_MRPT2::startup()
 
     }
     integral_type_ = ints_->integral_type();
+    GA_Sync();
+    //printf("\n P%d integral_type", my_proc);
 
     if(integral_type_!=DiskDF)
     {
@@ -381,6 +390,8 @@ void THREE_DSRG_MRPT2::startup()
 
     }
     // If the integral_type is DiskDF, we will compute these integral stuff later in each funtion
+    //printf("\n P%d leaving startup", my_proc);
+    GA_Sync();
 
 }
 
@@ -447,7 +458,7 @@ double THREE_DSRG_MRPT2::compute_energy()
 
         std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
         std::string str = "Computing T2";
-        outfile->Printf("\n    %-36s ...", str.c_str());
+        //printf("\n P%d    %-36s ...", my_proc, str.c_str());
         Timer T2timer;
 
         // If exceed memory, use diskbased algorithm
@@ -509,6 +520,8 @@ double THREE_DSRG_MRPT2::compute_energy()
         energy.push_back({"<[V, T1]>", Etemp});
     }
 
+    //printf("\n P%d about to enter E_VT2_2", my_proc);
+    GA_Sync();
     Etemp  = E_VT2_2();
     if(my_proc == 0)
     {
@@ -1053,7 +1066,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 {
     double E = 0.0;
     int my_proc = GA_Nodeid();
-    if(GA_Nodeid() == 0)
+    if(my_proc == 0)
     {
         Timer timer;
         std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
@@ -1136,6 +1149,8 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         //Calculates all but ccvv, cCvV, and CCVV energies
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
+    //printf("\n P%d about to Sync", my_proc);
+    GA_Sync();
 
 
     double Eccvv = 0.0;
@@ -1147,19 +1162,19 @@ double THREE_DSRG_MRPT2::E_VT2_2()
 
     if(options_.get_str("ccvv_algorithm")=="CORE")
     {
-        Eccvv = E_VT2_2_core();
+        if(my_proc == 0) Eccvv = E_VT2_2_core();
     }
     else if(options_.get_str("ccvv_algorithm")=="FLY_LOOP")
     {
-        Eccvv = E_VT2_2_fly_openmp();
+        if(my_proc = 0) Eccvv = E_VT2_2_fly_openmp();
     }
     else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
-        Eccvv = E_VT2_2_ambit();
+        if(my_proc == 0) Eccvv = E_VT2_2_ambit();
     }
     else if(options_.get_str("ccvv_algorithm")=="BATCH_CORE")
     {
-        Eccvv = E_VT2_2_batch_core();
+        if(my_proc == 0) Eccvv = E_VT2_2_batch_core();
     }
     else if(options_.get_str("ccvv_algorithm")=="BATCH_CORE_GA")
     {
@@ -1181,7 +1196,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     }
     else if(options_.get_str("CCVV_ALGORITHM")=="BATCH_VIRTUAL")
     {
-        Eccvv = E_VT2_2_batch_virtual();
+        if(my_proc == 0) Eccvv = E_VT2_2_batch_virtual();
     }
     else if(options_.get_str("CCVV_ALGORITHM")=="BATCH_VIRTUAL_GA")
     {
@@ -1210,6 +1225,10 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     outfile->Printf("\n    %-36s ...", strccvv.c_str());
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
     //outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
+    double all_e = 0.0;
+    if(my_proc == 0)
+        all_e = E + Eccvv;
+    MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     return (E + Eccvv);
 }
@@ -1985,11 +2004,14 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     double Ealpha = 0.0;
     double Emixed = 0.0;
     double Ebeta  = 0.0;
+    int my_proc  = GA_Nodeid();
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
     // Bef(ef) = Bm(L|e) * Bn(L|f)
+    if(debug_print) printf("\n Computing V_T2_2 in batch algorithm with P%d\n", my_proc);
+    if(debug_print) printf("\n Batching algorithm is going over m and n");
     outfile->Printf("\n Computing V_T2_2 in batch algorithm\n");
-    outfile->Printf("\n Batching algorithm is going over m and n");
+    outfile->Printf("v\n Batching algorithm is going over m and n");
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
     #ifdef _OPENMP
@@ -1999,12 +2021,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     /// In Parallel, make sure to limit memory per core.  
     int num_proc = GA_Nnodes();
-    int my_proc  = GA_Nodeid();
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     /// Memory keyword is global (compute per node memory here)
     size_t memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
-    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+    int num_block = 0;
+    int block_size = 0;
+    if(my_proc == 0) num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+    MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&int_mem_int, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&memory_input, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //printf("\n memory_input: %d num_block: %d int_mem_int: %d", memory_input, num_block, int_mem_int);
 
     ///Since the integrals compute Fa_, need to make sure Fa is distributed to all cores
     if(my_proc != 0)
@@ -2016,36 +2043,42 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     if(debug_print) printf("\n P%d done with F_BCAST: %8.8f s", my_proc, F_BCAST.get());
-    if(debug_print) printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
+    if(debug_print) printf("\n P%d ncmo_: %d nthree_: %d virtual_: %d core_: %d", my_proc, ncmo_, nthree_, virtual_, core_);
 
-    size_t block_size = 1;
+    if(memory_input > int_mem_int)
+    {
+        if(my_proc == 0)
+        {
+            block_size = core_ / num_proc;
+            num_block = num_proc;
+        }
+        MPI_Bcast(&num_block,  1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    }
     if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
     {
         num_block = options_.get_int("CCVV_BATCH_NUMBER");
         block_size = core_ / num_block;
     }
-    if(memory_input > int_mem_int)
-    {
-        block_size = core_ / num_proc;
-        num_block = core_ / block_size;
-    }
 
     if(block_size < 1)
     {
-        outfile->Printf("\n\n Block size is FUBAR.");
-        outfile->Printf("\n Block size is %d", block_size);
+        printf("\n P%d found this", my_proc);
+        printf("\n\n Block size is FUBAR.");
+        printf("\n Block size is %d with P%d", block_size, my_proc);
         throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if(num_block > core_)
     {
-        outfile->Printf("\n Number of blocks can not be larger than core_");
+        printf("\n Number of blocks can not be larger than core_ on P%d", my_proc);
+        printf("\n num_block: %d core_: %d on P%d", num_block, core_, my_proc);
         throw PSIEXCEPTION("Number of blocks is larger than core.  Fix num_block or check source code");
     }
     if(num_block < num_proc)
     {
         outfile->Printf("\n Set number of processors larger");
         outfile->Printf("\n This algorithm uses P processors to block DF tensors");
-        outfile->Printf("\n num_block = %d and num_proc = %d", num_block, num_proc);
+        printf("\n num_block = %d and num_proc = %d with P%d", num_block, num_proc, my_proc);
         throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
     }
     if(num_block >= 1)
@@ -2058,8 +2091,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     ///My algorithm assumes that the tensor is distributed as m(iproc)B_{e}^{Q}
     ///Each processor holds a chunk of B distributed through the core index
     ///dims-> nthree_, core_, virtual_
+    
     int dims[2];
     int B_chunk[2];
+    int ld[1];
+    ld[0] = nthree_ * virtual_;
     if(debug_print) printf("\n myproc: %d block_size: %d", my_proc, block_size);
     dims[0] = core_;
     dims[1] = nthree_ * virtual_;
@@ -2067,11 +2103,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     dim_chunk[0] = num_block;
     dim_chunk[1] = 1;
     int map[num_block + 1];
-    for(int i = 0; i < num_block - 1; i++)
+    for(int i = 0; i < num_block; i++)
     {
         map[i] = i * block_size;
     }
-    map[num_block -1] = (num_block - 1) * block_size + core_ % num_block;
     map[num_block] = 0;
     if(debug_print)
     {
@@ -2080,7 +2115,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             outfile->Printf("\n map[%d] = %d", i, map[i]);
     }
     int mBe = NGA_Create_irreg(C_DBL, 2, dims, (char *)"mBe", dim_chunk, map);
-    if(mBe==0)
+    if(not mBe)
     {
         GA_Error((char *)"Create mBe failed", 0);
         throw PSIEXCEPTION("Error in creating GA for B");
@@ -2122,8 +2157,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
 
                 int begin_offset[2];
                 int end_offset[2];
-                int ld[1];
-                ld[0] = nthree_ * virtual_;
                 NGA_Distribution(mBe, iproc, begin_offset, end_offset);
                 NGA_Put(mBe, begin_offset, end_offset, &BmQe.data()[0], ld);
                 for(int i = 0; i < 2; i++)
@@ -2137,12 +2170,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         }
     }
 
-    if(my_proc == 0)
-    {
-        ambit::Tensor Bcorrect = ints_->three_integral_block(naux, acore_mos_, virt_mos);
-        ambit::Tensor Bcorrect_trans = ambit::Tensor::build(tensor_type_, "BFull", {core_, nthree_, virtual_});
-        Bcorrect_trans("mQe") = Bcorrect("Qme");
-    }
+    //if(my_proc == 0)
+    //{
+    //    ambit::Tensor Bcorrect = ints_->three_integral_block(naux, acore_mos_, virt_mos);
+    //    ambit::Tensor Bcorrect_trans = ambit::Tensor::build(tensor_type_, "BFull", {core_, nthree_, virtual_});
+    //    Bcorrect_trans("mQe") = Bcorrect("Qme");
+    //}
     if(debug_print)
     {
         ambit::Tensor B_global = ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
@@ -2152,21 +2185,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         {
             for(int iproc = 0; iproc < num_proc; iproc++)
             {
-                int begin_offset[2];
-                int end_offset[2];
-                NGA_Distribution(mBe, iproc, begin_offset, end_offset);
-                int ld[1];
-                ld[0] = nthree_ * virtual_;
+                int begin_offset_get[2];
+                int end_offset_get[2];
+                NGA_Distribution(mBe, iproc, begin_offset_get, end_offset_get);
                 for(int i = 0; i < 2; i++)
                 {
-                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i, begin_offset[i], end_offset[i]);
+                    outfile->Printf("\n my_proc: %d offsets[%d] = (%d, %d)", iproc, i, begin_offset_get[i], end_offset_get[i]);
                 }
-                NGA_Get(mBe, begin_offset, end_offset, &(B_global.data()[begin_offset[0] * nthree_ * virtual_]), ld);
+                NGA_Get(mBe, begin_offset_get, end_offset_get, &(B_global.data()[begin_offset_get[0] * nthree_ * virtual_]), ld);
             }
         }
         GA_Sync();
-        if(my_proc == 0 && debug_print) B_global.print(stdout);
+    if(my_proc == 0 && debug_print) B_global.print(stdout);
     }
+    GA_Sync();
     if(debug_print) GA_Print(mBe);
     if(debug_print) GA_Print_distribution(mBe);
 
@@ -2234,8 +2266,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         ///Since every processor has different chunk (I can't assume locality)
         ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {m_batch.size(), nthree_, virtual_});
 
-        int ld[1];
-        ld[0] = nthree_ * virtual_;
         int m_begin_offset[2];
         int m_end_offset[2];
         //int m_offset_start = m_blocks * block_size;
@@ -2298,7 +2328,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
          }
          else
          {
-            int ld[1];
             int locate_offset[2];
             locate_offset[0] = n_blocks * block_size;
             locate_offset[1] = 0;
@@ -2312,7 +2341,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             }
             int begin_offset_n[2];
             int end_offset_n[2];
-            ld[0] = nthree_ * virtual_;
             NGA_Distribution(mBe, NGA_INFO, begin_offset_n, end_offset_n);
             NGA_Get(mBe, begin_offset_n, end_offset_n, &(BnQf.data()[0]), ld);
          }
@@ -2398,54 +2426,80 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     // Bef(ef) = Bm(L|e) * Bn(L|f)
     outfile->Printf("\n Computing V_T2_2 in batch algorithm\n");
     outfile->Printf("\n Batching algorithm is going over m and n");
-    if(my_proc > 0)
-        if(true) printf("\n P%d is in batch_core_rep", my_proc);
+    if(debug_print)
+        printf("\n P%d is in batch_core_rep", my_proc);
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
     #ifdef _OPENMP
         nthread = omp_get_max_threads();
     #endif
+    outfile->Printf("\n Algorithm uses %d processors and %d threads", num_proc, nthread);
 
     ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
     outfile->Printf("\n\n====Blocking information==========\n");
-    size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
-    size_t memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
-    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+    size_t int_mem_int = 0;
+    size_t memory_input = 0;
+    size_t num_block = 0;
+    size_t block_size = 0;
+    if(my_proc == 0)
+    {
+        int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
+        memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+        num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
+        block_size = core_ / num_block;
+    }
+    MPI_Bcast(&int_mem_int, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&memory_input, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
     {
-        num_block = options_.get_int("CCVV_BATCH_NUMBER");
+        if(my_proc == 0) num_block = options_.get_int("CCVV_BATCH_NUMBER");
+        MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
-    size_t block_size = core_ / num_block;
     if(memory_input > int_mem_int)
     {
-        block_size = core_ / num_proc;
-        num_block = core_ / block_size;
+        if(my_proc == 0) block_size = core_ / num_proc;
+        if(my_proc == 0) num_block = num_proc;
+        MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    }
+    if(num_block >= 1)
+    {
+        outfile->Printf("\n Block Information");
+        outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
+        outfile->Printf("\n  Block_size = %lu num_block = %lu P%d", block_size, num_block);
     }
 
     if(block_size < 1)
     {
-        outfile->Printf("\n\n Block size is FUBAR.");
-        outfile->Printf("\n Block size is %d", block_size);
+        printf("\n\n Block size is FUBAR on P%d.", my_proc);
+        printf("\n Block size is %d", block_size);
+        printf("\n Block Information for P%d\n", my_proc);
+        printf("\n  %lu / %lu = %lu P%d", int_mem_int, memory_input, int_mem_int / memory_input, my_proc);
+        printf("\n  Block_size = %lu num_block = %lu P%d", block_size, num_block, my_proc);
+        printf("\n Core_: %d virtual_: %d nthree_: %d", core_, virtual_, nthree_);
         throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
-    }
+    }    
     if(num_block > core_)
     {
+        printf("\n P%d says that num_block is %d", my_proc, num_block);
         outfile->Printf("\n Number of blocks can not be larger than core_");
         throw PSIEXCEPTION("Number of blocks is larger than core.  Fix num_block or check source code");
     }
 
-    if(num_block >= 1)
-    {
-        outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input, int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
-    }
     if(num_block < num_proc)
     {
         outfile->Printf("\n Set number of processors larger");
         outfile->Printf("\n This algorithm uses P processors to block DF tensors");
         outfile->Printf("\n num_block = %d and num_proc = %d", num_block, num_proc);
         throw PSIEXCEPTION("Set number of processors larger.  See output for details.");
+    }
+    if(debug_print)
+    {
+        printf("\n P%d is complete with all block information");
+        printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d ncmo_: %d num_proc: %d block_size: %d", my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc, block_size);
     }
 
     
