@@ -58,15 +58,19 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     /// In Parallel, make sure to limit memory per core.  
     int num_proc = GA_Nnodes();
     outfile->Printf("\n\n====Blocking information==========\n");
-    size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     /// Memory keyword is global (compute per node memory here)
-    size_t memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
+    size_t int_mem_int = 0;
+    size_t memory_input = 0;
     int num_block = 0;
     int block_size = 0;
+    if(my_proc ==0) int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
+    if(my_proc ==0) memory_input = Process::environment.get_memory() * 0.75 * 1.0 / num_proc;
     if(my_proc == 0) num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
-    MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&int_mem_int, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if(my_proc == 0) block_size = core_ / num_block;
+    MPI_Bcast(&int_mem_int,  1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&memory_input, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&num_block,    1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&block_size,   1, MPI_INT, 0, MPI_COMM_WORLD);
     //printf("\n memory_input: %d num_block: %d int_mem_int: %d", memory_input, num_block, int_mem_int);
 
     ///Since the integrals compute Fa_, need to make sure Fa is distributed to all cores
@@ -156,7 +160,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         GA_Error((char *)"Create mBe failed", 0);
         throw PSIEXCEPTION("Error in creating GA for B");
     }
-    GA_Print_distribution(mBe);
+    if(debug_print) GA_Print_distribution(mBe);
     if(my_proc == 0 && debug_print) printf("Created mBe tensor");
     std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
     std::vector<size_t> naux(nthree_);
@@ -232,7 +236,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             }
         }
         GA_Sync();
-    if(my_proc == 0 && debug_print) B_global.print(stdout);
+    if(my_proc == 0 && debug_print) printf("\n B_Global norm: %8.8f", B_global.norm(2.0));
     }
     GA_Sync();
     if(debug_print) GA_Print(mBe);
@@ -534,14 +538,24 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     }
     if(debug_print)
     {
-        printf("\n P%d is complete with all block information");
+        printf("\n P%d is complete with all block information", my_proc);
         printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d ncmo_: %d num_proc: %d block_size: %d", my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc, block_size);
     }
 
+    MPI_Barrier(MPI_COMM_WORLD);
     
+    printf("\n P%d virt_mos begin", my_proc);
     std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    std::vector<size_t> naux(nthree_);
-    std::iota(naux.begin(), naux.end(), 0);
+    printf("\n P%d virt_mos end", my_proc);
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("\n P%d Naux init with nthree_:%d", my_proc, nthree_);
+    std::vector<size_t> naux;
+    naux.resize(nthree_);
+    printf("\n P%d Naux init correctly", my_proc);
+    MPI_Barrier(MPI_COMM_WORLD);
+    printf("\n P%d naux about to be filled", my_proc);
+    std::iota(naux.begin(), naux.begin() + nthree_, 0);
+    printf("\n P%d virt_mos, naux, and filling naux ending", my_proc);
 
     /// Race condition if each thread access ambit tensors
     /// Force each thread to have its own copy of matrices (memory NQ * V)
@@ -552,6 +566,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     std::vector<ambit::Tensor> BnaVec;
     std::vector<ambit::Tensor> BmbVec;
     std::vector<ambit::Tensor> BnbVec;
+    if(debug_print) printf("\n P%d going to allocate tensors", my_proc);
 
     for (int i = 0; i < nthread; i++)
     {
@@ -564,6 +579,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
         RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
 
     }
+    if(debug_print) printf("\n P%d done with allocating tensors", my_proc);
 
     std::vector<std::pair<int, int> > mn_tasks;
     for(int m = 0, idx = 0; m < num_block; m++)
@@ -576,26 +592,34 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     
     std::pair<std::vector<int>, std::vector<int> > my_tasks = split_up_tasks(mn_tasks.size(), num_proc);
     std::vector<int> batch_start = my_tasks.first;
-    std::vector<int> batch_end = my_tasks.second;
+    std::vector<int> batch_end =   my_tasks.second;
     /// B tensor will be broadcasted to all processors (very memory heavy)
     /// F matrix will be broadcasted to all processors (N^2)
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(debug_print) printf("\n P%d going to allocate tensor", my_proc);
     ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {core_, nthree_, virtual_});
+    if(debug_print) printf("\n P%d done with allocatating tensor", my_proc);
     if(my_proc != 0)
     {
         Fa_.resize(ncmo_);
         Fb_.resize(ncmo_);
     }
-    Timer B_Bcast;
     if(my_proc == 0)
     {
         ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, virt_mos);
         BmQe("mQe") = B("Qme");
     }
-    printf("\n B_Bcast for F and B about to start on P%d", my_proc);
+    Timer F_Bcast;
+    if(debug_print) printf("\n F_Bcast for F about to start on P%d", my_proc);
     MPI_Bcast(&Fa_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Bcast(&Fb_[0], ncmo_, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    if(debug_print) printf("\n F_Bcast for F end on P%d", my_proc);
+    if(debug_print) printf("\n F_Bcast for F took %8.6f s on P%d.", F_Bcast.get(), my_proc);
+    if(debug_print) printf("\n B_Bcast for B about to start on P%d", my_proc);
+    Timer B_Bcast;
     MPI_Bcast(&BmQe.data()[0], nthree_ * virtual_ * core_, MPI_DOUBLE, 0,MPI_COMM_WORLD);
-    printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
+    if(debug_print) printf("\n B_Bcast took %8.8f on P%d", B_Bcast.get(), my_proc);
+    if(debug_print) printf("\n BmQe norm: %8.8f on P%d", BmQe.norm(2.0), my_proc);
     ///Step 2:  Loop over memory allowed blocks of m and n
     /// Get batch sizes and create vectors of mblock length
 

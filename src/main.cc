@@ -737,7 +737,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
         n_nodes = GA_Nnodes();
         my_proc = GA_Nodeid();
-        size_t memory = Process::environment.get_memory() * my_proc;
+        size_t memory = Process::environment.get_memory() / n_nodes;
         if (!MA_initialized()) {
             if(!MA_init(C_DBL, memory, memory))
             {
@@ -1130,12 +1130,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 reference = fci->reference();
             }
 
-            GA_Sync();
-            printf("\n P%d leaving FCI", my_proc);
+            //GA_Sync();
+            //printf("\n P%d leaving FCI", my_proc);
 
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
-            printf("\n P%d leaving THREE_DSRG_MRPT2", my_proc);
-            GA_Sync();
+            //printf("\n P%d leaving THREE_DSRG_MRPT2", my_proc);
+            //GA_Sync();
             three_dsrg_mrpt2->compute_energy();
         }
 
