@@ -92,7 +92,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL EFFECTIVE");
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE");
 
         /*- The damping factor in the erf(x omega)/x integrals -*/
         options.add_double("EFFECTIVE_COULOMB_OMEGA",1.0);
@@ -786,9 +786,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         ints_ = std::make_shared<ConventionalIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
         ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }else if (options.get_str("INT_TYPE") == "DISTDF"){
+    //    ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     }
     else{
-        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 

@@ -90,7 +90,6 @@ double CholeskyIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s)
      vpqrsalphaE = C_DDOT(nthree_,
             &(ThreeIntegral_->pointer()[p*aptei_idx_ + s][0]),1,
             &(ThreeIntegral_->pointer()[q*aptei_idx_ + r][0]),1);
-    //}
 
     return (vpqrsalphaC - vpqrsalphaE);
 }
