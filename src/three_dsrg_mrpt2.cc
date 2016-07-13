@@ -1928,6 +1928,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
             }
             size_t m_size = m_batch.size();
             size_t n_size = n_batch.size();
+            Timer Core_Loop;
             #pragma omp parallel for \
                 schedule(static) \
                 reduction(+:Ealpha, Emixed) 
@@ -1989,6 +1990,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
                     outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
                 }
             }
+            outfile->Printf("\n Batch_core loop per Mbatch: %d and Nbatch: %d takes %8.8f", m_blocks, n_blocks, Core_Loop.get());
         }
     }
     //return (Ealpha + Ebeta + Emixed);
@@ -2209,7 +2211,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
                     outfile->Printf("\n e: %d f:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", e, f, Ealpha , Emixed, Ealpha + Emixed);
                 }
             }
-            outfile->Printf("\n Virtual loop OpenMP timing for e_batch: %d and f_batch: %d takes %8.8f", e_blocks, f_blocks, Virtual_loop.get());
+            if(debug_print) outfile->Printf("\n Virtual loop OpenMP timing for e_batch: %d and f_batch: %d takes %8.8f", e_blocks, f_blocks, Virtual_loop.get());
         }
     }
     //return (Ealpha + Ebeta + Emixed);
