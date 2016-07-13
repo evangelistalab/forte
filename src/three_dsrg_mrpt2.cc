@@ -271,7 +271,6 @@ void THREE_DSRG_MRPT2::startup()
         }
     }
     //printf("\n Settingup stupid MO shit done P%d", my_proc);
-    MPI_Barrier(MPI_COMM_WORLD);
     //if(options_.get_bool("MOLDEN_WRITE_FORTE"))
     //{
     //    Dimension nmopi_ = mo_space_info_->get_dimension("ALL");
@@ -2156,6 +2155,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
             }
             size_t e_size = e_batch.size();
             size_t f_size = f_batch.size();
+            Timer Virtual_loop;
             #pragma omp parallel for \
                 schedule(static) \
                 reduction(+:Ealpha, Emixed) 
@@ -2209,6 +2209,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
                     outfile->Printf("\n e: %d f:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", e, f, Ealpha , Emixed, Ealpha + Emixed);
                 }
             }
+            outfile->Printf("\n Virtual loop OpenMP timing for e_batch: %d and f_batch: %d takes %8.8f", e_blocks, f_blocks, Virtual_loop.get());
         }
     }
     //return (Ealpha + Ebeta + Emixed);
