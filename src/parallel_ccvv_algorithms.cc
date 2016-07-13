@@ -97,8 +97,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     }
     if(options_.get_int("CCVV_BATCH_NUMBER") != -1)
     {
-        num_block = options_.get_int("CCVV_BATCH_NUMBER");
-        block_size = core_ / num_block;
+        if(my_proc == 0) num_block = options_.get_int("CCVV_BATCH_NUMBER");
+        if(my_proc == 0) block_size = core_ / num_block;
+        MPI_Bcast(&num_block, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&block_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
 
     if(block_size < 1)
@@ -162,9 +164,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     }
     if(debug_print) GA_Print_distribution(mBe);
     if(my_proc == 0 && debug_print) printf("Created mBe tensor");
-    std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    std::vector<size_t> naux(nthree_);
-    std::iota(naux.begin(), naux.end(), 0);
     /// Take m_blocks and split it up between processors
     std::pair<std::vector<int>, std::vector<int> > my_tasks = split_up_tasks(num_block, num_proc);
     ///Since B is stored on disk on processor 0, only read from p0
@@ -172,6 +171,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     {
         if(my_proc == 0)
         {
+            /// Really only need this tensors for 
+            std::vector<size_t> naux(nthree_);
+            std::iota(naux.begin(), naux.end(), 0);
+            std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
             for(int m_blocks = my_tasks.first[iproc]; m_blocks < my_tasks.second[iproc]; m_blocks++)
             {
                 std::vector<size_t> m_batch;
@@ -209,6 +212,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
             }
         }
     }
+    GA_Sync();
 
     //if(my_proc == 0)
     //{
@@ -218,11 +222,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     //}
     if(debug_print)
     {
-        ambit::Tensor B_global = ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
+        printf("\n Allocating B_global with core_: %d nthree_: %d virtual_: %d on P%d", core_, nthree_, virtual_, my_proc);
         printf("\n P%d going to NGA_GET", my_proc);
         outfile->Printf("\n");
         if(my_proc == 0)
         {
+            ambit::Tensor B_global = ambit::Tensor::build(tensor_type_, "BGlobal", {core_, nthree_, virtual_});
             for(int iproc = 0; iproc < num_proc; iproc++)
             {
                 int begin_offset_get[2];
@@ -234,9 +239,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
                 }
                 NGA_Get(mBe, begin_offset_get, end_offset_get, &(B_global.data()[begin_offset_get[0] * nthree_ * virtual_]), ld);
             }
+        if(debug_print) printf("\n B_Global 1norm: %8.8f", B_global.norm(1.0));
         }
         GA_Sync();
-    if(my_proc == 0 && debug_print) printf("\n B_Global 1norm: %8.8f", B_global.norm(1.0));
     }
     GA_Sync();
     double one_norm = 0.0;
@@ -544,20 +549,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
         printf("\n P%d num_block: %d core_: %d virtual_: %d nthree_: %d ncmo_: %d num_proc: %d block_size: %d", my_proc, num_block, core_, virtual_, nthree_, ncmo_, num_proc, block_size);
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
     
-    printf("\n P%d virt_mos begin", my_proc);
-    std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    printf("\n P%d virt_mos end", my_proc);
-    MPI_Barrier(MPI_COMM_WORLD);
-    printf("\n P%d Naux init with nthree_:%d", my_proc, nthree_);
-    std::vector<size_t> naux;
-    naux.resize(nthree_);
-    printf("\n P%d Naux init correctly", my_proc);
-    MPI_Barrier(MPI_COMM_WORLD);
-    printf("\n P%d naux about to be filled", my_proc);
-    std::iota(naux.begin(), naux.begin() + nthree_, 0);
-    printf("\n P%d virt_mos, naux, and filling naux ending", my_proc);
 
     /// Race condition if each thread access ambit tensors
     /// Force each thread to have its own copy of matrices (memory NQ * V)
@@ -597,7 +589,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     std::vector<int> batch_end =   my_tasks.second;
     /// B tensor will be broadcasted to all processors (very memory heavy)
     /// F matrix will be broadcasted to all processors (N^2)
-    MPI_Barrier(MPI_COMM_WORLD);
     if(debug_print) printf("\n P%d going to allocate tensor", my_proc);
     ambit::Tensor BmQe = ambit::Tensor::build(tensor_type_, "BmQE", {core_, nthree_, virtual_});
     if(debug_print) printf("\n P%d done with allocatating tensor", my_proc);
@@ -608,7 +599,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
     }
     if(my_proc == 0)
     {
-        ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, virt_mos);
+        std::vector<size_t> virt_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+        std::vector<size_t> naux(nthree_);
+        std::iota(naux.begin(), naux.end(), 0);
+        ambit::Tensor B = ints_->three_integral_block(naux, acore_mos_, avirt_mos_);
         BmQe("mQe") = B("Qme");
     }
     Timer F_Bcast;
