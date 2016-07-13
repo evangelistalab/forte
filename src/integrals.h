@@ -27,7 +27,7 @@ namespace forte{
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
-enum IntegralType {ConventionalInts,DF,Cholesky, DiskDF,Effective};
+enum IntegralType {ConventionalInts, DF, Cholesky, DiskDF, DistDF, Effective};
 //The integrals implementation is in a cc file for each class.  
 //DFIntegrals->df_integrals.cc
 
@@ -717,6 +717,70 @@ private:
     double* diagonal_aphys_tei_bb;
     size_t nthree_;
 };
+
+class DistDFIntegrals : public ForteIntegrals{
+public:
+    DistDFIntegrals(psi::Options &options,SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    ///aptei_xy functions are slow.  try to use three_integral_block
+
+    virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) {}
+    virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) {}
+    virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) {}
+
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s){}
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r,
+        const std::vector<size_t>& s){}
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q, const std::vector<size_t>& r, 
+        const std::vector<size_t>& s){}
+
+    virtual double diag_aptei_aa(size_t p, size_t q){}
+    virtual double diag_aptei_ab(size_t p, size_t q){}
+    virtual double diag_aptei_bb(size_t p, size_t q){}
+    virtual double three_integral(size_t A, size_t p, size_t q){}
+    virtual double** three_integral_pointer()
+    {
+        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+    }
+    ///Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q){}
+    ///return ambit tensor of size A by q
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>&q){}
+
+    virtual void set_tei(size_t p, size_t q, size_t r,size_t s,double value,bool alpha1,bool alpha2)
+    {
+        outfile->Printf("DistributedDF will not work with set_tei");
+        throw PSIEXCEPTION("DistDF can not use set_tei");
+    }
+    virtual ~DistDFIntegrals();
+
+    virtual void make_fock_matrix(SharedMatrix gamma_a,SharedMatrix gamma_b){}
+
+    /// Make a Fock matrix computed with respect to a given determinant
+    virtual size_t nthree() const {return nthree_;}
+private:
+    SharedWavefunction wfn_;
+    virtual void gather_integrals();
+    virtual void allocate();
+    virtual void deallocate();
+    //Grabs DF integrals with new Ca coefficients
+    virtual void make_diagonal_integrals() {}
+    virtual void resort_three(boost::shared_ptr<Matrix>& threeint, std::vector<size_t>& map) {}
+    virtual void resort_integrals_after_freezing() {}
+    virtual void resort_four(double *&, std::vector<size_t> &){}
+
+    /// This is the handle for GA
+    int DistDF_ga_;
+
+    boost::shared_ptr<Matrix> ThreeIntegral_;
+    double* diagonal_aphys_tei_aa;
+    double* diagonal_aphys_tei_ab;
+    double* diagonal_aphys_tei_bb;
+    size_t nthree_;
+};
+
 
 
 }} // End Namespaces
