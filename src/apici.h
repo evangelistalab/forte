@@ -314,6 +314,8 @@ private:
     double estimate_1st_order_perturbation(det_vec& dets, std::vector<double>& C, double spawning_threshold);
     /// Estimate the 2nd order pertubation energy for the result within subspace
     double estimate_2nd_order_perturbation_sub(det_vec& dets, std::vector<double>& C, double spawning_threshold);
+    /// Estimate the path-filtering error
+    double estimate_path_filtering_error(det_vec& dets, std::vector<double>& C, double spawning_threshold);
 
     /// Form the product H c
     double form_H_C(double tau,double spawning_threshold,Determinant& detI, double CI, det_hash<>& det_C,std::pair<double,double>& max_coupling);
