@@ -115,23 +115,23 @@ void MCSRGPT2_MO::startup(Options &options){
         Fb_srg_ = d2(ncmo_, d1(ncmo_));
         Form_Fock_SRG();
 
-        // zero all acitve two-electron integrals
-        for(size_t u = 0; u < na_; ++u){
-            size_t nu = idx_a_[u];
-            for(size_t v = 0; v < na_; ++v){
-                size_t nv = idx_a_[v];
-                for(size_t x = 0; x < na_; ++x){
-                    size_t nx = idx_a_[x];
-                    for(size_t y = 0; y < na_; ++y){
-                        size_t ny = idx_a_[y];
+//        // zero all acitve two-electron integrals
+//        for(size_t u = 0; u < na_; ++u){
+//            size_t nu = idx_a_[u];
+//            for(size_t v = 0; v < na_; ++v){
+//                size_t nv = idx_a_[v];
+//                for(size_t x = 0; x < na_; ++x){
+//                    size_t nx = idx_a_[x];
+//                    for(size_t y = 0; y < na_; ++y){
+//                        size_t ny = idx_a_[y];
 
-                        integral_->set_tei(nu,nv,nx,ny,0.0,true,true);
-                        integral_->set_tei(nu,nv,nx,ny,0.0,true,false);
-                        integral_->set_tei(nu,nv,nx,ny,0.0,false,false);
-                    }
-                }
-            }
-        }
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,true,true);
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,true,false);
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,false,false);
+//                    }
+//                }
+//            }
+//        }
     } else {
         // Form T Amplitudes
         T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
@@ -2068,10 +2068,14 @@ double MCSRGPT2_MO::ESRG_11(){
 
     for(size_t i = 0; i < nh_; ++i){
         size_t ni = idx_h_[i];
-        for(size_t j = 0; j < nh_; ++j){
-            size_t nj = idx_h_[j];
-            for(size_t a = 0; a < npt_; ++a){
-                size_t na = idx_p_[a];
+        for(size_t a = 0; a < npt_; ++a){
+            size_t na = idx_p_[a];
+
+            // i, a cannot all be active
+            if(i < na_ && a < na_) continue;
+
+            for(size_t j = 0; j < nh_; ++j){
+                size_t nj = idx_h_[j];
                 for(size_t b = 0; b < npt_; ++b){
                     size_t nb = idx_p_[b];
 
@@ -2501,15 +2505,18 @@ double MCSRGPT2_MO::ESRG_22_2(){
         size_t ni = idx_h_[i];
         for(size_t j = 0; j < nh_; ++j){
             size_t nj = idx_h_[j];
-            for(size_t k = 0; k < nh_; ++k){
-                size_t nk = idx_h_[k];
-                for(size_t l = 0; l < nh_; ++l){
-                    size_t nl = idx_h_[l];
+            for(size_t a = 0; a < npt_; ++a){
+                size_t na = idx_p_[a];
+                for(size_t b = 0; b < npt_; ++b){
+                    size_t nb = idx_p_[b];
 
-                    for(size_t a = 0; a < npt_; ++a){
-                        size_t na = idx_p_[a];
-                        for(size_t b = 0; b < npt_; ++b){
-                            size_t nb = idx_p_[b];
+                    // i, j, a, b cannot all be active
+                    if(i < na_ && j < na_ && a < na_ && b < na_) continue;
+
+                    for(size_t k = 0; k < nh_; ++k){
+                        size_t nk = idx_h_[k];
+                        for(size_t l = 0; l < nh_; ++l){
+                            size_t nl = idx_h_[l];
                             for(size_t c = 0; c < npt_; ++c){
                                 size_t nc = idx_p_[c];
                                 for(size_t d = 0; d < npt_; ++d){
@@ -2563,6 +2570,10 @@ double MCSRGPT2_MO::ESRG_22_4(){
                         size_t ni = idx_h_[i];
                         for(size_t j = 0; j < nh_; ++j){
                             size_t nj = idx_h_[j];
+
+                            // i, j cannot all be active
+                            if(i < na_ && j < na_) continue;
+
                             for(size_t k = 0; k < nh_; ++k){
                                 size_t nk = idx_h_[k];
                                 for(size_t l = 0; l < nh_; ++l){
@@ -2595,6 +2606,10 @@ double MCSRGPT2_MO::ESRG_22_4(){
                         size_t na = idx_p_[a];
                         for(size_t b = 0; b < npt_; ++b){
                             size_t nb = idx_p_[b];
+
+                            // a, b cannot all be active
+                            if(a < na_ && b < na_) continue;
+
                             for(size_t c = 0; c < npt_; ++c){
                                 size_t nc = idx_p_[c];
                                 for(size_t d = 0; d < npt_; ++d){
@@ -2625,35 +2640,39 @@ double MCSRGPT2_MO::ESRG_22_4(){
                     // particle-hole
                     for(size_t i = 0; i < nh_; ++i){
                         size_t ni = idx_h_[i];
-                        for(size_t j = 0; j < nh_; ++j){
-                            size_t nj = idx_h_[j];
-                            for(size_t a = 0; a < npt_; ++a){
-                                size_t na = idx_p_[a];
+                        for(size_t a = 0; a < npt_; ++a){
+                            size_t na = idx_p_[a];
+
+                            // i, a cannot all be active
+                            if(i < na_ && a < na_) continue;
+
+                            for(size_t j = 0; j < nh_; ++j){
+                                size_t nj = idx_h_[j];
                                 for(size_t b = 0; b < npt_; ++b){
                                     size_t nb = idx_p_[b];
 
-                                    double d1 = Fa_[ni][ni] + Fa_[nu][nu] - Fa_[na][na] - Fa_[ny][ny];
-                                    double d2 = Fa_[nv][nv] + Fa_[nb][nb] - Fa_[nj][nj] - Fa_[nx][nx];
-                                    vaa += 2.0 * integral_->aptei_aa(nv,nb,nj,nx) * integral_->aptei_aa(ni,nu,na,ny)
+                                    double d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[ny][ny];
+                                    double d2 = Fa_[nb][nb] + Fa_[nu][nu] - Fa_[nj][nj] - Fa_[nx][nx];
+                                    vaa += 2.0 * integral_->aptei_aa(nb,nu,nj,nx) * integral_->aptei_aa(ni,nv,na,ny)
                                             * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
                                             * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                                    d1 = Fa_[nu][nu] + Fb_[ni][ni] - Fa_[ny][ny] - Fb_[na][na];
-                                    d2 = Fa_[nv][nv] + Fb_[nb][nb] - Fa_[nx][nx] - Fb_[nj][nj];
-                                    vaa -= 2.0 * integral_->aptei_ab(nv,nb,nx,nj) * integral_->aptei_ab(nu,ni,ny,na)
+                                    d1 = Fa_[nv][nv] + Fb_[ni][ni] - Fa_[ny][ny] - Fb_[na][na];
+                                    d2 = Fa_[nu][nu] + Fb_[nb][nb] - Fa_[nx][nx] - Fb_[nj][nj];
+                                    vaa += 2.0 * integral_->aptei_ab(nu,nb,nx,nj) * integral_->aptei_ab(nv,ni,ny,na)
                                             * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
                                             * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
 
-                                    d1 = Fb_[ni][ni] + Fb_[nu][nu] - Fb_[na][na] - Fb_[ny][ny];
-                                    d2 = Fb_[nv][nv] + Fb_[nb][nb] - Fb_[nj][nj] - Fb_[nx][nx];
-                                    vbb += 2.0 * integral_->aptei_bb(nv,nb,nj,nx) * integral_->aptei_bb(ni,nu,na,ny)
+                                    d1 = Fb_[ni][ni] + Fb_[nv][nv] - Fb_[na][na] - Fb_[ny][ny];
+                                    d2 = Fb_[nb][nb] + Fb_[nu][nu] - Fb_[nj][nj] - Fb_[nx][nx];
+                                    vbb += 2.0 * integral_->aptei_bb(nb,nu,nj,nx) * integral_->aptei_bb(ni,nv,na,ny)
                                             * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
                                             * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
-                                    d1 = Fa_[ni][ni] + Fb_[nu][nu] - Fa_[na][na] - Fb_[ny][ny];
-                                    d2 = Fa_[nb][nb] + Fb_[nv][nv] - Fa_[nj][nj] - Fb_[nx][nx];
-                                    vbb -= 2.0 * integral_->aptei_ab(nb,nv,nj,nx) * integral_->aptei_ab(ni,nu,na,ny)
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[ny][ny];
+                                    d2 = Fa_[nb][nb] + Fb_[nu][nu] - Fa_[nj][nj] - Fb_[nx][nx];
+                                    vbb += 2.0 * integral_->aptei_ab(nb,nu,nj,nx) * integral_->aptei_ab(ni,nv,na,ny)
                                             * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
                                             * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
@@ -2803,7 +2822,7 @@ double MCSRGPT2_MO::ESRG_22_6(){
 
                                 d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[ne][ne] - Fb_[nz][nz];
                                 d2 = Fa_[ne][ne] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[ny][ny];
-                                vabb -= 2.0 * integral_->aptei_ab(ne,nw,nx,ny) * integral_->aptei_ab(nu,nw,ne,nz)
+                                vabb -= 2.0 * integral_->aptei_ab(ne,nw,nx,ny) * integral_->aptei_ab(nu,nv,ne,nz)
                                         * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
 
                                 d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ne][ne];
@@ -2832,12 +2851,31 @@ double MCSRGPT2_MO::ESRG_22_6(){
 }
 
 double MCSRGPT2_MO::compute_energy_srg(){
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing energy of [eta1, H1] ...");
     double Esrg_11 = ESRG_11();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta1, H2] ...");
     double Esrg_12 = ESRG_12();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H1] ...");
     double Esrg_21 = ESRG_21();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C2 ...");
     double Esrg_22_2 = ESRG_22_2();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C4 ...");
     double Esrg_22_4 = ESRG_22_4();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C6 ...");
     double Esrg_22_6 = ESRG_22_6();
+    outfile->Printf("\t\t\t\t\tDone.");
+
     double Esrg_22 = Esrg_22_2 + Esrg_22_4 + Esrg_22_6;
     double Ecorr = Esrg_11 + Esrg_12 + Esrg_21 + Esrg_22;
     double Etotal = Ecorr + Eref_;
