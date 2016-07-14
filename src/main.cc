@@ -738,12 +738,13 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         n_nodes = GA_Nnodes();
         my_proc = GA_Nodeid();
         size_t memory = Process::environment.get_memory() / n_nodes;
-        if (!MA_initialized()) {
-            if(!MA_init(C_DBL, memory, memory))
-            {
-                throw PSIEXCEPTION("GA Failed to initialize memory");
-            }
-        }
+        //if (!MA_initialized()) {
+        //    if(!MA_init(C_DBL, memory, memory))
+        //    {
+        //        outfile->Printf("\n Tried to allocate %d memory", memory);
+        //        throw PSIEXCEPTION("GA Failed to initialize memory");
+        //    }
+        //}
     #endif
     
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
