@@ -34,4 +34,4 @@ set forte{
   dsrg_s             0.5
 }
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"DSRG energy fo Ag state") #TEST
+compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"DSRG energy of Ag state") #TEST
