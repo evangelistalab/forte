@@ -183,6 +183,7 @@ public:
     }
     IntegralFrozenCore frozen_core_integrals(){return resort_frozen_core_;}
 
+    virtual int ga_handle(){return 0;}
 
 protected:
 
@@ -311,6 +312,7 @@ protected:
     /// The One Electron Integrals (T + V) in SO Basis
     SharedMatrix OneBody_symm_;
     SharedMatrix OneIntsAO_;
+
 
     ///The Frozen One Body Operator
 };
@@ -745,7 +747,7 @@ public:
         throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
     }
     ///Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q){}
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A, const std::vector<size_t>& p, const std::vector<size_t>& q);
     ///return ambit tensor of size A by q
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p, const std::vector<size_t>&q){}
 
@@ -760,6 +762,7 @@ public:
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const {return nthree_;}
+    virtual int ga_handle() {return DistDF_ga_;}
 private:
     SharedWavefunction wfn_;
     virtual void gather_integrals();
@@ -779,6 +782,11 @@ private:
     double* diagonal_aphys_tei_ab;
     double* diagonal_aphys_tei_bb;
     size_t nthree_;
+    /// Assuming integrals are stored on disk
+    /// Reads the block of integrals present for each process
+    ambit::Tensor read_integral_chunk(boost::shared_ptr<Tensor>& B, std::vector<int>& lo, std::vector<int>& hi);
+    /// Distributes tensor according to naux dimension
+    void create_dist_df();
 };
 
 

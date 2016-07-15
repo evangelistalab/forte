@@ -246,7 +246,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     GA_Sync();
     double one_norm = 0.0;
     if(debug_print) GA_Norm1(mBe, &one_norm);
-    if(debug_print) printf("B_GA_Norm1: %8.8f", one_norm);
+    if(debug_print) printf("Proc%d B_GA_Norm1: %8.8f", my_proc, one_norm);
     if(debug_print) GA_Print_distribution(mBe);
 
     /// Race condition if each thread access ambit tensors
@@ -259,6 +259,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
     std::vector<ambit::Tensor> BmbVec;
     std::vector<ambit::Tensor> BnbVec;
 
+    printf("\n Proc%d about to allocate tensors", my_proc);
+    printf("\n nthree_: %d virtual_: %d", nthree_, virtual_);
     for (int i = 0; i < nthread; i++)
     {
         BmaVec.push_back(ambit::Tensor::build(tensor_type_,"Bma",{nthree_,virtual_}));
@@ -270,6 +272,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
         RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
 
     }
+    if(debug_print) printf("\n Proc%d multiple tensor allocations", my_proc);
 
     std::vector<std::pair<int, int> > mn_tasks;
     for(int m = 0; m < num_block; m++)

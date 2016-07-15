@@ -732,6 +732,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 {
     int my_proc = 0;
     int n_nodes = 1;
+    ambit::initialize();
     #ifdef HAVE_GA
         GA_Initialize_ltd(Process::environment.get_memory());
         outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
@@ -787,7 +788,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
         ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISTDF"){
-    //    ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");
@@ -1272,6 +1273,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     GA_Terminate();
     #endif
     return ref_wfn;
+    ambit::finalize();
 }
 
 }} // End Namespaces
