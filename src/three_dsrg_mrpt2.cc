@@ -1930,7 +1930,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
             size_t n_size = n_batch.size();
             Timer Core_Loop;
             #pragma omp parallel for \
-                schedule(static) \
+                schedule(runtime) \
                 reduction(+:Ealpha, Emixed) 
             for(size_t mn = 0; mn < m_size * n_size; ++mn){
                 int thread = 0;
@@ -2159,7 +2159,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
             size_t f_size = f_batch.size();
             Timer Virtual_loop;
             #pragma omp parallel for \
-                schedule(static) \
+                schedule(runtime) \
                 reduction(+:Ealpha, Emixed) 
             for(size_t ef = 0; ef < e_size * f_size; ++ef){
                 int thread = 0;
