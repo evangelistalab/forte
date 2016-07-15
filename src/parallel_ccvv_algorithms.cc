@@ -397,7 +397,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
          size_t m_size = m_batch.size();
          size_t n_size = n_batch.size();
          #pragma omp parallel for num_threads(num_threads_)\
-             schedule(static) \
+             schedule(runtime) \
              reduction(+:Ealpha, Emixed) 
          for(size_t mn = 0; mn < m_size * n_size; ++mn){
              int thread = 0;
@@ -710,7 +710,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
         size_t m_size = m_batch.size();
         size_t n_size = n_batch.size();
         #pragma omp parallel for num_threads(num_threads_)\
-            schedule(static) \
+            schedule(runtime) \
             reduction(+:Ealpha, Emixed) 
         for(size_t mn = 0; mn < m_size * n_size; ++mn){
             int thread = 0;
