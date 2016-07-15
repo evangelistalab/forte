@@ -250,7 +250,6 @@ void DFIntegrals::gather_integrals()
     }
 
     ThreeIntegral_ = Bpq;
-
 }
 
 void DFIntegrals::make_diagonal_integrals()

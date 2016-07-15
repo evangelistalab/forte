@@ -167,7 +167,7 @@ void THREE_DSRG_MRPT2::startup()
     #ifdef HAVE_MPI
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     #endif
-    printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
+    //printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
 
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
