@@ -13,6 +13,12 @@
 #include "sparse_ci_solver.h"
 #include "fci_vector.h"
 
+struct PairHash{
+    size_t operator()( const std::pair<size_t, size_t>& p ) const {
+        return (p.first*1000) + p.second;
+    }
+};
+
 namespace psi{ namespace forte{
 
 #ifdef _OPENMP
@@ -21,6 +27,8 @@ namespace psi{ namespace forte{
     #define omp_get_max_threads() 1
     #define omp_get_thread_num() 0
 #endif
+
+
 
 SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& space, bool print_details , bool disk)
     : SigmaVector(space.size()), space_(space)
@@ -410,8 +418,67 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
 
     // Form alpha-beta annihilation list
     outfile->Printf("\n  Building alpha-beta annihilation lists");
+
     {
+        ab_ann_list_.resize(max_I);
+
+        std::unordered_map<std::pair<size_t,size_t>,size_t, PairHash> counter;
+
         size_t nab_ann = 0;
+/*
+        for ( size_t I = 0; I < max_I; ++I ){
+            std::vector<std::tuple<size_t, short, short>> ab_ann;
+            std::vector<std::pair<size_t, short>>& a_ann = a_ann_list_[I];
+            std::vector<std::pair<size_t, short>>& b_ann = b_ann_list_[I];
+            size_t max_a = a_ann.size();
+            size_t max_b = b_ann.size();
+            for( size_t A = 0; A < max_a; ++A ){
+                size_t A_idx = a_ann[A].first;
+                short ii_a = a_ann[A].second;
+                for( size_t B = 0; B < max_b; ++B ){
+                    size_t B_idx = b_ann[B].first;
+                    short ii_b = b_ann[B].second;
+  */
+        for( size_t A = 0; A < n_alfa_strings; ++A){           
+            std::vector<size_t> bvec = alfa_to_det[A];                                               
+            for( size_t B = 0, maxB = bvec.size(); B < maxB; ++B){          
+                std::vector<std::tuple<size_t,short,short>> ab_ann;
+                // Get the det index
+                size_t detB = bvec[B];
+                std::vector<std::pair<size_t, short>>& JA = a_ann_list_[detB];       
+                // loop through alpha annihilations                                            
+                for( size_t a = 0, max_a = JA.size(); a < max_a; ++a ){
+                    int ii_a = JA[a].second;
+                    size_t A_idx = JA[a].first;
+                    std::vector<std::pair<size_t, short>> JB = b_ann_list_[detB];
+                    for( size_t b = 0, max_b = JB.size(); b < max_b; ++b ){
+                        int ii_b = JB[b].second;                                                                                                             
+                        size_t B_idx = JB[b].first; 
+                 
+                        std::pair<size_t, size_t> ab_pair = std::make_pair(A_idx, B_idx);                    
+                        outfile->Printf("\n  %zu, %zu", ab_pair.first, ab_pair.second);
+
+                        size_t ab_add;
+                        std::unordered_map< std::pair<size_t,size_t>,size_t,PairHash>::iterator it = counter.find( ab_pair );
+                        if( it == counter.end() ){
+                            ab_add = nab_ann;    
+                            counter[ab_pair] = nab_ann;
+                            nab_ann++;
+                        }else{
+                            ab_add = it->second;
+                   //       outfile->Printf("\n  ab_add: %zu", ab_add);
+                        }
+
+                        ab_ann.push_back(std::make_tuple( ab_add, ii_a, ii_b ));
+                  //      outfile->Printf("\n  %zu, %d, %d", ab_add, ii_a, ii_b);
+                    }
+                }
+                ab_ann_list_[detB] = ab_ann;
+            }    
+        } 
+    
+
+    /*    size_t nab_ann = 0;
         ab_ann_list_.resize(max_I);
 
         // Loop through a_str_list to get all n-1(a) determinants
@@ -455,7 +522,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
             }
         }
         outfile->Printf("      ...done");
-
+*/
         outfile->Printf("\n  Building alpha-beta creation lists");
         ab_cre_list_.resize(nab_ann);
         for(size_t I = 0; I < max_I; ++I){
@@ -707,15 +774,17 @@ void SigmaVectorString::compute_sigma(SharedVector sigma, SharedVector b)
     for (size_t J = 0; J < size_; ++J){
         for( auto& abJ_mo_sign : ab_ann_list_[J] ){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
-            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            sign_pq *= std::get<2>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
             const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(abJ_mo_sign);
+            const size_t q = std::abs(std::get<2>(abJ_mo_sign)) - 1;
             for( auto& ababJ_mo_sign : ab_cre_list_[abJ_add] ){
                 const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(ababJ_mo_sign);
+                const size_t s = std::abs(std::get<2>(ababJ_mo_sign)) - 1;
                 if ((p != r) and (q != s)){
                     const size_t I = std::get<0>(ababJ_mo_sign);
-                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    sign_rs *= std::get<2>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
                 outfile->Printf("\n %zu -> %zu", J, I);
@@ -995,6 +1064,7 @@ Timer single;
                         detJ_add = it->second;
                     }
                     ab_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
+                    outfile->Printf("\n  %zu, %d, %d", detJ_add, (sign > 0.5) ? (ii + 1) : (-ii-1),jj);
                 }
             }
             ab_ann.shrink_to_fit();
