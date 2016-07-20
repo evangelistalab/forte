@@ -450,7 +450,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
                 for( size_t a = 0, max_a = JA.size(); a < max_a; ++a ){
                     int ii_a = JA[a].second;
                     size_t A_idx = JA[a].first;
-                    std::vector<std::pair<size_t, short>> JB = b_ann_list_[detB];
+                    std::vector<std::pair<size_t, short>>& JB = b_ann_list_[detB];
                     for( size_t b = 0, max_b = JB.size(); b < max_b; ++b ){
                         int ii_b = JB[b].second;                                                                                                             
                         size_t B_idx = JB[b].first; 
@@ -1064,7 +1064,7 @@ Timer single;
                         detJ_add = it->second;
                     }
                     ab_ann[ij] = std::make_tuple(detJ_add,(sign > 0.5) ? (ii + 1) : (-ii-1),jj);
-                    outfile->Printf("\n  %zu, %d, %d", detJ_add, (sign > 0.5) ? (ii + 1) : (-ii-1),jj);
+//                    outfile->Printf("\n  %zu, %d, %d", detJ_add, (sign > 0.5) ? (ii + 1) : (-ii-1),jj);
                 }
             }
             ab_ann.shrink_to_fit();
@@ -1299,7 +1299,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
         }
     }
         // aabb singles
-        outfile->Printf("\n  alpha-beta");
+     //   outfile->Printf("\n  alpha-beta");
     for (size_t J = 0; J < size_; ++J){
         for (auto& abJ_mo_sign : ab_ann_list[J]){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
@@ -1315,7 +1315,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    outfile->Printf("\n  %zu -> %zu", J, I);
+    //                outfile->Printf("\n  %zu -> %zu", J, I);
                 }
             }
         }
