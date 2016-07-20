@@ -1133,6 +1133,8 @@ double DSRG_MRPT2::compute_energy_relaxed(){
         FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
         fcisolver.set_max_rdm_level(1);
+        fcisolver.set_nroot(options_.get_int("NROOT"));
+        fcisolver.set_root(options_.get_int("ROOT"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
@@ -1140,8 +1142,8 @@ double DSRG_MRPT2::compute_energy_relaxed(){
 
         // printing
         print_h2("MRDSRG Energy Summary");
-        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (fixed)", Edsrg);
-        outfile->Printf("\n    %-30s = %22.15f", "MRDSRG Total Energy (relaxed)", Erelax);
+        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)", Edsrg);
+        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
     }
 

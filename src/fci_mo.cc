@@ -919,16 +919,16 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
 
-        // test orbital ordering
+        // test active orbital ordering
         for(int h = 0; h < nirrep_; ++h){
-            int nrow = MOoverlap->rowspi(h); // before semicanonical
-            int ncol = MOoverlap->colspi(h); // after semicanonical
+            int actv_start = frzcpi_[h] + core_[h];
+            int actv_end   = actv_start + active_[h];
 
-            for(int i = 0; i < nrow; ++i){
+            for(int i = actv_start; i < actv_end; ++i){
                 int ii = 0; // corresponding index in semicanonical basis
                 double smax = 0.0;
 
-                for(int j = 0; j < ncol; ++j){
+                for(int j = actv_start; j < actv_end; ++j){
                     double s = MOoverlap->get(h,i,j);
                     if(fabs(s) > smax){
                         smax = fabs(s);
@@ -936,7 +936,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
                     }
                 }
 
-                // swap orbitals if ordering changed
+                // swap active orbitals if ordering changed
                 if(ii != i){
                     int h_local = h;
                     size_t ni = i  - frzcpi_[h];
@@ -1572,44 +1572,76 @@ double FCI_MO::ThreeOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew
 
 void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
-    ambit::Tensor Fa = ambit::Tensor::build(ambit::CoreTensor,"Fa",{ncmo_,ncmo_});
-    ambit::Tensor Fb = ambit::Tensor::build(ambit::CoreTensor,"Fb",{ncmo_,ncmo_});
+    Timer tfock;
+    std::string str = "Forming generalized Fock matrix";
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
 
-    Fa.iterate([&](const std::vector<size_t>& i,double& value){
-        value = integral_->oei_a(i[0],i[1]);
-        for(const size_t& c: idx_c_){
-            value += integral_->aptei_aa(i[0],c,i[1],c);
-            value += integral_->aptei_ab(i[0],c,i[1],c);
+    SharedMatrix DaM(new Matrix("DaM", ncmo_, ncmo_));
+    SharedMatrix DbM(new Matrix("DbM", ncmo_, ncmo_));
+    for (size_t m = 0; m < nc_; m++) {
+        size_t nm = idx_c_[m];
+        for( size_t n = 0; n < nc_; n++){
+            size_t nn = idx_c_[n];
+            DaM->set(nm,nn,Da_[nm][nn]);
+            DbM->set(nm,nn,Db_[nm][nn]);
         }
-    });
-    Fb.iterate([&](const std::vector<size_t>& i,double& value){
-        value = integral_->oei_b(i[0],i[1]);
-        for(const size_t& c: idx_c_){
-            value += integral_->aptei_bb(i[0],c,i[1],c);
-            value += integral_->aptei_ab(c,i[0],c,i[1]);
+    }
+    for (size_t u = 0; u < na_; u++){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; v++){
+            size_t nv = idx_a_[v];
+            DaM->set(nu,nv, Da_[nu][nv]);
+            DbM->set(nu,nv, Db_[nu][nv]);
         }
-    });
-
-    std::vector<size_t> idx_corr (ncmo_);
-    std::iota(idx_corr.begin(), idx_corr.end(), 0);
-    ambit::Tensor V = integral_->aptei_aa_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fa("pq") += V("puqv") * L1a("vu");
-
-    V = integral_->aptei_ab_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fa("pq") += V("puqv") * L1b("vu");
-
-    V = integral_->aptei_ab_block(idx_a_,idx_corr,idx_a_,idx_corr);
-    Fb("pq") += V("upvq") * L1a("vu");
-
-    V = integral_->aptei_bb_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fb("pq") += V("puqv") * L1b("vu");
+    }
+    integral_->make_fock_matrix(DaM, DbM);
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tfock.get());}
 
     for(size_t p = 0; p < ncmo_; ++p){
         for(size_t q = 0; q < ncmo_; ++q){
-            A[p][q] = Fa.data()[p * ncmo_ + q];
-            B[p][q] = Fb.data()[p * ncmo_ + q];
+            A[p][q] = integral_->get_fock_a(p,q);
+            B[p][q] = integral_->get_fock_b(p,q);
         }
     }
+
+//    ambit::Tensor Fa = ambit::Tensor::build(ambit::CoreTensor,"Fa",{ncmo_,ncmo_});
+//    ambit::Tensor Fb = ambit::Tensor::build(ambit::CoreTensor,"Fb",{ncmo_,ncmo_});
+
+//    Fa.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_a(i[0],i[1]);
+//        for(const size_t& c: idx_c_){
+//            value += integral_->aptei_aa(i[0],c,i[1],c);
+//            value += integral_->aptei_ab(i[0],c,i[1],c);
+//        }
+//    });
+//    Fb.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_b(i[0],i[1]);
+//        for(const size_t& c: idx_c_){
+//            value += integral_->aptei_bb(i[0],c,i[1],c);
+//            value += integral_->aptei_ab(c,i[0],c,i[1]);
+//        }
+//    });
+
+//    std::vector<size_t> idx_corr (ncmo_);
+//    std::iota(idx_corr.begin(), idx_corr.end(), 0);
+//    ambit::Tensor V = integral_->aptei_aa_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fa("pq") += V("puqv") * L1a("vu");
+
+//    V = integral_->aptei_ab_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fa("pq") += V("puqv") * L1b("vu");
+
+//    V = integral_->aptei_ab_block(idx_a_,idx_corr,idx_a_,idx_corr);
+//    Fb("pq") += V("upvq") * L1a("vu");
+
+//    V = integral_->aptei_bb_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fb("pq") += V("puqv") * L1b("vu");
+
+//    for(size_t p = 0; p < ncmo_; ++p){
+//        for(size_t q = 0; q < ncmo_; ++q){
+//            A[p][q] = Fa.data()[p * ncmo_ + q];
+//            B[p][q] = Fb.data()[p * ncmo_ + q];
+//        }
+//    }
     timer_off("Form Fock");
 }
 
