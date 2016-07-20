@@ -817,16 +817,20 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
 
     // <[Hbar2, T2]> C_4 (C_2)^2 +-,+-
     temp["xyuv"] += H2["pxum"] * G2["myvp"];
+    temp["xyuv"] += H2["xPuM"] * G2["yMvP"];
     temp["xyuv"] += H2["pxuw"] * G2["zyvp"] * Gamma1_["wz"];
     temp["xyuv"] += H2["xPuW"] * G2["yZvP"] * Gamma1_["WZ"];
     temp["xyuv"] -= H2["mxup"] * G2["pyvm"];
+    temp["xyuv"] -= H2["xMuP"] * G2["yPvM"];
     temp["xyuv"] -= H2["zxup"] * G2["pyvw"] * Gamma1_["wz"];
     temp["xyuv"] -= H2["xZuP"] * G2["yPvW"] * Gamma1_["WZ"];
     E += temp["xyuv"] * Lambda2_["xyuv"];
 
-    temp["XYUV"] += H2["PYUM"] * G2["MYVP"];
+    temp["XYUV"] += H2["pXmU"] * G2["mYpV"];
+    temp["XYUV"] += H2["PXUM"] * G2["MYVP"];
     temp["XYUV"] += H2["pXwU"] * G2["zYpV"] * Gamma1_["wz"];
     temp["XYUV"] += H2["XPUW"] * G2["YZVP"] * Gamma1_["WZ"];
+    temp["XYUV"] -= H2["mXpU"] * G2["pYmV"];
     temp["XYUV"] -= H2["MXUP"] * G2["PYVM"];
     temp["XYUV"] -= H2["zXpU"] * G2["pYwV"] * Gamma1_["wz"];
     temp["XYUV"] -= H2["XZUP"] * G2["YPVW"] * Gamma1_["WZ"];

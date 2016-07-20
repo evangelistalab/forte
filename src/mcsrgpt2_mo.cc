@@ -26,7 +26,11 @@ MCSRGPT2_MO::MCSRGPT2_MO(SharedWavefunction ref_wfn, Options &options,
     print_method_banner({"Driven Similarity Renormalization Group", "Second-Order Perturbative Analysis", "Chenyang Li"});
 
     startup(options);
-    Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
+    if(options.get_str("CORR_LEVEL") == "SRG_PT2"){
+        Process::environment.globals["CURRENT ENERGY"] = compute_energy_srg();
+    } else {
+        Process::environment.globals["CURRENT ENERGY"] = compute_energy_dsrg();
+    }
 }
 
 MCSRGPT2_MO::~MCSRGPT2_MO()
@@ -101,78 +105,101 @@ void MCSRGPT2_MO::startup(Options &options){
         L2bb_ = d4(na_, d3(na_, d2(na_, d1(na_))));
     }
 
-    // Form T Amplitudes
-    T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-    T2ab_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-    T2bb_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
-    T1a_ = d2(nh_, d1(npt_));
-    T1b_ = d2(nh_, d1(npt_));
+    if(options.get_str("CORR_LEVEL") == "SRG_PT2"){
+        // compute [1 - exp(-s * x^2)] / x^2
+        srg_source_ = std::make_shared<LABS_SOURCE>(s_,taylor_threshold_);
 
-    string t_algorithm = options.get_str("T_ALGORITHM");
-    t1_amp_ = options.get_str("T1_AMP");
-    bool t1_zero = t1_amp_ == "ZERO";
-    outfile->Printf("\n");
-    outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
-    outfile->Flush();
-    if(boost::starts_with(t_algorithm, "DSRG")){
-        outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
-        Form_T2_DSRG(T2aa_,T2ab_,T2bb_,t_algorithm);
-        if(!t1_zero){
-            Form_T1_DSRG(T1a_,T1b_);
-        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
-    }else if(t_algorithm == "SELEC"){
-        outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. (c->a, c->v, a->v)");
-        Form_T2_SELEC(T2aa_,T2ab_,T2bb_);
-        if(!t1_zero){
-            Form_T1_DSRG(T1a_,T1b_);
-        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
-    }else if(t_algorithm == "ISA"){
-        outfile->Printf("\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
-        double b = options.get_double("ISA_B");
-        Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
-        if(!t1_zero){
-            Form_T1_ISA(T1a_,T1b_,b);
-        }else{outfile->Printf("\n  Zero T1 amplitudes.");}
+        // no need to form amplitudes nor effective integrals
+        // do need to reform the Fock matrix
+        Fa_srg_ = d2(ncmo_, d1(ncmo_));
+        Fb_srg_ = d2(ncmo_, d1(ncmo_));
+        Form_Fock_SRG();
+
+//        // zero all acitve two-electron integrals
+//        for(size_t u = 0; u < na_; ++u){
+//            size_t nu = idx_a_[u];
+//            for(size_t v = 0; v < na_; ++v){
+//                size_t nv = idx_a_[v];
+//                for(size_t x = 0; x < na_; ++x){
+//                    size_t nx = idx_a_[x];
+//                    for(size_t y = 0; y < na_; ++y){
+//                        size_t ny = idx_a_[y];
+
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,true,true);
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,true,false);
+//                        integral_->set_tei(nu,nv,nx,ny,0.0,false,false);
+//                    }
+//                }
+//            }
+//        }
+    } else {
+        // Form T Amplitudes
+        T2aa_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
+        T2ab_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
+        T2bb_ = d4(nh_, d3(nh_, d2(npt_, d1(npt_))));
+        T1a_ = d2(nh_, d1(npt_));
+        T1b_ = d2(nh_, d1(npt_));
+
+        string t_algorithm = options.get_str("T_ALGORITHM");
+        t1_amp_ = options.get_str("T1_AMP");
+        bool t1_zero = t1_amp_ == "ZERO";
+        outfile->Printf("\n");
+        outfile->Printf("\n  Computing MR-DSRG-PT2 T amplitudes ...");
+        outfile->Flush();
+        if(boost::starts_with(t_algorithm, "DSRG")){
+            outfile->Printf("\n  Form T amplitudes using %s formalism.", t_algorithm.c_str());
+            Form_T2_DSRG(T2aa_,T2ab_,T2bb_,t_algorithm);
+            if(!t1_zero){
+                Form_T1_DSRG(T1a_,T1b_);
+            }else{outfile->Printf("\n  Zero T1 amplitudes.");}
+        }else if(t_algorithm == "SELEC"){
+            outfile->Printf("\n  Form T amplitudes using DSRG_SELEC formalism. (c->a, c->v, a->v)");
+            Form_T2_SELEC(T2aa_,T2ab_,T2bb_);
+            if(!t1_zero){
+                Form_T1_DSRG(T1a_,T1b_);
+            }else{outfile->Printf("\n  Zero T1 amplitudes.");}
+        }else if(t_algorithm == "ISA"){
+            outfile->Printf("\n  Form T amplitudes using intruder state avoidance (ISA) formalism.");
+            double b = options.get_double("ISA_B");
+            Form_T2_ISA(T2aa_,T2ab_,T2bb_,b);
+            if(!t1_zero){
+                Form_T1_ISA(T1a_,T1b_,b);
+            }else{outfile->Printf("\n  Zero T1 amplitudes.");}
+        }
+        outfile->Printf("\n  Done.");
+        outfile->Flush();
+
+        // Check T Amplitudes
+        T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
+        T2Maxaa_ = 0.0, T2Maxab_ = 0.0, T2Maxbb_ = 0.0;
+        Check_T2("AA",T2aa_,T2Naa_,T2Maxaa_,options);
+        Check_T2("AB",T2ab_,T2Nab_,T2Maxab_,options);
+        Check_T2("BB",T2bb_,T2Nbb_,T2Maxbb_,options);
+
+        T1Na_ = 0.0, T1Nb_ = 0.0;
+        T1Maxa_ = 0.0, T1Maxb_ = 0.0;
+        Check_T1("A",T1a_,T1Na_,T1Maxa_,options);
+        Check_T1("B",T1b_,T1Nb_,T1Maxb_,options);
+
+        bool dsrgpt = options.get_bool("DSRGPT");
+
+        // Effective Fock Matrix
+        Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
+        Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
+        outfile->Printf("\n");
+        outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
+        outfile->Flush();
+        Form_Fock_DSRG(Fa_dsrg_,Fb_dsrg_,dsrgpt);
+        outfile->Printf("\t\t\tDone.");
+        outfile->Flush();
+
+        // Effective Two Electron Integrals
+        outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
+        outfile->Flush();
+        Form_APTEI_DSRG(dsrgpt);
+        outfile->Printf("\tDone.");
+        outfile->Flush();
     }
-    outfile->Printf("\n  Done.");
-    outfile->Flush();
-
-    // Check T Amplitudes
-    T2Naa_ = 0.0, T2Nab_ = 0.0, T2Nbb_ = 0.0;
-    T2Maxaa_ = 0.0, T2Maxab_ = 0.0, T2Maxbb_ = 0.0;
-    Check_T2("AA",T2aa_,T2Naa_,T2Maxaa_,options);
-    Check_T2("AB",T2ab_,T2Nab_,T2Maxab_,options);
-    Check_T2("BB",T2bb_,T2Nbb_,T2Maxbb_,options);
-
-//    print2PDC("T2aa",T2aa_,4);
-
-    T1Na_ = 0.0, T1Nb_ = 0.0;
-    T1Maxa_ = 0.0, T1Maxb_ = 0.0;
-    Check_T1("A",T1a_,T1Na_,T1Maxa_,options);
-    Check_T1("B",T1b_,T1Nb_,T1Maxb_,options);
-
-//    print_d2("T1a",T1a_);
-
-    bool dsrgpt = options.get_bool("DSRGPT");
-
-    // Effective Fock Matrix
-    Fa_dsrg_ = d2(ncmo_, d1(ncmo_));
-    Fb_dsrg_ = d2(ncmo_, d1(ncmo_));
-    outfile->Printf("\n");
-    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective Fock matrix ...");
-    outfile->Flush();
-    Form_Fock_DSRG(Fa_dsrg_,Fb_dsrg_,dsrgpt);
-    outfile->Printf("\t\t\tDone.");
-    outfile->Flush();
-
-//    print_d2("Fa_dsrg_",Fa_dsrg_);
-
-    // Effective Two Electron Integrals
-    outfile->Printf("\n  Computing the MR-DSRG-PT2 effective two-electron integrals ...");
-    outfile->Flush();
-    Form_APTEI_DSRG(dsrgpt);
-    outfile->Printf("\tDone.");
-    outfile->Flush();
 }
 
 double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const double &V){
@@ -199,6 +226,70 @@ double MCSRGPT2_MO::ElementRH(const string &source, const double &D, const doubl
         return V * exp(-s_ * pow(fabs(D), expo_delta_));
     }
     }
+}
+
+void MCSRGPT2_MO::Form_Fock_SRG(){
+    timer_on("Fock_SRG");
+
+//    for(size_t i = 0; i < nh_; ++i){
+//        size_t ni = idx_h_[i];
+//        for(size_t a = 0; a < npt_; ++a){
+//            size_t na = idx_p_[a];
+
+//            Fa_srg_[ni][na] = Fa_[ni][na];
+//            Fa_srg_[na][ni] = Fa_[na][ni];
+//            Fb_srg_[ni][na] = Fb_[ni][na];
+//            Fb_srg_[na][ni] = Fb_[na][ni];
+
+//            double va = 0.0, vb = 0.0;
+//            for(size_t u = 0; u < na_; ++u){
+//                size_t nu = idx_a_[u];
+//                for(size_t v = 0; v < na_; ++v){
+//                    size_t nv = idx_a_[v];
+
+//                    va += Da_[nu][nv] * integral_->aptei_aa(ni,nv,na,nu);
+//                    va += Db_[nu][nv] * integral_->aptei_ab(ni,nv,na,nu);
+//                    vb += Da_[nu][nv] * integral_->aptei_ab(nv,ni,nu,na);
+//                    vb += Db_[nu][nv] * integral_->aptei_bb(ni,nv,na,nu);
+//                }
+//            }
+
+//            Fa_srg_[ni][na] -= va;
+//            Fa_srg_[na][ni] -= va;
+//            Fb_srg_[ni][na] -= vb;
+//            Fb_srg_[na][ni] -= vb;
+//        }
+//    }
+
+    for(size_t p = 0; p < ncmo_; ++p){
+        for(size_t q = 0; q < ncmo_; ++q){
+            double va = integral_->oei_a(p,q);
+            double vb = integral_->oei_b(p,q);
+
+            for(size_t m = 0; m < nc_; ++m){
+                size_t nm = idx_c_[m];
+
+                va += integral_->aptei_aa(p,nm,q,nm);
+                va += integral_->aptei_ab(p,nm,q,nm);
+                vb += integral_->aptei_bb(p,nm,q,nm);
+                vb += integral_->aptei_ab(nm,p,nm,q);
+            }
+
+            Fa_srg_[p][q] = va;
+            Fb_srg_[p][q] = vb;
+        }
+    }
+
+    for(size_t u = 0; u < na_; ++u){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; ++v){
+            size_t nv = idx_a_[v];
+            Fa_srg_[nu][nv] = 0.0;
+            Fb_srg_[nu][nv] = 0.0;
+        }
+    }
+
+    timer_off("Fock_SRG");
 }
 
 void MCSRGPT2_MO::Form_Fock_DSRG(d2 &A, d2 &B, const bool &dsrgpt){
@@ -1970,6 +2061,843 @@ void MCSRGPT2_MO::E_VT2_6(double &E1, double &E2){
     E1 *= 0.25;
     E2 *= 0.25;
     timer_off("[V, T2] C_6 * C_2");
+}
+
+double MCSRGPT2_MO::ESRG_11(){
+    double E = 0.0;
+
+    for(size_t i = 0; i < nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t a = 0; a < npt_; ++a){
+            size_t na = idx_p_[a];
+
+            // i, a cannot all be active
+            if(i < na_ && a < na_) continue;
+
+            for(size_t j = 0; j < nh_; ++j){
+                size_t nj = idx_h_[j];
+                for(size_t b = 0; b < npt_; ++b){
+                    size_t nb = idx_p_[b];
+
+                    double va = 0.0, vb = 0.0;
+
+                    double d1 = Fa_[ni][ni] - Fa_[na][na];
+                    double d2 = Fa_[nb][nb] - Fa_[nj][nj];
+                    va += Fa_srg_[nb][nj] * Fa_srg_[ni][na]
+                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                    d1 = Fb_[ni][ni] - Fb_[na][na];
+                    d2 = Fb_[nb][nb] - Fb_[nj][nj];
+                    va += Fb_srg_[nb][nj] * Fb_srg_[ni][na]
+                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                    for(size_t u = 0; u < na_; ++u){
+                        size_t nu = idx_a_[u];
+                        for(size_t v = 0; v < na_; ++v){
+                            size_t nv = idx_a_[v];
+
+                            d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nu][nu];
+                            d2 = Fa_[nb][nb] - Fa_[nj][nj];
+                            va += Fa_srg_[nb][nj] * integral_->aptei_aa(ni,nv,na,nu) * Da_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[nu][nu];
+                            va += Fa_srg_[nb][nj] * integral_->aptei_ab(ni,nv,na,nu) * Db_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                            d1 = Fa_[nv][nv] + Fb_[ni][ni] - Fa_[nu][nu] - Fb_[na][na];
+                            d2 = Fb_[nb][nb] - Fb_[nj][nj];
+                            vb += Fb_srg_[nb][nj] * integral_->aptei_ab(nv,ni,nu,na) * Da_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            d1 = Fb_[nv][nv] + Fb_[ni][ni] - Fb_[nu][nu] - Fb_[na][na];
+                            vb += Fb_srg_[nb][nj] * integral_->aptei_bb(nv,ni,nu,na) * Db_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+
+                            d1 = Fa_[ni][ni] - Fa_[na][na];
+                            d2 = Fa_[nb][nb] + Fa_[nv][nv] - Fa_[nj][nj] - Fa_[nu][nu];
+                            va += Fa_srg_[ni][na] * integral_->aptei_aa(nb,nv,nj,nu) * Da_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            d2 = Fa_[nb][nb] + Fb_[nv][nv] - Fa_[nj][nj] - Fb_[nu][nu];
+                            va += Fa_srg_[ni][na] * integral_->aptei_ab(nb,nv,nj,nu) * Db_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                            d1 = Fb_[ni][ni] - Fb_[na][na];
+                            d2 = Fa_[nv][nv] + Fb_[nb][nb] - Fa_[nu][nu] - Fb_[nj][nj];
+                            vb += Fb_srg_[ni][na] * integral_->aptei_ab(nv,nb,nu,nj) * Da_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            d2 = Fb_[nv][nv] + Fb_[nb][nb] - Fb_[nu][nu] - Fb_[nj][nj];
+                            vb += Fb_srg_[ni][na] * integral_->aptei_bb(nv,nb,nu,nj) * Db_[nu][nv]
+                                    * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                            for(size_t x = 0; x < na_; ++x){
+                                size_t nx = idx_a_[x];
+                                for(size_t y = 0; y < na_; ++y){
+                                    size_t ny = idx_a_[y];
+
+                                    d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nu][nu];
+                                    d2 = Fa_[nb][nb] + Fa_[ny][ny] - Fa_[nj][nj] - Fa_[nx][nx];
+                                    va += integral_->aptei_aa(nb,ny,nj,nx) * integral_->aptei_aa(ni,nv,na,nu)
+                                            * Da_[nx][ny] * Da_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[nu][nu];
+                                    va += integral_->aptei_aa(nb,ny,nj,nx) * integral_->aptei_ab(ni,nv,na,nu)
+                                            * Da_[nx][ny] * Db_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nu][nu];
+                                    d2 = Fa_[nb][nb] + Fb_[ny][ny] - Fa_[nj][nj] - Fb_[nx][nx];
+                                    va += integral_->aptei_ab(nb,ny,nj,nx) * integral_->aptei_aa(ni,nv,na,nu)
+                                            * Db_[nx][ny] * Da_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[nu][nu];
+                                    va += integral_->aptei_ab(nb,ny,nj,nx) * integral_->aptei_ab(ni,nv,na,nu)
+                                            * Db_[nx][ny] * Db_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[ni][ni] + Fb_[nv][nv] - Fb_[na][na] - Fb_[nu][nu];
+                                    d2 = Fb_[nb][nb] + Fb_[ny][ny] - Fb_[nj][nj] - Fb_[nx][nx];
+                                    vb += integral_->aptei_bb(nb,ny,nj,nx) * integral_->aptei_bb(ni,nv,na,nu)
+                                            * Db_[nx][ny] * Db_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[nv][nv] + Fb_[ni][ni] - Fb_[nu][nu] - Fb_[na][na];
+                                    vb += integral_->aptei_bb(nb,ny,nj,nx) * integral_->aptei_ab(nv,ni,nu,na)
+                                            * Db_[nx][ny] * Da_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[ni][ni] + Fb_[nv][nv] - Fb_[na][na] - Fb_[nu][nu];
+                                    d2 = Fa_[ny][ny] + Fb_[nb][nb] - Fa_[nx][nx] - Fb_[nj][nj];
+                                    vb += integral_->aptei_ab(ny,nb,nx,nj) * integral_->aptei_bb(ni,nv,na,nu)
+                                            * Da_[nx][ny] * Db_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[nv][nv] + Fb_[ni][ni] - Fb_[nu][nu] - Fb_[na][na];
+                                    vb += integral_->aptei_ab(ny,nb,nx,nj) * integral_->aptei_ab(nv,ni,nu,na)
+                                            * Da_[nx][ny] * Da_[nu][nv]
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                }
+                            }
+                        }
+                    }
+
+                    E += 2.0 * va * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]);
+                    E += 2.0 * vb * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]);
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::ESRG_12(){
+    double E = 0.0;
+
+    for(size_t u = 0; u < na_; ++u){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; ++v){
+            size_t nv = idx_a_[v];
+            for(size_t x = 0; x < na_; ++x){
+                size_t nx = idx_a_[x];
+                for(size_t y = 0; y < na_; ++y){
+                    size_t ny = idx_a_[y];
+
+                    double vaa = 0.0, vab = 0.0, vbb = 0.0;
+
+                    // virtual
+                    for(size_t e = 0; e < nv_; ++e){
+                        size_t ne = idx_v_[e];
+
+                        double d1 = Fa_[nu][nu] - Fa_[ne][ne];
+                        double d2 = Fa_[ne][ne] + Fa_[nv][nv] - Fa_[nx][nx] - Fa_[ny][ny];
+                        vaa += integral_->aptei_aa(ne,nv,nx,ny) * Fa_srg_[nu][ne]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nu][nu] - Fb_[ne][ne];
+                        d2 = Fb_[ne][ne] + Fb_[nv][nv] - Fb_[nx][nx] - Fb_[ny][ny];
+                        vbb += integral_->aptei_bb(ne,nv,nx,ny) * Fb_srg_[nu][ne]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nu][nu] - Fa_[ne][ne];
+                        d2 = Fa_[ne][ne] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ny][ny];
+                        vab += integral_->aptei_ab(ne,nv,nx,ny) * Fa_srg_[nu][ne]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nv][nv] - Fb_[ne][ne];
+                        d2 = Fa_[nu][nu] + Fb_[ne][ne] - Fa_[nx][nx] - Fb_[ny][ny];
+                        vab += integral_->aptei_ab(nu,ne,nx,ny) * Fb_srg_[nv][ne]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        for(size_t w = 0; w < na_; ++w){
+                            size_t nw = idx_a_[w];
+                            for(size_t z = 0; z < na_; ++z){
+                                size_t nz = idx_a_[z];
+
+                                d1 = Fa_[nu][nu] + Fa_[nw][nw] - Fa_[ne][ne] - Fa_[nz][nz];
+                                d2 = Fa_[ne][ne] + Fa_[nv][nv] - Fa_[nx][nx] - Fa_[ny][ny];
+                                vaa += integral_->aptei_aa(ne,nv,nx,ny) * integral_->aptei_aa(nu,nw,ne,nz) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[ne][ne] - Fb_[nz][nz];
+                                vaa += integral_->aptei_aa(ne,nv,nx,ny) * integral_->aptei_ab(nu,nw,ne,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nu][nu] + Fb_[nw][nw] - Fb_[ne][ne] - Fb_[nz][nz];
+                                d2 = Fb_[ne][ne] + Fb_[nv][nv] - Fb_[nx][nx] - Fb_[ny][ny];
+                                vbb += integral_->aptei_bb(ne,nv,nx,ny) * integral_->aptei_bb(nu,nw,ne,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nw][nw] + Fb_[nu][nu] - Fa_[nz][nz] - Fb_[ne][ne];
+                                vbb += integral_->aptei_bb(ne,nv,nx,ny) * integral_->aptei_ab(nw,nu,nz,ne) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fa_[nw][nw] - Fa_[ne][ne] - Fa_[nz][nz];
+                                d2 = Fa_[ne][ne] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ny][ny];
+                                vab += integral_->aptei_ab(ne,nv,nx,ny) * integral_->aptei_aa(nu,nw,ne,nz) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[ne][ne] - Fb_[nz][nz];
+                                vab += integral_->aptei_ab(ne,nv,nx,ny) * integral_->aptei_ab(nu,nw,ne,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nw][nw] + Fb_[nv][nv] - Fa_[nz][nz] - Fb_[ne][ne];
+                                d2 = Fa_[nu][nu] + Fb_[ne][ne] - Fa_[nx][nx] - Fb_[ny][ny];
+                                vab += integral_->aptei_ab(nu,ne,nx,ny) * integral_->aptei_ab(nw,nv,nz,ne) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fb_[nw][nw] + Fb_[nv][nv] - Fb_[nz][nz] - Fb_[ne][ne];
+                                vab += integral_->aptei_ab(nu,ne,nx,ny) * integral_->aptei_bb(nw,nv,nz,ne) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+                        }
+                    }
+
+                    // core
+                    for(size_t m = 0; m < nc_; ++m){
+                        size_t nm = idx_c_[m];
+
+                        double d1 = Fa_[nm][nm] - Fa_[nx][nx];
+                        double d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[ny][ny];
+                        vaa -= integral_->aptei_aa(nu,nv,nm,ny) * Fa_srg_[nm][nx]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nm][nm] - Fb_[nx][nx];
+                        d2 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[nm][nm] - Fb_[ny][ny];
+                        vbb -= integral_->aptei_bb(nu,nv,nm,ny) * Fb_srg_[nm][nx]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nm][nm] - Fa_[nx][nx];
+                        d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nm][nm] - Fb_[ny][ny];
+                        vab -= integral_->aptei_ab(nu,nv,nm,ny) * Fa_srg_[nm][nx]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nm][nm] - Fb_[ny][ny];
+                        d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[nm][nm];
+                        vab -= integral_->aptei_ab(nu,nv,nx,nm) * Fa_srg_[nm][ny]
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        for(size_t w = 0; w < na_; ++w){
+                            size_t nw = idx_a_[w];
+                            for(size_t z = 0; z < na_; ++z){
+                                size_t nz = idx_a_[z];
+
+                                d1 = Fa_[nm][nm] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
+                                d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[ny][ny];
+                                vaa -= integral_->aptei_aa(nu,nv,nm,ny) * integral_->aptei_aa(nm,nw,nx,nz) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nm][nm] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vaa -= integral_->aptei_aa(nu,nv,nm,ny) * integral_->aptei_ab(nm,nw,nx,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nm][nm] + Fb_[nw][nw] - Fb_[nx][nx] - Fb_[nz][nz];
+                                d2 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[nm][nm] - Fb_[ny][ny];
+                                vbb -= integral_->aptei_bb(nu,nv,nm,ny) * integral_->aptei_bb(nm,nw,nx,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nw][nw] + Fb_[nm][nm] - Fa_[nz][nz] - Fb_[nx][nx];
+                                vbb -= integral_->aptei_bb(nu,nv,nm,ny) * integral_->aptei_ab(nw,nm,nz,nx) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nm][nm] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
+                                d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nm][nm] - Fb_[ny][ny];
+                                vab -= integral_->aptei_ab(nu,nv,nm,ny) * integral_->aptei_aa(nm,nw,nx,nz) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fa_[nm][nm] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vab -= integral_->aptei_ab(nu,nv,nm,ny) * integral_->aptei_ab(nm,nw,nx,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nw][nw] + Fb_[nm][nm] - Fa_[nz][nz] - Fb_[ny][ny];
+                                d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[nm][nm];
+                                vab -= integral_->aptei_ab(nu,nv,nx,nm) * integral_->aptei_ab(nw,nm,nz,ny) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d1 = Fb_[nw][nw] + Fb_[nm][nm] - Fb_[nz][nz] - Fb_[ny][ny];
+                                vab -= integral_->aptei_ab(nu,nv,nx,nm) * integral_->aptei_bb(nw,nm,nz,ny) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+                        }
+                    }
+
+                    E += vaa * L2aa_[x][y][u][v];
+                    E += 2.0 * vab * L2ab_[x][y][u][v];
+                    E += vbb * L2bb_[x][y][u][v];
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::ESRG_21(){
+    double E = 0.0;
+
+    for(size_t u = 0; u < na_; ++u){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; ++v){
+            size_t nv = idx_a_[v];
+            for(size_t x = 0; x < na_; ++x){
+                size_t nx = idx_a_[x];
+                for(size_t y = 0; y < na_; ++y){
+                    size_t ny = idx_a_[y];
+
+                    double vaa = 0.0, vab = 0.0, vbb = 0.0;
+
+                    // virtual
+                    for(size_t e = 0; e < nv_; ++e){
+                        size_t ne = idx_v_[e];
+
+                        double d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[ny][ny];
+                        double d2 = Fa_[ne][ne] - Fa_[nx][nx];
+                        vaa += Fa_srg_[ne][nx] * integral_->aptei_aa(nu,nv,ne,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[ne][ne] - Fb_[ny][ny];
+                        d2 = Fb_[ne][ne] - Fb_[nx][nx];
+                        vbb += Fb_srg_[ne][nx] * integral_->aptei_bb(nu,nv,ne,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[ne][ne] - Fb_[ny][ny];
+                        d2 = Fa_[ne][ne] - Fa_[nx][nx];
+                        vab += Fa_srg_[ne][nx] * integral_->aptei_ab(nu,nv,ne,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ne][ne];
+                        d2 = Fb_[ne][ne] - Fb_[ny][ny];
+                        vab += Fb_srg_[ne][ny] * integral_->aptei_ab(nu,nv,nx,ne)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        for(size_t w = 0; w < na_; ++w){
+                            size_t nw = idx_a_[w];
+                            for(size_t z = 0; z < na_; ++z){
+                                size_t nz = idx_a_[z];
+
+                                d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[ny][ny];
+                                d2 = Fa_[ne][ne] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
+                                vaa += integral_->aptei_aa(nu,nv,ne,ny) * integral_->aptei_aa(ne,nw,nx,nz) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[ne][ne] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vaa += integral_->aptei_aa(nu,nv,ne,ny) * integral_->aptei_ab(ne,nw,nx,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[ne][ne] - Fb_[ny][ny];
+                                d2 = Fb_[ne][ne] + Fb_[nw][nw] - Fb_[nx][nx] - Fb_[nz][nz];
+                                vbb += integral_->aptei_bb(nu,nv,ne,ny) * integral_->aptei_bb(ne,nw,nx,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[nw][nw] + Fb_[ne][ne] - Fa_[nz][nz] - Fb_[nx][nx];
+                                vbb += integral_->aptei_bb(nu,nv,ne,ny) * integral_->aptei_ab(nw,ne,nz,nx) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[ne][ne] - Fb_[ny][ny];
+                                d2 = Fa_[ne][ne] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[nz][nz];
+                                vab += integral_->aptei_ab(nu,nv,ne,ny) * integral_->aptei_aa(ne,nw,nx,nz) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[ne][ne] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vab += integral_->aptei_ab(nu,nv,ne,ny) * integral_->aptei_ab(ne,nw,nx,nz) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ne][ne];
+                                d2 = Fa_[nw][nw] + Fb_[ne][ne] - Fa_[nz][nz] - Fb_[ny][ny];
+                                vab += integral_->aptei_ab(nu,nv,nx,ne) * integral_->aptei_ab(nw,ne,nz,ny) * Da_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fb_[nw][nw] + Fb_[ne][ne] - Fb_[nz][nz] - Fb_[ny][ny];
+                                vab += integral_->aptei_ab(nu,nv,nx,ne) * integral_->aptei_bb(nw,ne,nz,ny) * Db_[nz][nw]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+                        }
+                    }
+
+                    // core
+                    for(size_t m = 0; m < nc_; ++m){
+                        size_t nm = idx_c_[m];
+
+                        double d1 = Fa_[nu][nu] + Fa_[nm][nm] - Fa_[nx][nx] - Fa_[ny][ny];
+                        double d2 = Fa_[nv][nv] - Fa_[nm][nm];
+                        vaa -= Fa_srg_[nv][nm] * integral_->aptei_aa(nu,nm,nx,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fb_[nu][nu] + Fb_[nm][nm] - Fb_[nx][nx] - Fb_[ny][ny];
+                        d2 = Fb_[nv][nv] - Fb_[nm][nm];
+                        vbb -= Fb_srg_[nv][nm] * integral_->aptei_bb(nu,nm,nx,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nu][nu] + Fb_[nm][nm] - Fa_[nx][nx] - Fb_[ny][ny];
+                        d2 = Fb_[nv][nv] - Fb_[nm][nm];
+                        vab -= Fb_srg_[nv][nm] * integral_->aptei_ab(nu,nm,nx,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        d1 = Fa_[nm][nm] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ny][ny];
+                        d2 = Fa_[nu][nu] - Fa_[nm][nm];
+                        vab -= Fa_srg_[nu][nm] * integral_->aptei_ab(nm,nv,nx,ny)
+                                * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                        for(size_t w = 0; w < na_; ++w){
+                            size_t nw = idx_a_[w];
+                            for(size_t z = 0; z < na_; ++z){
+                                size_t nz = idx_a_[z];
+
+                                d1 = Fa_[nu][nu] + Fa_[nm][nm] - Fa_[nx][nx] - Fa_[ny][ny];
+                                d2 = Fa_[nv][nv] + Fa_[nw][nw] - Fa_[nm][nm] - Fa_[nz][nz];
+                                vaa -= integral_->aptei_aa(nu,nm,nx,ny) * integral_->aptei_aa(nv,nw,nm,nz) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[nv][nv] + Fb_[nw][nw] - Fa_[nm][nm] - Fb_[nz][nz];
+                                vaa -= integral_->aptei_aa(nu,nm,nx,ny) * integral_->aptei_ab(nv,nw,nm,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nu][nu] + Fb_[nm][nm] - Fb_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fb_[nv][nv] + Fb_[nw][nw] - Fb_[nm][nm] - Fb_[nz][nz];
+                                vbb -= integral_->aptei_bb(nu,nm,nx,ny) * integral_->aptei_bb(nv,nw,nm,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[nw][nw] + Fb_[nv][nv] - Fa_[nz][nz] - Fb_[nm][nm];
+                                vbb -= integral_->aptei_bb(nu,nm,nx,ny) * integral_->aptei_ab(nw,nv,nz,nm) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nm][nm] - Fa_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fa_[nw][nw] + Fb_[nv][nv] - Fa_[nz][nz] - Fb_[nm][nm];
+                                vab -= integral_->aptei_ab(nu,nm,nx,ny) * integral_->aptei_ab(nw,nv,nz,nm) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fb_[nw][nw] + Fb_[nv][nv] - Fb_[nz][nz] - Fb_[nm][nm];
+                                vab -= integral_->aptei_ab(nu,nm,nx,ny) * integral_->aptei_bb(nw,nv,nz,nm) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nm][nm] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fa_[nu][nu] + Fa_[nw][nw] - Fa_[nm][nm] - Fa_[nz][nz];
+                                vab -= integral_->aptei_ab(nm,nv,nx,ny) * integral_->aptei_aa(nu,nw,nm,nz) * Da_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                d2 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[nm][nm] - Fb_[nz][nz];
+                                vab -= integral_->aptei_ab(nm,nv,nx,ny) * integral_->aptei_ab(nu,nw,nm,nz) * Db_[nw][nz]
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+                        }
+                    }
+
+                    E += vaa * L2aa_[x][y][u][v];
+                    E += 2.0 * vab * L2ab_[x][y][u][v];
+                    E += vbb * L2bb_[x][y][u][v];
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::ESRG_22_2(){
+    double E = 0.0;
+
+    for(size_t i = 0; i < nh_; ++i){
+        size_t ni = idx_h_[i];
+        for(size_t j = 0; j < nh_; ++j){
+            size_t nj = idx_h_[j];
+            for(size_t a = 0; a < npt_; ++a){
+                size_t na = idx_p_[a];
+                for(size_t b = 0; b < npt_; ++b){
+                    size_t nb = idx_p_[b];
+
+                    // i, j, a, b cannot all be active
+                    if(i < na_ && j < na_ && a < na_ && b < na_) continue;
+
+                    for(size_t k = 0; k < nh_; ++k){
+                        size_t nk = idx_h_[k];
+                        for(size_t l = 0; l < nh_; ++l){
+                            size_t nl = idx_h_[l];
+                            for(size_t c = 0; c < npt_; ++c){
+                                size_t nc = idx_p_[c];
+                                for(size_t d = 0; d < npt_; ++d){
+                                    size_t nd = idx_p_[d];
+
+                                    double d1 = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[na][na] - Fa_[nb][nb];
+                                    double d2 = Fa_[nc][nc] + Fa_[nd][nd] - Fa_[nk][nk] - Fa_[nl][nl];
+                                    E += 0.5 * integral_->aptei_aa(nc,nd,nk,nl) * integral_->aptei_aa(na,nb,ni,nj)
+                                            * Da_[nk][ni] * Da_[nl][nj] * (Delta(na,nc) - Da_[na][nc]) * (Delta(nb,nd) - Da_[nb][nd])
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[na][na] - Fb_[nb][nb];
+                                    d2 = Fa_[nc][nc] + Fb_[nd][nd] - Fa_[nk][nk] - Fb_[nl][nl];
+                                    E += 2.0 * integral_->aptei_ab(nc,nd,nk,nl) * integral_->aptei_ab(na,nb,ni,nj)
+                                            * Da_[nk][ni] * Db_[nl][nj] * (Delta(na,nc) - Da_[na][nc]) * (Delta(nb,nd) - Db_[nb][nd])
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[na][na] - Fb_[nb][nb];
+                                    d2 = Fb_[nc][nc] + Fb_[nd][nd] - Fb_[nk][nk] - Fb_[nl][nl];
+                                    E += 0.5 * integral_->aptei_bb(nc,nd,nk,nl) * integral_->aptei_bb(na,nb,ni,nj)
+                                            * Db_[nk][ni] * Db_[nl][nj] * (Delta(na,nc) - Db_[na][nc]) * (Delta(nb,nd) - Db_[nb][nd])
+                                            * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::ESRG_22_4(){
+    double E = 0.0;
+
+    for(size_t u = 0; u < na_; ++u){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; ++v){
+            size_t nv = idx_a_[v];
+            for(size_t x = 0; x < na_; ++x){
+                size_t nx = idx_a_[x];
+                for(size_t y = 0; y < na_; ++y){
+                    size_t ny = idx_a_[y];
+
+                    double vaa = 0.0, vab = 0.0, vbb = 0.0;
+
+                    // hole-hole
+                    for(size_t i = 0; i < nh_; ++i){
+                        size_t ni = idx_h_[i];
+                        for(size_t j = 0; j < nh_; ++j){
+                            size_t nj = idx_h_[j];
+
+                            // i, j cannot all be active
+                            if(i < na_ && j < na_) continue;
+
+                            for(size_t k = 0; k < nh_; ++k){
+                                size_t nk = idx_h_[k];
+                                for(size_t l = 0; l < nh_; ++l){
+                                    size_t nl = idx_h_[l];
+
+                                    double d1 = Fa_[ni][ni] + Fa_[nj][nj] - Fa_[nx][nx] - Fa_[ny][ny];
+                                    double d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nk][nk] - Fa_[nl][nl];
+                                    vaa += 0.25 * integral_->aptei_aa(nu,nv,nk,nl) * integral_->aptei_aa(ni,nj,nx,ny)
+                                            * Da_[nk][ni] * Da_[nl][nj] * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[ni][ni] + Fb_[nj][nj] - Fb_[nx][nx] - Fb_[ny][ny];
+                                    d2 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[nk][nk] - Fb_[nl][nl];
+                                    vbb += 0.25 * integral_->aptei_bb(nu,nv,nk,nl) * integral_->aptei_bb(ni,nj,nx,ny)
+                                            * Db_[nk][ni] * Db_[nl][nj] * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nj][nj] - Fa_[nx][nx] - Fb_[ny][ny];
+                                    d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nk][nk] - Fb_[nl][nl];
+                                    vab += 2.0 * integral_->aptei_ab(nu,nv,nk,nl) * integral_->aptei_ab(ni,nj,nx,ny)
+                                            * Da_[nk][ni] * Db_[nl][nj] * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                }
+                            }
+                        }
+                    }
+
+                    // particle-particle
+                    for(size_t a = 0; a < npt_; ++a){
+                        size_t na = idx_p_[a];
+                        for(size_t b = 0; b < npt_; ++b){
+                            size_t nb = idx_p_[b];
+
+                            // a, b cannot all be active
+                            if(a < na_ && b < na_) continue;
+
+                            for(size_t c = 0; c < npt_; ++c){
+                                size_t nc = idx_p_[c];
+                                for(size_t d = 0; d < npt_; ++d){
+                                    size_t nd = idx_p_[d];
+
+                                    double d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[na][na] - Fa_[nb][nb];
+                                    double d2 = Fa_[nc][nc] + Fa_[nd][nd] - Fa_[nx][nx] - Fa_[ny][ny];
+                                    vaa += 0.25 * integral_->aptei_aa(nc,nd,nx,ny) * integral_->aptei_aa(nu,nv,na,nb)
+                                            * (Delta(na,nc) - Da_[na][nc]) * (Delta(nb,nd) - Da_[nb][nd]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[na][na] - Fb_[nb][nb];
+                                    d2 = Fb_[nc][nc] + Fb_[nd][nd] - Fb_[nx][nx] - Fb_[ny][ny];
+                                    vbb += 0.25 * integral_->aptei_bb(nc,nd,nx,ny) * integral_->aptei_bb(nu,nv,na,nb)
+                                            * (Delta(na,nc) - Db_[na][nc]) * (Delta(nb,nd) - Db_[nb][nd]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[na][na] - Fb_[nb][nb];
+                                    d2 = Fa_[nc][nc] + Fb_[nd][nd] - Fa_[nx][nx] - Fb_[ny][ny];
+                                    vab += 2.0 * integral_->aptei_ab(nc,nd,nx,ny) * integral_->aptei_ab(nu,nv,na,nb)
+                                            * (Delta(na,nc) - Da_[na][nc]) * (Delta(nb,nd) - Db_[nb][nd]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                }
+                            }
+                        }
+                    }
+
+                    // particle-hole
+                    for(size_t i = 0; i < nh_; ++i){
+                        size_t ni = idx_h_[i];
+                        for(size_t a = 0; a < npt_; ++a){
+                            size_t na = idx_p_[a];
+
+                            // i, a cannot all be active
+                            if(i < na_ && a < na_) continue;
+
+                            for(size_t j = 0; j < nh_; ++j){
+                                size_t nj = idx_h_[j];
+                                for(size_t b = 0; b < npt_; ++b){
+                                    size_t nb = idx_p_[b];
+
+                                    double d1 = Fa_[ni][ni] + Fa_[nv][nv] - Fa_[na][na] - Fa_[ny][ny];
+                                    double d2 = Fa_[nb][nb] + Fa_[nu][nu] - Fa_[nj][nj] - Fa_[nx][nx];
+                                    vaa += 2.0 * integral_->aptei_aa(nb,nu,nj,nx) * integral_->aptei_aa(ni,nv,na,ny)
+                                            * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[nv][nv] + Fb_[ni][ni] - Fa_[ny][ny] - Fb_[na][na];
+                                    d2 = Fa_[nu][nu] + Fb_[nb][nb] - Fa_[nx][nx] - Fb_[nj][nj];
+                                    vaa += 2.0 * integral_->aptei_ab(nu,nb,nx,nj) * integral_->aptei_ab(nv,ni,ny,na)
+                                            * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+
+                                    d1 = Fb_[ni][ni] + Fb_[nv][nv] - Fb_[na][na] - Fb_[ny][ny];
+                                    d2 = Fb_[nb][nb] + Fb_[nu][nu] - Fb_[nj][nj] - Fb_[nx][nx];
+                                    vbb += 2.0 * integral_->aptei_bb(nb,nu,nj,nx) * integral_->aptei_bb(ni,nv,na,ny)
+                                            * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[ny][ny];
+                                    d2 = Fa_[nb][nb] + Fb_[nu][nu] - Fa_[nj][nj] - Fb_[nx][nx];
+                                    vbb += 2.0 * integral_->aptei_ab(nb,nu,nj,nx) * integral_->aptei_ab(ni,nv,na,ny)
+                                            * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+
+                                    d1 = Fa_[nu][nu] + Fb_[ni][ni] - Fa_[na][na] - Fb_[ny][ny];
+                                    d2 = Fa_[nb][nb] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[nj][nj];
+                                    vab -= 2.0 * integral_->aptei_ab(nb,nv,nx,nj) * integral_->aptei_ab(nu,ni,na,ny)
+                                            * Db_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[na][na] - Fb_[ny][ny];
+                                    d2 = Fa_[nu][nu] + Fa_[nb][nb] - Fa_[nx][nx] - Fa_[nj][nj];
+                                    vab += 2.0 * integral_->aptei_aa(nu,nb,nx,nj) * integral_->aptei_ab(ni,nv,na,ny)
+                                            * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fb_[ni][ni] + Fb_[nv][nv] - Fb_[na][na] - Fb_[ny][ny];
+                                    d2 = Fa_[nu][nu] + Fb_[nb][nb] - Fa_[nx][nx] - Fb_[nj][nj];
+                                    vab += 2.0 * integral_->aptei_ab(nu,nb,nx,nj) * integral_->aptei_bb(ni,nv,na,ny)
+                                            * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[na][na];
+                                    d2 = Fa_[nu][nu] + Fb_[nb][nb] - Fa_[nj][nj] - Fb_[ny][ny];
+                                    vab -= 2.0 * integral_->aptei_ab(nu,nb,nj,ny) * integral_->aptei_ab(ni,nv,nx,na)
+                                            * Da_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[ni][ni] + Fa_[nu][nu] - Fa_[na][na] - Fa_[nx][nx];
+                                    d2 = Fa_[nb][nb] + Fb_[nv][nv] - Fa_[nj][nj] - Fb_[ny][ny];
+                                    vab += 2.0 * integral_->aptei_ab(nb,nv,nj,ny) * integral_->aptei_aa(ni,nu,na,nx)
+                                            * Da_[nj][ni] * (Delta(na,nb) - Da_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                    d1 = Fa_[nu][nu] + Fb_[ni][ni] - Fa_[nx][nx] - Fb_[na][na];
+                                    d2 = Fb_[nb][nb] + Fb_[nv][nv] - Fb_[nj][nj] - Fb_[ny][ny];
+                                    vab += 2.0 * integral_->aptei_bb(nb,nv,nj,ny) * integral_->aptei_ab(nu,ni,nx,na)
+                                            * Db_[nj][ni] * (Delta(na,nb) - Db_[na][nb]) * d1
+                                            * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                                }
+                            }
+                        }
+                    }
+
+                    E += vaa * L2aa_[x][y][u][v];
+                    E += vab * L2ab_[x][y][u][v];
+                    E += vbb * L2bb_[x][y][u][v];
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::ESRG_22_6(){
+    double E = 0.0;
+
+    for(size_t u = 0; u < na_; ++u){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; ++v){
+            size_t nv = idx_a_[v];
+            for(size_t w = 0; w < na_; ++w){
+                size_t nw = idx_a_[w];
+                for(size_t x = 0; x < na_; ++x){
+                    size_t nx = idx_a_[x];
+                    for(size_t y = 0; y < na_; ++y){
+                        size_t ny = idx_a_[y];
+                        for(size_t z = 0; z < na_; ++z){
+                            size_t nz = idx_a_[z];
+
+                            double vaaa = 0.0, vaab = 0.0, vabb = 0.0, vbbb = 0.0;
+
+                            // core
+                            for(size_t m = 0; m < nc_; ++m){
+                                size_t nm = idx_c_[m];
+
+                                double d1 = Fa_[nm][nm] + Fa_[nw][nw] - Fa_[nx][nx] - Fa_[ny][ny];
+                                double d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[nz][nz];
+                                vaaa += 0.5 * integral_->aptei_aa(nu,nv,nm,nz) * integral_->aptei_aa(nm,nw,nx,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nm][nm] + Fb_[nw][nw] - Fb_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[nm][nm] - Fb_[nz][nz];
+                                vbbb += 0.5 * integral_->aptei_bb(nu,nv,nm,nz) * integral_->aptei_bb(nm,nw,nx,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nm][nm] + Fa_[nv][nv] - Fa_[nx][nx] - Fb_[nz][nz];
+                                d2 = Fa_[nu][nu] + Fb_[nw][nw] - Fb_[nm][nm] - Fa_[ny][ny];
+                                vaab += 2.0 * integral_->aptei_ab(nu,nw,ny,nm) * integral_->aptei_ab(nv,nm,nx,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nm][nm] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                d2 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[nm][nm] - Fa_[ny][ny];
+                                vaab -= integral_->aptei_aa(nu,nv,nm,ny) * integral_->aptei_ab(nm,nw,nx,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nm][nm] + Fa_[nv][nv] - Fa_[nx][nx] - Fa_[ny][ny];
+                                d2 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[nm][nm] - Fb_[nz][nz];
+                                vaab -= integral_->aptei_ab(nu,nw,nm,nz) * integral_->aptei_aa(nm,nv,nx,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nm][nm] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nm][nm] - Fb_[nz][nz];
+                                vabb += 2.0 * integral_->aptei_ab(nu,nv,nm,nz) * integral_->aptei_ab(nm,nw,nx,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nm][nm] + Fa_[nu][nu] - Fa_[nx][nx] - Fb_[ny][ny];
+                                d2 = Fb_[nw][nw] + Fb_[nv][nv] - Fb_[nm][nm] - Fb_[nz][nz];
+                                vabb -= integral_->aptei_bb(nv,nw,nm,nz) * integral_->aptei_ab(nu,nm,nx,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nm][nm] + Fb_[nw][nw] - Fb_[nz][nz] - Fb_[ny][ny];
+                                d2 = Fa_[nu][nu] + Fb_[nv][nv] - Fb_[nm][nm] - Fa_[nx][nx];
+                                vabb -= integral_->aptei_ab(nu,nv,nx,nm) * integral_->aptei_bb(nm,nw,ny,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+
+                            // virtual
+                            for(size_t e = 0; e < nv_; ++e){
+                                size_t ne = idx_v_[e];
+
+                                double d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[nz][nz];
+                                double d2 = Fa_[nw][nw] + Fa_[ne][ne] - Fa_[nx][nx] - Fa_[ny][ny];
+                                vaaa += 0.5 * integral_->aptei_aa(nw,ne,nx,ny) * integral_->aptei_aa(nu,nv,ne,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nu][nu] + Fb_[nv][nv] - Fb_[ne][ne] - Fb_[nz][nz];
+                                d2 = Fb_[nw][nw] + Fb_[ne][ne] - Fb_[nx][nx] - Fb_[ny][ny];
+                                vbbb += 0.5 * integral_->aptei_bb(nw,ne,nx,ny) * integral_->aptei_bb(nu,nv,ne,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[ny][ny] - Fb_[ne][ne];
+                                d2 = Fa_[nv][nv] + Fb_[ne][ne] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vaab -= 2.0 * integral_->aptei_ab(nv,ne,nx,nz) * integral_->aptei_ab(nu,nw,ny,ne)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fa_[nv][nv] - Fa_[ne][ne] - Fa_[ny][ny];
+                                d2 = Fa_[ne][ne] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[nz][nz];
+                                vaab += integral_->aptei_ab(ne,nw,nx,nz) * integral_->aptei_aa(nu,nv,ne,ny)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nw][nw] - Fa_[ne][ne] - Fb_[nz][nz];
+                                d2 = Fa_[nv][nv] + Fa_[ne][ne] - Fa_[nx][nx] - Fa_[ny][ny];
+                                vaab -= integral_->aptei_aa(nv,ne,nx,ny) * integral_->aptei_ab(nu,nw,ne,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[ne][ne] - Fb_[nz][nz];
+                                d2 = Fa_[ne][ne] + Fb_[nw][nw] - Fa_[nx][nx] - Fb_[ny][ny];
+                                vabb -= 2.0 * integral_->aptei_ab(ne,nw,nx,ny) * integral_->aptei_ab(nu,nv,ne,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fa_[nu][nu] + Fb_[nv][nv] - Fa_[nx][nx] - Fb_[ne][ne];
+                                d2 = Fb_[nw][nw] + Fb_[ne][ne] - Fb_[ny][ny] - Fb_[nz][nz];
+                                vabb -= integral_->aptei_bb(nw,ne,ny,nz) * integral_->aptei_ab(nu,nv,nx,ne)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+
+                                d1 = Fb_[nv][nv] + Fb_[nw][nw] - Fb_[ne][ne] - Fb_[nz][nz];
+                                d2 = Fa_[nu][nu] + Fb_[ne][ne] - Fa_[nx][nx] - Fb_[ny][ny];
+                                vabb += integral_->aptei_ab(nu,ne,nx,ny) * integral_->aptei_bb(nv,nw,ne,nz)
+                                        * d1 * srg_source_->compute_renormalized_denominator(d1 * d1 + d2 * d2);
+                            }
+
+                            E += vaaa * L3aaa_[x][y][z][u][v][w];
+                            E += vaab * L3aab_[x][y][z][u][v][w];
+                            E += vabb * L3abb_[x][y][z][u][v][w];
+                            E += vbbb * L3bbb_[x][y][z][u][v][w];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return E;
+}
+
+double MCSRGPT2_MO::compute_energy_srg(){
+    outfile->Printf("\n");
+    outfile->Printf("\n  Computing energy of [eta1, H1] ...");
+    double Esrg_11 = ESRG_11();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta1, H2] ...");
+    double Esrg_12 = ESRG_12();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H1] ...");
+    double Esrg_21 = ESRG_21();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C2 ...");
+    double Esrg_22_2 = ESRG_22_2();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C4 ...");
+    double Esrg_22_4 = ESRG_22_4();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    outfile->Printf("\n  Computing energy of [eta2, H2] C6 ...");
+    double Esrg_22_6 = ESRG_22_6();
+    outfile->Printf("\t\t\t\t\tDone.");
+
+    double Esrg_22 = Esrg_22_2 + Esrg_22_4 + Esrg_22_6;
+    double Ecorr = Esrg_11 + Esrg_12 + Esrg_21 + Esrg_22;
+    double Etotal = Ecorr + Eref_;
+
+    std::vector<std::pair<std::string,double>> energy;
+    energy.push_back({"E0 (reference)", Eref_});
+    energy.push_back({"[eta_1, H_1]", Esrg_11});
+    energy.push_back({"[eta_1, H_2]", Esrg_12});
+    energy.push_back({"[eta_2, H_1]", Esrg_21});
+    energy.push_back({"[eta_2, H_2] C2", Esrg_22_2});
+    energy.push_back({"[eta_2, H_2] C4", Esrg_22_4});
+    energy.push_back({"[eta_2, H_2] C6", Esrg_22_6});
+    energy.push_back({"[eta_2, H_2]", Esrg_22});
+    energy.push_back({"SRG-MRPT2 correlation energy", Ecorr});
+    energy.push_back({"SRG-MRPT2 total energy", Etotal});
+
+    print_h2("SRG-MRPT2 energy summary");
+    for (auto& str_dim : energy){
+        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
+    }
+
+    return Etotal;
 }
 
 }}
