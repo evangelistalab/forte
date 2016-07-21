@@ -576,7 +576,7 @@ void FCI_MO::form_det_cisd(){
     }
 
     if(root_sym_ != 0 || root_ != 0 || !cisd_ex_no_hf_){
-        if(cisd_ex_no_hf_){
+        if(cisd_ex_no_hf_ && root_sym_ == 0){
             root_ -= 1;
             nroot_ -= 1;
         }
