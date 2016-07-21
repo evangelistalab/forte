@@ -694,6 +694,8 @@ read_options(std::string name, Options &options)
         options.add_bool("PRINT_TIME_PROFILE", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
+        /*- Include internal amplitudes -*/
+        options.add_bool("INTERNAL_AMP", false);
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
