@@ -406,7 +406,7 @@ double THREE_DSRG_MRPT2::compute_energy()
 
         std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
         std::string str = "Computing T2";
-        outfile->Printf("\n    %-36s ...", str.c_str());
+        outfile->Printf("\n    %-37s ...", str.c_str());
         Timer T2timer;
 
         // If exceed memory, use diskbased algorithm
@@ -421,7 +421,7 @@ double THREE_DSRG_MRPT2::compute_energy()
         outfile->Printf("...Done. Timing %15.6f s", T2timer.get());
 
         std::string strV = "Computing V and Renormalizing";
-        outfile->Printf("\n    %-36s ...", strV.c_str());
+        outfile->Printf("\n    %-37s ...", strV.c_str());
         Timer Vtimer;
         if(!exceed_memory)
         {
@@ -565,7 +565,7 @@ double THREE_DSRG_MRPT2::compute_ref()
 void THREE_DSRG_MRPT2::compute_t2()
 {
     std::string str = "Computing T2";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     Timer timer;
 
     T2_["ijab"] = V_["abij"];
@@ -587,10 +587,11 @@ void THREE_DSRG_MRPT2::compute_t2()
     });
 
     // zero internal amplitudes
-    T2_.block("aaaa").zero();
-    T2_.block("aAaA").zero();
-    T2_.block("AAAA").zero();
-
+    if(!options_.get_bool("INTERNAL_AMP")){
+        T2_.block("aaaa").zero();
+        T2_.block("aAaA").zero();
+        T2_.block("AAAA").zero();
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 
@@ -825,7 +826,7 @@ void THREE_DSRG_MRPT2::compute_t1()
     //Francesco's library does not handle repeating indices between 3 different terms, so need to form an intermediate
     //via a pointwise multiplcation
     std::string str = "Computing T1";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     Timer timer;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp",spin_cases({"aa"}), true);
@@ -841,14 +842,15 @@ void THREE_DSRG_MRPT2::compute_t1()
     N["ia"] += temp["XU"] * T2_["iUaX"];
     T1_["ia"] = N["ia"] * RDelta1_["ia"];
 
-
     N["IA"]  = F_["IA"];
     N["IA"] += temp["xu"] * T2_["uIxA"];
     N["IA"] += temp["XU"] * T2_["IUAX"];
     T1_["IA"] = N["IA"] * RDelta1_["IA"];
 
-    T1_.block("AA").zero();
-    T1_.block("aa").zero();
+    if(!options_.get_bool("INTERNAL_AMP")){
+        T1_.block("AA").zero();
+        T1_.block("aa").zero();
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -865,7 +867,7 @@ void THREE_DSRG_MRPT2::renormalize_V()
 {
     Timer timer;
     std::string str = "Renormalizing V";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
 
     V_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
@@ -888,7 +890,7 @@ void THREE_DSRG_MRPT2::renormalize_F()
     Timer timer;
 
     std::string str = "Renormalizing F";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
 
     BlockedTensor temp_aa = BTF_->build(tensor_type_,"temp_aa",spin_cases({"aa"}), true);
     temp_aa["xu"] = Gamma1_["xu"] * Delta1_["xu"];
@@ -919,7 +921,7 @@ double THREE_DSRG_MRPT2::E_FT1()
 {
     Timer timer;
     std::string str = "Computing <[F, T1]>";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp",spin_cases({"hp"}), true);
@@ -939,7 +941,7 @@ double THREE_DSRG_MRPT2::E_VT1()
 {
     Timer timer;
     std::string str = "Computing <[V, T1]>";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaa"}));
@@ -969,7 +971,7 @@ double THREE_DSRG_MRPT2::E_FT2()
 {
     Timer timer;
     std::string str = "Computing <[F, T2]>";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp;
     temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}));
@@ -998,7 +1000,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double E = 0.0;
     Timer timer;
     std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
 
     //TODO: Implement these without storing V and/or T2 by using blocking
     ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
@@ -1112,7 +1114,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT or BATCH");
     }
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
-    outfile->Printf("\n    %-36s ...", strccvv.c_str());
+    outfile->Printf("\n    %-37s ...", strccvv.c_str());
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
     //outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
 
@@ -1123,7 +1125,7 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
 {
     Timer timer;
     std::string str = "Computing <[V, T2]> 4HH";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
     double E = 0.0;
     BlockedTensor temp1;
     BlockedTensor temp2;
@@ -1156,7 +1158,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     BlockedTensor temp2;
 
     std::string str = "Computing <V, T2]> 4PP";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
 
     temp1 = BTF_->build(tensor_type_,"temp1", spin_cases({"aapp"}));
     temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
@@ -1173,7 +1175,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     E += 0.125 * Lambda2_["XYUV"] * temp2["UVXY"];
     E += Lambda2_["xYuV"] * temp2["uVxY"];
 
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return E;
 }
 
@@ -1182,7 +1184,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     Timer timer;
     double E = 0.0;
     std::string str = "Computing [V, T2] 4PH";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s ...", str.c_str());
 
     BlockedTensor temp1;
     BlockedTensor temp2;
@@ -1222,7 +1224,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     temp2["uVxY"] -= V_["uBjY"] * temp1["jVxB"];
     E += temp2["uVxY"] * Lambda2_["xYuV"];
 
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
     return E;
 }
 
@@ -1230,7 +1232,7 @@ double THREE_DSRG_MRPT2::E_VT2_6()
 {
     Timer timer;
     std::string str = "Computing [V, T2] λ3";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n    %-37s  ...", str.c_str());
     double E = 0.0;
     BlockedTensor Lambda3;
 
