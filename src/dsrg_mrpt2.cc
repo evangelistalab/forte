@@ -1145,7 +1145,7 @@ double DSRG_MRPT2::compute_energy_relaxed(){
         Erelax = fcisolver.compute_energy();
 
         // printing
-        print_h2("MRDSRG Energy Summary");
+        print_h2("DSRG-MRPT2 Energy Summary");
         outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)", Edsrg);
         outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");

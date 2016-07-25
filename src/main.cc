@@ -1078,6 +1078,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
         }
+
+        if(options.get_str("CAS_TYPE") == "V2RDM")
+        {
+            std::shared_ptr<V2RDM> v2rdm = std::make_shared<V2RDM>(ref_wfn,options,ints_,mo_space_info);
+            Reference reference = v2rdm->reference();
+            std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(reference,ref_wfn,options,ints_,mo_space_info);
+            dsrg_mrpt2->compute_energy();
+        }
+
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);

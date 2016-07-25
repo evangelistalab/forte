@@ -1216,8 +1216,8 @@ double DSRG_MRPT3::compute_energy_relaxed(){
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
 
         // create FCIIntegrals manually
-        std::shared_ptr<FCIIntegrals> fci_ints;
         if(eri_df_){
+            std::shared_ptr<FCIIntegrals> fci_ints;
             fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
             fcisolver.use_user_integrals_and_restricted_docc(true);
             fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),Hbar2_.block("AAAA"));

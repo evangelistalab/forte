@@ -18,6 +18,7 @@ molecule {
 set globals{
    reference    ROHF
    scf_type     df
+   docc         [2,0,0,1]
    d_convergence           12
    e_convergence           15
    df_basis_mp2            cc-pvdz-ri

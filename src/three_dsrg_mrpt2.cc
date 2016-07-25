@@ -91,15 +91,29 @@ void THREE_DSRG_MRPT2::startup()
     taylor_threshold_ = options_.get_int("TAYLOR_THRESHOLD");
     if(taylor_threshold_ <= 0){
         outfile->Printf("\n  Threshold for Taylor expansion must be an integer greater than 0!");
-        exit(1);
+        throw PSIEXCEPTION("Threshold for Taylor expansion must be an integer greater than 0!");
     }
-    taylor_order_ = int(0.5 * (15.0 / taylor_threshold_ + 1)) + 1;
+
+    source_ = options_.get_str("SOURCE");
+    if(source_ != "STANDARD" && source_ != "LABS" && source_ != "DYSON"){
+        outfile->Printf("\n  Warning: SOURCE option \"%s\" is not implemented in DSRG-MRPT2. Changed to STANDARD.", source_.c_str());
+        source_ = "STANDARD";
+    }
+    if(source_ == "STANDARD"){
+        dsrg_source_ = std::make_shared<STD_SOURCE>(s_,taylor_threshold_);
+    }else if(source_ == "LABS"){
+        dsrg_source_ = std::make_shared<LABS_SOURCE>(s_,taylor_threshold_);
+    }else if(source_ == "DYSON"){
+        dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_,taylor_threshold_);
+    }
+
+    // initialize timer for commutator
+    dsrg_time_ = DSRG_TIME();
 
     rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    actvpi_  = mo_space_info_->get_dimension ("ACTIVE");
-    ruoccpi_ = mo_space_info_->get_dimension ("RESTRICTED_UOCC");
+    actvpi_  = mo_space_info_->get_dimension("ACTIVE");
+    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
 
-    
     acore_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     bcore_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     aactv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
@@ -109,10 +123,10 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::set_expert_mode(true);
 
-    //boost::shared_ptr<BlockedTensorFa_ctory> BTFBlockedTensorFa_ctory(options);
+//    boost::shared_ptr<BlockedTensorFa_ctory> BTFBlockedTensorFa_ctory(options);
 
-    //BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
-    //BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
+//    BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
+//    BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
     BTF_->add_mo_space("c","m,n,µ,π",acore_mos_,AlphaSpin);
     BTF_->add_mo_space("C","M,N,Ω,∏",bcore_mos_,BetaSpin);
 
@@ -143,22 +157,17 @@ void THREE_DSRG_MRPT2::startup()
     std::vector<size_t> nauxpi(nthree_);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-    //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
-    //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+//    BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+//    BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     BTF_->add_mo_space("d","g",nauxpi,NoSpin);
 
     H_ = BTF_->build(tensor_type_,"H",spin_cases({"gg"}));
-
     Gamma1_ = BTF_->build(tensor_type_,"Gamma1_",spin_cases({"hh"}));
     Eta1_ = BTF_->build(tensor_type_,"Eta1_",spin_cases({"pp"}));
     F_ = BTF_->build(tensor_type_,"Fock",spin_cases({"gg"}));
-    F_no_renorm_ = BTF_->build(tensor_type_,"Fock",spin_cases({"gg"}));
     Delta1_ = BTF_->build(tensor_type_,"Delta1_",spin_cases({"aa"}));
-
     RDelta1_ = BTF_->build(tensor_type_,"RDelta1_",spin_cases({"hp"}));
-
     T1_ = BTF_->build(tensor_type_,"T1 Amplitudes",spin_cases({"hp"}));
-
     RExp1_ = BTF_->build(tensor_type_,"RExp1",spin_cases({"hp"}));
 
     H_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -193,15 +202,13 @@ void THREE_DSRG_MRPT2::startup()
     Eta1_VV.iterate([&](const std::vector<size_t>& i,double& value){
         value = i[0] == i[1] ? 1.0 : 0.0;});
 
-
     Gamma1_aa("pq") = reference_.L1a()("pq");
     Gamma1_AA("pq") = reference_.L1b()("pq");
 
     Eta1_aa("pq") -= reference_.L1a()("pq");
     Eta1_AA("pq") -= reference_.L1b()("pq");
 
-
-    //Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.  
+    // Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.
     boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
     boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
     for(size_t m = 0; m < core_; m++){
@@ -209,11 +216,10 @@ void THREE_DSRG_MRPT2::startup()
             Gamma1_matrixB->set(bcore_mos_[m],bcore_mos_[m],1.0);
     }
     Gamma1_aa.iterate([&](const std::vector<size_t>& i,double& value){
-     Gamma1_matrixA->set(aactv_mos_[i[0]], aactv_mos_[i[1]], value);   });
+        Gamma1_matrixA->set(aactv_mos_[i[0]], aactv_mos_[i[1]], value);});
 
     Gamma1_AA.iterate([&](const std::vector<size_t>& i,double& value){
-     Gamma1_matrixB->set(bactv_mos_[i[0]], bactv_mos_[i[1]], value);   
-     });
+        Gamma1_matrixB->set(bactv_mos_[i[0]], bactv_mos_[i[1]], value);});
 
     ints_->make_fock_matrix(Gamma1_matrixA, Gamma1_matrixB);
 
@@ -225,19 +231,48 @@ void THREE_DSRG_MRPT2::startup()
             value = ints_->get_fock_b(i[0],i[1]);
         }
     });
-    F_no_renorm_["pq"] = F_["pq"];
-    F_no_renorm_["PQ"] = F_["PQ"];
-
-    Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
 
     Fa_.resize(ncmo_);
     Fb_.resize(ncmo_);
-
     for(size_t p = 0; p < ncmo_; p++)
     {
         Fa_[p] = ints_->get_fock_a(p,p);
         Fb_[p] = ints_->get_fock_b(p,p);
     }
+
+    // check semi-canonical orbitals
+    print_h2("Checking Orbitals");
+    semi_canonical_ = check_semicanonical();
+    if(!semi_canonical_){
+        if(!ignore_semicanonical_){
+            outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.");
+            outfile->Printf("\n    Warning: The code will keep running but the energy will be meaningless.");
+//            U_ = ambit::BlockedTensor::build(tensor_type_,"U",spin_cases({"gg"}));
+//            std::vector<std::vector<double>> eigens = diagonalize_Fock_diagblocks(U_);
+//            Fa_ = eigens[0];
+//            Fb_ = eigens[1];
+        } else {
+            outfile->Printf("\n    Warning: ignore testing of semi-canonical orbitals. DSRG-MRPT2 energy may be meaningless.");
+        }
+        semi_canonical_ = true;
+    }else{
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    }
+
+    // Prepare Hbar
+    std::string relax_ref = options_.get_str("RELAX_REF");
+    if(relax_ref != "NONE"){
+        if(relax_ref != "ONCE"){
+            outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref.c_str());
+            relax_ref = "ONCE";
+        }
+
+        Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
+        Hbar2_ = BTF_->build(tensor_type_,"Two-body Hbar",spin_cases({"aaaa"}));
+        Hbar1_["uv"] = F_["uv"];
+        Hbar1_["UV"] = F_["UV"];
+    }
+
     if(options_.get_bool("MOLDEN_WRITE_FORTE"))
     {
         Dimension nmopi_ = mo_space_info_->get_dimension("ALL");
@@ -248,15 +283,13 @@ void THREE_DSRG_MRPT2::startup()
         {
             outfile->Printf(" %8.8f", orb_energy);
         }
-        ///Not right, but I do not care about occupation.  Look at orbital energies
+        // Not right, but I do not care about occupation.  Look at orbital energies
         for(int h = 0; h < nirrep; h++)
             for(int i = 0; i < nmopi_[h]; i++)
                 occ_vector->set(h, i, 0.0);
 
-
         view_modified_orbitals(this->reference_wavefunction_, this->Ca(), this->epsilon_a(), occ_vector );
     }
-
 
     Delta1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin){
@@ -268,9 +301,9 @@ void THREE_DSRG_MRPT2::startup()
 
     RDelta1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0]  == AlphaSpin){
-            value = renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
+            value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
         }else if (spin[0]  == BetaSpin){
-            value = renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
+            value = dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
         }
     });
 
@@ -284,18 +317,15 @@ void THREE_DSRG_MRPT2::startup()
     Lambda2_AA("pqrs") = reference_.L2bb()("pqrs");
 
     // Prepare exponential tensors for effective Fock matrix and integrals
-
     RExp1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0]  == AlphaSpin){
-            value = renormalized_exp(Fa_[i[0]] - Fa_[i[1]]);
+            value = dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
         }else if (spin[0]  == BetaSpin){
-            value = renormalized_exp(Fb_[i[0]] - Fb_[i[1]]);
+            value = dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
         }
     });
 
-
     print_ = options_.get_int("PRINT");
-
     if(print_ > 1){
         Gamma1_.print(stdout);
         Eta1_.print(stdout);
@@ -376,26 +406,14 @@ void THREE_DSRG_MRPT2::print_summary()
 
 void THREE_DSRG_MRPT2::cleanup()
 {
-}
-
-double THREE_DSRG_MRPT2::renormalized_denominator(double D)
-{
-    double Z = std::sqrt(s_) * D;
-    if(std::fabs(Z) < std::pow(0.1, taylor_threshold_)){
-        return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
-    }else{
-        return (1.0 - std::exp(-s_ * std::pow(D, 2.0))) / D;
-    }
+    dsrg_time_.print_comm_time();
 }
 
 double THREE_DSRG_MRPT2::compute_energy()
 {
     Timer ComputeEnergy;
-    // Compute reference
-        //double Eref;
-        //Eref = compute_ref();
 
-        // Compute T2 and T1
+    // Compute T2 and T1
     if(integral_type_!=DiskDF){compute_t2();}
     if(integral_type_!=DiskDF){renormalize_V();}
     if(integral_type_==DiskDF)
@@ -410,8 +428,8 @@ double THREE_DSRG_MRPT2::compute_energy()
         Timer T2timer;
 
         // If exceed memory, use diskbased algorithm
-        //for all terms with <= 1 active idex
-        //If not, just compute V in the beginning
+        // for all terms with <= 1 active idex
+        // If not, just compute V in the beginning
 
         if(!exceed_memory)
         {
@@ -433,7 +451,6 @@ double THREE_DSRG_MRPT2::compute_energy()
     compute_t1();
     check_t1();
 
-
     // Compute effective integrals
     renormalize_F();
     if(print_ > 1)  F_.print(stdout); // The actv-actv block is different but OK.
@@ -441,7 +458,6 @@ double THREE_DSRG_MRPT2::compute_energy()
         T1_.print(stdout);
     }
 
-    // Compute DSRG-MRPT2 correlation energy
     // Compute DSRG-MRPT2 correlation energy
     double Etemp  = 0.0;
     double EVT2   = 0.0;
@@ -501,7 +517,6 @@ double THREE_DSRG_MRPT2::compute_energy()
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
-
     outfile->Printf("\n\n\n    CD/DF-DSRG-MRPT2 took   %8.8f s.", ComputeEnergy.get());
 
     if(options_.get_bool("PRINT_DENOM2"))
@@ -536,11 +551,13 @@ double THREE_DSRG_MRPT2::compute_energy()
         });
 
     }
+
     Hbar0_ = Etotal - Eref_;
-    if(options_.get_str("RELAX_REF") != "NONE")
-    {
+
+    if(options_.get_str("RELAX_REF") != "NONE"){
         relax_reference_once();
     }
+
     return Etotal;
 }
 
@@ -574,15 +591,15 @@ void THREE_DSRG_MRPT2::compute_t2()
     T2_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
         {
-            value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
         }
         else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
         {
-            value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
         }
         else
         {
-            value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
         }
     });
 
@@ -594,7 +611,6 @@ void THREE_DSRG_MRPT2::compute_t2()
     }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
 }
 
 ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std::string>& t2_spaces)
@@ -612,18 +628,17 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
     T2min.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
         {
-            value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
         }
         else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
         {
-            value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
         }
         else
         {
-            value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
         }
     });
-
 
     // zero internal amplitudes
     if(std::find(t2_spaces.begin(), t2_spaces.end(), "aaaa")!=t2_spaces.end())
@@ -638,8 +653,6 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
 }
 ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::string>& spaces, bool renormalize)
 {
-    
-
     ambit::BlockedTensor Vmin = BTF_->build(tensor_type_,"Vmin",spaces, true);
     ambit::BlockedTensor ThreeInt;
     Timer computeB;
@@ -665,11 +678,11 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
         Timer RenormV;
         Vmin.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-                value = (value + value * renormalized_exp(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]));
+                value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]));
             }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-                value = (value + value * renormalized_exp(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]));
+                value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]));
             }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-                value = (value + value * renormalized_exp(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]));
+                value = (value + value * dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]));
             }
         });
         if(detail_time_)
@@ -685,8 +698,8 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
     std::vector<size_t> nauxpi(nthree_);
     std::iota(nauxpi.begin(), nauxpi.end(),0);
 
-    //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
-    //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
+    // BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
+    // BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
     std::vector<std::string> ThreeIntegral_labels;
     for(const auto& label : spaces)
     {   
@@ -695,7 +708,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
         left_threeint+="d";
         right_threeint+="d";
        
-        //Since aAaA-> (aa)(AA) -> ThreeInt
+        // Since aAaA-> (aa)(AA) -> ThreeInt
         if(std::islower(label[0]) && std::isupper(label[1]) && std::islower(label[2]) && std::isupper(label[3]))
         {
             left_threeint+=label[0];
@@ -714,14 +727,14 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
             }
             
         }
-        //Since acac -> (aa)(cc) - (ac)(ac)
+        // Since acac -> (aa)(cc) - (ac)(ac)
         else if(std::islower(label[0]) && std::islower(label[1]) && std::islower(label[2]) && std::islower(label[3]))
         {
-            //Declare a string for the Kexchange part
+            // Declare a string for the Kexchange part
             std::string left_threeintK;
             std::string right_threeintK;
 
-            //Next section of code is standard J-like term
+            // Next section of code is standard J-like term
             left_threeint+=label[0];
             left_threeint+=label[2];
 
@@ -736,7 +749,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
                 ThreeIntegral_labels.push_back(right_threeint);
             }
 
-            //Add the exchange part of ThreeInt
+            // Add the exchange part of ThreeInt
             left_threeintK+="d";
             left_threeintK+=label[0];
             left_threeintK+=label[3];;
@@ -752,15 +765,15 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
                 ThreeIntegral_labels.push_back(right_threeintK);
             }
             
-            
+
         }
         else if(std::isupper(label[0]) && std::isupper(label[1]) && std::isupper(label[2]) && std::isupper(label[3]))
         {
-            //Declare a string for the Kexchange part
+            // Declare a string for the Kexchange part
             std::string left_threeintK;
             std::string right_threeintK;
 
-            //Next section of code is standard J-like term
+            // Next section of code is standard J-like term
             left_threeint+=label[0];
             left_threeint+=label[2];
 
@@ -775,7 +788,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
                 ThreeIntegral_labels.push_back(right_threeint);
             }
 
-            //Add the exchange part of ThreeInt
+            // Add the exchange part of ThreeInt
             left_threeintK+="d";
             left_threeintK+=label[0];
             left_threeintK+=label[3];;
@@ -792,12 +805,9 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_B_minimal(const std::vector<std::
             }
 
         }
-
-    
     }
 
     ambit::BlockedTensor ThreeInt = BTF_->build(tensor_type_, "ThreeIntMin", ThreeIntegral_labels, true);
-
 
     std::vector<std::string> ThreeInt_block = ThreeInt.block_labels();
 
@@ -871,16 +881,13 @@ void THREE_DSRG_MRPT2::renormalize_V()
 
     V_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-            value = (value + value * renormalized_exp(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]));
+            value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]));
         }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-            value = (value + value * renormalized_exp(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]));
+            value = (value + value * dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]));
         }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-            value = (value + value * renormalized_exp(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]));
+            value = (value + value * dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]));
         }
     });
-
-
-
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
@@ -1090,7 +1097,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     if(options_.get_str("ccvv_algorithm")=="CORE")
     {
         Eccvv = E_VT2_2_core();
-
     }
     else if(options_.get_str("ccvv_algorithm")=="FLY_LOOP")
     {
@@ -1249,8 +1255,6 @@ double THREE_DSRG_MRPT2::E_VT2_6()
     }
     if(print_ > 3)
         Lambda3.print(stdout);
-
-
 
 
     BlockedTensor temp;
@@ -1446,16 +1450,16 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
                     vmnefbeta = vmnefbetaC - vmnefbetaE;
                     vmnefmixed = vmnefmixedC;
 
-                    t2alpha = vmnefalpha * renormalized_denominator(Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f ]);
-                    t2beta  = vmnefbeta  * renormalized_denominator(Fb_[m] + Fb_[n] - Fb_[e] - Fb_[f ]);
-                    t2mixed = vmnefmixed * renormalized_denominator(Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f ]);
+                    t2alpha = vmnefalpha * dsrg_source_->compute_renormalized_denominator(Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f ]);
+                    t2beta  = vmnefbeta  * dsrg_source_->compute_renormalized_denominator(Fb_[m] + Fb_[n] - Fb_[e] - Fb_[f ]);
+                    t2mixed = vmnefmixed * dsrg_source_->compute_renormalized_denominator(Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f ]);
 
                     vmnefalphaR  = vmnefalpha;
                     vmnefbetaR   = vmnefbeta;
                     vmnefmixedR  = vmnefmixed;
-                    vmnefalphaR += vmnefalpha * renormalized_exp(Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f]);
-                    vmnefbetaR  += vmnefbeta * renormalized_exp(Fb_[m] + Fb_[n]  - Fb_[e] - Fb_[f]);
-                    vmnefmixedR += vmnefmixed * renormalized_exp(Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f]);
+                    vmnefalphaR += vmnefalpha * dsrg_source_->compute_renormalized(Fa_[m] + Fa_[n] - Fa_[e] - Fa_[f]);
+                    vmnefbetaR  += vmnefbeta * dsrg_source_->compute_renormalized(Fb_[m] + Fb_[n]  - Fb_[e] - Fb_[f]);
+                    vmnefmixedR += vmnefmixed * dsrg_source_->compute_renormalized(Fa_[m] + Fb_[n] - Fa_[e] - Fb_[f]);
 
                     Eflyalpha+=0.25 * vmnefalphaR * t2alpha;
                     Eflybeta+=0.25 * vmnefbetaR * t2beta;
@@ -1547,21 +1551,21 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 BefVec[thread].zero();
                 BefJKVec[thread].zero();
                 RDVec[thread].zero();
 
-                //// beta-beta
-                //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                //BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                //BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                //RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                //    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                //    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                //Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+                // beta-beta
+//                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+//                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+//                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+//                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+//                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+//                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+//                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
                 // alpha-beta
                 BefVec[thread].zero();
@@ -1571,12 +1575,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }
         }
     }
-    /// This block of code runs with DF and assumes that ThreeIntegral_ is created in startup.  Will fail for systems around 800 or 900 BF
+    // This block of code runs with DF and assumes that ThreeIntegral_ is created in startup.  Will fail for systems around 800 or 900 BF
     else
     {
         ambit::Tensor Ba = ambit::Tensor::build(tensor_type_,"Ba",{core_,nthree_,virtual_});
@@ -1634,24 +1638,24 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 // beta-beta
-                //BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                //BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                //BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                //RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                //    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                //    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                //Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+//                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+//                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+//                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+//                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+//                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+//                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+//                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
                 // alpha-beta
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }  
         }
@@ -1676,7 +1680,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
         nthread = omp_get_max_threads();
     #endif
 
-    ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
+    // Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     size_t memory_input = Process::environment.get_memory() * 0.75;
@@ -1711,8 +1715,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
 
-    /// Race condition if each thread access ambit tensors
-    /// Force each thread to have its own copy of matrices (memory NQ * V)
+    // Race condition if each thread access ambit tensors
+    // Force each thread to have its own copy of matrices (memory NQ * V)
     std::vector<ambit::Tensor> BefVec;
     std::vector<ambit::Tensor> BefJKVec;
     std::vector<ambit::Tensor> RDVec;
@@ -1733,27 +1737,27 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
 
     }
 
-    ///Step 2:  Loop over memory allowed blocks of m and n
-    /// Get batch sizes and create vectors of mblock length
+    // Step 2:  Loop over memory allowed blocks of m and n
+    // Get batch sizes and create vectors of mblock length
     for(size_t m_blocks = 0; m_blocks < num_block; m_blocks++)
     {
         std::vector<size_t> m_batch;
-        ///If core_ goes into num_block equally, all blocks are equal
+        // If core_ goes into num_block equally, all blocks are equal
         if(core_ % num_block == 0)
         {
-            /// Fill the mbatch from block_begin to block_end
-            /// This is done so I can pass a block to IntegralsAPI to read a chunk
+            // Fill the mbatch from block_begin to block_end
+            // This is done so I can pass a block to IntegralsAPI to read a chunk
             m_batch.resize(block_size);
-            /// copy used to get correct indices for B.  
+            // copy used to get correct indices for B.
             std::copy(acore_mos_.begin() + (m_blocks * block_size), acore_mos_.begin() + ((m_blocks + 1) * block_size), m_batch.begin());
         }
         else
         {
-            ///If last_block is shorter or long, fill the rest
+            // If last_block is shorter or long, fill the rest
             size_t gimp_block_size = m_blocks==(num_block - 1) ? block_size + core_ % num_block : block_size;
             m_batch.resize(gimp_block_size);
             //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
-             std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
+            std::copy(acore_mos_.begin() + (m_blocks)  * block_size, acore_mos_.begin() + (m_blocks) * block_size +  gimp_block_size, m_batch.begin());
         }
 
         ambit::Tensor B = ints_->three_integral_block(naux, m_batch, virt_mos);
@@ -1781,17 +1785,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
         for(size_t n_blocks = 0; n_blocks <= m_blocks; n_blocks++)
         {
             std::vector<size_t> n_batch;
-        ///If core_ goes into num_block equally, all blocks are equal
+        // If core_ goes into num_block equally, all blocks are equal
             if(core_ % num_block == 0)
             {
-                /// Fill the mbatch from block_begin to block_end
-                /// This is done so I can pass a block to IntegralsAPI to read a chunk
+                // Fill the mbatch from block_begin to block_end
+                // This is done so I can pass a block to IntegralsAPI to read a chunk
                 n_batch.resize(block_size);
                 std::copy(acore_mos_.begin() + n_blocks * block_size, acore_mos_.begin() + ((n_blocks + 1) * block_size), n_batch.begin());
             }
             else
             {
-                ///If last_block is longer, block_size + remainder
+                // If last_block is longer, block_size + remainder
                 size_t gimp_block_size = n_blocks==(num_block - 1) ? block_size +core_ % num_block : block_size;
                 n_batch.resize(gimp_block_size);
                 std::copy(acore_mos_.begin() + (n_blocks) * block_size, acore_mos_.begin() + (n_blocks  * block_size) + gimp_block_size , n_batch.begin());
@@ -1832,10 +1836,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
                 #ifdef _OPENMP
                     thread = omp_get_thread_num();
                 #endif
-                ///Since loop over mn is collapsed, need to use fancy offset tricks
-                /// m_in_loop = mn / n_size -> corresponds to m increment (m++) 
-                /// n_in_loop = mn % n_size -> corresponds to n increment (n++)
-                /// m_batch[m_in_loop] corresponds to the absolute index
+                // Since loop over mn is collapsed, need to use fancy offset tricks
+                // m_in_loop = mn / n_size -> corresponds to m increment (m++)
+                // n_in_loop = mn % n_size -> corresponds to n increment (n++)
+                // m_batch[m_in_loop] corresponds to the absolute index
                 size_t m_in_loop = mn / n_size;
                 size_t n_in_loop = mn % n_size;
                 size_t ma = m_batch[m_in_loop ];
@@ -1850,30 +1854,30 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
                 std::copy(BnQf.data().begin() + (mn % n_size) * dim, BnQf.data().begin() + (n_in_loop) * dim + dim, BnbVec[thread].data().begin());
 
 
-                //// alpha-aplha
+                // alpha-aplha
                 BefVec[thread]("ef") = BmaVec[thread]("ge") * BnaVec[thread]("gf");
                 BefJKVec[thread]("ef")  = BefVec[thread]("ef") * BefVec[thread]("ef");
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
-                //// beta-beta
-                ////BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-                ////BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-                ////BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-                ////RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                ////    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                ////    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
-                ////Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
+                // beta-beta
+//                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
+//                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
+//                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
+//                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
+//                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
+//                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+//                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
 
-                //// alpha-beta
+                // alpha-beta
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
                 if(debug_print)
                 {
@@ -1886,6 +1890,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
     //return (Ealpha + Ebeta + Emixed);
     return (Ealpha + Ebeta + Emixed);
 }
+
 double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
@@ -1903,7 +1908,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
         nthread = omp_get_max_threads();
     #endif
 
-    ///Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.  
+    // Step 1:  Figure out the largest chunk of B_{me}^{Q} and B_{nf}^{Q} can be stored in core.
     outfile->Printf("\n\n====Blocking information==========\n");
     size_t int_mem_int = (nthree_ * core_ * virtual_) * sizeof(double);
     size_t memory_input = Process::environment.get_memory() * 0.75;
@@ -1938,8 +1943,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
     std::vector<size_t> naux(nthree_);
     std::iota(naux.begin(), naux.end(), 0);
 
-    /// Race condition if each thread access ambit tensors
-    /// Force each thread to have its own copy of matrices (memory NQ * V)
+    // Race condition if each thread access ambit tensors
+    // Force each thread to have its own copy of matrices (memory NQ * V)
     std::vector<ambit::Tensor> BmnVec;
     std::vector<ambit::Tensor> BmnJKVec;
     std::vector<ambit::Tensor> RDVec;
@@ -1960,27 +1965,27 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
 
     }
 
-    ///Step 2:  Loop over memory allowed blocks of m and n
-    /// Get batch sizes and create vectors of mblock length
+    // Step 2:  Loop over memory allowed blocks of m and n
+    // Get batch sizes and create vectors of mblock length
     for(size_t e_blocks = 0; e_blocks < num_block; e_blocks++)
     {
         std::vector<size_t> e_batch;
-        ///If core_ goes into num_block equally, all blocks are equal
+        // If core_ goes into num_block equally, all blocks are equal
         if(virtual_ % num_block == 0)
         {
-            /// Fill the mbatch from block_begin to block_end
-            /// This is done so I can pass a block to IntegralsAPI to read a chunk
+            // Fill the mbatch from block_begin to block_end
+            // This is done so I can pass a block to IntegralsAPI to read a chunk
             e_batch.resize(block_size);
-            /// copy used to get correct indices for B.  
+            // copy used to get correct indices for B.
             std::copy(virt_mos.begin() + (e_blocks * block_size), virt_mos.begin() + ((e_blocks + 1) * block_size), e_batch.begin());
         }
         else
         {
-            ///If last_block is shorter or long, fill the rest
+            // If last_block is shorter or long, fill the rest
             size_t gimp_block_size = e_blocks==(num_block - 1) ? block_size + virtual_ % num_block : block_size;
             e_batch.resize(gimp_block_size);
             //std::iota(m_batch.begin(), m_batch.end(), m_blocks * (core_ / num_block));
-             std::copy(virt_mos.begin() + (e_blocks)  * block_size, virt_mos.begin() + (e_blocks) * block_size +  gimp_block_size, e_batch.begin());
+            std::copy(virt_mos.begin() + (e_blocks)  * block_size, virt_mos.begin() + (e_blocks) * block_size +  gimp_block_size, e_batch.begin());
         }
 
         ambit::Tensor B = ints_->three_integral_block(naux, e_batch, acore_mos_);
@@ -2008,17 +2013,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
         for(size_t f_blocks = 0; f_blocks <= e_blocks; f_blocks++)
         {
             std::vector<size_t> f_batch;
-        ///If core_ goes into num_block equally, all blocks are equal
+            // If core_ goes into num_block equally, all blocks are equal
             if(virtual_ % num_block == 0)
             {
-                /// Fill the mbatch from block_begin to block_end
-                /// This is done so I can pass a block to IntegralsAPI to read a chunk
+                // Fill the mbatch from block_begin to block_end
+                // This is done so I can pass a block to IntegralsAPI to read a chunk
                 f_batch.resize(block_size);
                 std::copy(virt_mos.begin() + f_blocks * block_size, virt_mos.begin() + ((f_blocks + 1) * block_size), f_batch.begin());
             }
             else
             {
-                ///If last_block is longer, block_size + remainder
+                // If last_block is longer, block_size + remainder
                 size_t gimp_block_size = f_blocks==(num_block - 1) ? block_size +virtual_ % num_block : block_size;
                 f_batch.resize(gimp_block_size);
                 std::copy(virt_mos.begin() + (f_blocks) * block_size, virt_mos.begin() + (f_blocks  * block_size) + gimp_block_size , f_batch.begin());
@@ -2059,10 +2064,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
                 #ifdef _OPENMP
                     thread = omp_get_thread_num();
                 #endif
-                ///Since loop over mn is collapsed, need to use fancy offset tricks
-                /// m_in_loop = mn / n_size -> corresponds to m increment (m++) 
-                /// n_in_loop = mn % n_size -> corresponds to n increment (n++)
-                /// m_batch[m_in_loop] corresponds to the absolute index
+                // Since loop over mn is collapsed, need to use fancy offset tricks
+                // m_in_loop = mn / n_size -> corresponds to m increment (m++)
+                // n_in_loop = mn % n_size -> corresponds to n increment (n++)
+                // m_batch[m_in_loop] corresponds to the absolute index
                 size_t e_in_loop = ef / f_size;
                 size_t f_in_loop = ef % f_size;
                 size_t ea = e_batch[e_in_loop ];
@@ -2077,22 +2082,22 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
                 std::copy(BfQn.data().begin() + f_in_loop * dim, BfQn.data().begin() + (f_in_loop) * dim + dim, BnbVec[thread].data().begin());
 
 
-                //// alpha-aplha
+                // alpha-aplha
                 BmnVec[thread]("mn") = BmaVec[thread]("gm") * BnaVec[thread]("gn");
                 BmnJKVec[thread]("mn")  = BmnVec[thread]("mn") * BmnVec[thread]("mn");
                 BmnJKVec[thread]("mn") -= BmnVec[thread]("mn") * BmnVec[thread]("nm");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[acore_mos_[i[0]]] + Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fa];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Ealpha += factor * 1.0 * BmnJKVec[thread]("mn") * RDVec[thread]("mn");
 
 
-                //// alpha-beta
+                // alpha-beta
                 BmnVec[thread]("mN") = BmaVec[thread]("gm") * BnbVec[thread]("gN");
                 BmnJKVec[thread]("mN")  = BmnVec[thread]("mN") * BmnVec[thread]("mN");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[acore_mos_[i[0]]] + Fa_[acore_mos_[i[1]]] - Fa_[ea] - Fa_[fb];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Emixed += factor * BmnJKVec[thread]("mN") * RDVec[thread]("mN");
                 if(debug_print)
                 {
@@ -2128,20 +2133,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_core()
         BlockedTensor RExp2ccvv = BTF_->build(tensor_type_, "RExp2ccvv", spin_cases({"ccvv"}));
         RD2_ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-                value = renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
             }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-                value = renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
             }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-                value = renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                value = dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
             }
         });
         RExp2ccvv.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
-                value = renormalized_exp(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+                value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
             }else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
-                value = renormalized_exp(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+                value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
             }else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
-                value = renormalized_exp(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+                value = dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
             }
         });
         BlockedTensor Rv = BTF_->build(tensor_type_, "ReV", spin_cases({"ccvv"}));
@@ -2222,17 +2227,17 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         tempTAA.push_back(ambit::Tensor::build(tensor_type_, "TEMPAA", {active_, active_}));
 
     }
-    //ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_, avirt_mos_);
-    //ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_, avirt_mos_);
+    // ambit::Tensor BemQ = ints_->three_integral_block(naux,  acore_mos_, avirt_mos_);
+    // ambit::Tensor BeuQ = ints_->three_integral_block(naux,  aactv_mos_, avirt_mos_);
 
-    ///Loop over e and f to compute V
+    // Loop over e and f to compute V
 
     ambit::Tensor BeuQ = ints_->three_integral_block(naux, avirt_mos_, aactv_mos_);
 
     //std::vector<double>& BemQ_data = BemQ.data();
 
-    ///I think this loop is typically too small to allow efficient use of
-    ///OpenMP.  Should probably test this assumption.
+    // I think this loop is typically too small to allow efficient use of
+    // OpenMP.  Should probably test this assumption.
     #pragma omp parallel for num_threads(num_threads_)
     for(size_t m = 0; m < core_; m++)
     {
@@ -2242,10 +2247,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         #endif
         size_t ma = acore_mos_[m];
 
-        //V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
-        //V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
-        //T2["mvef"] = V["mvef"] * D["mvef"]
-        //temp["uv"] = V * T2
+        // V[efu]_m = B_{em}^Q * B_{fu}^Q - B_{eu}^Q B_{fm}^Q
+        // V[efu]_m = V[efmu] + V[efmu] * exp[efmu]
+        // T2["mvef"] = V["mvef"] * D["mvef"]
+        // temp["uv"] = V * T2
         #pragma omp critical
         {
             Bm_Qe[thread] = ints_->three_integral_block_two_index(naux, ma, avirt_mos_);
@@ -2262,13 +2267,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         Vefu[thread].iterate([&](const std::vector<size_t>& i,double& value){
             double Exp = Fa_[avirt_mos_[i[0]]] + Fa_[avirt_mos_[i[1]]] - Fa_[aactv_mos_[i[2]]] - Fa_[ma];
             double D = -1.0 * (Fa_[avirt_mos_[i[0]]] + Fa_[avirt_mos_[i[1]]] - Fa_[aactv_mos_[i[2]]] - Fa_[ma]);
-            value = value + value * renormalized_exp(Exp);
-            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= renormalized_denominator(D);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= dsrg_source_->compute_renormalized_denominator(D);
         });
 
-            //T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
-            //    double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
-            //    value = value * renormalized_denominator(D);});
+//        T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
+//            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+//            value = value * dsrg_source_->compute_renormalized_denominator(D);});
 
         tempTaa[thread]("u,v")+= 0.5 * Vefu[thread]("e, f, u") * Tefv[thread]("e, f, v");
         Vefu[thread].zero();
@@ -2284,13 +2289,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         Vefu[thread].iterate([&](const std::vector<size_t>& i,double& value){
             double Exp = Fa_[avirt_mos_[i[0]]] + Fb_[avirt_mos_[i[1]]] - Fa_[aactv_mos_[i[2]]] - Fb_[ma];
             double D = -1.0 * (Fa_[avirt_mos_[i[0]]] + Fb_[avirt_mos_[i[1]]] - Fa_[aactv_mos_[i[2]]] - Fb_[ma]);
-            value = value + value * renormalized_exp(Exp);
-            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= renormalized_denominator(D);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= dsrg_source_->compute_renormalized_denominator(D);
         });
 
-            //T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
-            //    double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
-            //    value = value * renormalized_denominator(D);});
+//        T_mv[thread].iterate([&](const std::vector<size_t>& i,double& value){
+//            double D = Fa_[aactv_mos_[i[1]]] + Fa_[acore_mos_[i[0]]] - Fa_[ea] - Fa_[fa];
+//            value = value * dsrg_source_->compute_renormalized_denominator(D);});
 
         tempTAA[thread]("vu")+=Vefu[thread]("e, f, u") * Tefv[thread]("e,f, v");
         tempTaa[thread]("vu")+=Vefu[thread]("e,f, u") * Tefv[thread]("e,f, v");
@@ -2309,8 +2314,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
         Vefu[thread].iterate([&](const std::vector<size_t>& i,double& value){
             double Exp = Fa_[bvirt_mos_[i[0]]] + Fb_[bvirt_mos_[i[1]]] - Fb_[bactv_mos_[i[2]]] - Fb_[ma];
             double D = -1.0 * (Fa_[bvirt_mos_[i[0]]] + Fa_[bvirt_mos_[i[1]]] - Fb_[bactv_mos_[i[2]]] - Fb_[ma]);
-            value = value + value * renormalized_exp(Exp);
-            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= renormalized_denominator(D);
+            value = value + value * dsrg_source_->compute_renormalized(Exp);
+            T_mv_data[i[0] * virtual_ * active_ + i[1] * active_ + i[2]] *= dsrg_source_->compute_renormalized_denominator(D);
         });
 
 
@@ -2401,9 +2406,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
 
             V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double Exp = Fa_[aactv_mos_[i[1]]] + Fa_[avirt_mos_[i[0]]] - Fa_[ma] - Fa_[na];
-                value = value + value * renormalized_exp(Exp);
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
                 double D = Fa_[ma] + Fa_[na] - Fa_[aactv_mos_[i[1]]] - Fa_[avirt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * active_ + i[1]]*= renormalized_denominator(D);
+                T_ev[thread].data()[i[0] * active_ + i[1]]*= dsrg_source_->compute_renormalized_denominator(D);
                 ;});
 
 
@@ -2419,9 +2424,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
             T_ev[thread].data() = V_eu[thread].data();
             V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double Exp = Fa_[aactv_mos_[i[1]]] + Fb_[bvirt_mos_[i[0]]] - Fa_[ma] - Fb_[nb];
-                value = value + value * renormalized_exp(Exp);
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
                 double D = Fa_[ma] + Fb_[nb] - Fa_[aactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * active_ + i[1]] *= renormalized_denominator(D);
+                T_ev[thread].data()[i[0] * active_ + i[1]] *= dsrg_source_->compute_renormalized_denominator(D);
                 ;});
 
             tempTAA_e[thread]("vu")+=V_eu[thread]("M,v") * T_ev[thread]("M,u");
@@ -2436,9 +2441,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
 
             V_eu[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double Exp = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[bvirt_mos_[i[0]]];
-                value = value + value * renormalized_exp(Exp);
+                value = value + value * dsrg_source_->compute_renormalized(Exp);
                 double D = Fb_[mb] + Fb_[nb] - Fb_[bactv_mos_[i[1]]] - Fb_[avirt_mos_[i[0]]];
-                T_ev[thread].data()[i[0] * active_ + i[1]]*= renormalized_denominator(D);
+                T_ev[thread].data()[i[0] * active_ + i[1]]*= dsrg_source_->compute_renormalized_denominator(D);
                 ;});
 
             tempTAA_e[thread]("v,u")+= 0.5 * V_eu[thread]("M,v") * T_ev[thread]("M,u");
@@ -2462,147 +2467,97 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     }
 
     return (Eacvv + Eccva);
-
 }
+
 void THREE_DSRG_MRPT2::relax_reference_once()
 {
-    /// Time to relax this reference!
-        O1_ = BTF_->build(tensor_type_,"OneBody", spin_cases({"gg"}));
-        O2_ = BTF_->build(tensor_type_, "TwoBody", spin_cases({"gggg"}));
-        BlockedTensor T2all = BTF_->build(tensor_type_, "T2all", spin_cases({"hhpp"}));
-        H0_ = BTF_->build(tensor_type_, "ZeroBody", spin_cases({"gg"}));
-        H0_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if(i[0] == i[1]){
-                if(spin[0] == AlphaSpin){
-                    value = Fa_[i[0]];
-                }else{
-                    value = Fb_[i[0]];
-                }
-            }
-        });
-        Hbar1_ = BTF_->build(tensor_type_, "OneBody", spin_cases({"gg"}));
-        Hbar2_ = BTF_->build(tensor_type_, "TwoBody", spin_cases({"gggg"}));
+    // Time to relax this reference!
+    BlockedTensor T2all = BTF_->build(tensor_type_, "T2all", spin_cases({"hhpp"}));
+    BlockedTensor Vint = BTF_->build(tensor_type_, "AllV", spin_cases({"pphh"}));
+    BlockedTensor ThreeInt = compute_B_minimal(Vint.block_labels());
+    Vint["pqrs"]  = ThreeInt["gpr"] * ThreeInt["gqs"];
+    Vint["pqrs"] -= ThreeInt["gps"] * ThreeInt["gqr"];
+    Vint["PQRS"]  = ThreeInt["gPR"] * ThreeInt["gQS"];
+    Vint["PQRS"] -= ThreeInt["gPS"] * ThreeInt["gQR"];
+    Vint["qPsR"]  = ThreeInt["gPR"] * ThreeInt["gqs"];
 
-        BlockedTensor Vint = BTF_->build(tensor_type_, "AllV", spin_cases({"gggg"}));
-        BlockedTensor ThreeInt = compute_B_minimal(Vint.block_labels());
-        Vint["pqrs"] =   ThreeInt["gpr"]*ThreeInt["gqs"];
-        Vint["pqrs"] -=  ThreeInt["gps"]*ThreeInt["gqr"];
-        Vint["PQRS"] =   ThreeInt["gPR"]*ThreeInt["gQS"];
-        Vint["PQRS"] -=  ThreeInt["gPS"]*ThreeInt["gQR"];
-        Vint["qPsR"] =   ThreeInt["gPR"]*ThreeInt["gqs"];
-        Hbar1_("pq") = F_no_renorm_("pq");
-        Hbar1_("PQ") = F_no_renorm_("PQ");
+    Hbar2_["uvxy"] = Vint["uvxy"];
+    Hbar2_["uVxY"] = Vint["uVxY"];
+    Hbar2_["UVXY"] = Vint["UVXY"];
 
-        Hbar2_["pqrs"] = Vint["pqrs"];
-        Hbar2_["pQrS"] = Vint["pQrS"];
-        Hbar2_["PQRS"] = Vint["PQRS"];
+    T2all["ijab"] = Vint["abij"];
+    T2all["IJAB"] = Vint["ABIJ"];
+    T2all["iJaB"] = Vint["aBiJ"];
 
-        T2all["ijab"] = Vint["ijab"];
-        T2all["IJAB"] = Vint["IJAB"];
-        T2all["iJaB"] = Vint["iJaB"];
-        T2all.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
-            {
-                value *= renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
-            }
-            else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
-            {
-                value *= renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
-            }
-            else
-            {
-                value *= renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
-            }
-        });
+    T2all.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
+        {
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+        }
+        else if(spin[0]==BetaSpin && spin[1] == BetaSpin)
+        {
+            value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+        }
+        else
+        {
+            value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+        }
+    });
+
+    if(!options_.get_bool("INTERNAL_AMP")){
         T2all.block("aaaa").zero();
         T2all.block("AAAA").zero();
         T2all.block("aAaA").zero();
+    }
 
-        H1_T1_C1(H0_,T1_,0.5,O1_);
-        H1_T2_C1(H0_,T2all,0.5,O1_);
-        H1_T2_C2(H0_,T2all,0.5,O2_);
-
-        Hbar1_["pq"] += O1_["pq"];
-        Hbar1_["PQ"] += O1_["PQ"];
-        Hbar2_["pqrs"] += O2_["pqrs"];
-        Hbar2_["pQrS"] += O2_["pQrS"];
-        Hbar2_["PQRS"] += O2_["PQRS"];
-
-        Hbar1_["pq"] += O1_["qp"];
-        Hbar1_["PQ"] += O1_["QP"];
-        Hbar2_["pqrs"] += O2_["rspq"];
-        Hbar2_["pQrS"] += O2_["rSpQ"];
-        Hbar2_["PQRS"] += O2_["RSPQ"];
-        if(true)
-        {
-            double Ecorr = 0.0;
-            double Etemp = 0.0;
-            std::vector<std::pair<std::string, double> > energy;
-            H1_T1_C0(Hbar1_,T1_,1.0,Ecorr);
-            energy.push_back({"<[F, A1]>", 2 * (Ecorr - Etemp)});
-            Etemp = Ecorr;
-
-            H1_T2_C0(Hbar1_,T2all,1.0,Ecorr);
-            energy.push_back({"<[F, A2]>", 2 * (Ecorr - Etemp)});
-            Etemp = Ecorr;
-
-            H2_T1_C0(Hbar2_,T1_,1.0,Ecorr);
-            energy.push_back({"<[V, A1]>", 2 * (Ecorr - Etemp)});
-            Etemp = Ecorr;
-
-            H2_T2_C0(Hbar2_,T2all,1.0,Ecorr);
-            energy.push_back({"<[V, A2]>", 2 * (Ecorr - Etemp)});
-            Etemp = Ecorr;
-
-            // <[H, A]> = 2 * <[H, T]>
-            Ecorr *= 2.0;
-            energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
-            energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
-
-            outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
-            for (auto& str_dim : energy){
-                outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
+    Vint.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (fabs(value) > 1.0e-12){
+            if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)){
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
             }
+            else if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ){
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
+            }
+            else if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ){
+                value *= 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+            }
+        } else {
+            value = 0.0;
         }
+    });
 
-        O1_.zero();
-        O2_.zero();
+    BlockedTensor C1 = BTF_->build(tensor_type_,"C1",spin_cases({"aa"}));
+    BlockedTensor C2 = BTF_->build(tensor_type_,"C2",spin_cases({"aaaa"}));
+    H1_T1_C1(F_,T1_,0.5,C1);
+    H1_T2_C1(F_,T2all,0.5,C1);
+    H2_T1_C1(Vint,T1_,0.5,C1);
+    H2_T2_C1(Vint,T2all,0.5,C1);
+    H1_T2_C2(F_,T2all,0.5,C2);
+    H2_T1_C2(Vint,T1_,0.5,C2);
+    H2_T2_C2(Vint,T2all,0.5,C2);
 
-        H1_T1_C1(Hbar1_,T1_,1.0,O1_);
-        H1_T2_C1(Hbar1_,T2all,1.0,O1_);
-        H2_T1_C1(Hbar2_,T1_,1.0,O1_);
-        H2_T2_C1(Hbar2_,T2all,1.0,O1_);
+    Hbar1_["uv"] += C1["uv"];
+    Hbar1_["uv"] += C1["vu"];
+    Hbar1_["UV"] += C1["UV"];
+    Hbar1_["UV"] += C1["VU"];
+    Hbar2_["uvxy"] += C2["uvxy"];
+    Hbar2_["uvxy"] += C2["xyuv"];
+    Hbar2_["uVxY"] += C2["uVxY"];
+    Hbar2_["uVxY"] += C2["xYuV"];
+    Hbar2_["UVXY"] += C2["UVXY"];
+    Hbar2_["UVXY"] += C2["XYUV"];
 
-        H1_T2_C2(Hbar1_,T2all,1.0,O2_);
-        H2_T1_C2(Hbar2_,T1_,1.0,O2_);
-        H2_T2_C2(Hbar2_,T2all,1.0,O2_);
+    de_normal_order();
 
+    double E_relax = relaxed_energy();
+    Process::environment.globals["CURRENT ENERGY"] = E_relax;
 
-        Hbar1_["pq"] += O1_["pq"];
-        Hbar1_["pq"] += O1_["qp"];
-        Hbar1_["PQ"] += O1_["PQ"];
-        Hbar1_["PQ"] += O1_["QP"];
-        Hbar2_["pqrs"] += O2_["pqrs"];
-        Hbar2_["pqrs"] += O2_["rspq"];
-        Hbar2_["pQrS"] += O2_["pQrS"];
-        Hbar2_["pQrS"] += O2_["rSpQ"];
-        Hbar2_["PQRS"] += O2_["PQRS"];
-        Hbar2_["PQRS"] += O2_["RSPQ"];
-
-        de_normal_order();
-
-        double E_relax = relaxed_energy();
-
-        Process::environment.globals["CURRENT ENERGY"] = E_relax;
-
-
-        // printing
-        print_h2("MRDSRG Energy Summary");
-        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 (fixed)", Hbar0_ + Eref_);
-        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 (relax)", E_relax);
-        outfile->Printf("\n");
-
+    // printing
+    print_h2("DSRG-MRPT2 Energy Summary");
+    outfile->Printf("\n    %-37s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)  ", Hbar0_ + Eref_);
+    outfile->Printf("\n    %-37s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", E_relax);
 }
+
 double THREE_DSRG_MRPT2::relaxed_energy()
 {
     // setup for FCISolver
@@ -2630,20 +2585,14 @@ double THREE_DSRG_MRPT2::relaxed_energy()
     auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
     auto na = (nelec_actv + ms) / 2;
     auto nb =  nelec_actv - na;
-    O1_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        if (spin[0] == AlphaSpin){
-            ints_->set_oei(i[0],i[1],value,true);
-        }else{
-            ints_->set_oei(i[0],i[1],value,false);
-        }
-    });
 
     // reference relaxation
     double Erelax = 0.0;
-        // diagonalize the Hamiltonian
+
+    // diagonalize the Hamiltonian
     FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,options_.get_int("ROOT_SYM"),ints_, mo_space_info_,
                                              options_.get_int("NTRIAL_PER_ROOT"),print_, options_);
-    fcisolver.set_max_rdm_level(2);
+    fcisolver.set_max_rdm_level(1);
     fcisolver.set_nroot(options_.get_int("NROOT"));
     fcisolver.set_root(options_.get_int("ROOT"));
     fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
@@ -2653,301 +2602,14 @@ double THREE_DSRG_MRPT2::relaxed_energy()
     fcisolver.print_no(false);
 
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
-    auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
     fcisolver.use_user_integrals_and_restricted_docc(true);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),Hbar2_.block("AAAA"));
-    std::vector<std::vector<double> > oei_vector;
-    if((core_  + mo_space_info_->size("FROZEN_DOCC")) > 0)
-    {
-        oei_vector = compute_restricted_docc_operator_dsrg();
-        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-        fci_ints->set_scalar_energy(scalar_energy_fci_);
-        fcisolver.set_integral_pointer(fci_ints);
-    }
-    else{
-        std::vector<double> oei_a(active_ * active_);
-        std::vector<double> oei_b(active_ * active_);
-
-        for (size_t p = 0; p < active_; ++p){
-            size_t pp = active[p];
-            for (size_t q = 0; q < active_; ++q){
-                size_t qq = active[q];
-                size_t idx = active_ * p + q;
-                oei_a[idx] = ints_->oei_a(pp,qq);
-                oei_b[idx] = ints_->oei_b(pp,qq);
-            }
-        }
-        oei_vector.push_back(oei_a);
-        oei_vector.push_back(oei_b);
-        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-        fci_ints->set_scalar_energy(scalar_energy_fci_);
-        fcisolver.set_integral_pointer(fci_ints);
-    }
+    fci_ints->set_restricted_one_body_operator(aone_eff_,bone_eff_);
+    fci_ints->set_scalar_energy(ints_->scalar());
+    fcisolver.set_integral_pointer(fci_ints);
 
     Erelax = fcisolver.compute_energy();
     return Erelax;
-
-}
-void THREE_DSRG_MRPT2::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0){
-    Timer timer;
-
-    double E = 0.0;
-    E += H1["em"] * T1["me"];
-    E += H1["ex"] * T1["ye"] * Gamma1_["xy"];
-    E += H1["xm"] * T1["my"] * Eta1_["yx"];
-
-    E += H1["EM"] * T1["ME"];
-    E += H1["EX"] * T1["YE"] * Gamma1_["XY"];
-    E += H1["XM"] * T1["MY"] * Eta1_["YX"];
-
-    E *= alpha;
-    C0 += E;
-
-    if(print_ > 2){
-        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f",timer.get());
-    }
-    time_H1_T1_C0 += timer.get();
-}
-
-void THREE_DSRG_MRPT2::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0){
-    Timer timer;
-    BlockedTensor temp;
-    double E = 0.0;
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaa"});
-    temp["uvxy"] += H1["ex"] * T2["uvey"];
-    temp["uvxy"] -= H1["vm"] * T2["umxy"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAA"});
-    temp["UVXY"] += H1["EX"] * T2["UVEY"];
-    temp["UVXY"] -= H1["VM"] * T2["UMXY"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAaA"});
-    temp["uVxY"] += H1["ex"] * T2["uVeY"];
-    temp["uVxY"] += H1["EY"] * T2["uVxE"];
-    temp["uVxY"] -= H1["VM"] * T2["uMxY"];
-    temp["uVxY"] -= H1["um"] * T2["mVxY"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    E  *= alpha;
-    C0 += E;
-
-    if(print_ > 2){
-        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f",timer.get());
-    }
-    time_H1_T2_C0 += timer.get();
-}
-
-void THREE_DSRG_MRPT2::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0){
-    Timer timer;
-    BlockedTensor temp;
-    double E = 0.0;
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaa"});
-    temp["uvxy"] += H2["evxy"] * T1["ue"];
-    temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAA"});
-    temp["UVXY"] += H2["EVXY"] * T1["UE"];
-    temp["UVXY"] -= H2["UVMY"] * T1["MX"];
-    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAaA"});
-    temp["uVxY"] += H2["eVxY"] * T1["ue"];
-    temp["uVxY"] += H2["uExY"] * T1["VE"];
-    temp["uVxY"] -= H2["uVmY"] * T1["mx"];
-    temp["uVxY"] -= H2["uVxM"] * T1["MY"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    E  *= alpha;
-    C0 += E;
-
-    if(print_ > 2){
-        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f",timer.get());
-    }
-    time_H2_T1_C0 += timer.get();
-}
-
-void THREE_DSRG_MRPT2::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0){
-    Timer timer;
-
-    // <[Hbar2, T2]> (C_2)^4
-    double E = H2["eFmN"] * T2["mNeF"];
-    E += 0.25 * H2["efmn"] * T2["mnef"];
-    E += 0.25 * H2["EFMN"] * T2["MNEF"];
-
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",spin_cases({"aa"}));
-    temp["vu"] += 0.5 * H2["efmu"] * T2["mvef"];
-    temp["vu"] += H2["fEuM"] * T2["vMfE"];
-    temp["VU"] += 0.5 * H2["EFMU"] * T2["MVEF"];
-    temp["VU"] += H2["eFmU"] * T2["mVeF"];
-    E += temp["vu"] * Gamma1_["uv"];
-    E += temp["VU"] * Gamma1_["UV"];
-
-    temp.zero();
-    temp["vu"] += 0.5 * H2["vemn"] * T2["mnue"];
-    temp["vu"] += H2["vEmN"] * T2["mNuE"];
-    temp["VU"] += 0.5 * H2["VEMN"] * T2["MNUE"];
-    temp["VU"] += H2["eVnM"] * T2["nMeU"];
-    E += temp["vu"] * Eta1_["uv"];
-    E += temp["VU"] * Eta1_["UV"];
-
-    temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}));
-    temp["yvxu"] += H2["efxu"] * T2["yvef"];
-    temp["yVxU"] += H2["eFxU"] * T2["yVeF"];
-    temp["YVXU"] += H2["EFXU"] * T2["YVEF"];
-    E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
-    E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
-    E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
-
-    temp.zero();
-    temp["vyux"] += H2["vymn"] * T2["mnux"];
-    temp["vYuX"] += H2["vYmN"] * T2["mNuX"];
-    temp["VYUX"] += H2["VYMN"] * T2["MNUX"];
-    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
-    E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
-    E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
-
-    temp.zero();
-    temp["vyux"] += H2["vemx"] * T2["myue"];
-    temp["vyux"] += H2["vExM"] * T2["yMuE"];
-    temp["VYUX"] += H2["eVmX"] * T2["mYeU"];
-    temp["VYUX"] += H2["VEXM"] * T2["YMUE"];
-    E += temp["vyux"] * Gamma1_["xy"] * Eta1_["uv"];
-    E += temp["VYUX"] * Gamma1_["XY"] * Eta1_["UV"];
-    temp["yVxU"] = H2["eVxM"] * T2["yMeU"];
-    E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
-    temp["vYuX"] = H2["vEmX"] * T2["mYuE"];
-    E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
-
-    temp.zero();
-    temp["yvxu"] += 0.5 * Gamma1_["wz"] * H2["vexw"] * T2["yzue"];
-    temp["yvxu"] += Gamma1_["WZ"] * H2["vExW"] * T2["yZuE"];
-    temp["yvxu"] += 0.5 * Eta1_["wz"] * T2["myuw"] * H2["vzmx"];
-    temp["yvxu"] += Eta1_["WZ"] * T2["yMuW"] * H2["vZxM"];
-    E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
-
-    temp["YVXU"] += 0.5 * Gamma1_["WZ"] * H2["VEXW"] * T2["YZUE"];
-    temp["YVXU"] += Gamma1_["wz"] * H2["eVwX"] * T2["zYeU"];
-    temp["YVXU"] += 0.5 * Eta1_["WZ"] * T2["MYUW"] * H2["VZMX"];
-    temp["YVXU"] += Eta1_["wz"] * H2["zVmX"] * T2["mYwU"];
-    E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 HH -- combined with PH
-    temp = ambit::BlockedTensor::build(tensor_type_,"temp",spin_cases({"aaaa"}));
-    temp["uvxy"] += 0.125 * H2["uvmn"] * T2["mnxy"];
-    temp["uvxy"] += 0.25 * Gamma1_["wz"] * H2["uvmw"] * T2["mzxy"];
-    temp["uVxY"] += H2["uVmN"] * T2["mNxY"];
-    temp["uVxY"] += Gamma1_["wz"] * T2["zMxY"] * H2["uVwM"];
-    temp["uVxY"] += Gamma1_["WZ"] * H2["uVmW"] * T2["mZxY"];
-    temp["UVXY"] += 0.125 * H2["UVMN"] * T2["MNXY"];
-    temp["UVXY"] += 0.25 * Gamma1_["WZ"] * H2["UVMW"] * T2["MZXY"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 PP -- combined with PH
-    temp["uvxy"] += 0.125 * H2["efxy"] * T2["uvef"];
-    temp["uvxy"] += 0.25 * Eta1_["wz"] * T2["uvew"] * H2["ezxy"];
-    temp["uVxY"] += H2["eFxY"] * T2["uVeF"];
-    temp["uVxY"] += Eta1_["wz"] * H2["zExY"] * T2["uVwE"];
-    temp["uVxY"] += Eta1_["WZ"] * T2["uVeW"] * H2["eZxY"];
-    temp["UVXY"] += 0.125 * H2["EFXY"] * T2["UVEF"];
-    temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2["UVEW"] * H2["EZXY"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2 PH
-    temp["uvxy"] += H2["eumx"] * T2["mvey"];
-    temp["uvxy"] += H2["uExM"] * T2["vMyE"];
-    temp["uvxy"] += Gamma1_["wz"] * T2["zvey"] * H2["euwx"];
-    temp["uvxy"] += Gamma1_["WZ"] * H2["uExW"] * T2["vZyE"];
-    temp["uvxy"] += Eta1_["zw"] * H2["wumx"] * T2["mvzy"];
-    temp["uvxy"] += Eta1_["ZW"] * T2["vMyZ"] * H2["uWxM"];
-    E += temp["uvxy"] * Lambda2_["xyuv"];
-
-    temp["UVXY"] += H2["eUmX"] * T2["mVeY"];
-    temp["UVXY"] += H2["EUMX"] * T2["MVEY"];
-    temp["UVXY"] += Gamma1_["wz"] * T2["zVeY"] * H2["eUwX"];
-    temp["UVXY"] += Gamma1_["WZ"] * T2["ZVEY"] * H2["EUWX"];
-    temp["UVXY"] += Eta1_["zw"] * H2["wUmX"] * T2["mVzY"];
-    temp["UVXY"] += Eta1_["ZW"] * H2["WUMX"] * T2["MVZY"];
-    E += temp["UVXY"] * Lambda2_["XYUV"];
-
-    temp["uVxY"] += H2["uexm"] * T2["mVeY"];
-    temp["uVxY"] += H2["uExM"] * T2["MVEY"];
-    temp["uVxY"] -= H2["eVxM"] * T2["uMeY"];
-    temp["uVxY"] -= H2["uEmY"] * T2["mVxE"];
-    temp["uVxY"] += H2["eVmY"] * T2["umxe"];
-    temp["uVxY"] += H2["EVMY"] * T2["uMxE"];
-
-    temp["uVxY"] += Gamma1_["wz"] * T2["zVeY"] * H2["uexw"];
-    temp["uVxY"] += Gamma1_["WZ"] * T2["ZVEY"] * H2["uExW"];
-    temp["uVxY"] -= Gamma1_["WZ"] * H2["eVxW"] * T2["uZeY"];
-    temp["uVxY"] -= Gamma1_["wz"] * T2["zVxE"] * H2["uEwY"];
-    temp["uVxY"] += Gamma1_["wz"] * T2["zuex"] * H2["eVwY"];
-    temp["uVxY"] -= Gamma1_["WZ"] * H2["EVYW"] * T2["uZxE"];
-
-    temp["uVxY"] += Eta1_["zw"] * H2["wumx"] * T2["mVzY"];
-    temp["uVxY"] += Eta1_["ZW"] * T2["VMYZ"] * H2["uWxM"];
-    temp["uVxY"] -= Eta1_["zw"] * H2["wVxM"] * T2["uMzY"];
-    temp["uVxY"] -= Eta1_["ZW"] * T2["mVxZ"] * H2["uWmY"];
-    temp["uVxY"] += Eta1_["zw"] * T2["umxz"] * H2["wVmY"];
-    temp["uVxY"] += Eta1_["ZW"] * H2["WVMY"] * T2["uMxZ"];
-    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-    // <[Hbar2, T2]> C_6 C_2_
-    if(options_.get_str("THREEPDC") != "ZERO"){
-        BlockedTensor Lambda3 = BTF_->build(tensor_type_,"Lambda3_",spin_cases({"aaaaaa"}));
-        ambit::Tensor Lambda3_aaa = Lambda3.block("aaaaaa");
-        ambit::Tensor Lambda3_aaA = Lambda3.block("aaAaaA");
-        ambit::Tensor Lambda3_aAA = Lambda3.block("aAAaAA");
-        ambit::Tensor Lambda3_AAA = Lambda3.block("AAAAAA");
-        Lambda3_aaa("pqrstu") = reference_.L3aaa()("pqrstu");
-        Lambda3_aaA("pqrstu") = reference_.L3aab()("pqrstu");
-        Lambda3_aAA("pqrstu") = reference_.L3abb()("pqrstu");
-        Lambda3_AAA("pqrstu") = reference_.L3bbb()("pqrstu");
-        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaaaaa"});
-        temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];      //  aaaaaa from hole
-        temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];      //  aaaaaa from particle
-        E += 0.25 * temp["uvwxyz"] * Lambda3["xyzuvw"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"AAAAAA"});
-        temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];      //  AAAAAA from hole
-        temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];      //  AAAAAA from particle
-        E += 0.25 * temp["UVWXYZ"] * Lambda3["XYZUVW"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aaAaaA"});
-        temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];      //  aaAaaA from hole
-        temp["uvWxyZ"] -= H2["uWiZ"] * T2["ivxy"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-        temp["uvWxyZ"] += H2["uWyI"] * T2["vIxZ"];      //  aaAaaA from hole
-
-        temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-        temp["uvWxyZ"] -= H2["vAxZ"] * T2["uWyA"];      //  aaAaaA from particle
-        E += 0.5 * temp["uvWxyZ"] * Lambda3["xyZuvW"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"aAAaAA"});
-        temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];      //  aAAaAA from hole
-        temp["uVWxYZ"] -= H2["uVxI"] * T2["IWYZ"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-        temp["uVWxYZ"] += H2["uViZ"] * T2["iWxY"];      //  aAAaAA from hole
-
-        temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-        temp["uVWxYZ"] -= H2["aWxY"] * T2["uVaZ"];      //  aAAaAA from particle
-        E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
-    }
-
-    // multiply prefactor and copy to C0
-    E  *= alpha;
-    C0 += E;
-
-    if(print_ > 2){
-        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f",timer.get());
-    }
-    time_H2_T2_C0 += timer.get();
 }
 
 void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
@@ -2958,16 +2620,11 @@ void THREE_DSRG_MRPT2::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const doub
 
     C1["IP"] += alpha * H1["AP"] * T1["IA"];
     C1["QA"] -= alpha * T1["IA"] * H1["QI"];
-    //C1["ij"] += alpha * H1["aj"] * T1["ia"];
-    //C1["kj"] -= alpha * T1["ij"] * H1["ki"];
-
-    //C1["IJ"] += alpha * H1["AJ"] * T1["IA"];
-    //C1["QA"] -= alpha * T1["IA"] * H1["QI"];
 
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T1] -> C1 : %12.3f",timer.get());
     }
-    time_H1_T1_C1 += timer.get();
+    dsrg_time_.add("111",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
@@ -2990,7 +2647,7 @@ void THREE_DSRG_MRPT2::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const doub
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T2] -> C1 : %12.3f",timer.get());
     }
-    time_H1_T2_C1 += timer.get();
+    dsrg_time_.add("121",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1){
@@ -3013,7 +2670,7 @@ void THREE_DSRG_MRPT2::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const doub
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f",timer.get());
     }
-    time_H2_T1_C1 += timer.get();
+    dsrg_time_.add("211",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1){
@@ -3173,7 +2830,7 @@ void THREE_DSRG_MRPT2::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const doub
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f",timer.get());
     }
-    time_H2_T2_C1 += timer.get();
+    dsrg_time_.add("221",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
@@ -3194,33 +2851,10 @@ void THREE_DSRG_MRPT2::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const doub
     C2["QJAB"] -= alpha * T2["IJAB"] * H1["QI"];
     C2["IQAB"] -= alpha * T2["IJAB"] * H1["QJ"];
 
-//    // probably not worth doing the following because contracting one index should be fast
-//    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"hhpg","HHPG"});
-//    temp["ijap"] = alpha * T2["ijab"] * H1["bp"];
-//    temp["IJAP"] = alpha * T2["IJAB"] * H1["BP"];
-
-//    C2["ijpb"] -= temp["ijbp"]; // use permutation of temp
-//    C2["ijap"] += temp["ijap"]; // explicitly evaluate by temp
-//    C2["iJpA"] += alpha * T2["iJbA"] * H1["bp"];
-//    C2["iJaP"] += alpha * T2["iJaB"] * H1["BP"];
-//    C2["IJPB"] -= temp["IJBP"]; // use permutation of temp
-//    C2["IJAP"] += temp["IJAP"]; // explicitly evaluate by temp
-
-//    temp = ambit::BlockedTensor::build(tensor_type_,"temp",{"ghpp","GHPP"});
-//    temp["qjab"] = alpha * T2["ijab"] * H1["qi"];
-//    temp["QJAB"] = alpha * T2["IJAB"] * H1["QI"];
-
-//    C2["qjab"] -= temp["qjab"]; // explicitly evaluate by temp
-//    C2["iqab"] += temp["qiab"]; // use permutation of temp
-//    C2["qJaB"] -= alpha * T2["iJaB"] * H1["qi"];
-//    C2["iQaB"] -= alpha * T2["iJaB"] * H1["QJ"];
-//    C2["QJAB"] -= temp["QJAB"]; // explicitly evaluate by temp
-//    C2["IQAB"] += temp["QIAB"]; // use permutation of temp
-
     if(print_ > 2){
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f",timer.get());
     }
-    time_H1_T2_C2 += timer.get();
+    dsrg_time_.add("122",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2){
@@ -3244,7 +2878,7 @@ void THREE_DSRG_MRPT2::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const doub
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f",timer.get());
     }
-    time_H2_T1_C2 += timer.get();
+    dsrg_time_.add("212",timer.get());
 }
 
 void THREE_DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2){
@@ -3320,8 +2954,9 @@ void THREE_DSRG_MRPT2::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const doub
     if(print_ > 2){
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f",timer.get());
     }
-    time_H2_T2_C2 += timer.get();
+     dsrg_time_.add("222",timer.get());
 }
+
 void THREE_DSRG_MRPT2::de_normal_order()
 {
     // printing
@@ -3336,44 +2971,18 @@ void THREE_DSRG_MRPT2::de_normal_order()
 
     // scalar from Hbar1
     double scalar1 = 0.0;
-    Hbar1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar1 -= value;
-    });
-    Hbar1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar1 -= value;
-    });
     scalar1 -= Hbar1_["vu"] * Gamma1_["uv"];
     scalar1 -= Hbar1_["VU"] * Gamma1_["UV"];
 
     // scalar from Hbar2
     double scalar2 = 0.0;
-    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
-    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
-    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
-    Hbar2_.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
-    });
-    Hbar2_.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += value;
-    });
-    Hbar2_.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) scalar2 += 0.5 * value;
-    });
-
-    O1_.zero();
-    O1_["pq"] += Hbar2_["puqv"] * Gamma1_["vu"];
-    O1_["pq"] += Hbar2_["pUqV"] * Gamma1_["VU"];
-    O1_["PQ"] += Hbar2_["uPvQ"] * Gamma1_["vu"];
-    O1_["PQ"] += Hbar2_["PUQV"] * Gamma1_["VU"];
-    O1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar2 += value;
-    });
-    O1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) scalar2 += value;
-    });
     scalar2 += 0.5 * Gamma1_["uv"] * Hbar2_["vyux"] * Gamma1_["xy"];
     scalar2 += 0.5 * Gamma1_["UV"] * Hbar2_["VYUX"] * Gamma1_["XY"];
     scalar2 += Gamma1_["uv"] * Hbar2_["vYuX"] * Gamma1_["XY"];
+
+    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
+    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
+    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
     double scalar = scalar0 + scalar1 + scalar2;
     outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
@@ -3382,19 +2991,16 @@ void THREE_DSRG_MRPT2::de_normal_order()
     Timer t_one;
     str = "Computing the one-body term ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    O1_.scale(-1.0);
-    O1_["pq"] += Hbar1_["pq"];
-    O1_["PQ"] += Hbar1_["PQ"];
-    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"cc"}));
-    temp.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
-        if (i[0] == i[1]) value = 1.0;
-    });
-    O1_["pq"] -= Hbar2_["pmqn"] * temp["nm"];
-    O1_["pq"] -= Hbar2_["pMqN"] * temp["NM"];
-    O1_["PQ"] -= Hbar2_["mPnQ"] * temp["nm"];
-    O1_["PQ"] -= Hbar2_["PMQN"] * temp["NM"];
+    BlockedTensor temp1 = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
+    temp1["uv"]  = Hbar1_["uv"];
+    temp1["UV"]  = Hbar1_["UV"];
+    temp1["uv"] -= Hbar2_["uxvy"] * Gamma1_["yx"];
+    temp1["uv"] -= Hbar2_["uXvY"] * Gamma1_["YX"];
+    temp1["UV"] -= Hbar2_["xUyV"] * Gamma1_["yx"];
+    temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
+    aone_eff_ = temp1.block("aa").data();
+    bone_eff_ = temp1.block("AA").data();
     outfile->Printf("  Done. Timing %10.3f s", t_one.get());
-
     ints_->set_scalar(scalar);
 
     // print scalar
@@ -3411,127 +3017,224 @@ void THREE_DSRG_MRPT2::de_normal_order()
     double Etest = scalar_include_fc + molecule_->nuclear_repulsion_energy();
 
     double Etest1 = 0.0;
-    O1_.block("cc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
-    O1_.block("CC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if (i[0] == i[1]) Etest1 += value;
-    });
-    Etest1 += O1_["uv"] * Gamma1_["vu"];
-    Etest1 += O1_["UV"] * Gamma1_["VU"];
+    Etest1 += temp1["uv"] * Gamma1_["vu"];
+    Etest1 += temp1["UV"] * Gamma1_["VU"];
+
+    Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
+    Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
+    Etest1 *= 0.5;
 
     double Etest2 = 0.0;
-    Hbar2_.block("cccc").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-    Hbar2_.block("cCcC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += value;
-    });
-    Hbar2_.block("CCCC").citerate([&](const std::vector<size_t>& i,const double& value){
-        if ((i[0] == i[2]) && (i[1] == i[3])) Etest2 += 0.5 * value;
-    });
-
-    Etest2 += Hbar2_["munv"] * temp["nm"] * Gamma1_["vu"];
-    Etest2 += Hbar2_["uMvN"] * temp["NM"] * Gamma1_["vu"];
-    Etest2 += Hbar2_["mUnV"] * temp["nm"] * Gamma1_["VU"];
-    Etest2 += Hbar2_["MUNV"] * temp["NM"] * Gamma1_["VU"];
-
-    Etest2 += 0.5 * Gamma1_["vu"] * Hbar2_["uxvy"] * Gamma1_["yx"];
-    Etest2 += 0.5 * Gamma1_["VU"] * Hbar2_["UXVY"] * Gamma1_["YX"];
-    Etest2 += Gamma1_["vu"] * Hbar2_["uXvY"] * Gamma1_["YX"];
-
     Etest2 += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
     Etest2 += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
     Etest2 += Hbar2_["uVxY"] * Lambda2_["xYuV"];
 
     Etest += Etest1 + Etest2;
-    outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
-    outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
+    outfile->Printf("\n    %-35s = %22.15f", "One-Body Energy (after)", Etest1);
+    outfile->Printf("\n    %-35s = %22.15f", "Two-Body Energy (after)", Etest2);
+    outfile->Printf("\n    %-35s = %22.15f", "Total Energy (after)", Etest);
+    outfile->Printf("\n    %-35s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
     if(fabs(Etest - Eref_ - Hbar0_) > 100.0 * options_.get_double("E_CONVERGENCE")){
         throw PSIEXCEPTION("De-normal-odering failed.");
     }
 }
-std::vector<std::vector<double> > THREE_DSRG_MRPT2::compute_restricted_docc_operator_dsrg()
-{
-    size_t nfomo = mo_space_info_->size("RESTRICTED_DOCC");
-    size_t na = mo_space_info_->size("ACTIVE");
-    auto fomo_to_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto cmo_to_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    std::vector<double> oei_a(na * na);
-    std::vector<double> oei_b(na * na);
-    std::vector<double> tei_rdocc_aa;
-    std::vector<double> tei_rdocc_ab;
-    std::vector<double> tei_rdocc_bb;
 
-    std::vector<double> tei_gh_aa;
-    std::vector<double> tei_gh_ab;
-    std::vector<double> tei_gh_bb;
+bool THREE_DSRG_MRPT2::check_semicanonical(){
+    outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
 
-    ambit::Tensor rdocc_aa = Hbar2_.block("cccc");
-    ambit::Tensor rdocc_ab = Hbar2_.block("cCcC");
-    ambit::Tensor rdocc_bb = Hbar2_.block("CCCC");
-    tei_rdocc_aa = rdocc_aa.data();
-    tei_rdocc_ab = rdocc_ab.data();
-    tei_rdocc_bb = rdocc_bb.data();
-
-    ambit::Tensor gh_aa  = Hbar2_.block("acac");
-    ambit::Tensor gh_ab  = Hbar2_.block("aCaC");
-    ambit::Tensor gh_bb  = Hbar2_.block("ACAC");
-
-    tei_gh_aa  = gh_aa.data();
-    tei_gh_ab  = gh_ab.data();
-    tei_gh_bb  = gh_bb.data();
-    O1_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
-        if (spin[0] == AlphaSpin){
-            ints_->set_oei(i[0],i[1],value,true);
-        }else{
-            ints_->set_oei(i[0],i[1],value,false);
+    // zero diagonal elements
+    F_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin and (i[0] == i[1])){
+            value = 0.0;
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])){
+            value = 0.0;
         }
     });
 
-    // Compute the scalar contribution to the energy that comes from
-    // the restricted occupied orbitals
-    double scalar_energy = ints_->scalar();
-    for (size_t i = 0; i < nfomo; ++i){
-        size_t ii = fomo_to_mo[i];
-        scalar_energy += ints_->oei_a(ii,ii);
-        scalar_energy += ints_->oei_b(ii,ii);
-        for (size_t j = 0; j < nfomo; ++j){
-            size_t index = nfomo*nfomo*nfomo*i + nfomo*nfomo*j + nfomo*i + j;
-            scalar_energy += 0.5 * tei_rdocc_aa[index];
-            scalar_energy += 1.0 * tei_rdocc_ab[index];
-            scalar_energy += 0.5 * tei_rdocc_bb[index];
-        }
+    // off diagonal elements of diagonal blocks
+    double Foff_sum = 0.0;
+    std::vector<double> Foff;
+    for(const auto& block: {"cc", "aa", "vv", "CC", "AA", "VV"}){
+        double value = F_.block(block).norm();
+        Foff.emplace_back(value);
+        Foff_sum += value;
     }
-    scalar_energy_fci_ = scalar_energy;
 
+    // add diagonal elements back
+    F_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin and (i[0] == i[1])){
+            value = Fa_[i[0]];
+        }
+        if (spin[0] == BetaSpin and (i[0] == i[1])){
+            value = Fb_[i[0]];
+        }
+    });
 
-    for (size_t p = 0; p < na; ++p){
-        size_t pp = cmo_to_mo[p];
-        for (size_t q = 0; q < na; ++q){
-            size_t qq = cmo_to_mo[q];
-            size_t idx = na * p + q;
-            oei_a[idx] = ints_->oei_a(pp,qq);
-            oei_b[idx] = ints_->oei_b(pp,qq);
-            // Compute the one-body contribution to the energy that comes from
-            // the restricted occupied orbitals
-            for (size_t f = 0; f < nfomo; ++f){
-                size_t index  = nfomo * na * nfomo * p + na * nfomo * f + nfomo * q + f;
-                oei_a[idx] += tei_gh_aa[index];
-                oei_a[idx] += tei_gh_ab[index];
-                oei_b[idx] += tei_gh_bb[index];
-                oei_b[idx] += tei_gh_ab[index]; // TODO check these factors 0.5
+    bool semi = false;
+    double threshold = 0.1 * std::sqrt(options_.get_double("E_CONVERGENCE"));
+    if(Foff_sum > threshold){
+        std::string sep(3 + 16 * 3, '-');
+        outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
+        outfile->Printf("\n    Off-Diagonal norms of the core, active, virtual blocks of Fock matrix");
+        outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
+        outfile->Printf("\n    %s", sep.c_str());
+        outfile->Printf("\n    Fa %15.10f %15.10f %15.10f", Foff[0], Foff[1], Foff[2]);
+        outfile->Printf("\n    Fb %15.10f %15.10f %15.10f", Foff[3], Foff[4], Foff[5]);
+        outfile->Printf("\n    %s\n", sep.c_str());
+    }else{
+        outfile->Printf("     OK.");
+        semi = true;
+    }
+    return semi;
+}
+
+std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U){
+    // diagonal blocks identifiers (C-A-V ordering)
+    std::vector<std::string> blocks {"cc","aa","vv","CC","AA","VV"};
+
+    // map MO space label to its Dimension
+    std::map<std::string, Dimension> MOlabel_to_dimension;
+    MOlabel_to_dimension["c"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension["a"] = mo_space_info_->get_dimension("ACTIVE");
+    MOlabel_to_dimension["v"] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+
+    // eigen values to be returned
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    std::vector<double> eigenvalues_a(ncmo, 0.0);
+    std::vector<double> eigenvalues_b(ncmo, 0.0);
+
+    // map MO space label to its offset Dimension
+    std::map<std::string, Dimension> MOlabel_to_offset_dimension;
+    int nirrep = corr.n();
+    MOlabel_to_offset_dimension["c"] = Dimension(std::vector<int> (nirrep, 0));
+    MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension["v"] = mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+
+    // figure out index
+    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values){
+        int h = irrep;
+        size_t idx_begin = 0;
+        while((--h) >= 0) idx_begin += corr[h];
+
+        std::string label (1, tolower(block_label[0]));
+        idx_begin += MOlabel_to_offset_dimension[label][irrep];
+
+        bool spin_alpha = islower(block_label[0]);
+        size_t nvalues = values.size();
+        if(spin_alpha){
+            for(size_t i = 0; i < nvalues; ++i){
+                eigenvalues_a[i + idx_begin] = values[i];
+            }
+        }else{
+            for(size_t i = 0; i < nvalues; ++i){
+                eigenvalues_b[i + idx_begin] = values[i];
+            }
+        }
+    };
+
+    // diagonalize diagonal blocks
+    for(const auto& block: blocks){
+        size_t dim = F_.block(block).dim(0);
+        if(dim == 0){
+            continue;
+        }else{
+            std::string label (1, tolower(block[0]));
+            Dimension space = MOlabel_to_dimension[label];
+            int nirrep = space.n();
+
+            // separate Fock with irrep
+            for(int h = 0; h < nirrep; ++h){
+                size_t h_dim = space[h];
+                ambit::Tensor U_h;
+                if(h_dim == 0){
+                    continue;
+                }else if(h_dim == 1){
+                    U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
+                    U_h.data()[0] = 1.0;
+                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+                    F_block.data() = F_.block(block).data();
+                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
+                    fill_eigen(block,h,T_h.data());
+                }else{
+                    ambit::Tensor F_block = ambit::Tensor::build(tensor_type_,"F_block",F_.block(block).dims());
+                    F_block.data() = F_.block(block).data();
+                    ambit::Tensor T_h = separate_tensor(F_block,space,h);
+                    auto Feigen = T_h.syev(AscendingEigenvalue);
+                    U_h = ambit::Tensor::build(tensor_type_,"U_h",std::vector<size_t> (2, h_dim));
+                    U_h("pq") = Feigen["eigenvectors"]("pq");
+                    fill_eigen(block,h,Feigen["eigenvalues"].data());
+                }
+                ambit::Tensor U_out = U.block(block);
+                combine_tensor(U_out,U_h,space,h);
             }
         }
     }
-    std::vector<std::vector<double> > return_oei(2);
-    return_oei[0] = oei_a;
-    return_oei[1] = oei_b;
-
-    return return_oei;
-
+    return {eigenvalues_a, eigenvalues_b};
 }
+
+ambit::Tensor THREE_DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h){
+    // test tens and irrep
+    int tens_dim = static_cast<int>(tens.dim(0));
+    if(tens_dim != irrep.sum() || tens_dim != tens.dim(1)){
+        throw PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+    }
+    if(h >= irrep.n()){
+        throw PSIEXCEPTION("Ask for wrong irrep.");
+    }
+
+    // from relative (blocks) to absolute (big tensor) index
+    auto rel_to_abs = [&](size_t i, size_t j, size_t offset){
+        return (i + offset) * tens_dim + (j + offset);
+    };
+
+    // compute offset
+    size_t offset = 0, h_dim = irrep[h];
+    int h_local = h;
+    while((--h_local) >= 0) offset += irrep[h_local];
+
+    // fill in values
+    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_,"T_h",std::vector<size_t> (2, h_dim));
+    for(size_t i = 0; i < h_dim; ++i){
+        for(size_t j = 0; j < h_dim; ++j){
+            size_t abs_idx = rel_to_abs(i, j, offset);
+            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+        }
+    }
+
+    return T_h;
+}
+
+void THREE_DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h){
+    // test tens and irrep
+    if(h >= irrep.n()){
+        throw PSIEXCEPTION("Ask for wrong irrep.");
+    }
+    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
+    if(tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)){
+        throw PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+    }
+
+    // from relative (blocks) to absolute (big tensor) index
+    size_t tens_dim = tens.dim(0);
+    auto rel_to_abs = [&](size_t i, size_t j, size_t offset){
+        return (i + offset) * tens_dim + (j + offset);
+    };
+
+    // compute offset
+    size_t offset = 0;
+    int h_local = h;
+    while((--h_local) >= 0) offset += irrep[h_local];
+
+    // fill in values
+    for(size_t i = 0; i < h_dim; ++i){
+        for(size_t j = 0; j < h_dim; ++j){
+            size_t abs_idx = rel_to_abs(i, j, offset);
+            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
+        }
+    }
+}
+
 }} // End Namespaces
