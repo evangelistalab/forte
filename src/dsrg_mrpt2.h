@@ -185,8 +185,6 @@ protected:
     /// Two-body transformed Hamiltonian (active only)
     ambit::BlockedTensor Hbar2_;
 
-    /// Diagonal blocks of Fock matrix
-    ambit::BlockedTensor Fdiag_;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
