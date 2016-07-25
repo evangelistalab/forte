@@ -2,17 +2,17 @@
 #define _three_dsrg_mrpt2_h_
 
 #include <fstream>
-
+#include <string>
+#include <vector>
 #include "liboptions/liboptions.h"
 #include "libmints/wavefunction.h"
 
-#include "integrals.h"
 #include <ambit/blocked_tensor.h>
+#include "integrals.h"
 #include "reference.h"
-#include <string>
-#include <vector>
-//#include <libthce/thce.h>
 #include "blockedtensorfactory.h"
+#include "dsrg_source.h"
+#include "dsrg_time.h"
 
 namespace psi{
 
@@ -31,6 +31,12 @@ protected:
 
     /// The reference object
     Reference reference_;
+
+    /// The energy of the reference
+    double Eref_;
+
+    /// The frozen-core energy
+    double frozen_core_energy_;
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals>  ints_;
@@ -88,11 +94,12 @@ protected:
 
     /// The flow parameter
     double s_;
-
+    /// Source operator
+    std::string source_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
-    /// Order of the Taylor expansion of f(z) = (1-exp(-z^2))/z
-    int taylor_order_;
+    /// The dsrg source operator
+    std::shared_ptr<DSRG_SOURCE> dsrg_source_;
 
     // => Tensors <= //
     ambit::TensorType tensor_type_;
@@ -113,9 +120,6 @@ protected:
     ambit::BlockedTensor H0_;
     ambit::BlockedTensor Hbar1_;
     ambit::BlockedTensor Hbar2_;
-    ambit::BlockedTensor O1_;
-    ambit::BlockedTensor O2_;
-
 
     /// A vector of strings that avoids creating ccvv indices
     std::vector<std::string> no_hhpp_;
@@ -176,17 +180,11 @@ protected:
     double E_VT2_4PH();
     double E_VT2_6();
 
+    /// Timings for computing the commutators
+    DSRG_TIME dsrg_time_;
+
+    /// Compute zero-body Hbar truncated to 2nd-order
     double Hbar0_ = 0.0;
-    double scalar_energy_fci_ = 0.0;
-    ///
-    /// Compute zero-body term of commutator [H1, T1]
-    void H1_T1_C0(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H1, T2]
-    void H1_T2_C0(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0(ambit::BlockedTensor& H2, ambit::BlockedTensor& T1, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, T2]
-    void H2_T2_C0(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(ambit::BlockedTensor& H1, ambit::BlockedTensor& T1, const double& alpha, ambit::BlockedTensor& C1);
@@ -203,52 +201,46 @@ protected:
     void H1_T2_C2(ambit::BlockedTensor& H1, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(ambit::BlockedTensor& H2, ambit::BlockedTensor& T2, const double& alpha, ambit::BlockedTensor& C2);
-    double time_H1_T1_C0 = 0.0;
-    double time_H1_T2_C0 = 0.0;
-    double time_H2_T1_C0 = 0.0;
-    double time_H2_T2_C0 = 0.0;
-    double time_H1_T1_C1 = 0.0;
-    double time_H1_T2_C1 = 0.0;
-    double time_H2_T1_C1 = 0.0;
-    double time_H2_T2_C1 = 0.0;
-    double time_H1_T2_C2 = 0.0;
-    double time_H2_T1_C2 = 0.0;
-    double time_H2_T2_C2 = 0.0;
 
     void de_normal_order();
 
     double relaxed_energy();
 
-    std::vector<std::vector<double> > compute_restricted_docc_operator_dsrg();
-
-    // Print levels
+    /// Print levels
     int print_;
-    // Print detailed timings
+    /// Print detailed timings
     bool detail_time_ = false;
 
-    // Taylor Expansion of [1 - exp(-s * D^2)] / D = sqrt(s) * (\sum_{n=1} \frac{1}{n!} (-1)^{n+1} Z^{2n-1})
-    double Taylor_Exp(const double& Z, const int& n){
-        if(n > 0){
-            double value = Z, tmp = Z;
-            for(int x=0; x<(n-1); ++x){
-                tmp *= std::pow(Z, 2.0) / (x+2);
-                value += tmp;
-            }
-            return value;
-        }else{return 0.0;}
-    }
-
-    ///This function will remove the indices that do not have at least one active index
-    ///This function generates all possible MO spaces and spin components
+    /// This function will remove the indices that do not have at least one active index
+    /// This function generates all possible MO spaces and spin components
     /// Param:  std::string is the lables - "cav"
     /// Will take a string like cav and generate all possible combinations of this
     /// for a four character string
     boost::shared_ptr<BlockedTensorFactory> BTF_;
 
-    //The MOSpace object
+    /// The MOSpace object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     IntegralType integral_type_;
 
+    /// Effective alpha one-electron integrals (used in denormal ordering)
+    std::vector<double> aone_eff_;
+    /// Effective beta one-electron integrals (used in denormal ordering)
+    std::vector<double> bone_eff_;
+
+    /// Are orbitals semi-canonicalized?
+    bool semi_canonical_;
+    /// Check if orbitals are semi-canonicalized
+    bool check_semicanonical();
+    /// Ignore semi-canonical testing
+    bool ignore_semicanonical_ = false;
+    /// Unitary matrix to block diagonal Fock
+    ambit::BlockedTensor U_;
+    /// Diagonalize the diagonal blocks of the Fock matrix
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
+    /// Separate an 2D ambit::Tensor according to its irrep
+    ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
+    /// Combine a separated 2D ambit::Tensor
+    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
 
 public:
 
@@ -261,14 +253,13 @@ public:
 
     /// Compute the DSRG-MRPT2 energy
     double compute_energy();
+
     /// Allow the reference to relax
     void relax_reference_once();
 
-    /// The energy of the reference
-    double Eref_;
+    /// Ignore semi-canonical testing in DSRG-MRPT2
+    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
 
-    /// The frozen-core energy
-    double frozen_core_energy_;
 private:
 	//maximum number of threads
 	int num_threads_;

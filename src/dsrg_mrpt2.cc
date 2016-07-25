@@ -558,9 +558,11 @@ void DSRG_MRPT2::compute_t2()
     }
 
     // zero internal amplitudes
-    T2_.block("aaaa").zero();
-    T2_.block("aAaA").zero();
-    T2_.block("AAAA").zero();
+    if(!options_.get_bool("INTERNAL_AMP")){
+        T2_.block("aaaa").zero();
+        T2_.block("aAaA").zero();
+        T2_.block("AAAA").zero();
+    }
 
     // This is used to print the tensor out for further analysis.
     // Only used as a test for some future tensor factorizations and other
@@ -660,8 +662,10 @@ void DSRG_MRPT2::compute_t1()
     }
 
     // zero internal amplitudes
-    T1_.block("AA").zero();
-    T1_.block("aa").zero();
+    if(!options_.get_bool("INTERNAL_AMP")){
+        T1_.block("AA").zero();
+        T1_.block("aa").zero();
+    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -1141,7 +1145,7 @@ double DSRG_MRPT2::compute_energy_relaxed(){
         Erelax = fcisolver.compute_energy();
 
         // printing
-        print_h2("MRDSRG Energy Summary");
+        print_h2("DSRG-MRPT2 Energy Summary");
         outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)", Edsrg);
         outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");

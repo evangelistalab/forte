@@ -181,6 +181,10 @@ protected:
     vecdet determinant_;
     STLBitsetDeterminant dominant_det_;
 
+    /// Exclude ground-state HF in CISD space or not for excited states
+    /// If it is excluded, ground state will use HF energy
+    bool cisd_ex_no_hf_;
+
     /// Orbital Strings
     vector<vector<vector<bool>>> Form_String(const int &active_elec, const bool &print = false);
     vector<bool> Form_String_Ref(const bool &print = false);

@@ -545,8 +545,13 @@ void FCI_MO::form_det_cis(){
 void FCI_MO::form_det_cisd(){
     // add close-shell ref
     vector<bool> string_ref = Form_String_Ref();
+    cisd_ex_no_hf_ = options_.get_bool("CISD_EX_NO_HF");
     if(root_sym_ == 0){
         determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+
+        if(root_ != 0 && cisd_ex_no_hf_){
+            determinant_.pop_back();
+        }
     }
 
     // singles string
@@ -570,54 +575,61 @@ void FCI_MO::form_det_cisd(){
         }
     }
 
-    // singles
-    Timer tdet;
-    string str = "Forming determinants";
-    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
-
-    int i = symmetry ^ root_sym_;
-    if(ipea_ == "NONE"){
-        size_t single_size = string_singles[i].size();
-        for(size_t x = 0; x < single_size; ++x){
-            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+    if(root_sym_ != 0 || root_ != 0 || !cisd_ex_no_hf_){
+        if(cisd_ex_no_hf_ && root_sym_ == 0){
+            root_ -= 1;
+            nroot_ -= 1;
         }
-    } else {
-        size_t single_size = string_singles_ipea[i].size();
-        for(size_t x = 0; x < single_size; ++x){
-            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
-        }
-    }
 
-    // doubles
-    size_t double_size = string_doubles[i].size();
-    for(size_t x = 0; x < double_size; ++x){
-        determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
-    }
+        // singles
+        Timer tdet;
+        string str = "Forming determinants";
+        if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
-    for(int h = 0; h < nirrep_; ++h){
-        size_t single_size_a = string_singles[h].size();
-        for(size_t x = 0; x < single_size_a; ++x){
-            int sym = h ^ root_sym_;
-
-            size_t single_size_b = string_singles[sym].size();
-            for(size_t y = 0; y < single_size_b; ++y){
-                determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+        int i = symmetry ^ root_sym_;
+        if(ipea_ == "NONE"){
+            size_t single_size = string_singles[i].size();
+            for(size_t x = 0; x < single_size; ++x){
+                determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+                determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
             }
+        } else {
+            size_t single_size = string_singles_ipea[i].size();
+            for(size_t x = 0; x < single_size; ++x){
+                determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
+                determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+            }
+        }
 
-            if(ipea_ != "NONE"){
-                size_t single_ipea_size_b = string_singles_ipea[sym].size();
-                for(size_t y = 0; y < single_ipea_size_b; ++y){
-                    determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
-                    determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+        // doubles
+        size_t double_size = string_doubles[i].size();
+        for(size_t x = 0; x < double_size; ++x){
+            determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
+        }
+
+        for(int h = 0; h < nirrep_; ++h){
+            size_t single_size_a = string_singles[h].size();
+            for(size_t x = 0; x < single_size_a; ++x){
+                int sym = h ^ root_sym_;
+
+                size_t single_size_b = string_singles[sym].size();
+                for(size_t y = 0; y < single_size_b; ++y){
+                    determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+                }
+
+                if(ipea_ != "NONE"){
+                    size_t single_ipea_size_b = string_singles_ipea[sym].size();
+                    for(size_t y = 0; y < single_ipea_size_b; ++y){
+                        determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                        determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+                    }
                 }
             }
         }
-    }
 
-    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
+        if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
+    }
 
     // Number of alpha and beta electrons in active
     int na_a = nalfa_ - nc_ - nfrzc_;
@@ -924,6 +936,8 @@ void FCI_MO::semi_canonicalize(const size_t& count){
             int actv_start = frzcpi_[h] + core_[h];
             int actv_end   = actv_start + active_[h];
 
+            std::map<int, int> indexmap;
+            std::vector<int> idx_0, idx_sc;
             for(int i = actv_start; i < actv_end; ++i){
                 int ii = 0; // corresponding index in semicanonical basis
                 double smax = 0.0;
@@ -936,20 +950,47 @@ void FCI_MO::semi_canonicalize(const size_t& count){
                     }
                 }
 
-                // swap active orbitals if ordering changed
                 if(ii != i){
-                    int h_local = h;
-                    size_t ni = i  - frzcpi_[h];
-                    size_t nj = ii - frzcpi_[h];
-                    while((--h_local) >= 0){
-                        ni += ncmopi_[h_local];
-                        nj += ncmopi_[h_local];
-                    }
-                    outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
-
-                    Ca->set_column(h, i, Ca_new->get_column(h, ii));
-                    Cb->set_column(h, i, Cb_new->get_column(h, ii));
+                    indexmap[i] = ii;
+                    idx_0.push_back(i);
+                    idx_sc.push_back(ii);
                 }
+            }
+
+            // find intersections of indices before and after semicanonicalization
+            std::vector<int> idx_both;
+            std::sort(idx_0.begin(),idx_0.end());
+            std::sort(idx_sc.begin(),idx_sc.end());
+            std::set_intersection(idx_0.begin(),idx_0.end(),idx_sc.begin(),idx_sc.end(),
+                                  std::back_inserter(idx_both));
+            idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
+                                       [&](int i) {return std::find(idx_both.begin(), idx_both.end(), i) != idx_both.end();}),
+                        idx_0.end());
+
+            // swap orbitals if they are in the intersection
+            for(const int& x: idx_both){
+                int h_local = h;
+                size_t ni = x - frzcpi_[h];
+                size_t nj = indexmap[x] - frzcpi_[h];
+                while((--h_local) >= 0){
+                    ni += ncmopi_[h_local];
+                    nj += ncmopi_[h_local];
+                }
+                outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
+                Ca->set_column(h, x, Ca_new->get_column(h, indexmap[x]));
+                Cb->set_column(h, x, Cb_new->get_column(h, indexmap[x]));
+            }
+
+            // throw warnings when inconsistency is detected
+            for(const int& x: idx_0){
+                int h_local = h;
+                size_t ni = x - frzcpi_[h];
+                size_t nj = indexmap[x] - frzcpi_[h];
+                while((--h_local) >= 0){
+                    ni += ncmopi_[h_local];
+                    nj += ncmopi_[h_local];
+                }
+                outfile->Printf("\n  Orbital %3zu may have changed to semicanonical orbital %3zu. Please interpret orbitals with caution.", ni, nj);
             }
         }
 

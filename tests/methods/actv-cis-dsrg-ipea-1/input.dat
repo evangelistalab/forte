@@ -27,8 +27,8 @@ set forte{
   multiplicity       1
   ipea               ip
   print_ci_vector    0.0000000000001
-  frozen_docc        [1,0,0,0,0,1,0,0]                                            
-  restricted_docc    [1,0,0,0,0,1,1,1]         
+  frozen_docc        [1,0,0,0,0,1,0,0]
+  restricted_docc    [1,0,0,0,0,1,1,1]
   active             [3,0,0,0,0,0,0,0]
   nrootpi            [2,0,0,0,0,0,0,0]
   dsrg_s             0.5
