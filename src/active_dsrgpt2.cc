@@ -120,6 +120,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                             Ept = dsrg->compute_energy();
                         }else{
                             auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                            dsrg->ignore_semicanonical(true);
                             Ept = dsrg->compute_energy();
                         }
                     }

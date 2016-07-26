@@ -454,7 +454,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
              BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
              RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                  double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                 value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
              Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
              //// beta-beta
@@ -471,7 +471,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga()
              BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
              RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                  double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                 value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                 value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
              Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
              if(debug_print)
              {
@@ -792,7 +792,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
             BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
             RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                 double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
             Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
             //// beta-beta
@@ -809,7 +809,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep()
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = renormalized_denominator(D) * (1.0 + renormalized_exp(D));});
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
             Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             if(debug_print)
             {

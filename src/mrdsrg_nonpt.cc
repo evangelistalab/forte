@@ -469,9 +469,9 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
 
         // DIIS amplitudes
         if(diis_manager){
-//            if(cycle >= min_diis_vectors){
+            if(cycle >= min_diis_vectors){
                 diis_manager->add_entry(2, &(big_DT[0]), &(big_T[0]));
-//            }
+            }
             if (cycle > max_diis_vectors){
                 if (diis_manager->subspace_size() >= min_diis_vectors && cycle){
                     outfile->Printf(" -> DIIS");

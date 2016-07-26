@@ -847,6 +847,9 @@ double AdaptivePathIntegralCI::compute_energy()
     outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,approx_energy_);
     outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - approx_energy_);
 
+    double pfError = estimate_path_filtering_error(dets, C, spawning_threshold_);
+    outfile->Printf("\n\n  * Adaptive-CI Path-filtering Error  <= %18.12f Eh",1,pfError);
+
     if (do_perturb_analysis_) {
         double error_2nd_perturb_sub, error_2nd_perturb_full;
         std::tie(error_2nd_perturb_sub, error_2nd_perturb_full) = estimate_perturbation(dets, C, spawning_threshold_);
@@ -910,7 +913,6 @@ double AdaptivePathIntegralCI::compute_energy()
     timer_off("PIFCI:Energy");
     return var_energy;
 }
-
 
 double AdaptivePathIntegralCI::initial_guess(det_vec& dets,std::vector<double>& C)
 {
@@ -3047,6 +3049,25 @@ std::tuple<double, double> AdaptivePathIntegralCI::estimate_perturbation(det_vec
         perturbation_2nd_energy_estimator_sub += 0.5* (delta - sqrt(delta * delta + 4 * current_V * current_V));
     }
     return std::make_tuple(perturbation_2nd_energy_estimator_sub, 0.0);
+}
+
+
+double AdaptivePathIntegralCI::estimate_path_filtering_error(det_vec& dets, std::vector<double>& C, double spawning_threshold){
+    size_t size = dets.size();
+    double pfError = 0.0;
+#pragma omp parallel for reduction(max:pfError)
+    for (size_t I = 0; I < size; ++I){
+        double current_pf = 0.0;
+        for (size_t J = 0; J < size; ++J){
+            double HIJ = dets[J].slater_rules(dets[I]);
+            if (std::fabs(C[J] * HIJ) < spawning_threshold && J != I){
+                current_pf += std::fabs(HIJ * C[J]);
+            }
+        }
+        if (current_pf > pfError)
+            pfError = current_pf;
+    }
+    return pfError;
 }
 
 void AdaptivePathIntegralCI::print_wfn(det_vec& space,std::vector<double>& C, size_t max_output)
