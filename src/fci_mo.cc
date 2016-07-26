@@ -301,7 +301,7 @@ double FCI_MO::compute_energy(){
 
     // Orbitals. If use Kevin's CASSCF, this part is ignored.
     if(!default_orbitals_){
-        if(semi_){
+        if(semi_ && count != 0){
             // Semi-canonicalize orbitals
             semi_canonicalize(count);
 
@@ -545,8 +545,13 @@ void FCI_MO::form_det_cis(){
 void FCI_MO::form_det_cisd(){
     // add close-shell ref
     vector<bool> string_ref = Form_String_Ref();
+    cisd_ex_no_hf_ = options_.get_bool("CISD_EX_NO_HF");
     if(root_sym_ == 0){
         determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
+
+        if(root_ != 0 && cisd_ex_no_hf_){
+            determinant_.pop_back();
+        }
     }
 
     // singles string
@@ -570,54 +575,61 @@ void FCI_MO::form_det_cisd(){
         }
     }
 
-    // singles
-    Timer tdet;
-    string str = "Forming determinants";
-    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
-
-    int i = symmetry ^ root_sym_;
-    if(ipea_ == "NONE"){
-        size_t single_size = string_singles[i].size();
-        for(size_t x = 0; x < single_size; ++x){
-            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+    if(root_sym_ != 0 || root_ != 0 || !cisd_ex_no_hf_){
+        if(cisd_ex_no_hf_ && root_sym_ == 0){
+            root_ -= 1;
+            nroot_ -= 1;
         }
-    } else {
-        size_t single_size = string_singles_ipea[i].size();
-        for(size_t x = 0; x < single_size; ++x){
-            determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
-            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
-        }
-    }
 
-    // doubles
-    size_t double_size = string_doubles[i].size();
-    for(size_t x = 0; x < double_size; ++x){
-        determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
-    }
+        // singles
+        Timer tdet;
+        string str = "Forming determinants";
+        if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
 
-    for(int h = 0; h < nirrep_; ++h){
-        size_t single_size_a = string_singles[h].size();
-        for(size_t x = 0; x < single_size_a; ++x){
-            int sym = h ^ root_sym_;
-
-            size_t single_size_b = string_singles[sym].size();
-            for(size_t y = 0; y < single_size_b; ++y){
-                determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+        int i = symmetry ^ root_sym_;
+        if(ipea_ == "NONE"){
+            size_t single_size = string_singles[i].size();
+            for(size_t x = 0; x < single_size; ++x){
+                determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+                determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
             }
+        } else {
+            size_t single_size = string_singles_ipea[i].size();
+            for(size_t x = 0; x < single_size; ++x){
+                determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[i][x], string_ref));
+                determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles_ipea[i][x]));
+            }
+        }
 
-            if(ipea_ != "NONE"){
-                size_t single_ipea_size_b = string_singles_ipea[sym].size();
-                for(size_t y = 0; y < single_ipea_size_b; ++y){
-                    determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
-                    determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+        // doubles
+        size_t double_size = string_doubles[i].size();
+        for(size_t x = 0; x < double_size; ++x){
+            determinant_.push_back(STLBitsetDeterminant(string_doubles[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_doubles[i][x]));
+        }
+
+        for(int h = 0; h < nirrep_; ++h){
+            size_t single_size_a = string_singles[h].size();
+            for(size_t x = 0; x < single_size_a; ++x){
+                int sym = h ^ root_sym_;
+
+                size_t single_size_b = string_singles[sym].size();
+                for(size_t y = 0; y < single_size_b; ++y){
+                    determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles[sym][y]));
+                }
+
+                if(ipea_ != "NONE"){
+                    size_t single_ipea_size_b = string_singles_ipea[sym].size();
+                    for(size_t y = 0; y < single_ipea_size_b; ++y){
+                        determinant_.push_back(STLBitsetDeterminant(string_singles[h][x], string_singles_ipea[sym][y]));
+                        determinant_.push_back(STLBitsetDeterminant(string_singles_ipea[sym][y], string_singles[h][x]));
+                    }
                 }
             }
         }
-    }
 
-    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
+        if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
+    }
 
     // Number of alpha and beta electrons in active
     int na_a = nalfa_ - nc_ - nfrzc_;
@@ -919,16 +931,18 @@ void FCI_MO::semi_canonicalize(const size_t& count){
         Ca->copy(Ca_new);
         Cb->copy(Cb_new);
 
-        // test orbital ordering
+        // test active orbital ordering
         for(int h = 0; h < nirrep_; ++h){
-            int nrow = MOoverlap->rowspi(h); // before semicanonical
-            int ncol = MOoverlap->colspi(h); // after semicanonical
+            int actv_start = frzcpi_[h] + core_[h];
+            int actv_end   = actv_start + active_[h];
 
-            for(int i = 0; i < nrow; ++i){
+            std::map<int, int> indexmap;
+            std::vector<int> idx_0, idx_sc;
+            for(int i = actv_start; i < actv_end; ++i){
                 int ii = 0; // corresponding index in semicanonical basis
                 double smax = 0.0;
 
-                for(int j = 0; j < ncol; ++j){
+                for(int j = actv_start; j < actv_end; ++j){
                     double s = MOoverlap->get(h,i,j);
                     if(fabs(s) > smax){
                         smax = fabs(s);
@@ -936,20 +950,47 @@ void FCI_MO::semi_canonicalize(const size_t& count){
                     }
                 }
 
-                // swap orbitals if ordering changed
                 if(ii != i){
-                    int h_local = h;
-                    size_t ni = i  - frzcpi_[h];
-                    size_t nj = ii - frzcpi_[h];
-                    while((--h_local) >= 0){
-                        ni += ncmopi_[h_local];
-                        nj += ncmopi_[h_local];
-                    }
-                    outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
-
-                    Ca->set_column(h, i, Ca_new->get_column(h, ii));
-                    Cb->set_column(h, i, Cb_new->get_column(h, ii));
+                    indexmap[i] = ii;
+                    idx_0.push_back(i);
+                    idx_sc.push_back(ii);
                 }
+            }
+
+            // find intersections of indices before and after semicanonicalization
+            std::vector<int> idx_both;
+            std::sort(idx_0.begin(),idx_0.end());
+            std::sort(idx_sc.begin(),idx_sc.end());
+            std::set_intersection(idx_0.begin(),idx_0.end(),idx_sc.begin(),idx_sc.end(),
+                                  std::back_inserter(idx_both));
+            idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
+                                       [&](int i) {return std::find(idx_both.begin(), idx_both.end(), i) != idx_both.end();}),
+                        idx_0.end());
+
+            // swap orbitals if they are in the intersection
+            for(const int& x: idx_both){
+                int h_local = h;
+                size_t ni = x - frzcpi_[h];
+                size_t nj = indexmap[x] - frzcpi_[h];
+                while((--h_local) >= 0){
+                    ni += ncmopi_[h_local];
+                    nj += ncmopi_[h_local];
+                }
+                outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
+                Ca->set_column(h, x, Ca_new->get_column(h, indexmap[x]));
+                Cb->set_column(h, x, Cb_new->get_column(h, indexmap[x]));
+            }
+
+            // throw warnings when inconsistency is detected
+            for(const int& x: idx_0){
+                int h_local = h;
+                size_t ni = x - frzcpi_[h];
+                size_t nj = indexmap[x] - frzcpi_[h];
+                while((--h_local) >= 0){
+                    ni += ncmopi_[h_local];
+                    nj += ncmopi_[h_local];
+                }
+                outfile->Printf("\n  Orbital %3zu may have changed to semicanonical orbital %3zu. Please interpret orbitals with caution.", ni, nj);
             }
         }
 
@@ -1572,44 +1613,76 @@ double FCI_MO::ThreeOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew
 
 void FCI_MO::Form_Fock(d2 &A, d2 &B){
     timer_on("Form Fock");
-    ambit::Tensor Fa = ambit::Tensor::build(ambit::CoreTensor,"Fa",{ncmo_,ncmo_});
-    ambit::Tensor Fb = ambit::Tensor::build(ambit::CoreTensor,"Fb",{ncmo_,ncmo_});
+    Timer tfock;
+    std::string str = "Forming generalized Fock matrix";
+    if(!quiet_){outfile->Printf("\n  %-35s ...", str.c_str());}
 
-    Fa.iterate([&](const std::vector<size_t>& i,double& value){
-        value = integral_->oei_a(i[0],i[1]);
-        for(const size_t& c: idx_c_){
-            value += integral_->aptei_aa(i[0],c,i[1],c);
-            value += integral_->aptei_ab(i[0],c,i[1],c);
+    SharedMatrix DaM(new Matrix("DaM", ncmo_, ncmo_));
+    SharedMatrix DbM(new Matrix("DbM", ncmo_, ncmo_));
+    for (size_t m = 0; m < nc_; m++) {
+        size_t nm = idx_c_[m];
+        for( size_t n = 0; n < nc_; n++){
+            size_t nn = idx_c_[n];
+            DaM->set(nm,nn,Da_[nm][nn]);
+            DbM->set(nm,nn,Db_[nm][nn]);
         }
-    });
-    Fb.iterate([&](const std::vector<size_t>& i,double& value){
-        value = integral_->oei_b(i[0],i[1]);
-        for(const size_t& c: idx_c_){
-            value += integral_->aptei_bb(i[0],c,i[1],c);
-            value += integral_->aptei_ab(c,i[0],c,i[1]);
+    }
+    for (size_t u = 0; u < na_; u++){
+        size_t nu = idx_a_[u];
+        for(size_t v = 0; v < na_; v++){
+            size_t nv = idx_a_[v];
+            DaM->set(nu,nv, Da_[nu][nv]);
+            DbM->set(nu,nv, Db_[nu][nv]);
         }
-    });
-
-    std::vector<size_t> idx_corr (ncmo_);
-    std::iota(idx_corr.begin(), idx_corr.end(), 0);
-    ambit::Tensor V = integral_->aptei_aa_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fa("pq") += V("puqv") * L1a("vu");
-
-    V = integral_->aptei_ab_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fa("pq") += V("puqv") * L1b("vu");
-
-    V = integral_->aptei_ab_block(idx_a_,idx_corr,idx_a_,idx_corr);
-    Fb("pq") += V("upvq") * L1a("vu");
-
-    V = integral_->aptei_bb_block(idx_corr,idx_a_,idx_corr,idx_a_);
-    Fb("pq") += V("puqv") * L1b("vu");
+    }
+    integral_->make_fock_matrix(DaM, DbM);
+    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tfock.get());}
 
     for(size_t p = 0; p < ncmo_; ++p){
         for(size_t q = 0; q < ncmo_; ++q){
-            A[p][q] = Fa.data()[p * ncmo_ + q];
-            B[p][q] = Fb.data()[p * ncmo_ + q];
+            A[p][q] = integral_->get_fock_a(p,q);
+            B[p][q] = integral_->get_fock_b(p,q);
         }
     }
+
+//    ambit::Tensor Fa = ambit::Tensor::build(ambit::CoreTensor,"Fa",{ncmo_,ncmo_});
+//    ambit::Tensor Fb = ambit::Tensor::build(ambit::CoreTensor,"Fb",{ncmo_,ncmo_});
+
+//    Fa.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_a(i[0],i[1]);
+//        for(const size_t& c: idx_c_){
+//            value += integral_->aptei_aa(i[0],c,i[1],c);
+//            value += integral_->aptei_ab(i[0],c,i[1],c);
+//        }
+//    });
+//    Fb.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_b(i[0],i[1]);
+//        for(const size_t& c: idx_c_){
+//            value += integral_->aptei_bb(i[0],c,i[1],c);
+//            value += integral_->aptei_ab(c,i[0],c,i[1]);
+//        }
+//    });
+
+//    std::vector<size_t> idx_corr (ncmo_);
+//    std::iota(idx_corr.begin(), idx_corr.end(), 0);
+//    ambit::Tensor V = integral_->aptei_aa_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fa("pq") += V("puqv") * L1a("vu");
+
+//    V = integral_->aptei_ab_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fa("pq") += V("puqv") * L1b("vu");
+
+//    V = integral_->aptei_ab_block(idx_a_,idx_corr,idx_a_,idx_corr);
+//    Fb("pq") += V("upvq") * L1a("vu");
+
+//    V = integral_->aptei_bb_block(idx_corr,idx_a_,idx_corr,idx_a_);
+//    Fb("pq") += V("puqv") * L1b("vu");
+
+//    for(size_t p = 0; p < ncmo_; ++p){
+//        for(size_t q = 0; q < ncmo_; ++q){
+//            A[p][q] = Fa.data()[p * ncmo_ + q];
+//            B[p][q] = Fb.data()[p * ncmo_ + q];
+//        }
+//    }
     timer_off("Form Fock");
 }
 

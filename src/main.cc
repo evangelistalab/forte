@@ -646,6 +646,8 @@ read_options(std::string name, Options &options)
         options.add_double("PRINT_CI_VECTOR", 0.05);
         /*- Active space type -*/
         options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
+        /*- Exclude HF to the CISD space for excited state (ground state will be HF energy) -*/
+        options.add_bool("CISD_EX_NO_HF", false);
         /*- Compute IP/EA in active-CI -*/
         options.add_str("IPEA", "NONE", "NONE IP EA");
         /*- Semicanonicalize orbitals -*/
@@ -669,7 +671,7 @@ read_options(std::string name, Options &options)
         ///              OPTIONS FOR THE MR-DSRG MODULE
         //////////////////////////////////////////////////////////////
         /*- Correlation level -*/
-        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 LDSRG2_QC");
+        options.add_str("CORR_LEVEL", "PT2", "LDSRG2 QDSRG2 LDSRG2_P3 QDSRG2_P3 PT2 PT3 LDSRG2_QC LSRG2 SRG_PT2");
         /*- Source Operator -*/
         options.add_str("SOURCE", "STANDARD", "STANDARD LABS DYSON AMP EMP2 LAMP LEMP2");
         /*- The Algorithm to Form T Amplitudes -*/
@@ -698,6 +700,8 @@ read_options(std::string name, Options &options)
         options.add_bool("PRINT_TIME_PROFILE", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
+        /*- Include internal amplitudes -*/
+        options.add_bool("INTERNAL_AMP", false);
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
@@ -1101,6 +1105,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
         }
+
+        if(options.get_str("CAS_TYPE") == "V2RDM")
+        {
+            std::shared_ptr<V2RDM> v2rdm = std::make_shared<V2RDM>(ref_wfn,options,ints_,mo_space_info);
+            Reference reference = v2rdm->reference();
+            std::shared_ptr<THREE_DSRG_MRPT2> dsrg_mrpt2 = std::make_shared<THREE_DSRG_MRPT2>(reference,ref_wfn,options,ints_,mo_space_info);
+            dsrg_mrpt2->compute_energy();
+        }
+
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
