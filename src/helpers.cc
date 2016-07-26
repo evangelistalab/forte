@@ -387,22 +387,20 @@ std::pair<std::vector<int>, std::vector<int> > split_up_tasks(size_t size_of_tas
 {
     int mystart = 0;
     int nbatch = 0;
-    std::vector<int> mystart_list(nproc);
-    std::vector<int> myend_list(nproc);
+    std::vector<int> mystart_list(nproc, 0);
+    std::vector<int> myend_list(nproc, 0);
     for(int me = 0; me < nproc; me++)
     {
         mystart = (size_of_tasks / nproc) * me;
-        {
-            if (size_of_tasks % nproc > me){
-                mystart += me;
-                nbatch = mystart + (size_of_tasks / nproc) + 1;
-            }else{
-                mystart += size_of_tasks % nproc;
-                nbatch = mystart + (size_of_tasks / nproc);
-            }
-            mystart_list[me] = mystart;
-            myend_list[me]   = nbatch;
+        if (size_of_tasks % nproc > me){
+            mystart += me;
+            nbatch = mystart + (size_of_tasks / nproc) + 1;
+        }else{
+            mystart += size_of_tasks % nproc;
+            nbatch = mystart + (size_of_tasks / nproc);
         }
+        mystart_list[me] = mystart;
+        myend_list[me]   = nbatch;
     }
     std::pair<std::vector<int>, std::vector<int> > my_lists = std::make_pair(mystart_list, myend_list);
 

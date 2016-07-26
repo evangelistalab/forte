@@ -37,9 +37,9 @@ protected:
     /// The type of SCF reference
     std::string ref_type_;
     /// The number of corrleated MO
-    size_t ncmo_;
+    size_t ncmo_ = 0;
     /// The number of auxiliary/cholesky basis functions
-    size_t nthree_;
+    size_t nthree_ = 0;
 
     /// The number of correlated orbitals per irrep (excluding frozen core and virtuals)
     Dimension ncmopi_;

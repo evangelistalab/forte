@@ -46,7 +46,9 @@
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
+#include <mpi.h>
 #endif
+
 
 INIT_PLUGIN
 void forte_options(std::string name, psi::Options &options);
@@ -747,6 +749,8 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         //    }
         //}
     #endif
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
+    MPI_Comm_size(MPI_COMM_WORLD, &n_nodes);
     
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();

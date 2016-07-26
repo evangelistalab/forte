@@ -58,8 +58,8 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
 
 	num_threads_ = omp_get_max_threads();
     /// Get processor number
-    int nproc = GA_Nnodes();
-    int my_proc = GA_Nodeid();
+    int nproc = MPI::COMM_WORLD.Get_size();
+    int my_proc = MPI::COMM_WORLD.Get_rank();
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
@@ -92,8 +92,8 @@ THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2()
 
 void THREE_DSRG_MRPT2::startup()
 {
-    int nproc = GA_Nnodes();
-    int my_proc = GA_Nodeid();
+    int nproc = MPI::COMM_WORLD.Get_size();
+    int my_proc = MPI::COMM_WORLD.Get_rank();
 
     if(my_proc == 0)
     {
@@ -167,7 +167,7 @@ void THREE_DSRG_MRPT2::startup()
     #ifdef HAVE_MPI
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     #endif
-    //printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
+    printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
 
     //BlockedTensor::add_mo_space("@","$",nauxpi,NoSpin);
     //BlockedTensor::add_mo_space("d","g",nauxpi,NoSpin);
@@ -346,7 +346,7 @@ void THREE_DSRG_MRPT2::startup()
 
     }
     integral_type_ = ints_->integral_type();
-    GA_Sync();
+    //GA_Sync();
     //printf("\n P%d integral_type", my_proc);
 
     if(integral_type_!=DiskDF)
@@ -387,7 +387,7 @@ void THREE_DSRG_MRPT2::startup()
     }
     // If the integral_type is DiskDF, we will compute these integral stuff later in each funtion
     //printf("\n P%d leaving startup", my_proc);
-    GA_Sync();
+    //GA_Sync();
 
 }
 
@@ -442,8 +442,12 @@ double THREE_DSRG_MRPT2::compute_energy()
         //Eref = compute_ref();
 
         // Compute T2 and T1
-    int my_proc = GA_Nodeid();
-    int nproc   = GA_Nnodes();
+    //int my_proc = GA_Nodeid();
+    //int nproc   = GA_Nnodes();
+    int my_proc = 0;
+    int nproc = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
     if(integral_type_!=DiskDF){compute_t2();}
     if(integral_type_!=DiskDF && my_proc == 0){renormalize_V();}
     if(integral_type_==DiskDF && my_proc == 0)
@@ -517,7 +521,7 @@ double THREE_DSRG_MRPT2::compute_energy()
     }
 
     //printf("\n P%d about to enter E_VT2_2", my_proc);
-    GA_Sync();
+    //GA_Sync();
     Etemp  = E_VT2_2();
     if(my_proc == 0)
     {
@@ -626,7 +630,7 @@ double THREE_DSRG_MRPT2::compute_ref()
 }
 void THREE_DSRG_MRPT2::compute_t2()
 {
-    if(GA_Nodeid() == 0)
+    if(MPI::COMM_WORLD.Get_rank() == 0)
     {
         std::string str = "Computing T2";
         outfile->Printf("\n    %-36s ...", str.c_str());
@@ -1061,7 +1065,7 @@ double THREE_DSRG_MRPT2::E_FT2()
 double THREE_DSRG_MRPT2::E_VT2_2()
 {
     double E = 0.0;
-    int my_proc = GA_Nodeid();
+    int my_proc = MPI::COMM_WORLD.Get_rank();
     if(my_proc == 0)
     {
         Timer timer;
@@ -1146,7 +1150,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
     //printf("\n P%d about to Sync", my_proc);
-    GA_Sync();
+    //GA_Sync();
 
 
     double Eccvv = 0.0;
