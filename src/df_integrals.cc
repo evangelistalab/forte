@@ -10,6 +10,9 @@
 #include <ga.h>
 #include <macdecls.h>
 #endif
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
 
 #include "blockedtensorfactory.h"
 
@@ -154,7 +157,11 @@ void DFIntegrals::gather_integrals()
     if(options_.get_str("DF_BASIS_MP2").length() == 0)
     {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
+        #ifdef HAVE_MPI
+        MPI_Abort(MPI_COMM_WORLD, 0);
+        #endif
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
+
     }
 
     boost::shared_ptr<BasisSet> primary = wfn_->basisset();
