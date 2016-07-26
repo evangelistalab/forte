@@ -15,7 +15,15 @@
 #include <string>
 #include <algorithm>
 #ifdef HAVE_MPI
-#include "mpi.h"
+    #include <mpi.h>
+#endif
+#ifdef HAVE_GA
+    #include <ga.h>
+    #include <macdecls.h>
+    #include <omp.h>
+#else 
+    #define GA_Nnodes() 1
+    #define GA_Nodeid() 0
 #endif
 using namespace ambit;
 
@@ -28,14 +36,6 @@ namespace psi{ namespace forte{
    #define omp_get_max_threads() 1
    #define omp_get_thread_num() 0
    bool THREE_DSRG_MRPT2::have_omp_ = false;
-#endif
-#ifdef HAVE_GA
-    #include <ga.h>
-    #include <macdecls.h>
-    #include <omp.h>
-#else 
-    #define GA_Nnodes() 1
-    #define GA_Nodeid() 0
 #endif
 
 
@@ -58,8 +58,12 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
 
 	num_threads_ = omp_get_max_threads();
     /// Get processor number
-    int nproc = MPI::COMM_WORLD.Get_size();
-    int my_proc = MPI::COMM_WORLD.Get_rank();
+    int nproc = 1;
+    int my_proc = 0;
+    #ifdef HAVE_MPI
+        nproc =   MPI::COMM_WORLD.Get_size();
+        my_proc = MPI::COMM_WORLD.Get_rank();
+    #endif 
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
@@ -79,7 +83,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     }
 
     //printf("\n P%d about to enter startup", my_proc);
-    GA_Sync();
+    //GA_Sync();
     startup();
     if(my_proc == 0)    
         print_summary();
@@ -92,8 +96,12 @@ THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2()
 
 void THREE_DSRG_MRPT2::startup()
 {
-    int nproc = MPI::COMM_WORLD.Get_size();
-    int my_proc = MPI::COMM_WORLD.Get_rank();
+    int nproc = 1;
+    int my_proc = 0;
+    #ifdef HAVE_MPI
+    nproc = MPI::COMM_WORLD.Get_size();
+    my_proc = MPI::COMM_WORLD.Get_rank();
+    #endif
 
     if(my_proc == 0)
     {
@@ -462,9 +470,11 @@ double THREE_DSRG_MRPT2::compute_energy()
     //int my_proc = GA_Nodeid();
     //int nproc   = GA_Nnodes();
     int my_proc = 0;
-    int nproc = 0;
+    int nproc = 1;
+    #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    #endif
     // Compute T2 and T1
     if(integral_type_!=DiskDF){compute_t2();}
     if(integral_type_!=DiskDF && my_proc == 0){renormalize_V();}
@@ -581,7 +591,6 @@ double THREE_DSRG_MRPT2::compute_energy()
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
 
-    outfile->Printf("\n\n\n    CD/DF-DSRG-MRPT2 took   %8.8f s.", ComputeEnergy.get());
 
     if(my_proc == 0)
     {
@@ -663,7 +672,11 @@ double THREE_DSRG_MRPT2::compute_ref()
 }
 void THREE_DSRG_MRPT2::compute_t2()
 {
-    if(MPI::COMM_WORLD.Get_rank() == 0)
+    int my_rank = 0;
+    #ifdef HAVE_MPI
+        my_rank = MPI::COMM_WORLD.Get_rank();
+    #endif
+    if(my_rank == 0)
     {
         std::string str = "Computing T2";
         outfile->Printf("\n    %-37s ...", str.c_str());
@@ -1096,7 +1109,10 @@ double THREE_DSRG_MRPT2::E_FT2()
 double THREE_DSRG_MRPT2::E_VT2_2()
 {
     double E = 0.0;
-    int my_proc = MPI::COMM_WORLD.Get_rank();
+    int my_proc = 0;
+    #ifdef HAVE_MPI
+        my_proc = MPI::COMM_WORLD.Get_rank();
+    #endif
     if(my_proc == 0)
     {
         Timer timer;
@@ -1254,7 +1270,9 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     double all_e = 0.0;
     if(my_proc == 0)
         all_e = E + Eccvv;
+    #ifdef HAVE_MPI
     MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    #endif
 
     return (E + Eccvv);
 }
