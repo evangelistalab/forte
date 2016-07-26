@@ -229,8 +229,8 @@ void DMRGSolver::compute_energy()
     Dimension orbspi     = mo_space_info_->get_dimension("ALL");
     int * docc       = wfn_->doccpi();
     int * socc       = wfn_->soccpi();
-    if ( wfn_irrep<0 )                            { throw PSIEXCEPTION("Option WFN_IRREP (integer) may not be smaller than zero!"); }
-    if ( wfn_multp<1 )                            { throw PSIEXCEPTION("Option WFN_MULTP (integer) should be larger or equal to one: WFN_MULTP = (2S+1) >= 1 !"); }
+    if ( wfn_irrep<0 )                            { throw PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!"); }
+    if ( wfn_multp<1 )                            { throw PSIEXCEPTION("Option MULTIPLICTY (integer) should be larger or equal to one: WFN_MULTP = (2S+1) >= 1 !"); }
     if ( ndmrg_states==0 )                        { throw PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!"); }
     if ( ndmrg_econv==0 )                         { throw PSIEXCEPTION("Option DMRG_ECONV (double array) should be set!"); }
     if ( ndmrg_maxsweeps==0 )                     { throw PSIEXCEPTION("Option DMRG_MAXSWEEPS (integer array) should be set!"); }
