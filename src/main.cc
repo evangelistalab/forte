@@ -738,7 +738,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 {
     int my_proc = 0;
     int n_nodes = 1;
-    ambit::initialize();
+    //ambit::initialize();
     #ifdef HAVE_GA
         GA_Initialize_ltd(Process::environment.get_memory());
         outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
@@ -753,8 +753,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         //    }
         //}
     #endif
+    #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
     MPI_Comm_size(MPI_COMM_WORLD, &n_nodes);
+    #endif
+
     
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();
@@ -1291,7 +1294,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     GA_Terminate();
     #endif
     return ref_wfn;
-    ambit::finalize();
+    //ambit::finalize();
 }
 
 }} // End Namespaces
