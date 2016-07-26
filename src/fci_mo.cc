@@ -301,7 +301,7 @@ double FCI_MO::compute_energy(){
 
     // Orbitals. If use Kevin's CASSCF, this part is ignored.
     if(!default_orbitals_){
-        if(semi_){
+        if(semi_ && count != 0){
             // Semi-canonicalize orbitals
             semi_canonicalize(count);
 
