@@ -102,6 +102,7 @@ def generate_makefile(args):
         else:
             addons += "CXXSRC = $(filter-out dmrgscf.cc dmrgsolver.cc, $(notdir $(wildcard *.cc)))\n"
             addons += "DEPENDINCLUDE = $(filter-out dmrgscf.h dmrgsolver.h, $(notdir $(wildcard *.h*)))\n"
+
         if args.mpi and args.ga_bindir:
             addons += "GA_DIR = %s\n" % args.ga_bindir
             addons += "INCLUDES += -I$(GA_DIR)/include\n"
@@ -110,7 +111,7 @@ def generate_makefile(args):
         else:
             print "Need both GA and MPI for parallel computing"
             print "Turning off MPI based code"
-            #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc, $(notdir $(wildcard *.cc)))\n"
+            addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc distribute_df_integrals.cc, $(notdir $(wildcard *.cc)))\n"
             
 
 

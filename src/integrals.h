@@ -720,6 +720,7 @@ private:
     size_t nthree_ = 0;
 };
 
+#ifdef HAVE_GA
 class DistDFIntegrals : public ForteIntegrals{
 public:
     DistDFIntegrals(psi::Options &options,SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -788,6 +789,7 @@ private:
     /// Distributes tensor according to naux dimension
     void create_dist_df();
 };
+#endif
 
 
 
