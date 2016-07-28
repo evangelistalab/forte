@@ -738,7 +738,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 {
     int my_proc = 0;
     int n_nodes = 1;
-    //ambit::initialize();
     #ifdef HAVE_GA
         GA_Initialize_ltd(Process::environment.get_memory());
         outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
@@ -1294,7 +1293,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     GA_Terminate();
     #endif
     return ref_wfn;
-    //ambit::finalize();
 }
 
 }} // End Namespaces
