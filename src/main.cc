@@ -52,6 +52,17 @@
 
 INIT_PLUGIN
 void forte_options(std::string name, psi::Options &options);
+/// These functions replace the Memory Allocator in GA with C/C++ allocator. 
+void* replace_malloc(size_t bytes, int align, char *name)
+{
+    return malloc(bytes);
+}
+void replace_free(void *ptr)
+{
+    free(ptr);
+}
+
+
 
 namespace psi{ namespace forte{
 
@@ -739,18 +750,12 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     int my_proc = 0;
     int n_nodes = 1;
     #ifdef HAVE_GA
-        GA_Initialize_ltd(Process::environment.get_memory());
-        outfile->Printf("\n Forte is using %d processors", GA_Nnodes());
-        n_nodes = GA_Nnodes();
-        my_proc = GA_Nodeid();
-        size_t memory = Process::environment.get_memory() / n_nodes;
-        //if (!MA_initialized()) {
-        //    if(!MA_init(C_DBL, memory, memory))
-        //    {
-        //        outfile->Printf("\n Tried to allocate %d memory", memory);
-        //        throw PSIEXCEPTION("GA Failed to initialize memory");
-        //    }
-        //}
+    GA_Initialize_ltd(Process::environment.get_memory());
+    ///Use C/C++ memory allocators 
+    GA_Register_stack_memory(replace_malloc, replace_free);
+    n_nodes = GA_Nnodes();
+    my_proc = GA_Nodeid();
+    size_t memory = Process::environment.get_memory() / n_nodes;
     #endif
     #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
@@ -805,15 +810,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
-
-    //[forte-private]
-
-    //Link the integrals to the DynamicBitsetDeterminant class
-    //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
-    //fci_ints_->set_active_integrals_and_restricted_docc();
-    //STLBitsetDeterminant::set_ints(fci_ints_);
-    //DynamicBitsetDeterminant::set_ints(fci_ints_);
-
 
     if (options.get_str("JOB_TYPE") == "TASKS"){
         std::vector<std::string> tasks{"FCI_SEMI_CANONICAL","DSRG-MRPT2"};
@@ -1153,12 +1149,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 reference = fci->reference();
             }
 
-            //GA_Sync();
-            //printf("\n P%d leaving FCI", my_proc);
-
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
-            //printf("\n P%d leaving THREE_DSRG_MRPT2", my_proc);
-            //GA_Sync();
             three_dsrg_mrpt2->compute_energy();
         }
 
