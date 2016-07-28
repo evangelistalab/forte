@@ -804,7 +804,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
         ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "DISTDF"){
+        #ifdef HAVE_GA
         ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        #endif
     }
     else{
         outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");

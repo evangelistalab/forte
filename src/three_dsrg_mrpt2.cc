@@ -161,10 +161,6 @@ void THREE_DSRG_MRPT2::startup()
 
     BlockedTensor::set_expert_mode(true);
 
-//    boost::shared_ptr<BlockedTensorFa_ctory> BTFBlockedTensorFa_ctory(options);
-
-//    BlockedTensor::add_mo_space("c","m,n,µ,π",acore_mos,AlphaSpin);
-//    BlockedTensor::add_mo_space("C","M,N,Ω,∏",bcore_mos,BetaSpin);
     BTF_->add_mo_space("c","m,n,µ,π",acore_mos_,AlphaSpin);
     BTF_->add_mo_space("C","M,N,Ω,∏",bcore_mos_,BetaSpin);
 
@@ -195,8 +191,8 @@ void THREE_DSRG_MRPT2::startup()
     Timer naux_bcast;
     #ifdef HAVE_MPI
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    #endif
     printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(), nthree_);
+    #endif
 
     if(my_proc == 0)
     {
@@ -429,9 +425,6 @@ void THREE_DSRG_MRPT2::startup()
         }
 
     }
-    // If the integral_type is DiskDF, we will compute these integral stuff later in each funtion
-    //printf("\n P%d leaving startup", my_proc);
-    //GA_Sync();
 
 }
 
@@ -472,10 +465,6 @@ void THREE_DSRG_MRPT2::cleanup()
 double THREE_DSRG_MRPT2::compute_energy()
 {
     Timer ComputeEnergy;
-
-        // Compute T2 and T1
-    //int my_proc = GA_Nodeid();
-    //int nproc   = GA_Nnodes();
     int my_proc = 0;
     int nproc = 1;
     #ifdef HAVE_MPI
@@ -513,7 +502,9 @@ double THREE_DSRG_MRPT2::compute_energy()
         {
             V_  = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 2));
         }
-        else {V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 1));}
+        else {
+            V_ = compute_V_minimal(BTF_->spin_cases_avoid(list_of_pphh_V, 1));
+        }
         outfile->Printf("...Done. Timing %15.6f s", Vtimer.get());
     }
     if(my_proc == 0)
@@ -595,7 +586,7 @@ double THREE_DSRG_MRPT2::compute_energy()
 
     // Print energy summary
     print_h2("DSRG-MRPT2 Energy Summary");
-    for (auto& str_dim : energy){
+    for (auto& str_dim : energy)
         outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
     }
 
@@ -1234,13 +1225,13 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     #ifdef HAVE_MPI
         my_proc = MPI::COMM_WORLD.Get_rank();
     #endif
+    ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
+    Timer timer;
     if(my_proc == 0)
     {
-        Timer timer;
         std::string str = "Computing <[V, T2]> (C_2)^4 (no ccvv)";
         outfile->Printf("\n    %-36s ...", str.c_str());
         //TODO: Implement these without storing V and/or T2 by using blocking
-        ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
         if( (integral_type_!=DiskDF))
         {
             temp.zero();
@@ -1403,7 +1394,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     }
     else if(options_.get_str("ccvv_algorithm")=="FLY_LOOP")
     {
-        if(my_proc = 0) Eccvv = E_VT2_2_fly_openmp();
+        if(my_proc == 0) Eccvv = E_VT2_2_fly_openmp();
     }
     else if(options_.get_str("ccvv_algorithm")=="FLY_AMBIT")
     {
@@ -1468,7 +1459,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     #endif
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_bool("INTERNAL_AMP") && my_proc == 0){
         temp.zero();
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
