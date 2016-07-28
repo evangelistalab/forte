@@ -429,7 +429,7 @@ double THREE_DSRG_MRPT2::compute_energy()
 
         std::vector<std::string> list_of_pphh_V = BTF_->generate_indices("vac", "pphh");
         std::string str = "Computing T2";
-        outfile->Printf("\n    %-37s ...", str.c_str());
+        //outfile->Printf("\n    %-37s ...", str.c_str());
         Timer T2timer;
 
         // If exceed memory, use diskbased algorithm
@@ -440,7 +440,7 @@ double THREE_DSRG_MRPT2::compute_energy()
             T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,2));
         }
         else { T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_, 1));}
-        outfile->Printf("...Done. Timing %15.6f s", T2timer.get());
+        outfile->Printf("      %-37s ...Done. Timing %15.6f s", str.c_str(), T2timer.get());
 
         std::string strV = "Computing V and Renormalizing";
         outfile->Printf("\n    %-37s ...", strV.c_str());
@@ -643,13 +643,18 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
     ambit::BlockedTensor T2min;
 
     T2min = BTF_->build(tensor_type_, "T2min", t2_spaces, true);
+    Timer timer_b_min;
     ambit::BlockedTensor ThreeInt = compute_B_minimal(t2_spaces);
+    if(detail_time_) outfile->Printf("\n Took %8.4f s to compute_B_minimal");
+    Timer v_t2;
     T2min["ijab"] =  (ThreeInt["gia"] * ThreeInt["gjb"]);
     T2min["ijab"] -= (ThreeInt["gib"] * ThreeInt["gja"]);
     T2min["IJAB"] =  (ThreeInt["gIA"] * ThreeInt["gJB"]);
     T2min["IJAB"] -= (ThreeInt["gIB"] * ThreeInt["gJA"]);
     T2min["iJaB"] =  (ThreeInt["gia"] * ThreeInt["gJB"]);
+    if(detail_time_) outfile->Printf("\n Took %8.4f s to compute T2 from B", v_t2.get());
 
+    Timer t2_iterate;
     T2min.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
         if (spin[0] == AlphaSpin && spin[1] == AlphaSpin)
         {
@@ -664,6 +669,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
             value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
         }
     });
+    if(detail_time_) outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.get());
 
     // zero internal amplitudes or keep the upper triangle
     for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
