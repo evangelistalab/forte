@@ -52,8 +52,6 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
 
-
-    ///Need to erase all mo_space information
     ambit::BlockedTensor::reset_mo_spaces();
 
 	num_threads_ = omp_get_max_threads();
@@ -65,11 +63,20 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
         my_proc = MPI::COMM_WORLD.Get_rank();
     #endif 
 
-    outfile->Printf("\n\n\t  ---------------------------------------------------------");
-    outfile->Printf("\n\t      DF/CD - Driven Similarity Renormalization Group MBPT2");
-    outfile->Printf("\n\t                   Kevin Hannon and Chenyang (York) Li");
-    outfile->Printf("\n\t                    %4d thread(s) %s %4d process(es)",num_threads_,have_omp_ ? "(OMP)" : "", nproc);
-    outfile->Printf("\n\t  ---------------------------------------------------------");
+    std::string title_thread = std::to_string(num_threads_) + " thread";
+    if(num_threads_ > 1){
+        title_thread += "s";
+    }
+    if(have_omp_){
+        title_thread += " (OMP)";
+    }
+    if(nproc > 1)
+    {
+        title_thread += " and " + std::to_string(nproc) + " Process";
+    }
+
+    print_method_banner({"DF/CD - Driven Similarity Renormalization Group MBPT2",
+                        "Kevin Hannon and Chenyang (York) Li", title_thread});
 
     if(options_.get_bool("MEMORY_SUMMARY"))
     {
@@ -163,8 +170,8 @@ void THREE_DSRG_MRPT2::startup()
 
     core_ = acore_mos_.size();
 
-    BTF_->add_mo_space("a","uvwxyz",aactv_mos_,AlphaSpin);
-    BTF_->add_mo_space("A","UVWXYZ",bactv_mos_,BetaSpin);
+    BTF_->add_mo_space("a","uvwxyz123",aactv_mos_,AlphaSpin);
+    BTF_->add_mo_space("A","UVWXYZ!@#",bactv_mos_,BetaSpin);
     active_ = aactv_mos_.size();
 
     BTF_->add_mo_space("v","e,f,ε,φ",avirt_mos_,AlphaSpin);
@@ -444,7 +451,7 @@ void THREE_DSRG_MRPT2::print_summary()
         {"ccvv_source", options_.get_str("CCVV_SOURCE")}};
 
     // Print some information
-    outfile->Printf("\n\n  ==> Calculation Information <==\n");
+    print_h2("Calculation Information");
     for (auto& str_dim : calculation_info){
         outfile->Printf("\n    %-39s %10d",str_dim.first.c_str(),str_dim.second);
     }
@@ -492,7 +499,6 @@ double THREE_DSRG_MRPT2::compute_energy()
         // If exceed memory, use diskbased algorithm
         // for all terms with <= 1 active idex
         // If not, just compute V in the beginning
-
         if(!exceed_memory)
         {
             T2_ = compute_T2_minimal(BTF_->spin_cases_avoid(no_hhpp_,2));
@@ -519,6 +525,7 @@ double THREE_DSRG_MRPT2::compute_energy()
     // Compute effective integrals
     if(my_proc == 0) renormalize_F();
     if(print_ > 1 && my_proc == 0)  F_.print(stdout); // The actv-actv block is different but OK.
+    if(print_ > 1 && my_proc == 0)  F_.print(stdout);
     if(print_ > 2 && my_proc == 0){
         T1_.print(stdout);
     }
@@ -586,11 +593,13 @@ double THREE_DSRG_MRPT2::compute_energy()
             outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
         }
 
-        outfile->Printf("\n\n\n    CD/DF-DSRG-MRPT2 took   %8.8f s.", ComputeEnergy.get());
+    // Print energy summary
+    print_h2("DSRG-MRPT2 Energy Summary");
+    for (auto& str_dim : energy){
+        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
-
 
     if(my_proc == 0)
     {
@@ -707,7 +716,34 @@ void THREE_DSRG_MRPT2::compute_t2()
             T2_.block("AAAA").zero();
         }
 
-        outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    // zero internal amplitudes or keep the upper triangle
+        if(!options_.get_bool("INTERNAL_AMP")){
+            T2_.block("aaaa").zero();
+            T2_.block("aAaA").zero();
+            T2_.block("AAAA").zero();
+        } else {
+            size_t nactv1 = mo_space_info_->size("ACTIVE");
+            size_t nactv2 = nactv1 * nactv1;
+            size_t nactv3 = nactv2 * nactv1;
+
+            for(size_t i = 0; i < nactv1; ++i){
+                for(size_t j = 0; j < nactv1; ++j){
+                    size_t c = i * nactv1 + j;
+                    for(size_t a = 0; a < nactv1; ++a){
+                        for(size_t b = 0; b < nactv1; ++b){
+                            size_t v = a * nactv1 + b;
+                            if(c >= v){
+                                size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
+                                for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                                    T2_.block(block).data()[idx] = 0.0;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
 }
 
@@ -744,17 +780,38 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
     });
     if(detail_time_) outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.get());
 
-    // zero internal amplitudes
-    if(std::find(t2_spaces.begin(), t2_spaces.end(), "aaaa")!=t2_spaces.end())
-        T2min.block("aaaa").zero();
-    if(std::find(t2_spaces.begin(), t2_spaces.end(), "aAaA")!=t2_spaces.end())
-        T2min.block("aAaA").zero();
-    if(std::find(t2_spaces.begin(), t2_spaces.end(), "AAAA")!=t2_spaces.end())
-        T2min.block("AAAA").zero();
+    // zero internal amplitudes or keep the upper triangle
+    for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+        if(std::find(t2_spaces.begin(), t2_spaces.end(), block)!=t2_spaces.end()){
+            if(!options_.get_bool("INTERNAL_AMP")){
+                T2min.block(block).zero();
+            } else {
+                size_t nactv1 = mo_space_info_->size("ACTIVE");
+                size_t nactv2 = nactv1 * nactv1;
+                size_t nactv3 = nactv2 * nactv1;
+
+                for(size_t i = 0; i < nactv1; ++i){
+                    for(size_t j = 0; j < nactv1; ++j){
+                        size_t c = i * nactv1 + j;
+                        for(size_t a = 0; a < nactv1; ++a){
+                            for(size_t b = 0; b < nactv1; ++b){
+                                size_t v = a * nactv1 + b;
+                                if(c >= v){
+                                    size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
+                                    T2_.block(block).data()[idx] = 0.0;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            } // end internal
+        } // end block existence test
+    } // end block labels loop
+
     return T2min;
-
-
 }
+
 ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::string>& spaces, bool renormalize)
 {
     ambit::BlockedTensor Vmin = BTF_->build(tensor_type_,"Vmin",spaces, true);
@@ -763,7 +820,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
     ThreeInt = compute_B_minimal(spaces);
     if(detail_time_)
     {
-        outfile->Printf("\n Compute B minimal takes %8.6f s", computeB.get());
+        outfile->Printf("\n  Compute B minimal takes %8.6f s", computeB.get());
     }
     Timer ComputeV;
     Vmin["abij"] =   ThreeInt["gai"]*ThreeInt["gbj"];
@@ -773,8 +830,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
     Vmin["aBiJ"] =   ThreeInt["gai"]*ThreeInt["gBJ"];
     if(detail_time_)
     {
-        outfile->Printf("\n Compute V from B takes %8.6f s", ComputeV.get());
-
+        outfile->Printf("\n  Compute V from B takes %8.6f s", ComputeV.get());
     }
 
     if(renormalize)
@@ -791,7 +847,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_V_minimal(const std::vector<std::
         });
         if(detail_time_)
         {
-            outfile->Printf("\n RenormalizeV takes %8.6f s.", RenormV.get());
+            outfile->Printf("\n  RenormalizeV takes %8.6f s.", RenormV.get());
         }
     }
     return Vmin;
@@ -961,9 +1017,23 @@ void THREE_DSRG_MRPT2::compute_t1()
     N["IA"] += temp["XU"] * T2_["IUAX"];
     T1_["IA"] = N["IA"] * RDelta1_["IA"];
 
+    // zero internal amplitudes or keep the upper triangle
     if(!options_.get_bool("INTERNAL_AMP")){
         T1_.block("AA").zero();
         T1_.block("aa").zero();
+    } else {
+        size_t nactv = mo_space_info_->size("ACTIVE");
+
+        for(size_t i = 0; i < nactv; ++i){
+            for(size_t a = 0; a < nactv; ++a){
+                if(i >= a){
+                    size_t idx = i * nactv + a;
+                    for(const std::string& block: {"aa", "AA"}){
+                        T1_.block(block).data()[idx] = 0.0;
+                    }
+                }
+            }
+        }
     }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -1021,10 +1091,15 @@ void THREE_DSRG_MRPT2::renormalize_F()
     temp2["IA"] += temp1["IA"] * RExp1_["IA"];
 
     F_["ia"] += temp2["ia"];
-    F_["ai"] += temp2["ia"];
-
     F_["IA"] += temp2["IA"];
-    F_["AI"] += temp2["IA"];
+
+    // prevent double counting within the active
+    F_["em"] += temp2["me"];
+    F_["eu"] += temp2["ue"];
+    F_["um"] += temp2["mu"];
+    F_["EM"] += temp2["ME"];
+    F_["EU"] += temp2["UE"];
+    F_["UM"] += temp2["MU"];
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
 }
 
@@ -1033,18 +1108,26 @@ double THREE_DSRG_MRPT2::E_FT1()
     Timer timer;
     std::string str = "Computing <[F, T1]>";
     outfile->Printf("\n    %-37s ...", str.c_str());
+
     double E = 0.0;
-    BlockedTensor temp;
-    temp = BTF_->build(tensor_type_,"temp",spin_cases({"hp"}), true);
+    E += F_["em"] * T1_["me"];
+    E += F_["ex"] * T1_["ye"] * Gamma1_["xy"];
+    E += F_["xm"] * T1_["my"] * Eta1_["yx"];
 
-    temp["jb"] += T1_["ia"] * Eta1_["ab"] * Gamma1_["ji"];
-    temp["JB"] += T1_["IA"] * Eta1_["AB"] * Gamma1_["JI"];
+    E += F_["EM"] * T1_["ME"];
+    E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
+    E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    E += temp["jb"] * F_["bj"];
-    E += temp["JB"] * F_["BJ"];
+    if(options_.get_bool("INTERNAL_AMP")){
+        E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
+        E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
+
+        E += F_["XV"] * T1_["UX"] * Gamma1_["VU"];
+        E -= F_["YU"] * T1_["UX"] * Gamma1_["XY"];
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
+    dsrg_time_.add("110",timer.get());
     return E;
 }
 
@@ -1053,10 +1136,9 @@ double THREE_DSRG_MRPT2::E_VT1()
     Timer timer;
     std::string str = "Computing <[V, T1]>";
     outfile->Printf("\n    %-37s ...", str.c_str());
+
     double E = 0.0;
-    BlockedTensor temp;
-    temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaa"}));
-    
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp", spin_cases({"aaaa"}), true);
 
     temp["uvxy"] += V_["evxy"] * T1_["ue"];
     temp["uvxy"] -= V_["uvmy"] * T1_["mx"];
@@ -1073,8 +1155,27 @@ double THREE_DSRG_MRPT2::E_VT1()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
 
+        temp["uvxy"] += V_["wvxy"] * T1_["uw"];
+        temp["uvxy"] -= V_["uvwy"] * T1_["wx"];
+
+        temp["UVXY"] += V_["WVXY"] * T1_["UW"];
+        temp["UVXY"] -= V_["UVWY"] * T1_["WX"];
+
+        temp["uVxY"] += V_["wVxY"] * T1_["uw"];
+        temp["uVxY"] += V_["uWxY"] * T1_["VW"];
+        temp["uVxY"] -= V_["uVwY"] * T1_["wx"];
+        temp["uVxY"] -= V_["uVxW"] * T1_["WY"];
+
+        E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
+        E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
+        E += temp["uVxY"] * Lambda2_["xYuV"];
+    }
+
+    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("210",timer.get());
     return E;
 }
 
@@ -1083,9 +1184,9 @@ double THREE_DSRG_MRPT2::E_FT2()
     Timer timer;
     std::string str = "Computing <[F, T2]>";
     outfile->Printf("\n    %-37s ...", str.c_str());
+
     double E = 0.0;
-    BlockedTensor temp;
-    temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}));
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
     
     temp["uvxy"] += F_["xe"] * T2_["uvey"];
     temp["uvxy"] -= F_["mv"] * T2_["umxy"];
@@ -1102,7 +1203,27 @@ double THREE_DSRG_MRPT2::E_FT2()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
+
+        temp["uvxy"] += F_["wx"] * T2_["uvwy"];
+        temp["uvxy"] -= F_["vw"] * T2_["uwxy"];
+
+        temp["UVXY"] += F_["WX"] * T2_["UVWY"];
+        temp["UVXY"] -= F_["VW"] * T2_["UWXY"];
+
+        temp["uVxY"] += F_["wx"] * T2_["uVwY"];
+        temp["uVxY"] += F_["WY"] * T2_["uVxW"];
+        temp["uVxY"] -= F_["VW"] * T2_["uWxY"];
+        temp["uVxY"] -= F_["uw"] * T2_["wVxY"];
+
+        E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
+        E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
+        E += temp["uVxY"] * Lambda2_["xYuV"];
+    }
+
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("120",timer.get());
     return E;
 }
 
@@ -1120,7 +1241,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         outfile->Printf("\n    %-36s ...", str.c_str());
         //TODO: Implement these without storing V and/or T2 by using blocking
         ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
-
         if( (integral_type_!=DiskDF))
         {
             temp.zero();
@@ -1195,6 +1315,81 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         //Calculates all but ccvv, cCvV, and CCVV energies
         outfile->Printf("...Done. Timing %15.6f s", timer.get());
     }
+    // TODO: Implement these without storing V and/or T2 by using blocking
+    //ambit::BlockedTensor temp = BTF_->build(tensor_type_, "temp",{"aa", "AA"});
+
+    //if(integral_type_ != DiskDF)
+    //{
+    //    temp.zero();
+    //    temp["vu"] += 0.5 * V_["efmu"] * T2_["mvef"];
+    //    temp["vu"] += V_["fEuM"] * T2_["vMfE"];
+    //    temp["VU"] += 0.5 * V_["EFMU"] * T2_["MVEF"];
+    //    temp["VU"] += V_["eFmU"] * T2_["mVeF"];
+    //    E += temp["vu"] * Gamma1_["uv"];
+    //    E += temp["VU"] * Gamma1_["UV"];
+    //    //outfile->Printf("\n  E = V^{ef}_{mu} * T_{ef}^{mv}: %8.6f", E);
+    //    temp.zero();
+    //    temp["vu"] += 0.5 * V_["vemn"] * T2_["mnue"];
+    //    temp["vu"] += V_["vEmN"] * T2_["mNuE"];
+    //    temp["VU"] += 0.5 * V_["VEMN"] * T2_["MNUE"];
+    //    temp["VU"] += V_["eVnM"] * T2_["nMeU"];
+    //    E += temp["vu"] * Eta1_["uv"];
+    //    E += temp["VU"] * Eta1_["UV"];
+    //    //outfile->Printf("\n  E = V^{ve}_{mn} * T_{ue}^{mn}: %8.6f", E);
+    //}
+    //else
+    //{
+    //    E += E_VT2_2_one_active();
+    //}
+    //// These terms all have two active indices -> I will assume these can be store in core.
+
+    //temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
+    //temp["yvxu"] += V_["efxu"] * T2_["yvef"];
+    //temp["yVxU"] += V_["eFxU"] * T2_["yVeF"];
+    //temp["YVXU"] += V_["EFXU"] * T2_["YVEF"];
+    //E += 0.25 * temp["yvxu"] * Gamma1_["xy"] * Gamma1_["uv"];
+    //E += temp["yVxU"] * Gamma1_["UV"] * Gamma1_["xy"];
+    //E += 0.25 * temp["YVXU"] * Gamma1_["XY"] * Gamma1_["UV"];
+    ////outfile->Printf("\n  V_{xu}^{ef} * T2_{ef}^{yv} * G1 * G1: %8.6f", E);
+
+    //temp.zero();
+    //temp["vyux"] += V_["vymn"] * T2_["mnux"];
+    //temp["vYuX"] += V_["vYmN"] * T2_["mNuX"];
+    //temp["VYUX"] += V_["VYMN"] * T2_["MNUX"];
+    //E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
+    //E += temp["vYuX"] * Eta1_["uv"] * Eta1_["XY"];
+    //E += 0.25 * temp["VYUX"] * Eta1_["UV"] * Eta1_["XY"];
+    ////outfile->Printf("\n  V_{vy}^{ux} * T2_{ef}^{yv} * E1 * E1: %8.6f", E);
+
+    //temp.zero();
+    //temp["vyux"] += V_["vemx"] * T2_["myue"];
+    //temp["vyux"] += V_["vExM"] * T2_["yMuE"];
+    //temp["VYUX"] += V_["eVmX"] * T2_["mYeU"];
+    //temp["VYUX"] += V_["VEXM"] * T2_["YMUE"];
+    //E += temp["vyux"] * Gamma1_["xy"] * Eta1_["uv"];
+    //E += temp["VYUX"] * Gamma1_["XY"] * Eta1_["UV"];
+    //temp["yVxU"] = V_["eVxM"] * T2_["yMeU"];
+    //E += temp["yVxU"] * Gamma1_["xy"] * Eta1_["UV"];
+    //temp["vYuX"] = V_["vEmX"] * T2_["mYuE"];
+    //E += temp["vYuX"] * Gamma1_["XY"] * Eta1_["uv"];
+    ////outfile->Printf("\n  V_{ve}^{mx} * T2_{ue}^{my} * G1 * E1: %8.6f", E);
+
+    //temp.zero();
+    //temp["yvxu"] += 0.5 * Gamma1_["wz"] * V_["vexw"] * T2_["yzue"];
+    //temp["yvxu"] += Gamma1_["WZ"] * V_["vExW"] * T2_["yZuE"];
+    //temp["yvxu"] += 0.5 * Eta1_["wz"] * T2_["myuw"] * V_["vzmx"];
+    //temp["yvxu"] += Eta1_["WZ"] * T2_["yMuW"] * V_["vZxM"];
+    //E += temp["yvxu"] * Gamma1_["xy"] * Eta1_["uv"];
+    ////outfile->Printf("\n  V_{ve}^{xw} * T2_{ue}^{yz} * G1 * E1: %8.6f", E);
+
+    //temp["YVXU"] += 0.5 * Gamma1_["WZ"] * V_["VEXW"] * T2_["YZUE"];
+    //temp["YVXU"] += Gamma1_["wz"] * V_["eVwX"] * T2_["zYeU"];
+    //temp["YVXU"] += 0.5 * Eta1_["WZ"] * T2_["MYUW"] * V_["VZMX"];
+    //temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
+    //E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
+    ////outfile->Printf("\n  V_{VE}^{XW} * T2_{UE}^{YZ} * G1 * E1: %8.6f", E);
+
+    ////Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
 
     Timer ccvv_timer;
@@ -1266,7 +1461,6 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
     outfile->Printf("\n    %-37s ...", strccvv.c_str());
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
-    //outfile->Printf("\n E_ccvv = %8.6f", Eccvv);
     double all_e = 0.0;
     if(my_proc == 0)
         all_e = E + Eccvv;
@@ -1274,6 +1468,32 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     MPI_Bcast(&all_e, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     #endif
 
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
+        temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
+        temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
+        temp["UVXY"] += 0.25 * V_["UVWZ"] * Gamma1_["WX"] * Gamma1_["ZY"];
+
+        temp["uvxy"] -= 0.25 * V_["wzxy"] * Gamma1_["uw"] * Gamma1_["vz"];
+        temp["uVxY"] -= V_["wZxY"] * Gamma1_["uw"] * Gamma1_["VZ"];
+        temp["UVXY"] -= 0.25 * V_["WZXY"] * Gamma1_["UW"] * Gamma1_["VZ"];
+
+        temp["uvxy"] -= 0.5 * V_["u1wz"] * Gamma1_["v1"] * Gamma1_["wx"] * Gamma1_["zy"];
+        temp["uVxY"] -= V_["u!wZ"] * Gamma1_["V!"] * Gamma1_["wx"] * Gamma1_["ZY"];
+        temp["uVxY"] -= V_["1VwZ"] * Gamma1_["u1"] * Gamma1_["wx"] * Gamma1_["ZY"];
+        temp["UVXY"] -= 0.5 * V_["U!WZ"] * Gamma1_["V!"] * Gamma1_["WX"] * Gamma1_["ZY"];
+
+        temp["uvxy"] += 0.5 * V_["wzx1"] * Gamma1_["uw"] * Gamma1_["vz"] * Gamma1_["1y"];
+        temp["uVxY"] += V_["wZx!"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["!Y"];
+        temp["uVxY"] += V_["wZ1Y"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["1x"];
+        temp["UVXY"] += 0.5 * V_["WZX!"] * Gamma1_["UW"] * Gamma1_["VZ"] * Gamma1_["!Y"];
+
+        E += temp["uvxy"] * T2_["xyuv"];
+        E += temp["uVxY"] * T2_["xYuV"];
+        E += temp["UVXY"] * T2_["XYUV"];
+    }
+
+    dsrg_time_.add("220",timer.get());
     return (E + Eccvv);
 }
 
@@ -1282,105 +1502,203 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     Timer timer;
     std::string str = "Computing <[V, T2]> 4HH";
     outfile->Printf("\n    %-37s ...", str.c_str());
+
     double E = 0.0;
-    BlockedTensor temp1;
-    BlockedTensor temp2;
-    temp1 = BTF_->build(tensor_type_,"temp1", spin_cases({"aahh"}));
-    temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
 
+    temp["uvxy"] += 0.125 * V_["uvmn"] * T2_["mnxy"];
+    temp["uvxy"] += 0.25 * Gamma1_["wz"] * V_["uvmw"] * T2_["mzxy"];
+    temp["uVxY"] += V_["uVmN"] * T2_["mNxY"];
+    temp["uVxY"] += Gamma1_["wz"] * T2_["zMxY"] * V_["uVwM"];
+    temp["uVxY"] += Gamma1_["WZ"] * V_["uVmW"] * T2_["mZxY"];
+    temp["UVXY"] += 0.125 * V_["UVMN"] * T2_["MNXY"];
+    temp["UVXY"] += 0.25 * Gamma1_["WZ"] * V_["UVMW"] * T2_["MZXY"];
 
-    temp1["uvij"] += V_["uvkl"] * Gamma1_["ki"] * Gamma1_["lj"];
-    temp1["UVIJ"] += V_["UVKL"] * Gamma1_["KI"] * Gamma1_["LJ"];
-    temp1["uViJ"] += V_["uVkL"] * Gamma1_["ki"] * Gamma1_["LJ"];
+    E += Lambda2_["xyuv"] * temp["uvxy"];
+    E += Lambda2_["xYuV"] * temp["uVxY"];
+    E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    temp2["uvxy"] += temp1["uvij"] * T2_["ijxy"];
-    temp2["UVXY"] += temp1["UVIJ"] * T2_["IJXY"];
-    temp2["uVxY"] += temp1["uViJ"] * T2_["iJxY"];
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
+        temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
+        temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
+        temp["UVXY"] -= 0.125 * V_["UVWZ"] * T2_["WZXY"];
 
-    E += 0.125 * Lambda2_["xyuv"] * temp2["uvxy"];
-    E += 0.125 * Lambda2_["XYUV"] * temp2["UVXY"];
-    E += Lambda2_["xYuV"] * temp2["uVxY"];
+        temp["uvxy"] += 0.25 * V_["uv1w"] * T2_["1zxy"] * Gamma1_["wz"];
+        temp["uVxY"] += V_["uV1W"] * T2_["1ZxY"] * Gamma1_["WZ"];
+        temp["uVxY"] += V_["uVw!"] * T2_["z!xY"] * Gamma1_["wz"];
+        temp["UVXY"] += 0.25 * V_["UV!W"] * T2_["!ZXY"] * Gamma1_["WZ"];
+
+        E += Lambda2_["xyuv"] * temp["uvxy"];
+        E += Lambda2_["XYUV"] * temp["UVXY"];
+        E += Lambda2_["xYuV"] * temp["uVxY"];
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
-
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PP()
 {
     Timer timer;
-    double E = 0.0;
-    BlockedTensor temp1;
-    BlockedTensor temp2;
-
     std::string str = "Computing <V, T2]> 4PP";
     outfile->Printf("\n    %-37s ...", str.c_str());
 
-    temp1 = BTF_->build(tensor_type_,"temp1", spin_cases({"aapp"}));
-    temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+    double E = 0.0;
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
 
-    temp1["uvcd"] += T2_["uvab"] * Eta1_["ac"] * Eta1_["bd"];
-    temp1["UVCD"] += T2_["UVAB"] * Eta1_["AC"] * Eta1_["BD"];
-    temp1["uVcD"] += T2_["uVaB"] * Eta1_["ac"] * Eta1_["BD"];
+    temp["uvxy"] += 0.125 * V_["efxy"] * T2_["uvef"];
+    temp["uvxy"] += 0.25 * Eta1_["wz"] * T2_["uvew"] * V_["ezxy"];
+    temp["uVxY"] += V_["eFxY"] * T2_["uVeF"];
+    temp["uVxY"] += Eta1_["wz"] * V_["zExY"] * T2_["uVwE"];
+    temp["uVxY"] += Eta1_["WZ"] * T2_["uVeW"] * V_["eZxY"];
+    temp["UVXY"] += 0.125 * V_["EFXY"] * T2_["UVEF"];
+    temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2_["UVEW"] * V_["EZXY"];
 
-    temp2["uvxy"] += temp1["uvcd"] * V_["cdxy"];
-    temp2["UVXY"] += temp1["UVCD"] * V_["CDXY"];
-    temp2["uVxY"] += temp1["uVcD"] * V_["cDxY"];
+    E += Lambda2_["xyuv"] * temp["uvxy"];
+    E += Lambda2_["xYuV"] * temp["uVxY"];
+    E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    E += 0.125 * Lambda2_["xyuv"] * temp2["uvxy"];
-    E += 0.125 * Lambda2_["XYUV"] * temp2["UVXY"];
-    E += Lambda2_["xYuV"] * temp2["uVxY"];
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
+        temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
+        temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
+        temp["UVXY"] += 0.125 * V_["WZXY"] * T2_["UVWZ"];
+
+        temp["uvxy"] -= 0.25 * V_["1zxy"] * T2_["uv1w"] * Gamma1_["wz"];
+        temp["uVxY"] -= V_["1ZxY"] * T2_["uV1W"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["z!xY"] * T2_["uVw!"] * Gamma1_["wz"];
+        temp["UVXY"] -= 0.25 * V_["!ZXY"] * T2_["UV!W"] * Gamma1_["WZ"];
+
+        E += Lambda2_["xyuv"] * temp["uvxy"];
+        E += Lambda2_["xYuV"] * temp["uVxY"];
+        E += Lambda2_["XYUV"] * temp["UVXY"];
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
 double THREE_DSRG_MRPT2::E_VT2_4PH()
 {
     Timer timer;
-    double E = 0.0;
     std::string str = "Computing [V, T2] 4PH";
     outfile->Printf("\n    %-37s ...", str.c_str());
 
-    BlockedTensor temp1;
-    BlockedTensor temp2;
-    temp1 = BTF_->build(tensor_type_,"temp1",{"hapa", "HAPA", "hApA", "ahap", "AHAP", "aHaP", "aHpA", "hAaP"});
-    temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
+//    double E = 0.0;
+//    BlockedTensor temp1;
+//    BlockedTensor temp2;
+//    temp1 = BTF_->build(tensor_type_,"temp1",{"hapa", "HAPA", "hApA", "ahap", "AHAP", "aHaP", "aHpA", "hAaP"});
+//    temp2 = BTF_->build(tensor_type_,"temp2", spin_cases({"aaaa"}));
 
-    temp1["juby"]  =  T2_["iuay"] * Gamma1_["ji"] * Eta1_["ab"];
-    temp2["uvxy"] +=  V_["vbjx"] * temp1["juby"];
+//    temp1["juby"]  =  T2_["iuay"] * Gamma1_["ji"] * Eta1_["ab"];
+//    temp2["uvxy"] +=  V_["vbjx"] * temp1["juby"];
 
-    temp1["uJyB"]  =  T2_["uIyA"] * Gamma1_["JI"] * Eta1_["AB"];
-    temp2["uvxy"] -=  V_["vBxJ"] * temp1["uJyB"];
-    E += temp2["uvxy"] * Lambda2_["xyuv"];
+//    temp1["uJyB"]  =  T2_["uIyA"] * Gamma1_["JI"] * Eta1_["AB"];
+//    temp2["uvxy"] -=  V_["vBxJ"] * temp1["uJyB"];
+//    E += temp2["uvxy"] * Lambda2_["xyuv"];
 
-    temp1["JUBY"]  = T2_["IUAY"] * Gamma1_["IJ"] * Eta1_["AB"];
-    temp2["UVXY"] += V_["VBJX"] * temp1["JUBY"];
+//    temp1["JUBY"]  = T2_["IUAY"] * Gamma1_["IJ"] * Eta1_["AB"];
+//    temp2["UVXY"] += V_["VBJX"] * temp1["JUBY"];
 
-    temp1["jUbY"]  = T2_["iUaY"] * Gamma1_["ji"] * Eta1_["ab"];
-    temp2["UVXY"] -= V_["bVjX"] * temp1["jUbY"];
-    E += temp2["UVXY"] * Lambda2_["XYUV"];
+//    temp1["jUbY"]  = T2_["iUaY"] * Gamma1_["ji"] * Eta1_["ab"];
+//    temp2["UVXY"] -= V_["bVjX"] * temp1["jUbY"];
+//    E += temp2["UVXY"] * Lambda2_["XYUV"];
 
-    temp1["jVbY"]  = T2_["iVaY"] * Gamma1_["ji"] * Eta1_["ab"];
-    temp2["uVxY"] -= V_["ubjx"] * temp1["jVbY"];
+//    temp1["jVbY"]  = T2_["iVaY"] * Gamma1_["ji"] * Eta1_["ab"];
+//    temp2["uVxY"] -= V_["ubjx"] * temp1["jVbY"];
 
-    temp1["JVBY"]  = T2_["IVAY"] * Gamma1_["JI"] * Eta1_["AB"];
-    temp2["uVxY"] += V_["uBxJ"] * temp1["JVBY"];
+//    temp1["JVBY"]  = T2_["IVAY"] * Gamma1_["JI"] * Eta1_["AB"];
+//    temp2["uVxY"] += V_["uBxJ"] * temp1["JVBY"];
 
-    temp1["jubx"]  = T2_["iuax"] * Gamma1_["ji"] * Eta1_["ab"];
-    temp2["uVxY"] += V_["bVjY"] * temp1["jubx"];
+//    temp1["jubx"]  = T2_["iuax"] * Gamma1_["ji"] * Eta1_["ab"];
+//    temp2["uVxY"] += V_["bVjY"] * temp1["jubx"];
 
-    temp1["uJxB"]  = T2_["uIxA"] * Gamma1_["JI"] * Eta1_["AB"];
-    temp2["uVxY"] -= V_["VBJY"] * temp1["uJxB"];
+//    temp1["uJxB"]  = T2_["uIxA"] * Gamma1_["JI"] * Eta1_["AB"];
+//    temp2["uVxY"] -= V_["VBJY"] * temp1["uJxB"];
 
-    temp1["uJbY"]  = T2_["uIaY"] * Gamma1_["JI"] * Eta1_["ab"];
-    temp2["uVxY"] -= V_["bVxJ"] * temp1["uJbY"];
+//    temp1["uJbY"]  = T2_["uIaY"] * Gamma1_["JI"] * Eta1_["ab"];
+//    temp2["uVxY"] -= V_["bVxJ"] * temp1["uJbY"];
 
-    temp1["jVxB"]  = T2_["iVxA"] * Gamma1_["ji"] * Eta1_["AB"];
-    temp2["uVxY"] -= V_["uBjY"] * temp1["jVxB"];
-    E += temp2["uVxY"] * Lambda2_["xYuV"];
+//    temp1["jVxB"]  = T2_["iVxA"] * Gamma1_["ji"] * Eta1_["AB"];
+//    temp2["uVxY"] -= V_["uBjY"] * temp1["jVxB"];
+//    E += temp2["uVxY"] * Lambda2_["xYuV"];
+
+    double E = 0.0;
+    BlockedTensor temp = BTF_->build(tensor_type_,"temp",spin_cases({"aaaa"}), true);
+
+    temp["uvxy"] += V_["eumx"] * T2_["mvey"];
+    temp["uvxy"] += V_["uExM"] * T2_["vMyE"];
+    temp["uvxy"] += Gamma1_["wz"] * T2_["zvey"] * V_["euwx"];
+    temp["uvxy"] += Gamma1_["WZ"] * V_["uExW"] * T2_["vZyE"];
+    temp["uvxy"] += Eta1_["zw"] * V_["wumx"] * T2_["mvzy"];
+    temp["uvxy"] += Eta1_["ZW"] * T2_["vMyZ"] * V_["uWxM"];
+    E += temp["uvxy"] * Lambda2_["xyuv"];
+
+    temp["UVXY"] += V_["eUmX"] * T2_["mVeY"];
+    temp["UVXY"] += V_["EUMX"] * T2_["MVEY"];
+    temp["UVXY"] += Gamma1_["wz"] * T2_["zVeY"] * V_["eUwX"];
+    temp["UVXY"] += Gamma1_["WZ"] * T2_["ZVEY"] * V_["EUWX"];
+    temp["UVXY"] += Eta1_["zw"] * V_["wUmX"] * T2_["mVzY"];
+    temp["UVXY"] += Eta1_["ZW"] * V_["WUMX"] * T2_["MVZY"];
+    E += temp["UVXY"] * Lambda2_["XYUV"];
+
+    temp["uVxY"] += V_["uexm"] * T2_["mVeY"];
+    temp["uVxY"] += V_["uExM"] * T2_["MVEY"];
+    temp["uVxY"] -= V_["eVxM"] * T2_["uMeY"];
+    temp["uVxY"] -= V_["uEmY"] * T2_["mVxE"];
+    temp["uVxY"] += V_["eVmY"] * T2_["umxe"];
+    temp["uVxY"] += V_["EVMY"] * T2_["uMxE"];
+
+    temp["uVxY"] += Gamma1_["wz"] * T2_["zVeY"] * V_["uexw"];
+    temp["uVxY"] += Gamma1_["WZ"] * T2_["ZVEY"] * V_["uExW"];
+    temp["uVxY"] -= Gamma1_["WZ"] * V_["eVxW"] * T2_["uZeY"];
+    temp["uVxY"] -= Gamma1_["wz"] * T2_["zVxE"] * V_["uEwY"];
+    temp["uVxY"] += Gamma1_["wz"] * T2_["zuex"] * V_["eVwY"];
+    temp["uVxY"] -= Gamma1_["WZ"] * V_["EVYW"] * T2_["uZxE"];
+
+    temp["uVxY"] += Eta1_["zw"] * V_["wumx"] * T2_["mVzY"];
+    temp["uVxY"] += Eta1_["ZW"] * T2_["VMYZ"] * V_["uWxM"];
+    temp["uVxY"] -= Eta1_["zw"] * V_["wVxM"] * T2_["uMzY"];
+    temp["uVxY"] -= Eta1_["ZW"] * T2_["mVxZ"] * V_["uWmY"];
+    temp["uVxY"] += Eta1_["zw"] * T2_["umxz"] * V_["wVmY"];
+    temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
+    E += temp["uVxY"] * Lambda2_["xYuV"];
+
+    if(options_.get_bool("INTERNAL_AMP")){
+        temp.zero();
+        temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
+        temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
+        temp["uvxy"] += V_["vzx1"] * T2_["1uwy"] * Gamma1_["wz"];
+        temp["uvxy"] += V_["vZx!"] * T2_["u!yW"] * Gamma1_["WZ"];
+        E += temp["uvxy"] * Lambda2_["xyuv"];
+
+        temp["UVXY"] -= V_["V!XW"] * T2_["ZU!Y"] * Gamma1_["WZ"];
+        temp["UVXY"] -= V_["1VwX"] * T2_["zU1Y"] * Gamma1_["wz"];
+        temp["UVXY"] += V_["VZX!"] * T2_["!UWY"] * Gamma1_["WZ"];
+        temp["UVXY"] += V_["zV1X"] * T2_["1UwY"] * Gamma1_["wz"];
+        E += temp["UVXY"] * Lambda2_["XYUV"];
+
+        temp["uVxY"] -= V_["1VxW"] * T2_["uZ1Y"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["u!wY"] * T2_["zVx!"] * Gamma1_["wz"];
+        temp["uVxY"] += V_["u1xw"] * T2_["zV1Y"] * Gamma1_["wz"];
+        temp["uVxY"] += V_["u!xW"] * T2_["ZV!Y"] * Gamma1_["WZ"];
+        temp["uVxY"] += V_["1VwY"] * T2_["zu1x"] * Gamma1_["wz"];
+        temp["uVxY"] += V_["!VWY"] * T2_["uZx!"] * Gamma1_["WZ"];
+
+        temp["uVxY"] += V_["zVx!"] * T2_["u!wY"] * Gamma1_["wz"];
+        temp["uVxY"] += V_["uZ1Y"] * T2_["1VxW"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["uzx1"] * T2_["1VwY"] * Gamma1_["wz"];
+        temp["uVxY"] -= V_["uZx!"] * T2_["!VWY"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["zV1Y"] * T2_["1uwx"] * Gamma1_["wz"];
+        temp["uVxY"] -= V_["ZV!Y"] * T2_["u!xW"] * Gamma1_["WZ"];
+        E += temp["uVxY"] * Lambda2_["xYuV"];
+    }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    dsrg_time_.add("220",timer.get());
     return E;
 }
 
@@ -1497,9 +1815,9 @@ double THREE_DSRG_MRPT2::E_VT2_6()
 
             //E += 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
             double Econtrib = 0.5 * temp["uVWxYZ"] * Lambda3["xYZuVW"];
-            outfile->Printf("\n Econtrib: %8.8f", Econtrib);
-            outfile->Printf("\n L3aAANorm: %8.8f", Lambda3.block("aAAaAA").norm(2.0) * Lambda3.block("aAAaAA").norm(2.0));
-            outfile->Printf("\n temp: %8.8f", temp.block("aAAaAA").norm(2.0) * temp.block("aAAaAA").norm(2.0));
+            outfile->Printf("\n  Econtrib: %8.8f", Econtrib);
+            outfile->Printf("\n  L3aAANorm: %8.8f", Lambda3.block("aAAaAA").norm(2.0) * Lambda3.block("aAAaAA").norm(2.0));
+            outfile->Printf("\n  temp: %8.8f", temp.block("aAAaAA").norm(2.0) * temp.block("aAAaAA").norm(2.0));
             ambit::Tensor temp_uVWz = ambit::Tensor::build(tensor_type_, "VWxz", {active_, active_, active_, active_});
             std::vector<double>& temp_uVWz_data = temp.block("aAAaAA").data();
             ambit::Tensor L3_ZuVW = ambit::Tensor::build(tensor_type_, "L3Slice", {active_, active_, active_, active_});
@@ -1531,8 +1849,8 @@ double THREE_DSRG_MRPT2::E_VT2_6()
                     E += 0.25 * temp_uvwz["UVWZ"] * L3_zuvw["ZUVW"];
                 }
             }
-            outfile->Printf("\n Econtrib2: %8.8f", Econtrib2);
-            outfile->Printf("\n Temp: %8.8f Cumulant: %8.8f", normTemp, normCumulant);
+            outfile->Printf("\n  Econtrib2: %8.8f", Econtrib2);
+            outfile->Printf("\n  Temp: %8.8f Cumulant: %8.8f", normTemp, normCumulant);
                 
         }
     }
@@ -1822,8 +2140,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given m and n, form Bm(L|e) and Bn(L|f)
     // Bef(ef) = Bm(L|e) * Bn(L|f)
-    outfile->Printf("\n Computing V_T2_2 in batch algorithm\n");
-    outfile->Printf("\n Batching algorithm is going over m and n");
+    outfile->Printf("\n  Computing V_T2_2 in batch algorithm\n");
+    outfile->Printf("\n  Batching algorithm is going over m and n");
     size_t dim = nthree_ * virtual_;
     int nthread = 1;
     #ifdef _OPENMP
@@ -1844,13 +2162,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
 
     if(block_size < 1)
     {
-        outfile->Printf("\n\n Block size is FUBAR.");
-        outfile->Printf("\n Block size is %d", block_size);
+        outfile->Printf("\n\n  Block size is FUBAR.");
+        outfile->Printf("\n  Block size is %d", block_size);
         throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if(num_block > core_)
     {
-        outfile->Printf("\n Number of blocks can not be larger than core_");
+        outfile->Printf("\n  Number of blocks can not be larger than core_");
         throw PSIEXCEPTION("Number of blocks is larger than core.  Fix num_block or check source code");
     }
 
@@ -1917,15 +2235,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
 
         if(debug_print)
         {
-            outfile->Printf("\n BmQe norm: %8.8f", BmQe.norm(2.0));
-            outfile->Printf("\n m_block: %d", m_blocks);
+            outfile->Printf("\n  BmQe norm: %8.8f", BmQe.norm(2.0));
+            outfile->Printf("\n  m_block: %d", m_blocks);
             int count = 0;
             for(auto mb : m_batch)
             {
                 outfile->Printf("m_batch[%d] =  %d ",count, mb);
                 count++;
             }
-            outfile->Printf("\n Core indice list");
+            outfile->Printf("\n  Core indice list");
             for(auto coremo : acore_mos_)
             {
                 outfile->Printf(" %d " , coremo);
@@ -1963,8 +2281,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
             }
             if(debug_print)
             {
-                outfile->Printf("\n BnQf norm: %8.8f", BnQf.norm(2.0));
-                outfile->Printf("\n m_block: %d", m_blocks);
+                outfile->Printf("\n  BnQf norm: %8.8f", BnQf.norm(2.0));
+                outfile->Printf("\n  m_block: %d", m_blocks);
                 int count = 0;
                 for(auto nb : n_batch)
                 {
@@ -2032,8 +2350,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
                 if(debug_print)
                 {
-                    outfile->Printf("\n m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
-                    outfile->Printf("\n m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
+                    outfile->Printf("\n  m_size: %d n_size: %d m: %d n:%d", m_size, n_size, m, n);
+                    outfile->Printf("\n  m: %d n:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", m, n, Ealpha , Emixed, Ealpha + Emixed);
                 }
             }
             outfile->Printf("\n Batch_core loop per Mbatch: %d and Nbatch: %d takes %8.8f", m_blocks, n_blocks, Core_Loop.get());
@@ -2052,8 +2370,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
     // Compute <[V, T2]> (C_2)^4 ccvv term; (me|nf) = B(L|me) * B(L|nf)
     // For a given e and f, form Be(L|m) and Bf(L|n)
     // Bef(mn) = Be(L|m) * Bf(L|n)
-    outfile->Printf("\n Computing V_T2_2 in batch algorithm\n");
-    outfile->Printf("\n Batching algorithm is going over e and f");
+    outfile->Printf("\n  Computing V_T2_2 in batch algorithm\n");
+    outfile->Printf("\n  Batching algorithm is going over e and f");
     size_t dim = nthree_ * core_;
     int nthread = 1;
     #ifdef _OPENMP
@@ -2074,13 +2392,13 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
 
     if(block_size < 1)
     {
-        outfile->Printf("\n\n Block size is FUBAR.");
-        outfile->Printf("\n Block size is %d", block_size);
+        outfile->Printf("\n\n  Block size is FUBAR.");
+        outfile->Printf("\n  Block size is %d", block_size);
         throw PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
     }
     if(num_block > virtual_)
     {
-        outfile->Printf("\n Number of blocks can not be larger than core_");
+        outfile->Printf("\n  Number of blocks can not be larger than core_");
         throw PSIEXCEPTION("Number of blocks is larger than core.  Fix num_block or check source code");
     }
 
@@ -2147,15 +2465,15 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
 
         if(debug_print)
         {
-            outfile->Printf("\n BeQm norm: %8.8f", BeQm.norm(2.0));
-            outfile->Printf("\n e_block: %d", e_blocks);
+            outfile->Printf("\n  BeQm norm: %8.8f", BeQm.norm(2.0));
+            outfile->Printf("\n  e_block: %d", e_blocks);
             int count = 0;
             for(auto e : e_batch)
             {
                 outfile->Printf("e_batch[%d] =  %d ",count, e);
                 count++;
             }
-            outfile->Printf("\n Virtual index list");
+            outfile->Printf("\n  Virtual index list");
             for(auto virtualmo : virt_mos)
             {
                 outfile->Printf(" %d " , virtualmo);
@@ -2193,8 +2511,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
             }
             if(debug_print)
             {
-                outfile->Printf("\n BfQn norm: %8.8f", BfQn.norm(2.0));
-                outfile->Printf("\n f_block: %d", f_blocks);
+                outfile->Printf("\n  BfQn norm: %8.8f", BfQn.norm(2.0));
+                outfile->Printf("\n  f_block: %d", f_blocks);
                 int count = 0;
                 for(auto nf : f_batch)
                 {
@@ -2254,8 +2572,8 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
                 Emixed += factor * BmnJKVec[thread]("mN") * RDVec[thread]("mN");
                 if(debug_print)
                 {
-                    outfile->Printf("\n e_size: %d f_size: %d e: %d f:%d", e_size, f_size, e, f);
-                    outfile->Printf("\n e: %d f:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", e, f, Ealpha , Emixed, Ealpha + Emixed);
+                    outfile->Printf("\n  e_size: %d f_size: %d e: %d f:%d", e_size, f_size, e, f);
+                    outfile->Printf("\n  e: %d f:%d Ealpha = %8.8f Emixed = %8.8f Sum = %8.8f", e, f, Ealpha , Emixed, Ealpha + Emixed);
                 }
             }
             if(debug_print) outfile->Printf("\n Virtual loop OpenMP timing for e_batch: %d and f_batch: %d takes %8.8f", e_blocks, f_blocks, Virtual_loop.get());
@@ -2490,7 +2808,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
 
     if(print_ > 0)
     {
-        outfile->Printf("\n\n CAVV computation takes %8.8f", ccvaTimer.get());
+        outfile->Printf("\n\n  CAVV computation takes %8.8f", ccvaTimer.get());
     }
 
     std::vector<ambit::Tensor>  Bm_vQ;
@@ -2617,7 +2935,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
     Eccva += tempTAA_all("VU") * Eta1_AA("UV");
     if(print_ > 0)
     {
-        outfile->Printf("\n\n CCVA takes %8.8f", cavvTimer.get());
+        outfile->Printf("\n\n  CCVA takes %8.8f", cavvTimer.get());
     }
 
     return (Eacvv + Eccva);
