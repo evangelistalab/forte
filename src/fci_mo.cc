@@ -937,7 +937,7 @@ void FCI_MO::semi_canonicalize(const size_t& count){
             int actv_end   = actv_start + active_[h];
 
             std::map<int, int> indexmap;
-            std::vector<int> idx_0, idx_sc;
+            std::vector<int> idx_0;
             for(int i = actv_start; i < actv_end; ++i){
                 int ii = 0; // corresponding index in semicanonical basis
                 double smax = 0.0;
@@ -953,22 +953,47 @@ void FCI_MO::semi_canonicalize(const size_t& count){
                 if(ii != i){
                     indexmap[i] = ii;
                     idx_0.push_back(i);
-                    idx_sc.push_back(ii);
                 }
             }
 
-            // find intersections of indices before and after semicanonicalization
-            std::vector<int> idx_both;
-            std::sort(idx_0.begin(),idx_0.end());
-            std::sort(idx_sc.begin(),idx_sc.end());
-            std::set_intersection(idx_0.begin(),idx_0.end(),idx_sc.begin(),idx_sc.end(),
-                                  std::back_inserter(idx_both));
+            // find orbitals to swap if the loop is closed
+            std::vector<int> idx_swap;
+            for(const int& x: idx_0){
+                // if index x is already in the to-be-swapped index, then continue
+                if(std::find(idx_swap.begin(), idx_swap.end(), x) != idx_swap.end()){
+                    continue;
+                }
+
+                std::vector<int> temp;
+                int local = x;
+
+                while(indexmap.find(indexmap[local]) != indexmap.end()){
+                    if(std::find(temp.begin(), temp.end(), local) == temp.end()){
+                        temp.push_back(local);
+                    } else {
+                        // a loop found
+                        break;
+                    }
+
+                    local = indexmap[local];
+                }
+
+                // start from the point that has the value of "local" and copy to idx_swap
+                int pos = std::find(temp.begin(), temp.end(), local) - temp.begin();
+                for(int i = pos; i < temp.size(); ++i){
+                    if(std::find(idx_swap.begin(), idx_swap.end(), temp[i]) == idx_swap.end()){
+                        idx_swap.push_back(temp[i]);
+                    }
+                }
+            }
+
+            // remove the swapped orbitals from the vector of orginal orbitals
             idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
-                                       [&](int i) {return std::find(idx_both.begin(), idx_both.end(), i) != idx_both.end();}),
+                                       [&](int i) {return std::find(idx_swap.begin(), idx_swap.end(), i) != idx_swap.end();}),
                         idx_0.end());
 
             // swap orbitals if they are in the intersection
-            for(const int& x: idx_both){
+            for(const int& x: idx_swap){
                 int h_local = h;
                 size_t ni = x - frzcpi_[h];
                 size_t nj = indexmap[x] - frzcpi_[h];
