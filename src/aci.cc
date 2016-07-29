@@ -1680,6 +1680,12 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     for(int i = 0; i < nbeta_; ++i){
         occ[nact_ + labeled_orb_en[i].second.second] = 1;
     } 
+
+    bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
+    std::ofstream final_wfn;
+    if( print_final_wfn ) final_wfn.open("final_wfn.txt");
+
+    
     
     STLBitsetDeterminant rdet(occ);
 	auto ref_bits = rdet.bits();
@@ -1707,6 +1713,11 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 			ndiff /= 2;
 			excitation_counter[ndiff] = std::make_pair(excitation_counter[ndiff].first + 1,
 													   excitation_counter[ndiff].second + det_weight[I].first * det_weight[I].first);
+
+            if( print_final_wfn and (n == ref_root_) ){
+                final_wfn << det_space[I].str().c_str() << "\t" << evecs->get(I,n) << "\t" << ndiff << "\n"; 
+            } 
+
 		}
 		int order = 0;
 		size_t det = 0;
