@@ -311,12 +311,6 @@ private:
 	/// Compute 1-RDM
 	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
-	/// One-electron operator
-	double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q);
-
-	/// Check the sign
-	double CheckSign(std::vector<int> I, const int &n);
-
 	/// Compute full S^2 matrix and diagonalize it
 	void full_spin_transform(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix cI, int nroot);
 

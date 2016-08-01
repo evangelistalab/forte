@@ -1750,61 +1750,6 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 	
 }
 
-
-double AdaptiveCI::OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q)
-{
-	STLBitsetDeterminant tmp = J;
-
-	double sign = 1.0;
-
-	if( sp == false ){
-		if( tmp.get_alfa_bit(q)) {
-			sign *= CheckSign(tmp.get_alfa_occ(),q);
-			tmp.set_alfa_bit(q,0);
-		}else{
-			return 0.0;
-		}
-
-		if( !tmp.get_alfa_bit(p) ){
-			sign *= CheckSign(tmp.get_alfa_occ(),p);
-			tmp.set_alfa_bit(p,1);
-			Jnew = tmp;
-			return sign;
-		}else{
-			return 0.0;
-		}
-	}else{
-		if( tmp.get_beta_bit(q) ){
-			sign *= CheckSign(tmp.get_beta_occ(),q);
-			tmp.set_beta_bit(q,0);
-		}else{
-			return 0.0;
-		}
- 
-		if( !tmp.get_beta_bit(p) ){
-			sign *= CheckSign(tmp.get_beta_occ(),p);
-			tmp.set_beta_bit(p,1);
-			Jnew = tmp;
-			return sign;
-		 }else{
-			return 0.0;
-		}
-	}
-}
-
-double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
-{
-	size_t count = 0;
-	for( int i = 0; i < n; ++i){
-		
-		if( I[i] ) count++;
-	
-	}
-
-	return std::pow( -1.0, count % 2 );
-
-}
-
 void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix evecs,int nroot)
 {
 	std::string state_label;
@@ -1852,7 +1797,7 @@ void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant >& det_s
 	// Build the S^2 Matrix
 	size_t det_size = det_space.size();
 	SharedMatrix S2(new Matrix("S^2", det_size, det_size));
-
+#pragma omp parallel for
 	for(size_t I = 0; I < det_size; ++I ){
 		for(size_t J = 0; J <= I; ++J){
 			S2->set(I,J, det_space[I].spin2(det_space[J]) );
