@@ -594,17 +594,7 @@ double AdaptiveCI::compute_energy()
 
 		// Use spin projection to ensure the P space is spin pure
 		if( (spin_projection == 1 or spin_projection == 3) and P_space_.size() <= 200){
-			double spin_contamination = compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
-			if(spin_contamination >= spin_tol_){
-				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				full_spin_transform(P_space_, P_evecs, num_ref_roots);
-				P_evecs->zero();
-				P_evecs = PQ_spin_evecs_->clone();
-               compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
-			}else if (!quiet_mode_){
-				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n  No need to perform spin projection.");
-			}
+            project_determinant_space(P_space_, P_evecs, P_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
@@ -651,17 +641,7 @@ double AdaptiveCI::compute_energy()
 		// Ensure the solutions are spin-pure
 
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
-			double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, num_ref_roots);
-			if(spin_contamination >= spin_tol_){
-				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				full_spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
-				PQ_evecs->zero();
-				PQ_evecs = PQ_spin_evecs_->clone();
-               compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
-			}else if (!quiet_mode_){
-				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n  No need to perform spin projection.");
-			}
+            project_determinant_space(PQ_space_, PQ_evecs, PQ_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
@@ -790,17 +770,7 @@ double AdaptiveCI::compute_energy()
 
 	// Ensure the solutions are spin-pure
 	if(( spin_projection == 2 or spin_projection == 3) and PQ_space_.size() <= 200){
-		double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, nroot_);
-		if(spin_contamination >= spin_tol_){
-			if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-			full_spin_transform(PQ_space_, PQ_evecs, nroot_);
-			PQ_evecs->zero();
-			PQ_evecs = PQ_spin_evecs_->clone();
-            compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_,diag_method_);
-		}else if (!quiet_mode_){
-			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-			outfile->Printf("\n  No need to perform spin projection.");
-		}
+        project_determinant_space( PQ_space_, PQ_evecs, PQ_evals, nroot_);
 	}else if ( !quiet_mode_ ){
 		outfile->Printf("\n  Not performing spin projection.");
 	}
@@ -2336,6 +2306,20 @@ void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, std::ve
     outfile->Printf("\n S2 is %f", S2);
 }
 
+void AdaptiveCI::project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot )
+{
+	double spin_contamination = compute_spin_contamination(space, evecs, nroot);
+	if(spin_contamination >= spin_tol_){
+		if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
+		full_spin_transform(space, evecs, nroot);
+		evecs->zero();
+		evecs = PQ_spin_evecs_->clone();
+        compute_H_expectation_val(space,evals,evecs,nroot,diag_method_);
+	}else if (!quiet_mode_){
+		outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+		outfile->Printf("\n  No need to perform spin projection.");
+	}
+}
 
 }} // EndNamespaces
 
