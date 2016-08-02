@@ -607,32 +607,116 @@ void THREE_DSRG_MRPT2::compute_t2()
         }
     });
 
-    // zero internal amplitudes or keep the upper triangle
-    if(!options_.get_bool("INTERNAL_AMP")){
-        T2_.block("aaaa").zero();
-        T2_.block("aAaA").zero();
-        T2_.block("AAAA").zero();
-    } else {
+    // internal amplitudes (AA->AA)
+    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+    if(internal_amp.find("DOUBLES") != string::npos){
         size_t nactv1 = mo_space_info_->size("ACTIVE");
         size_t nactv2 = nactv1 * nactv1;
         size_t nactv3 = nactv2 * nactv1;
+        size_t nactv_occ = actv_occ_mos_.size();
+        size_t nactv_uocc = actv_uocc_mos_.size();
 
-        for(size_t i = 0; i < nactv1; ++i){
-            for(size_t j = 0; j < nactv1; ++j){
-                size_t c = i * nactv1 + j;
-                for(size_t a = 0; a < nactv1; ++a){
-                    for(size_t b = 0; b < nactv1; ++b){
-                        size_t v = a * nactv1 + b;
-                        if(c >= v){
-                            size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
-                            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
-                                T2_.block(block).data()[idx] = 0.0;
+        if(internal_amp_select == "ALL"){
+            for(size_t i = 0; i < nactv1; ++i){
+                for(size_t j = 0; j < nactv1; ++j){
+                    size_t c = i * nactv1 + j;
+
+                    for(size_t a = 0; a < nactv1; ++a){
+                        for(size_t b = 0; b < nactv1; ++b){
+                            size_t v = a * nactv1 + b;
+
+                            if(c >= v){
+                                size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
+                                for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                                    T2_.block(block).data()[idx] = 0.0;
+                                }
+                            }
+
+                        }
+                    }
+
+                }
+            }
+        } else if (internal_amp_select == "OOVV"){
+            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                // copy original data
+                std::vector<double> data (T2_.block(block).data());
+
+                T2_.block(block).zero();
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t A = 0; A < nactv_uocc; ++A){
+                            for(size_t B = 0; B < nactv_uocc; ++B){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                T2_.block(block).data()[idx] = data[idx];
                             }
                         }
                     }
                 }
+
+            }
+        } else {
+            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                // copy original data
+                std::vector<double> data (T2_.block(block).data());
+                T2_.block(block).zero();
+
+                // OO->VV
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t A = 0; A < nactv_uocc; ++A){
+                            for(size_t B = 0; B < nactv_uocc; ++B){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
+                // OO->OV, OO->VO
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t K = 0; K < nactv_occ; ++K){
+                            for(size_t A = 0; A < nactv_uocc; ++A){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_occ_mos_[K] * nactv1 + actv_uocc_mos_[A];
+                                T2_.block(block).data()[idx] = data[idx];
+
+                                idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_occ_mos_[K];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
+                // OV->VV, VO->VV
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t A = 0; A < nactv_uocc; ++A){
+                        for(size_t B = 0; B < nactv_uocc; ++B){
+                            for(size_t C = 0; C < nactv_uocc; ++C){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_uocc_mos_[A] * nactv2
+                                        + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                T2_.block(block).data()[idx] = data[idx];
+
+                                idx = actv_uocc_mos_[A] * nactv3 + actv_occ_mos_[I] * nactv2
+                                        + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
             }
         }
+
+    } else {
+        T2_.block("aaaa").zero();
+        T2_.block("aAaA").zero();
+        T2_.block("AAAA").zero();
     }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -645,7 +729,7 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
     T2min = BTF_->build(tensor_type_, "T2min", t2_spaces, true);
     Timer timer_b_min;
     ambit::BlockedTensor ThreeInt = compute_B_minimal(t2_spaces);
-    if(detail_time_) outfile->Printf("\n Took %8.4f s to compute_B_minimal");
+    if(detail_time_) outfile->Printf("\n Took %8.4f s to compute_B_minimal", timer_b_min.get());
     Timer v_t2;
     T2min["ijab"] =  (ThreeInt["gia"] * ThreeInt["gjb"]);
     T2min["ijab"] -= (ThreeInt["gib"] * ThreeInt["gja"]);
@@ -671,31 +755,110 @@ ambit::BlockedTensor THREE_DSRG_MRPT2::compute_T2_minimal(const std::vector<std:
     });
     if(detail_time_) outfile->Printf("\n T2 iteration takes %8.4f s", t2_iterate.get());
 
-    // zero internal amplitudes or keep the upper triangle
+    // internal amplitudes (AA->AA)
+    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+
     for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
-        if(std::find(t2_spaces.begin(), t2_spaces.end(), block)!=t2_spaces.end()){
-            if(!options_.get_bool("INTERNAL_AMP")){
-                T2min.block(block).zero();
-            } else {
+        if(std::find(t2_spaces.begin(), t2_spaces.end(), block) != t2_spaces.end()){
+
+            if(internal_amp.find("DOUBLES") != string::npos){
                 size_t nactv1 = mo_space_info_->size("ACTIVE");
                 size_t nactv2 = nactv1 * nactv1;
                 size_t nactv3 = nactv2 * nactv1;
+                size_t nactv_occ = actv_occ_mos_.size();
+                size_t nactv_uocc = actv_uocc_mos_.size();
 
-                for(size_t i = 0; i < nactv1; ++i){
-                    for(size_t j = 0; j < nactv1; ++j){
-                        size_t c = i * nactv1 + j;
-                        for(size_t a = 0; a < nactv1; ++a){
-                            for(size_t b = 0; b < nactv1; ++b){
-                                size_t v = a * nactv1 + b;
-                                if(c >= v){
-                                    size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
-                                    T2_.block(block).data()[idx] = 0.0;
+                if(internal_amp_select == "ALL"){
+                    for(size_t i = 0; i < nactv1; ++i){
+                        for(size_t j = 0; j < nactv1; ++j){
+                            size_t c = i * nactv1 + j;
+
+                            for(size_t a = 0; a < nactv1; ++a){
+                                for(size_t b = 0; b < nactv1; ++b){
+                                    size_t v = a * nactv1 + b;
+
+                                    if(c >= v){
+                                        size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
+                                        T2min.block(block).data()[idx] = 0.0;
+                                    }
+
+                                }
+                            }
+
+                        }
+                    }
+                } else if (internal_amp_select == "OOVV"){
+                    // copy original data
+                    std::vector<double> data (T2min.block(block).data());
+
+                    T2min.block(block).zero();
+                    for(size_t I = 0; I < nactv_occ; ++I){
+                        for(size_t J = 0; J < nactv_occ; ++J){
+                            for(size_t A = 0; A < nactv_uocc; ++A){
+                                for(size_t B = 0; B < nactv_uocc; ++B){
+                                    size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                            + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                    T2min.block(block).data()[idx] = data[idx];
                                 }
                             }
                         }
                     }
-                }
+                } else {
+                    // copy original data
+                    std::vector<double> data (T2min.block(block).data());
+                    T2min.block(block).zero();
 
+                    // OO->VV
+                    for(size_t I = 0; I < nactv_occ; ++I){
+                        for(size_t J = 0; J < nactv_occ; ++J){
+                            for(size_t A = 0; A < nactv_uocc; ++A){
+                                for(size_t B = 0; B < nactv_uocc; ++B){
+                                    size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                            + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                    T2min.block(block).data()[idx] = data[idx];
+                                }
+                            }
+                        }
+                    }
+
+                    // OO->OV, OO->VO
+                    for(size_t I = 0; I < nactv_occ; ++I){
+                        for(size_t J = 0; J < nactv_occ; ++J){
+                            for(size_t K = 0; K < nactv_occ; ++K){
+                                for(size_t A = 0; A < nactv_uocc; ++A){
+                                    size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                            + actv_occ_mos_[K] * nactv1 + actv_uocc_mos_[A];
+                                    T2min.block(block).data()[idx] = data[idx];
+
+                                    idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                            + actv_uocc_mos_[A] * nactv1 + actv_occ_mos_[K];
+                                    T2min.block(block).data()[idx] = data[idx];
+                                }
+                            }
+                        }
+                    }
+
+                    // OV->VV, VO->VV
+                    for(size_t I = 0; I < nactv_occ; ++I){
+                        for(size_t A = 0; A < nactv_uocc; ++A){
+                            for(size_t B = 0; B < nactv_uocc; ++B){
+                                for(size_t C = 0; C < nactv_uocc; ++C){
+                                    size_t idx = actv_occ_mos_[I] * nactv3 + actv_uocc_mos_[A] * nactv2
+                                            + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                    T2min.block(block).data()[idx] = data[idx];
+
+                                    idx = actv_uocc_mos_[A] * nactv3 + actv_occ_mos_[I] * nactv2
+                                            + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                    T2min.block(block).data()[idx] = data[idx];
+                                }
+                            }
+                        }
+                    }
+                } // end internal selection
+
+            } else {
+                T2min.block(block).zero();
             } // end internal
         } // end block existence test
     } // end block labels loop
@@ -908,13 +1071,13 @@ void THREE_DSRG_MRPT2::compute_t1()
     N["IA"] += temp["XU"] * T2_["IUAX"];
     T1_["IA"] = N["IA"] * RDelta1_["IA"];
 
-    // zero internal amplitudes or keep the upper triangle
-    if(!options_.get_bool("INTERNAL_AMP")){
-        T1_.block("AA").zero();
-        T1_.block("aa").zero();
-    } else {
+    // internal amplitudes (A->A)
+    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+    if(internal_amp.find("SINGLES") != std::string::npos){
         size_t nactv = mo_space_info_->size("ACTIVE");
 
+        // zero half internals to avoid double counting
         for(size_t i = 0; i < nactv; ++i){
             for(size_t a = 0; a < nactv; ++a){
                 if(i >= a){
@@ -925,6 +1088,35 @@ void THREE_DSRG_MRPT2::compute_t1()
                 }
             }
         }
+
+        if(internal_amp_select != "ALL"){
+            size_t nactv_occ = actv_occ_mos_.size();
+            size_t nactv_uocc = actv_uocc_mos_.size();
+
+            // zero O->O internals
+            for(size_t I = 0; I < nactv_occ; ++I){
+                for(size_t J = 0; J < nactv_occ; ++J){
+                    size_t idx = actv_occ_mos_[I] * nactv + actv_occ_mos_[J];
+                    for(const std::string& block: {"aa", "AA"}){
+                        T1_.block(block).data()[idx] = 0.0;
+                    }
+                }
+            }
+
+            // zero V->V internals
+            for(size_t A = 0; A < nactv_uocc; ++A){
+                for(size_t B = 0; B < nactv_uocc; ++B){
+                    size_t idx = actv_uocc_mos_[A] * nactv + actv_uocc_mos_[B];
+                    for(const std::string& block: {"aa", "AA"}){
+                        T1_.block(block).data()[idx] = 0.0;
+                    }
+                }
+            }
+
+        }
+    } else {
+        T1_.block("AA").zero();
+        T1_.block("aa").zero();
     }
 
     outfile->Printf("...Done. Timing %15.6f s", timer.get());
@@ -1009,7 +1201,7 @@ double THREE_DSRG_MRPT2::E_FT1()
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
         E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
 
@@ -1046,7 +1238,7 @@ double THREE_DSRG_MRPT2::E_VT1()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -1094,7 +1286,7 @@ double THREE_DSRG_MRPT2::E_FT2()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -1238,7 +1430,7 @@ double THREE_DSRG_MRPT2::E_VT2_2()
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
     //outfile->Printf("\n  E_ccvv = %8.6f", Eccvv);
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
@@ -1288,7 +1480,7 @@ double THREE_DSRG_MRPT2::E_VT2_4HH()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
         temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
@@ -1330,7 +1522,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PP()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
         temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
@@ -1437,7 +1629,7 @@ double THREE_DSRG_MRPT2::E_VT2_4PH()
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
         temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];

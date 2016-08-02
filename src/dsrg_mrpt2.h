@@ -39,16 +39,13 @@
 
 using namespace ambit;
 namespace psi{ namespace forte{
-/**
- * @brief The MethodBase class
- * This class provides basic functions to write electronic structure
- * pilot codes using the Tensor classes
- */
+
 class DSRG_MRPT2 : public Wavefunction
 {
 public:
     /**
      * DSRG_MRPT2 Constructor
+     * @param reference The reference object of FORTE
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
@@ -68,6 +65,11 @@ public:
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+
+    /// Set active active occupied MOs (relative to active)
+    void set_actv_occ(std::vector<size_t> actv_occ) {actv_occ_mos_ = std::vector<size_t>(actv_occ);}
+    /// Set active active unoccupied MOs (relative to active)
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {actv_uocc_mos_ = std::vector<size_t>(actv_uocc);}
 
 protected:
     // => Class initialization and termination <= //
@@ -106,6 +108,11 @@ protected:
     std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos_;
+
+    /// List of active active occupied MOs (relative to active)
+    std::vector<size_t> actv_occ_mos_;
+    /// List of active active unoccupied MOs (relative to active)
+    std::vector<size_t> actv_uocc_mos_;
 
     /// Alpha core label
     std::string acore_label_;

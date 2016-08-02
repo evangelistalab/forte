@@ -15,6 +15,7 @@ FCI_MO::FCI_MO(SharedWavefunction ref_wfn, Options& options,
 {
     shallow_copy(ref_wfn);
     reference_wavefunction_ = ref_wfn;
+    print_method_banner({"Complete Active Space Configuration Interaction","Chenyang Li"});
     startup();
 }
 
@@ -235,9 +236,70 @@ void FCI_MO::read_options(){
         outfile->Printf("\n");
         outfile->Flush();
     }
+
+    // state averaging
+    if(options_["AVG_STATES"].has_changed()){
+        size_t navg_states = options_["AVG_STATES"].size();
+
+        if(navg_states < 1 || navg_states > nroot_){
+            outfile->Printf("\n  Invalid number of states to average. Please increase NROOT.");
+            throw PSIEXCEPTION("Invalid number of states to average.");
+        }
+
+        avg_states_.clear();
+        avg_weights_.clear();
+        for(int i = 0; i < navg_states; ++i){
+            int state = options_["AVG_STATES"][i].to_integer();
+            if(state > nroot_ - 1){
+                outfile->Printf("\n  Invalid root number in AVG_STATES. Please check ROOT (start from 0) or increase NROOT.");
+                throw PSIEXCEPTION("Invalid root number in AVG_STATES.");
+            }
+
+            avg_states_.push_back(state);
+            avg_weights_.push_back(1.0 / navg_states);
+        }
+
+        if(options_["AVG_WEIGHTS"].has_changed()){
+            avg_weights_.clear();
+            if(options_["AVG_WEIGHTS"].size() != navg_states){
+                outfile->Printf("\n  Mismatched number of average weights.");
+                throw PSIEXCEPTION("Mismatched number of average weights.");
+            }
+
+            double total = 0.0;
+            for(int i = 0; i < navg_states; ++i){
+                double weight = options_["AVG_WEIGHTS"][i].to_double();
+                if(weight < 0.0){
+                    outfile->Printf("\n  Negative entries in AVG_WEIGHTS.");
+                    throw PSIEXCEPTION("Negative entries in AVG_WEIGHTS.");
+                }
+
+                avg_weights_.push_back(weight);
+                total += weight;
+            }
+
+            if(fabs(total - 1.0) > 1.0e-10){
+                outfile->Printf("\n  AVG_WEIGHTS entries do not add up to 1.0.");
+                throw PSIEXCEPTION("AVG_WEIGHTS entries do not add up to 1.0.");
+            }
+        }
+
+        // printing
+        print_h2("State Averaging");
+        outfile->Printf("\n    AVG_STATES   ");
+        for(int i = 0; i < navg_states; ++i){
+            outfile->Printf("%5d", avg_states_[i]);
+        }
+        outfile->Printf("\n    AVG_WEIGHTS  ");
+        for(int i = 0; i < navg_states; ++i){
+            outfile->Printf("%5.2f", avg_weights_[i]);
+        }
+        outfile->Printf("\n");
+    }
 }
 
 double FCI_MO::compute_energy(){
+
     // allocate density
     Da_ = d2(ncmo_, d1(ncmo_));
     Db_ = d2(ncmo_, d1(ncmo_));
@@ -303,7 +365,8 @@ double FCI_MO::compute_energy(){
     if(!default_orbitals_){
         if(semi_ && count != 0){
             // Semi-canonicalize orbitals
-            semi_canonicalize(count);
+            outfile->Printf("\n  Use semi-canonical orbitals.\n");
+            semi_canonicalize();
 
             // Form and Diagonalize the CASCI Hamiltonian
             Diagonalize_H(determinant_, eigen_);
@@ -324,7 +387,7 @@ double FCI_MO::compute_energy(){
             for(int i = 0; i < eigen_.size(); ++i){
                 evecs->set_column(0,i,(eigen_[i]).first);
             }
-            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs, root_, root_);
+            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
 
             // Form Density
             FormDensity(ci_rdms, Da_, Db_);
@@ -334,7 +397,7 @@ double FCI_MO::compute_energy(){
             }
 
             // Fock Matrix
-            size_t count = 0;
+            count = 0;
             Form_Fock(Fa_,Fb_);
             Check_Fock(Fa_,Fb_,dconv_,count);
             if(print_ > 1){
@@ -678,6 +741,24 @@ vector<bool> FCI_MO::Form_String_Ref(const bool &print){
     active_o_ = doccpi - frzcpi_ - core_;
     active_v_ = active_ - active_o_;
 
+    ao_.clear();
+    av_.clear();
+    for(int h = 0; h < nirrep_; ++h){
+        int h_local = h;
+        size_t offset = 0;
+        while(--h_local >= 0){
+            offset += active_[h_local];
+        }
+
+        for(size_t i = 0; i < active_[h]; ++i){
+            if(i < active_o_[h]){
+                ao_.push_back(i + offset);
+            } else {
+                av_.push_back(i + offset);
+            }
+        }
+    }
+
     if(print){
         print_h2("Reference String");
         outfile->Printf("    ");
@@ -697,7 +778,6 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
     // occupied and unoccupied indices, symmetry (active)
     int symmetry = 0;
     vector<int> uocc, occ;
-    ao_.clear();av_.clear();
     for(size_t i = 0; i < na_; ++i){
         if(ipea_ != "NONE" &&
                 std::find(diffused_orbs_.begin(), diffused_orbs_.end(), i) != diffused_orbs_.end()){
@@ -707,10 +787,8 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Singles(const vector<bool> &ref
         if(ref_string[i]){
             occ.push_back(i);
             symmetry ^= sym_active_[i];
-            ao_.push_back(i);
         }else{
             uocc.push_back(i);
-            av_.push_back(i);
         }
     }
 
@@ -909,124 +987,224 @@ vector<vector<vector<bool>>> FCI_MO::Form_String_Doubles(const vector<bool> &ref
     return String;
 }
 
-void FCI_MO::semi_canonicalize(const size_t& count){
-    outfile->Printf("\n  Use semi-canonical orbitals.\n");
+void FCI_MO::semi_canonicalize(){
+    SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
+    SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
+    BD_Fock(Fa_,Fb_,Ua,Ub,"Fock");
+    SharedMatrix Ca = this->Ca();
+    SharedMatrix Cb = this->Cb();
+    SharedMatrix Ca_new(Ca->clone());
+    SharedMatrix Cb_new(Cb->clone());
+    Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
+    Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
 
-    if(count != 0){
-        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
-        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
-        BD_Fock(Fa_,Fb_,Ua,Ub,"Fock");
-        SharedMatrix Ca = this->Ca();
-        SharedMatrix Cb = this->Cb();
-        SharedMatrix Ca_new(Ca->clone());
-        SharedMatrix Cb_new(Cb->clone());
-        Ca_new->gemm(false,false,1.0,Ca,Ua,0.0);
-        Cb_new->gemm(false,false,1.0,Cb,Ub,0.0);
+    // overlap of original and semicanonical orbitals
+    SharedMatrix MOoverlap = Matrix::triplet(Ca,this->S(),Ca_new,true,false,false);
+    MOoverlap->set_name("MO overlap");
 
-        // overlap of original and semicanonical orbitals
-        SharedMatrix MOoverlap = Matrix::triplet(Ca,this->S(),Ca_new,true,false,false);
-        MOoverlap->set_name("MO overlap");
+    // copy semicanonical orbital to wavefunction
+    Ca->copy(Ca_new);
+    Cb->copy(Cb_new);
 
-        // copy semicanonical orbital to wavefunction
-        Ca->copy(Ca_new);
-        Cb->copy(Cb_new);
+    // test active orbital ordering
+    for(int h = 0; h < nirrep_; ++h){
+        int actv_start = frzcpi_[h] + core_[h];
+        int actv_end   = actv_start + active_[h];
 
-        // test active orbital ordering
-        for(int h = 0; h < nirrep_; ++h){
-            int actv_start = frzcpi_[h] + core_[h];
-            int actv_end   = actv_start + active_[h];
+        std::map<int, int> indexmap;
+        std::vector<int> idx_0;
+        for(int i = actv_start; i < actv_end; ++i){
+            int ii = 0; // corresponding index in semicanonical basis
+            double smax = 0.0;
 
-            std::map<int, int> indexmap;
-            std::vector<int> idx_0;
-            for(int i = actv_start; i < actv_end; ++i){
-                int ii = 0; // corresponding index in semicanonical basis
-                double smax = 0.0;
-
-                for(int j = actv_start; j < actv_end; ++j){
-                    double s = MOoverlap->get(h,i,j);
-                    if(fabs(s) > smax){
-                        smax = fabs(s);
-                        ii = j;
-                    }
-                }
-
-                if(ii != i){
-                    indexmap[i] = ii;
-                    idx_0.push_back(i);
+            for(int j = actv_start; j < actv_end; ++j){
+                double s = MOoverlap->get(h,i,j);
+                if(fabs(s) > smax){
+                    smax = fabs(s);
+                    ii = j;
                 }
             }
 
-            // find orbitals to swap if the loop is closed
-            std::vector<int> idx_swap;
-            for(const int& x: idx_0){
-                // if index x is already in the to-be-swapped index, then continue
-                if(std::find(idx_swap.begin(), idx_swap.end(), x) != idx_swap.end()){
-                    continue;
-                }
-
-                std::vector<int> temp;
-                int local = x;
-
-                while(indexmap.find(indexmap[local]) != indexmap.end()){
-                    if(std::find(temp.begin(), temp.end(), local) == temp.end()){
-                        temp.push_back(local);
-                    } else {
-                        // a loop found
-                        break;
-                    }
-
-                    local = indexmap[local];
-                }
-
-                // start from the point that has the value of "local" and copy to idx_swap
-                int pos = std::find(temp.begin(), temp.end(), local) - temp.begin();
-                for(int i = pos; i < temp.size(); ++i){
-                    if(std::find(idx_swap.begin(), idx_swap.end(), temp[i]) == idx_swap.end()){
-                        idx_swap.push_back(temp[i]);
-                    }
-                }
-            }
-
-            // remove the swapped orbitals from the vector of orginal orbitals
-            idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
-                                       [&](int i) {return std::find(idx_swap.begin(), idx_swap.end(), i) != idx_swap.end();}),
-                        idx_0.end());
-
-            // swap orbitals if they are in the intersection
-            for(const int& x: idx_swap){
-                int h_local = h;
-                size_t ni = x - frzcpi_[h];
-                size_t nj = indexmap[x] - frzcpi_[h];
-                while((--h_local) >= 0){
-                    ni += ncmopi_[h_local];
-                    nj += ncmopi_[h_local];
-                }
-                outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
-                Ca->set_column(h, x, Ca_new->get_column(h, indexmap[x]));
-                Cb->set_column(h, x, Cb_new->get_column(h, indexmap[x]));
-            }
-
-            // throw warnings when inconsistency is detected
-            for(const int& x: idx_0){
-                int h_local = h;
-                size_t ni = x - frzcpi_[h];
-                size_t nj = indexmap[x] - frzcpi_[h];
-                while((--h_local) >= 0){
-                    ni += ncmopi_[h_local];
-                    nj += ncmopi_[h_local];
-                }
-                outfile->Printf("\n  Orbital %3zu may have changed to semicanonical orbital %3zu. Please interpret orbitals with caution.", ni, nj);
+            if(ii != i){
+                indexmap[i] = ii;
+                idx_0.push_back(i);
+                outfile->Printf("\n  i = %3d, ii = %3d, smax = %.15f", i, ii, smax);
             }
         }
 
-        outfile->Printf("\n\n");
-        integral_->retransform_integrals();
-        ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
-        ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
-        ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
+        // find orbitals to swap if the loop is closed
+        std::vector<int> idx_swap;
+        for(const int& x: idx_0){
+            // if index x is already in the to-be-swapped index, then continue
+            if(std::find(idx_swap.begin(), idx_swap.end(), x) != idx_swap.end()){
+                continue;
+            }
+
+            std::vector<int> temp;
+            int local = x;
+
+            while(indexmap.find(indexmap[local]) != indexmap.end()){
+                if(std::find(temp.begin(), temp.end(), local) == temp.end()){
+                    temp.push_back(local);
+                } else {
+                    // a loop found
+                    break;
+                }
+
+                local = indexmap[local];
+            }
+
+            // start from the point that has the value of "local" and copy to idx_swap
+            int pos = std::find(temp.begin(), temp.end(), local) - temp.begin();
+            for(int i = pos; i < temp.size(); ++i){
+                if(std::find(idx_swap.begin(), idx_swap.end(), temp[i]) == idx_swap.end()){
+                    idx_swap.push_back(temp[i]);
+                }
+            }
+        }
+
+        // remove the swapped orbitals from the vector of orginal orbitals
+        idx_0.erase(std::remove_if(idx_0.begin(), idx_0.end(),
+                                   [&](int i) {return std::find(idx_swap.begin(), idx_swap.end(), i) != idx_swap.end();}),
+                    idx_0.end());
+
+        // swap orbitals
+        for(const int& x: idx_swap){
+            int h_local = h;
+            size_t ni = x - frzcpi_[h];
+            size_t nj = indexmap[x] - frzcpi_[h];
+            while((--h_local) >= 0){
+                ni += ncmopi_[h_local];
+                nj += ncmopi_[h_local];
+            }
+            outfile->Printf("\n  Orbital ordering changed due to semicanonicalization. Swapped orbital %3zu back to %3zu.", nj, ni);
+            Ca->set_column(h, x, Ca_new->get_column(h, indexmap[x]));
+            Cb->set_column(h, x, Cb_new->get_column(h, indexmap[x]));
+        }
+
+        // throw warnings when inconsistency is detected
+        for(const int& x: idx_0){
+            int h_local = h;
+            size_t ni = x - frzcpi_[h];
+            size_t nj = indexmap[x] - frzcpi_[h];
+            while((--h_local) >= 0){
+                ni += ncmopi_[h_local];
+                nj += ncmopi_[h_local];
+            }
+            outfile->Printf("\n  Orbital %3zu may have changed to semicanonical orbital %3zu. Please interpret orbitals with caution.", ni, nj);
+        }
     }
+
+//    // test integral transformation
+//    ambit::Tensor U = ambit::Tensor::build(ambit::CoreTensor,"Orbital rotation",{ncmo_,ncmo_});
+//    ambit::Tensor H = ambit::Tensor::build(ambit::CoreTensor,"OEI",{ncmo_,ncmo_});
+//    ambit::Tensor F = ambit::Tensor::build(ambit::CoreTensor,"Fock",{ncmo_,ncmo_});
+//    ambit::Tensor Da = ambit::Tensor::build(ambit::CoreTensor,"Da",{ncmo_,ncmo_});
+//    ambit::Tensor Db = ambit::Tensor::build(ambit::CoreTensor,"Db",{ncmo_,ncmo_});
+//    ambit::Tensor Vaa = ambit::Tensor::build(ambit::CoreTensor,"Vaa",{ncmo_,ncmo_,ncmo_,ncmo_});
+//    ambit::Tensor Vab = ambit::Tensor::build(ambit::CoreTensor,"Vab",{ncmo_,ncmo_,ncmo_,ncmo_});
+//    ambit::Tensor H_trans = ambit::Tensor::build(ambit::CoreTensor,"OEI transformed by integral class",{ncmo_,ncmo_});
+//    ambit::Tensor Vaa_trans = ambit::Tensor::build(ambit::CoreTensor,"Vaa transformed by integral class",{ncmo_,ncmo_,ncmo_,ncmo_});
+//    ambit::Tensor Vab_trans = ambit::Tensor::build(ambit::CoreTensor,"Vab transformed by integral class",{ncmo_,ncmo_,ncmo_,ncmo_});
+
+//    Vaa.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->aptei_aa(i[0],i[1],i[2],i[3]);
+//    });
+//    Vab.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->aptei_ab(i[0],i[1],i[2],i[3]);
+//    });
+//    H.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_a(i[0],i[1]);
+//    });
+////    H.print();
+
+//    Da.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = Da_[i[0]][i[1]];
+//    });
+//    Db.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = Db_[i[0]][i[1]];
+//    });
+
+
+//    for(int h = 0; h < nirrep_; ++h){
+//        int h_local = h;
+//        size_t offset = 0;
+//        while(--h_local >= 0){
+//            offset += ncmopi_[h_local];
+//        }
+
+//        for(size_t p = 0; p < ncmopi_[h]; ++p){
+//            size_t np = p + offset;
+//            for(size_t q = 0; q < ncmopi_[h]; ++q){
+//                size_t nq = q + offset;
+
+//                size_t idx = np * ncmo_ + nq;
+//                U.data()[idx] = Ua->get(h,p+frzcpi_[h],q+frzcpi_[h]);
+//            }
+//        }
+//    }
+//    U.print();
+
+//    ambit::Tensor tempH = ambit::Tensor::build(ambit::CoreTensor,"H temp",{ncmo_,ncmo_});
+//    ambit::Tensor tempDa = ambit::Tensor::build(ambit::CoreTensor,"Da temp",{ncmo_,ncmo_});
+//    ambit::Tensor tempVaa = ambit::Tensor::build(ambit::CoreTensor,"Vaa temp",{ncmo_,ncmo_,ncmo_,ncmo_});
+//    ambit::Tensor tempVab = ambit::Tensor::build(ambit::CoreTensor,"Vab temp",{ncmo_,ncmo_,ncmo_,ncmo_});
+//    tempVaa("cdkl") = U("ac") * U("bd") * Vaa("abij") * U("jl") * U("ik");
+//    tempVab("cdkl") = U("ac") * U("bd") * Vab("abij") * U("jl") * U("ik");
+//    tempH("rs") = U("pr") * H("pq") * U("qs");
+//    tempDa("rs") = U("pr") * Da("pq") * U("qs");
+////    tempDa.print();
+////    tempVaa.print();
+
+//    F("pq")  = tempH("pq");
+//    F("pq") += U("xp") * Vaa("xrys") * U("yq") * Da("sr");
+//    F("pq") += U("xp") * Vab("xrys") * U("yq") * Db("sr");
+////    F.print();
+
+    outfile->Printf("\n\n");
+    integral_->retransform_integrals();
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+
+//    Vaa_trans.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->aptei_aa(i[0],i[1],i[2],i[3]);
+//    });
+//    Vab_trans.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->aptei_ab(i[0],i[1],i[2],i[3]);
+//    });
+//    H_trans.iterate([&](const std::vector<size_t>& i,double& value){
+//        value = integral_->oei_a(i[0],i[1]);
+//    });
+////    Vab_trans.print();
+
+//    size_t ncmo2 = ncmo_ * ncmo_;
+//    size_t ncmo3 = ncmo_ * ncmo2;
+//    for(size_t p = 0; p < ncmo_; ++p){
+//        for(size_t q = 0; q < ncmo_; ++q){
+
+//            double v1 = tempH.data()[p * ncmo_ + q];
+//            double v2 = H_trans.data()[p * ncmo_ + q];
+////            double diff = fabs(v1) - fabs(v2);
+//            double diff = v1 - v2;
+//            if(fabs(diff) > 1.0e-12){
+//                outfile->Printf("\n  diff of H[%3zu][%3zu] = %20.15f", p, q, diff);
+//            }
+
+//            for(size_t r = 0; r < ncmo_; ++r){
+//                for(size_t s = 0; s < ncmo_; ++s){
+//                    double v3 = tempVaa.data()[p * ncmo3 + q * ncmo2 + r * ncmo_ + s];
+//                    double v4 = Vaa_trans.data()[p * ncmo3 + q * ncmo2 + r * ncmo_ + s];
+//                    double diff = fabs(v3) - fabs(v4);
+//                    if(fabs(diff) > 1.0e-12){
+//                        outfile->Printf("\n  diff of V[%3zu][%3zu][%3zu][%3zu] = %20.15f", p, q, r, s, diff);
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>> &eigen){
@@ -1045,8 +1223,9 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
         STLBitsetDeterminant bs_det(alfa_bits,beta_bits);
         P_space.push_back(bs_det);
     }
+
     SparseCISolver sparse_solver;
-    int nroot = det_size < 25 ? det_size : 25;
+    int nroot = det_size < 5 * nroot_ ? det_size : 5 * nroot_;
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
@@ -1108,7 +1287,6 @@ inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, in
 }
 
 void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector, double>> &eigen, const vecdet &det){
-
     timer_on("STORE CI Vectors");
     if(!quiet_){
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
@@ -1118,6 +1296,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
         outfile->Flush();
     }
 
+    dominant_dets_.clear();
     for(int i = 0; i != nroot; ++i){
         vector<tuple<double, int>> ci_selec; // tuple<coeff, index>
 
@@ -1128,7 +1307,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
                 ci_selec.push_back(make_tuple(value, j));
         }
         sort(ci_selec.begin(), ci_selec.end(), ReverseAbsSort);
-        dominant_det_ = det[get<1>(ci_selec[0])];
+        dominant_dets_.push_back(det[get<1>(ci_selec[0])]);
 
         if(!quiet_){outfile->Printf("\n  ==> Root No. %d <==\n", i);}
         for(size_t j = 0; j < ci_selec.size(); ++j){
@@ -1233,7 +1412,7 @@ void FCI_MO::print_d2(const string &str, const d2 &OnePD){
     timer_off("PRINT Density");
 }
 
-void FCI_MO::FormCumulant2(CI_RDMS &ci_rdms, const int &root, d4 &AA, d4 &AB, d4 &BB){
+void FCI_MO::FormCumulant2(CI_RDMS &ci_rdms, d4 &AA, d4 &AB, d4 &BB){
     timer_on("FORM 2-Cumulant");
     Timer tL2;
     std::string str = "Forming Lambda2";
@@ -1371,7 +1550,7 @@ double FCI_MO::TwoOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, 
     }else{timer_off("2PO"); return 0.0;}
 }
 
-void FCI_MO::FormCumulant3(CI_RDMS &ci_rdms, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC){
+void FCI_MO::FormCumulant3(CI_RDMS &ci_rdms, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC){
     timer_on("FORM 3-Cumulant");
     Timer tL3;
     std::string str = "Forming Lambda3";
@@ -1865,12 +2044,15 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         blocks = {Fc_a,Fc_b,Fv_a,Fv_b,Fao_a,Fao_b,Fav_a,Fav_b};
     }
     for(auto F: blocks){
-        SharedMatrix U(new Matrix("U",F->rowspi(),F->colspi()));
+        std::string name = "U for " + F->name();
+        SharedMatrix U(new Matrix(name,F->rowspi(),F->colspi()));
         SharedVector lambda(new Vector("lambda",F->rowspi()));
         F->diagonalize(U,lambda);
         evecs.push_back(U);
         evals.push_back(lambda);
 //        U->eivprint(lambda);
+//        SharedMatrix X = Matrix::triplet(U,F,U,true,false,false);
+//        X->print();
     }
 
     // fill in the unitary rotation
@@ -2196,7 +2378,7 @@ void FCI_MO::compute_ref(){
     L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{na_, na_, na_, na_});
     L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{na_, na_, na_, na_});
 
-    FormCumulant2(ci_rdms, root_, L2aa_, L2ab_, L2bb_);
+    FormCumulant2(ci_rdms, L2aa_, L2ab_, L2bb_);
     if(print_ > 2){
         print2PDC("L2aa", L2aa_, print_);
         print2PDC("L2ab", L2ab_, print_);
@@ -2217,7 +2399,7 @@ void FCI_MO::compute_ref(){
         L3bbb = ambit::Tensor::build(ambit::CoreTensor,"L3bbb",{na_, na_, na_, na_, na_, na_});
 
         if(boost::starts_with(threepdc, "MK") && t_algorithm != "DSRG_NOSEMI"){
-            FormCumulant3(ci_rdms, root_, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
+            FormCumulant3(ci_rdms, L3aaa_, L3aab_, L3abb_, L3bbb_, threepdc);
         }
         else if (threepdc == "DIAG"){
             FormCumulant3_DIAG(determinant_, root_, L3aaa_, L3aab_, L3abb_, L3bbb_);
@@ -2250,6 +2432,154 @@ Reference FCI_MO::reference()
         ref.set_L3bbb(L3bbb);
     }
     return ref;
+}
+
+void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb){
+    SharedMatrix Ca_wfn = this->Ca();
+    SharedMatrix Cb_wfn = this->Cb();
+    Ca_wfn->copy(Ca);
+    Cb_wfn->copy(Cb);
+    integral_->retransform_integrals();
+    ambit::Tensor tei_active_aa = integral_->aptei_aa_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_ab = integral_->aptei_ab_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    ambit::Tensor tei_active_bb = integral_->aptei_bb_block(idx_a_, idx_a_, idx_a_, idx_a_);
+    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints_->compute_restricted_one_body_operator();
+}
+
+double FCI_MO::compute_energy_sa(){
+    // allocate density
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a",{na_, na_});
+    L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b",{na_, na_});
+
+    // allocate Fock matrix
+    Fa_ = d2(ncmo_, d1(ncmo_));
+    Fb_ = d2(ncmo_, d1(ncmo_));
+
+    // form determinants
+    form_p_space();
+
+    // diagonalize the CASCI Hamiltonian
+    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
+    Diagonalize_H(determinant_, eigen_);
+    if(print_ > 2 && !quiet_){
+        for(pair<SharedVector, double> x: eigen_){
+            outfile->Printf("\n\n  Spin selected CI vectors\n");
+            (x.first)->print();
+            outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+        }
+    }
+
+    // store CI vectors in eigen_
+    if(nroot_ > eigen_.size()){
+        outfile->Printf("\n  Too many roots of interest!");
+        if(eigen_.size() > 1)
+            outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
+        else
+            outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
+        outfile->Printf("\n  Check root_sym, multi, etc.");
+        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
+        throw PSIEXCEPTION("Too many roots of interest.");
+    }
+    Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+    // prepare ci_rdms for one density
+    int dim = (eigen_[0].first)->dim();
+    SharedMatrix evecs (new Matrix("evecs",dim,dim));
+    for(int i = 0; i < eigen_.size(); ++i){
+        evecs->set_column(0,i,(eigen_[i]).first);
+    }
+//    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
+
+//    // form density
+//    FormDensity(ci_rdms, Da_, Db_);
+//    if(print_ > 1){
+//        print_d2("Da", Da_);
+//        print_d2("Db", Db_);
+//    }
+
+    // if state averaging
+    if(options_["AVG_STATES"].has_changed()){
+        size_t navg_states = avg_states_.size();
+        for(int i = 0; i < navg_states; ++i){
+            int root1 = avg_states_[i];
+            double weight1 = avg_weights_[i];
+
+            for(int j = 0; j < navg_states; ++j){
+                int root2 = avg_states_[j];
+                double weight2 = avg_weights_[j];
+                d2 Da = d2(ncmo_, d1(ncmo_));
+                d2 Db = d2(ncmo_, d1(ncmo_));
+
+                CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root1,root2);
+                FormDensity(ci_rdms, Da, Db);
+
+            }
+        }
+    }
+
+    // Fock Matrix
+    size_t count = 0;
+    Form_Fock(Fa_,Fb_);
+    Check_Fock(Fa_,Fb_,dconv_,count);
+    if(print_ > 1){
+        print_d2("Fa", Fa_);
+        print_d2("Fb", Fb_);
+    }
+
+    // Orbitals. If use Kevin's CASSCF, this part is ignored.
+    if(!default_orbitals_){
+        if(semi_ && count != 0){
+            // Semi-canonicalize orbitals
+            outfile->Printf("\n  Use semi-canonical orbitals.\n");
+            semi_canonicalize();
+
+            // Form and Diagonalize the CASCI Hamiltonian
+            Diagonalize_H(determinant_, eigen_);
+            if(print_ > 2){
+                for(pair<SharedVector, double> x: eigen_){
+                    outfile->Printf("\n\n  Spin selected CI vectors\n");
+                    (x.first)->print();
+                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+                }
+            }
+
+            // Store CI Vectors in eigen_
+            Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+            // prepare ci_rdms for one density
+            int dim = (eigen_[0].first)->dim();
+            SharedMatrix evecs (new Matrix("evecs",dim,dim));
+            for(int i = 0; i < eigen_.size(); ++i){
+                evecs->set_column(0,i,(eigen_[i]).first);
+            }
+            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
+
+            // Form Density
+            FormDensity(ci_rdms, Da_, Db_);
+            if(print_ > 1){
+                print_d2("Da", Da_);
+                print_d2("Db", Db_);
+            }
+
+            // Fock Matrix
+            size_t count = 0;
+            Form_Fock(Fa_,Fb_);
+            Check_Fock(Fa_,Fb_,dconv_,count);
+            if(print_ > 1){
+                print_d2("Fa", Fa_);
+                print_d2("Fb", Fb_);
+            }
+        }else{
+//            nat_orbs();
+        }
+    }
+
+    Eref_ = eigen_[root_].second;
+    Process::environment.globals["CURRENT ENERGY"] = Eref_;
+    return Eref_;
 }
 
 }}
