@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wed Jul 27 17:36:05 2016
+    Psi4 started on: Tue Aug  2 18:35:00 2016
 
-    Process ID:  44415
+    Process ID:  70965
     PSI4DATADIR: /Users/zxu66/src/psi4public/share
     Memory level set to 256.000 MB
 
@@ -32,7 +32,7 @@
 import forte
 memory 500 mb
 
-refdsrgpt2   = -100.023143001118669
+refdsrgpt2   =  -100.067222639376482
 
 molecule HF{
   0 1
@@ -52,16 +52,17 @@ set globals{
 
 set forte{
   job_type                active-dsrgpt2
-  frozen_docc             [1,0,1,1]
+  frozen_docc             [1,0,0,0]
   restricted_docc         [0,0,0,0]
-  active                  [4,0,0,0]
-  frozen_uocc             [5,1,3,3]
+  active                  [4,0,2,2]
+  frozen_uocc             [5,1,2,2]
   nrootpi                 [1,0,0,0]
   dsrg_s                  1.0
   cas_type                cas
   active_space_type       cisd
   cisd_ex_no_hf           true
-  internal_amp            true
+  internal_amp            singles_doubles
+  internal_amp_select     all
   ntamp                   60
 }
 
@@ -81,14 +82,14 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),7,"CD-DSRG-MRPT2 energy
 set forte{
   job_type                dsrg-mrpt2
   int_type                conventional
-  frozen_docc             [1,0,1,1]
-  restricted_docc         [2,0,0,0]
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [2,0,1,1]
   active                  [0,0,0,0]
-  frozen_uocc             [5,1,3,3]
+  frozen_uocc             [5,1,2,2]
+  internal_amp            none
 }
 Edsrg_sr = energy('forte', ref_wfn=wfn)
 compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
-
 --------------------------------------------------------------------------
 /Users/zxu66/src/v2rdm_casscf/v2rdm_casscf.so loaded.
 /Users/zxu66/src/forte/forte.so loaded.
@@ -96,7 +97,7 @@ compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
   Memory set to 500.000 MiB by Python script.
 
 *** tstart() called on che-zxu66-01i
-*** at Wed Jul 27 17:36:06 2016
+*** at Tue Aug  2 18:35:01 2016
 
 
          ---------------------------------------------------------
@@ -197,43 +198,23 @@ compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -99.85079074898003   -9.98508e+01   8.86447e-02 
-   @RHF iter   1:   -99.97358720518011   -1.22796e-01   2.46409e-02 
-   @RHF iter   2:  -100.00252507117396   -2.89379e-02   1.33550e-02 DIIS
+   @RHF iter   0:   -99.85079074897999   -9.98508e+01   8.86447e-02 
+   @RHF iter   1:   -99.97358720518012   -1.22796e-01   2.46409e-02 
+   @RHF iter   2:  -100.00252507117401   -2.89379e-02   1.33550e-02 DIIS
    @RHF iter   3:  -100.00936922921476   -6.84416e-03   2.04727e-03 DIIS
-   @RHF iter   4:  -100.00982232914490   -4.53100e-04   6.57227e-04 DIIS
-   @RHF iter   5:  -100.00986878847424   -4.64593e-05   9.24343e-05 DIIS
-   @RHF iter   6:  -100.00987000833248   -1.21986e-06   1.36276e-05 DIIS
-   @RHF iter   7:  -100.00987003204816   -2.37157e-08   1.69919e-06 DIIS
-   @RHF iter   8:  -100.00987003232079   -2.72635e-10   2.07721e-07 DIIS
-   @RHF iter   9:  -100.00987003232471   -3.92220e-12   1.63000e-08 DIIS
-   @RHF iter  10:  -100.00987003232464    7.10543e-14   2.44791e-09 DIIS
-   @RHF iter  11:  -100.00987003232481   -1.70530e-13   1.66495e-10 DIIS
-   @RHF iter  12:  -100.00987003232478    2.84217e-14   1.24170e-11 DIIS
-   @RHF iter  13:  -100.00987003232471    7.10543e-14   2.15883e-12 DIIS
-   @RHF iter  14:  -100.00987003232478   -7.10543e-14   6.19285e-14 DIIS
-   @RHF iter  15:  -100.00987003232484   -5.68434e-14   1.77940e-14 DIIS
-   @RHF iter  16:  -100.00987003232471    1.27898e-13   8.01346e-15 DIIS
-   @RHF iter  17:  -100.00987003232474   -2.84217e-14   3.48352e-15 DIIS
-   @RHF iter  18:  -100.00987003232473    1.42109e-14   3.17101e-15 DIIS
-   @RHF iter  19:  -100.00987003232476   -2.84217e-14   2.66388e-15 DIIS
-   @RHF iter  20:  -100.00987003232483   -7.10543e-14   3.55880e-15 DIIS
-   @RHF iter  21:  -100.00987003232481    1.42109e-14   2.95571e-15 DIIS
-   @RHF iter  22:  -100.00987003232473    8.52651e-14   2.63098e-15 DIIS
-   @RHF iter  23:  -100.00987003232477   -4.26326e-14   2.64420e-15 DIIS
-   @RHF iter  24:  -100.00987003232471    5.68434e-14   2.78943e-15 DIIS
-   @RHF iter  25:  -100.00987003232468    2.84217e-14   3.43365e-15 DIIS
-   @RHF iter  26:  -100.00987003232473   -4.26326e-14   2.53770e-15 DIIS
-   @RHF iter  27:  -100.00987003232477   -4.26326e-14   3.22749e-15 DIIS
-   @RHF iter  28:  -100.00987003232474    2.84217e-14   2.28326e-15 DIIS
-   @RHF iter  29:  -100.00987003232468    5.68434e-14   2.94537e-15 DIIS
-   @RHF iter  30:  -100.00987003232470   -1.42109e-14   2.34382e-15 DIIS
-   @RHF iter  31:  -100.00987003232481   -1.13687e-13   3.51160e-15 DIIS
-   @RHF iter  32:  -100.00987003232474    7.10543e-14   2.80517e-15 DIIS
-   @RHF iter  33:  -100.00987003232470    4.26326e-14   2.99926e-15 DIIS
-   @RHF iter  34:  -100.00987003232477   -7.10543e-14   3.11771e-15 DIIS
-   @RHF iter  35:  -100.00987003232474    2.84217e-14   2.92954e-15 DIIS
-   @RHF iter  36:  -100.00987003232474    0.00000e+00   3.07167e-15 DIIS
+   @RHF iter   4:  -100.00982232914488   -4.53100e-04   6.57227e-04 DIIS
+   @RHF iter   5:  -100.00986878847419   -4.64593e-05   9.24343e-05 DIIS
+   @RHF iter   6:  -100.00987000833241   -1.21986e-06   1.36276e-05 DIIS
+   @RHF iter   7:  -100.00987003204810   -2.37157e-08   1.69919e-06 DIIS
+   @RHF iter   8:  -100.00987003232088   -2.72777e-10   2.07721e-07 DIIS
+   @RHF iter   9:  -100.00987003232471   -3.83693e-12   1.63000e-08 DIIS
+   @RHF iter  10:  -100.00987003232473   -1.42109e-14   2.44791e-09 DIIS
+   @RHF iter  11:  -100.00987003232480   -7.10543e-14   1.66495e-10 DIIS
+   @RHF iter  12:  -100.00987003232477    2.84217e-14   1.24173e-11 DIIS
+   @RHF iter  13:  -100.00987003232476    1.42109e-14   2.15899e-12 DIIS
+   @RHF iter  14:  -100.00987003232468    7.10543e-14   6.24255e-14 DIIS
+   @RHF iter  15:  -100.00987003232476   -7.10543e-14   1.86116e-14 DIIS
+   @RHF iter  16:  -100.00987003232476    0.00000e+00   7.70314e-15 DIIS
 
   ==> Post-Iterations <==
 
@@ -250,8 +231,8 @@ compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
        4A1     0.164493     5A1     0.737647     2B2     1.383060  
        2B1     1.383060     6A1     1.446649     3B2     1.616045  
        3B1     1.616045     7A1     2.133481     8A1     2.301792  
-       9A1     4.012209     1A2     4.012209     4B1     4.207293  
-       4B2     4.207293    10A1     4.935778  
+       9A1     4.012209     1A2     4.012209     4B2     4.207293  
+       4B1     4.207293    10A1     4.935778  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
@@ -259,13 +240,13 @@ compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
 
   Energy converged.
 
-  @RHF Final Energy:  -100.00987003232474
+  @RHF Final Energy:  -100.00987003232476
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              4.7625948773099998
-    One-Electron Energy =                -149.9568562656195923
-    Two-Electron Energy =                  45.1843913559848716
+    One-Electron Energy =                -149.9568562656193080
+    Two-Electron Energy =                  45.1843913559845802
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
@@ -275,14 +256,14 @@ compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
 
   Saving occupied orbitals to File 180.
 
-*** tstop() called on che-zxu66-01i at Wed Jul 27 17:36:06 2016
+*** tstop() called on che-zxu66-01i at Tue Aug  2 18:35:01 2016
 Module time:
-	user time   =       0.24 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.31 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.24 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
+	user time   =       0.31 seconds =       0.01 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 
 
@@ -316,25 +297,23 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Read options for space ACTIVE
   Read options for space FROZEN_UOCC
  Removing orbital 0
- Removing orbital 11
- Removing orbital 15
   -------------------------------------------------
                        A1    A2    B1    B2   Sum
   -------------------------------------------------
-    FROZEN_DOCC         1     0     1     1     3
+    FROZEN_DOCC         1     0     0     0     1
     RESTRICTED_DOCC     0     0     0     0     0
-    ACTIVE              4     0     0     0     4
+    ACTIVE              4     0     2     2     8
     RESTRICTED_UOCC     0     0     0     0     0
-    FROZEN_UOCC         5     1     3     3    12
+    FROZEN_UOCC         5     1     2     2    10
     Total              10     1     4     4    19
   -------------------------------------------------
 
   ==> Integral Transformation <==
 
   Number of molecular orbitals:               19
-  Number of correlated molecular orbitals:     4
-  Number of frozen occupied orbitals:          3
-  Number of frozen unoccupied orbitals:       12
+  Number of correlated molecular orbitals:     8
+  Number of frozen occupied orbitals:          1
+  Number of frozen unoccupied orbitals:       10
 
 
   Overall Conventional Integrals timings
@@ -348,7 +327,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.24310500 s
+  Integral transformation done. 0.27423800 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002913 GB  Using in-core PK algorithm.
    Calculation information:
@@ -366,11 +345,11 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   We computed 1035 shell quartets total.
   Whereas there are 1035 unique shell quartets.
 
-  Frozen-core energy            -95.777625202108 a.u.
+  Frozen-core energy            -76.535749118262 a.u.
 
- FrozenOneBody Operator takes  0.05396400 s
+  FrozenOneBody Operator takes  0.06703000 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.52312400 s
+  Conventional integrals take 0.61935700 s
 
                                ------------------
                                  ACTIVE-DSRGPT2
@@ -386,6 +365,12 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
       NROOTS     1     0     0     0
     ----------------------------------
 
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
   ==> Input Summary <==
 
     number of atoms                =     2
@@ -400,37 +385,33 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   ==> Orbital Spaces <==
 
     TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    1     0     1     1 ]
-    FROZEN VIRTUAL                [    5     1     3     3 ]
-    CORRELATED MO                 [    4     0     0     0 ]
+    FROZEN CORE                   [    1     0     0     0 ]
+    FROZEN VIRTUAL                [    5     1     2     2 ]
+    CORRELATED MO                 [    4     0     2     2 ]
     CORE                          [    0     0     0     0 ]
-    ACTIVE                        [    4     0     0     0 ]
+    ACTIVE                        [    4     0     2     2 ]
     VIRTUAL                       [    0     0     0     0 ]
 
   ==> Correlated Subspace Indices <==
 
     CORE                          
-    ACTIVE                           0    1    2    3 
-    HOLE                             0    1    2    3 
+    ACTIVE                           0    1    2    3    4    5    6    7 
+    HOLE                             0    1    2    3    4    5    6    7 
     VIRTUAL                       
-    PARTICLE                         0    1    2    3 
+    PARTICLE                         0    1    2    3    4    5    6    7 
 
-
-  ===================================
-    Current Job:  A1 state, root  0
-  ===================================
-
+    Looping over all roots to determine excitation type.
 
   ==> Determinants Summary <==
 
-    number of alpha active electrons    =     2
-    number of beta active electrons     =     2
+    number of alpha active electrons    =     4
+    number of beta active electrons     =     4
     root symmetry (zero based)          =     0
     number of determinants              =     1
 
   ==> Determinants |alpha|beta> <==
   
-  |2200>
+  |22002020>
 
 
   Diagonalizing Hamiltonian           ...
@@ -438,7 +419,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Reference type: RHF
   Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000052 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000116 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -446,13 +427,13 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Root No. 0 <==
 
-    2200          1.0000000000
+    2200 20 20          1.0000000000
 
-    Total Energy:   -100.009870032324756
+    Total Energy:   -100.009870032324883
 
 
-  Forming one-particle density        ...  Done. Timing        0.000030 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.000007 s
+  Forming one-particle density        ...  Done. Timing        0.000718 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.000035 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Fa_CORE    block is diagonal.
@@ -463,10 +444,60 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Fb_ACT_V   block is diagonal.
   Fa_VIRTUAL block is diagonal.
   Fb_VIRTUAL block is diagonal.
-  Done checking Fock matrices.                   Timing        0.000065 s
+  Done checking Fock matrices.                   Timing        0.000105 s
 
-  Forming Lambda2                     ...  Done. Timing        0.000081 s
-  Forming Lambda3                     ...  Done. Timing        0.001871 s
+
+  ===================================
+    Current Job:  A1 state, root  0
+  ===================================
+
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     4
+    number of beta active electrons     =     4
+    root symmetry (zero based)          =     0
+    number of determinants              =     1
+
+  ==> Determinants |alpha|beta> <==
+  
+  |22002020>
+
+
+  Diagonalizing Hamiltonian           ...
+
+  Reference type: RHF
+  Threshold for spin check: 0.10
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000066 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2200 20 20          1.0000000000
+
+    Total Energy:   -100.009870032324883
+
+
+  Forming one-particle density        ...  Done. Timing        0.000036 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.000031 s
+  Checking Fock matrices (Fa, Fb)     ...
+  Nonzero criteria: > 1.00E-12
+  Fa_CORE    block is diagonal.
+  Fb_CORE    block is diagonal.
+  Fa_ACT_O   block is diagonal.
+  Fb_ACT_O   block is diagonal.
+  Fa_ACT_V   block is diagonal.
+  Fb_ACT_V   block is diagonal.
+  Fa_VIRTUAL block is diagonal.
+  Fb_VIRTUAL block is diagonal.
+  Done checking Fock matrices.                   Timing        0.000087 s
+
+  Forming Lambda2                     ...  Done. Timing        0.002112 s
+  Forming Lambda3                     ...  Done. Timing        0.191412 s
 
               ----------------------------------------------------
                  Driven Similarity Renormalization Group MBPT2
@@ -478,13 +509,13 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Calculation Information <==
 
-    ntamp                                           60
-    flow parameter                           1.000e+00
-    taylor expansion threshold               1.000e-03
-    intruder_tamp                            1.000e-01
-    int_type                                CONVENTIONAL
-    source operator                           STANDARD
-    reference relaxation                          NONE
+    ntamp                                                 60
+    flow parameter                                 1.000e+00
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
 
   ==> Checking Orbitals <==
 
@@ -493,68 +524,103 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.001388 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.001320 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.000237 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.001384 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001362 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.003492 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.003406 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.017631 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.006536 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.005728 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.018055 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.010967 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.021306 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.002909 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.002033 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.002515 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001896 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.007721 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.008639 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.030456 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.011883 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.011921 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.034239 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.202740 s
 
   ==> Excitation Amplitudes Summary <==
 
-    Active Indices:    0    1    2    3 
+    Active Indices:    0    1    2    3    4    5    6    7 
 
 
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
+    [  4   6   5   6]-0.086588 [  4   6   4   7]-0.086588 [  0   6   0   7]-0.075022 
+    [  0   4   0   5]-0.075022 [  1   6   1   7]-0.068859 [  1   4   1   5]-0.068859 
+    [  1   6   2   6] 0.065689 [  1   4   2   4] 0.065689 [  1   6   3   6]-0.061381 
+    [  1   4   3   4]-0.061381 [  2   6   3   6] 0.052815 [  2   4   3   4] 0.052815 
     [  0   1   0   2] 0.052146 [  0   2   0   3] 0.051009 [  0   1   1   2] 0.048390 
-    [  0   1   0   3]-0.044484 [  1   2   1   3] 0.034629 [  0   3   1   3] 0.033599 
-    [  0   1   1   3]-0.031332 [  1   2   2   3]-0.023293 [  0   3   2   3]-0.015646 
-    [  0   2   1   2] 0.012412 [  0   2   2   3] 0.008202 [  0   2   1   3]-0.001805 
-    [  0   3   1   2]-0.000553 [  0   1   2   3]-0.000259 [  1   3   2   3]-0.000153 
+    [  2   5   3   5] 0.047662 [  2   7   3   7] 0.047662 [  4   7   5   7]-0.047014 
+    [  5   6   5   7]-0.047014 [  0   1   0   3]-0.044484 [  0   6   2   6]-0.039700 
+    [  0   4   2   4]-0.039700 [  1   7   2   7] 0.035470 [  1   5   2   5] 0.035470 
+    [  1   2   1   3] 0.034629 [  0   3   1   3] 0.033599 [  0   7   2   7]-0.031724 
+    [  0   5   2   5]-0.031724 [  0   1   1   3]-0.031332 [  1   7   2   6]-0.030809 
+    [  1   5   2   4]-0.030809 [  1   7   3   6] 0.027879 [  1   5   3   4] 0.027879 
+    [  4   6   5   7]-0.023909 [  1   2   2   3]-0.023293 [  1   4   3   5]-0.019808 
+    [  1   6   3   7]-0.019808 [  1   6   2   7] 0.017491 [  1   4   2   5] 0.017491 
+    [  2   7   3   6]-0.016551 [  2   5   3   4]-0.016551 [  0   3   2   3]-0.015646 
+    [  0   5   1   5] 0.014791 [  0   7   1   7] 0.014791 [  3   6   3   7]-0.013915 
+    [  3   4   3   5]-0.013915 [  0   2   1   2] 0.012412 [  1   7   3   7]-0.011798 
+    [  1   5   3   5]-0.011798 [  2   6   2   7]-0.010817 [  2   4   2   5]-0.010817 
+    [  0   6   1   6]-0.010388 [  0   4   1   4]-0.010388 [  0   4   1   5]-0.009682 
+    [  0   6   1   7]-0.009682 [  0   2   6   7]-0.009487 [  0   2   4   5]-0.009487 
+    [  2   6   3   7] 0.008873 [  2   4   3   5] 0.008873 [  0   6   3   6] 0.008659 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 61)                   0.236335531122435.
+    Norm of T2AA vector: (nonzero elements: 360)                  0.622078333245794.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   1   1]-0.090212 [  0   1   0   2] 0.073828 [  2   3   3   3] 0.070106 
-    [  1   3   3   3] 0.067501 [  1   2   1   3] 0.066994 [  0   2   0   3] 0.065678 
-    [  0   1   0   3]-0.060352 [  1   1   1   2] 0.059416 [  0   0   0   2]-0.057299 
-    [  0   3   1   3] 0.052616 [  1   1   3   3]-0.041071 [  2   2   3   3]-0.040622 
-    [  1   1   1   3]-0.040573 [  0   3   1   1] 0.038920 [  0   1   1   3]-0.033120 
-    [  1   1   2   2]-0.029849 [  2   2   2   3] 0.029546 [  0   2   1   2] 0.029137 
-    [  1   1   2   3] 0.028286 [  0   0   0   3] 0.020107 [  0   1   1   1]-0.017211 
-    [  0   3   3   3]-0.017113 [  0   2   1   3]-0.014730 [  0   1   1   2] 0.014208 
-    [  0   0   1   2] 0.013787 [  1   3   2   3]-0.013499 [  0   3   2   3]-0.011990 
-    [  0   3   2   2] 0.011245 [  0   0   2   2]-0.010922 [  0   1   2   2] 0.010645 
-    [  1   2   3   3]-0.010580 [  0   2   2   2]-0.010358 [  0   1   3   3] 0.008411 
-    [  0   0   3   3]-0.008388 [  0   0   1   3]-0.008359 [  0   2   2   3] 0.007641 
-    [  0   0   2   3] 0.007475 [  0   1   2   3]-0.006921 [  1   2   2   2]-0.006497 
-    [  0   3   1   2]-0.006262 [  1   2   2   3]-0.005235 [  0   0   0   1]-0.003404 
-    [  1   3   2   2]-0.002530 [  0   2   3   3] 0.002313 [  0   2   1   1]-0.000950 
+    [  6   6   6   7]-0.106014 [  4   4   4   5]-0.106014 [  0   6   0   7]-0.094602 
+    [  0   4   0   5]-0.094602 [  4   6   5   6]-0.093064 [  4   6   4   7]-0.093064 
+    [  0   0   1   1]-0.090212 [  0   0   6   6]-0.085649 [  0   0   4   4]-0.085649 
+    [  0   1   0   2] 0.073828 [  1   6   1   7]-0.072420 [  1   4   1   5]-0.072420 
+    [  1   6   2   6] 0.070256 [  1   4   2   4] 0.070256 [  2   3   3   3] 0.070106 
+    [  1   3   3   3] 0.067501 [  1   2   1   3] 0.066994 [  1   6   3   6]-0.066843 
+    [  1   4   3   4]-0.066843 [  0   2   0   3] 0.065678 [  0   1   0   3]-0.060352 
+    [  1   1   1   2] 0.059416 [  0   0   0   2]-0.057299 [  2   6   3   6] 0.056916 
+    [  2   4   3   4] 0.056916 [  2   5   3   5] 0.055411 [  2   7   3   7] 0.055411 
+    [  0   3   1   3] 0.052616 [  6   7   7   7]-0.051249 [  4   5   5   5]-0.051249 
+    [  0   6   2   6]-0.051224 [  0   4   2   4]-0.051224 [  4   7   5   7]-0.048426 
+    [  5   6   5   7]-0.048426 [  1   1   3   3]-0.041071 [  2   2   3   3]-0.040622 
+    [  1   1   1   3]-0.040573 [  0   3   1   1] 0.038920 [  6   6   7   7]-0.034716 
+    [  4   4   5   5]-0.034716 [  1   7   2   6]-0.034074 [  1   5   2   4]-0.034074 
+    [  1   7   3   6] 0.033375 [  1   5   3   4] 0.033375 [  0   1   1   3]-0.033120 
+    [  0   5   1   4] 0.029852 [  0   7   1   6] 0.029852 [  1   1   2   2]-0.029849 
+    [  2   2   2   3] 0.029546 [  0   2   1   2] 0.029137 [  1   1   2   3] 0.028286 
+    [  0   7   2   7]-0.028098 [  0   5   2   5]-0.028098 [  4   6   5   7]-0.027511 
+    [  0   6   1   6]-0.026208 [  0   4   1   4]-0.026208 [  1   7   2   7] 0.023031 
+    [  1   5   2   5] 0.023031 [  0   6   3   6] 0.021045 [  0   4   3   4] 0.021045 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 115)                  0.338787150634836.
+    Norm of T2AB vector: (nonzero elements: 523)                  0.640546714414003.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
+    [  4   6   5   6]-0.086588 [  4   6   4   7]-0.086588 [  0   6   0   7]-0.075022 
+    [  0   4   0   5]-0.075022 [  1   6   1   7]-0.068859 [  1   4   1   5]-0.068859 
+    [  1   6   2   6] 0.065689 [  1   4   2   4] 0.065689 [  1   6   3   6]-0.061381 
+    [  1   4   3   4]-0.061381 [  2   6   3   6] 0.052815 [  2   4   3   4] 0.052815 
     [  0   1   0   2] 0.052146 [  0   2   0   3] 0.051009 [  0   1   1   2] 0.048390 
-    [  0   1   0   3]-0.044484 [  1   2   1   3] 0.034629 [  0   3   1   3] 0.033599 
-    [  0   1   1   3]-0.031332 [  1   2   2   3]-0.023293 [  0   3   2   3]-0.015646 
-    [  0   2   1   2] 0.012412 [  0   2   2   3] 0.008202 [  0   2   1   3]-0.001805 
-    [  0   3   1   2]-0.000553 [  0   1   2   3]-0.000259 [  1   3   2   3]-0.000153 
+    [  2   5   3   5] 0.047662 [  2   7   3   7] 0.047662 [  4   7   5   7]-0.047014 
+    [  5   6   5   7]-0.047014 [  0   1   0   3]-0.044484 [  0   6   2   6]-0.039700 
+    [  0   4   2   4]-0.039700 [  1   7   2   7] 0.035470 [  1   5   2   5] 0.035470 
+    [  1   2   1   3] 0.034629 [  0   3   1   3] 0.033599 [  0   7   2   7]-0.031724 
+    [  0   5   2   5]-0.031724 [  0   1   1   3]-0.031332 [  1   7   2   6]-0.030809 
+    [  1   5   2   4]-0.030809 [  1   7   3   6] 0.027879 [  1   5   3   4] 0.027879 
+    [  4   6   5   7]-0.023909 [  1   2   2   3]-0.023293 [  1   4   3   5]-0.019808 
+    [  1   6   3   7]-0.019808 [  1   6   2   7] 0.017491 [  1   4   2   5] 0.017491 
+    [  2   7   3   6]-0.016551 [  2   5   3   4]-0.016551 [  0   3   2   3]-0.015646 
+    [  0   5   1   5] 0.014791 [  0   7   1   7] 0.014791 [  3   6   3   7]-0.013915 
+    [  3   4   3   5]-0.013915 [  0   2   1   2] 0.012412 [  1   7   3   7]-0.011798 
+    [  1   5   3   5]-0.011798 [  2   6   2   7]-0.010817 [  2   4   2   5]-0.010817 
+    [  0   6   1   6]-0.010388 [  0   4   1   4]-0.010388 [  0   4   1   5]-0.009682 
+    [  0   6   1   7]-0.009682 [  0   2   6   7]-0.009487 [  0   2   4   5]-0.009487 
+    [  2   6   3   7] 0.008873 [  2   4   3   5] 0.008873 [  0   6   3   6] 0.008659 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 61)                   0.236335531122435.
+    Norm of T2BB vector: (nonzero elements: 360)                  0.622078333245794.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -562,35 +628,40 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     T1 amplitudes larger than 0.1000 for spin case A: NULL
     T1 amplitudes larger than 0.1000 for spin case B: NULL
     T2 amplitudes larger than 0.1000 for spin case AA: NULL
-    T2 amplitudes larger than 0.1000 for spin case AB: NULL
+    T2 amplitudes larger than 0.1000 for spin case AB:
+        Amplitude         Value                               Denominator                           
+    ------------------------------------------------------------------------------------------------
+    [  6   6   6   7]   -0.10601436 ( -0.621198 +  -0.621198 -  -0.621198 -   1.383060 =  -2.004258)
+    [  4   4   4   5]   -0.10601436 ( -0.621198 +  -0.621198 -  -0.621198 -   1.383060 =  -2.004258)
+    ------------------------------------------------------------------------------------------------
     T2 amplitudes larger than 0.1000 for spin case BB: NULL
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -100.009870032324756
+    E0 (reference)                 =   -100.009870032324883
     <[F, T1]>                      =      0.000000000000000
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.013272968793856
+    <[V, T2]> (C_2)^4              =     -0.057352607051729
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.013272968793856
-    DSRG-MRPT2 correlation energy  =     -0.013272968793856
-    DSRG-MRPT2 total energy        =   -100.023143001118612
+    <[V, T2]>                      =     -0.057352607051729
+    DSRG-MRPT2 correlation energy  =     -0.057352607051729
+    DSRG-MRPT2 total energy        =   -100.067222639376610
     max(T1)                        =      0.000000000000000
-    max(T2)                        =      0.090212272135012
+    max(T2)                        =      0.106014358899177
     ||T1||                         =      0.000000000000000
-    ||T2||                         =      0.755523593465439
+    ||T2||                         =      1.554079559988493
 
-  Energy took 0.07318600 s
+  Energy took 0.35423400 s
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.004       0.003       0.059
+    -> C0       0.002       0.008       0.009       0.292
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -600,10 +671,10 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
     Sym.    ROOT         CISD                 PT2
     ----------------------------------------------------
-      A1       0     -100.0098700323     -100.0231430011
+      A1       0     -100.0098700323     -100.0672226394
     ----------------------------------------------------
 
-  Your calculation took 0.62853900 seconds
+  Your calculation took 1.30519600 seconds
 	DSRG-MRPT2 energy.................................................PASSED
 
 Reading options from the FORTE block
@@ -619,31 +690,29 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Read options for space ACTIVE
   Read options for space FROZEN_UOCC
  Removing orbital 0
- Removing orbital 11
- Removing orbital 15
   -------------------------------------------------
                        A1    A2    B1    B2   Sum
   -------------------------------------------------
-    FROZEN_DOCC         1     0     1     1     3
+    FROZEN_DOCC         1     0     0     0     1
     RESTRICTED_DOCC     0     0     0     0     0
-    ACTIVE              4     0     0     0     4
+    ACTIVE              4     0     2     2     8
     RESTRICTED_UOCC     0     0     0     0     0
-    FROZEN_UOCC         5     1     3     3    12
+    FROZEN_UOCC         5     1     2     2    10
     Total              10     1     4     4    19
   -------------------------------------------------
 
   ==> Integral Transformation <==
 
   Number of molecular orbitals:               19
-  Number of correlated molecular orbitals:     4
-  Number of frozen occupied orbitals:          3
-  Number of frozen unoccupied orbitals:       12
+  Number of correlated molecular orbitals:     8
+  Number of frozen occupied orbitals:          1
+  Number of frozen unoccupied orbitals:       10
 
 
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.079491 s
+    Computing CD Integrals               ......Done. Timing        0.093731 s
  Need 0.000430 GB to store cd integrals in core
 
  Number of cholesky vectors 160 to satisfy       0.000000010000 tolerance
@@ -663,11 +732,11 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   We computed 1035 shell quartets total.
   Whereas there are 1035 unique shell quartets.
 
-  Frozen-core energy            -95.777625202108 a.u.
+  Frozen-core energy            -76.535749118262 a.u.
 
- FrozenOneBody Operator takes  0.05808700 s
+  FrozenOneBody Operator takes  0.07009900 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 0.15102300
+  CholeskyIntegrals take 0.18800400
 
                                ------------------
                                  ACTIVE-DSRGPT2
@@ -683,6 +752,12 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
       NROOTS     1     0     0     0
     ----------------------------------
 
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
   ==> Input Summary <==
 
     number of atoms                =     2
@@ -697,20 +772,70 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   ==> Orbital Spaces <==
 
     TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    1     0     1     1 ]
-    FROZEN VIRTUAL                [    5     1     3     3 ]
-    CORRELATED MO                 [    4     0     0     0 ]
+    FROZEN CORE                   [    1     0     0     0 ]
+    FROZEN VIRTUAL                [    5     1     2     2 ]
+    CORRELATED MO                 [    4     0     2     2 ]
     CORE                          [    0     0     0     0 ]
-    ACTIVE                        [    4     0     0     0 ]
+    ACTIVE                        [    4     0     2     2 ]
     VIRTUAL                       [    0     0     0     0 ]
 
   ==> Correlated Subspace Indices <==
 
     CORE                          
-    ACTIVE                           0    1    2    3 
-    HOLE                             0    1    2    3 
+    ACTIVE                           0    1    2    3    4    5    6    7 
+    HOLE                             0    1    2    3    4    5    6    7 
     VIRTUAL                       
-    PARTICLE                         0    1    2    3 
+    PARTICLE                         0    1    2    3    4    5    6    7 
+
+    Looping over all roots to determine excitation type.
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons    =     4
+    number of beta active electrons     =     4
+    root symmetry (zero based)          =     0
+    number of determinants              =     1
+
+  ==> Determinants |alpha|beta> <==
+  
+  |22002020>
+
+
+  Diagonalizing Hamiltonian           ...
+
+  Reference type: RHF
+  Threshold for spin check: 0.10
+
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000070 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2200 20 20          1.0000000000
+
+    Total Energy:   -100.009870031921551
+
+
+  Forming one-particle density        ...  Done. Timing        0.000032 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.010324 s
+  Checking Fock matrices (Fa, Fb)     ...
+  Nonzero criteria: > 1.00E-12
+  Fa_CORE    block is diagonal.
+  Fb_CORE    block is diagonal.
+  Warning: Fa_ACT_O   NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034341
+  Warning: Fb_ACT_O   NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034341
+  Warning: Fa_ACT_V   NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830173
+  Warning: Fb_ACT_V   NOT diagonal!
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830173
+  Fa_VIRTUAL block is diagonal.
+  Fb_VIRTUAL block is diagonal.
+  Done checking Fock matrices.                   Timing        0.000130 s
 
 
   ===================================
@@ -720,14 +845,14 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Determinants Summary <==
 
-    number of alpha active electrons    =     2
-    number of beta active electrons     =     2
+    number of alpha active electrons    =     4
+    number of beta active electrons     =     4
     root symmetry (zero based)          =     0
     number of determinants              =     1
 
   ==> Determinants |alpha|beta> <==
   
-  |2200>
+  |22002020>
 
 
   Diagonalizing Hamiltonian           ...
@@ -735,7 +860,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Reference type: RHF
   Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000033 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000165 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -743,38 +868,38 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Root No. 0 <==
 
-    2200          1.0000000000
+    2200 20 20          1.0000000000
 
-    Total Energy:   -100.009870032255293
+    Total Energy:   -100.009870031921551
 
 
-  Forming one-particle density        ...  Done. Timing        0.000013 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.000763 s
+  Forming one-particle density        ...  Done. Timing        0.000042 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.001924 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Fa_CORE    block is diagonal.
   Fb_CORE    block is diagonal.
   Warning: Fa_ACT_O   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000008017
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034341
   Warning: Fb_ACT_O   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000008017
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034341
   Warning: Fa_ACT_V   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000589380
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830173
   Warning: Fb_ACT_V   NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000589380
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830173
   Fa_VIRTUAL block is diagonal.
   Fb_VIRTUAL block is diagonal.
-  Done checking Fock matrices.                   Timing        0.000069 s
+  Done checking Fock matrices.                   Timing        0.000234 s
 
   Use semi-canonical orbitals.
 
-  Diagonalizing Fock                  ...  Done. Timing        0.000061 s
+  Diagonalizing Fock                  ...  Done. Timing        0.000132 s
 
 
 
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        0.072783 s
+    Computing CD Integrals               ......Done. Timing        0.093410 s
  Need 0.000430 GB to store cd integrals in core
 
  Number of cholesky vectors 160 to satisfy       0.000000010000 tolerance
@@ -794,17 +919,17 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   We computed 1035 shell quartets total.
   Whereas there are 1035 unique shell quartets.
 
-  Frozen-core energy            -95.777625202108 a.u.
+  Frozen-core energy            -76.535749118262 a.u.
 
- FrozenOneBody Operator takes  0.04945200 s
+  FrozenOneBody Operator takes  0.06776000 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.050 s.
+  Frozen Orbitals takes     0.068 s.
   Diagonalizing Hamiltonian           ...
 
   Reference type: RHF
   Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000039 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000053 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -812,13 +937,13 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Root No. 0 <==
 
-    2200          1.0000000000
+    2200 20 20          1.0000000000
 
-    Total Energy:   -100.009870032255265
+    Total Energy:   -100.009870031921565
 
 
-  Forming one-particle density        ...  Done. Timing        0.000017 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.000941 s
+  Forming one-particle density        ...  Done. Timing        0.000030 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.001472 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Fa_CORE    block is diagonal.
@@ -829,10 +954,10 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Fb_ACT_V   block is diagonal.
   Fa_VIRTUAL block is diagonal.
   Fb_VIRTUAL block is diagonal.
-  Done checking Fock matrices.                   Timing        0.000055 s
+  Done checking Fock matrices.                   Timing        0.000064 s
 
-  Forming Lambda2                     ...  Done. Timing        0.000085 s
-  Forming Lambda3                     ...  Done. Timing        0.001858 s
+  Forming Lambda2                     ...  Done. Timing        0.001486 s
+  Forming Lambda3                     ...  Done. Timing        0.208076 s
 
            ---------------------------------------------------------
              DF/CD - Driven Similarity Renormalization Group MBPT2
@@ -841,7 +966,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
            ---------------------------------------------------------
 
   Reference = RHF
-  Reference Energy = -100.009870032255265
+  Reference Energy = -100.009870031921565
 
   ==> Checking Orbitals <==
 
@@ -856,44 +981,44 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     int_type                                  CHOLESKY
     ccvv_algorithm                           FLY_AMBIT
     ccvv_source                                 NORMAL
-    Computing T2                          ......Done. Timing        0.001444 s
-    Renormalizing V                       ......Done. Timing        0.000204 s
-    Computing T1                          ......Done. Timing        0.001784 s
-    Renormalizing F                       ......Done. Timing        0.002319 s
-    Computing <[F, T1]>                   ......Done. Timing        0.001734 s
-    Computing <[F, T2]>                   ......Done. Timing        0.003356 s
-    Computing <[V, T1]>                   ......Done. Timing        0.003972 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.011657 s
-    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.000068 s
-    Computing <[V, T2]> 4HH               ......Done. Timing        0.008633 s
-    Computing <V, T2]> 4PP                ......Done. Timing        0.006487 s
-    Computing [V, T2] 4PH                 ......Done. Timing        0.017943 s
-    Computing [V, T2] λ3                  ......Done. Timing        0.008936 s
+    Computing T2                          ......Done. Timing        0.015240 s
+    Renormalizing V                       ......Done. Timing        0.002031 s
+    Computing T1                          ......Done. Timing        0.003175 s
+    Renormalizing F                       ......Done. Timing        0.004177 s
+    Computing <[F, T1]>                   ......Done. Timing        0.003169 s
+    Computing <[F, T2]>                   ......Done. Timing        0.009446 s
+    Computing <[V, T1]>                   ......Done. Timing        0.006932 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv) ......Done. Timing        0.021160 s
+    Computing <[V, T2]> (C_2)^4 ccvv      ......Done. Timing        0.000810 s
+    Computing <[V, T2]> 4HH               ......Done. Timing        0.007642 s
+    Computing <V, T2]> 4PP                ......Done. Timing        0.007388 s
+    Computing [V, T2] 4PH                 ......Done. Timing        0.044468 s
+    Computing [V, T2] λ3                  ......Done. Timing        0.215181 s
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -100.009870032255265
+    E0 (reference)                 =   -100.009870031921565
     <[F, T1]>                      =     -0.000000000000000
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.013272968761356
+    <[V, T2]> (C_2)^4              =     -0.057352606836204
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.013272968761356
-    DSRG-MRPT2 correlation energy  =     -0.013272968761356
-    DSRG-MRPT2 total energy        =   -100.023143001016621
-    max(T1)                        =      0.000000000071744
-    ||T1||                         =      0.000000000116973
+    <[V, T2]>                      =     -0.057352606836204
+    DSRG-MRPT2 correlation energy  =     -0.057352606836204
+    DSRG-MRPT2 total energy        =   -100.067222638757769
+    max(T1)                        =      0.000000000267991
+    ||T1||                         =      0.000000000472975
 
-  CD/DF-DSRG-MRPT2 took   0.07641100 s.
+  CD/DF-DSRG-MRPT2 took   0.36071500 s.
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.003       0.004       0.052
+    -> C0       0.003       0.009       0.007       0.097
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
@@ -903,10 +1028,10 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
     Sym.    ROOT         CISD                 PT2
     ----------------------------------------------------
-      A1       0     -100.0098700323     -100.0231430010
+      A1       0     -100.0098700319     -100.0672226388
     ----------------------------------------------------
 
-  Your calculation took 0.43197900 seconds
+  Your calculation took 1.09865900 seconds
 	CD-DSRG-MRPT2 energy..............................................PASSED
 
 Reading options from the FORTE block
@@ -922,25 +1047,23 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Read options for space ACTIVE
   Read options for space FROZEN_UOCC
  Removing orbital 0
- Removing orbital 11
- Removing orbital 15
   -------------------------------------------------
                        A1    A2    B1    B2   Sum
   -------------------------------------------------
-    FROZEN_DOCC         1     0     1     1     3
-    RESTRICTED_DOCC     2     0     0     0     2
+    FROZEN_DOCC         1     0     0     0     1
+    RESTRICTED_DOCC     2     0     1     1     4
     ACTIVE              0     0     0     0     0
-    RESTRICTED_UOCC     2     0     0     0     2
-    FROZEN_UOCC         5     1     3     3    12
+    RESTRICTED_UOCC     2     0     1     1     4
+    FROZEN_UOCC         5     1     2     2    10
     Total              10     1     4     4    19
   -------------------------------------------------
 
   ==> Integral Transformation <==
 
   Number of molecular orbitals:               19
-  Number of correlated molecular orbitals:     4
-  Number of frozen occupied orbitals:          3
-  Number of frozen unoccupied orbitals:       12
+  Number of correlated molecular orbitals:     8
+  Number of frozen occupied orbitals:          1
+  Number of frozen unoccupied orbitals:       10
 
 
   Overall Conventional Integrals timings
@@ -954,7 +1077,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.31284000 s
+  Integral transformation done. 0.35801100 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002913 GB  Using in-core PK algorithm.
    Calculation information:
@@ -972,11 +1095,17 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   We computed 1035 shell quartets total.
   Whereas there are 1035 unique shell quartets.
 
-  Frozen-core energy            -95.777625202108 a.u.
+  Frozen-core energy            -76.535749118262 a.u.
 
- FrozenOneBody Operator takes  0.05072400 s
+  FrozenOneBody Operator takes  0.07335100 s
   Resorting integrals after freezing core.
-  Conventional integrals take 0.56825400 s
+  Conventional integrals take 0.68290400 s
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
 
   ==> Input Summary <==
 
@@ -992,20 +1121,20 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   ==> Orbital Spaces <==
 
     TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    1     0     1     1 ]
-    FROZEN VIRTUAL                [    5     1     3     3 ]
-    CORRELATED MO                 [    4     0     0     0 ]
-    CORE                          [    2     0     0     0 ]
+    FROZEN CORE                   [    1     0     0     0 ]
+    FROZEN VIRTUAL                [    5     1     2     2 ]
+    CORRELATED MO                 [    4     0     2     2 ]
+    CORE                          [    2     0     1     1 ]
     ACTIVE                        [    0     0     0     0 ]
-    VIRTUAL                       [    2     0     0     0 ]
+    VIRTUAL                       [    2     0     1     1 ]
 
   ==> Correlated Subspace Indices <==
 
-    CORE                             0    1 
+    CORE                             0    1    4    6 
     ACTIVE                        
-    HOLE                             0    1 
-    VIRTUAL                          2    3 
-    PARTICLE                         2    3 
+    HOLE                             0    1    4    6 
+    VIRTUAL                          2    3    5    7 
+    PARTICLE                         2    3    5    7 
 
 
   ==> Determinants Summary <==
@@ -1025,7 +1154,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Reference type: RHF
   Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000034 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000044 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1035,30 +1164,30 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
              1.0000000000
 
-    Total Energy:   -100.009870032324713
+    Total Energy:   -100.009870032324798
 
 
-  Forming one-particle density        ...  Done. Timing        0.000008 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.000007 s
+  Forming one-particle density        ...  Done. Timing        0.000010 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.000017 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Warning: Fa_CORE    NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000008018
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034345
   Warning: Fb_CORE    NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000008018
+  Nonzero off-diagonal:     2. Largest value:  0.000000000034345
   Fa_ACT_O   block is diagonal.
   Fb_ACT_O   block is diagonal.
   Fa_ACT_V   block is diagonal.
   Fb_ACT_V   block is diagonal.
   Warning: Fa_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000589379
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830180
   Warning: Fb_VIRTUAL NOT diagonal!
-  Nonzero off-diagonal:     2. Largest value:  0.000000000589379
-  Done checking Fock matrices.                   Timing        0.000056 s
+  Nonzero off-diagonal:     2. Largest value:  0.000000007830180
+  Done checking Fock matrices.                   Timing        0.000077 s
 
   Use semi-canonical orbitals.
 
-  Diagonalizing Fock                  ...  Done. Timing        0.000045 s
+  Diagonalizing Fock                  ...  Done. Timing        0.000138 s
 
 
 	Presorting SO-basis two-electron integrals.
@@ -1070,7 +1199,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.23174300 s
+  Integral transformation done. 0.27377100 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002913 GB  Using in-core PK algorithm.
    Calculation information:
@@ -1088,17 +1217,17 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   We computed 1035 shell quartets total.
   Whereas there are 1035 unique shell quartets.
 
-  Frozen-core energy            -95.777625202108 a.u.
+  Frozen-core energy            -76.535749118262 a.u.
 
- FrozenOneBody Operator takes  0.04883100 s
+  FrozenOneBody Operator takes  0.07013500 s
   Resorting integrals after freezing core.
-  Frozen Orbitals takes     0.049 s.
+  Frozen Orbitals takes     0.071 s.
   Diagonalizing Hamiltonian           ...
 
   Reference type: RHF
   Threshold for spin check: 0.10
 
-  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000041 s
+  Spin State: S^2 = 0.000, S = 0.000, singlet (from 1 determinants)  Done. Timing        0.000061 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1108,11 +1237,11 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
              1.0000000000
 
-    Total Energy:   -100.009870032324713
+    Total Energy:   -100.009870032324812
 
 
-  Forming one-particle density        ...  Done. Timing        0.000009 s
-  Forming generalized Fock matrix     ...  Done. Timing        0.000008 s
+  Forming one-particle density        ...  Done. Timing        0.000013 s
+  Forming generalized Fock matrix     ...  Done. Timing        0.000020 s
   Checking Fock matrices (Fa, Fb)     ...
   Nonzero criteria: > 1.00E-12
   Fa_CORE    block is diagonal.
@@ -1123,10 +1252,10 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Fb_ACT_V   block is diagonal.
   Fa_VIRTUAL block is diagonal.
   Fb_VIRTUAL block is diagonal.
-  Done checking Fock matrices.                   Timing        0.000047 s
+  Done checking Fock matrices.                   Timing        0.000074 s
 
-  Forming Lambda2                     ...  Done. Timing        0.000009 s
-  Forming Lambda3                     ...  Done. Timing        0.000010 s
+  Forming Lambda2                     ...  Done. Timing        0.000014 s
+  Forming Lambda3                     ...  Done. Timing        0.000107 s
 
               ----------------------------------------------------
                  Driven Similarity Renormalization Group MBPT2
@@ -1138,13 +1267,13 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Calculation Information <==
 
-    ntamp                                           60
-    flow parameter                           1.000e+00
-    taylor expansion threshold               1.000e-03
-    intruder_tamp                            1.000e-01
-    int_type                                CONVENTIONAL
-    source operator                           STANDARD
-    reference relaxation                          NONE
+    ntamp                                                 60
+    flow parameter                                 1.000e+00
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                    CONVENTIONAL
+    source operator                                 STANDARD
+    reference relaxation                                NONE
 
   ==> Checking Orbitals <==
 
@@ -1153,18 +1282,18 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Computing DSRG-MRPT2 ... <==
 
-    Computing T2 amplitudes                  ...  Done. Timing        0.000905 s
-    Computing T1 amplitudes                  ...  Done. Timing        0.001119 s
-    Renormalizing two-electron integrals     ...  Done. Timing        0.000129 s
-    Renormalizing Fock matrix elements       ...  Done. Timing        0.001444 s
-    Computing <[F, T1]>                      ...  Done. Timing        0.001960 s
-    Computing <[F, T2]>                      ...  Done. Timing        0.005085 s
-    Computing <[V, T1]>                      ...  Done. Timing        0.004234 s
-    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.016599 s
-    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.004503 s
-    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.004452 s
-    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.017785 s
-    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.008692 s
+    Computing T2 amplitudes                  ...  Done. Timing        0.001162 s
+    Computing T1 amplitudes                  ...  Done. Timing        0.001677 s
+    Renormalizing two-electron integrals     ...  Done. Timing        0.000265 s
+    Renormalizing Fock matrix elements       ...  Done. Timing        0.002183 s
+    Computing <[F, T1]>                      ...  Done. Timing        0.001153 s
+    Computing <[F, T2]>                      ...  Done. Timing        0.002175 s
+    Computing <[V, T1]>                      ...  Done. Timing        0.002123 s
+    Computing <[V, T2]> (C_2)^4              ...  Done. Timing        0.014229 s
+    Computing <[V, T2]> C_4 (C_2)^2 HH       ...  Done. Timing        0.003069 s
+    Computing <[V, T2]> C_4 (C_2)^2 PP       ...  Done. Timing        0.003404 s
+    Computing <[V, T2]> C_4 (C_2)^2 PH       ...  Done. Timing        0.013428 s
+    Computing <[V, T2]> C_6 C_2              ...  Done. Timing        0.006902 s
 
   ==> Excitation Amplitudes Summary <==
 
@@ -1174,27 +1303,42 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
+    [  4   6   5   7]-0.023909 [  1   4   3   5]-0.019808 [  1   6   3   7]-0.019808 
+    [  1   6   2   7] 0.017491 [  1   4   2   5] 0.017491 [  0   6   2   7]-0.007243 
+    [  0   4   2   5]-0.007243 [  0   6   3   7] 0.003925 [  0   4   3   5] 0.003925 
     [  0   1   2   3]-0.000259 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 4)                    0.000518574969720.
+    Norm of T2AA vector: (nonzero elements: 40)                   0.091738645009000.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   1   3   3]-0.041071 [  1   1   2   2]-0.029849 [  1   1   2   3] 0.028286 
-    [  0   0   2   2]-0.010922 [  0   1   2   2] 0.010645 [  0   1   3   3] 0.008411 
-    [  0   0   3   3]-0.008388 [  0   0   2   3] 0.007475 [  0   1   2   3]-0.006921 
+    [  1   1   3   3]-0.041071 [  6   6   7   7]-0.034716 [  4   4   5   5]-0.034716 
+    [  1   1   2   2]-0.029849 [  1   1   2   3] 0.028286 [  4   6   5   7]-0.027511 
+    [  1   4   3   5]-0.020298 [  1   6   3   7]-0.020298 [  1   6   2   7] 0.018512 
+    [  1   4   2   5] 0.018512 [  0   0   2   2]-0.010922 [  0   1   2   2] 0.010645 
+    [  0   6   2   7]-0.010387 [  0   4   2   5]-0.010387 [  1   1   5   5]-0.009125 
+    [  1   1   7   7]-0.009125 [  0   1   3   3] 0.008411 [  0   0   3   3]-0.008388 
+    [  0   0   2   3] 0.007475 [  0   1   2   3]-0.006921 [  0   0   7   7]-0.006875 
+    [  0   0   5   5]-0.006875 [  4   4   2   2]-0.006433 [  6   6   2   2]-0.006433 
+    [  0   6   3   7] 0.005030 [  0   4   3   5] 0.005030 [  4   4   3   3]-0.004786 
+    [  6   6   3   3]-0.004786 [  6   6   2   3] 0.003874 [  4   4   2   3] 0.003874 
+    [  4   4   7   7]-0.003602 [  6   6   5   5]-0.003602 [  0   1   5   5] 0.000808 
+    [  0   1   7   7] 0.000808 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 16)                   0.070937500214216.
+    Norm of T2AB vector: (nonzero elements: 72)                   0.114286731055798.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
+    [  4   6   5   7]-0.023909 [  1   4   3   5]-0.019808 [  1   6   3   7]-0.019808 
+    [  1   6   2   7] 0.017491 [  1   4   2   5] 0.017491 [  0   6   2   7]-0.007243 
+    [  0   4   2   5]-0.007243 [  0   6   3   7] 0.003925 [  0   4   3   5] 0.003925 
     [  0   1   2   3]-0.000259 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 4)                    0.000518574969720.
+    Norm of T2BB vector: (nonzero elements: 40)                   0.091738645009000.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1207,36 +1351,36 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -100.009870032324713
+    E0 (reference)                 =   -100.009870032324812
     <[F, T1]>                      =      0.000000000000000
     <[F, T2]>                      =      0.000000000000000
     <[V, T1]>                      =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.013272968793856
+    <[V, T2]> (C_2)^4              =     -0.057352607051728
     <[V, T2]> C_4 (C_2)^2 HH       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000000000000000
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000000000000000
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]>                      =     -0.013272968793856
-    DSRG-MRPT2 correlation energy  =     -0.013272968793856
-    DSRG-MRPT2 total energy        =   -100.023143001118569
+    <[V, T2]>                      =     -0.057352607051728
+    DSRG-MRPT2 correlation energy  =     -0.057352607051728
+    DSRG-MRPT2 total energy        =   -100.067222639376538
     max(T1)                        =      0.000000000000000
     max(T2)                        =      0.041071009724217
     ||T1||                         =      0.000000000000000
-    ||T2||                         =      0.141876895887125
+    ||T2||                         =      0.262826531305071
 
-  Energy took 0.06819900 s
+  Energy took 0.05347500 s
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.005       0.004       0.052
+    -> C0       0.001       0.002       0.002       0.041
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Your calculation took 1.16856700 seconds
+  Your calculation took 1.42961600 seconds
 	DSRG-MRPT2 internal v.s. SR-DSRG-PT2..............................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

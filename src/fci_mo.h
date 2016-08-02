@@ -13,6 +13,7 @@
 #include <libmints/basisset.h>
 #include <libmints/integral.h>
 #include <libmints/sointegral.h>
+#include <libmints/mintshelper.h>
 #include <vector>
 #include <tuple>
 #include <string>
@@ -59,20 +60,29 @@ public:
     /// Returns the reference object
     Reference reference();
 
+    /// Compute state-averaged CASCI energy
+    double compute_energy_sa();
+
+    /// Returns the state-averaged reference object
+    Reference reference_sa();
+
     /// Set symmetry of the root
-    void set_root_sym(const int& root_sym) {root_sym_ = root_sym;}
+    void set_root_sym(int root_sym) {root_sym_ = root_sym;}
 
     /// Set number of roots
-    void set_nroots(const int& nroot) {nroot_ = nroot;}
+    void set_nroots(int nroot) {nroot_ = nroot;}
 
     /// Set which root is preferred
-    void set_root(const int& root) {root_ = root;}
+    void set_root(int root) {root_ = root;}
 
     /// Set active space type
-    void set_active_space_type(const string& act) {active_space_type_ = act;}
+    void set_active_space_type(string act) {active_space_type_ = act;}
+
+    /// Set orbitals
+    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
 
     /// Use whatever orbitals passed to this code
-    void use_default_orbitals(const bool& default_orbitals) {default_orbitals_ = default_orbitals;}
+    void use_default_orbitals(bool default_orbitals) {default_orbitals_ = default_orbitals;}
 
     /// Form P space
     void form_p_space();
@@ -89,14 +99,20 @@ public:
     /// Return the vector of eigen vectors
     vector<pair<SharedVector,double>> eigen() {return eigen_;}
 
-    /// Return the dominant determinant
-    STLBitsetDeterminant dominant_det() {return dominant_det_;}
+    /// Return a vector of dominant determinant for each root
+    vector<STLBitsetDeterminant> dominant_dets() {return dominant_dets_;}
 
     /// Set to use semicanonical
-    void set_semicanonical(const bool& semi) {semi_ = semi;}
+    void set_semicanonical(bool semi) {semi_ = semi;}
 
     /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(const bool& quiet) {quiet_ = quiet;}
+    void set_quite_mode(bool quiet) {quiet_ = quiet;}
+
+    /// Return indices (relative to active, not absolute) of active occupied orbitals
+    vector<size_t> actv_occ() {return ao_;}
+
+    /// Return indices (relative to active, not absolute) of active virtual orbitals
+    vector<size_t> actv_uocc() {return av_;}
 
 protected:
     /// Basic Preparation
@@ -179,7 +195,7 @@ protected:
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
-    STLBitsetDeterminant dominant_det_;
+    vector<STLBitsetDeterminant> dominant_dets_;
 
     /// Exclude ground-state HF in CISD space or not for excited states
     /// If it is excluded, ground state will use HF energy
@@ -196,7 +212,10 @@ protected:
     /// Choice of Roots
     int nroot_;  // number of roots
     int root_;   // which root in nroot
-    Dimension nrootspi_; // number of roots per irrep
+
+    /// State Average
+    vector<int> avg_states_;
+    vector<double> avg_weights_;
 
     /// Diagonalize the CASCI Hamiltonian
     vector<pair<SharedVector,double>> eigen_;
@@ -212,7 +231,7 @@ protected:
     bool default_orbitals_ = false;
     /// Semi-canonicalize orbitals
     bool semi_;
-    void semi_canonicalize(const size_t &count);
+    void semi_canonicalize();
     /// Use natural orbitals
     void nat_orbs();
 
@@ -254,7 +273,7 @@ protected:
     bool CheckDensity();
 
     /// Form 2-Particle Density Cumulant
-    void FormCumulant2(CI_RDMS &ci_rdms, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2(CI_RDMS &ci_rdms, d4 &AA, d4 &AB, d4 &BB);
     void FormCumulant2AA(const vector<double> &tpdm_aa, const vector<double> &tpdm_bb, d4 &AA, d4 &BB);
     void FormCumulant2AB(const vector<double> &tpdm_ab, d4 &AB);
 //    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
@@ -262,7 +281,7 @@ protected:
 //    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
 
     /// Form 3-Particle Density Cumulant
-    void FormCumulant3(CI_RDMS &ci_rdms, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3(CI_RDMS &ci_rdms, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3AAA(const vector<double> &tpdm_aaa, const vector<double> &tpdm_bbb, d6 &AAA, d6 &BBB, string &DC);
     void FormCumulant3AAB(const vector<double> &tpdm_aab, const vector<double> &tpdm_abb, d6 &AAB, d6 &ABB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
