@@ -157,7 +157,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
 }
 void SigmaBuilder::get_diagonal(Vector& diag)
 {
-    for (size_t I = 0; I < diag_.size(); ++I){
+    for (size_t I = 0, max_I = diag_.size(); I < max_I;  ++I){
         diag.set(I,diag_[I]);
     }
 }
