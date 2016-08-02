@@ -43,6 +43,9 @@ public:
     /// Default constructor
     WFNOperator( std::shared_ptr<MOSpaceInfo> mo_space_info  );
 
+    /// Empty constructor
+    WFNOperator();
+
     /// Build the coupling lists for one-particle operators
     void op_lists( DeterminantMap& wfn );
 
@@ -59,17 +62,6 @@ public:
 
     /// Compute total spin expectation value <|S^2|> 
     double s2( DeterminantMap& wfn );
-
-protected:
-
-    /// Initialize important variables on construction
-    void startup();
-
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// Active space symmetry
-    std::vector<int> mo_symmetry_;
 
     /// The alpha single-annihilation/creation list
     std::vector< std::vector< std::pair<size_t,short> >> a_ann_list_;
@@ -90,6 +82,17 @@ protected:
     /// The alfa-beta single-annihilation/creation list
     std::vector< std::vector< std::tuple<size_t,short,short> >> ab_ann_list_;
     std::vector< std::vector< std::tuple<size_t,short,short> >> ab_cre_list_;
+protected:
+
+    /// Initialize important variables on construction
+    void startup();
+
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// Active space symmetry
+    std::vector<int> mo_symmetry_;
+
 };
 
 }}

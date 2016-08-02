@@ -311,12 +311,6 @@ private:
 	/// Compute 1-RDM
 	void compute_1rdm(SharedMatrix A, SharedMatrix B, std::vector<STLBitsetDeterminant>& det_space, SharedMatrix evecs, int nroot);
 
-	/// One-electron operator
-	double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q);
-
-	/// Check the sign
-	double CheckSign(std::vector<int> I, const int &n);
-
 	/// Compute full S^2 matrix and diagonalize it
 	void full_spin_transform(std::vector<STLBitsetDeterminant>& det_space, SharedMatrix cI, int nroot);
 
@@ -349,6 +343,9 @@ private:
                      std::vector<STLBitsetDeterminant>& det_space,
                      SharedMatrix evecs,
                      int num_ref_roots);
+
+    /// Project ACI wavefunction
+    void project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot );
 
     void test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs );
 
