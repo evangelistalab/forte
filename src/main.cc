@@ -517,6 +517,8 @@ read_options(std::string name, Options &options)
         options.add_int("N_AVERAGE", 1);
         /*- Offset for state averaging -*/
         options.add_int("AVERAGE_OFFSET", 0);
+        /*- Print final wavefunction to file? -*/
+        options.add_bool("SAVE_FINAL_WFN", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI

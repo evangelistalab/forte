@@ -36,6 +36,16 @@ std::vector<double> DeterminantMap::coefficients()
     return cI_;
 }
 
+/*
+std::vector<STLBitsetDeterminant> DeterminantMap::determinants()
+{
+    std::vector<STLBitsetDeterminant> space;//( wfn_size_ );
+
+    for( detmap::iterator it = wfn_.begin; it != wfn_.end(); ++it ){
+    } 
+}
+*/
+
 double DeterminantMap::coefficient( size_t value )
 {
     return cI_[value];
