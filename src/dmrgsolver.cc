@@ -191,10 +191,6 @@ void DMRGSolver::compute_energy()
     double * dmrg_noiseprefactors     = options_.get_double_array("DMRG_NOISEPREFACTORS");
     const int ndmrg_noiseprefactors   = options_["DMRG_NOISEPREFACTORS"].size();
     const bool dmrg_print_corr        = options_.get_bool("DMRG_PRINT_CORR");
-    const bool mps_chkpt              = options_.get_bool("DMRG_CHKPT");
-    //int * frozen_docc                 = options_.get_int_array("FROZEN_DOCC");
-    //int * active                      = options_.get_int_array("ACTIVE");
-    /// Sebastian optimizes the frozen_docc
     Dimension frozen_docc             = mo_space_info_->get_dimension("INACTIVE_DOCC");
     Dimension active                  = mo_space_info_->get_dimension("ACTIVE");
     Dimension virtual_orbs                 = mo_space_info_->get_dimension("RESTRICTED_UOCC");
