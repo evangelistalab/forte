@@ -335,11 +335,6 @@ void THREE_DSRG_MRPT2::startup()
             H_.print(stdout);
         }
 
-        for(auto orb_energy : Fa_)
-        {
-            outfile->Printf(" %8.8f", orb_energy);
-        }
-
         Delta1_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
             if (spin[0] == AlphaSpin){
                 value = Fa_[i[0]] - Fa_[i[1]];
@@ -579,15 +574,9 @@ double THREE_DSRG_MRPT2::compute_energy()
         energy.push_back({"||T1||", T1norm_});
 
         // Print energy summary
-        outfile->Printf("\n\n  ==> DSRG-MRPT2 Energy Summary <==\n");
-        for (auto& str_dim : energy){
+        print_h2("DSRG-MRPT2 Energy Summary");
+        for (auto& str_dim : energy)
             outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
-        }
-
-    // Print energy summary
-    print_h2("DSRG-MRPT2 Energy Summary");
-    for (auto& str_dim : energy)
-        outfile->Printf("\n    %-30s = %22.15f",str_dim.first.c_str(),str_dim.second);
     }
 
     Process::environment.globals["CURRENT ENERGY"] = Etotal;
