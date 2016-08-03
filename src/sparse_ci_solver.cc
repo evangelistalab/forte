@@ -1,6 +1,5 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
 
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
@@ -1393,7 +1392,6 @@ void SparseCISolver::diagonalize_full(const std::vector<STLBitsetDeterminant>& s
     evals.reset(new Vector("e",dim_space));
 
     // Diagonalize H
-    //boost::timer t_diag;
     H->diagonalize(evecs,evals);
 }
 
@@ -1463,7 +1461,7 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetD
 
 std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
 {
-    boost::timer t_h_build2;
+    Timer t_h_build2;
     // Allocate as many elements as we need
     size_t dim_space = space.size();
     std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse(dim_space);
@@ -1501,7 +1499,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
         }
     }
     outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
-    outfile->Printf("\n  %s: %f s","Time spent building H (openmp)",t_h_build2.elapsed());
+    outfile->Printf("\n  %s: %f s","Time spent building H (openmp)",t_h_build2.get());
     outfile->Flush();
     return H_sparse;
 }

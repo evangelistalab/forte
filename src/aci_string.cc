@@ -4,7 +4,6 @@
 //#include <unordered_map>
 //#include <numeric>
 
-#include <boost/timer.hpp>
 
 #include <libpsio/psio.hpp>
 #include <libmints/pointgrp.h>
@@ -491,7 +490,7 @@ double ACIString::compute_energy()
 	    outfile->Printf("\n  REFERENCE ENERGY:         %1.12f", reference_determinant_.energy() + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
         print_info();
     }
-    boost::timer t_iamrcisd;
+    Timer t_iamrcisd;
 
     SharedMatrix P_evecs;
     SharedMatrix PQ_evecs;
@@ -767,7 +766,7 @@ double ACIString::compute_energy()
 	    	}
 	    }
 
-        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.elapsed());
+        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",t_iamrcisd.get());
         outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT") + 1);
     }
     outfile->Flush();
@@ -898,7 +897,7 @@ void ACIString::default_find_q_space(SharedVector evals, SharedMatrix evecs)
 
 void ACIString::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
-    boost::timer t_ms_build;
+    Timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double> > V_hash;
@@ -910,7 +909,7 @@ void ACIString::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	
     if( !quiet_mode_){
         outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
-        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
+        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.get());
     }
     outfile->Flush();
 
@@ -924,7 +923,7 @@ void ACIString::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         V_hash.erase(P_space_[J]);
     }
 
-    boost::timer t_ms_screen;
+    Timer t_ms_screen;
 
     std::vector<double> C1(nroot_,0.0);
     std::vector<double> E2(nroot_,0.0);
@@ -1030,7 +1029,7 @@ void ACIString::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     if( !quiet_mode_ ){
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
-        outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
+        outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.get());
     }
     outfile->Flush();
 }
@@ -1762,8 +1761,8 @@ void ACIString::print_nos()
 {
 	print_h2("NATURAL ORBITALS");
 
-    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
-    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B",nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B",nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){
