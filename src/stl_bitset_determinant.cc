@@ -2,7 +2,6 @@
 #include <libmoinfo/libmoinfo.h>
 #include <libmints/matrix.h>
 
-#include <boost/lexical_cast.hpp>
 
 #include "stl_bitset_determinant.h"
 #include "stl_bitset_string.h"
