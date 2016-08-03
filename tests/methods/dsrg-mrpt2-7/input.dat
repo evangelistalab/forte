@@ -3,7 +3,7 @@
 import forte
 memory 500 mb
 
-refdsrgpt2   = -100.023143001118669
+refdsrgpt2   =  -100.067222639376482
 
 molecule HF{
   0 1
@@ -23,16 +23,17 @@ set globals{
 
 set forte{
   job_type                active-dsrgpt2
-  frozen_docc             [1,0,1,1]
+  frozen_docc             [1,0,0,0]
   restricted_docc         [0,0,0,0]
-  active                  [4,0,0,0]
-  frozen_uocc             [5,1,3,3]
+  active                  [4,0,2,2]
+  frozen_uocc             [5,1,2,2]
   nrootpi                 [1,0,0,0]
   dsrg_s                  1.0
   cas_type                cas
   active_space_type       cisd
   cisd_ex_no_hf           true
-  internal_amp            true
+  internal_amp            singles_doubles
+  internal_amp_select     all
   ntamp                   60
 }
 
@@ -52,11 +53,11 @@ compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),7,"CD-DSRG-MRPT2 energy
 set forte{
   job_type                dsrg-mrpt2
   int_type                conventional
-  frozen_docc             [1,0,1,1]
-  restricted_docc         [2,0,0,0]
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [2,0,1,1]
   active                  [0,0,0,0]
-  frozen_uocc             [5,1,3,3]
+  frozen_uocc             [5,1,2,2]
+  internal_amp            none
 }
 Edsrg_sr = energy('forte', ref_wfn=wfn)
-compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal v.s. SR-DSRG-PT2")
-
+compare_values(Edsrg_sr,Edsrg,10,"DSRG-MRPT2 internal vs SR-DSRG-PT2")
