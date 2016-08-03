@@ -281,14 +281,12 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
-        /*- Options for state averaging -*/
-        options.add("STATE_AVERAGE",new ArrayType());
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
         /*- Print the NO from the rdm of FCI -*/
-        options.add_bool("PRINT_NO", false);
+        options.add_bool("PRINT_NO",false);
 
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
@@ -654,6 +652,10 @@ read_options(std::string name, Options &options)
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
         /*- Number of roots per irrep (in Cotton order) -*/
         options.add("NROOTPI", new ArrayType());
+        /*- The array of root numbers for state averaging -*/
+        options.add("AVG_STATES",new ArrayType());
+        /*- The weight of each root for state averaging -*/
+        options.add("AVG_WEIGHTS",new ArrayType());
         /*- The density convergence criterion -*/
         options.add_double("D_CONVERGENCE",1.0e-8);
 
@@ -696,8 +698,13 @@ read_options(std::string name, Options &options)
         options.add_bool("PRINT_TIME_PROFILE", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
-        /*- Include internal amplitudes -*/
-        options.add_bool("INTERNAL_AMP", false);
+        /*- Include internal amplitudes according to excitation level -*/
+        options.add_str("INTERNAL_AMP", "NONE", "NONE SINGLES_DOUBLES SINGLES DOUBLES");
+        /*- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
+         *  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
+         *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
+         *  - OOVV: pure external (O->V; OO->VV) -*/
+        options.add_str("INTERNAL_AMP_SELECT", "AUTO", "AUTO ALL OOVV");
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
@@ -708,8 +715,11 @@ read_options(std::string name, Options &options)
          *  - DMRG  DMRG code
          *  - V2RDM V2RDM interface -*/
         options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
-        /*- Average densities of different spins -*/
+        /*- Average densities of different spins in V2RDM -*/
         options.add_bool("AVG_DENS_SPIN", false);
+
+        /*- Defintion for source operator for ccvv term -*/
+        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL");
         /*- Batches for CCVV_ALGORITHM -*/
@@ -721,8 +731,6 @@ read_options(std::string name, Options &options)
         /*- Detailed timing printings -*/
         options.add_bool("THREE_MRPT2_TIMINGS", false);
 
-        /*- Defintion for source operator for ccvv term -*/
-        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
         options.add_bool("PRINT_DENOM2", false);
     }
@@ -985,6 +993,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(cas_type == "CAS")
         {
             boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
+//            Reference reference;
+            if(options["AVG_STATES"].has_changed()){
+                fci_mo->compute_energy_sa();
+            } else {
             fci_mo->compute_energy();
             Reference reference = fci_mo->reference();
             boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
@@ -992,6 +1004,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
                 dsrg_mrpt2->compute_energy_relaxed();
             }else{
                 dsrg_mrpt2->compute_energy();
+            }
             }
         }
 

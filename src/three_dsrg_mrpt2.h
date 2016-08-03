@@ -14,17 +14,39 @@
 #include "dsrg_source.h"
 #include "dsrg_time.h"
 
-namespace psi{
+namespace psi{ namespace forte{
 
-namespace forte{
-
-/**
- * @brief The MethodBase class
- * This class provides basic functions to write electronic structure
- * pilot codes using the Tensor classes
- */
 class THREE_DSRG_MRPT2 : public Wavefunction
 {
+public:
+    /**
+     * THREE_DSRG_MRPT2 Constructor
+     * @param reference The reference object of FORTE
+     * @param ref_wfn The reference wavefunction object
+     * @param options The main options object
+     * @param ints A pointer to an allocated integral object
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options,
+                     std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    /// Destructor
+    ~THREE_DSRG_MRPT2();
+
+    /// Compute the DSRG-MRPT2 energy
+    double compute_energy();
+
+    /// Allow the reference to relax
+    void relax_reference_once();
+
+    /// Ignore semi-canonical testing in DSRG-MRPT2
+    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+
+    /// Set active active occupied MOs (relative to active)
+    void set_actv_occ(std::vector<size_t> actv_occ) {actv_occ_mos_ = std::vector<size_t>(actv_occ);}
+    /// Set active active unoccupied MOs (relative to active)
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {actv_uocc_mos_ = std::vector<size_t>(actv_uocc);}
+
 protected:
 
     // => Class data <= //
@@ -72,6 +94,11 @@ protected:
     std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos_;
+
+    /// List of active active occupied MOs (relative to active)
+    std::vector<size_t> actv_occ_mos_;
+    /// List of active active unoccupied MOs (relative to active)
+    std::vector<size_t> actv_uocc_mos_;
 
     /// List of eigenvalues for fock alpha
     std::vector<double> Fa_;
@@ -241,24 +268,6 @@ protected:
     ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
-
-public:
-
-    // => Constructors <= //
-
-    THREE_DSRG_MRPT2(Reference reference, SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo>
-    mo_space_info);
-
-    ~THREE_DSRG_MRPT2();
-
-    /// Compute the DSRG-MRPT2 energy
-    double compute_energy();
-
-    /// Allow the reference to relax
-    void relax_reference_once();
-
-    /// Ignore semi-canonical testing in DSRG-MRPT2
-    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
 
 private:
 	//maximum number of threads

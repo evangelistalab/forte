@@ -961,7 +961,7 @@ void ACIString::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 			e2[n] = E2_I;
         }
 
-		if(ex_alg_ == "STATE_AVERAGE" and nroot_ != 1){
+        if(ex_alg_ == "AVERAGE" and nroot_ != 1){
 			criteria = average_q_values(nroot, C1, E2);
 		}else{
 			criteria = root_select(nroot, C1, E2);

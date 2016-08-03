@@ -68,112 +68,78 @@ double ACTIVE_DSRGPT2::compute_energy(){
     }else{
         FCI_MO fci_mo(reference_wavefunction_,options_,ints_,mo_space_info_);
         int nirrep = nrootpi_.size();
+
+//        // save HF orbitals
+//        SharedMatrix Ca_hf (this->Ca()->clone());
+//        SharedMatrix Cb_hf (this->Cb()->clone());
+
+        // before real computation, we will do CI over all states to determine the excitation type
+        outfile->Printf("\n    Looping over all roots to determine excitation type.");
+//        fci_mo.set_quite_mode(true);
+        fci_mo.set_semicanonical(false);
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] == 0) continue;
             else{
                 fci_mo.set_root_sym(h);
+                fci_mo.set_nroots(nrootpi_[h]);
+                fci_mo.set_root(nrootpi_[h] - 1);
 
-                // number of CISD root for <CISD|CIS>
-                int cisd_nroot = nrootpi_[h] < 5 ? 2 * nrootpi_[h] : nrootpi_[h] + 5;
-
-                // first figure out the size of p_space in CISD
-                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
-                    fci_mo.set_active_space_type("CISD");
-                    fci_mo.set_quite_mode(true);
-                    fci_mo.form_p_space();
-                    size_t p_space_size = fci_mo.p_space().size();
-                    if(cisd_nroot >= p_space_size){
-                        if(p_space_size == 1){
-                            cisd_nroot = 1;
-                        } else {
-                            cisd_nroot = p_space_size - 1; // TODO: this number should be the root found for a given multiplicity in space_ci_solve
-                        }
-                    }
-
-                    // set back to CIS computation
-                    fci_mo.set_active_space_type("CIS");
-                    fci_mo.set_quite_mode(false);
-                }
-
-                // setup overlap matrix of CISD and CIS
-                std::string matrix_name = "<CISD|CIS> in Irrep " + irrep_symbol_[h];
-                Matrix overlap (matrix_name, cisd_nroot, nrootpi_[h]); // CISD by CIS
+                fci_mo.compute_energy();
+                vector<pair<SharedVector,double>> eigen = fci_mo.eigen();
+                vector<STLBitsetDeterminant> dominant_dets = fci_mo.dominant_dets();
 
                 for(int i = 0; i < nrootpi_[h]; ++i){
-                    // CI routine
-                    outfile->Printf("\n\n  %s", std::string(35,'=').c_str());
-                    outfile->Printf("\n    Current Job: %3s state, root %2d", irrep_symbol_[h].c_str(), i);
-                    outfile->Printf("\n  %s\n", std::string(35,'=').c_str());
-                    fci_mo.set_nroots(i+1);
-                    fci_mo.set_root(i);
-                    ref_energies_[h].push_back(fci_mo.compute_energy());
-                    Reference reference = fci_mo.reference();
-                    dominant_dets_[h].push_back(fci_mo.dominant_det());
+                    ref_energies_[h].push_back(eigen[i].second);
+                    dominant_dets_[h].push_back(dominant_dets[i]);
                     orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
+                }
 
-                    // PT2 or PT3 routine
-                    double Ept = 0.0;
-                    if(options_.get_str("CORR_LEVEL") == "PT2"){
-                        if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
-                            auto dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                            dsrg->ignore_semicanonical(true);
-                            Ept = dsrg->compute_energy();
-                        }else{
-                            auto dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                            dsrg->ignore_semicanonical(true);
-                            Ept = dsrg->compute_energy();
-                        }
+                // figure out the overlap <CIS|CISD>
+                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
+                    std::string step_name = "Computing Overlap <CISD|CIS> of Irrep " + irrep_symbol_[h];
+                    print_h2(step_name);
+
+                    std::vector<STLBitsetDeterminant> vecdet_cis = fci_mo.p_space();
+
+                    int cisd_nroot = nrootpi_[h] < 5 ? 2 * nrootpi_[h] : nrootpi_[h] + 5;
+                    fci_mo.set_active_space_type("CISD");
+                    fci_mo.form_p_space();
+                    std::vector<STLBitsetDeterminant> vecdet_cisd = fci_mo.p_space();
+                    size_t p_space_size = vecdet_cisd.size();
+                    if(cisd_nroot >= p_space_size){
+                        cisd_nroot = p_space_size;
                     }
-                    if(options_.get_str("CORR_LEVEL") == "PT3"){
-                        auto dsrg = std::make_shared<DSRG_MRPT3>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                        dsrg->ignore_semicanonical(true);
-                        Ept = dsrg->compute_energy();
+
+                    // setup overlap matrix of CISD and CIS
+                    std::string matrix_name = "<CISD|CIS> in Irrep " + irrep_symbol_[h];
+                    Matrix overlap (matrix_name, cisd_nroot, nrootpi_[h]); // CISD by CIS
+
+                    // compute CISD
+                    outfile->Printf("\n    Compute %d roots for CISD in Irrep %s for <CIS|CISD>.\n\n", cisd_nroot, irrep_symbol_[h].c_str());
+                    std::vector<SharedVector> cisd_evecs;
+                    fci_mo.set_nroots(cisd_nroot);
+                    fci_mo.set_root(cisd_nroot - 1);
+                    fci_mo.compute_energy();
+                    for(int i = 0; i < cisd_nroot; ++i){
+                        cisd_evecs.push_back(fci_mo.eigen()[i].first);
                     }
-                    pt_energies_[h].push_back(Ept);
 
-                    // compute singles percentages
-                    if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
-                        std::vector<STLBitsetDeterminant> vecdet_cis = fci_mo.p_space();
-                        SharedVector eigen_cis = fci_mo.eigen().back().first;
+                    // set back to CIS
+                    fci_mo.set_active_space_type("CIS");
 
-                        // set quite mode for CISD, use CIS semi-canonicalized orbitals
-                        fci_mo.set_active_space_type("CISD");
-                        fci_mo.set_semicanonical(false);
-                        fci_mo.set_quite_mode(true);
-
-                        // loop over CISD states
-                        print_h2("Compute Singles Percentage");
-                        outfile->Printf("    Will compute %d roots for CISD in Irrep %s.\n", cisd_nroot, irrep_symbol_[h].c_str());
+                    // printing
+                    for(int i = 0; i < nrootpi_[h]; ++i){
                         for(int j = 0; j < cisd_nroot; ++j){
-//                            outfile->Printf("\n\n  %s", std::string(42,'=').c_str());
-//                            outfile->Printf("\n    Current Job (CISD): %3s state, root %2d", irrep_symbol_[h].c_str(), j);
-//                            outfile->Printf("\n  %s\n", std::string(42,'=').c_str());
-                            fci_mo.set_nroots(j+1);
-                            fci_mo.set_root(j);
-                            fci_mo.compute_energy();
-
-                            std::vector<STLBitsetDeterminant> vecdet_cisd = fci_mo.p_space();
-                            SharedVector eigen_cisd = fci_mo.eigen().back().first;
-
                             for(int s = 0; s < vecdet_cis.size(); ++s){
                                 for(int sd = 0; sd < vecdet_cisd.size(); ++sd){
                                     if(vecdet_cis[s] == vecdet_cisd[sd]){
-                                        double value = eigen_cisd->get(sd) * eigen_cis->get(s);
+                                        double value = cisd_evecs[j]->get(sd) * eigen[i].first->get(s);
                                         overlap.add(j,i,value);
                                     }
                                 }
                             }
                         }
-
-                        // set back to CIS computation
-                        fci_mo.set_active_space_type("CIS");
-                        fci_mo.set_semicanonical(true);
-                        fci_mo.set_quite_mode(false);
                     }
-                }
-
-                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
-                    outfile->Printf("\n  ==> Overlap Metric of <CISD|CIS> for Irrep %s <==\n\n", irrep_symbol_[h].c_str());
                     overlap.print();
                     for(int i = 0; i < overlap.ncol(); ++i){
                         double max = std::fabs(overlap.get(i,i));
@@ -187,6 +153,56 @@ double ACTIVE_DSRGPT2::compute_energy(){
                         }
                         t1_percentage_[h].push_back(make_pair(root,100.0*max));
                     }
+                } // end of <CIS|CISD>
+            }
+        }
+        fci_mo.set_quite_mode(false);
+        fci_mo.set_semicanonical(true);
+
+        // real computation
+        for(int h = 0; h < nirrep; ++h){
+            if(nrootpi_[h] == 0) continue;
+            else{
+                fci_mo.set_root_sym(h);
+
+                for(int i = 0; i < nrootpi_[h]; ++i){
+                    // CI routine
+                    outfile->Printf("\n\n  %s", std::string(35,'=').c_str());
+                    outfile->Printf("\n    Current Job: %3s state, root %2d", irrep_symbol_[h].c_str(), i);
+                    outfile->Printf("\n  %s\n", std::string(35,'=').c_str());
+                    fci_mo.set_nroots(i+1);
+                    fci_mo.set_root(i);
+                    fci_mo.compute_energy();
+                    Reference reference = fci_mo.reference();
+//                    dominant_dets_[h].push_back(fci_mo.dominant_det());
+//                    orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
+
+                    // PT2 or PT3 routine
+                    double Ept = 0.0;
+                    if(options_.get_str("CORR_LEVEL") == "PT2"){
+                        if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
+                            std::shared_ptr<DSRG_MRPT2> dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                            dsrg->ignore_semicanonical(true);
+                            dsrg->set_actv_occ(fci_mo.actv_occ());
+                            dsrg->set_actv_uocc(fci_mo.actv_uocc());
+                            Ept = dsrg->compute_energy();
+                        }else{
+                            std::shared_ptr<THREE_DSRG_MRPT2> dsrg = std::make_shared<THREE_DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                            dsrg->ignore_semicanonical(true);
+                            dsrg->set_actv_occ(fci_mo.actv_occ());
+                            dsrg->set_actv_uocc(fci_mo.actv_uocc());
+                            Ept = dsrg->compute_energy();
+                        }
+                    }
+                    if(options_.get_str("CORR_LEVEL") == "PT3"){
+                        auto dsrg = std::make_shared<DSRG_MRPT3>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
+                        dsrg->ignore_semicanonical(true);
+                        Ept = dsrg->compute_energy();
+                    }
+                    pt_energies_[h].push_back(Ept);
+
+//                    // set back to HF orbitals
+//                    fci_mo.set_orbs(Ca_hf, Cb_hf);
                 }
             }
         }
@@ -286,7 +302,6 @@ void ACTIVE_DSRGPT2::print_summary(){
                         double Eci = (ref_energies_[h][i-1] - ref_energies_[0][0]) * ev;
                         double Ept = (pt_energies_[h][i-1] - pt_energies_[0][0]) * ev;
                         current_orb_extents_ = orb_extents_[h][i-1];
-
                         std::string ex_type = compute_ex_type(dominant_dets_[h][i-1], dominant_dets_[0][0]);
                         outfile->Printf("\n    %4s  %6d  %8.3f  %8.3f  %40s", sym.c_str(), i-1, Eci, Ept, ex_type.c_str());
                     }
@@ -336,6 +351,11 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det, con
     size_t A = occA_ref.size();
     size_t B = occB_ref.size();
 
+    // same as reference
+    if(A + B == 0){
+        output = "same as reference (?)";
+    }
+
     // CIS
     if(A + B == 1){
         int idx_ref, idx_det;
@@ -352,8 +372,10 @@ std::string ACTIVE_DSRGPT2::compute_ex_type(const STLBitsetDeterminant& det, con
                                   " (Diffuse) " : str(boost::format(" (%7.2f) ") % orbex_det));
 
         output = sym_active[idx_ref] + " -> " + sym_active[idx_det] + r2_str + "(S)";
-    }else{
-        // CISD
+    }
+
+    // CISD
+    if(A + B == 2){
         if (A == 1 && B == 1){
             int i_ref = occA_ref[0], j_ref = occB_ref[0];
             int i_det = occA_det[0], j_det = occB_det[0];
