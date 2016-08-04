@@ -2239,7 +2239,7 @@ void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, std::ve
 {
     outfile->Printf("\n\n  Testing operators");
 
-    DeterminantMap aci_wfn( det_space, PQ_evecs );
+    DeterminantMap aci_wfn( det_space, PQ_evecs, nroot_ );
     aci_wfn.print();
     WFNOperator op(mo_space_info_);
     
