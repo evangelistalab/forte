@@ -40,7 +40,7 @@ class DeterminantMap
 public:
 
     /// Default constructor
-    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
+    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI, int nroot );
 
     /// Empty constructor
     DeterminantMap();
@@ -86,10 +86,17 @@ public:
 
     /// Return the number of determinants
     double size();
+
+    /// Return the number of roots
+    int nroot();
+
 protected:
 
     /// The dimension of the hash
     size_t wfn_size_;
+
+    /// The number of roots
+    int nroot_;
 
     /// A hash of (determinants,coefficients)
     detmap wfn_;
