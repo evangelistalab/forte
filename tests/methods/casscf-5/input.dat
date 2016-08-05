@@ -1,4 +1,4 @@
-import forte
+import forte_parallel
 
 
 memory 500 mb

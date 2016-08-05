@@ -1,7 +1,7 @@
 #! Generated using commit GITCOMMIT
 #! BeH2 with symmetry
 
-import forte
+import forte_parallel
 
 refscf     = -15.50490325102
 refcasscf  = -15.51070257217
