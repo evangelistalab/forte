@@ -1879,20 +1879,20 @@ double THREE_DSRG_MRPT2::E_VT2_2_fly_openmp()
                     double t2mixed = 0.0;
                     double t2beta = 0.0;
                     vmnefalphaC = C_DDOT(nthree_,
-                            &(ints_->three_integral_pointer()[0][m * ncmo_ + e]),nmo_ * nmo_,
-                            &(ints_->three_integral_pointer()[0][n * ncmo_ + f]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + e]),1,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + f]),1);
                      vmnefalphaE = C_DDOT(nthree_,
-                            &(ints_->three_integral_pointer()[0][m * ncmo_ + f]),nmo_ * nmo_,
-                            &(ints_->three_integral_pointer()[0][n * ncmo_ + e]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + f]),1,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + e]),1);
                     vmnefbetaC = C_DDOT(nthree_,
-                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + eb]),nmo_ * nmo_,
-                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + fb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + eb]),1,
+                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + fb]),1);
                      vmnefbetaE = C_DDOT(nthree_,
-                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + fb]),nmo_ * nmo_,
-                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + eb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][mb * ncmo_ + fb]),1,
+                            &(ints_->three_integral_pointer()[0][nb * ncmo_ + eb]),1);
                     vmnefmixedC = C_DDOT(nthree_,
-                            &(ints_->three_integral_pointer()[0][m * ncmo_ + eb]),nmo_ * nmo_,
-                            &(ints_->three_integral_pointer()[0][n * ncmo_ + fb]),nmo_ * nmo_);
+                            &(ints_->three_integral_pointer()[0][m * ncmo_ + eb]),1,
+                            &(ints_->three_integral_pointer()[0][n * ncmo_ + fb]),1);
 
                     vmnefalpha = vmnefalphaC - vmnefalphaE;
                     vmnefbeta = vmnefbetaC - vmnefbetaE;
