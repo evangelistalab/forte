@@ -752,7 +752,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     int my_proc = 0;
     int n_nodes = 1;
     #ifdef HAVE_GA
-    GA_Initialize_ltd(Process::environment.get_memory());
+    GA_Initialize();
     ///Use C/C++ memory allocators 
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
