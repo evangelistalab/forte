@@ -7,10 +7,10 @@ WFNOperator::WFNOperator( std::shared_ptr<MOSpaceInfo> mo_space_info ) : mo_spac
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 }
 
-double WFNOperator::s2( DeterminantMap& wfn )
+double WFNOperator::s2( DeterminantMap& wfn, SharedMatrix& evecs, int root )
 {
     double S2 = 0.0;
-    const det_hash<size_t>& wfn_map = wfn.wfn();    
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();    
 
     for (auto& det : wfn_map){
         // Compute diagonal
@@ -20,7 +20,7 @@ double WFNOperator::s2( DeterminantMap& wfn )
         int na = PhiI.get_alfa_occ().size();
         int nb = PhiI.get_beta_occ().size();
         double ms = 0.5 * static_cast<double>(na - nb); 
-        S2 += ( ms*ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) * wfn.coefficient(det.second) * wfn.coefficient(det.second);
+        S2 += ( ms*ms + ms + static_cast<double>(nb) - static_cast<double>(npair)) * evecs->get(det.second,root) * evecs->get(det.second,root);
         if( (npair == nb) or (npair == na) ) continue;
 
         // Loop directly through all determinants with
@@ -38,20 +38,19 @@ double WFNOperator::s2( DeterminantMap& wfn )
                 short s = std::get<2>(ababJ_mo_sign);
                 if( (r!=s) and (p==s) and (q==r) ) {
                     sign_pq *= sign_rs;
-                    S2 -= sign_pq * wfn.coefficient(det.second) * wfn.coefficient(std::get<0>(ababJ_mo_sign));
+                    S2 -= sign_pq * evecs->get(det.second,root) * evecs->get(std::get<0>(ababJ_mo_sign), root);
                 }
             }
         }
     }
 
     S2  = std::fabs(S2);
-    S2 /= wfn.norm();
     return S2;
 }
 
 void WFNOperator::add_singles( DeterminantMap& wfn )
 {
-    det_hash<size_t>& wfn_map = wfn.wfn();
+    det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
     // Loop through determinants, generate singles and add them to the wfn
     //Alpha excitations
@@ -67,7 +66,7 @@ void WFNOperator::add_singles( DeterminantMap& wfn )
                 if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                     det.set_alfa_bit(ii,false);
                     det.set_alfa_bit(aa,true);
-                    wfn.add( det, 0.0 );
+                    wfn.add( det );
                     det.set_alfa_bit(ii,true);
                     det.set_alfa_bit(aa,false);
                 }
@@ -88,7 +87,7 @@ void WFNOperator::add_singles( DeterminantMap& wfn )
                 if( (mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
                     det.set_beta_bit(ii,false);
                     det.set_beta_bit(aa,true);
-                    wfn.add( det, 0.0 );
+                    wfn.add( det );
                     det.set_beta_bit(ii,true);
                     det.set_beta_bit(aa,false);
                 }
@@ -100,7 +99,7 @@ void WFNOperator::add_singles( DeterminantMap& wfn )
 
 void WFNOperator::add_doubles( DeterminantMap& wfn )
 {
-    const det_hash<size_t>& wfn_map = wfn.wfn();
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
     for( auto& I : wfn_map ){
         STLBitsetDeterminant det = I.first;
@@ -128,7 +127,7 @@ void WFNOperator::add_doubles( DeterminantMap& wfn )
                             det.set_alfa_bit(jj, false);
                             det.set_alfa_bit(aa, true);
                             det.set_alfa_bit(bb, true);
-                            wfn.add( det, 0.0);
+                            wfn.add( det );
                             det.set_alfa_bit(aa, false);
                             det.set_alfa_bit(bb, false);
                             det.set_alfa_bit(ii, true);
@@ -153,7 +152,7 @@ void WFNOperator::add_doubles( DeterminantMap& wfn )
                             det.set_beta_bit(jj, false);
                             det.set_beta_bit(aa, true);
                             det.set_beta_bit(bb, true);
-                            wfn.add( det, 0.0);
+                            wfn.add( det );
                             det.set_beta_bit(aa, false);
                             det.set_beta_bit(bb, false);
                             det.set_beta_bit(ii, true);
@@ -178,7 +177,7 @@ void WFNOperator::add_doubles( DeterminantMap& wfn )
                             det.set_beta_bit(jj, false);
                             det.set_alfa_bit(aa, true);
                             det.set_beta_bit(bb, true);
-                            wfn.add( det, 0.0);
+                            wfn.add( det );
                             det.set_alfa_bit(aa, false);
                             det.set_beta_bit(bb, false);
                             det.set_alfa_bit(ii, true);
@@ -196,7 +195,7 @@ void WFNOperator::op_lists( DeterminantMap& wfn )
     size_t ndets = wfn.size();
     a_ann_list_.resize(ndets);
     b_ann_list_.resize(ndets);
-    const det_hash<size_t>& wfn_map = wfn.wfn();
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
     // Generate alpha coupling list
     {
         size_t na_ann = 0;
@@ -297,7 +296,7 @@ void WFNOperator::tp_lists( DeterminantMap& wfn )
     aa_ann_list_.resize(ndets);
     ab_ann_list_.resize(ndets);
     bb_ann_list_.resize(ndets);
-    const det_hash<size_t>& wfn_map = wfn.wfn();
+    const det_hash<size_t>& wfn_map = wfn.wfn_hash();
     // Generate alpha-alpha coupling list
     {
         size_t naa_ann = 0;

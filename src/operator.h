@@ -61,7 +61,7 @@ public:
     void add_doubles( DeterminantMap& wfn );
 
     /// Compute total spin expectation value <|S^2|> 
-    double s2( DeterminantMap& wfn );
+    double s2( DeterminantMap& wfn, SharedMatrix& evecs, int root );
 
     /// The alpha single-annihilation/creation list
     std::vector< std::vector< std::pair<size_t,short> >> a_ann_list_;
