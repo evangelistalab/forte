@@ -26,9 +26,8 @@ namespace psi{ namespace forte{
 #else
     #define omp_get_max_threads() 1
     #define omp_get_thread_num() 0
+    #define omp_get_num_threads() 1
 #endif
-
-
 
 SigmaBuilder::SigmaBuilder(DeterminantMap& wfn, WFNOperator& op ) : size_(wfn.size()), wfn_(wfn), op_(op)
 {
@@ -66,7 +65,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
 
             // aa singles
             size_t J = det_pair->second;
-            STLBitsetDeterminant detJ = det_pair->first;
+            const STLBitsetDeterminant& detJ = det_pair->first;
             std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[J];
 
             // Get list of annihilated determinants            

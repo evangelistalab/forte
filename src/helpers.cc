@@ -384,4 +384,17 @@ void view_modified_orbitals(SharedWavefunction wfn, const boost::shared_ptr<Matr
         molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation);
 }
 
+using namespace std::chrono;
+
+ForteTimer::ForteTimer()
+{
+    t_start_ = std::chrono::high_resolution_clock::now();
+}
+
+/// Return the elapsed time in seconds
+double ForteTimer::elapsed() {
+    t_end_ = high_resolution_clock::now();
+    return duration_cast<sduration<double>>(t_end_ - t_start_).count();
+}
+
 }} // End Namespaces
