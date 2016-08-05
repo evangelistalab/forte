@@ -20,8 +20,8 @@ namespace psi{ namespace forte{
 #else
     #define omp_get_max_threads() 1
     #define omp_get_thread_num() 0
+    #define omp_get_num_threads() 1
 #endif
-
 
 SigmaBuilder::SigmaBuilder(DeterminantMap& wfn, WFNOperator& op ) : size_(wfn.size()), wfn_(wfn), op_(op)
 {
