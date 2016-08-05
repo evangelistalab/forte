@@ -40,7 +40,7 @@ class DeterminantMap
 public:
 
     /// Default constructor
-    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI, int nroot );
+    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI, int nroot, int multiplicity );
 
     /// Empty constructor
     DeterminantMap();
@@ -90,6 +90,9 @@ public:
     /// Return the number of roots
     int nroot();
 
+    /// Return the multiplicity
+    int multiplicity();
+
 protected:
 
     /// The dimension of the hash
@@ -97,6 +100,9 @@ protected:
 
     /// The number of roots
     int nroot_;
+
+    /// The multiplicity
+    int multiplicity_;    
 
     /// A hash of (determinants,coefficients)
     detmap wfn_;
