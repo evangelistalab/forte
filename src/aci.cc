@@ -818,7 +818,7 @@ double AdaptiveCI::compute_energy()
    //     cI[I] = PQ_evecs->get(I,0);
    // }
 
-   // test_ops(PQ_space_, cI);
+   // test_ops(PQ_space_, PQ_evecs);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -2235,18 +2235,20 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
     return new_root;
 }
 
-void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs )
+void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, SharedMatrix& PQ_evecs )
 {
     outfile->Printf("\n\n  Testing operators");
 
-    DeterminantMap aci_wfn( det_space, PQ_evecs, nroot_, wavefunction_multiplicity_ );
-    aci_wfn.print();
+    DeterminantMap aci_wfn( det_space );
     WFNOperator op(mo_space_info_);
     
     op.op_lists( aci_wfn );
     op.tp_lists( aci_wfn );
-    double S2 = op.s2( aci_wfn );
-    outfile->Printf("\n S2 is %f", S2);
+    
+    for( int n = 0; n < nroot_; ++n ){
+        double S2 = op.s2( aci_wfn, PQ_evecs, n );
+        outfile->Printf("\n Root %d S2 is %f",n, S2);
+    }
 }
 
 void AdaptiveCI::project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot )

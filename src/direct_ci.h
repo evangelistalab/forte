@@ -94,7 +94,7 @@ public:
      * @param diag_method The diagonalization algorithm
      * @param multiplicity The spin multiplicity of the solution (2S + 1).  1 = singlet, 2 = doublet, ...
      */
-    void diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals, DiagonalizationMethod diag_method );
+    void diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs, SharedVector& evals, int nroot, int multiplicity, DiagonalizationMethod diag_method );
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
@@ -116,16 +116,16 @@ public:
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals );
+    void diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs,  SharedVector& evals );
 
-    void diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals);
+    void diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs, SharedVector& evals, int nroot, int multiplicity);
 
     SharedMatrix build_full_hamiltonian( DeterminantMap& wfn, WFNOperator& op );
 
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess( DeterminantMap& wfn);
+    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess( DeterminantMap& wfn, int nroot, int multiplicity);
 
     /// The Davidson-Liu algorithm
-    bool davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedVector Eigenvalues);
+    bool davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedMatrix Eigenvectors, SharedVector Eigenvalues, int nroot, int multiplicity);
 
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
