@@ -347,7 +347,7 @@ private:
     /// Project ACI wavefunction
     void project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot );
 
-    void test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs );
+    void test_ops( std::vector<STLBitsetDeterminant>& det_space, SharedMatrix& PQ_evecs );
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

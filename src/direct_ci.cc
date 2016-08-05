@@ -13,12 +13,6 @@
 #include "direct_ci.h"
 #include "fci_vector.h"
 
-struct PairHash{
-    size_t operator()( const std::pair<size_t, size_t>& p ) const {
-        return (p.first*1000) + p.second;
-    }
-};
-
 namespace psi{ namespace forte{
 
 #ifdef _OPENMP
@@ -27,7 +21,6 @@ namespace psi{ namespace forte{
     #define omp_get_max_threads() 1
     #define omp_get_thread_num() 0
 #endif
-
 
 
 SigmaBuilder::SigmaBuilder(DeterminantMap& wfn, WFNOperator& op ) : size_(wfn.size()), wfn_(wfn), op_(op)
@@ -46,7 +39,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
     #pragma omp parallel
     {
         // Get a reference to the wavefunction map
-        det_hash<size_t>& wfn_map = wfn_.wfn();    
+        det_hash<size_t>& wfn_map = wfn_.wfn_hash();    
         
         // Get references to creation/annihilation lists 
         auto& a_ann_list = op_.a_ann_list_; 
@@ -66,7 +59,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
 
             // aa singles
             size_t J = det_pair->second;
-            STLBitsetDeterminant detJ = det_pair->first;
+            const STLBitsetDeterminant& detJ = det_pair->first;
             std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[J];
 
             // Get list of annihilated determinants            
@@ -200,26 +193,26 @@ void DirectCI::set_maxiter_davidson(int value)
     maxiter_davidson_ = value;
 }
 
-void DirectCI::diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals,DiagonalizationMethod diag_method)
+void DirectCI::diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs, SharedVector& evals, int nroot, int multiplicity, DiagonalizationMethod diag_method)
 {
     if (wfn.size() <= 200 && !force_diag_method_){
-        diagonalize_full(wfn, op, evals);
+        diagonalize_full(wfn, op, evecs, evals);
     }else{
         if (diag_method == Full){
-            diagonalize_full(wfn, op, evals);
+            diagonalize_full(wfn, op, evecs, evals);
         }else if (diag_method == DLSolver ){
-            diagonalize_davidson_liu(wfn, op,evals);
+            diagonalize_davidson_liu(wfn, op, evecs, evals, nroot, multiplicity);
         }
     }
 }
 
-void DirectCI::diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals )
+void DirectCI::diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs, SharedVector& evals )
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
     SharedMatrix H = build_full_hamiltonian( wfn, op );
 
     size_t dim_space = wfn.size();
-    SharedMatrix evecs(new Matrix("U",dim_space,dim_space));
+    evecs.reset(new Matrix("U",dim_space,dim_space));
     evals.reset(new Vector("e",dim_space));
 
 
@@ -227,7 +220,7 @@ void DirectCI::diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedVec
     H->diagonalize(evecs,evals);
 }
 
-void DirectCI::diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op,  SharedVector& evals)
+void DirectCI::diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op, SharedMatrix& evecs,  SharedVector& evals, int nroot, int multiplicity)
 {
 	if( print_details_ ){	
 		outfile->Printf("\n\n  Davidson-liu solver algorithm");
@@ -235,11 +228,12 @@ void DirectCI::diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op,  
 	}
 
     size_t dim_space = wfn.size();
-    evals.reset(new Vector("e", wfn.nroot()));
+    evecs.reset(new Matrix("U", dim_space, nroot));
+    evals.reset(new Vector("e", nroot));
 
     // Diagonalize H
     SigmaBuilder svl(wfn, op);
-    davidson_liu_solver(wfn, svl, evals);
+    davidson_liu_solver(wfn, svl, evecs, evals, nroot, multiplicity);
 }
 
 SharedMatrix DirectCI::build_full_hamiltonian( DeterminantMap& wfn, WFNOperator& op )
@@ -263,7 +257,7 @@ SharedMatrix DirectCI::build_full_hamiltonian( DeterminantMap& wfn, WFNOperator&
     #pragma omp parallel
     {
         // Get a reference to the wavefunction map
-        det_hash<size_t>& wfn_map = wfn.wfn();    
+        det_hash<size_t>& wfn_map = wfn.wfn_hash();    
         
         // Get references to creation/annihilation lists 
         auto& a_ann_list = op.a_ann_list_; 
@@ -283,7 +277,7 @@ SharedMatrix DirectCI::build_full_hamiltonian( DeterminantMap& wfn, WFNOperator&
 
             // aa singles
             size_t J = det_pair->second;
-            STLBitsetDeterminant detJ = det_pair->first;
+            const STLBitsetDeterminant& detJ = det_pair->first;
             std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[J];
 
             // Get list of annihilated determinants            
@@ -407,11 +401,9 @@ SharedMatrix DirectCI::build_full_hamiltonian( DeterminantMap& wfn, WFNOperator&
 }
 
 
-std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::initial_guess( DeterminantMap& wfn)
+std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::initial_guess( DeterminantMap& wfn, int nroot, int multiplicity)
 {
     size_t ndets = wfn.size();
-    int nroot = wfn.nroot();
-    int multiplicity = wfn.multiplicity();
 
     size_t nguess = std::min(static_cast<size_t>(nroot) * 100,ndets);
     std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
@@ -419,7 +411,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::i
     // Find the ntrial lowest diagonals
     std::vector<std::pair<double,STLBitsetDeterminant>> smallest(ndets);
 
-    det_hash<size_t>& wfn_map = wfn.wfn();
+    det_hash<size_t>& wfn_map = wfn.wfn_hash();
 
     for( det_hash<size_t>::iterator it = wfn_map.begin(), it_end = wfn_map.end(); it != it_end; ++it  ){
         smallest[it->second] = std::make_pair( it->first.energy(), it->first ) ;
@@ -546,12 +538,10 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::i
 //    }
  }
 
-bool DirectCI::davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedVector Eigenvalues  )
+bool DirectCI::davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedMatrix Eigenvectors, SharedVector Eigenvalues, int nroot, int multiplicity  )
 {
 //    print_details_ = true;
     size_t fci_size = wfn.size();
-    int nroot = wfn.nroot();
-    int multiplicity = wfn.multiplicity();
 
     DavidsonLiuSolver dls(fci_size,nroot);
     dls.set_e_convergence(e_convergence_);
@@ -569,7 +559,7 @@ bool DirectCI::davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, Shar
     size_t guess_size = dls.collapse_size();
     if (print_details_) outfile->Printf("\n  number of guess vectors: %d",guess_size);
 
-    auto guess = initial_guess( wfn );
+    auto guess = initial_guess( wfn, nroot, multiplicity );
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g){
@@ -660,15 +650,11 @@ bool DirectCI::davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, Shar
 //    dls.get_results();
     SharedVector evals = dls.eigenvalues();
     SharedMatrix evecs = dls.eigenvectors();
-
-    std::vector<double> Eigenvector( fci_size );
-
     for (int r = 0; r < nroot; ++r){
         Eigenvalues->set(r,evals->get(r));
         for (size_t I = 0; I < fci_size; ++I){
-            Eigenvector[I] = evecs->get(r,I);
+            Eigenvectors->set( I, r, evecs->get(r,I) );
         }
-        wfn.update_coefficients( Eigenvector );
     }
     return true;
 }
