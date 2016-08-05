@@ -394,7 +394,7 @@ ForteTimer::ForteTimer()
 /// Return the elapsed time in seconds
 double ForteTimer::elapsed() {
     t_end_ = high_resolution_clock::now();
-    return duration_cast<sduration<double>>(t_end_ - t_start_).count();
+    return duration_cast<duration<double>>(t_end_ - t_start_).count();
 }
 
 }} // End Namespaces
