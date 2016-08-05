@@ -3,7 +3,7 @@
 
 namespace psi{ namespace forte{
 
-DeterminantMap::DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI, int nroot ) 
+DeterminantMap::DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI, int nroot, int multiplicity ) 
 {
     // The dimension of the wavefunction
     wfn_size_ = cI.size();
@@ -16,6 +16,7 @@ DeterminantMap::DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::ve
     }        
 
     nroot_ = nroot;
+    multiplicity_ = multiplicity;
 }
 
 DeterminantMap::DeterminantMap(){}
@@ -36,6 +37,11 @@ detmap& DeterminantMap::wfn()
 int DeterminantMap::nroot()
 {
     return nroot_;
+}
+
+int DeterminantMap::multiplicity()
+{
+    return multiplicity_;
 }
 
 std::vector<double> DeterminantMap::coefficients()
