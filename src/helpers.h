@@ -27,6 +27,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <chrono>
 
 #include "ambit/blocked_tensor.h"
 #include <libmints/matrix.h>
@@ -198,6 +199,21 @@ double to_gb(T num_el){
  * @return A pair of size in appropriate unit (B, KB, MB, GB, TB)
  */
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
+
+/**
+  * @brief A timer class
+  */
+class ForteTimer {
+public:
+    ForteTimer();
+
+    /// Return the elapsed time in seconds
+    double elapsed();
+
+private:
+    std::chrono::high_resolution_clock::time_point t_start_;
+    std::chrono::high_resolution_clock::time_point t_end_;
+};
 
 }} // End Namespaces
 
