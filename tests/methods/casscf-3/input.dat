@@ -1,5 +1,5 @@
 #! CASSCF/6-31G** energy point
-import forte
+import forte_parallel
 refcasscf     = -75.641108837310796
 ref_my_casscf = -75.641108837310796 
 
