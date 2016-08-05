@@ -30,7 +30,7 @@ namespace psi{ namespace forte{
 
 
 
-SigmaBuilder::SigmaBuilder(WFNOperator& op, DeterminantMap& wfn ) : size_(wfn.size()), wfn_(wfn), op_(op)
+SigmaBuilder::SigmaBuilder(DeterminantMap& wfn, WFNOperator& op ) : size_(wfn.size()), wfn_(wfn), op_(op)
 {
     // Copy coupling lists from operator object
 }
@@ -43,9 +43,10 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
     
 
     // First do the one-particle term
+    #pragma omp parallel
     {
         // Get a reference to the wavefunction map
-        const det_hash<size_t>& wfn_map = wfn_.wfn();    
+        det_hash<size_t>& wfn_map = wfn_.wfn();    
         
         // Get references to creation/annihilation lists 
         auto& a_ann_list = op_.a_ann_list_; 
@@ -54,15 +55,29 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
         auto& a_cre_list = op_.a_cre_list_; 
         auto& b_cre_list = op_.b_cre_list_; 
 
-        for( auto& det_pair : wfn_map ){
-            // aa singles
-            size_t J = det_pair.second;
-            STLBitsetDeterminant detJ = det_pair.first;
+        size_t count = 0;
+        int ithread = omp_get_thread_num();
+        int nthreads = omp_get_num_threads();        
 
-            for (auto& aJ_mo_sign : a_ann_list[J]){
+        for( det_hash<size_t>::iterator det_pair = wfn_map.begin(), it_end = wfn_map.end(); det_pair != it_end; ++det_pair, count++ ){
+
+            // Nifty way to thread map iterators
+            if( (count % nthreads) != ithread ) continue;
+
+            // aa singles
+            size_t J = det_pair->second;
+            STLBitsetDeterminant detJ = det_pair->first;
+            std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[J];
+
+            // Get list of annihilated determinants            
+            for ( int ann = 0, max_a = a_ann.size(); ann < max_a; ++ann){
+                std::pair<size_t,short>& aJ_mo_sign = a_ann[ann];
                 const size_t aJ_add = aJ_mo_sign.first;
                 const size_t p = std::abs(aJ_mo_sign.second) - 1;
-                for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
+
+                std::vector<std::pair<size_t,short>>& a_cre = a_cre_list[aJ_add];
+                for ( int cre = 0, max_cre = a_cre.size(); cre < max_cre; ++cre){
+                    std::pair<size_t,short>& aaJ_mo_sign = a_cre[cre]; 
                     const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                     if (p != q){
                         const double HIJ = detJ.slater_rules_single_alpha(p,q);
@@ -71,10 +86,17 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
                     }
                 }
             }
-            for (auto& bJ_mo_sign : b_ann_list[J]){
+            
+            // bb singles
+            std::vector<std::pair<size_t,short>>& b_ann = b_ann_list[J];
+            for ( int ann = 0, max_a = b_ann.size(); ann < max_a; ++ann){
+                std::pair<size_t,short>& bJ_mo_sign = b_ann[ann];
                 const size_t bJ_add = bJ_mo_sign.first;
                 const size_t p = std::abs(bJ_mo_sign.second) - 1;
-                for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
+
+                std::vector<std::pair<size_t,short>>& b_cre = b_cre_list[bJ_add];
+                for ( int cre = 0, max_cre = b_cre.size(); cre < max_cre; ++cre){
+                    std::pair<size_t,short>& bbJ_mo_sign = b_cre[cre]; 
                     const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                     if (p != q){
                         const double HIJ = detJ.slater_rules_single_beta(p,q);
@@ -155,6 +177,7 @@ void SigmaBuilder::compute_sigma(SharedVector sigma, SharedVector b)
         }
     }
 }
+
 void SigmaBuilder::get_diagonal(Vector& diag)
 {
     for (size_t I = 0, max_I = diag_.size(); I < max_I;  ++I){
@@ -177,78 +200,52 @@ void DirectCI::set_maxiter_davidson(int value)
     maxiter_davidson_ = value;
 }
 
-/*
-void DirectCI::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
+void DirectCI::diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals,DiagonalizationMethod diag_method)
 {
-    if (space.size() <= 200 && !force_diag_method_){
-        diagonalize_full(space,evals,evecs,nroot,multiplicity);
+    if (wfn.size() <= 200 && !force_diag_method_){
+        diagonalize_full(wfn, op, evals);
     }else{
         if (diag_method == Full){
-            diagonalize_full(space,evals,evecs,nroot,multiplicity);
+            diagonalize_full(wfn, op, evals);
         }else if (diag_method == DLSolver ){
-            diagonalize_davidson_liu_solver(space,evals,evecs,nroot,multiplicity);
-        }else if (diag_method == DLString ){
-            diagonalize_davidson_liu_string(space,evals,evecs,nroot,multiplicity, false);
-        }else if (diag_method == DLDisk ){
-            diagonalize_davidson_liu_string(space,evals,evecs,nroot,multiplicity, true);
+            diagonalize_davidson_liu(wfn, op,evals);
         }
     }
 }
 
-void DirectCI::diagonalize_full(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int,int)
+void DirectCI::diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals )
 {
     // Find all the eigenvalues and eigenvectors of the Hamiltonian
-    SharedMatrix H = build_full_hamiltonian(space);
+    SharedMatrix H = build_full_hamiltonian( wfn, op );
 
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,dim_space));
+    size_t dim_space = wfn.size();
+    SharedMatrix evecs(new Matrix("U",dim_space,dim_space));
     evals.reset(new Vector("e",dim_space));
 
+
     // Diagonalize H
-    //boost::timer t_diag;
     H->diagonalize(evecs,evals);
 }
 
-void DirectCI::diagonalize_davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity)
+void DirectCI::diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op,  SharedVector& evals)
 {
 	if( print_details_ ){	
 		outfile->Printf("\n\n  Davidson-liu solver algorithm");
 		outfile->Flush();
 	}
 
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,nroot));
-    evals.reset(new Vector("e",nroot));
+    size_t dim_space = wfn.size();
+    evals.reset(new Vector("e", wfn.nroot()));
 
     // Diagonalize H
-    SigmaVectorList svl (space, print_details_);
-    SigmaVector* sigma_vector = &svl;
-    davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
+    SigmaBuilder svl(wfn, op);
+    davidson_liu_solver(wfn, svl, evals);
 }
 
-void DirectCI::diagonalize_davidson_liu_string(const std::vector<STLBitsetDeterminant>& space, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity, bool disk)
-{
-	if( print_details_ and !disk ){	
-		outfile->Printf("\n\n  Davidson-Liu String algorithm");
-		outfile->Flush();
-	}else if ( print_details_ and disk ){
-		outfile->Printf("\n\n  Disk-based Davidson-Liu String Algorithm");
-    }
-
-    size_t dim_space = space.size();
-    evecs.reset(new Matrix("U",dim_space,nroot));
-    evals.reset(new Vector("e",nroot));
-
-    // Diagonalize H
-    SigmaVectorString svl (space, print_details_, disk);
-    SigmaVector* sigma_vector = &svl;
-    davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
-}
-
-SharedMatrix DirectCI::build_full_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
+SharedMatrix DirectCI::build_full_hamiltonian( DeterminantMap& wfn, WFNOperator& op )
 {
     // Build the H matrix
-    size_t dim_space = space.size();
+    size_t dim_space = wfn.size();
     SharedMatrix H(new Matrix("H",dim_space,dim_space));
     //If you are using DiskDF, Kevin found that openmp does not like this! 
     int threads = 0;
@@ -260,112 +257,197 @@ SharedMatrix DirectCI::build_full_hamiltonian(const std::vector<STLBitsetDetermi
     {
        threads = omp_get_max_threads();
     }
-    #pragma omp parallel for schedule(dynamic) num_threads(threads)
-    for (size_t I = 0; I < dim_space; ++I){
-        const STLBitsetDeterminant& detI = space[I];
-        for (size_t J = I; J < dim_space; ++J){
-            const STLBitsetDeterminant& detJ = space[J];
-            double HIJ = detI.slater_rules(detJ);
-            H->set(I,J,HIJ);
-            H->set(J,I,HIJ);
+
+    H->zero();
+
+    #pragma omp parallel
+    {
+        // Get a reference to the wavefunction map
+        det_hash<size_t>& wfn_map = wfn.wfn();    
+        
+        // Get references to creation/annihilation lists 
+        auto& a_ann_list = op.a_ann_list_; 
+        auto& b_ann_list = op.b_ann_list_; 
+
+        auto& a_cre_list = op.a_cre_list_; 
+        auto& b_cre_list = op.b_cre_list_; 
+
+        size_t count = 0;
+        int ithread = omp_get_thread_num();
+        int nthreads = omp_get_num_threads();        
+
+        for( det_hash<size_t>::iterator det_pair = wfn_map.begin(), it_end = wfn_map.end(); det_pair != it_end; ++det_pair, count++ ){
+
+            // Nifty way to thread map iterators
+            if( (count % nthreads) != ithread ) continue;
+
+            // aa singles
+            size_t J = det_pair->second;
+            STLBitsetDeterminant detJ = det_pair->first;
+            std::vector<std::pair<size_t,short>>& a_ann = a_ann_list[J];
+
+            // Get list of annihilated determinants            
+            for ( int ann = 0, max_a = a_ann.size(); ann < max_a; ++ann){
+                std::pair<size_t,short>& aJ_mo_sign = a_ann[ann];
+                const size_t aJ_add = aJ_mo_sign.first;
+                const size_t p = std::abs(aJ_mo_sign.second) - 1;
+
+                std::vector<std::pair<size_t,short>>& a_cre = a_cre_list[aJ_add];
+                for ( int cre = 0, max_cre = a_cre.size(); cre < max_cre; ++cre){
+                    std::pair<size_t,short>& aaJ_mo_sign = a_cre[cre]; 
+                    const size_t I = aaJ_mo_sign.first;
+                    if ( I < J ) continue;                     
+
+                    const size_t q = std::abs(aaJ_mo_sign.second) - 1;
+                    if (p != q){
+                        double value = detJ.slater_rules_single_alpha(p,q);
+                        H->set(I,J, value );
+                        H->set(J,I, value );
+                    }
+                }
+            }
+            
+            // bb singles
+            std::vector<std::pair<size_t,short>>& b_ann = b_ann_list[J];
+            for ( int ann = 0, max_a = b_ann.size(); ann < max_a; ++ann){
+                std::pair<size_t,short>& bJ_mo_sign = b_ann[ann];
+                const size_t bJ_add = bJ_mo_sign.first;
+                const size_t p = std::abs(bJ_mo_sign.second) - 1;
+
+                std::vector<std::pair<size_t,short>>& b_cre = b_cre_list[bJ_add];
+                for ( int cre = 0, max_cre = b_cre.size(); cre < max_cre; ++cre){
+                    std::pair<size_t,short>& bbJ_mo_sign = b_cre[cre]; 
+                    const size_t I = bbJ_mo_sign.first;
+                    if( I < J ) continue;        
+    
+                    const size_t q = std::abs(bbJ_mo_sign.second) - 1;
+                    if (p != q){
+                        double value = detJ.slater_rules_single_alpha(p,q);
+                        H->set(I,J, value );
+                        H->set(J,I, value );
+                    }
+                }
+            }
+        }
+    }
+
+    // Get references to creation/annihilation lists 
+    auto& aa_ann_list = op.aa_ann_list_; 
+    auto& ab_ann_list = op.ab_ann_list_; 
+    auto& bb_ann_list = op.bb_ann_list_; 
+
+    auto& aa_cre_list = op.aa_cre_list_; 
+    auto& ab_cre_list = op.ab_cre_list_; 
+    auto& bb_cre_list = op.bb_cre_list_; 
+   
+#pragma omp parallel for 
+    for (size_t J = 0; J < dim_space; ++J){
+        // reference
+        for (auto& aaJ_mo_sign : aa_ann_list[J]){
+            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(aaJ_mo_sign);
+            for (auto& aaaaJ_mo_sign : aa_cre_list[aaJ_add]){
+                const size_t I = std::get<0>(aaaaJ_mo_sign);
+                if( I < J ) continue;
+
+                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(aaaaJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double value = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
+                    H->set( I, J, value );
+                    H->set( J, I, value );
+                }
+            }
+        }
+        // aabb singles
+        for (auto& abJ_mo_sign : ab_ann_list[J]){
+            const size_t abJ_add = std::get<0>(abJ_mo_sign);
+            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(abJ_mo_sign);
+            for (auto& ababJ_mo_sign : ab_cre_list[abJ_add]){
+                const size_t I = std::get<0>(ababJ_mo_sign);
+                if( I <  J ) continue;            
+    
+                const size_t r = std::abs(std::get<1>(ababJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(ababJ_mo_sign);
+                if ((p != r) and (q != s)){
+                    const double sign_rs = std::get<1>(ababJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double value = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
+                    H->set( I, J, value );
+                    H->set( J, I, value );
+                }
+            }
+        }
+        // bbbb singles
+        for (auto& bbJ_mo_sign : bb_ann_list[J]){
+            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
+            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
+            const size_t q = std::get<2>(bbJ_mo_sign);
+            for (auto& bbbbJ_mo_sign : bb_cre_list[bbJ_add]){
+                const size_t I = std::get<0>(bbbbJ_mo_sign);
+                if ( I < J ) continue;
+
+                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
+                const size_t s = std::get<2>(bbbbJ_mo_sign);
+                if ((p != r) and (q != s) and (p != s) and (q != r)){
+                    const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                    const double value = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
+                    H->set( I, J, value );
+                    H->set( J, I, value );
+                }
+            }
         }
     }
     return H;
 }
 
-std::vector<std::pair<std::vector<int>,std::vector<double>>> DirectCI::build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space)
+
+std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::initial_guess( DeterminantMap& wfn)
 {
-    boost::timer t_h_build2;
-    // Allocate as many elements as we need
-    size_t dim_space = space.size();
-    std::vector<std::pair<std::vector<int>,std::vector<double>>> H_sparse(dim_space);
+    size_t ndets = wfn.size();
+    int nroot = wfn.nroot();
+    int multiplicity = wfn.multiplicity();
 
-    size_t num_nonzero = 0;
-
-    outfile->Printf("\n  Building H using OpenMP-take2");
-    outfile->Flush();
-
-    // Form the Hamiltonian matrix
-
-#pragma omp parallel for schedule(dynamic)
-    for (size_t I = 0; I < dim_space; ++I){
-        std::vector<double> H_row;
-        std::vector<int> index_row;
-        const STLBitsetDeterminant& detI = space[I];
-        double HII = detI.slater_rules(detI);
-        H_row.push_back(HII);
-        index_row.push_back(I);
-        for (size_t J = 0; J < dim_space; ++J){
-            if (I != J){
-                const STLBitsetDeterminant detJ = space[J];
-                double HIJ = detI.slater_rules(detJ);
-                if (std::fabs(HIJ) >= 1.0e-12){
-                    H_row.push_back(HIJ);
-                    index_row.push_back(J);
-                }
-            }
-        }
-
-#pragma omp critical(save_h_row)
-        {
-            H_sparse[I] = make_pair(index_row,H_row);
-            num_nonzero += index_row.size();
-        }
-    }
-    outfile->Printf("\n  The sparse Hamiltonian matrix contains %zu nonzero elements out of %zu (%f)",num_nonzero,dim_space * dim_space,double(num_nonzero)/double(dim_space * dim_space));
-    outfile->Printf("\n  %s: %f s","Time spent building H (openmp)",t_h_build2.elapsed());
-    outfile->Flush();
-    return H_sparse;
-}
-
-std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity)
-{
-    size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * 100,ndets);
     std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
-    std::vector<std::pair<STLBitsetDeterminant,size_t>> guess_dets_pos;
-    std::vector<std::pair<double,size_t>> smallest(ndets);
-    for(size_t I = 0; I < ndets; ++I){
-        smallest[I] = std::make_pair(space[I].energy(),I);
+    std::vector<std::pair<double,STLBitsetDeterminant>> smallest(ndets);
+
+    det_hash<size_t>& wfn_map = wfn.wfn();
+
+    for( det_hash<size_t>::iterator it = wfn_map.begin(), it_end = wfn_map.end(); it != it_end; ++it  ){
+        smallest[it->second] = std::make_pair( it->first.energy(), it->first ) ;
     }
     std::sort(smallest.begin(),smallest.end());
 
-    std::vector<STLBitsetDeterminant> guess_det;
+    std::vector<STLBitsetDeterminant> guess_dets;
     for(size_t i = 0; i < nguess; i++) {
-        size_t I = smallest[i].second;
-        guess_dets_pos.push_back(std::make_pair(space[I],I));  // store a det and its position
-        guess_det.push_back(space[I]);
+        guess_dets.push_back(smallest[i].second);
     }
 
+    smallest.clear();
+
     if (spin_project_){
-        STLBitsetDeterminant::enforce_spin_completeness(guess_det);
-        if (guess_det.size() > nguess){
-            size_t nnew_dets = guess_det.size() - nguess;
-            if (print_details_) outfile->Printf("\n  Initial guess space is incomplete.\n  Trying to add %d determinant(s).",nnew_dets);
-            int nfound = 0;
-            for (size_t i = 0; i < nnew_dets; ++i){
-                for (size_t j = nguess; j < ndets; ++j){
-                    size_t J = smallest[j].second;
-                    if (space[J] == guess_det[nguess + i]){
-                        guess_dets_pos.push_back(std::make_pair(space[J],J));  // store a det and its position
-                        nfound++;
-                        break;
-                    }
-                }
-            }
-            if(print_details_) outfile->Printf("  %d determinant(s) added.",nfound);
+        STLBitsetDeterminant::enforce_spin_completeness(guess_dets);
+        if (guess_dets.size() > nguess){
+            size_t nnew_dets = guess_dets.size() - nguess;
+            if (print_details_) outfile->Printf("\n  Initial guess space is incomplete.\n  Adding %d determinant(s).",nnew_dets);
         }
-        nguess = guess_dets_pos.size();
+        nguess = guess_dets.size();
     }
 
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2",nguess,nguess);
     for(size_t I = 0; I < nguess; I++) {
         for(size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            const STLBitsetDeterminant& detI = guess_dets[I];
+            const STLBitsetDeterminant& detJ = guess_dets[J];
             double S2IJ = detI.spin2(detJ);
             S2.set(I,J,S2IJ);
             S2.set(J,I,S2IJ);
@@ -379,8 +461,8 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::i
     Matrix H("H",nguess,nguess);
     for(size_t I = 0; I < nguess; I++) {
         for(size_t J = I; J < nguess; J++) {
-            const STLBitsetDeterminant& detI = guess_dets_pos[I].first;
-            const STLBitsetDeterminant& detJ = guess_dets_pos[J].first;
+            const STLBitsetDeterminant& detI = guess_dets[I];
+            const STLBitsetDeterminant& detJ = guess_dets[J];
             double HIJ = detI.slater_rules(detJ);
             H.set(I,J,HIJ);
             H.set(J,I,HIJ);
@@ -438,7 +520,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::i
                 for (int J = 0; J < nspin_states; ++J){
                     CIr += S2evecs.get(I,mult_list_s[J]) * HS2evecs(J,r);
                 }
-                det_C.push_back(std::make_pair(guess_dets_pos[I].second,CIr));
+                det_C.push_back(std::make_pair(wfn_map[guess_dets[I]],CIr));
             }
             guess.push_back(std::make_pair(m,det_C));
         }
@@ -464,15 +546,13 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> DirectCI::i
 //    }
  }
 
-bool DirectCI::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
-                                         SigmaVector* sigma_vector,
-                                         SharedVector Eigenvalues,
-                                         SharedMatrix Eigenvectors,
-                                         int nroot,
-                                         int multiplicity)
+bool DirectCI::davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedVector Eigenvalues  )
 {
 //    print_details_ = true;
-    size_t fci_size = sigma_vector->size();
+    size_t fci_size = wfn.size();
+    int nroot = wfn.nroot();
+    int multiplicity = wfn.multiplicity();
+
     DavidsonLiuSolver dls(fci_size,nroot);
     dls.set_e_convergence(e_convergence_);
     dls.set_print_level(0);
@@ -483,13 +563,13 @@ bool DirectCI::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& spac
     SharedVector sigma(new Vector("sigma",fci_size));
 
     // get and pass diagonal
-    sigma_vector->get_diagonal(*sigma);
+    svl.get_diagonal(*sigma);
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
     if (print_details_) outfile->Printf("\n  number of guess vectors: %d",guess_size);
 
-    auto guess = initial_guess(space,nroot,multiplicity);
+    auto guess = initial_guess( wfn );
 
     std::vector<int> guess_list;
     for (size_t g = 0; g < guess.size(); ++g){
@@ -545,7 +625,7 @@ bool DirectCI::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& spac
         bool add_sigma = true;
         do{
             dls.get_b(b);
-            sigma_vector->compute_sigma(sigma,b);
+            svl.compute_sigma(sigma,b);
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
 
@@ -580,14 +660,18 @@ bool DirectCI::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& spac
 //    dls.get_results();
     SharedVector evals = dls.eigenvalues();
     SharedMatrix evecs = dls.eigenvectors();
+
+    std::vector<double> Eigenvector( fci_size );
+
     for (int r = 0; r < nroot; ++r){
         Eigenvalues->set(r,evals->get(r));
         for (size_t I = 0; I < fci_size; ++I){
-            Eigenvectors->set(I,r,evecs->get(r,I));
+            Eigenvector[I] = evecs->get(r,I);
         }
+        wfn.update_coefficients( Eigenvector );
     }
     return true;
 }
-*/
+
 
 }}

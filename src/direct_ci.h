@@ -41,7 +41,7 @@ enum DiagonalizationMethod {Full,DLSolver};
 class SigmaBuilder
 {
 public:
-    SigmaBuilder( WFNOperator& op, DeterminantMap& wfn );
+    SigmaBuilder( DeterminantMap& wfn, WFNOperator& op );
 
     size_t size() {return size_;}
 
@@ -94,7 +94,7 @@ public:
      * @param diag_method The diagonalization algorithm
      * @param multiplicity The spin multiplicity of the solution (2S + 1).  1 = singlet, 2 = doublet, ...
      */
-    void diagonalize_hamiltonian(const WFNOperator& op, const DeterminantMap& wfn, SharedMatrix evecs );
+    void diagonalize_hamiltonian( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals, DiagonalizationMethod diag_method );
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) {parallel_ = parallel;}
@@ -116,20 +116,17 @@ public:
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const WFNOperator& op, const DeterminantMap& wfn );
+    void diagonalize_full( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals );
 
-    void diagonalize_davidson_liu_solver( DeterminantMap& wfn, SharedVector& evals, SharedMatrix& evecs, int nroot, int multiplicity);
+    void diagonalize_davidson_liu( DeterminantMap& wfn, WFNOperator& op, SharedVector& evals);
 
+    SharedMatrix build_full_hamiltonian( DeterminantMap& wfn, WFNOperator& op );
 
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity);
+    std::vector<std::pair<double, std::vector<std::pair<size_t, double> > > > initial_guess( DeterminantMap& wfn);
 
     /// The Davidson-Liu algorithm
-    bool davidson_liu_solver(const DeterminantMap& wfn,
-                                             SigmaBuilder* sigma_vector,
-                                             SharedVector Eigenvalues,
-                                             SharedMatrix Eigenvectors,
-                                             int nroot,
-                                             int multiplicity);
+    bool davidson_liu_solver( DeterminantMap& wfn, SigmaBuilder& svl, SharedVector Eigenvalues);
+
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
