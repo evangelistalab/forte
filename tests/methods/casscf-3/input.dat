@@ -10,7 +10,7 @@ H 1 1.00 2 103.1
 }
 
 set {
-    scf_type        out_of_core
+    scf_type        pk
     df_basis_guess   false
     basis           3-21g
     reference       rhf
