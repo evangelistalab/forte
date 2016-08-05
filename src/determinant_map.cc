@@ -50,4 +50,19 @@ void DeterminantMap::add( STLBitsetDeterminant& det )
     wfn_size_ = wfn_.size();
 }
 
+STLBitsetDeterminant DeterminantMap::get_det( size_t& value )
+{
+    // Iterate through map to find the right one
+    // Possibly a faster way to do this?
+    STLBitsetDeterminant det;
+    
+    for( detmap::iterator it = wfn_.begin(), endit = wfn_.end(); it != endit; ++it ){
+        if( it->second == value ){
+            det = it->first;
+            break;
+        }
+    }
+    return det;
+}
+
 }}
