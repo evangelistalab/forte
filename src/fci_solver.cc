@@ -177,11 +177,11 @@ double FCI::compute_energy()
     fcisolver_->set_max_rdm_level(max_rdm_level_);
     fcisolver_->set_nroot(options_.get_int("NROOT"));
     fcisolver_->set_root(options_.get_int("ROOT"));
-    fcisolver_->test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver_->set_test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver_->set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
     fcisolver_->set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
     fcisolver_->set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-    fcisolver_->print_no(print_no_);
+    fcisolver_->set_print_no(print_no_);
 
     double fci_energy = fcisolver_->compute_energy();
 
@@ -443,8 +443,12 @@ double FCISolver::compute_energy()
 
     if (converged == SolverStatus::NotConverged){
         outfile->Printf("\n  FCI did not converge!");
-        exit(1);
+        throw PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
     }
+
+    // Copy eigen values and eigen vectors
+    eigen_vals_ = dls.eigenvalues();
+    eigen_vecs_ = dls.eigenvectors();
 
     // Print determinants
     if (print_){
@@ -491,26 +495,21 @@ double FCISolver::compute_energy()
         }
     }
 
-
     // Compute the RDMs
-    if (converged == SolverStatus::Converged){
-        C_->copy(dls.eigenvector(root_));
-        if (print_) outfile->Printf("\n\n  ==> RDMs for Root No. %d <==",root_);
-        C_->compute_rdms(max_rdm_level_);
-
-        if(print_ > 1 && max_rdm_level_ > 1){C_->energy_from_rdms(fci_ints);}
-
-        // Optionally, test the RDMs
-        if (test_rdms_) C_->rdm_test();
-
-        // Print the NO if energy converged
-        if(print_no_ || print_ > 0) {C_->print_natural_orbitals(mo_space_info_);}
+    C_->copy(dls.eigenvector(root_));
+    if(print_){
+        std::string title_rdm = "Computing RDMs for Root No. " + std::to_string(root_);
+        print_h2(title_rdm);
     }
-    else
-    {
-        outfile->Printf("\n CI did not converge.");
-        throw PSIEXCEPTION("CI did not converge.  Try setting FCI_ITERATIONS higher");
-    }
+    C_->compute_rdms(max_rdm_level_);
+
+    if(print_ > 1 && max_rdm_level_ > 1) {C_->energy_from_rdms(fci_ints);}
+
+    // Optionally, test the RDMs
+    if(test_rdms_) {C_->rdm_test();}
+
+    // Print the NO if energy converged
+    if(print_no_ || print_ > 0) {C_->print_natural_orbitals(mo_space_info_);}
 
     energy_ = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
 
