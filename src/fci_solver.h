@@ -81,26 +81,30 @@ public:
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
     void set_subspace_per_root(int value);
+
     /// If you actually change the integrals in your code, you should set this to false.
-    void use_user_integrals_and_restricted_docc(bool user_provide_integrals)
-        { provide_integrals_and_restricted_docc_ = user_provide_integrals; }
-    /// If you want to use your own integrals need to set FCIIntegrals
-    /// This is normally not set.
-    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints)
-    {
-        fci_ints_ = fci_ints;
+    void use_user_integrals_and_restricted_docc(bool user_provide_integrals){
+        provide_integrals_and_restricted_docc_ = user_provide_integrals;
     }
+    /// If you want to use your own integrals need to set FCIIntegrals (This is normally not set)
+    void set_integral_pointer(std::shared_ptr<FCIIntegrals> fci_ints){fci_ints_ = fci_ints;}
 
     /// When set to true before calling compute_energy(), it will test the
     /// reduce density matrices.  Watch out, this function is very slow!
-    void test_rdms(bool value) {test_rdms_ = value;}
+    void set_test_rdms(bool value) {test_rdms_ = value;}
     /// Print the Natural Orbitals
-    void print_no(bool value){print_no_ = value;}
+    void set_print_no(bool value){print_no_ = value;}
     /// Return a FCIWfn
-    std::shared_ptr<FCIWfn> get_FCIWFN()
-    {
-        return C_;
-    }
+    std::shared_ptr<FCIWfn> get_FCIWFN() {return C_;}
+
+    /// Return eigen vectors
+    SharedMatrix eigen_vecs() {return eigen_vecs_;}
+    /// Return eigen values
+    SharedVector eigen_vals() {return eigen_vals_;}
+    /// Return string lists
+    std::shared_ptr<StringLists> lists() {return lists_;}
+    /// Return symmetry
+    int symmetry() {return symmetry_;}
 
 private:
 
@@ -128,6 +132,11 @@ private:
 
     /// The FCI wave function
     std::shared_ptr<FCIWfn> C_;
+
+    /// Eigen vectors
+    SharedMatrix eigen_vecs_;
+    /// Eigen values
+    SharedVector eigen_vals_;
 
     /// The number of irreps
     int nirrep_;

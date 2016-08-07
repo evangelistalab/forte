@@ -283,7 +283,7 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.",frozen_core_energy_);
 
 
-        outfile->Printf("\n\n FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
+        outfile->Printf("\n\n  FrozenOneBody Operator takes  %8.8f s", FrozenOneBody.get());
     }
 }
 

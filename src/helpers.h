@@ -27,6 +27,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <chrono>
 
 #include "ambit/blocked_tensor.h"
 #include <libmints/matrix.h>
@@ -206,6 +207,21 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
  *                           -> pair.1 -> end or each processor
  */
 std::pair<std::vector<int>, std::vector<int> > split_up_tasks(size_t size_of_tasks,int nproc);
+
+/**
+  * @brief A timer class
+  */
+class ForteTimer {
+public:
+    ForteTimer();
+
+    /// Return the elapsed time in seconds
+    double elapsed();
+
+private:
+    std::chrono::high_resolution_clock::time_point t_start_;
+    std::chrono::high_resolution_clock::time_point t_end_;
+};
 
 }} // End Namespaces
 

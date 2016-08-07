@@ -4,8 +4,6 @@
 //#include <unordered_map>
 //#include <numeric>
 
-#include <boost/timer.hpp>
-
 #include <libpsio/psio.hpp>
 #include <libmints/pointgrp.h>
 #include <libmints/molecule.h>
@@ -594,17 +592,7 @@ double AdaptiveCI::compute_energy()
 
 		// Use spin projection to ensure the P space is spin pure
 		if( (spin_projection == 1 or spin_projection == 3) and P_space_.size() <= 200){
-			double spin_contamination = compute_spin_contamination(P_space_, P_evecs, num_ref_roots);
-			if(spin_contamination >= spin_tol_){
-				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				full_spin_transform(P_space_, P_evecs, num_ref_roots);
-				P_evecs->zero();
-				P_evecs = PQ_spin_evecs_->clone();
-               compute_H_expectation_val(P_space_,P_evals,P_evecs,num_ref_roots,diag_method_);
-			}else if (!quiet_mode_){
-				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n  No need to perform spin projection.");
-			}
+            project_determinant_space(P_space_, P_evecs, P_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
@@ -651,17 +639,7 @@ double AdaptiveCI::compute_energy()
 		// Ensure the solutions are spin-pure
 
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
-			double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, num_ref_roots);
-			if(spin_contamination >= spin_tol_){
-				if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-				full_spin_transform(PQ_space_, PQ_evecs, num_ref_roots);
-				PQ_evecs->zero();
-				PQ_evecs = PQ_spin_evecs_->clone();
-               compute_H_expectation_val(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,diag_method_);
-			}else if (!quiet_mode_){
-				outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-				outfile->Printf("\n  No need to perform spin projection.");
-			}
+            project_determinant_space(PQ_space_, PQ_evecs, PQ_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
 			outfile->Printf("\n  Not performing spin projection.");
 		}
@@ -790,17 +768,7 @@ double AdaptiveCI::compute_energy()
 
 	// Ensure the solutions are spin-pure
 	if(( spin_projection == 2 or spin_projection == 3) and PQ_space_.size() <= 200){
-		double spin_contamination = compute_spin_contamination(PQ_space_, PQ_evecs, nroot_);
-		if(spin_contamination >= spin_tol_){
-			if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
-			full_spin_transform(PQ_space_, PQ_evecs, nroot_);
-			PQ_evecs->zero();
-			PQ_evecs = PQ_spin_evecs_->clone();
-            compute_H_expectation_val(P_space_,P_evals,P_evecs,nroot_,diag_method_);
-		}else if (!quiet_mode_){
-			outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
-			outfile->Printf("\n  No need to perform spin projection.");
-		}
+        project_determinant_space( PQ_space_, PQ_evecs, PQ_evals, nroot_);
 	}else if ( !quiet_mode_ ){
 		outfile->Printf("\n  Not performing spin projection.");
 	}
@@ -850,7 +818,7 @@ double AdaptiveCI::compute_energy()
    //     cI[I] = PQ_evecs->get(I,0);
    // }
 
-   // test_ops(PQ_space_, cI);
+   // test_ops(PQ_space_, PQ_evecs);
 
     if(!quiet_mode_){
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
@@ -998,7 +966,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
 
 void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 {
-    boost::timer t_ms_build;
+    Timer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double> > V_hash;
@@ -1010,7 +978,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	
     if( !quiet_mode_){
         outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
-        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.elapsed());
+        outfile->Printf("\n  %s: %f s\n","Time spent building the model space",t_ms_build.get());
     }
     outfile->Flush();
 
@@ -1024,7 +992,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         V_hash.erase(P_space_[J]);
     }
 
-    boost::timer t_ms_screen;
+    Timer t_ms_screen;
 
     std::vector<double> C1(nroot_,0.0);
     std::vector<double> E2(nroot_,0.0);
@@ -1127,7 +1095,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 
     if( !quiet_mode_ ){
         outfile->Printf("\n  %s: %zu determinants","Dimension of the P + Q space",PQ_space_.size());
-        outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.elapsed());
+        outfile->Printf("\n  %s: %f s","Time spent screening the model space",t_ms_screen.get());
     }
     outfile->Flush();
 }
@@ -1780,61 +1748,6 @@ oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
 	
 }
 
-
-double AdaptiveCI::OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const bool sp, const size_t &p, const size_t &q)
-{
-	STLBitsetDeterminant tmp = J;
-
-	double sign = 1.0;
-
-	if( sp == false ){
-		if( tmp.get_alfa_bit(q)) {
-			sign *= CheckSign(tmp.get_alfa_occ(),q);
-			tmp.set_alfa_bit(q,0);
-		}else{
-			return 0.0;
-		}
-
-		if( !tmp.get_alfa_bit(p) ){
-			sign *= CheckSign(tmp.get_alfa_occ(),p);
-			tmp.set_alfa_bit(p,1);
-			Jnew = tmp;
-			return sign;
-		}else{
-			return 0.0;
-		}
-	}else{
-		if( tmp.get_beta_bit(q) ){
-			sign *= CheckSign(tmp.get_beta_occ(),q);
-			tmp.set_beta_bit(q,0);
-		}else{
-			return 0.0;
-		}
- 
-		if( !tmp.get_beta_bit(p) ){
-			sign *= CheckSign(tmp.get_beta_occ(),p);
-			tmp.set_beta_bit(p,1);
-			Jnew = tmp;
-			return sign;
-		 }else{
-			return 0.0;
-		}
-	}
-}
-
-double AdaptiveCI::CheckSign( std::vector<int> I, const int &n )
-{
-	size_t count = 0;
-	for( int i = 0; i < n; ++i){
-		
-		if( I[i] ) count++;
-	
-	}
-
-	return std::pow( -1.0, count % 2 );
-
-}
-
 void AdaptiveCI::print_wfn(std::vector<STLBitsetDeterminant>& space,SharedMatrix evecs,int nroot)
 {
 	std::string state_label;
@@ -1882,7 +1795,7 @@ void AdaptiveCI::full_spin_transform( std::vector< STLBitsetDeterminant >& det_s
 	// Build the S^2 Matrix
 	size_t det_size = det_space.size();
 	SharedMatrix S2(new Matrix("S^2", det_size, det_size));
-
+#pragma omp parallel for
 	for(size_t I = 0; I < det_size; ++I ){
 		for(size_t J = 0; J <= I; ++J){
 			S2->set(I,J, det_space[I].spin2(det_space[J]) );
@@ -2009,8 +1922,8 @@ void AdaptiveCI::print_nos()
 {
 	print_h2("NATURAL ORBITALS");
 
-    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
-    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B",nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_, nactpi_, nactpi_));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_B",nirrep_, nactpi_, nactpi_));
 
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){
@@ -2322,20 +2235,36 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
     return new_root;
 }
 
-void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs )
+void AdaptiveCI::test_ops( std::vector<STLBitsetDeterminant>& det_space, SharedMatrix& PQ_evecs )
 {
     outfile->Printf("\n\n  Testing operators");
 
-    DeterminantMap aci_wfn( det_space, PQ_evecs );
-    aci_wfn.print();
+    DeterminantMap aci_wfn( det_space );
     WFNOperator op(mo_space_info_);
     
     op.op_lists( aci_wfn );
     op.tp_lists( aci_wfn );
-    double S2 = op.s2( aci_wfn );
-    outfile->Printf("\n S2 is %f", S2);
+    
+    for( int n = 0; n < nroot_; ++n ){
+        double S2 = op.s2( aci_wfn, PQ_evecs, n );
+        outfile->Printf("\n Root %d S2 is %f",n, S2);
+    }
 }
 
+void AdaptiveCI::project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot )
+{
+	double spin_contamination = compute_spin_contamination(space, evecs, nroot);
+	if(spin_contamination >= spin_tol_){
+		if( !quiet_mode_ ) outfile->Printf("\n  Average spin contamination per root is %1.5f", spin_contamination);
+		full_spin_transform(space, evecs, nroot);
+		evecs->zero();
+		evecs = PQ_spin_evecs_->clone();
+        compute_H_expectation_val(space,evals,evecs,nroot,diag_method_);
+	}else if (!quiet_mode_){
+		outfile->Printf("\n  Average spin contamination (%1.5f) is less than tolerance (%1.5f)", spin_contamination, spin_tol_);
+		outfile->Printf("\n  No need to perform spin projection.");
+	}
+}
 
 }} // EndNamespaces
 

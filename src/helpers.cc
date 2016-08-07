@@ -408,4 +408,17 @@ std::pair<std::vector<int>, std::vector<int> > split_up_tasks(size_t size_of_tas
 }
 
 
+using namespace std::chrono;
+
+ForteTimer::ForteTimer()
+{
+    t_start_ = std::chrono::high_resolution_clock::now();
+}
+
+/// Return the elapsed time in seconds
+double ForteTimer::elapsed() {
+    t_end_ = high_resolution_clock::now();
+    return duration_cast<duration<double>>(t_end_ - t_start_).count();
+}
+
 }} // End Namespaces

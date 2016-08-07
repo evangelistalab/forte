@@ -298,14 +298,12 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE FULL CI CODE
         //////////////////////////////////////////////////////////////
 
-        /*- Options for state averaging -*/
-        options.add("STATE_AVERAGE",new ArrayType());
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("FCI_MAX_RDM",1);
         /*- Test the FCI reduced density matrices? -*/
         options.add_bool("TEST_RDMS",false);
         /*- Print the NO from the rdm of FCI -*/
-        options.add_bool("PRINT_NO", false);
+        options.add_bool("PRINT_NO",false);
 
         /*- The number of trial guess vectors to generate per root -*/
         options.add_int("NTRIAL_PER_ROOT",10);
@@ -350,7 +348,7 @@ read_options(std::string name, Options &options)
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
-        /// The number of Rotation parameters to extrapolate with
+        /// The number of rotation parameters to extrapolate with
         options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
         options.add_int("CASSCF_DIIS_START", 3);
@@ -365,17 +363,19 @@ read_options(std::string name, Options &options)
         /// When to start skipping CI steps
         options.add_int("CASSCF_CI_STEP_START", -1);
 
-
-        /*- SA-CASSCF -*/
-        /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
-        options.add("SA_STATES", new ArrayType());
-        /// An array weights for each state
-        options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
-        /// Monitor the CAS-CI Solutions through iterations
+        //////////////////////////////////////////////////////////////
+        /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
+        //////////////////////////////////////////////////////////////
+        /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
+        options.add("AVG_STATES", new ArrayType());
+        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]
+         *  Note that AVG_WEIGHTS is required when the same option is specified in Psi4 -*/
+        options.add("AVG_WEIGHTS", new ArrayType());
+        /*- Monitor the CAS-CI solutions through iterations -*/
         options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE DMRGSolver
+        ///         OPTIONS FOR THE DMRGSOLVER
         //////////////////////////////////////////////////////////////
 
         options.add_int("DMRG_WFN_MULTP", -1);
@@ -713,8 +713,13 @@ read_options(std::string name, Options &options)
         options.add_bool("PRINT_TIME_PROFILE", false);
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
-        /*- Include internal amplitudes -*/
-        options.add_bool("INTERNAL_AMP", false);
+        /*- Include internal amplitudes according to excitation level -*/
+        options.add_str("INTERNAL_AMP", "NONE", "NONE SINGLES_DOUBLES SINGLES DOUBLES");
+        /*- Select only part of the asked internal amplitudes (IAs) in V-CIS/CISD
+         *  - AUTO: all IAs that changes excitations (O->V; OO->VV, OO->OV, OV->VV)
+         *  - ALL:  all IAs (O->O, V->V, O->V; OO->OO, OV->OV, VV->VV, OO->VV, OO->OV, OV->VV)
+         *  - OOVV: pure external (O->V; OO->VV) -*/
+        options.add_str("INTERNAL_AMP_SELECT", "AUTO", "AUTO ALL OOVV");
         /*- Exponent of Energy Denominator -*/
         options.add_double("DELTA_EXPONENT", 2.0);
         /*- Intruder State Avoidance b Parameter -*/
@@ -725,8 +730,11 @@ read_options(std::string name, Options &options)
          *  - DMRG  DMRG code
          *  - V2RDM V2RDM interface -*/
         options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM");
-        /*- Average densities of different spins -*/
+        /*- Average densities of different spins in V2RDM -*/
         options.add_bool("AVG_DENS_SPIN", false);
+
+        /*- Defintion for source operator for ccvv term -*/
+        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
         /*- Batches for CCVV_ALGORITHM -*/
@@ -738,8 +746,6 @@ read_options(std::string name, Options &options)
         /*- Detailed timing printings -*/
         options.add_bool("THREE_MRPT2_TIMINGS", false);
 
-        /*- Defintion for source operator for ccvv term -*/
-        options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Print (1 - exp(-2*s*D)) / D -*/
         options.add_bool("PRINT_DENOM2", false);
     }
@@ -1012,14 +1018,23 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         std::string cas_type = options.get_str("CAS_TYPE");
         if(cas_type == "CAS")
         {
-            boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-            fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") != "NONE"){
-                dsrg_mrpt2->compute_energy_relaxed();
-            }else{
-                dsrg_mrpt2->compute_energy();
+            std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
+            if(options["AVG_STATES"].has_changed()){
+                fci_mo->compute_sa_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+                dsrg_mrpt2->set_p_space(fci_mo->p_space());
+                dsrg_mrpt2->set_eigens(fci_mo->eigens());
+                dsrg_mrpt2->compute_energy_multi_state();
+            } else {
+                fci_mo->compute_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+                if(options.get_str("RELAX_REF") != "NONE"){
+                    dsrg_mrpt2->compute_energy_relaxed();
+                }else{
+                    dsrg_mrpt2->compute_energy();
+                }
             }
         }
 
