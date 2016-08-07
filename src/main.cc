@@ -758,7 +758,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     int my_proc = 0;
     int n_nodes = 1;
     #ifdef HAVE_GA
-    GA_Initialize_ltd(Process::environment.get_memory());
+    GA_Initialize();
     ///Use C/C++ memory allocators 
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
@@ -1107,6 +1107,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
     {
+        Timer all_three_dsrg_mrpt2;
 
         if(options.get_str("INT_TYPE")=="CONVENTIONAL")
         {
@@ -1195,6 +1196,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #endif
         }
 
+        outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         auto srg = std::make_shared<TensorSRG>(ref_wfn, options, ints_, mo_space_info);
