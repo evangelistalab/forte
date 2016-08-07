@@ -4,14 +4,12 @@
 
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>
-#include <libmints/molecule.h>
 #include <libqt/qt.h>
-#include <iostream>
-#include <fstream>
 
 #include "dsrg_mrpt2.h"
 #include "blockedtensorfactory.h"
 #include "fci_solver.h"
+#include "ci_rdms.h"
 
 using namespace ambit;
 
@@ -135,10 +133,14 @@ void DSRG_MRPT2::startup()
 
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
+    multi_state_ = options_["AVG_STATES"].has_changed();
     if(relax_ref_ != "NONE"){
         if(relax_ref_ != "ONCE"){
-            outfile->Printf("\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
+            outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
             relax_ref_ = "ONCE";
+        }
+        if(multi_state_){
+            outfile->Printf("\n\n  Multi-state computations ignore RELAX_REF option.");
         }
 
         Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
@@ -148,6 +150,16 @@ void DSRG_MRPT2::startup()
         Hbar2_["uvxy"] = V_["uvxy"];
         Hbar2_["uVxY"] = V_["uVxY"];
         Hbar2_["UVXY"] = V_["UVXY"];
+    } else {
+        if(multi_state_){
+            Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
+            Hbar2_ = BTF_->build(tensor_type_,"Two-body Hbar",spin_cases({"aaaa"}));
+            Hbar1_["uv"] = F_["uv"];
+            Hbar1_["UV"] = F_["UV"];
+            Hbar2_["uvxy"] = V_["uvxy"];
+            Hbar2_["uVxY"] = V_["uVxY"];
+            Hbar2_["UVXY"] = V_["UVXY"];
+        }
     }
 
     // initialize timer for commutator
@@ -339,18 +351,19 @@ void DSRG_MRPT2::print_summary()
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
         {"int_type", options_.get_str("INT_TYPE")},
         {"source operator", source_},
+        {"state_type", multi_state_ ? "MULTI_STATE" : "STATE_SPECIFIC"},
         {"reference relaxation", relax_ref_}};
 
     // Print some information
     outfile->Printf("\n\n  ==> Calculation Information <==\n");
     for (auto& str_dim : calculation_info){
-        outfile->Printf("\n    %-39s %10d",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-40s %15d",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_double){
-        outfile->Printf("\n    %-39s %10.3e",str_dim.first.c_str(),str_dim.second);
+        outfile->Printf("\n    %-40s %15.3e",str_dim.first.c_str(),str_dim.second);
     }
     for (auto& str_dim : calculation_info_string){
-        outfile->Printf("\n    %-39s %10s",str_dim.first.c_str(),str_dim.second.c_str());
+        outfile->Printf("\n    %-40s %15s",str_dim.first.c_str(),str_dim.second.c_str());
     }
 
     if(options_.get_bool("MEMORY_SUMMARY")) {
@@ -557,33 +570,118 @@ void DSRG_MRPT2::compute_t2()
         T2_["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
-    // zero internal amplitudes or keep the upper triangle
-    if(!options_.get_bool("INTERNAL_AMP")){
-        T2_.block("aaaa").zero();
-        T2_.block("aAaA").zero();
-        T2_.block("AAAA").zero();
-    } else {
+    // internal amplitudes (AA->AA)
+    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+    if(internal_amp.find("DOUBLES") != string::npos){
         size_t nactv1 = mo_space_info_->size("ACTIVE");
         size_t nactv2 = nactv1 * nactv1;
         size_t nactv3 = nactv2 * nactv1;
+        size_t nactv_occ = actv_occ_mos_.size();
+        size_t nactv_uocc = actv_uocc_mos_.size();
 
-        for(size_t i = 0; i < nactv1; ++i){
-            for(size_t j = 0; j < nactv1; ++j){
-                size_t c = i * nactv1 + j;
-                for(size_t a = 0; a < nactv1; ++a){
-                    for(size_t b = 0; b < nactv1; ++b){
-                        size_t v = a * nactv1 + b;
-                        if(c >= v){
-                            size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
-                            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
-                                T2_.block(block).data()[idx] = 0.0;
+        if(internal_amp_select == "ALL"){
+            for(size_t i = 0; i < nactv1; ++i){
+                for(size_t j = 0; j < nactv1; ++j){
+                    size_t c = i * nactv1 + j;
+
+                    for(size_t a = 0; a < nactv1; ++a){
+                        for(size_t b = 0; b < nactv1; ++b){
+                            size_t v = a * nactv1 + b;
+
+                            if(c >= v){
+                                size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
+                                for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                                    T2_.block(block).data()[idx] = 0.0;
+                                }
+                            }
+
+                        }
+                    }
+
+                }
+            }
+        } else if (internal_amp_select == "OOVV"){
+            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                // copy original data
+                std::vector<double> data (T2_.block(block).data());
+
+                T2_.block(block).zero();
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t A = 0; A < nactv_uocc; ++A){
+                            for(size_t B = 0; B < nactv_uocc; ++B){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                T2_.block(block).data()[idx] = data[idx];
                             }
                         }
                     }
                 }
+
+            }
+        } else {
+            for(const std::string& block: {"aaaa", "aAaA", "AAAA"}){
+                // copy original data
+                std::vector<double> data (T2_.block(block).data());
+                T2_.block(block).zero();
+
+                // OO->VV
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t A = 0; A < nactv_uocc; ++A){
+                            for(size_t B = 0; B < nactv_uocc; ++B){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
+                // OO->OV, OO->VO
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t J = 0; J < nactv_occ; ++J){
+                        for(size_t K = 0; K < nactv_occ; ++K){
+                            for(size_t A = 0; A < nactv_uocc; ++A){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_occ_mos_[K] * nactv1 + actv_uocc_mos_[A];
+                                T2_.block(block).data()[idx] = data[idx];
+
+                                idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2
+                                        + actv_uocc_mos_[A] * nactv1 + actv_occ_mos_[K];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
+                // OV->VV, VO->VV
+                for(size_t I = 0; I < nactv_occ; ++I){
+                    for(size_t A = 0; A < nactv_uocc; ++A){
+                        for(size_t B = 0; B < nactv_uocc; ++B){
+                            for(size_t C = 0; C < nactv_uocc; ++C){
+                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_uocc_mos_[A] * nactv2
+                                        + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                T2_.block(block).data()[idx] = data[idx];
+
+                                idx = actv_uocc_mos_[A] * nactv3 + actv_occ_mos_[I] * nactv2
+                                        + actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
+                                T2_.block(block).data()[idx] = data[idx];
+                            }
+                        }
+                    }
+                }
+
             }
         }
+
+    } else {
+        T2_.block("aaaa").zero();
+        T2_.block("aAaA").zero();
+        T2_.block("AAAA").zero();
     }
+
 
     // This is used to print the tensor out for further analysis.
     // Only used as a test for some future tensor factorizations and other
@@ -682,13 +780,13 @@ void DSRG_MRPT2::compute_t1()
         T1_["IA"] = tempT1["IA"];
     }
 
-    // zero internal amplitudes or keep the upper triangle
-    if(!options_.get_bool("INTERNAL_AMP")){
-        T1_.block("AA").zero();
-        T1_.block("aa").zero();
-    } else {
+    // internal amplitudes (A->A)
+    std::string internal_amp = options_.get_str("INTERNAL_AMP");
+    std::string internal_amp_select = options_.get_str("INTERNAL_AMP_SELECT");
+    if(internal_amp.find("SINGLES") != std::string::npos){
         size_t nactv = mo_space_info_->size("ACTIVE");
 
+        // zero half internals to avoid double counting
         for(size_t i = 0; i < nactv; ++i){
             for(size_t a = 0; a < nactv; ++a){
                 if(i >= a){
@@ -699,6 +797,35 @@ void DSRG_MRPT2::compute_t1()
                 }
             }
         }
+
+        if(internal_amp_select != "ALL"){
+            size_t nactv_occ = actv_occ_mos_.size();
+            size_t nactv_uocc = actv_uocc_mos_.size();
+
+            // zero O->O internals
+            for(size_t I = 0; I < nactv_occ; ++I){
+                for(size_t J = 0; J < nactv_occ; ++J){
+                    size_t idx = actv_occ_mos_[I] * nactv + actv_occ_mos_[J];
+                    for(const std::string& block: {"aa", "AA"}){
+                        T1_.block(block).data()[idx] = 0.0;
+                    }
+                }
+            }
+
+            // zero V->V internals
+            for(size_t A = 0; A < nactv_uocc; ++A){
+                for(size_t B = 0; B < nactv_uocc; ++B){
+                    size_t idx = actv_uocc_mos_[A] * nactv + actv_uocc_mos_[B];
+                    for(const std::string& block: {"aa", "AA"}){
+                        T1_.block(block).data()[idx] = 0.0;
+                    }
+                }
+            }
+
+        }
+    } else {
+        T1_.block("AA").zero();
+        T1_.block("aa").zero();
     }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
@@ -847,7 +974,7 @@ double DSRG_MRPT2::E_FT1()
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
         E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
 
@@ -884,7 +1011,7 @@ double DSRG_MRPT2::E_VT1()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -932,7 +1059,7 @@ double DSRG_MRPT2::E_FT2()
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -1024,7 +1151,7 @@ double DSRG_MRPT2::E_VT2_2()
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
@@ -1075,7 +1202,7 @@ double DSRG_MRPT2::E_VT2_4HH()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
         temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
@@ -1117,7 +1244,7 @@ double DSRG_MRPT2::E_VT2_4PP()
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
         temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
@@ -1185,7 +1312,7 @@ double DSRG_MRPT2::E_VT2_4PH()
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if(options_.get_bool("INTERNAL_AMP")){
+    if(options_.get_str("INTERNAL_AMP") != "NONE"){
         temp.zero();
         temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
         temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
@@ -1256,7 +1383,7 @@ double DSRG_MRPT2::E_VT2_6()
         temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];//  aAAaAA from particle
         E += 0.5 * temp["uVWxYZ"] * Lambda3_["xYZuVW"];
 
-        if(options_.get_bool("INTERNAL_AMP")){
+        if(options_.get_str("INTERNAL_AMP") != "NONE"){
             temp.zero();
             temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
             temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
@@ -1288,6 +1415,128 @@ double DSRG_MRPT2::E_VT2_6()
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220",timer.get());
     return E;
+}
+
+double DSRG_MRPT2::compute_energy_multi_state(){
+    // compute DSRG-MRPT2 energy
+    double Edsrg = compute_energy();
+
+    // transfer integrals
+    transfer_integrals();
+
+    // prepare FCI integrals
+    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
+    ambit::Tensor tei_active_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+    ambit::Tensor tei_active_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+    ambit::Tensor tei_active_bb = ints_->aptei_bb_block(aactv_mos_, aactv_mos_, aactv_mos_, aactv_mos_);
+    fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    fci_ints->compute_restricted_one_body_operator();
+//    STLBitsetDeterminant::set_ints(fci_ints);
+
+    // get character table
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> irrep_symbol;
+    for(int h = 0; h < this->nirrep(); ++h){
+        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+    }
+
+    // multiplicity table
+    std::vector<std::string> multi_label{"Singlet","Doublet","Triplet","Quartet","Quintet","Sextet","Septet","Octet",
+                                  "Nonet","Decaet","11-et","12-et","13-et","14-et","15-et","16-et","17-et","18-et",
+                                  "19-et","20-et","21-et","22-et","23-et","24-et"};
+
+    // size of 1rdm and 2rdm
+    size_t na = mo_space_info_->size("ACTIVE");
+    size_t nele1 = na * na;
+    size_t nele2 = na * nele1;
+
+    // get one-electron integral (DSRG transformed)
+    BlockedTensor oei = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
+    oei.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if (spin[0] == AlphaSpin){
+            value = ints_->oei_a(i[0],i[1]);
+        }else{
+            value = ints_->oei_b(i[0],i[1]);
+        }
+    });
+
+    // loop over entries of AVG_STATES
+    int nentry = eigens_.size();
+    for(int n = 0; n < nentry; ++n){
+        int irrep = options_["AVG_STATES"][n][0].to_integer();
+        int multi = options_["AVG_STATES"][n][1].to_integer();
+        int nstates = options_["AVG_STATES"][n][2].to_integer();
+        std::stringstream ss;
+        ss << "Effective Hamiltonian of " << nstates << " "
+           << multi_label[multi - 1] << " " << irrep_symbol[irrep] << " States";
+        print_h2(ss.str());
+
+        int dim = (eigens_[n][0].first)->dim();
+        SharedMatrix evecs (new Matrix("evecs",dim,dim));
+        for(int i = 0; i < eigens_[n].size(); ++i){
+            evecs->set_column(0,i,(eigens_[n][i]).first);
+        }
+
+        SharedMatrix Heff (new Matrix("Heff " + irrep_symbol[irrep], nstates, nstates));
+        for(int A = 0; A < nstates; ++A){
+            for(int B = 0; B < nstates; ++B){
+
+                // compute rdms
+                CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
+                ci_rdms.set_symmetry(irrep);
+
+                std::vector<double> opdm_a (nele1, 0.0);
+                std::vector<double> opdm_b (nele1, 0.0);
+                ci_rdms.compute_1rdm(opdm_a,opdm_b);
+                for(double& x: opdm_a){
+                    outfile->Printf("\n  %20.15f",x);
+                }
+
+                std::vector<double> tpdm_aa (nele2, 0.0);
+                std::vector<double> tpdm_ab (nele2, 0.0);
+                std::vector<double> tpdm_bb (nele2, 0.0);
+                ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
+
+                // put rdms in tensor format
+                BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
+                D1.block("aa").data() = opdm_a;
+                D1.block("AA").data() = opdm_b;
+
+                BlockedTensor D2 = BTF_->build(tensor_type_,"D2",spin_cases({"aaaa"}),true);
+                D2.block("aaaa").data() = tpdm_aa;
+                D2.block("aAaA").data() = tpdm_ab;
+                D2.block("AAAA").data() = tpdm_bb;
+
+//                double H_AB = ints_->scalar();
+                double H_AB = 0.0;
+                H_AB += oei["uv"] * D1["uv"];
+                H_AB += oei["UV"] * D1["UV"];
+                H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
+                H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
+                H_AB += Hbar2_["uVxY"] * D2["xYuV"];
+
+                if(A == B){
+                    outfile->Printf("\n  fz-c    = %20.15f", ints_->frozen_core_energy());
+                    outfile->Printf("\n  scalar  = %20.15f", ints_->scalar());
+                    H_AB += ints_->frozen_core_energy() + ints_->scalar();
+                }
+
+                Heff->set(A,B,H_AB);
+            }
+        } // end forming effective Hamiltonian
+
+        Heff->print();
+
+        SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
+        SharedVector Ems (new Vector("MS Energies", nstates));
+        Heff->diagonalize(U, Ems);
+        U->eivprint(Ems);
+
+
+
+    } // end looping averaged states
+
+    return 0.0;
 }
 
 double DSRG_MRPT2::compute_energy_relaxed(){
@@ -1339,7 +1588,7 @@ double DSRG_MRPT2::compute_energy_relaxed(){
 
         // printing
         print_h2("DSRG-MRPT2 Energy Summary");
-        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)", Edsrg);
+        outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (fixed)  ", Edsrg);
         outfile->Printf("\n    %-30s = %22.15f", "DSRG-MRPT2 Total Energy (relaxed)", Erelax);
         outfile->Printf("\n");
     }
@@ -1422,11 +1671,7 @@ void DSRG_MRPT2::transfer_integrals(){
         }
     });
 
-    BlockedTensor temp2 = BTF_->build(tensor_type_,"temp2",spin_cases({"aaaa"}));
-    temp2["uvxy"] = Hbar2_["uvxy"];
-    temp2["uVxY"] = Hbar2_["uVxY"];
-    temp2["UVXY"] = Hbar2_["UVXY"];
-    temp2.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
+    Hbar2_.citerate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,const double& value){
         if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)){
             ints_->set_tei(i[0],i[1],i[2],i[3],value,true,true);
         }else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)){

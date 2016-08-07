@@ -35,6 +35,7 @@ set globals{
    maxiter                 500
    reference               ROHF
    S                       0.0
+   guess                   core
 }
 scf = energy('casscf')
 compare_values(refmcscf, scf,10,"SCF Energy")

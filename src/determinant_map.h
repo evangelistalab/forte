@@ -40,56 +40,39 @@ class DeterminantMap
 public:
 
     /// Default constructor
-    DeterminantMap( std::vector<STLBitsetDeterminant>& dets, std::vector<double>& cI );
+    DeterminantMap( std::vector<STLBitsetDeterminant>& dets );
 
     /// Empty constructor
     DeterminantMap();
 
     /// Copy constructor
-    DeterminantMap(detmap& wfn_, std::vector<double>& cI);
+    DeterminantMap( detmap& wfn_ );
 
     /// @return The hash
-    detmap& wfn();
-
-    /// The coefficients
-    std::vector<double> cI_; 
-
-    /// Return the coefficients
-    std::vector<double> coefficients();
-
-    /// Return a coefficient
-    double coefficient( size_t idx );
-
-    /// Update the coefficients
-    void update_coefficients( std::vector<double>& CI );
-
-    /// Scale the wavefunction
-    void scale( double value );
-
-    /// Return the norm of the wavefunction
-    double norm();
-
-    /// Normalize the wavefunction
-    void normalize();
+    detmap& wfn_hash();
 
     /// Add a determinant
-    void add( STLBitsetDeterminant& det, double value );
-
-    /// Merge two wavefunctions, overwriting the original in the case of conflicts
-    void merge( DeterminantMap& wfn ); 
-
-    /// Enlarge determinant space so that wfn is eigenfunction of total spin
-    void enforce_spin_completeness();
-
-    /// Print the most important determinants
-    void print();
+    void add( STLBitsetDeterminant& det );
 
     /// Return the number of determinants
     double size();
+
+    // Return a specific determinant by value
+    STLBitsetDeterminant get_det( size_t& value );
+
+    // Return a vector of the determinants
+    std::vector<STLBitsetDeterminant> determinants();
+
 protected:
 
     /// The dimension of the hash
     size_t wfn_size_;
+
+    /// The number of roots
+    int nroot_;
+
+    /// The multiplicity
+    int multiplicity_;    
 
     /// A hash of (determinants,coefficients)
     detmap wfn_;

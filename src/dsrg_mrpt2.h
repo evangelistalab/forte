@@ -23,11 +23,16 @@
 #ifndef _dsrg_mrpt2_h_
 #define _dsrg_mrpt2_h_
 
+#include <iostream>
 #include <fstream>
+#include <sstream>
+#include <tuple>
 #include <boost/assign.hpp>
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
+#include <libmints/molecule.h>
+#include <libmints/pointgrp.h>
 
 #include "integrals.h"
 #include "ambit/blocked_tensor.h"
@@ -36,19 +41,17 @@
 #include "blockedtensorfactory.h"
 #include "dsrg_time.h"
 #include "dsrg_source.h"
+#include "stl_bitset_determinant.h"
 
 using namespace ambit;
 namespace psi{ namespace forte{
-/**
- * @brief The MethodBase class
- * This class provides basic functions to write electronic structure
- * pilot codes using the Tensor classes
- */
+
 class DSRG_MRPT2 : public Wavefunction
 {
 public:
     /**
      * DSRG_MRPT2 Constructor
+     * @param reference The reference object of FORTE
      * @param ref_wfn The reference wavefunction object
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
@@ -66,8 +69,22 @@ public:
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
+    /// Compute the multi-state DSRG-MRPT2 energy
+    double compute_energy_multi_state();
+
+    /// Set CASCI eigen values and eigen vectors for state averaging
+    void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
+
+    /// Set determinants in the model space
+    void set_p_space(std::vector<psi::forte::STLBitsetDeterminant> p_space) {p_space_ = p_space;}
+
     /// Ignore semi-canonical testing in DSRG-MRPT2
     void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+
+    /// Set active active occupied MOs (relative to active)
+    void set_actv_occ(std::vector<size_t> actv_occ) {actv_occ_mos_ = std::vector<size_t>(actv_occ);}
+    /// Set active active unoccupied MOs (relative to active)
+    void set_actv_uocc(std::vector<size_t> actv_uocc) {actv_uocc_mos_ = std::vector<size_t>(actv_uocc);}
 
 protected:
     // => Class initialization and termination <= //
@@ -80,6 +97,13 @@ protected:
     void print_summary();
     /// Print levels
     int print_;
+
+    /// Multi-state or not
+    bool multi_state_;
+    /// CASCI eigen values and eigen vectors for state averaging
+    std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
+    /// Determinants in the model space
+    std::vector<psi::forte::STLBitsetDeterminant> p_space_;
 
     /// The reference object
     Reference reference_;
@@ -106,6 +130,11 @@ protected:
     std::vector<size_t> bactv_mos_;
     /// List of beta virtual MOs
     std::vector<size_t> bvirt_mos_;
+
+    /// List of active active occupied MOs (relative to active)
+    std::vector<size_t> actv_occ_mos_;
+    /// List of active active unoccupied MOs (relative to active)
+    std::vector<size_t> actv_uocc_mos_;
 
     /// Alpha core label
     std::string acore_label_;

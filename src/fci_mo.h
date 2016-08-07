@@ -13,6 +13,7 @@
 #include <libmints/basisset.h>
 #include <libmints/integral.h>
 #include <libmints/sointegral.h>
+#include <libmints/mintshelper.h>
 #include <vector>
 #include <tuple>
 #include <string>
@@ -25,6 +26,7 @@
 #include "reference.h"
 #include "helpers.h"
 #include "ci_rdms.h"
+#include "active_dsrgpt2.h"
 
 using namespace std;
 
@@ -39,8 +41,9 @@ using vecdet = vector<psi::forte::STLBitsetDeterminant>;
 namespace psi{ namespace forte{
 class FCI_MO : public Wavefunction
 {
-public:
+friend class ACTIVE_DSRGPT2;
 
+public:
     /**
      * @brief FCI_MO Constructor
      * @param ref_wfn The reference wavefunction object
@@ -59,23 +62,26 @@ public:
     /// Returns the reference object
     Reference reference();
 
+    /// Compute state-averaged CASCI energy
+    double compute_sa_energy();
+
     /// Set symmetry of the root
-    void set_root_sym(const int& root_sym) {root_sym_ = root_sym;}
+    void set_root_sym(int root_sym) {root_sym_ = root_sym;}
 
     /// Set number of roots
-    void set_nroots(const int& nroot) {nroot_ = nroot;}
+    void set_nroots(int nroot) {nroot_ = nroot;}
 
     /// Set which root is preferred
-    void set_root(const int& root) {root_ = root;}
+    void set_root(int root) {root_ = root;}
 
     /// Set active space type
-    void set_active_space_type(const string& act) {active_space_type_ = act;}
+    void set_active_space_type(string act) {active_space_type_ = act;}
+
+    /// Set orbitals
+    void set_orbs(SharedMatrix Ca, SharedMatrix Cb);
 
     /// Use whatever orbitals passed to this code
-    void use_default_orbitals(const bool& default_orbitals) {default_orbitals_ = default_orbitals;}
-
-    /// Form P space
-    void form_p_space();
+    void use_default_orbitals(bool default_orbitals) {default_orbitals_ = default_orbitals;}
 
     /// Return the vector of determinants
     vecdet p_space() {return determinant_;}
@@ -86,17 +92,26 @@ public:
         return orb_extents_;
     }
 
-    /// Return the vector of eigen vectors
+    /// Return the vector of eigen vectors and eigen values
     vector<pair<SharedVector,double>> eigen() {return eigen_;}
 
-    /// Return the dominant determinant
-    STLBitsetDeterminant dominant_det() {return dominant_det_;}
+    /// Return the vector of eigen vectors and eigen values (used in state-average computation)
+    vector<vector<pair<SharedVector,double>>> eigens() {return eigens_;}
+
+    /// Return a vector of dominant determinant for each root
+    vector<STLBitsetDeterminant> dominant_dets() {return dominant_dets_;}
 
     /// Set to use semicanonical
-    void set_semicanonical(const bool& semi) {semi_ = semi;}
+    void set_semicanonical(bool semi) {semi_ = semi;}
 
     /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(const bool& quiet) {quiet_ = quiet;}
+    void set_quite_mode(bool quiet) {quiet_ = quiet;}
+
+    /// Return indices (relative to active, not absolute) of active occupied orbitals
+    vector<size_t> actv_occ() {return ao_;}
+
+    /// Return indices (relative to active, not absolute) of active virtual orbitals
+    vector<size_t> actv_uocc() {return av_;}
 
 protected:
     /// Basic Preparation
@@ -174,12 +189,15 @@ protected:
     /// Active Space Type: CAS, CIS, CISD
     string active_space_type_;
 
+    /// Form Determiants Space
+    void form_p_space();
+
     /// Determinants
     void form_det();
     void form_det_cis();
     void form_det_cisd();
     vecdet determinant_;
-    STLBitsetDeterminant dominant_det_;
+    vector<STLBitsetDeterminant> dominant_dets_;
 
     /// Exclude ground-state HF in CISD space or not for excited states
     /// If it is excluded, ground state will use HF energy
@@ -196,23 +214,27 @@ protected:
     /// Choice of Roots
     int nroot_;  // number of roots
     int root_;   // which root in nroot
-    Dimension nrootspi_; // number of roots per irrep
 
-    /// Diagonalize the CASCI Hamiltonian
+    /// State Average Information (tuple of irrep, multi, nstates, weights)
+    std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info_;
+
+    /// Eigen Values and Eigen Vectors of Certain Symmetry
     vector<pair<SharedVector,double>> eigen_;
-    ///The algorithm for diagonalization
+    /// A List of Eigen Values and Vectors for State Average
+    vector<vector<pair<SharedVector,double>>> eigens_;
+    /// The algorithm for diagonalization
     std::string diag_algorithm_;
 
     void Diagonalize_H(const vecdet &det, vector<pair<SharedVector,double>> &eigen);
 
-    /// Store and Print the CI Vectors and Configurations
-    void Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
+    /// Print the CI Vectors and Configurations (figure out the dominant determinants)
+    void print_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector,double>> &eigen, const vecdet &det);
 
     /// Use whatever orbitals passed to this code
     bool default_orbitals_ = false;
     /// Semi-canonicalize orbitals
     bool semi_;
-    void semi_canonicalize(const size_t &count);
+    void semi_canonicalize();
     /// Use natural orbitals
     void nat_orbs();
 
@@ -221,7 +243,6 @@ protected:
     d2 Db_;
     ambit::Tensor L1a;    // only in active
     ambit::Tensor L1b;    // only in active
-    void fill_density();
 
     /// 2-Body Density Cumulant
     d4 L2aa_;
@@ -230,7 +251,6 @@ protected:
     ambit::Tensor L2aa;
     ambit::Tensor L2ab;
     ambit::Tensor L2bb;
-    void fill_cumulant2();
 
     /// 3-Body Density Cumulant
     d6 L3aaa_;
@@ -241,7 +261,6 @@ protected:
     ambit::Tensor L3aab;
     ambit::Tensor L3abb;
     ambit::Tensor L3bbb;
-    void fill_cumulant3();
 
     /// Print Functions
     void print_d2(const string &str, const d2 &OnePD);
@@ -252,23 +271,29 @@ protected:
     void FormDensity(CI_RDMS &ci_rdms, d2 &A, d2 &B);
     /// Check Density Matrix
     bool CheckDensity();
+    /// Fill in L1a, L1b from Da_, Db_
+    void fill_density();
+    /// Fill in L1a, L1b, Da_, Db_ from the RDM Vectors
+    void fill_density(vector<double> &opdm_a, vector<double> &opdm_b);
 
     /// Form 2-Particle Density Cumulant
-    void FormCumulant2(CI_RDMS &ci_rdms, const int &root, d4 &AA, d4 &AB, d4 &BB);
+    void FormCumulant2(CI_RDMS &ci_rdms, d4 &AA, d4 &AB, d4 &BB);
     void FormCumulant2AA(const vector<double> &tpdm_aa, const vector<double> &tpdm_bb, d4 &AA, d4 &BB);
     void FormCumulant2AB(const vector<double> &tpdm_ab, d4 &AB);
-//    void FormCumulant2(const vecdet &determinants, const int &root, d4 &AA, d4 &AB, d4 &BB);
-//    void FormCumulant2AA(const vecdet &determinants, const int &root, d4 &AA, d4 &BB);
-//    void FormCumulant2AB(const vecdet &determinants, const int &root, d4 &AB);
+    /// Fill in L2aa, L2ab and L2bb from L2aa_, L2ab_, and L2bb_
+    void fill_cumulant2();
+    /// Fill in L2aa, L2ab, L2bb from the 2RDMs (used in state average, L2aa_ ... are not initialized)
+    void compute_cumulant2(vector<double> &tpdm_aa, vector<double> &tpdm_ab, vector<double> &tpdm_bb);
 
     /// Form 3-Particle Density Cumulant
-    void FormCumulant3(CI_RDMS &ci_rdms, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
+    void FormCumulant3(CI_RDMS &ci_rdms, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
     void FormCumulant3AAA(const vector<double> &tpdm_aaa, const vector<double> &tpdm_bbb, d6 &AAA, d6 &BBB, string &DC);
     void FormCumulant3AAB(const vector<double> &tpdm_aab, const vector<double> &tpdm_abb, d6 &AAB, d6 &ABB, string &DC);
     void FormCumulant3_DIAG(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB);
-//    void FormCumulant3(const vecdet &determinants, const int &root, d6 &AAA, d6 &AAB, d6 &ABB, d6 &BBB, string &DC);
-//    void FormCumulant3AAA(const vecdet &determinants, const int &root, d6 &AAA, d6 &BBB, string &DC);
-//    void FormCumulant3AAB(const vecdet &determinants, const int &root, d6 &AAB, d6 &ABB, string &DC);
+    /// Fill in L3aaa, L3aab, L3abb, L3bbb from L3aaa_, L3aab_, L3abb_, L3bbb_
+    void fill_cumulant3();
+    /// Fill in L3aaa, L3aab, L3abb, L3bbb from the 3RDMs (used in state average, L3aaa_ ... are not initialized)
+    void compute_cumulant3(vector<double> &tpdm_aaa, vector<double> &tpdm_aab, vector<double> &tpdm_abb, vector<double> &tpdm_bbb);
 
     /// N-Particle Operator
     double OneOP(const STLBitsetDeterminant &J, STLBitsetDeterminant &Jnew, const size_t &p, const bool &sp, const size_t &q, const bool &sq);
@@ -285,7 +310,10 @@ protected:
 
     /// Reference Energy
     double Eref_;
+
+    /// Compute 2- and 3-cumulants
     void compute_ref();
+    void compute_sa_ref();
 
     /// Compute AO quadrupole for orbital extents
     void compute_SOquadrupole();

@@ -62,8 +62,12 @@ public:
     void set_print( bool print ) {print_ = print;}
 
     void set_max_rdm( int rdm );
-    // convert to strings
-    void convert_to_string( std::vector<STLBitsetDeterminant>& space ); 
+
+    void set_symmetry( int sym ) {symmetry_ = sym;}
+
+    // Convert to strings
+    void convert_to_string( std::vector<STLBitsetDeterminant>& space );
+
 private:
    /* Class Variables*/  
 	
