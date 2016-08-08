@@ -355,7 +355,7 @@ private:
     void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
 
     /// Compute the RDMs
-    void compute_rdms( SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, int root1, int root2 );
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

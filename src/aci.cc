@@ -524,7 +524,7 @@ double AdaptiveCI::compute_energy()
     std::vector<size_t> sizes(nroot_);
 
     for( int i = 0; i < nrun; ++i ){
-        outfile->Printf("\n  Computing wavefunction for root %d", i); 
+        if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
         P_space_.clear();
         PQ_space_.clear();
         if( multi_state ){
@@ -534,7 +534,7 @@ double AdaptiveCI::compute_energy()
 
         if( ex_alg_ == "ROOT_COMBINE") {
             sizes[i] = PQ_space_.size();
-            outfile->Printf("\n  Combining determinant spaces");
+            if( !quiet_mode_ ) outfile->Printf("\n  Combining determinant spaces");
             // Combine selected determinants into total space
             merge_determinants( full_space, PQ_space_ );
             PQ_space_.clear();    
@@ -560,8 +560,11 @@ double AdaptiveCI::compute_energy()
     }
 
     // Compute the RDMs
-   // if( multi_state ){
-   // compute_rdms( PQ_evecs, 0, 0 ); 
+    if( multi_state ){
+        compute_rdms( full_space, PQ_evecs, 0, 0 ); 
+    } else{
+        compute_rdms( PQ_space_, PQ_evecs, 0,0 );
+    }
     outfile->Flush();
 
 
@@ -1946,7 +1949,7 @@ int AdaptiveCI::root_follow( std::vector<std::pair<STLBitsetDeterminant, double>
     std::vector<std::pair<STLBitsetDeterminant, double>> P_int;    
 
     for( int n = 0; n < num_ref_roots; ++n ){
-        outfile->Printf("\n\n  Computing overlap for root %d", n);
+        if( !quiet_mode_ ) outfile->Printf("\n\n  Computing overlap for root %d", n);
         double new_overlap = 0.0;
 
         // First, grab the most important subset of the determinant space
@@ -2257,9 +2260,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
 }
 
-void AdaptiveCI::compute_rdms( SharedMatrix& PQ_evecs, int root1, int root2 )
+void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 )
 {
-    CI_RDMS ci_rdms_(options_,fci_ints_,PQ_space_,PQ_evecs, root1, root2);
+    CI_RDMS ci_rdms_(options_,fci_ints_,dets,PQ_evecs, root1, root2);
     ci_rdms_.set_max_rdm(rdm_level_);
     //ci_rdms_.convert_to_string(PQ_space_);
 	if( rdm_level_ >= 1 ){
