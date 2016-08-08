@@ -98,7 +98,7 @@ void CASSCF::compute_casscf()
         E_casscf_old = E_casscf_;
         if(print_ > 0)
         {
-            outfile->Printf("\n\n Performing a CAS with %5s", options_.get_str("CAS_TYPE").c_str());
+            outfile->Printf("\n\n  Performing a CAS with %s", options_.get_str("CAS_TYPE").c_str());
         }
         Timer cas_timer;
         /// Perform a DMRG-CI, ACI, FCI inside an active space
@@ -302,13 +302,11 @@ void CASSCF::cas_ci()
     if(print_ > 0)
     {
         quiet = false;
-        print_h2("CAS");
-        outfile->Printf(" Using %5s", options_.get_str("CAS_TYPE").c_str());
     }
     if(options_.get_str("CAS_TYPE") == "FCI")
     {
         //Used to grab the computed energy and RDMs.
-        if(options_["SA_STATES"].size() == 0)
+        if(options_["AVG_STATES"].size() == 0)
         {
             set_up_fci();
         }
@@ -675,15 +673,16 @@ void CASSCF::set_up_fci()
     }
 
     if (options_.get_int("PRINT")){
-        outfile->Printf("\n  Number of electrons: %d",nel);
-        outfile->Printf("\n  Charge: %d",charge);
-        outfile->Printf("\n  Multiplicity: %d",multiplicity);
-        outfile->Printf("\n  Davidson subspace max dim: %d",options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-        outfile->Printf("\n  Davidson subspace min dim: %d",options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
+        print_h2("FCI Summary");
+        outfile->Printf("\n    Number of electrons: %d",nel);
+        outfile->Printf("\n    Charge: %d",charge);
+        outfile->Printf("\n    Multiplicity: %d",multiplicity);
+        outfile->Printf("\n    Davidson subspace max dim: %d",options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
+        outfile->Printf("\n    Davidson subspace min dim: %d",options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         if (ms % 2 == 0){
-            outfile->Printf("\n  M_s: %d",ms / 2);
+            outfile->Printf("\n    M_s: %d", ms / 2);
         }else{
-            outfile->Printf("\n  M_s: %d/2",ms);
+            outfile->Printf("\n    M_s: %d/2", ms);
         }
     }
 
@@ -702,11 +701,11 @@ void CASSCF::set_up_fci()
     fcisolver.set_max_rdm_level(2);
     fcisolver.set_nroot(options_.get_int("NROOT"));
     fcisolver.set_root(options_.get_int("ROOT"));
-    fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver.set_test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
     fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
     fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-    fcisolver.print_no(false);
+    fcisolver.set_print_no(false);
 
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
     if(!(options_.get_bool("RESTRICTED_DOCC_JK")))

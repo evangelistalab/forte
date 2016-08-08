@@ -331,7 +331,7 @@ read_options(std::string name, Options &options)
 
         /*- DIIS Options -*/
         options.add_bool("CASSCF_DO_DIIS", true);
-        /// The number of Rotation parameters to extrapolate with
+        /// The number of rotation parameters to extrapolate with
         options.add_int("CASSCF_DIIS_MAX_VEC", 8);
         /// When to start the DIIS iterations (will make this automatic)
         options.add_int("CASSCF_DIIS_START", 3);
@@ -346,17 +346,19 @@ read_options(std::string name, Options &options)
         /// When to start skipping CI steps
         options.add_int("CASSCF_CI_STEP_START", -1);
 
-
-        /*- SA-CASSCF -*/
-        /// A array of [[IRREP, MULT, STATES], [IRREP2, MULT, STATES]]
-        options.add("SA_STATES", new ArrayType());
-        /// An array weights for each state
-        options.add_str("SA_WEIGHTS", "EQUAL", "EQUAL DYNAMIC");
-        /// Monitor the CAS-CI Solutions through iterations
+        //////////////////////////////////////////////////////////////
+        /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
+        //////////////////////////////////////////////////////////////
+        /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
+        options.add("AVG_STATES", new ArrayType());
+        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]
+         *  Note that AVG_WEIGHTS is required when the same option is specified in Psi4 -*/
+        options.add("AVG_WEIGHTS", new ArrayType());
+        /*- Monitor the CAS-CI solutions through iterations -*/
         options.add_bool("MONITOR_SA_SOLUTION", false);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE DMRGSolver
+        ///         OPTIONS FOR THE DMRGSOLVER
         //////////////////////////////////////////////////////////////
 
         options.add_int("DMRG_WFN_MULTP", -1);
@@ -652,10 +654,6 @@ read_options(std::string name, Options &options)
         options.add_str("THREEPDC", "MK", "MK MK_DECOMP ZERO DIAG");
         /*- Number of roots per irrep (in Cotton order) -*/
         options.add("NROOTPI", new ArrayType());
-        /*- The array of root numbers for state averaging -*/
-        options.add("AVG_STATES",new ArrayType());
-        /*- The weight of each root for state averaging -*/
-        options.add("AVG_WEIGHTS",new ArrayType());
         /*- The density convergence criterion -*/
         options.add_double("D_CONVERGENCE",1.0e-8);
 
@@ -992,19 +990,23 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         std::string cas_type = options.get_str("CAS_TYPE");
         if(cas_type == "CAS")
         {
-            boost::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-//            Reference reference;
+            std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATES"].has_changed()){
-                fci_mo->compute_energy_sa();
+                fci_mo->compute_sa_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+                dsrg_mrpt2->set_p_space(fci_mo->p_space());
+                dsrg_mrpt2->set_eigens(fci_mo->eigens());
+                dsrg_mrpt2->compute_energy_multi_state();
             } else {
-            fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
-            boost::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") != "NONE"){
-                dsrg_mrpt2->compute_energy_relaxed();
-            }else{
-                dsrg_mrpt2->compute_energy();
-            }
+                fci_mo->compute_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
+                if(options.get_str("RELAX_REF") != "NONE"){
+                    dsrg_mrpt2->compute_energy_relaxed();
+                }else{
+                    dsrg_mrpt2->compute_energy();
+                }
             }
         }
 

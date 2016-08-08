@@ -1,5 +1,10 @@
-#include "sa_fcisolver.h"
+#include <cmath>
+#include <tuple>
+#include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <libmints/mints.h>
+#include "sa_fcisolver.h"
 
 namespace psi{ namespace forte{
 
@@ -11,43 +16,145 @@ SA_FCISolver::SA_FCISolver(Options& options, boost::shared_ptr<Wavefunction> wfn
 
 void SA_FCISolver::read_options()
 {
-   int number_of_states_per_irrep_mult = options_["SA_STATES"].size();
-   std::vector<std::tuple<int, int, int> >parsed_option;
-   bool print = options_.get_bool("CASSCF_DEBUG_PRINTING");
-   int number_of_states = 0;
-   for(int i = 0; i < number_of_states_per_irrep_mult; i++)
-   {
-       int symmetry = options_["SA_STATES"][i][0].to_integer();
-       int multiplicity = options_["SA_STATES"][i][1].to_integer();
-       int states_per_sym_mult = options_["SA_STATES"][i][2].to_integer();
-       std::tuple<int, int, int> tuple_state = std::make_tuple(symmetry, multiplicity, states_per_sym_mult);
-       number_of_states += states_per_sym_mult;
-       parsed_option.push_back(tuple_state);
-       if(symmetry > wfn_->nirrep() or symmetry < 0)
-       {
-           outfile->Printf("Please check the symmetry of your molecule and the symmetry you specified in SA_STATES");
-           outfile->Printf("\n The number of irreps is %d and you specified %d symmetry", wfn_->nirrep(), symmetry);
-           throw PSIEXCEPTION("You either asked for irrep greater than number of irreps or requested a negative irrep");
+    // irrep symbol
+    int nirrep = wfn_->nirrep();
+    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+    std::vector<std::string> irrep_symbol;
+    for(int h = 0; h < nirrep; ++h){
+        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
+    }
 
-       }
-       if(multiplicity < 0)
-       {
-           throw PSIEXCEPTION("You asked for a negative multiplicity");
-       }
-   }
-   parsed_options_ = parsed_option;
-   outfile->Printf("\n There are %d separate states", number_of_states_per_irrep_mult);
-   outfile->Printf("\n There are %d total states to be averaged", number_of_states);
-   number_of_states_ = number_of_states;
-   if(print)
-   {
-       for(auto& state : parsed_option)
-       {
-           outfile->Printf("\n %d %d %d", std::get<0>(state), std::get<1>(state),std::get<2>(state));
-       }
-   }
+    // read states for averaging
+    nstates_ = 0;
+    parsed_options_.clear();
+
+    if(options_["AVG_STATES"].has_changed()){
+        int nentry = options_["AVG_STATES"].size();
+
+        // figure out total number of states
+        std::vector<int> nstatespim;
+        std::vector<int> irreps;
+        std::vector<int> multis;
+        for(int i = 0; i < nentry; ++i){
+            if(options_["AVG_STATES"][i].size() != 3){
+                outfile->Printf("\n  Error: invalid input of AVG_STATES. Each entry should take an array of three numbers.");
+                throw PSIEXCEPTION("Invalid input of AVG_STATES");
+            }
+
+            // irrep
+            int irrep = options_["AVG_STATES"][i][0].to_integer();
+            if(irrep >= nirrep || irrep < 0){
+                outfile->Printf("\n  Error: invalid irrep in AVG_STATES. Please check the input irrep (start from 0) not to exceed %d",
+                                nirrep - 1);
+                throw PSIEXCEPTION("Invalid irrep in AVG_STATES");
+            }
+            irreps.push_back(irrep);
+
+            // multiplicity
+            int multi = options_["AVG_STATES"][i][1].to_integer();
+            if(multi < 1){
+                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATES.");
+                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATES");
+            }
+            multis.push_back(multi);
+
+            // number of states of irrep and multiplicity
+            int nstates_this = options_["AVG_STATES"][i][2].to_integer();
+            if(nstates_this < 1){
+                outfile->Printf("\n  Error: invalid nstates in AVG_STATES. nstates of a certain irrep and multiplicity should greater than 0.");
+                throw PSIEXCEPTION("Invalid nstates in AVG_STATES.");
+            }
+            nstatespim.push_back(nstates_this);
+            nstates_ += nstates_this;
+        }
+
+        // test input weights
+        std::vector<std::vector<double>> weights;
+        if(options_["AVG_WEIGHTS"].has_changed()){
+            if(options_["AVG_WEIGHTS"].size() != nentry){
+                outfile->Printf("\n  Error: mismatched number of entries in AVG_STATES (%d) and AVG_WEIGHTS (%d).",
+                                nentry, options_["AVG_WEIGHTS"].size());
+                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATES and AVG_WEIGHTS.");
+            }
+
+            double wsum = 0.0;
+            for(int i = 0; i < nentry; ++i){
+                int nw = options_["AVG_WEIGHTS"][i].size();
+                if(nw != nstatespim[i]){
+                    outfile->Printf("\n  Error: mismatched number of weights in entry %d of AVG_WEIGHTS. Asked for %d states but only %d weights.",
+                                    i, nstatespim[i], nw);
+                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHTS.");
+                }
+
+                std::vector<double> weight;
+                for(int n = 0; n < nw; ++n){
+                    double w = options_["AVG_WEIGHTS"][i][n].to_double();
+                    if(w < 0.0){
+                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHTS.");
+                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHTS.");
+                    }
+                    weight.push_back(w);
+                    wsum += w;
+                }
+                weights.push_back(weight);
+            }
+            if(fabs(wsum - 1.0) > 1.0e-10){
+                outfile->Printf("\n  Error: AVG_WEIGHTS entries do not add up to 1.0. Sum = %.10f", wsum);
+                throw PSIEXCEPTION("AVG_WEIGHTS entries do not add up to 1.0.");
+            }
+
+        } else {
+            // use equal weights
+            double w = 1.0 / nstates_;
+            for(int i = 0; i < nentry; ++i){
+                std::vector<double> weight (nstatespim[i], w);
+                weights.push_back(weight);
+            }
+        }
+
+        // form option parser
+        for(int i = 0; i < nentry; ++i){
+            std::tuple<int, int, int, std::vector<double>> avg_info = std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
+            parsed_options_.push_back(avg_info);
+        }
+
+        // printing summary
+        print_h2("State Averaging Summary");
+        int lweight = *std::max_element(nstatespim.begin(), nstatespim.end());
+        if(lweight == 1){
+            lweight = 7;
+        }else{
+            lweight *= 6;
+            lweight -= 1;
+        }
+        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + lweight;
+        std::string blank (lweight - 7, ' ');
+        std::string dash (ltotal, '-');
+        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
+        outfile->Printf("\n    %s", dash.c_str());
+        for(int i = 0; i < nentry; ++i){
+            std::string w_str;
+            for(double w: weights[i]){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << w;
+                w_str += ss.str() + " ";
+            }
+            w_str.pop_back(); // delete the last space character
+
+            std::stringstream ss;
+            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]] << "    "
+               << std::setw(4) << std::right << multis[i] << "    "
+               << std::setw(5) << std::right << nstatespim[i] << "    "
+               << std::setw(lweight) << w_str;
+            outfile->Printf("\n    %s", ss.str().c_str());
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n    Total number of states: %d", nstates_);
+        outfile->Printf("\n    %s", dash.c_str());
+    }
 
 }
+
 double SA_FCISolver::compute_energy()
 {
     double E_sa_casscf = 0.0;
@@ -59,9 +166,11 @@ double SA_FCISolver::compute_energy()
 
     for(const auto& cas_solutions : parsed_options_)
     {
-        int symmetry = std::get<0>(cas_solutions);
-        int multiplicity = std::get<1>(cas_solutions);
-        int nroot        = std::get<2>(cas_solutions);
+        int symmetry;
+        int multiplicity;
+        int nroot;
+        std::tie (symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
+
         Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
         size_t nfdocc = mo_space_info_->size("FROZEN_DOCC");
         std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
@@ -97,6 +206,7 @@ double SA_FCISolver::compute_energy()
         }
 
         if (options_.get_int("PRINT")){
+            print_h2("FCI Solver Summary");
             outfile->Printf("\n  Number of electrons: %d",nel);
             outfile->Printf("\n  Charge: %d",charge);
             outfile->Printf("\n  Multiplicity: %d",multiplicity);
@@ -120,11 +230,11 @@ double SA_FCISolver::compute_energy()
         FCISolver fcisolver(active_dim,rdocc,active,na,nb,multiplicity,symmetry,ints_, mo_space_info_,
                         options_.get_int("NTRIAL_PER_ROOT"),options_.get_int("PRINT"), options_);
         fcisolver.set_max_rdm_level(2);
-        fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
+        fcisolver.set_test_rdms(options_.get_bool("TEST_RDMS"));
         fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
         fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
         fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-        fcisolver.print_no(false);
+        fcisolver.set_print_no(false);
         fcisolver.use_user_integrals_and_restricted_docc(true);
         if(fci_ints_ == nullptr)
         {
@@ -135,6 +245,32 @@ double SA_FCISolver::compute_energy()
             fcisolver.set_integral_pointer(fci_ints_);
         }
         fcisolver.set_nroot(nroot);
+
+//        fcisolver.set_root(0);
+//        fcisolver.set_test_rdms(false);
+//        fcisolver.compute_energy();
+//        double Enuc = Process::environment.molecule()->nuclear_repulsion_energy();
+//        SharedMatrix vecs = fcisolver.eigen_vecs();
+//        SharedVector vals = fcisolver.eigen_vals();
+//        for(int n = 0; n < nroot; ++n){
+//            // create new FCIWfn pointers
+//            std::shared_ptr<FCIWfn> fci_wfn = fcisolver.get_FCIWFN();
+//            fci_wfn->copy(vecs->get_column(0,n));
+//            fci_wfn->print();
+//            SA_C_.push_back(fci_wfn); // this line probably would not work
+
+//            // use the FCIWfn in FCISolver to compute RDM and obtain the reference
+//            fci_wfn->compute_rdms(2);
+//            for(double x: fci_wfn->opdm_a()){
+//                outfile->Printf("\n  %20.15f",x);
+//            }
+//            sa_cas_ref.push_back(fcisolver.reference());
+
+//            // fill in energies
+//            double Ecas = vals->get(0,n) + Enuc;
+//            casscf_energies.push_back(Ecas);
+//        }
+
         for(int root_number = 0; root_number < nroot; root_number++)
         {
             fcisolver.set_root(root_number);
@@ -144,7 +280,7 @@ double SA_FCISolver::compute_energy()
             sa_cas_ref.push_back(fcisolver.reference());
         }
     }
-    if(options_.get_str("SA_WEIGHTS") == "EQUAL")
+    if(!options_["AVG_WEIGHTS"].has_changed())
     {
         for(auto& casscf_energy : casscf_energies)
         {
@@ -169,11 +305,11 @@ double SA_FCISolver::compute_energy()
         //sa_cas.set_g2bb(L2bb);
 
         /// You need to first get SA RDM and use those to convert to sa-cumulants.
-        L1a_sa.scale(1.0 / number_of_states_);
-        L1b_sa.scale(1.0 / number_of_states_);
-        L2aa_sa.scale(1.0 / number_of_states_);
-        L2ab_sa.scale(1.0 / number_of_states_);
-        L2bb_sa.scale(1.0 / number_of_states_);
+        L1a_sa.scale(1.0 / nstates_);
+        L1b_sa.scale(1.0 / nstates_);
+        L2aa_sa.scale(1.0 / nstates_);
+        L2ab_sa.scale(1.0 / nstates_);
+        L2bb_sa.scale(1.0 / nstates_);
 
         L2aa_sa("pqrs") -= L1a_sa("pr") * L1a_sa("qs");
         L2aa_sa("pqrs") += L1a_sa("ps") * L1a_sa("qr");
