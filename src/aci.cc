@@ -2046,6 +2046,11 @@ void AdaptiveCI::merge_determinants( std::vector<STLBitsetDeterminant>& final, s
 void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 {
 
+    bool print_refs = false;
+	if(options_["PRINT_REFS"].has_changed()){
+		print_refs = options_.get_bool("PRINT_REFS");
+	}
+
     SharedMatrix P_evecs;
     SharedVector P_evals;
 
@@ -2155,7 +2160,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         	outfile->Flush();
 		}
 
-        if( !quiet_mode_ ) print_wfn(P_space_,P_evecs,num_ref_roots);
+        if( !quiet_mode_ and print_refs ) print_wfn(P_space_,P_evecs,num_ref_roots);
 
         // Step 2. Find determinants in the Q space        
         
