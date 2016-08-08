@@ -3025,11 +3025,11 @@ double THREE_DSRG_MRPT2::relaxed_energy()
     fcisolver.set_max_rdm_level(1);
     fcisolver.set_nroot(options_.get_int("NROOT"));
     fcisolver.set_root(options_.get_int("ROOT"));
-    fcisolver.test_rdms(options_.get_bool("TEST_RDMS"));
+    fcisolver.set_test_rdms(options_.get_bool("TEST_RDMS"));
     fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
     fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
     fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-    fcisolver.print_no(false);
+    fcisolver.set_print_no(false);
 
     std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, active, rdocc);
     fcisolver.use_user_integrals_and_restricted_docc(true);

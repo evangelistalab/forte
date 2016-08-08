@@ -1,6 +1,8 @@
 #include <cmath>
 #include <numeric>
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 #include <boost/algorithm/string/predicate.hpp>
 #include "fci_vector.h"
 #include "fci_mo.h"
@@ -239,62 +241,136 @@ void FCI_MO::read_options(){
 
     // state averaging
     if(options_["AVG_STATES"].has_changed()){
-        size_t navg_states = options_["AVG_STATES"].size();
 
-        if(navg_states < 1 || navg_states > nroot_){
-            outfile->Printf("\n  Invalid number of states to average. Please increase NROOT.");
-            throw PSIEXCEPTION("Invalid number of states to average.");
+        CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
+        std::vector<std::string> irrep_symbol;
+        for(int h = 0; h < nirrep_; ++h){
+            irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
         }
 
-        avg_states_.clear();
-        avg_weights_.clear();
-        for(int i = 0; i < navg_states; ++i){
-            int state = options_["AVG_STATES"][i].to_integer();
-            if(state > nroot_ - 1){
-                outfile->Printf("\n  Invalid root number in AVG_STATES. Please check ROOT (start from 0) or increase NROOT.");
-                throw PSIEXCEPTION("Invalid root number in AVG_STATES.");
+        size_t nstates = 0;
+        int nentry = options_["AVG_STATES"].size();
+
+        // figure out total number of states
+        std::vector<int> nstatespim;
+        std::vector<int> irreps;
+        std::vector<int> multis;
+        for(int i = 0; i < nentry; ++i){
+            if(options_["AVG_STATES"][i].size() != 3){
+                outfile->Printf("\n  Error: invalid input of AVG_STATES. Each entry should take an array of three numbers.");
+                throw PSIEXCEPTION("Invalid input of AVG_STATES");
             }
 
-            avg_states_.push_back(state);
-            avg_weights_.push_back(1.0 / navg_states);
+            // irrep
+            int irrep = options_["AVG_STATES"][i][0].to_integer();
+            if(irrep >= nirrep_ || irrep < 0){
+                outfile->Printf("\n  Error: invalid irrep in AVG_STATES. Please check the input irrep (start from 0) not to exceed %d",
+                                nirrep_ - 1);
+                throw PSIEXCEPTION("Invalid irrep in AVG_STATES");
+            }
+            irreps.push_back(irrep);
+
+            // multiplicity
+            int multi = options_["AVG_STATES"][i][1].to_integer();
+            if(multi < 1){
+                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATES.");
+                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATES");
+            }
+            multis.push_back(multi);
+
+            // number of states of irrep and multiplicity
+            int nstates_this = options_["AVG_STATES"][i][2].to_integer();
+            if(nstates_this < 1){
+                outfile->Printf("\n  Error: invalid nstates in AVG_STATES. nstates of a certain irrep and multiplicity should greater than 0.");
+                throw PSIEXCEPTION("Invalid nstates in AVG_STATES.");
+            }
+            nstatespim.push_back(nstates_this);
+            nstates += nstates_this;
         }
 
+        // test input weights
+        std::vector<std::vector<double>> weights;
         if(options_["AVG_WEIGHTS"].has_changed()){
-            avg_weights_.clear();
-            if(options_["AVG_WEIGHTS"].size() != navg_states){
-                outfile->Printf("\n  Mismatched number of average weights.");
-                throw PSIEXCEPTION("Mismatched number of average weights.");
+            if(options_["AVG_WEIGHTS"].size() != nentry){
+                outfile->Printf("\n  Error: mismatched number of entries in AVG_STATES (%d) and AVG_WEIGHTS (%d).",
+                                nentry, options_["AVG_WEIGHTS"].size());
+                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATES and AVG_WEIGHTS.");
             }
 
-            double total = 0.0;
-            for(int i = 0; i < navg_states; ++i){
-                double weight = options_["AVG_WEIGHTS"][i].to_double();
-                if(weight < 0.0){
-                    outfile->Printf("\n  Negative entries in AVG_WEIGHTS.");
-                    throw PSIEXCEPTION("Negative entries in AVG_WEIGHTS.");
+            double wsum = 0.0;
+            for(int i = 0; i < nentry; ++i){
+                int nw = options_["AVG_WEIGHTS"][i].size();
+                if(nw != nstatespim[i]){
+                    outfile->Printf("\n  Error: mismatched number of weights in entry %d of AVG_WEIGHTS. Asked for %d states but only %d weights.",
+                                    i, nstatespim[i], nw);
+                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHTS.");
                 }
 
-                avg_weights_.push_back(weight);
-                total += weight;
+                std::vector<double> weight;
+                for(int n = 0; n < nw; ++n){
+                    double w = options_["AVG_WEIGHTS"][i][n].to_double();
+                    if(w < 0.0){
+                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHTS.");
+                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHTS.");
+                    }
+                    weight.push_back(w);
+                    wsum += w;
+                }
+                weights.push_back(weight);
             }
-
-            if(fabs(total - 1.0) > 1.0e-10){
-                outfile->Printf("\n  AVG_WEIGHTS entries do not add up to 1.0.");
+            if(fabs(wsum - 1.0) > 1.0e-10){
+                outfile->Printf("\n  Error: AVG_WEIGHTS entries do not add up to 1.0. Sum = %.10f", wsum);
                 throw PSIEXCEPTION("AVG_WEIGHTS entries do not add up to 1.0.");
             }
+
+        } else {
+            // use equal weights
+            double w = 1.0 / nstates;
+            for(int i = 0; i < nentry; ++i){
+                std::vector<double> weight (nstatespim[i], w);
+                weights.push_back(weight);
+            }
         }
 
-        // printing
-        print_h2("State Averaging");
-        outfile->Printf("\n    AVG_STATES   ");
-        for(int i = 0; i < navg_states; ++i){
-            outfile->Printf("%5d", avg_states_[i]);
+        // form option parser
+        for(int i = 0; i < nentry; ++i){
+            std::tuple<int, int, int, std::vector<double>> avg_info = std::make_tuple(irreps[i], multis[i], nstatespim[i], weights[i]);
+            sa_info_.push_back(avg_info);
         }
-        outfile->Printf("\n    AVG_WEIGHTS  ");
-        for(int i = 0; i < navg_states; ++i){
-            outfile->Printf("%5.2f", avg_weights_[i]);
+
+        // printing summary
+        print_h2("State Averaging Summary");
+        int lweight = *std::max_element(nstatespim.begin(), nstatespim.end());
+        if(lweight == 1){
+            lweight = 7;
+        }else{
+            lweight *= 6;
+            lweight -= 1;
         }
-        outfile->Printf("\n");
+        int ltotal = 6 + 2 + 6 + 2 + 7 + 2 + lweight;
+        std::string blank (lweight - 7, ' ');
+        std::string dash (ltotal, '-');
+        outfile->Printf("\n    Irrep.  Multi.  Nstates  %sWeights", blank.c_str());
+        outfile->Printf("\n    %s", dash.c_str());
+        for(int i = 0; i < nentry; ++i){
+            std::string w_str;
+            for(double w: weights[i]){
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << w;
+                w_str += ss.str() + " ";
+            }
+            w_str.pop_back(); // delete the last space character
+
+            std::stringstream ss;
+            ss << std::setw(4) << std::right << irrep_symbol[irreps[i]] << "    "
+               << std::setw(4) << std::right << multis[i] << "    "
+               << std::setw(5) << std::right << nstatespim[i] << "    "
+               << std::setw(lweight) << w_str;
+            outfile->Printf("\n    %s", ss.str().c_str());
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n    Total number of states: %d", nstates);
+        outfile->Printf("\n    %s\n", dash.c_str());
     }
 }
 
@@ -330,12 +406,12 @@ double FCI_MO::compute_energy(){
         if(eigen_.size() > 1)
             outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
         else
-            outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
+            outfile->Printf("\n  There is only %3d root that satisfy the condition!", eigen_.size());
         outfile->Printf("\n  Check root_sym, multi, etc.");
         outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
         throw PSIEXCEPTION("Too many roots of interest.");
     }
-    Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+    print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
     // prepare ci_rdms for one density
     int dim = (eigen_[0].first)->dim();
@@ -379,7 +455,7 @@ double FCI_MO::compute_energy(){
             }
 
             // Store CI Vectors in eigen_
-            Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+            print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
 
             // prepare ci_rdms for one density
             int dim = (eigen_[0].first)->dim();
@@ -1286,8 +1362,8 @@ inline bool ReverseAbsSort(const tuple<double, int> &lhs, const tuple<double, in
     return abs(get<0>(rhs)) < abs(get<0>(lhs));
 }
 
-void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector, double>> &eigen, const vecdet &det){
-    timer_on("STORE CI Vectors");
+void FCI_MO::print_CI(const int &nroot, const double &CI_threshold, const vector<pair<SharedVector, double>> &eigen, const vecdet &det){
+    timer_on("Print CI Vectors");
     if(!quiet_){
         outfile->Printf("\n\n  * * * * * * * * * * * * * * * * *");
         outfile->Printf("\n  *  CI Vectors & Configurations  *");
@@ -1336,7 +1412,7 @@ void FCI_MO::Store_CI(const int &nroot, const double &CI_threshold, const vector
         outfile->Flush();
     }
 
-    timer_off("STORE CI Vectors");
+    timer_off("Print CI Vectors");
 }
 
 void FCI_MO::FormDensity(CI_RDMS &ci_rdms, d2 &A, d2 &B){
@@ -2359,6 +2435,40 @@ void FCI_MO::fill_cumulant3(){
     });
 }
 
+void FCI_MO::fill_density(vector<double> &opdm_a, vector<double> &opdm_b){
+    Da_ = d2(ncmo_, d1(ncmo_));
+    Db_ = d2(ncmo_, d1(ncmo_));
+    L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a",{na_, na_});
+    L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b",{na_, na_});
+
+    // fill in L1a and L1b
+    L1a.data() = opdm_a;
+    L1b.data() = opdm_b;
+
+    // fill in Da_ and Db_
+    for(size_t p = 0; p < nc_; ++p){
+        size_t np = idx_c_[p];
+            Da_[np][np] = 1.0;
+            Db_[np][np] = 1.0;
+    }
+
+    for(size_t p = 0; p < na_; ++p){
+        size_t np = idx_a_[p];
+        for(size_t q = p; q < na_; ++q){
+            size_t nq = idx_a_[q];
+
+            if((sym_active_[p] ^ sym_active_[q]) != 0) continue;
+
+            size_t index = p * na_ + q;
+            Da_[np][nq] = opdm_a[index];
+            Db_[np][nq] = opdm_b[index];
+
+            Da_[nq][np] = Da_[np][nq];
+            Db_[nq][np] = Db_[np][nq];
+        }
+    }
+}
+
 void FCI_MO::compute_ref(){
     timer_on("Compute Ref");
 
@@ -2417,7 +2527,12 @@ void FCI_MO::compute_ref(){
 
 Reference FCI_MO::reference()
 {
-    compute_ref();
+    if(options_["AVG_WEIGHTS"].has_changed()){
+        compute_sa_ref();
+    } else {
+        compute_ref();
+    }
+
     Reference ref;
     ref.set_Eref(Eref_);
     ref.set_L1a(L1a);
@@ -2447,80 +2562,89 @@ void FCI_MO::set_orbs(SharedMatrix Ca, SharedMatrix Cb){
     fci_ints_->compute_restricted_one_body_operator();
 }
 
-double FCI_MO::compute_energy_sa(){
-    // allocate density
-    Da_ = d2(ncmo_, d1(ncmo_));
-    Db_ = d2(ncmo_, d1(ncmo_));
-    L1a = ambit::Tensor::build(ambit::CoreTensor,"L1a",{na_, na_});
-    L1b = ambit::Tensor::build(ambit::CoreTensor,"L1b",{na_, na_});
+double FCI_MO::compute_sa_energy(){
+    // averaged energy and density
+    double Ecas_sa = 0.0;
+    size_t nelement = na_ * na_;
+    vector<double> sa_opdm_a (nelement, 0.0);
+    vector<double> sa_opdm_b (nelement, 0.0);
+    eigens_.clear();
 
     // allocate Fock matrix
     Fa_ = d2(ncmo_, d1(ncmo_));
     Fb_ = d2(ncmo_, d1(ncmo_));
 
-    // form determinants
-    form_p_space();
+    // loop over all averaged states
+    int nstates = 0;
+    for(const auto& info: sa_info_){
+        // get current symmetry, multiplicity, nroots, weights
+        int irrep, multi, nroots;
+        std::vector<double> weights;
+        std::tie (irrep, multi, nroots, weights) = info;
+        nstates += nroots;
 
-    // diagonalize the CASCI Hamiltonian
-    diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
-    Diagonalize_H(determinant_, eigen_);
-    if(print_ > 2 && !quiet_){
-        for(pair<SharedVector, double> x: eigen_){
-            outfile->Printf("\n\n  Spin selected CI vectors\n");
-            (x.first)->print();
-            outfile->Printf("  Energy  =  %20.15lf\n", x.second);
-        }
-    }
+        root_sym_ = irrep;
+        multi_ = multi;
+        nroot_ = nroots;
+        root_ = nroot_ - 1; // not necessary
 
-    // store CI vectors in eigen_
-    if(nroot_ > eigen_.size()){
-        outfile->Printf("\n  Too many roots of interest!");
-        if(eigen_.size() > 1)
-            outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
-        else
-            outfile->Printf("\n  There are only %3d root that satisfy the condition!", eigen_.size());
-        outfile->Printf("\n  Check root_sym, multi, etc.");
-        outfile->Printf("\n  If unrestricted orbitals are used, spin contamination may be severe (> 5%%).");
-        throw PSIEXCEPTION("Too many roots of interest.");
-    }
-    Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+        // form determinants
+        form_p_space();
 
-    // prepare ci_rdms for one density
-    int dim = (eigen_[0].first)->dim();
-    SharedMatrix evecs (new Matrix("evecs",dim,dim));
-    for(int i = 0; i < eigen_.size(); ++i){
-        evecs->set_column(0,i,(eigen_[i]).first);
-    }
-//    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
+        // diagonalize the CASCI Hamiltonian
+        diag_algorithm_ = options_.get_str("DIAG_ALGORITHM");
+        eigen_.clear();
+        Diagonalize_H(determinant_, eigen_);
+        eigens_.push_back(eigen_);
 
-//    // form density
-//    FormDensity(ci_rdms, Da_, Db_);
-//    if(print_ > 1){
-//        print_d2("Da", Da_);
-//        print_d2("Db", Db_);
-//    }
-
-    // if state averaging
-    if(options_["AVG_STATES"].has_changed()){
-        size_t navg_states = avg_states_.size();
-        for(int i = 0; i < navg_states; ++i){
-            int root1 = avg_states_[i];
-            double weight1 = avg_weights_[i];
-
-            for(int j = 0; j < navg_states; ++j){
-                int root2 = avg_states_[j];
-                double weight2 = avg_weights_[j];
-                d2 Da = d2(ncmo_, d1(ncmo_));
-                d2 Db = d2(ncmo_, d1(ncmo_));
-
-                CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root1,root2);
-                FormDensity(ci_rdms, Da, Db);
-
+        // store CI vectors in eigen_
+        if(nroot_ > eigen_.size()){
+            outfile->Printf("\n  Too many roots of interest!");
+            if(eigen_.size() > 1){
+                outfile->Printf("\n  There are only %3d roots that satisfy the condition!", eigen_.size());
+            } else {
+                outfile->Printf("\n  There is only %3d root that satisfy the condition!", eigen_.size());
             }
+            outfile->Printf("\n  Check root_sym, multi, and number of determinants.");
+            throw PSIEXCEPTION("Too many roots of interest.");
         }
+        print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+        // compute one density using ci_rdms
+        int dim = (eigen_[0].first)->dim();
+        SharedMatrix evecs (new Matrix("evecs",dim,dim));
+        for(int i = 0; i < eigen_.size(); ++i){
+            evecs->set_column(0,i,(eigen_[i]).first);
+        }
+
+        for(int i = 0; i < nroots; ++i){
+            double weight = weights[i];
+            Ecas_sa += weight * eigen_[i].second;
+
+            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,i,i);
+            ci_rdms.set_symmetry(irrep);
+            vector<double> opdm_a (nelement, 0.0);
+            vector<double> opdm_b (nelement, 0.0);
+            ci_rdms.compute_1rdm(opdm_a,opdm_b);
+
+            std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) {v *= weight;});
+            std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) {v *= weight;});
+            std::transform (sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(), std::plus<double>());
+            std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
+        }
+
+    } // end looping over all averaged states
+    eigen_.clear(); // make sure other code use eigens_ for state average
+    outfile->Printf("\n  Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
+
+    // fill in Da_, Db_, L1a, L1b
+    fill_density(sa_opdm_a,sa_opdm_b);
+    if(print_ > 1){
+        print_d2("Da", Da_);
+        print_d2("Db", Db_);
     }
 
-    // Fock Matrix
+    // form Fock matrix
     size_t count = 0;
     Form_Fock(Fa_,Fb_);
     Check_Fock(Fa_,Fb_,dconv_,count);
@@ -2536,50 +2660,270 @@ double FCI_MO::compute_energy_sa(){
             outfile->Printf("\n  Use semi-canonical orbitals.\n");
             semi_canonicalize();
 
-            // Form and Diagonalize the CASCI Hamiltonian
-            Diagonalize_H(determinant_, eigen_);
-            if(print_ > 2){
-                for(pair<SharedVector, double> x: eigen_){
-                    outfile->Printf("\n\n  Spin selected CI vectors\n");
-                    (x.first)->print();
-                    outfile->Printf("  Energy  =  %20.15lf\n", x.second);
+            // clear previous stuff
+            Ecas_sa = 0.0;
+            sa_opdm_a = vector<double> (nelement, 0.0);
+            sa_opdm_b = vector<double> (nelement, 0.0);
+            eigens_.clear();
+
+            // loop over all averaging states
+            for(const auto& info: sa_info_){
+                // set current symmetry, multiplicity, nroots
+                int irrep, multi, nroots;
+                std::vector<double> weights;
+                std::tie (irrep, multi, nroots, weights) = info;
+
+                root_sym_ = irrep;
+                multi_ = multi;
+                nroot_ = nroots;
+                root_ = nroot_ - 1; // not necessary
+
+                // form determinants
+                form_p_space();
+
+                // diagonalize the CASCI Hamiltonian
+                eigen_.clear();
+                Diagonalize_H(determinant_, eigen_);
+                eigens_.push_back(eigen_);
+
+                // print CI vectors in eigen_
+                print_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+
+                // compute one density using ci_rdms
+                int dim = (eigen_[0].first)->dim();
+                SharedMatrix evecs (new Matrix("evecs",dim,dim));
+                for(int i = 0; i < eigen_.size(); ++i){
+                    evecs->set_column(0,i,(eigen_[i]).first);
                 }
-            }
 
-            // Store CI Vectors in eigen_
-            Store_CI(nroot_, options_.get_double("PRINT_CI_VECTOR"), eigen_, determinant_);
+                for(int i = 0; i < nroots; ++i){
+                    double weight = weights[i];
+                    Ecas_sa += weight * eigen_[i].second;
 
-            // prepare ci_rdms for one density
-            int dim = (eigen_[0].first)->dim();
-            SharedMatrix evecs (new Matrix("evecs",dim,dim));
-            for(int i = 0; i < eigen_.size(); ++i){
-                evecs->set_column(0,i,(eigen_[i]).first);
-            }
-            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,root_,root_);
+                    CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,i,i);
+                    ci_rdms.set_symmetry(irrep);
+                    vector<double> opdm_a (nelement, 0.0);
+                    vector<double> opdm_b (nelement, 0.0);
+                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+                    for(double& x: opdm_a){
+                        outfile->Printf("\n  %20.15f",x);
+                    }
 
-            // Form Density
-            FormDensity(ci_rdms, Da_, Db_);
+                    std::for_each(opdm_a.begin(), opdm_a.end(), [&](double& v) {v *= weight;});
+                    std::for_each(opdm_b.begin(), opdm_b.end(), [&](double& v) {v *= weight;});
+                    std::transform (sa_opdm_a.begin(), sa_opdm_a.end(), opdm_a.begin(), sa_opdm_a.begin(), std::plus<double>());
+                    std::transform (sa_opdm_b.begin(), sa_opdm_b.end(), opdm_b.begin(), sa_opdm_b.begin(), std::plus<double>());
+                }
+
+            } // end looping over all averaged states
+            eigen_.clear(); // make sure other code use eigens_ for state average
+            outfile->Printf("\n    Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
+
+            // fill in Da_, Db_, L1a, L1b
+            fill_density(sa_opdm_a,sa_opdm_b);
             if(print_ > 1){
                 print_d2("Da", Da_);
                 print_d2("Db", Db_);
             }
 
-            // Fock Matrix
-            size_t count = 0;
+            // form Fock matrix
+            count = 0;
             Form_Fock(Fa_,Fb_);
             Check_Fock(Fa_,Fb_,dconv_,count);
             if(print_ > 1){
                 print_d2("Fa", Fa_);
                 print_d2("Fb", Fb_);
             }
+
         }else{
 //            nat_orbs();
         }
     }
 
-    Eref_ = eigen_[root_].second;
+    Eref_ = Ecas_sa;
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
     return Eref_;
+}
+
+void FCI_MO::compute_sa_ref(){
+    timer_on("Compute SA Ref");
+
+    // prepare averaged 2- and 3-densities
+    size_t nelement2 = na_ * na_ * na_ * na_;
+    vector<double> sa_tpdm_aa (nelement2, 0.0);
+    vector<double> sa_tpdm_ab (nelement2, 0.0);
+    vector<double> sa_tpdm_bb (nelement2, 0.0);
+
+    size_t nelement3 = na_ * na_ * nelement2;
+    bool no_3pdc = (options_.get_str("THREEPDC") == "ZERO");
+    vector<double> sa_tpdm_aaa, sa_tpdm_aab, sa_tpdm_abb, sa_tpdm_bbb;
+    if(!no_3pdc){
+        sa_tpdm_aaa = vector<double> (nelement3, 0.0);
+        sa_tpdm_aab = vector<double> (nelement3, 0.0);
+        sa_tpdm_abb = vector<double> (nelement3, 0.0);
+        sa_tpdm_bbb = vector<double> (nelement3, 0.0);
+    }
+
+    // loop over all averaged states
+    int nentry = sa_info_.size();
+    for(int n = 0; n < nentry; ++n){
+        // get current nroots and weights
+        int nroots, irrep;
+        std::vector<double> weights;
+        std::tie (irrep, std::ignore, nroots, weights) = sa_info_[n];
+
+        // compute 2rdms and 3rdms
+        int dim = (eigens_[n][0].first)->dim();
+        SharedMatrix evecs (new Matrix("evecs",dim,dim));
+        for(int i = 0; i < eigens_[n].size(); ++i){
+            evecs->set_column(0,i,(eigens_[n][i]).first);
+        }
+
+        for(int i = 0; i < nroots; ++i){
+            double weight = weights[i];
+            CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,i,i);
+            ci_rdms.set_symmetry(irrep);
+
+            vector<double> tpdm_aa (nelement2, 0.0);
+            vector<double> tpdm_ab (nelement2, 0.0);
+            vector<double> tpdm_bb (nelement2, 0.0);
+            ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
+
+            std::for_each(tpdm_aa.begin(), tpdm_aa.end(), [&](double& v) {v *= weight;});
+            std::for_each(tpdm_ab.begin(), tpdm_ab.end(), [&](double& v) {v *= weight;});
+            std::for_each(tpdm_bb.begin(), tpdm_bb.end(), [&](double& v) {v *= weight;});
+            std::transform (sa_tpdm_aa.begin(), sa_tpdm_aa.end(), tpdm_aa.begin(), sa_tpdm_aa.begin(), std::plus<double>());
+            std::transform (sa_tpdm_ab.begin(), sa_tpdm_ab.end(), tpdm_ab.begin(), sa_tpdm_ab.begin(), std::plus<double>());
+            std::transform (sa_tpdm_bb.begin(), sa_tpdm_bb.end(), tpdm_bb.begin(), sa_tpdm_bb.begin(), std::plus<double>());
+
+            if(!no_3pdc){
+                vector<double> tpdm_aaa (nelement3, 0.0);
+                vector<double> tpdm_aab (nelement3, 0.0);
+                vector<double> tpdm_abb (nelement3, 0.0);
+                vector<double> tpdm_bbb (nelement3, 0.0);
+                ci_rdms.compute_3rdm(tpdm_aaa,tpdm_aab,tpdm_abb,tpdm_bbb);
+
+                std::for_each(tpdm_aaa.begin(), tpdm_aaa.end(), [&](double& v) {v *= weight;});
+                std::for_each(tpdm_aab.begin(), tpdm_aab.end(), [&](double& v) {v *= weight;});
+                std::for_each(tpdm_abb.begin(), tpdm_abb.end(), [&](double& v) {v *= weight;});
+                std::for_each(tpdm_bbb.begin(), tpdm_bbb.end(), [&](double& v) {v *= weight;});
+                std::transform (sa_tpdm_aaa.begin(), sa_tpdm_aaa.end(), tpdm_aaa.begin(), sa_tpdm_aaa.begin(), std::plus<double>());
+                std::transform (sa_tpdm_aab.begin(), sa_tpdm_aab.end(), tpdm_aab.begin(), sa_tpdm_aab.begin(), std::plus<double>());
+                std::transform (sa_tpdm_abb.begin(), sa_tpdm_abb.end(), tpdm_abb.begin(), sa_tpdm_abb.begin(), std::plus<double>());
+                std::transform (sa_tpdm_bbb.begin(), sa_tpdm_bbb.end(), tpdm_bbb.begin(), sa_tpdm_bbb.begin(), std::plus<double>());
+            }
+        }
+
+    } // end looping over all averaged states
+
+    // compute 2-cumulants and 3-cumulants
+    compute_cumulant2(sa_tpdm_aa, sa_tpdm_ab, sa_tpdm_bb);
+
+    if(!no_3pdc){
+        compute_cumulant3(sa_tpdm_aaa,sa_tpdm_aab,sa_tpdm_abb,sa_tpdm_bbb);
+    }
+
+    timer_off("Compute SA Ref");
+}
+
+void FCI_MO::compute_cumulant2(vector<double>& tpdm_aa, vector<double>& tpdm_ab, vector<double>& tpdm_bb){
+    L2aa = ambit::Tensor::build(ambit::CoreTensor,"L2aa",{na_, na_, na_, na_});
+    L2ab = ambit::Tensor::build(ambit::CoreTensor,"L2ab",{na_, na_, na_, na_});
+    L2bb = ambit::Tensor::build(ambit::CoreTensor,"L2bb",{na_, na_, na_, na_});
+
+    // copy incoming 2rdms to 2cumulants
+    L2aa.data() = tpdm_aa;
+    L2ab.data() = tpdm_ab;
+    L2bb.data() = tpdm_bb;
+
+    // add wedge product of 1cumulants (1rdms)
+    L2aa("pqrs") -= L1a("pr") * L1a("qs");
+    L2aa("pqrs") += L1a("ps") * L1a("qr");
+
+    L2bb("pqrs") -= L1b("pr") * L1b("qs");
+    L2bb("pqrs") += L1b("ps") * L1b("qr");
+
+    L2ab("pqrs") -= L1a("pr") * L1b("qs");
+}
+
+void FCI_MO::compute_cumulant3(vector<double>& tpdm_aaa, vector<double>& tpdm_aab, vector<double>& tpdm_abb, vector<double>& tpdm_bbb){
+    L3aaa = ambit::Tensor::build(ambit::CoreTensor,"L3aaa",{na_, na_, na_, na_, na_, na_});
+    L3aab = ambit::Tensor::build(ambit::CoreTensor,"L3aab",{na_, na_, na_, na_, na_, na_});
+    L3abb = ambit::Tensor::build(ambit::CoreTensor,"L3abb",{na_, na_, na_, na_, na_, na_});
+    L3bbb = ambit::Tensor::build(ambit::CoreTensor,"L3bbb",{na_, na_, na_, na_, na_, na_});
+
+    // copy incoming 3rdms to 3cumulants
+    L3aaa.data() = tpdm_aaa;
+    L3aab.data() = tpdm_aab;
+    L3abb.data() = tpdm_abb;
+    L3bbb.data() = tpdm_bbb;
+
+    // add wedge product of 1cumulants and 2cumulants
+    // - step 1: aaa
+    L3aaa("pqrstu") -= L1a("ps") * L2aa("qrtu");
+    L3aaa("pqrstu") += L1a("pt") * L2aa("qrsu");
+    L3aaa("pqrstu") += L1a("pu") * L2aa("qrts");
+
+    L3aaa("pqrstu") -= L1a("qt") * L2aa("prsu");
+    L3aaa("pqrstu") += L1a("qs") * L2aa("prtu");
+    L3aaa("pqrstu") += L1a("qu") * L2aa("prst");
+
+    L3aaa("pqrstu") -= L1a("ru") * L2aa("pqst");
+    L3aaa("pqrstu") += L1a("rs") * L2aa("pqut");
+    L3aaa("pqrstu") += L1a("rt") * L2aa("pqsu");
+
+    L3aaa("pqrstu") -= L1a("ps") * L1a("qt") * L1a("ru");
+    L3aaa("pqrstu") -= L1a("pt") * L1a("qu") * L1a("rs");
+    L3aaa("pqrstu") -= L1a("pu") * L1a("qs") * L1a("rt");
+
+    L3aaa("pqrstu") += L1a("ps") * L1a("qu") * L1a("rt");
+    L3aaa("pqrstu") += L1a("pu") * L1a("qt") * L1a("rs");
+    L3aaa("pqrstu") += L1a("pt") * L1a("qs") * L1a("ru");
+
+    // - step 2: aab
+    L3aab("pqRstU") -= L1a("ps") * L2ab("qRtU");
+    L3aab("pqRstU") += L1a("pt") * L2ab("qRsU");
+
+    L3aab("pqRstU") -= L1a("qt") * L2ab("pRsU");
+    L3aab("pqRstU") += L1a("qs") * L2ab("pRtU");
+
+    L3aab("pqRstU") -= L1b("RU") * L2aa("pqst");
+
+    L3aab("pqRstU") -= L1a("ps") * L1a("qt") * L1b("RU");
+    L3aab("pqRstU") += L1a("pt") * L1a("qs") * L1b("RU");
+
+    // - step 3: abb
+    L3abb("pQRsTU") -= L1a("ps") * L2bb("QRTU");
+
+    L3abb("pQRsTU") -= L1b("QT") * L2ab("pRsU");
+    L3abb("pQRsTU") += L1b("QU") * L2ab("pRsT");
+
+    L3abb("pQRsTU") -= L1b("RU") * L2ab("pQsT");
+    L3abb("pQRsTU") += L1b("RT") * L2ab("pQsU");
+
+    L3abb("pQRsTU") -= L1a("ps") * L1b("QT") * L1b("RU");
+    L3abb("pQRsTU") += L1a("ps") * L1b("QU") * L1b("RT");
+
+    // - step 4: bbb
+    L3bbb("pqrstu") -= L1b("ps") * L2bb("qrtu");
+    L3bbb("pqrstu") += L1b("pt") * L2bb("qrsu");
+    L3bbb("pqrstu") += L1b("pu") * L2bb("qrts");
+
+    L3bbb("pqrstu") -= L1b("qt") * L2bb("prsu");
+    L3bbb("pqrstu") += L1b("qs") * L2bb("prtu");
+    L3bbb("pqrstu") += L1b("qu") * L2bb("prst");
+
+    L3bbb("pqrstu") -= L1b("ru") * L2bb("pqst");
+    L3bbb("pqrstu") += L1b("rs") * L2bb("pqut");
+    L3bbb("pqrstu") += L1b("rt") * L2bb("pqsu");
+
+    L3bbb("pqrstu") -= L1b("ps") * L1b("qt") * L1b("ru");
+    L3bbb("pqrstu") -= L1b("pt") * L1b("qu") * L1b("rs");
+    L3bbb("pqrstu") -= L1b("pu") * L1b("qs") * L1b("rt");
+
+    L3bbb("pqrstu") += L1b("ps") * L1b("qu") * L1b("rt");
+    L3bbb("pqrstu") += L1b("pu") * L1b("qt") * L1b("rs");
+    L3bbb("pqrstu") += L1b("pt") * L1b("qs") * L1b("ru");
 }
 
 }}
