@@ -501,6 +501,8 @@ double AdaptiveCI::compute_energy()
         ex_alg_ = "AVERAGE";
     }
 
+    
+
     Timer aci_elapse;
 
     // The eigenvalues and eigenvectors
@@ -508,12 +510,58 @@ double AdaptiveCI::compute_energy()
     SharedVector PQ_evals;
 
     // Compute wavefunction and energy
-    compute_aci( PQ_evecs, PQ_evals );
+    size_t dim; 
+    int nrun = 1;
+    bool multi_state = false;
+        
+    if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE"   or 
+        options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" ){
+        nrun = nroot_;
+        multi_state = true;
+    }
 
-    outfile->Printf("\n  PQ: %f", PQ_evecs->get(0,0));
+    std::vector<STLBitsetDeterminant> full_space;
+    std::vector<size_t> sizes(nroot_);
+
+    for( int i = 0; i < nrun; ++i ){
+        outfile->Printf("\n  Computing wavefunction for root %d", i); 
+        P_space_.clear();
+        PQ_space_.clear();
+        if( multi_state ){
+            ref_root_ = i;
+        }
+        compute_aci( PQ_evecs, PQ_evals );
+
+        if( ex_alg_ == "ROOT_COMBINE") {
+            sizes[i] = PQ_space_.size();
+            outfile->Printf("\n  Combining determinant spaces");
+            // Combine selected determinants into total space
+            merge_determinants( full_space, PQ_space_ );
+            PQ_space_.clear();    
+        }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+            // orthogonalize
+        }
+    }
+    dim = PQ_space_.size();    
+
+    if( ex_alg_ == "ROOT_COMBINE" ){
+        outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
+                dim = full_space.size(); 
+
+        for( int n = 0; n < nroot_; ++n ){        
+            outfile->Printf("\n  Determinants for root %d: %zu", n, sizes[n]);
+        }
+
+        outfile->Printf("\n  Size of combined space: %zu", dim);
+        
+        SparseCISolver sparse_solver;      
+        sparse_solver.diagonalize_hamiltonian(full_space,PQ_evals,PQ_evecs,nroot_,wavefunction_multiplicity_,diag_method_);
+
+    }
 
     // Compute the RDMs
-    compute_rdms( PQ_evecs, 0, 0 ); 
+   // if( multi_state ){
+   // compute_rdms( PQ_evecs, 0, 0 ); 
     outfile->Flush();
 
 
@@ -524,7 +572,7 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
 	    outfile->Printf("\n  Iterations required:                         %zu", cycle_);
-	    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", PQ_space_.size());
+	    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
     }
 
 //	std::vector<double> davidson;
@@ -553,22 +601,30 @@ double AdaptiveCI::compute_energy()
         }
 
 	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
-	    print_wfn(PQ_space_, PQ_evecs, nroot_);
+        if( multi_state ){
+	        print_wfn(full_space, PQ_evecs, nroot_);
+        } else {
+	        print_wfn(PQ_space_, PQ_evecs, nroot_);
+        }
 	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
 	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
-        wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
-
-	    if(options_.get_bool("DETERMINANT_HISTORY")){
-	    	outfile->Printf("\n Det history (number,cycle,origin)");
-	    	size_t counter = 0;
-	    	for( auto &I : PQ_space_ ){
-	    		outfile->Printf("\n Det number : %zu", counter);
-	    		for( auto &n : det_history_[I]){
-	    			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
-	    		}
-	    		++counter;
-	    	}
-	    }
+        if( multi_state ){
+            wfn_analyzer(full_space, PQ_evecs, nroot_);	
+        } else{
+            wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
+        }
+    
+	   // if(options_.get_bool("DETERMINANT_HISTORY")){
+	   // 	outfile->Printf("\n Det history (number,cycle,origin)");
+	   // 	size_t counter = 0;
+	   // 	for( auto &I : PQ_space_ ){
+	   // 		outfile->Printf("\n Det number : %zu", counter);
+	   // 		for( auto &n : det_history_[I]){
+	   // 			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+	   // 		}
+	   // 		++counter;
+	   // 	}
+	   // }
 
         outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
         outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
@@ -2028,6 +2084,16 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		cycle_ = cycle;
 		std::string cycle_h = "Cycle " + std::to_string(cycle_); 
 		
+
+        bool follow = false;
+        if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" or
+            options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+            options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE"){
+            
+            follow = true;
+        }        
+
+
 		if( !quiet_mode_ ){
 			print_h2(cycle_h);
 			outfile->Printf("\n  Initial P space dimension: %zu", P_space_.size());
@@ -2049,18 +2115,18 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
         if( cycle < pre_iter_ ){
             ex_alg_ = "AVERAGE";
-        }else if ( cycle == pre_iter_ and (options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT") ){
+        }else if ( cycle == pre_iter_ and follow ){
             ex_alg_ = "ROOT_SELECT";
         }        
         // If doing root-following, grab the initial root
-        if( ex_alg_ == "ROOT_SELECT" and cycle == pre_iter_){
+        if( follow and cycle == pre_iter_){
             for( size_t I = 0, maxI = P_space_.size(); I < maxI; ++I){
                 P_ref.push_back( std::make_pair( P_space_[I], P_evecs->get(I, ref_root_) ));
             } 
         }
 
 
-        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 1){
+        if( follow and num_ref_roots > 1){
             ref_root_ = root_follow( P_ref, P_space_, P_evecs, num_ref_roots);
         } 
 
@@ -2140,7 +2206,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
        // }
         num_ref_roots = std::min(nroot_,int(PQ_space_.size()));
 
-        if( ex_alg_ == "ROOT_SELECT" and num_ref_roots > 0){
+        if( follow and num_ref_roots > 0){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
         bool stuck = check_stuck( energy_history, PQ_evals );
@@ -2150,7 +2216,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }else if ( stuck and (options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE") and ex_alg_ == "AVERAGE" ){
             outfile->Printf("\n  Root averaging algorithm converged."); 
             outfile->Printf("\n  Now optimizing PQ Space for root %d", options_.get_int("ROOT"));
-            ex_alg_ = "ROOT_SELECT";
+            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         }
 
@@ -2159,7 +2225,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if( converged and (ex_alg_ == "AVERAGE") and options_.get_str("EXCITED_ALGORITHM") == "COMPOSITE"){
             outfile->Printf("\n  Root averaging algorithm converged."); 
             outfile->Printf("\n  Now optimizing PQ Space for root %d", options_.get_int("ROOT"));
-            ex_alg_ = "ROOT_SELECT";
+            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
             pre_iter_ = cycle + 1;
         }
         else if (converged){
@@ -2186,7 +2252,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 	}else if ( !quiet_mode_ ){
 		outfile->Printf("\n  Not performing spin projection.");
 	}
-    outfile->Printf("\n  pq: %f", PQ_evecs->get(0,0));
+
+    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+
 }
 
 void AdaptiveCI::compute_rdms( SharedMatrix& PQ_evecs, int root1, int root2 )
