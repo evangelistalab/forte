@@ -17,19 +17,19 @@ molecule HF{
 }
 
 set globals{
-#   basis                   cc-pvtz
-   basis                   cc-pvdz
-   reference               ROHF
-   d_convergence           12
-   e_convergence           15
-   MCSCF_E_CONVERGENCE     12
-   MCSCF_R_CONVERGENCE     8
-   frozen_docc             [1, 0, 0, 0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   scf_type                out_of_core
-   num_roots               2
-   avg_states              [1, 2]
+# basis                   cc-pvtz
+  basis                   cc-pvdz
+  reference               rohf
+  d_convergence           12
+  e_convergence           15
+  mcscf_e_convergence     12
+  mcscf_r_convergence     8
+  frozen_docc             [1, 0, 0, 0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  scf_type                out_of_core
+  num_roots               2
+  avg_states              [1, 2]
 }
 refmcscf = energy('casscf')
 energy('scf')
@@ -37,19 +37,19 @@ energy('scf')
 
 set scf_type direct
 set forte{
-   frozen_docc             [1,0,0,0]
-   restricted_docc         [1,0,1,1]
-   active                  [2,0,0,0]
-   cas_type                FCI
-   CASSCF_REFERENCE        TRUE
-   int_type                conventional
-   CASSCF_ITERATIONS        25
-   print                    1
-   SA_STATES                [[0, 1, 2]]
-   CASSCF_DEBUG_PRINTING     false
-   FCI_ITERATIONS             60
-   CASSCF_E_CONVERGENCE       1e-12
-   CASSCF_G_CONVERGENCE       1e-8
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  cas_type                fci
+  casscf_reference        true
+  int_type                conventional
+  casscf_iterations       25
+  print                   1
+  avg_states              [[0, 1, 2]]
+  casscf_debug_printing   false
+  fci_iterations          60
+  casscf_e_convergence    1e-12
+  casscf_g_convergence    1e-8
 }
 
 #compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy")

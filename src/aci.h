@@ -249,6 +249,9 @@ private:
     /// All that happens before we compute the energy
     void startup();
 
+    /// Compute an aci wavefunction
+    void compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+
 	/// Get the reference occupation
 	std::vector<int> get_occupation();
 
@@ -347,7 +350,12 @@ private:
     /// Project ACI wavefunction
     void project_determinant_space( std::vector<STLBitsetDeterminant>& space, SharedMatrix evecs, SharedVector evals, int nroot );
 
-    void test_ops( std::vector<STLBitsetDeterminant>& det_space, std::vector<double>& PQ_evecs );
+    void test_ops( std::vector<STLBitsetDeterminant>& det_space, SharedMatrix& PQ_evecs );
+
+    void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
+
+    /// Compute the RDMs
+    void compute_rdms( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, int root1, int root2 );
 
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization

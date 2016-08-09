@@ -1,4 +1,4 @@
-import forte
+import forte_parallel
 
 
 memory 500 mb
@@ -26,7 +26,7 @@ set globals{
    basis                   sto-3g
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-jkfit
-   scf_type                out_of_core
+   scf_type                pk
    d_convergence           10
    e_convergence           12
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
@@ -35,9 +35,10 @@ set globals{
    maxiter                 500
    reference               ROHF
    S                       0.0
+   guess                   core
 }
-scf = energy('casscf')
-compare_values(refmcscf, scf,10,"SCF Energy")
+#scf = energy('casscf')
+#compare_values(refmcscf, scf,10,"SCF Energy")
 
 set scf_type  direct
 set forte {

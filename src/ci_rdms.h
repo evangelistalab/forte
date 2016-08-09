@@ -63,6 +63,8 @@ public:
 
     void set_max_rdm( int rdm );
 
+    void set_symmetry( int sym ) {symmetry_ = sym;}
+
     // Convert to strings
     void convert_to_string( std::vector<STLBitsetDeterminant>& space );
 
