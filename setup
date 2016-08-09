@@ -114,6 +114,7 @@ def generate_makefile(args):
             print "Need both GA and MPI for parallel computing"
             print "Turning off MPI based code"
             string_filter += "parallel_ccvv_algorithms.cc distribute_df_integrals.cc "
+            string_filter += " paralleldfmo.cc"
 
             #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc distribute_df_integrals.cc, $(notdir $(wildcard *.cc)))\n"
             
