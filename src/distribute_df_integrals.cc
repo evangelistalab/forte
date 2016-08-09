@@ -13,6 +13,7 @@
     #include <ga.h>
     #include <macdecls.h>
     #include <mpi.h>
+    #include "paralleldfmo.h"
 #endif
 
 
@@ -51,6 +52,7 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     if(my_proc == 0) gather_integrals();
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     create_dist_df();
+    test_distributed_integrals();
     //make_diagonal_integrals();
     if (ncmo_ < nmo_){
         if(my_proc == 0) freeze_core_orbitals();
@@ -239,6 +241,9 @@ void DistDFIntegrals::allocate()
     diagonal_aphys_tei_ab = new double[nmo_ * nmo_];
     diagonal_aphys_tei_bb = new double[nmo_ * nmo_];
 }
+void test_distributed_df_integrals()
+{
+}
 //double DistDFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s)
 //{
 //    ambit::Tensor pqrs = aptei_aa_block({p}, {q}, {r}, {s});
@@ -258,6 +263,7 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
     std::vector<double>& ReturnTensorV = ReturnTensor.data();
+    std::vector<double> buffer(A.size() * nmo_ * nmo_, 0.0);
     bool frozen_core = false;
 
     if(frzcpi_.sum() && aptei_idx_ == ncmo_)
@@ -266,52 +272,49 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
     size_t pn, qn;
     /// DistDF_ga_ is distributed via A dimension.  
     /// A lot of logic needs to be done to figure out where information lies
-    bool on_one_core = false;
     int subscript_begin[2];
     int subscript_end[2];
     subscript_begin[0] = A[0];
     subscript_begin[1] = 0;
-    subscript_end[0] = A[A.size() - 1];
-    subscript_end[1] = nmo_ * nmo_;
-    int proc_begin = NGA_Locate(DistDF_ga_, subscript_begin);
-    int proc_end   = NGA_Locate(DistDF_ga_, subscript_end);
-    if(proc_begin == -1 or proc_end == -1)
-    {
-        printf("\n proc_begin: %d", proc_begin);
-        printf("\n proc_end: %d", proc_end);
-        printf("\n Found multiple blocks that hold this region");
-        printf("\n A = (%d, %d), p = (%d, %d), q = (%d, %d)", A[0], A[A.size() - 1], p[0], p[p.size() - 1], q[0], q[q.size() - 1]);
-        printf("\n my_proc: %d", GA_Nodeid());
-        throw PSIEXCEPTION("GA could not locate region of THREE_INTEGRAL");
-    }
-    /// If NGA_Locate gives same processor for begin and end,
-    /// it is given that the integral is located on one core
-    if(proc_begin == proc_end)
-    {
-        on_one_core = true;
-    }
-    if(on_one_core)
-    {
-        int one_core_offset_begin[2];
-        int one_core_offset_end[2];
-        int ld[1];
-        ld[0] = nmo_ * nmo_;
-        ///Read entire chunk of requested array
-        NGA_Distribution(DistDF_ga_, proc_begin, one_core_offset_begin, one_core_offset_end);
-        std::vector<double> buffer;
-        ///Buffer can be larger than what was requested
-        ///If(p or q < nmo_), then will read more than I want, but thats okay(I Think).
-        size_t buffer_size = one_core_offset_end[0] - one_core_offset_begin[0] + 1 + nmo_ * nmo_;
-        buffer.resize(buffer_size);
-        NGA_Get(DistDF_ga_, one_core_offset_begin, one_core_offset_end, &buffer[0], ld);
-        return ReturnTensor;
+    //subscript_end[0] = A[A.size() - 1];
+    //subscript_end[1] = nmo_ * nmo_;
+    //buffer.resize(buffer_size);
+    //NGA_Get(DistDF_ga_, one_core_offset_begin, one_core_offset_end, &buffer[0], ld);
+    exit(1);
 
+    return ReturnTensor;
+
+}
+void DistDFIntegrals::test_distributed_integrals()
+{
+    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_SCF",options_.get_str("DF_BASIS_SCF"));
+    int naux = auxiliary->nbf();
+    SharedMatrix Ca = wfn_->Ca();
+    SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
+    int nso = wfn_->nso();
+    int nmo = wfn_->nmo();
+    for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h){
+        for (size_t i = 0; i < wfn_->nmopi()[h]; ++i){
+            size_t nao = wfn_->nso();
+            size_t nso = wfn_->nsopi()[h];
+
+            if (!nso) continue;
+
+            C_DGEMV('N',nao,nso,1.0,wfn_->aotoso()->pointer(h)[0],nso,&Ca->pointer(h)[0][i],wfn_->nmopi()[h],0.0,&Ca_ao->pointer()[0][index],wfn_->nmopi().sum());
+
+            index += 1;
+        }
     }
 
-
-
-
-
+    ParallelDFMO DFMO = ParallelDFMO(wfn_->basisset(), auxiliary);
+    DFMO.set_C(Ca_ao);
+    DFMO.compute_integrals();
+    int MY_DF = DFMO.Q_PQ();
+    int test_ga = 0;
+    GA_Duplicate(test_ga, (char *) "ZeroArray");
+    //GA_Print(MY_DF);
+    GA_Print(MY_DF);
+    GA_Print(DistDF_ga_);
 }
 
 
