@@ -1,0 +1,48 @@
+import forte
+
+refscf = -75.3790205732515943 
+refaci = -75.645331476749 
+refacipt2 = -75.837388242086
+
+molecule C2{ 
+C  0.00000 0.00000 0.0 
+C  0.00000 0.00000 1.24253
+}
+
+set {
+  basis 6-31g*
+  b#asis sto-3g
+  scf_type pk
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  docc [2,0,0,0,0,2,1,1]
+}
+
+
+set forte {
+  job_type aci 
+  frozen_docc [1,0,0,0,0,1,0,0]
+  restricted_docc [0,0,0,0,0,0,0,0]
+  SELECT_TYPE aimed_energy
+  excited_algorithm root_combine
+  TAUP 0.08
+  TAUQ 0.08
+  nroot 3
+  charge 0
+  root_sym 0
+  average_offset 0
+  ACI_INITIAL_SPACE CISD
+  maxiter_davidson 1000
+}
+
+set_num_threads(8)
+
+energy('scf')
+
+compare_values(refscf, get_variable("CURRENT ENERGY"),9, "SCF energy")
+
+energy('forte')
+
+compare_values(refaci, get_variable("ACI ENERGY"),9, "ACI energy")
+compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy")

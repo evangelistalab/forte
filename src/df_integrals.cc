@@ -6,6 +6,13 @@
 #include <libthce/thce.h>
 #include <libthce/lreri.h>
 #include <libqt/qt.h>
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#endif
+#ifdef HAVE_MPI
+#include <mpi.h>
+#endif
 
 #include "blockedtensorfactory.h"
 
@@ -25,12 +32,19 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     outfile->Printf("\n  DFIntegrals overall time");
     Timer DFInt;
     allocate();
-    gather_integrals();
-    make_diagonal_integrals();
-    if (ncmo_ < nmo_){
-        freeze_core_orbitals();
-        // Set the new value of the number of orbitals to be used in indexing routines
-        aptei_idx_ = ncmo_;
+    int my_proc = 0;
+    #ifdef HAVE_GA
+       my_proc = GA_Nodeid();
+    #endif
+    if(my_proc == 0)
+    {
+        gather_integrals();
+        make_diagonal_integrals();
+        if (ncmo_ < nmo_){
+            freeze_core_orbitals();
+            // Set the new value of the number of orbitals to be used in indexing routines
+            aptei_idx_ = ncmo_;
+        }
     }
     outfile->Printf("\n  DFIntegrals take %15.8f s", DFInt.get());
 }
@@ -143,7 +157,11 @@ void DFIntegrals::gather_integrals()
     if(options_.get_str("DF_BASIS_MP2").length() == 0)
     {
         outfile->Printf("\n Please set a DF_BASIS_MP2 option to a specified auxiliary basis set");
+        #ifdef HAVE_MPI
+        MPI_Abort(MPI_COMM_WORLD, 0);
+        #endif
         throw PSIEXCEPTION("Select a DF_BASIS_MP2 for use with DFIntegrals");
+
     }
 
     boost::shared_ptr<BasisSet> primary = wfn_->basisset();
@@ -239,7 +257,6 @@ void DFIntegrals::gather_integrals()
     }
 
     ThreeIntegral_ = Bpq;
-
 }
 
 void DFIntegrals::make_diagonal_integrals()
