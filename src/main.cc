@@ -663,6 +663,8 @@ read_options(std::string name, Options &options)
         options.add_str("ACTIVE_SPACE_TYPE", "COMPLETE", "COMPLETE CIS CISD DOCI");
         /*- Exclude HF to the CISD space for excited state (ground state will be HF energy) -*/
         options.add_bool("CISD_EX_NO_HF", false);
+        /*- Compute <CIS|CISD> overlap in CIS computations -*/
+        options.add_bool("CIS_CISD_OVERLAP", false);
         /*- Compute IP/EA in active-CI -*/
         options.add_str("IPEA", "NONE", "NONE IP EA");
         /*- Semicanonicalize orbitals -*/
