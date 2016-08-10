@@ -1650,6 +1650,18 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 //    }
  }
 
+void SparseCISolver::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
+{
+    for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
+        bad_states_.push_back( roots[i] );
+    }
+}
+
+void SparseCISolver::set_root_project( bool value )
+{
+    root_project_ = value;
+}
+
 bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SigmaVector* sigma_vector,
                                          SharedVector Eigenvalues,
@@ -1703,6 +1715,14 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     for (auto& g : guess){
         if (g.first != multiplicity) bad_roots.push_back(g.second);
     }
+
+    if( root_project_ ){
+        for( int n = 0, max_n = bad_states_.size(); n< max_n; ++n ){
+            bad_roots.push_back( bad_states_[n] );
+        }
+    } 
+
+
     dls.set_project_out(bad_roots);
 
     SolverStatus converged = SolverStatus::NotConverged;
