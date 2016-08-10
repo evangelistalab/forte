@@ -43,9 +43,26 @@
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
 #include "localize.h"
+#ifdef HAVE_GA
+#include <ga.h>
+#include <macdecls.h>
+#include <mpi.h>
+#endif
+
 
 INIT_PLUGIN
 void forte_options(std::string name, psi::Options &options);
+/// These functions replace the Memory Allocator in GA with C/C++ allocator. 
+void* replace_malloc(size_t bytes, int align, char *name)
+{
+    return malloc(bytes);
+}
+void replace_free(void *ptr)
+{
+    free(ptr);
+}
+
+
 
 namespace psi{ namespace forte{
 
@@ -88,7 +105,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF ALL EFFECTIVE");
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE");
 
         /*- The damping factor in the erf(x omega)/x integrals -*/
         options.add_double("EFFECTIVE_COULOMB_OMEGA",1.0);
@@ -469,7 +486,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE");
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/
@@ -521,6 +538,8 @@ read_options(std::string name, Options &options)
         options.add_int("AVERAGE_OFFSET", 0);
         /*- Print final wavefunction to file? -*/
         options.add_bool("SAVE_FINAL_WFN", false);
+        /*- Print the P space? -*/
+        options.add_bool("PRINT_REFS", false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
@@ -721,7 +740,7 @@ read_options(std::string name, Options &options)
         /*- Defintion for source operator for ccvv term -*/
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
-        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL");
+        options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
         /*- Batches for CCVV_ALGORITHM -*/
         options.add_int("CCVV_BATCH_NUMBER", -1);
         /*- Excessive printing for DF_DSRG_MRPT2 -*/
@@ -740,6 +759,22 @@ read_options(std::string name, Options &options)
 
 extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options)
 {
+    int my_proc = 0;
+    int n_nodes = 1;
+    #ifdef HAVE_GA
+    GA_Initialize();
+    ///Use C/C++ memory allocators 
+    GA_Register_stack_memory(replace_malloc, replace_free);
+    n_nodes = GA_Nnodes();
+    my_proc = GA_Nodeid();
+    size_t memory = Process::environment.get_memory() / n_nodes;
+    #endif
+    #ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_proc);
+    MPI_Comm_size(MPI_COMM_WORLD, &n_nodes);
+    #endif
+
+    
     if (options.get_str("JOB_TYPE") == "BITSET_PERFORMANCE"){
         test_bitset_performance();
         return ref_wfn;
@@ -780,20 +815,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         ints_ = std::make_shared<ConventionalIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
     }else if (options.get_str("INT_TYPE") == "EFFECTIVE"){
         ints_ = std::make_shared<EffectiveIntegrals>(options,ref_wfn,UnrestrictedMOs,RemoveFrozenMOs, mo_space_info);
+    }else if (options.get_str("INT_TYPE") == "DISTDF"){
+        #ifdef HAVE_GA
+        ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
+        #endif
     }
     else{
-        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF or CONVENTIONAL");
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
-
-    //[forte-private]
-
-    //Link the integrals to the DynamicBitsetDeterminant class
-    //std::shared_ptr<FCIIntegrals> fci_ints_ = std::make_shared<FCIIntegrals>(ints_, mo_space_info->get_corr_abs_mo("ACTIVE"), mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC"));
-    //fci_ints_->set_active_integrals_and_restricted_docc();
-    //STLBitsetDeterminant::set_ints(fci_ints_);
-    //DynamicBitsetDeterminant::set_ints(fci_ints_);
-
 
     if (options.get_str("JOB_TYPE") == "TASKS"){
         std::vector<std::string> tasks{"FCI_SEMI_CANONICAL","DSRG-MRPT2"};
@@ -1014,7 +1044,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "FCI")
         {
-            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
             if (options.get_bool("SEMI_CANONICAL"))
             {
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
@@ -1046,12 +1075,14 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(cas_type == "ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+                aci->set_quiet(true);
                 aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
                 SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,aci_reference);
             }
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+            aci->set_quiet(true);
             aci->set_max_rdm(3);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
@@ -1082,6 +1113,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     }
     if (options.get_str("JOB_TYPE") == "THREE-DSRG-MRPT2")
     {
+        Timer all_three_dsrg_mrpt2;
 
         if(options.get_str("INT_TYPE")=="CONVENTIONAL")
         {
@@ -1109,6 +1141,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(options.get_str("CAS_TYPE")=="ACI"){
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
+                aci->set_quiet( true );
                 aci->set_max_rdm(2);
                 aci->compute_energy();
                 Reference aci_reference = aci->reference();
@@ -1116,6 +1149,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             }
             auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
             aci->set_max_rdm(3);
+            aci->set_quiet(true);
             aci->compute_energy();
             Reference aci_reference = aci->reference();
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(aci_reference,ref_wfn,options,ints_,mo_space_info));
@@ -1126,15 +1160,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             if(options.get_bool("SEMI_CANONICAL") and !options.get_bool("CASSCF_REFERENCE")){
                 boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-                fci->set_max_rdm_level(1);
-                fci->compute_energy();
-                Reference reference2 = fci->reference();
-                SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                if(my_proc == 0)
+                {
+                    fci->set_max_rdm_level(1);
+                    fci->compute_energy();
+                    Reference reference2 = fci->reference();
+                    SemiCanonical semi(ref_wfn,options,ints_,mo_space_info,reference2);
+                }
             }
             boost::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
-            fci->set_max_rdm_level(3);
-            fci->compute_energy();
-            Reference reference = fci->reference();
+            Reference reference;
+            if(my_proc == 0)
+            {
+                fci->set_max_rdm_level(3);
+                fci->compute_energy();
+                reference = fci->reference();
+            }
 
             boost::shared_ptr<THREE_DSRG_MRPT2> three_dsrg_mrpt2(new THREE_DSRG_MRPT2(reference,ref_wfn,options,ints_, mo_space_info));
             three_dsrg_mrpt2->compute_energy();
@@ -1163,6 +1204,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 #endif
         }
 
+        outfile->Printf("\n CD/DF DSRG-MRPT2 took %8.5f s.", all_three_dsrg_mrpt2.get());
     }
     if ((options.get_str("JOB_TYPE") == "TENSORSRG") or (options.get_str("JOB_TYPE") == "SR-DSRG")){
         auto srg = std::make_shared<TensorSRG>(ref_wfn, options, ints_, mo_space_info);
@@ -1208,7 +1250,6 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
         if(cas_type == "FCI")
         {
-            //if (options.get_bool("SEMI_CANONICAL") and options.get_bool("CASSCF_REFERENCE")){
             if (options.get_bool("SEMI_CANONICAL"))
             {
                 std::shared_ptr<FCI> fci(new FCI(ref_wfn,options,ints_,mo_space_info));
@@ -1268,6 +1309,9 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     STLBitsetDeterminant::reset_ints();
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
+    #ifdef HAVE_GA
+    GA_Terminate();
+    #endif
     return ref_wfn;
 }
 
