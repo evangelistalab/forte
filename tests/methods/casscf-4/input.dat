@@ -1,7 +1,7 @@
 #! Generated using commit GITCOMMIT
 #! BeH2 with symmetry
 
-import forte
+import forte_parallel
 
 refscf     = -15.50490325102
 refcasscf  = -15.51070257217
@@ -16,7 +16,7 @@ molecule {
 }
 
 set globals{
-   scf_type             out_of_core
+   scf_type             pk
    d_convergence        10
    e_convergence        10
    basis                3-21g
