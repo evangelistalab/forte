@@ -1,0 +1,46 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+# Edsrg and Re are slightly off from using tcscf code
+# because of frozen-core orbitals
+refEdsrg = -100.21737298387
+refRe    =    1.73424630636 # in Bohr
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 0.918
+}
+
+set globals{
+   basis                   cc-pvdz
+   reference               rhf
+   d_convergence           12
+   e_convergence           15
+   g_convergence           gau_verytight
+   docc                    [3,0,1,1]
+   restricted_docc         [2,0,1,1]
+   active                  [2,0,0,0]
+   mcscf_e_convergence     12
+   mcscf_r_convergence     8
+   mcscf_maxiter           100
+}
+
+set forte{
+   job_type                dsrg-mrpt2
+   frozen_docc             [1,0,0,0]
+   restricted_docc         [1,0,1,1]
+   active                  [2,0,0,0]
+   root_sym                0
+   nroot                   1
+   dsrg_s                  0.5
+   cas_type                cas
+}
+
+Eopt = optimize('forte_casscf',dertype=0)
+mol  = psi4.get_active_molecule()
+bond = abs(mol.z(0) - mol.z(1))
+compare_values(refEdsrg,Eopt,8,"DSRG-MRPT2 energy at Re")
+compare_values(bond,refRe,5,"Optimized bond length")

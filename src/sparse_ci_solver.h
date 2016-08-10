@@ -169,6 +169,9 @@ public:
     /// Enable/disable spin projection
     void set_spin_project(bool value);
 
+    /// Enable/disable root projection
+    void set_root_project(bool value);
+
     /// Set convergence threshold
     void set_e_convergence(double value);
 
@@ -179,6 +182,9 @@ public:
     void set_maxiter_davidson(int value);
     SharedMatrix build_full_hamiltonian(const std::vector<STLBitsetDeterminant>& space);
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space);
+
+    /// Add roots to project out during Davidson-Liu procedure
+    void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& roots );    
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -210,6 +216,8 @@ private:
     bool print_details_ = true;
     /// Project solutions onto given multiplicity?
     bool spin_project_ = false;
+    /// Project solutions onto given root?
+    bool root_project_ = false;
     /// The energy convergence threshold
     double e_convergence_ = 1.0e-12;
     /// Number of collapse vectors per roots
@@ -220,6 +228,9 @@ private:
     int maxiter_davidson_ = 100;
     /// Force to use diag_method no matter how small the space is
     bool force_diag_method_ = false;
+
+    /// Additional roots to project out
+    std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
 };
 
 }}
