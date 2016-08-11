@@ -213,7 +213,6 @@ void CASSCF::compute_casscf()
     Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
     Timer retrans_ints;
-    ints_->retransform_integrals();
     if(print_ > 0)
     {
         outfile->Printf("\n Overall retranformation of integrals takes %6.4f s.", retrans_ints.get());
@@ -222,6 +221,7 @@ void CASSCF::compute_casscf()
     if(options_.get_str("JOB_TYPE") != "CASSCF")
     {
         SemiCanonical semi(reference_wavefunction_, options_, ints_, mo_space_info_, cas_ref_);
+        ints_->retransform_integrals();
     }
 
 }
@@ -285,12 +285,22 @@ void CASSCF::startup()
     Hcore_->add(V);
 
     Timer JK_initialize;
-    JK_ = JK::build_JK(reference_wavefunction_->basisset(), options_);
+    if(options_.get_str("SCF_TYPE")=="GTFOCK")
+    {
+    #ifdef HAVE_JK_FACTORY
+        Process::environment.set_legacy_molecule(this->molecule());
+        JK_ = boost::shared_ptr<JK>(new GTFockJK(this->basisset()));
+    #else
+        throw PSIEXCEPTION("GTFock was not compiled in this version");
+    #endif
+    } else {
+        JK_ = JK::build_JK(this->basisset(), this->options_);
+    }
     JK_->set_memory(Process::environment.get_memory() * 0.8);
     JK_->initialize();
     JK_->C_left().clear();
     JK_->C_right().clear();
-    if(print_ > 0)  outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(), options_.get_str("SCF_TYPE").c_str());
+    if(print_ > 0)  outfile->Printf("\n     JK takes %5.5f s to initialize while using %s",    JK_initialize.get(), options_.get_str("SCF_TYPE").c_str());
 
 }
 void CASSCF::cas_ci()
@@ -474,16 +484,6 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
             C_core->set_column(h, i, Ca->get_column(h, i));
         }
     }
-
-    //boost::shared_ptr<JK> JK_core = JK::build_JK(this->basisset(), this->options_);
-
-    /// Already transform everything to C1 so make sure JK does not do this.
-    //JK_core->set_allow_desymmetrization(false);
-
-    /////TODO: Make this an option in my code
-    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    //JK_core->initialize();
 
     JK_->set_do_K(true);
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
