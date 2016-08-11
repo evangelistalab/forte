@@ -545,6 +545,9 @@ double AdaptiveCI::compute_energy()
             // orthogonalize
             add_bad_roots( PQ_space_, PQ_evecs, i);
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
+        }if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+            ref_root_ = i;
+            wfn_analyzer(PQ_space_, PQ_evecs, nroot_ ); 
         }
     }
     dim = PQ_space_.size();    
@@ -1417,9 +1420,9 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     } 
 
     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
-    std::ofstream final_wfn;
-    if( print_final_wfn ) final_wfn.open("final_wfn.txt");
 
+    std::ofstream final_wfn;
+    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(ref_root_) +  ".txt");
     
     
     STLBitsetDeterminant rdet(occ);
@@ -1464,6 +1467,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 		}
 		outfile->Printf("\n\n  Highest-order excitation searched:     %zu  \n", excitation_counter.size() - 1);
 	}
+    if( print_final_wfn ) final_wfn.close();
 }
 
 oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
