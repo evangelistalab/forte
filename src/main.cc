@@ -246,6 +246,9 @@ read_options(std::string name, Options &options)
         /*- The diagonalization method -*/
         options.add_str("DIAG_ALGORITHM","DAVIDSON","DAVIDSON FULL DAVIDSONLIST SOLVER DLSTRING DLDISK");
 
+        /*- Force the diagonalization procedure?  -*/
+        options.add_bool("FORCE_DIAG_METHOD", false);
+    
         /*- The number of roots computed -*/
         options.add_int("NROOT",1);
 
