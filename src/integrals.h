@@ -788,6 +788,7 @@ private:
     ambit::Tensor read_integral_chunk(boost::shared_ptr<Tensor>& B, std::vector<int>& lo, std::vector<int>& hi);
     /// Distributes tensor according to naux dimension
     void create_dist_df();
+    void test_distributed_integrals();
 };
 #endif
 

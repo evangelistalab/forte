@@ -385,16 +385,16 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t> &A
 
         int p_idx = 0;
         int q_idx = 0;
-    for(size_t p_block : p)
-    {
-        p_map[p_block] = p_idx;
-        p_idx++;
-    }
-    for(size_t q_block : q)
-    {
-        q_map[q_block] = q_idx;
-        q_idx++;
-    }
+        for(size_t p_block : p)
+        {
+            p_map[p_block] = p_idx;
+            p_idx++;
+        }
+        for(size_t q_block : q)
+        {
+            q_map[q_block] = q_idx;
+            q_idx++;
+        }
         for(size_t p_block : p)
         {
             pn = frozen_core ? cmotomo_[p_block] : p_block;
