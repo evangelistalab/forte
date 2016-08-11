@@ -139,7 +139,7 @@ void ParallelDFMO::transform_integrals()
     {
         throw PSIEXCEPTION("GA failed on creating Aia_ga");
     }
-    GA_Q_PQ_ = GA_Duplicate(Aia_ga, (char *)"Q|PQ");
+    GA_Q_PQ_ = GA_Duplicate(Aia_ga, (char *)"(Q|pq)");
     if(not GA_Q_PQ_)
     {
         throw PSIEXCEPTION("GA failed on creating GA_Q_PQ");
