@@ -616,12 +616,11 @@ vector<vector<vector<bool>>> FCI_MO::Form_String(const int& active_elec, const b
 void FCI_MO::form_det_cis(){
     // add close-shell ref
     vector<bool> string_ref = Form_String_Ref();
-    if(root_sym_ == 0){
+    if(root_sym_ == 0 && root_ == 0){
         determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
     }
 
     // singles string
-    // have to do full singles string because it sets up the ao_ and av_
     vector<vector<vector<bool>>> string_singles = Form_String_Singles(string_ref);
     if(ipea_ == "IP"){
         string_singles = Form_String_IP(string_ref);
@@ -638,19 +637,27 @@ void FCI_MO::form_det_cis(){
         }
     }
 
-    // singles
-    Timer tdet;
-    string str = "Forming determinants";
-    if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
+    if(root_sym_ != 0 || root_ != 0){
+        // if HF solution is not in the excited space, we subtract root by 1 (after the above if test!)
+        if(root_sym_ == 0 && root_ != 0){
+            root_ -= 1;
+            nroot_ -= 1;
+        }
 
-    int i = symmetry ^ root_sym_;
-    size_t single_size = string_singles[i].size();
-    for(size_t x = 0; x < single_size; ++x){
-        determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        // singles
+        Timer tdet;
+        string str = "Forming determinants";
+        if(!quiet_) {outfile->Printf("\n  %-35s ...", str.c_str());}
+
+        int i = symmetry ^ root_sym_;
+        size_t single_size = string_singles[i].size();
+        for(size_t x = 0; x < single_size; ++x){
+            determinant_.push_back(STLBitsetDeterminant(string_singles[i][x], string_ref));
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_singles[i][x]));
+        }
+
+        if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
     }
-
-    if(!quiet_){outfile->Printf("  Done. Timing %15.6f s", tdet.get());}
 
     // Number of alpha and beta electrons in active
     int na_a = nalfa_ - nc_ - nfrzc_;
@@ -686,10 +693,8 @@ void FCI_MO::form_det_cisd(){
     vector<bool> string_ref = Form_String_Ref();
     cisd_ex_no_hf_ = options_.get_bool("CISD_EX_NO_HF");
     if(root_sym_ == 0){
-        determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
-
-        if(root_ != 0 && cisd_ex_no_hf_){
-            determinant_.pop_back();
+        if(root_ == 0 || !cisd_ex_no_hf_){
+            determinant_.push_back(STLBitsetDeterminant(string_ref, string_ref));
         }
     }
 
@@ -715,6 +720,7 @@ void FCI_MO::form_det_cisd(){
     }
 
     if(root_sym_ != 0 || root_ != 0 || !cisd_ex_no_hf_){
+        // if HF solution is not in the excited space, we subtract root by 1 (after the above if test!)
         if(cisd_ex_no_hf_ && root_sym_ == 0){
             root_ -= 1;
             nroot_ -= 1;
