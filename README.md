@@ -1,11 +1,10 @@
 ![forte](lib/logos/forte_logo_github2.png)
-#Forte
-=============
 
 #####Code Authors: Evangelistalab
 #####Web: evangelistalab.org
 
-Adaptive quantum chemistry methods
+Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods
+strongly correlated electrons.
 
 Installation directions for Forte:
 
