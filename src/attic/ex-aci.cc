@@ -6,8 +6,8 @@
 #include <unordered_map>
 #include <numeric>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include <libciomr/libciomr.h>
 #include <libpsio/psio.h>
@@ -430,7 +430,7 @@ void EX_ACI::print_info()
 
 double EX_ACI::compute_energy()
 {
-    boost::timer t_iamrcisd;
+    ForteTimer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive CI (v 2.0)");
 
     SharedMatrix H;
@@ -719,7 +719,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
     std::vector<DynamicBitsetDeterminant> sd_dets_vec;
     std::map<DynamicBitsetDeterminant,int> new_dets_map;
 
-    boost::timer t_ms_build;
+    ForteTimer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
     std::map<DynamicBitsetDeterminant,std::vector<double> > V_hash;
@@ -741,7 +741,7 @@ void EX_ACI::find_q_space(int nroot, SharedVector evals,SharedMatrix evecs)
         V_hash.erase(P_space_[J]);
     }
 
-    boost::timer t_ms_screen;
+    ForteTimer t_ms_screen;
 
     using bsmap_it = std::map<DynamicBitsetDeterminant,std::vector<double> >::const_iterator;
     pVector<double,double> C1(nroot,make_pair(0.0,0.0));
@@ -922,7 +922,7 @@ void EX_ACI::find_q_space_single_root(int nroot,SharedVector evals,SharedMatrix 
     std::vector<DynamicBitsetDeterminant> sd_dets_vec;
     std::map<DynamicBitsetDeterminant,int> new_dets_map;
 
-    boost::timer t_ms_build;
+    ForteTimer t_ms_build;
 
     // This hash saves the determinant coupling to the model space eigenfunction
     std::map<DynamicBitsetDeterminant,double> V_map;
@@ -944,7 +944,7 @@ void EX_ACI::find_q_space_single_root(int nroot,SharedVector evals,SharedMatrix 
         V_map.erase(P_space_[J]);
     }
 
-    boost::timer t_ms_screen;
+    ForteTimer t_ms_screen;
 
     using bsmap_it =  std::map<DynamicBitsetDeterminant,std::vector<double> >::const_iterator;
     std::vector<std::pair<double,double> > C1(nroot_,make_pair(0.0,0.0));

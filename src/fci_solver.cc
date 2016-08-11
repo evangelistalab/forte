@@ -10,8 +10,7 @@
 #include <cmath>
 #include <numeric>
 
-#include <boost/format.hpp>
-#include <boost/timer.hpp>
+#include "mini-boost/boost/format.hpp"
 
 #include <libciomr/libciomr.h>
 #include <liboptions/liboptions.h>
@@ -309,7 +308,7 @@ void FCISolver::startup()
 */
 double FCISolver::compute_energy()
 {
-    boost::timer t;
+    ForteTimer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
     std::shared_ptr<FCIIntegrals> fci_ints;
@@ -524,7 +523,7 @@ std::vector<std::pair<int,std::vector<std::tuple<size_t,size_t,size_t,double>>>>
 FCISolver::initial_guess(FCIWfn& diag, size_t n, size_t multiplicity,
                          std::shared_ptr<FCIIntegrals> fci_ints)
 {
-    boost::timer t;
+    ForteTimer t;
 
     double nuclear_repulsion_energy = Process::environment.molecule()->nuclear_repulsion_energy();
     double scalar_energy = fci_ints->scalar_energy();

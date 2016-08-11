@@ -3,9 +3,9 @@
 #include <algorithm>
 
 #include <boost/unordered_map.hpp>
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
-#include <boost/math/special_functions/bessel.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
+#include "mini-boost/boost/math/special_functions/bessel.hpp"
 
 #include <libciomr/libciomr.h>
 #include <libpsio/psio.h>
@@ -218,7 +218,7 @@ void FastAdaptivePathIntegralCI::print_info()
 double FastAdaptivePathIntegralCI::compute_energy()
 {
     timer_on("PIFCI:Energy");
-    boost::timer t_apici;
+    ForteTimer t_apici;
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;

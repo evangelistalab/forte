@@ -1,11 +1,9 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
-
-#include "libmints/molecule.h"
-
+#include <libmints/molecule.h>
 #include <libqt/qt.h>
 
+#include "helpers.h"
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
@@ -25,14 +23,14 @@ void FCIWfn::compute_rdms(int max_order)
     size_t nb = beta_graph_->nones();
 
     if (max_order >= 1){
-        boost::timer t;
+        ForteTimer t;
         if (na >= 1) compute_1rdm(opdm_a_,true);
         if (nb >= 1) compute_1rdm(opdm_b_,false);
         rdm_timing.push_back(t.elapsed());
     }
 
     if (max_order >= 2){
-        boost::timer t;
+        ForteTimer t;
         if (na >= 2) compute_2rdm_aa(tpdm_aa_,true);
         if (nb >= 2) compute_2rdm_aa(tpdm_bb_,false);
         if ((na >= 1) and (nb >= 1))
@@ -42,7 +40,7 @@ void FCIWfn::compute_rdms(int max_order)
     }
 
     if (max_order >= 3){
-        boost::timer t;
+        ForteTimer t;
         if (na >= 3) compute_3rdm_aaa(tpdm_aaa_,true);
         if (nb >= 3) compute_3rdm_aaa(tpdm_bbb_,false);
         if ((na >= 2) and (nb >= 1))

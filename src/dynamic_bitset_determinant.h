@@ -30,7 +30,7 @@
         (h) *= 0x2127599bf4325c37ULL;   \
         (h) ^= (h) >> 47; })
 
-#include <boost/dynamic_bitset.hpp>
+#include "mini-boost/boost/dynamic_bitset.hpp"
 #include <unordered_map>
 
 #include "integrals.h"

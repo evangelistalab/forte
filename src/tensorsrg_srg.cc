@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include <boost/numeric/odeint.hpp>
+#include "mini-boost/boost/numeric/odeint.hpp"
 
 #include "tensorsrg.h"
 

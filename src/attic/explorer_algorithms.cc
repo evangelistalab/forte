@@ -7,9 +7,9 @@
 #include <libmints/molecule.h>
 #include <libmints/pointgrp.h>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
+#include "mini-boost/boost/lexical_cast.hpp"
 
 #include "lambda-ci.h"
 #include "string_determinant.h"

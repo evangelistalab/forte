@@ -4,7 +4,7 @@
 #include <libmoinfo/libmoinfo.h>
 #include <libmints/matrix.h>
 
-#include <boost/lexical_cast.hpp>
+#include "mini-boost/boost/lexical_cast.hpp"
 
 #include "stl_bitset_determinant.h"
 #include "dynamic_bitset_determinant.h"

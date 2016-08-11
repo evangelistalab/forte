@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include <boost/shared_ptr.hpp>
+#include "mini-boost/boost/shared_ptr.hpp"
 #include "libdiis/diismanager.h"
 
 #include "tensorsrg.h"

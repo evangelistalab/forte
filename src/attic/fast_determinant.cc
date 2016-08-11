@@ -1,4 +1,4 @@
-#include <boost/lexical_cast.hpp>
+#include "mini-boost/boost/lexical_cast.hpp"
 
 #include "fast_determinant.h"
 

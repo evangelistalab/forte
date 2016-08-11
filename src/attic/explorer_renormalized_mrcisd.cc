@@ -4,8 +4,8 @@
 #include <functional>
 #include <algorithm>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "physconst.h"
 #include <libqt/qt.h>
@@ -109,7 +109,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
         // Find the SD space out of the reference
         std::vector<StringDeterminant> sd_dets_vec;
         std::map<StringDeterminant,int> new_dets_map;
-        boost::timer t_ms_build;
+        ForteTimer t_ms_build;
         for (size_t I = 0, max_I = old_dets_vec.size(); I < max_I; ++I){
             const StringDeterminant& det = old_dets_vec[I];
             for (int p = 0, i = 0, a = 0; p < ncmo_; ++p){
@@ -245,7 +245,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
         outfile->Printf("\n  Time spent building the model space = %f s",t_ms_build.elapsed());
         outfile->Flush();
 
-        boost::timer t_ms_screen;
+        ForteTimer t_ms_screen;
 
         sort( sd_dets_vec.begin(), sd_dets_vec.end() );
         sd_dets_vec.erase( unique( sd_dets_vec.begin(), sd_dets_vec.end() ), sd_dets_vec.end() );
@@ -308,7 +308,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
 
         if (options.get_str("ENERGY_TYPE") != "IMRCISD_SPARSE"){
             H.reset(new Matrix("Hamiltonian Matrix",num_mrcisd_dets,num_mrcisd_dets));
-            boost::timer t_h_build;
+            ForteTimer t_h_build;
 #pragma omp parallel for schedule(dynamic)
             for (size_t I = 0; I < num_mrcisd_dets; ++I){
                 const StringDeterminant& detI = refsd_dets_vec[I];
@@ -323,7 +323,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large;
+            ForteTimer t_hdiag_large;
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
                 outfile->Printf("\n  Using the Davidson-Liu algorithm.");
                 davidson_liu(H,evals,evecs,nroot);
@@ -338,7 +338,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
         else
             // Sparse algorithm
         {
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
             std::vector<std::vector<std::pair<int,double> > > H_sparse;
 
             size_t num_nonzero = 0;
@@ -366,7 +366,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs,nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
@@ -418,7 +418,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
         if (options.get_str("ENERGY_TYPE") == "IMRCISD_SPARSE"){
             H.reset(new Matrix("Hamiltonian Matrix",size_small_ci,size_small_ci));
 
-            boost::timer t_h_small_build;
+            ForteTimer t_h_small_build;
 #pragma omp parallel for schedule(dynamic)
             for (size_t I = 0; I < size_small_ci; ++I){
                 for (size_t J = I; J < size_small_ci; ++J){
@@ -443,7 +443,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
         else
         // Sparse algorithm
         {
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
             std::vector<std::vector<std::pair<int,double> > > H_sparse;
 
             size_t num_nonzero = 0;
@@ -471,7 +471,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs,nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
@@ -552,7 +552,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 
         // Find the SD space out of the reference
         std::map<StringDeterminant,int> new_dets_map;
-        boost::timer t_ms_build;
+        ForteTimer t_ms_build;
         for (size_t I = 0, max_I = old_dets_vec.size(); I < max_I; ++I){
             const StringDeterminant& det = old_dets_vec[I];
             double Em = det.energy();
@@ -703,7 +703,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
         evecs.reset(new Matrix("U",num_mrcisd_dets,nroot));
         evals.reset(new Vector("e",nroot));
 
-        boost::timer t_h_build;
+        ForteTimer t_h_build;
         for (size_t I = 0; I < num_mrcisd_dets; ++I){
             for (size_t J = I; J < num_mrcisd_dets; ++J){
                 double HIJ = new_dets_vec[I].slater_rules(new_dets_vec[J]);
@@ -715,7 +715,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
         outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
+        ForteTimer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
@@ -762,7 +762,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
         evecs.reset(new Matrix("U",size_small_ci,nroot));
         evals.reset(new Vector("e",nroot));
 
-        boost::timer t_h_small_build;
+        ForteTimer t_h_small_build;
         for (size_t I = 0; I < size_small_ci; ++I){
             for (size_t J = I; J < size_small_ci; ++J){
                 double HIJ = old_dets_vec[I].slater_rules(old_dets_vec[J]);
@@ -867,7 +867,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 //        outfile->Printf("\n  Cycle %3d: %zu determinants in the RMRCISD wave function",cycle,old_dets_vec.size());
 
 //        std::map<shared_det,int> new_dets_map;
-//        boost::timer t_ms_build;
+//        ForteTimer t_ms_build;
 ////        outfile->Printf("\n  Processing determinants:\n");
 //        for (size_t I = 0, max_I = old_dets_vec.size(); I < max_I; ++I){
 //            const shared_det& det = old_dets_vec[I];
@@ -1021,7 +1021,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 //        evecs.reset(new Matrix("U",num_mrcisd_dets,nroot));
 //        evals.reset(new Vector("e",nroot));
 
-//        boost::timer t_h_build;
+//        ForteTimer t_h_build;
 //        for (size_t I = 0; I < num_mrcisd_dets; ++I){
 ////            new_dets_vec[I]->print();
 //            for (size_t J = I; J < num_mrcisd_dets; ++J){
@@ -1037,7 +1037,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 //        outfile->Flush();
 
 //        // 4) Diagonalize the Hamiltonian
-//        boost::timer t_hdiag_large;
+//        ForteTimer t_hdiag_large;
 //        if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
 //            outfile->Printf("\n  Using the Davidson-Liu algorithm.");
 //            davidson_liu(H,evals,evecs,nroot);
@@ -1085,7 +1085,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options)
 //        evecs.reset(new Matrix("U",size_small_ci,nroot));
 //        evals.reset(new Vector("e",nroot));
 
-//        boost::timer t_h_small_build;
+//        ForteTimer t_h_small_build;
 //        for (size_t I = 0; I < size_small_ci; ++I){
 //            for (size_t J = I; J < size_small_ci; ++J){
 //                double HIJ = old_dets_vec[I]->slater_rules(*old_dets_vec[J]);
