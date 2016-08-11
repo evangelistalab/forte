@@ -75,12 +75,25 @@ double ACTIVE_DSRGPT2::compute_energy(){
 
         // before real computation, we will do CI over all states to determine the excitation type
         outfile->Printf("\n    Looping over all roots to determine excitation type.");
-//        fci_mo.set_quite_mode(true);
         fci_mo.set_semicanonical(false);
         for(int h = 0; h < nirrep; ++h){
             if(nrootpi_[h] == 0) continue;
             else{
                 fci_mo.set_root_sym(h);
+
+                // when the ground state is only a single determinant
+                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS" || options_.get_bool("CISD_EX_NO_HF")){
+                    if(h == 0){
+                        // get ground state
+                        fci_mo.set_nroots(1);
+                        fci_mo.set_root(0);
+                        fci_mo.compute_energy();
+                        vector<STLBitsetDeterminant> dominant_dets = fci_mo.dominant_dets();
+                        dominant_dets_[h].push_back(dominant_dets[0]);
+                        orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
+                    }
+                }
+
                 fci_mo.set_nroots(nrootpi_[h]);
                 fci_mo.set_root(nrootpi_[h] - 1);
 
@@ -89,13 +102,12 @@ double ACTIVE_DSRGPT2::compute_energy(){
                 vector<STLBitsetDeterminant> dominant_dets = fci_mo.dominant_dets();
 
                 for(int i = 0; i < nrootpi_[h]; ++i){
-                    ref_energies_[h].push_back(eigen[i].second);
                     dominant_dets_[h].push_back(dominant_dets[i]);
                     orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
                 }
 
                 // figure out the overlap <CIS|CISD>
-                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS"){
+                if(options_.get_str("ACTIVE_SPACE_TYPE") == "CIS" && options_.get_bool("CIS_CISD_OVERLAP")){
                     std::string step_name = "Computing Overlap <CISD|CIS> of Irrep " + irrep_symbol_[h];
                     print_h2(step_name);
 
@@ -156,7 +168,6 @@ double ACTIVE_DSRGPT2::compute_energy(){
                 } // end of <CIS|CISD>
             }
         }
-        fci_mo.set_quite_mode(false);
         fci_mo.set_semicanonical(true);
 
         // real computation
@@ -172,7 +183,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     outfile->Printf("\n  %s\n", std::string(35,'=').c_str());
                     fci_mo.set_nroots(i+1);
                     fci_mo.set_root(i);
-                    fci_mo.compute_energy();
+                    ref_energies_[h].push_back(fci_mo.compute_energy());
                     Reference reference = fci_mo.reference();
 //                    dominant_dets_[h].push_back(fci_mo.dominant_det());
 //                    orb_extents_[h].push_back(flatten_fci_orbextents(fci_mo.orb_extents()));
@@ -228,22 +239,7 @@ void ACTIVE_DSRGPT2::print_summary(){
     if(ref_type == "COMPLETE") ref_type = std::string("CAS");
 
     int nirrep = nrootpi_.size();
-    if(ref_type != "CIS"){
-        int total_width = 4 + 6 + 18 + 18 + 3 * 2;
-        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT",
-                        ref_type.c_str(), std::string(7,' ').c_str(), options_.get_str("CORR_LEVEL").c_str());
-        outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
-        for(int h = 0; h < nirrep; ++h){
-            if(nrootpi_[h] != 0){
-                for(int i = nrootpi_[h]; i > 0; --i){
-                    std::string sym(4,' ');
-                    if(i == 1) sym = irrep_symbol_[h];
-                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt_energies_[h][i-1]);
-                }
-                outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
-            }
-        }
-    }else{
+    if(ref_type == "CIS" && options_.get_bool("CIS_CISD_OVERLAP")){
         int total_width = 4 + 6 + 18 + 18 + 11 + 4 * 2;
         outfile->Printf("\n    %4s  %6s  %11s%7s  %11s%7s  %11s", "Sym.", "ROOT", ref_type.c_str(), std::string(7,' ').c_str(),
                         options_.get_str("CORR_LEVEL").c_str(), std::string(7,' ').c_str(), "% in CISD ");
@@ -255,6 +251,21 @@ void ACTIVE_DSRGPT2::print_summary(){
                     if(i == 1) sym = irrep_symbol_[h];
                     outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f  %5.1f (%3d)", sym.c_str(), i-1, ref_energies_[h][i-1],
                             pt_energies_[h][i-1], t1_percentage_[h][i-1].second, t1_percentage_[h][i-1].first);
+                }
+                outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+            }
+        }
+    } else {
+        int total_width = 4 + 6 + 18 + 18 + 3 * 2;
+        outfile->Printf("\n    %4s  %6s  %11s%7s  %11s", "Sym.", "ROOT",
+                        ref_type.c_str(), std::string(7,' ').c_str(), options_.get_str("CORR_LEVEL").c_str());
+        outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
+        for(int h = 0; h < nirrep; ++h){
+            if(nrootpi_[h] != 0){
+                for(int i = nrootpi_[h]; i > 0; --i){
+                    std::string sym(4,' ');
+                    if(i == 1) sym = irrep_symbol_[h];
+                    outfile->Printf("\n    %4s  %6d  %18.10f  %18.10f", sym.c_str(), i-1, ref_energies_[h][i-1], pt_energies_[h][i-1]);
                 }
                 outfile->Printf("\n    %s", std::string(total_width,'-').c_str());
             }
