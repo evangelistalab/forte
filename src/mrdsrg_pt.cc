@@ -1,8 +1,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
-#include <boost/format.hpp>
-#include <boost/timer.hpp>
+#include "mini-boost/boost/format.hpp"
 
 #include <libdiis/diismanager.h>
 
@@ -223,7 +222,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagV(){
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
         Hbar1_["pq"]  = F_["pq"];
         Hbar1_["PQ"]  = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -264,7 +263,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagV(){
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 
@@ -462,7 +461,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagVdiag
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
         Hbar1_["pq"]  = F_["pq"];
         Hbar1_["PQ"]  = F_["PQ"];
         Hbar1_["pq"] -= H0th_["pq"];
@@ -503,7 +502,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagVdiag
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 
@@ -666,7 +665,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagVdiag
         // start iteration
         do{
             // compute Hbar
-            boost::timer t_hbar;
+            ForteTimer t_hbar;
             Hbar1_["pq"] = C1_["pq"];
             Hbar1_["PQ"] = C1_["PQ"];
             Hbar2_["pqrs"] = C2_["pqrs"];
@@ -701,7 +700,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_FdiagVdiag
             double Hbar2od = Hbar2od_norm(blocks2);
 
             // update amplitudes
-            boost::timer t_amp;
+            ForteTimer t_amp;
             update_t();
             double time_amp = t_amp.elapsed();
 
@@ -835,7 +834,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Ffull(){
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
         Hbar1_.zero();
         Hbar2_["pqrs"] = V_["pqrs"];
         Hbar2_["pQrS"] = V_["pQrS"];
@@ -872,7 +871,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Ffull(){
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 
@@ -986,7 +985,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Ffull(){
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
 
         Hbar1_["pq"] = O1_["pq"];
         Hbar1_["PQ"] = O1_["PQ"];
@@ -1031,7 +1030,7 @@ std::vector<std::pair<std::string,double>> MRDSRG::compute_energy_pt2_Ffull(){
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 

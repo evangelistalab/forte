@@ -3,8 +3,8 @@
 #include <cmath>
 #include <set>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 #include <boost/unordered_map.hpp>
 
 #include "lambda-ci.h"
@@ -24,7 +24,7 @@ namespace psi{ namespace forte{
 void LambdaCI::explore_singles(psi::Options& options)
 {
     outfile->Printf("\n\n  Exploring the space of Slater determinants using the singles method\n");
-    boost::timer t;
+    ForteTimer t;
 
     // No explorer will succeed without a cartographer
     Cartographer cg(options,min_energy_,min_energy_ + determinant_threshold_);
@@ -56,7 +56,7 @@ void LambdaCI::explore_singles(psi::Options& options)
     to_be_processed_elements.push_back(boost::make_tuple(ref_energy_,wavefunction_symmetry_,zero_ex));
 
     size_t num_dets_visited = 0;
-    boost::timer t_dets;
+    ForteTimer t_dets;
     bool iterate = true;
     int level = 0;
     while(iterate){

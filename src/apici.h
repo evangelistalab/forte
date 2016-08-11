@@ -28,7 +28,6 @@
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
 #include <physconst.h>
-#include <boost/unordered_map.hpp>
 
 #include "forte-def.h"
 #include "integrals.h"

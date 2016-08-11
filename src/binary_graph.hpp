@@ -24,7 +24,7 @@ public:
    * @param n lenght of the string
    * @param k number of 1s
    * @param symm symmetry of each orbital
-   * @param nirr nuber of irreps
+   * @param nirr number of irreps
    */
     BinaryGraph(int n, int k, std::vector<int> symm, int nirr)
         : nbits_(n), nones_(k), nirrep_(nirr), symmetry(symm)
@@ -38,7 +38,7 @@ public:
    * @param n lenght of the string
    * @param k number of 1s
    * @param symm symmetry of each orbital
-   * @param nirr nuber of irreps
+   * @param nirr number of irreps
    */
     BinaryGraph(int n, int k, std::vector<int>& irrep_size)
         : nbits_(n), nones_(k), nirrep_(irrep_size.size())
@@ -186,7 +186,7 @@ public:
 private:
     void startup()
     {
-        if (nbits_ != 0){
+        if ((nbits_ != 0) and (nones_ > 0)){
             // Allocate the weight tensors
             weight0 = new size_t**[nbits_];
             weight1 = new size_t**[nbits_];
@@ -205,13 +205,15 @@ private:
         }
         strpi_  = new size_t[nirrep_];
         offset = new size_t[nirrep_];
-        for(int h = 0; h < nirrep_; ++h)
+        for(int h = 0; h < nirrep_; ++h){
+            strpi_[h] = 0;
             offset[h] = 0;
+        }
     }
 
     void cleanup()
     {
-        if (nbits_ != 0){
+        if ((nbits_ != 0) and (nones_ > 0)){
             // Deallocate the weight tensors
             for(int n = 0; n < nbits_; ++n){
                 for(int h = 0; h < nirrep_; ++h){
@@ -232,7 +234,7 @@ private:
 
     void generate_weights()
     {
-        if (nbits_ != 0){
+        if ((nbits_ != 0) and (nones_ > 0)){
             // Generate weights
             weight0[0][0][0] = 1;
             weight1[0][symmetry[0]][1] = 1;
