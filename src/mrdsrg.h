@@ -2,7 +2,7 @@
 #define _mrdsrg_h_
 
 #include <cmath>
-#include <boost/assign.hpp>
+#include "mini-boost/boost/assign.hpp"
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>

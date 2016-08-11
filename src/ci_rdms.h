@@ -7,7 +7,6 @@
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
-#include <boost/functional/hash.hpp>
 
 #include "helpers.h"
 #include "stl_bitset_determinant.h"

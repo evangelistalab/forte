@@ -1,7 +1,7 @@
 #include <cmath>
 
 #include <libmints/matrix.h>
-#include <boost/numeric/odeint.hpp>
+#include "mini-boost/boost/numeric/odeint.hpp"
 
 #include "libdiis/diismanager.h"
 

@@ -6,8 +6,8 @@
 #include <random>
 
 #include <boost/unordered_map.hpp>
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include <libciomr/libciomr.h>
 #include <libpsio/psio.h>
@@ -133,7 +133,7 @@ void GeneticAlgorithmCI::print_info()
 
 double GeneticAlgorithmCI::compute_energy()
 {
-    boost::timer t_iamrcisd;
+    ForteTimer t_iamrcisd;
     outfile->Printf("\n\n  Genetic Algorithm CI");
 
     SparseCISolver sparse_solver;

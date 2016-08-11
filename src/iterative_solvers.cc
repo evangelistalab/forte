@@ -1,7 +1,6 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
-
+#include "helpers.h"
 #include "iterative_solvers.h"
 
 #define PRINT_VARS(msg) \
@@ -151,7 +150,7 @@ SolverStatus DavidsonLiuSolver::update()
 
     PRINT_VARS("update")
 
-    boost::timer t_davidson;
+    ForteTimer t_davidson;
 
     // form and diagonalize mini-matrix
     G->zero();

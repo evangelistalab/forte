@@ -1,8 +1,7 @@
-#include <boost/timer.hpp>
-
 #include <numeric>
 #include <vector>
 
+#include "helpers.h"
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
 
@@ -10,7 +9,7 @@ namespace psi{ namespace forte{
 
 void FCIWfn::form_H_diagonal(std::shared_ptr<FCIIntegrals> fci_ints)
 {
-    boost::timer t;
+    ForteTimer t;
 
     int wfn_sym = symmetry_;
     int n  = ncmo_;

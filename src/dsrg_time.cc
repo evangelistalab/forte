@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 
 #include "helpers.h"
 #include "dsrg_time.h"

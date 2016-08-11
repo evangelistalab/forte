@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <boost/unordered_map.hpp>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include <libqt/qt.h>
 
@@ -33,7 +33,7 @@ namespace psi{ namespace forte{
  */
 void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
 {
-    boost::timer t_iamrcisd;
+    ForteTimer t_iamrcisd;
 
     outfile->Printf("\n\n  Iterative Adaptive MRCISD");
 
@@ -93,7 +93,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         evecs.reset(new Matrix("U",dim_ref_space,num_ref_roots));
         evals.reset(new Vector("e",num_ref_roots));
 
-        boost::timer t_h_build;
+        ForteTimer t_h_build;
 #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < dim_ref_space; ++I){
             const StringDeterminant& detI = ref_space[I];
@@ -108,7 +108,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         outfile->Flush();
 
         // Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
+        ForteTimer t_hdiag_large;
         if (cycle == 0){
             outfile->Printf("\n  Performing full diagonalization.");
             H->diagonalize(evecs,evals);
@@ -150,7 +150,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         std::vector<StringDeterminant> sd_dets_vec;
         std::map<StringDeterminant,int> new_dets_map;
 
-        boost::timer t_ms_build;
+        ForteTimer t_ms_build;
 
         for (size_t I = 0, max_I = ref_space_map.size(); I < max_I; ++I){
             const StringDeterminant& det = ref_space[I];
@@ -288,14 +288,14 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
 
 
         // Remove the duplicate determinants
-        boost::timer t_ms_unique;
+        ForteTimer t_ms_unique;
         sort( sd_dets_vec.begin(), sd_dets_vec.end() );
         sd_dets_vec.erase( unique( sd_dets_vec.begin(), sd_dets_vec.end() ), sd_dets_vec.end() );
         outfile->Printf("\n  The SD excitation space has dimension: %zu (unique)",sd_dets_vec.size());
         outfile->Printf("\n  Time spent to eliminate duplicate   = %f s",t_ms_unique.elapsed());
 
 
-        boost::timer t_ms_screen;
+        ForteTimer t_ms_screen;
         // This will contain all the determinants
         std::vector<StringDeterminant> ref_sd_dets;
 
@@ -396,7 +396,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         if (options.get_str("ENERGY_TYPE") == "IMRCISD"){
             H.reset(new Matrix("Hamiltonian Matrix",dim_ref_sd_dets,dim_ref_sd_dets));
 
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
 #pragma omp parallel for schedule(dynamic)
             for (size_t I = 0; I < dim_ref_sd_dets; ++I){
                 const StringDeterminant& detI = ref_sd_dets[I];
@@ -411,7 +411,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
                 outfile->Printf("\n  Using the Davidson-Liu algorithm.");
                 davidson_liu(H,evals,evecs,nroot);
@@ -425,7 +425,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         }
         // Sparse algorithm
         else{
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
             std::vector<std::vector<std::pair<int,double> > > H_sparse;
 
             size_t num_nonzero = 0;
@@ -453,7 +453,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs,nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());
@@ -504,7 +504,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
         //        unordered_map<std::vector<bool>,int> a_str_hash;
         //        unordered_map<std::vector<bool>,int> b_str_hash;
 
-        //        boost::timer t_stringify;
+        //        ForteTimer t_stringify;
         //        for (size_t I = 0; I < dim_ref_sd_dets; ++I){
         //            const StringDeterminant& detI = ref_sd_dets[I];
         //            const std::vector<bool> a_str = detI.get_alfa_bits_vector_bool();
@@ -539,7 +539,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options)
  */
 void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 {
-    boost::timer t_iamrcisd;
+    ForteTimer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive MRCISD");
 
     int nroot = options.get_int("NROOT");
@@ -601,7 +601,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 //    evecs.reset(new Matrix("U",dim_ref_space,nroot));
 //    evals.reset(new Vector("e",nroot));
 
-//    boost::timer t_h_build;
+//    ForteTimer t_h_build;
 //#pragma omp parallel for schedule(dynamic)
 //    for (size_t I = 0; I < dim_ref_space; ++I){
 //        const StringDeterminant& detI = ref_space[I];
@@ -616,7 +616,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 //    outfile->Flush();
 
 //    // 4) Diagonalize the Hamiltonian
-//    boost::timer t_hdiag_large;
+//    ForteTimer t_hdiag_large;
 //    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
 //        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
 //        davidson_liu(H,evals,evecs,nroot);
@@ -651,7 +651,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
 
         H.reset(new Matrix("Hamiltonian Matrix",dim_ref_space,dim_ref_space));
 
-        boost::timer t_h_build;
+        ForteTimer t_h_build;
 #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < dim_ref_space; ++I){
             const DynamicBitsetDeterminant& detI = ref_space[I];
@@ -672,7 +672,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         evecs.reset(new Matrix("U",dim_ref_space,num_ref_roots));
         evals.reset(new Vector("e",num_ref_roots));
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
-        boost::timer t_hdiag_large;
+        ForteTimer t_hdiag_large;
         davidson_liu(H,evals,evecs,num_ref_roots);
         outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large.elapsed());
         outfile->Flush();
@@ -702,7 +702,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         std::vector<DynamicBitsetDeterminant> sd_dets_vec;
         std::map<DynamicBitsetDeterminant,int> new_dets_map;
 
-        boost::timer t_ms_build;
+        ForteTimer t_ms_build;
 
         // This hash saves the determinant coupling to the model space eigenfunction
         std::map<DynamicBitsetDeterminant,std::vector<double> > V_hash;
@@ -878,7 +878,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             ref_sd_dets.push_back(ref_space[J]);
         }
 
-        boost::timer t_ms_screen;
+        ForteTimer t_ms_screen;
 
         typedef std::map<DynamicBitsetDeterminant,std::vector<double> >::iterator bsmap_it;
         std::vector<std::pair<double,double> > C1(nroot,make_pair(0.0,0.0));
@@ -926,7 +926,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         if (options.get_str("ENERGY_TYPE") == "IMRCISD"){
             H.reset(new Matrix("Hamiltonian Matrix",dim_ref_sd_dets,dim_ref_sd_dets));
 
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
 #pragma omp parallel for schedule(dynamic)
             for (size_t I = 0; I < dim_ref_sd_dets; ++I){
                 const DynamicBitsetDeterminant& detI = ref_sd_dets[I];
@@ -941,7 +941,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
                 outfile->Printf("\n  Using the Davidson-Liu algorithm.");
                 davidson_liu(H,evals,evecs,nroot);
@@ -955,7 +955,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
         }
         // Sparse algorithm
         else{
-            boost::timer t_h_build2;
+            ForteTimer t_h_build2;
             std::vector<std::vector<std::pair<int,double> > > H_sparse;
 
             size_t num_nonzero = 0;
@@ -983,7 +983,7 @@ void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options)
             outfile->Flush();
 
             // 4) Diagonalize the Hamiltonian
-            boost::timer t_hdiag_large2;
+            ForteTimer t_hdiag_large2;
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu_sparse(H_sparse,evals,evecs, nroot);
             outfile->Printf("\n  Time spent diagonalizing H          = %f s",t_hdiag_large2.elapsed());

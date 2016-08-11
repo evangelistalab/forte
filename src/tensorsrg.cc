@@ -2,7 +2,7 @@
 
 #include <exception>
 
-#include <boost/numeric/odeint.hpp>
+#include "mini-boost/boost/numeric/odeint.hpp"
 
 #include <libmints/molecule.h>
 #include <libmints/wavefunction.h>
