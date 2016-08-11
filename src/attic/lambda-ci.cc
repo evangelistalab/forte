@@ -1,6 +1,6 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
+#include "mini-boost/boost/timer.hpp"
 
 #include <libpsio/psio.hpp>
 #include <libmints/wavefunction.h>
@@ -17,7 +17,7 @@ namespace psi{ namespace forte{
 LambdaCI::LambdaCI(Options &options,ForteIntegrals* ints)
     : options_(options),ints_(ints),min_energy_(0.0),pt2_energy_correction_(0.0)
 {
-    boost::timer t;
+    ForteTimer t;
 
     // Read data and allocate member objects
     startup(options);

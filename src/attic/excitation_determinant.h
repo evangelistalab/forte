@@ -24,7 +24,6 @@
 #define _excitation_determinant_h_
 
 #include <algorithm>
-#include <boost/array.hpp>
 #include "integrals.h"
 
 #define MAXEX 8

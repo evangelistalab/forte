@@ -83,10 +83,6 @@ def generate_makefile(args):
         re_target = re.compile(r"PSITARGET = \$\(NAME\)\.so")
         makefile = re_target.sub("PSITARGET = ../forte.so",makefile)
 
-        # Add "AMBIT_BINDIR = <args.ambit_bindir>"
-        # Add "INCLUDES += -I$(AMBIT_BINDIR)/include"
-        # Add "LDFLAGS += -L$(AMBIT_DIR)/lib -lambit"
-
         chemps2 = True
         if not args.chemps2_bindir:
             chemps2 = False
@@ -117,6 +113,7 @@ def generate_makefile(args):
 
             #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc distribute_df_integrals.cc, $(notdir $(wildcard *.cc)))\n"
             
+        addons += ("INCLUDES += -I%s/mini-boost\n" % default_path)
 
         addons  += "CXXSRC = $(filter-out %s, $(notdir $(wildcard *.cc)))\n" % string_filter 
         re_addons = re.compile(r"DEPENDINCLUDE")

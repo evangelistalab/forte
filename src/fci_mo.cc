@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
-#include <boost/algorithm/string/predicate.hpp>
+#include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "fci_vector.h"
 #include "fci_mo.h"
 

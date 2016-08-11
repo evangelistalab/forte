@@ -26,7 +26,7 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
-#include <boost/assign.hpp>
+#include "mini-boost/boost/assign.hpp"
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>

@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "lambda-ci.h"
 #include "cartographer.h"
@@ -69,7 +69,7 @@ void LambdaCI::explore_original(psi::Options& options)
     bool* Ia = new bool[2 * ncmo_];
     bool* Ib = &Ia[ncmo_];
 
-    boost::timer t;
+    ForteTimer t;
     double time_string = 0.0;
     double time_dets = 0.0;
     long num_dets_visited = 0;
@@ -91,13 +91,13 @@ void LambdaCI::explore_original(psi::Options& options)
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
     outfile->Printf("\n  +++ Screening the alpha strings +++\n"); outfile->Flush();
-    boost::timer timer_astr;
+    ForteTimer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,navir,maxnaex_,true);
     outfile->Printf("\n  Time required: %f s",timer_astr.elapsed());
     outfile->Flush();
 
     outfile->Printf("\n\n  +++ Screening the beta strings +++\n"); outfile->Flush();
-    boost::timer timer_bstr;
+    ForteTimer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,nbvir,maxnbex_,false);
     outfile->Printf("\n  Time required: %f s",timer_bstr.elapsed());
     outfile->Flush();
@@ -110,7 +110,7 @@ void LambdaCI::explore_original(psi::Options& options)
 
     vector<bool> empty_det(2 * ncmo_,false);
     StringDeterminant det(empty_det);
-    boost::timer t_dets;
+    ForteTimer t_dets;
     // Loop over the excitation level
     for (int nex = minnex_; nex <= maxnex_; ++nex){
         size_t num_dets_accepted_ex = 0;
@@ -271,7 +271,7 @@ void LambdaCI::explore(psi::Options& options)
     bool* Ia = new bool[2 * ncmo_];
     bool* Ib = &Ia[ncmo_];
 
-    boost::timer t;
+    ForteTimer t;
     double time_string = 0.0;
     double time_dets = 0.0;
     long num_dets_visited = 0;
@@ -293,13 +293,13 @@ void LambdaCI::explore(psi::Options& options)
     // The strings are in QT format and are stored using the following structure:
     // [<string irrep>][<string index>](<string energy>,<string structure>)
     outfile->Printf("\n  +++ Screening the alpha strings +++\n"); outfile->Flush();
-    boost::timer timer_astr;
+    ForteTimer timer_astr;
     vec_astr_symm_ = compute_strings_screened(epsilon_a_qt_,naocc,navir,maxnaex_,true);
     outfile->Printf("\n  Time required: %f s",timer_astr.elapsed());
     outfile->Flush();
 
     outfile->Printf("\n\n  +++ Screening the beta strings +++\n"); outfile->Flush();
-    boost::timer timer_bstr;
+    ForteTimer timer_bstr;
     vec_bstr_symm_ = compute_strings_screened(epsilon_b_qt_,nbocc,nbvir,maxnbex_,false);
     outfile->Printf("\n  Time required: %f s",timer_bstr.elapsed());
     outfile->Flush();
@@ -307,7 +307,7 @@ void LambdaCI::explore(psi::Options& options)
 
     vector<bool> empty_det(2 * ncmo_,false);
     StringDeterminant det(empty_det);
-    boost::timer t_dets;
+    ForteTimer t_dets;
     // Loop over the excitation level
     outfile->Printf("\n\n==================================");
     outfile->Printf("\n Exc. lvl    Tested       Accepted");

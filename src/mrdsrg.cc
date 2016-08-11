@@ -3,7 +3,7 @@
 #include <map>
 #include <cmath>
 
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 
 #include <libmints/molecule.h>
 

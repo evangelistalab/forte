@@ -2,8 +2,8 @@
 
 #include <cmath>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "lambda-ci.h"
 #include "cartographer.h"
@@ -54,7 +54,7 @@ void LambdaCI::examine_all(psi::Options& options)
         maxnbex_ = std::min(maxnex_,maxnbex_);
     }
 
-    boost::timer t;
+    ForteTimer t;
     double time_string = 0.0;
     double time_dets = 0.0;
     long num_dets_visited = 0;
