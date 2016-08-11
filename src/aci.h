@@ -359,10 +359,13 @@ private:
     void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
 
     /// Compute the RDMs
-    void compute_rdms( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
+
+    /// Save older roots
+    void save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root );
 
     /// Add roots to be projected out in DL
-    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root);
+    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets);
 
     /// Print Summary
     void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );

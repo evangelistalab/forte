@@ -543,7 +543,7 @@ double AdaptiveCI::compute_energy()
             PQ_space_.clear();    
         }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and i != (nrun - 1)){
             // orthogonalize
-            add_bad_roots( PQ_space_, PQ_evecs, i);
+            save_old_root( PQ_space_, PQ_evecs, i);
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
             ref_root_ = i;
@@ -2087,6 +2087,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -2136,7 +2137,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if( cycle < pre_iter_ ){
             ex_alg_ = "AVERAGE";
         }else if ( cycle == pre_iter_ and follow ){
-            ex_alg_ = "ROOT_SELECT";
+            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
         }        
         // If doing root-following, grab the initial root
         if( follow and cycle == pre_iter_){
@@ -2146,11 +2147,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
 
-        if( follow and num_ref_roots > 1){
+        if( follow and num_ref_roots > 1 and (cycle >= pre_iter_) ){
             ref_root_ = root_follow( P_ref, P_space_, P_evecs, num_ref_roots);
         } 
 
-		// Save the dimention of the previous PQ space
+		// Save the dimension of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
 
 		// Use spin projection to ensure the P space is spin pure
@@ -2193,6 +2194,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
         if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
             sparse_solver.set_root_project(true);
+            add_bad_roots( PQ_space_ );
             sparse_solver.add_bad_roots( bad_roots_ );
         }
 
@@ -2227,9 +2229,10 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
        // }
         num_ref_roots = std::min(nroot_,int(PQ_space_.size()));
 
-        if( follow and num_ref_roots > 0){
+        if( follow and num_ref_roots > 0 and (cycle >= pre_iter_) ){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
+
         bool stuck = check_stuck( energy_history, PQ_evals );
         if( stuck and (options_.get_str("EXCITED_ALGORITHM") != "COMPOSITE")  ){
             outfile->Printf("\n  Procedure is stuck! Quitting...");
@@ -2318,31 +2321,34 @@ void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMa
 
 }  
 
-void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
+void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
 {
 
     det_hash<size_t> detmapper;
-    if( root > 0 ){
-        // Build the hash
-        for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
-            detmapper[dets[I]] = I;
-        }
-
-        // Look through each state, save common determinants/coeffs
-        std::vector<std::pair<size_t, double>> bad_root;
-        for( int i = 0; i < root; ++i ){
-            std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
-            
-            for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
-                if( detmapper.count(state[I].first) > 0 ){
-                    bad_root.push_back(std::make_pair( detmapper[state[I].first], PQ_evecs->get( I, root ) )); 
-                }
-            }
-            bad_roots_.push_back(bad_root);
-        }
+    // Build the hash
+    for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+        detmapper[dets[I]] = I;
     }
 
+    // Look through each state, save common determinants/coeffs
+    std::vector<std::pair<size_t, double>> bad_root;
+    int nroot = old_roots_.size();
+    for( int i = 0; i < nroot; ++i ){
+        std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
+        
+        for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
+            if( detmapper.count(state[I].first) > 0 ){
+                bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
+            }
+        }
+        bad_roots_.push_back(bad_root);
+    }
+    
 
+}
+
+void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
+{
     for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
         old_roots_[root].push_back( std::make_pair( dets[I], PQ_evecs->get(I, root)));
     } 
