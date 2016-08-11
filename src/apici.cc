@@ -1,10 +1,10 @@
 #include <cmath>
 #include <functional>
 #include <algorithm>
-
 #include <unordered_map>
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+
+#include "mini-boost/boost/format.hpp"
+#include "mini-boost/boost/math/special_functions/bessel.hpp"
 
 #include <libciomr/libciomr.h>
 #include <libpsio/psio.h>
@@ -18,7 +18,6 @@
 #include "helpers.h"
 #include "dynamic_bitset_determinant.h"
 #include "fci_vector.h"
-#include <boost/math/special_functions/bessel.hpp>
 
 using namespace std;
 using namespace psi;
@@ -658,7 +657,7 @@ void Delta_Chebyshev_propagator_coefs(std::vector<double>& coefs, int order, dou
 double AdaptivePathIntegralCI::compute_energy()
 {
     timer_on("PIFCI:Energy");
-    boost::timer t_apici;
+    ForteTimer t_apici;
     old_max_one_HJI_ = 1e100;
     new_max_one_HJI_ = 1e100;
     old_max_two_HJI_ = 1e100;

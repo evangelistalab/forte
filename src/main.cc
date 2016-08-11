@@ -1,7 +1,7 @@
 #include <cmath>
 #include <memory>
 
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 #include <ambit/tensor.h>
 
 #include "psi4-dec.h"

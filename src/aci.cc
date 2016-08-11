@@ -522,6 +522,9 @@ double AdaptiveCI::compute_energy()
 
     std::vector<STLBitsetDeterminant> full_space;
     std::vector<size_t> sizes(nroot_);
+    if( ex_alg_ == "ROOT_ORTHOGONALIZE"){
+        old_roots_.resize( nroot_ - 1 );
+    }
 
     for( int i = 0; i < nrun; ++i ){
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
@@ -538,8 +541,13 @@ double AdaptiveCI::compute_energy()
             // Combine selected determinants into total space
             merge_determinants( full_space, PQ_space_ );
             PQ_space_.clear();    
-        }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and i != (nrun - 1)){
             // orthogonalize
+            add_bad_roots( PQ_space_, PQ_evecs, i);
+            //compute_rdms( PQ_space_, PQ_evecs, i,i);
+        }if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+            ref_root_ = i;
+            wfn_analyzer(PQ_space_, PQ_evecs, nroot_ ); 
         }
     }
     dim = PQ_space_.size();    
@@ -560,24 +568,27 @@ double AdaptiveCI::compute_energy()
     }
 
     // Compute the RDMs
-    if( multi_state ){
+    if( ex_alg_ == "ROOT_COMBINE"  ){
         compute_rdms( full_space, PQ_evecs, 0, 0 ); 
-    } else{
+    } else if( !multi_state ) {
         compute_rdms( PQ_space_, PQ_evecs, 0,0 );
+    }
+
+    if( !quiet_mode_ ){
+        if( ex_alg_ == "ROOT_COMBINE" ){
+            print_final( full_space, PQ_evecs, PQ_evals );
+        }else if ( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        }else{
+            print_final( PQ_space_, PQ_evecs, PQ_evals );
+        }
     }
     outfile->Flush();
 
 
    // test_ops(PQ_space_, PQ_evecs);
 
-    // Print a summary
-    if(!quiet_mode_){
-        outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
-	    outfile->Printf("\n  Iterations required:                         %zu", cycle_);
-	    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
-    }
-
+    outfile->Flush();
 //	std::vector<double> davidson;
 //	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
 //		davidson = davidson_correction( P_space_ , P_evals, PQ_evecs, PQ_space_, PQ_evals ); 
@@ -585,62 +596,62 @@ double AdaptiveCI::compute_energy()
 //		outfile->Printf("\n Davidson corr: %1.9f", i);
 //	}}
 
-    if(!quiet_mode_){
-        for (int i = 0; i < nroot_; ++ i){
-            double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
-            double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
-            outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i,abs_energy,exc_energy);
-            outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i,abs_energy + multistate_pt2_energy_correction_[i],
-                    exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
-	//    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
-    //        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
-    //                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
-	//    	}
-        }
-
-        if( ex_alg_ == "ROOT_SELECT" ){
-            outfile->Printf("\n\n  Energy optimized for Root %d: %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
-            outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy()+ multistate_pt2_energy_correction_[ref_root_]);
-        }
-
-	    outfile->Printf("\n\n  ==> Wavefunction Information <==");
-        if( multi_state ){
-	        print_wfn(full_space, PQ_evecs, nroot_);
-        } else {
-	        print_wfn(PQ_space_, PQ_evecs, nroot_);
-        }
-	    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
-	    outfile->Printf(  "\n  __________ 	____________   ________________ ");
-        if( multi_state ){
-            wfn_analyzer(full_space, PQ_evecs, nroot_);	
-        } else{
-            wfn_analyzer(PQ_space_, PQ_evecs, nroot_);	
-        }
-    
-	   // if(options_.get_bool("DETERMINANT_HISTORY")){
-	   // 	outfile->Printf("\n Det history (number,cycle,origin)");
-	   // 	size_t counter = 0;
-	   // 	for( auto &I : PQ_space_ ){
-	   // 		outfile->Printf("\n Det number : %zu", counter);
-	   // 		for( auto &n : det_history_[I]){
-	   // 			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
-	   // 		}
-	   // 		++counter;
-	   // 	}
-	   // }
-
-        outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
-        outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
-    }
-    outfile->Flush();
-
     double root_energy = PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
     double root_energy_pt2 = root_energy + multistate_pt2_energy_correction_[options_.get_int("ROOT")];
     Process::environment.globals["CURRENT ENERGY"] = root_energy;
     Process::environment.globals["ACI ENERGY"] = root_energy;
     Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+    outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
+    outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
 
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+}
+
+void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
+{
+    size_t dim = dets.size();
+    // Print a summary
+    outfile->Printf("\n\n  ==> ACI Summary <==\n");
+
+	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
+	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+    for (int i = 0; i < nroot_; ++ i){
+        double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
+        double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d        = %.12f Eh = %8.4f eV",i,abs_energy,exc_energy);
+        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",i,abs_energy + multistate_pt2_energy_correction_[i],
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] - multistate_pt2_energy_correction_[0]));
+//    	if(options_.get_str("SIZE_CORRECTION") == "DAVIDSON" ){
+//        outfile->Printf("\n  * Adaptive-CI Energy Root %3d + D1   = %.12f Eh = %8.4f eV",i,abs_energy + davidson[i],
+//                exc_energy + pc_hartree2ev * (davidson[i] - davidson[0]));
+//    	}
+    }
+
+    if( ex_alg_ == "ROOT_SELECT" ){
+        outfile->Printf("\n\n  Energy optimized for Root %d: %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+        outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy()+ multistate_pt2_energy_correction_[ref_root_]);
+    }
+
+    outfile->Printf("\n\n  ==> Wavefunction Information <==");
+
+    print_wfn(dets, PQ_evecs, nroot_);
+
+    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+    outfile->Printf(  "\n  __________ 	____________   ________________ ");
+    wfn_analyzer(dets, PQ_evecs, nroot_);	
+
+   // if(options_.get_bool("DETERMINANT_HISTORY")){
+   // 	outfile->Printf("\n Det history (number,cycle,origin)");
+   // 	size_t counter = 0;
+   // 	for( auto &I : PQ_space_ ){
+   // 		outfile->Printf("\n Det number : %zu", counter);
+   // 		for( auto &n : det_history_[I]){
+   // 			outfile->Printf("\n %zu	   %s", n.first, n.second.c_str());		
+   // 		}
+   // 		++counter;
+   // 	}
+   // }
+
 }
 
 void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
@@ -1409,9 +1420,9 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     } 
 
     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
-    std::ofstream final_wfn;
-    if( print_final_wfn ) final_wfn.open("final_wfn.txt");
 
+    std::ofstream final_wfn;
+    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(ref_root_) +  ".txt");
     
     
     STLBitsetDeterminant rdet(occ);
@@ -1456,6 +1467,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 		}
 		outfile->Printf("\n\n  Highest-order excitation searched:     %zu  \n", excitation_counter.size() - 1);
 	}
+    if( print_final_wfn ) final_wfn.close();
 }
 
 oVector<double, int, int> AdaptiveCI::sym_labeled_orbitals(std::string type)
@@ -2179,9 +2191,10 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
 
-        //for( size_t I = 0; I < PQ_space_.size(); ++I){
-        //    outfile->Printf("\n  %zu  %s", I, PQ_space_[I].str().c_str());
-        //}
+        if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+            sparse_solver.set_root_project(true);
+            sparse_solver.add_bad_roots( bad_roots_ );
+        }
 
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
@@ -2304,6 +2317,60 @@ void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMa
 	}
 
 }  
+
+void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
+{
+
+    det_hash<size_t> detmapper;
+    if( root > 0 ){
+        // Build the hash
+        for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+            detmapper[dets[I]] = I;
+        }
+
+        // Look through each state, save common determinants/coeffs
+        std::vector<std::pair<size_t, double>> bad_root;
+        for( int i = 0; i < root; ++i ){
+            std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
+            
+            for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
+                if( detmapper.count(state[I].first) > 0 ){
+                    bad_root.push_back(std::make_pair( detmapper[state[I].first], PQ_evecs->get( I, root ) )); 
+                }
+            }
+            bad_roots_.push_back(bad_root);
+        }
+    }
+
+
+    for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+        old_roots_[root].push_back( std::make_pair( dets[I], PQ_evecs->get(I, root)));
+    } 
+}
+
+/*
+void AdaptiveCI::orthogonalize_intersection( std::vector<std::vector<STLBitsetDeterminant>>& state_list, std::vector<std::vector<double>>& evecs  )
+{
+    int nstate = state_list.size();
+
+    // Make sure the number of states matches the number of eigenvectors
+    if ( nstate != evecs.size() ){
+        throw PSIEXCEPTION("\n  %d eigenvectors provided for %d states!", evecs.size(), nstate );
+    }
+
+    for( int n = 0; n < nstate; ++n ){
+
+        // Create hash for current root
+        det_hash<int> root_hash;
+        std::vector<STLBitsetDeterminant>& dets = state_list[n];
+        for( int I = 0, max_I = dets.size(); I < max_I; ++I ){
+            root_hash[ dets[I] ] = I;
+        } 
+
+    }
+
+}
+*/
 
 }} // EndNamespaces
 

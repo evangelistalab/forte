@@ -7,8 +7,8 @@
 
 #include <iostream>
 
-#include <boost/shared_ptr.hpp>
-#include <boost/dynamic_bitset.hpp>
+#include "mini-boost/boost/shared_ptr.hpp"
+#include "mini-boost/boost/dynamic_bitset.hpp"
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
