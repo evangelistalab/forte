@@ -1,4 +1,4 @@
-![forte](lib/logos/forte_logo_github.png)
+![forte](lib/logos/forte_logo_github2.png)
 #Forte
 =============
 
