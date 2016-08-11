@@ -4,8 +4,8 @@
 #include <functional>
 #include <algorithm>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "physconst.h"
 #include <libqt/qt.h>
@@ -64,14 +64,14 @@ void LambdaCI::diagonalize_p_space(psi::Options& options)
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian
-    boost::timer t_hbuild;
+    ForteTimer t_hbuild;
     SharedMatrix H = build_hamiltonian_parallel(options);
     H->print();
     outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
     outfile->Flush();
 
     // 2) Smooth out the couplings of the model and intermediate space
-    boost::timer t_hsmooth;
+    ForteTimer t_hsmooth;
 
     if (options.get_bool("SELECT")){
         select_important_hamiltonian(H);
@@ -94,7 +94,7 @@ void LambdaCI::diagonalize_p_space(psi::Options& options)
     SharedVector evals(new Vector("e",nroots));
 
     // 4) Diagonalize the Hamiltonian
-    boost::timer t_hdiag;
+    ForteTimer t_hdiag;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H,evals,evecs,nroots);
@@ -252,19 +252,19 @@ void LambdaCI::diagonalize_p_space_lowdin(psi::Options& options)
     double delta_E = 1.0e10;
     for (int cycle = 0; cycle < 20; ++cycle){
         // 1) Build the Hamiltonian
-        boost::timer t_hbuild;
+        ForteTimer t_hbuild;
         SharedMatrix H = build_hamiltonian_parallel(options);
         outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
         outfile->Flush();
 
         // 2) Add the Lowding contribution to H
-        boost::timer t_hbuild_lowdin;
+        ForteTimer t_hbuild_lowdin;
         lowdin_hamiltonian(H,E);
         outfile->Printf("\n  Time spent on Lowding corrections = %f s",t_hbuild_lowdin.elapsed());
         outfile->Flush();
 
         // 3) Smooth out the couplings of the model and intermediate space
-        boost::timer t_hsmooth;
+        ForteTimer t_hsmooth;
         smooth_hamiltonian(H);
         outfile->Printf("\n  Time spent smoothing H            = %f s",t_hsmooth.elapsed());
         outfile->Flush();
@@ -281,7 +281,7 @@ void LambdaCI::diagonalize_p_space_lowdin(psi::Options& options)
         SharedVector evals(new Vector("e",nroots));
 
         // 5) Diagonalize the Hamiltonian
-        boost::timer t_hdiag;
+        ForteTimer t_hdiag;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroots);
@@ -580,14 +580,14 @@ void LambdaCI::diagonalize_p_space_direct(psi::Options& options)
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian
-    boost::timer t_hbuild;
+    ForteTimer t_hbuild;
     std::vector<std::vector<std::pair<int,double> > > H_sparse = build_hamiltonian_direct(options);
 
     outfile->Printf("\n  Time spent building H             = %f s",t_hbuild.elapsed());
     outfile->Flush();
 
     // 2) Smooth out the couplings of the model and intermediate space
-    boost::timer t_hsmooth;
+    ForteTimer t_hsmooth;
 
     ////    if (options.get_bool("SELECT")){
     ////        select_important_hamiltonian(H);
@@ -610,7 +610,7 @@ void LambdaCI::diagonalize_p_space_direct(psi::Options& options)
     SharedVector evals(new Vector("e",nroots));
 
     // 4) Diagonalize the Hamiltonian
-    boost::timer t_hdiag;
+    ForteTimer t_hdiag;
     outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     davidson_liu_sparse(H_sparse,evals,evecs,nroots);
     outfile->Printf("\n  Time spent diagonalizing H        = %f s",t_hdiag.elapsed());

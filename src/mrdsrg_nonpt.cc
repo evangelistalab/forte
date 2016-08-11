@@ -2,8 +2,8 @@
 #include <vector>
 #include <map>
 #include <cctype>
-#include <boost/format.hpp>
-#include <boost/timer.hpp>
+
+#include "mini-boost/boost/format.hpp"
 
 #include <libdiis/diismanager.h>
 
@@ -179,7 +179,7 @@ double MRDSRG::compute_energy_ldsrg2(){
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
         compute_hbar();
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
@@ -190,7 +190,7 @@ double MRDSRG::compute_energy_ldsrg2(){
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 
@@ -448,7 +448,7 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
     // start iteration
     do{
         // compute Hbar
-        boost::timer t_hbar;
+        ForteTimer t_hbar;
         compute_hbar_qc();
         double Edelta = Hbar0_ - Ecorr;
         Ecorr = Hbar0_;
@@ -459,7 +459,7 @@ double MRDSRG::compute_energy_ldsrg2_qc(){
         double Hbar2od = Hbar2od_norm(blocks2);
 
         // update amplitudes
-        boost::timer t_amp;
+        ForteTimer t_amp;
         update_t();
         double time_amp = t_amp.elapsed();
 

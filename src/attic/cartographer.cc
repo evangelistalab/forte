@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "cartographer.h"
 

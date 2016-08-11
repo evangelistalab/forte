@@ -4,10 +4,10 @@
 #include <utility>
 #include <algorithm>
 #include <ctype.h>
-#include <boost/algorithm/string/predicate.hpp>
+#include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include <fstream>
 #include <iostream>
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 #include "mcsrgpt2_mo.h"
 
 #define Delta(i,j) ((i==j) ? 1 : 0)
