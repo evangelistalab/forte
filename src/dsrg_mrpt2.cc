@@ -133,7 +133,7 @@ void DSRG_MRPT2::startup()
 
     // Prepare Hbar
     relax_ref_ = options_.get_str("RELAX_REF");
-    multi_state_ = options_["AVG_STATES"].has_changed();
+    multi_state_ = options_["AVG_STATE"].has_changed();
     if(relax_ref_ != "NONE"){
         if(relax_ref_ != "ONCE"){
             outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
@@ -1419,7 +1419,7 @@ double DSRG_MRPT2::E_VT2_6()
 
 double DSRG_MRPT2::compute_energy_multi_state(){
     // compute DSRG-MRPT2 energy
-    double Edsrg = compute_energy();
+    compute_energy();
 
     // transfer integrals
     transfer_integrals();
@@ -1450,26 +1450,24 @@ double DSRG_MRPT2::compute_energy_multi_state(){
     size_t nele1 = na * na;
     size_t nele2 = na * nele1;
 
-    // get one-electron integral (DSRG transformed)
+    // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
-    oei.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
-        if (spin[0] == AlphaSpin){
-            value = ints_->oei_a(i[0],i[1]);
-        }else{
-            value = ints_->oei_b(i[0],i[1]);
-        }
-    });
+    oei.block("aa").data() = fci_ints->oei_a_vector();
+    oei.block("AA").data() = fci_ints->oei_b_vector();
 
-    // loop over entries of AVG_STATES
+    // get nuclear repulsion energy
+    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    double Enuc = molecule->nuclear_repulsion_energy();
+
+    // loop over entries of AVG_STATE
+    print_h2("Diagonalize Effective Hamiltonian");
+    outfile->Printf("\n");
     int nentry = eigens_.size();
+    std::vector<std::vector<double>> Edsrg_sa (nentry, std::vector<double> ());
     for(int n = 0; n < nentry; ++n){
-        int irrep = options_["AVG_STATES"][n][0].to_integer();
-        int multi = options_["AVG_STATES"][n][1].to_integer();
-        int nstates = options_["AVG_STATES"][n][2].to_integer();
-        std::stringstream ss;
-        ss << "Effective Hamiltonian of " << nstates << " "
-           << multi_label[multi - 1] << " " << irrep_symbol[irrep] << " States";
-        print_h2(ss.str());
+        int irrep = options_["AVG_STATE"][n][0].to_integer();
+        int multi = options_["AVG_STATE"][n][1].to_integer();
+        int nstates = options_["AVG_STATE"][n][2].to_integer();
 
         int dim = (eigens_[n][0].first)->dim();
         SharedMatrix evecs (new Matrix("evecs",dim,dim));
@@ -1477,9 +1475,10 @@ double DSRG_MRPT2::compute_energy_multi_state(){
             evecs->set_column(0,i,(eigens_[n][i]).first);
         }
 
-        SharedMatrix Heff (new Matrix("Heff " + irrep_symbol[irrep], nstates, nstates));
+        SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1]
+                           + " " + irrep_symbol[irrep], nstates, nstates));
         for(int A = 0; A < nstates; ++A){
-            for(int B = 0; B < nstates; ++B){
+            for(int B = A; B < nstates; ++B){
 
                 // compute rdms
                 CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
@@ -1488,9 +1487,6 @@ double DSRG_MRPT2::compute_energy_multi_state(){
                 std::vector<double> opdm_a (nele1, 0.0);
                 std::vector<double> opdm_b (nele1, 0.0);
                 ci_rdms.compute_1rdm(opdm_a,opdm_b);
-                for(double& x: opdm_a){
-                    outfile->Printf("\n  %20.15f",x);
-                }
 
                 std::vector<double> tpdm_aa (nele2, 0.0);
                 std::vector<double> tpdm_ab (nele2, 0.0);
@@ -1507,7 +1503,6 @@ double DSRG_MRPT2::compute_energy_multi_state(){
                 D2.block("aAaA").data() = tpdm_ab;
                 D2.block("AAAA").data() = tpdm_bb;
 
-//                double H_AB = ints_->scalar();
                 double H_AB = 0.0;
                 H_AB += oei["uv"] * D1["uv"];
                 H_AB += oei["UV"] * D1["UV"];
@@ -1516,27 +1511,51 @@ double DSRG_MRPT2::compute_energy_multi_state(){
                 H_AB += Hbar2_["uVxY"] * D2["xYuV"];
 
                 if(A == B){
-                    outfile->Printf("\n  fz-c    = %20.15f", ints_->frozen_core_energy());
-                    outfile->Printf("\n  scalar  = %20.15f", ints_->scalar());
-                    H_AB += ints_->frozen_core_energy() + ints_->scalar();
+                    H_AB += ints_->frozen_core_energy() + fci_ints->scalar_energy() + Enuc;
+                    Heff->set(A,B,H_AB);
+                } else {
+                    Heff->set(A,B,H_AB);
+                    Heff->set(B,A,H_AB);
                 }
 
-                Heff->set(A,B,H_AB);
             }
         } // end forming effective Hamiltonian
-
-        Heff->print();
 
         SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
         SharedVector Ems (new Vector("MS Energies", nstates));
         Heff->diagonalize(U, Ems);
-        U->eivprint(Ems);
 
+        Heff->print();
+//        U->eivprint(Ems);
 
+        // fill in Edsrg_sa
+        for(int i = 0; i < nstates; ++i){
+            Edsrg_sa[n].push_back(Ems->get(i));
+        }
 
     } // end looping averaged states
 
-    return 0.0;
+    // energy summuary
+    print_h2("Multi-State DSRG-MRPT2 Energy Summary");
+
+    outfile->Printf("\n    Multi.  Irrep.  No.   DSRG-MRPT2 Energy");
+    std::string dash(41, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for(int n = 0; n < nentry; ++n){
+        int irrep = options_["AVG_STATE"][n][0].to_integer();
+        int multi = options_["AVG_STATE"][n][1].to_integer();
+        int nstates = options_["AVG_STATE"][n][2].to_integer();
+
+        for(int i = 0; i < nstates; ++i){
+            outfile->Printf("\n     %3d     %3s    %3d  %20.15f",
+                            multi, irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
+        }
+        outfile->Printf("\n    %s", dash.c_str());
+    }
+
+    Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
+    return Edsrg_sa[0][0];
 }
 
 double DSRG_MRPT2::compute_energy_relaxed(){
