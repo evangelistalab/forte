@@ -1,7 +1,7 @@
 #ifndef _mcsrgpt2_mo_h_
 #define _mcsrgpt2_mo_h_
 
-#include <boost/assign.hpp>
+#include "mini-boost/boost/assign.hpp"
 #include <liboptions/liboptions.h>
 #include <libmints/vector.h>
 #include <libmints/matrix.h>

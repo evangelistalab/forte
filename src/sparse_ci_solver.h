@@ -186,6 +186,9 @@ public:
     /// Add roots to project out during Davidson-Liu procedure
     void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& roots );    
 
+    /// Set option to force diagonalization type
+    void set_force_diag( int value );
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,

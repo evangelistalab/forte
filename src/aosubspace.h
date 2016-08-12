@@ -1,7 +1,7 @@
 #ifndef _aosubspace_h_
 #define _aosubspace_h_
 
-#include <boost/shared_ptr.hpp>
+#include "mini-boost/boost/shared_ptr.hpp"
 #include <libmints/molecule.h>
 #include <libmints/basisset.h>
 #include <liboptions/liboptions.h>

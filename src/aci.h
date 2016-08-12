@@ -217,6 +217,10 @@ private:
 	std::unordered_map<STLBitsetDeterminant, std::vector< std::pair<size_t, std::string>>, STLBitsetDeterminant::Hash > det_history_;
 	/// Stream for printing determinant coefficients
 	std::ofstream det_list_;
+    /// Roots to project out
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots_;
+    /// Storage of past roots
+    std::vector<std::vector<std::pair<STLBitsetDeterminant,double>>> old_roots_;
 
 	/// A Vector to store spin of each root
 	std::vector<std::pair<double,double> > root_spin_vec_;
@@ -355,8 +359,16 @@ private:
     void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
 
     /// Compute the RDMs
-    void compute_rdms( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
 
+    /// Save older roots
+    void save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root );
+
+    /// Add roots to be projected out in DL
+    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets);
+
+    /// Print Summary
+    void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
 //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);

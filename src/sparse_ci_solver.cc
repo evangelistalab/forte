@@ -1365,6 +1365,11 @@ void SparseCISolver::set_maxiter_davidson(int value)
     maxiter_davidson_ = value;
 }
 
+void SparseCISolver::set_force_diag( int value )
+{
+    force_diag_method_ = value;
+}
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
     if (space.size() <= 200 && !force_diag_method_){

@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 #include <libmints/molecule.h>
 #include "v2rdm.h"
 

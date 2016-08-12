@@ -1,7 +1,6 @@
 #include <cmath>
 
-#include <boost/timer.hpp>
-
+#include "helpers.h"
 #include "tensorsrg.h"
 
 using namespace std;
@@ -118,7 +117,7 @@ void TensorSRG::hermitian_commutator_A_B_C_SRC_fourth_order(double factor,
 
 void TensorSRG::hermitian_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
-    boost::timer t;
+    ForteTimer t;
     C += alpha * A["ai"] * B["ia"];
     C += alpha * A["AI"] * B["IA"];
 
@@ -130,7 +129,7 @@ void TensorSRG::hermitian_commutator_A1_B1_C0(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A1_B1_C1(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
-    boost::timer t;
+    ForteTimer t;
 
     C["ip"] += alpha * A["ap"] * B["ia"];
     C["qa"] -= alpha * B["ia"] * A["qi"];
@@ -150,7 +149,7 @@ void TensorSRG::hermitian_commutator_A1_B2_C0(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
-    boost::timer t;
+    ForteTimer t;
     C["qp"] += alpha * A["sr"] * B["qrps"];
     C["qp"] += alpha * A["SR"] * B["qRpS"];
     C["QP"] += alpha * A["SR"] * B["QRPS"];
@@ -163,7 +162,7 @@ void TensorSRG::hermitian_commutator_A1_B2_C1(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
-    boost::timer t;
+    ForteTimer t;
 
     C["rspq"] += alpha * A["tp"] * B["rstq"];
     C["rspq"] += alpha * A["tq"] * B["rspt"];
@@ -210,7 +209,7 @@ void TensorSRG::hermitian_commutator_A1_B2_C2(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,double alpha,double& C)
 {
-    boost::timer t;
+    ForteTimer t;
 
     C += alpha * 0.25 * A["abij"] * B["ijab"];
     C += alpha * 1.00 * A["aBiJ"] * B["iJaB"];
@@ -224,7 +223,7 @@ void TensorSRG::hermitian_commutator_A2_B2_C0(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
-    boost::timer t;
+    ForteTimer t;
 
     C["qp"] += +0.5 * alpha * A["abip"] * B["iqab"];
     C["qp"] += +1.0 * alpha * A["aBpI"] * B["qIaB"];
@@ -246,7 +245,7 @@ void TensorSRG::hermitian_commutator_A2_B2_C1(BlockedTensor& A,BlockedTensor& B,
 
 void TensorSRG::hermitian_commutator_A2_B2_C2(BlockedTensor& A,BlockedTensor& B,double alpha,BlockedTensor& C)
 {
-    boost::timer t;
+    ForteTimer t;
 
     // AAAA case (these work only in the single-reference case)
     // Term I

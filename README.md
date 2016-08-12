@@ -1,11 +1,10 @@
-![forte](lib/logos/forte_logo_github.png)
-#Forte
-=============
+![forte](lib/logos/forte_logo_github2.png)
 
 #####Code Authors: Evangelistalab
 #####Web: evangelistalab.org
 
-Adaptive quantum chemistry methods
+Forte is an open-source plugin to Psi4 (https://github.com/psi4/psi4) that implements a variety of quantum chemistry methods
+for strongly correlated electrons.
 
 Installation directions for Forte:
 
@@ -21,8 +20,23 @@ Once you have the current versions of Psi4, CMake, and Ambit, follow the followi
 
 1. Run the setup script found in the forte folder:
   ```
-   python setup --psi4=<psi4 executable> --ambit-bindir=<ambit installation dir>
+   python setup --psi4=<psi4 executable>
   ```
+  
+  ```
+optional arguments:
+  -h, --help            show this help message and exit
+
+PSI4 and CheMPS2 options:
+  --psi4 PATH           The PSI4 executable. If this is left blank this script
+                        will attempt to find PSI4 on your system. Failing that
+                        it will not be able to compile FORTE. (default: None)
+  --chemps2-bindir PATH
+                        The chemps2 binary installation directory. (default:
+                        None)
+  --mpi                 Whether to build the MPI part of code (default: False)
+  --ga-bindir PATH      The GA install directory. (default: None)
+   ```
 
 2. Follow the instructions provided in the output of the `setup` script to compile forte:
   ```
