@@ -198,12 +198,25 @@ void DistDFIntegrals::test_distributed_integrals()
         ambit::Tensor partial_b_dist = three_integral_block(Apartial, p, p);
         partial_b_df("Q, p, q") -= partial_b_dist("Q, p, q");
         outfile->Printf("\n Test read entire A: %8.8f", partial_b_df.norm(2.0));
-        if(entire_b_df.norm(2.0) > 1.0e-6)
-            throw PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
+        //if(partial_b_df.norm(2.0) > 1.0e-6)
+            //throw PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
+        ///Test rdocc 
 
+        auto rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+        ambit::Tensor b_mn_df = test_int->three_integral_block(Avec, rdocc, rdocc);
+        ambit::Tensor b_mn_dist = three_integral_block(Avec, rdocc,rdocc);
+        b_mn_df("Q, p, q") -= b_mn_dist("Q, p, q");
+        outfile->Printf("\n Test read entire A: %8.8f", b_mn_df.norm(2.0));
+        if(b_mn_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_mn");
 
-
-       
+        auto active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        ambit::Tensor b_mu_df = test_int->three_integral_block(Avec, rdocc, active);
+        ambit::Tensor b_mu_dist = three_integral_block(Avec, rdocc,active);
+        b_mu_df("Q, p, q") -= b_mu_dist("Q, p, q");
+        outfile->Printf("\n Test read entire A: %8.8f", b_mu_df.norm(2.0));
+        if(b_mu_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_mu");
 }
 
 ambit::Tensor DistDFIntegrals::read_integral_chunk(boost::shared_ptr<Tensor>& B,std::vector<int>& lo, std::vector<int>& hi)
@@ -317,7 +330,7 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
         ld[0] = nmo_ * nmo_;
         subscript_begin[0] = A[0];
         subscript_begin[1] = 0;
-        subscript_end[0] = A[A.size() - 1] - 1 ;
+        subscript_end[0] = A[A.size() - 1];
         subscript_end[1] = nmo_ * nmo_ - 1;
         for(int i = 0; i < 2; i++)
             outfile->Printf("\n subscript[%d] = (%d, %d)", i, subscript_begin[i], subscript_end[i]);
@@ -343,14 +356,10 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
         ld[0] = nmo_ * nmo_;
         subscript_begin[0] = 0;
         subscript_end[0] = nthree_ - 1;
-        std::vector<size_t>::iterator result_min_p = std::min_element(p.begin(), p.end());
-        std::vector<size_t>::iterator result_min_q = std::min_element(q.begin(), q.end());
-        size_t min_p = *result_min_p;
-        size_t min_q = *result_min_q;
-        std::vector<size_t>::iterator result_max_p = std::max_element(p.begin(), p.end());
-        std::vector<size_t>::iterator result_max_q = std::max_element(q.begin(), q.end());
-        size_t max_p = *result_max_p;
-        size_t max_q = *result_max_q;
+        size_t min_p = *std::min_element(p.begin(), p.end() - 1);
+        size_t min_q = *std::min_element(q.begin(), q.end() - 1);
+        size_t max_p = *std::max_element(p.begin(), p.end() - 1);
+        size_t max_q = *std::max_element(q.begin(), q.end() - 1);
         subscript_begin[1] = (min_p * nmo_ + min_q);
         subscript_end[1] = (max_p * nmo_ + max_q) - 1;
         for(int i = 0; i < 2; i++)
@@ -384,7 +393,15 @@ void DistDFIntegrals::gather_integrals()
     ParallelDFMO DFMO = ParallelDFMO(wfn_->basisset(), auxiliary);
     DFMO.set_C(Ca_ao);
     DFMO.compute_integrals();
-    DistDF_ga_ = DFMO.Q_PQ();
+    int my_DFMO = DFMO.Q_PQ();
+    int dim[3];
+    int chunk[3];
+    dim[0] = nthree_;
+    dim[1] = aptei_idx_;
+    dim[2] = aptei_idx_;
+    chunk[0] = -1;
+    chunk[1] = aptei_idx_;
+    chunk[2] = aptei_idx_;
 }
 
 
