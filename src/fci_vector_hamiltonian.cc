@@ -1,7 +1,6 @@
-#include <boost/timer.hpp>
-
 #include <libqt/qt.h>
 
+#include "helpers.h"
 #include "fci_vector.h"
 
 namespace psi{ namespace forte{
@@ -20,27 +19,27 @@ void FCIWfn::Hamiltonian(FCIWfn& result,std::shared_ptr<FCIIntegrals> fci_ints,R
         H0(result,fci_ints);
     }
     // H1_aa
-    { boost::timer t;
+    { ForteTimer t;
         H1(result,fci_ints,true);
         h1_aa_timer += t.elapsed();
     }
     // H1_bb
-    { boost::timer t;
+    { ForteTimer t;
         H1(result,fci_ints,false);
         h1_bb_timer += t.elapsed();
     }
     // H2_aabb
-    { boost::timer t;
+    { ForteTimer t;
         H2_aabb(result,fci_ints);
         h2_aabb_timer += t.elapsed();
     }
     // H2_aaaa
-    { boost::timer t;
+    { ForteTimer t;
         H2_aaaa2(result,fci_ints,true);
         h2_aaaa_timer += t.elapsed();
     }
     // H2_bbbb
-    { boost::timer t;
+    { ForteTimer t;
         H2_aaaa2(result,fci_ints,false);
         h2_bbbb_timer += t.elapsed();
     }

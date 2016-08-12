@@ -1,7 +1,7 @@
 #include <numeric>
 #include <algorithm>
 #include <math.h>
-#include <boost/format.hpp>
+#include "mini-boost/boost/format.hpp"
 
 #include <libpsio/psio.hpp>
 #include <libpsio/psio.h>

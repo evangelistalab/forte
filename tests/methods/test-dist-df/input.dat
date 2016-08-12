@@ -1,13 +1,17 @@
+#! Generated using commit GITCOMMIT
+#! Perform a DF-DSRG-MRPT2 on benzyne 
+
 import forte
 
 
 memory 500 mb
 
-refmcscf   =  -226.575016947333239
-refdsrgpt2 =  -226.575016871111
+refmcscf   =  -225.76764656871
+refdsrgpt2 =  -226.852903772295662
+refdsrgpt2_jk_rd = -226.85229847492
 
 molecule mbenzyne{
-  0 1
+  0 3
    C   0.0000000000  -2.5451795941   0.0000000000
    C   0.0000000000   2.5451795941   0.0000000000
    C  -2.2828001669  -1.3508352528   0.0000000000
@@ -29,34 +33,27 @@ set globals{
    scf_type                pk
    d_convergence           10
    e_convergence           12
-   frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
-   restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
-   active                 [1, 0, 0, 0, 0, 0, 1, 0]
+   docc                   [5, 3, 1, 1, 0, 1, 4, 4]
+   socc                   [1, 0, 0, 0, 0, 0, 1, 0]
    maxiter                 500
-   reference               ROHF
-   S                       0.0
-   guess                   core
 }
-#scf = energy('casscf')
-#compare_values(refmcscf, scf,10,"SCF Energy")
 
-set scf_type  direct
 set forte {
-   job_type               CASSCF
-   CASSCF_DEBUG_PRINTING   false
    frozen_docc            [2, 1, 0, 0, 0, 0, 2, 1]
    restricted_docc        [3, 2, 1, 1, 0, 1, 2, 3]
    active                 [1, 0, 0, 0, 0, 0, 1, 0]
    root_sym                0
    nroot                   1
    multiplicity            1
-   int_type                conventional
-   cas_type                FCI
-   casscf_reference        true
-   CASSCF_ITERATIONS       50
-   print                    0
+#   dsrgpt                  false
+   dsrg_s                  0.5
+   int_type                DistDF
 }
 
+scf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf, scf,10,"SCF Energy")
 
-my_casscf = energy('forte')
-compare_values(my_casscf, get_variable("CURRENT ENERGY"),6,"CASSCF energy")
+energy('forte', ref_wfn = wfn)
+compare_values(refdsrgpt2_jk_rd, get_variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy")
+
+

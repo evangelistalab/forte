@@ -83,10 +83,6 @@ def generate_makefile(args):
         re_target = re.compile(r"PSITARGET = \$\(NAME\)\.so")
         makefile = re_target.sub("PSITARGET = ../forte.so",makefile)
 
-        # Add "AMBIT_BINDIR = <args.ambit_bindir>"
-        # Add "INCLUDES += -I$(AMBIT_BINDIR)/include"
-        # Add "LDFLAGS += -L$(AMBIT_DIR)/lib -lambit"
-
         chemps2 = True
         if not args.chemps2_bindir:
             chemps2 = False
@@ -114,9 +110,11 @@ def generate_makefile(args):
             print "Need both GA and MPI for parallel computing"
             print "Turning off MPI based code"
             string_filter += "parallel_ccvv_algorithms.cc distribute_df_integrals.cc "
+            string_filter += " paralleldfmo.cc"
 
             #addons += "CXXSRC = $(filter-out parallel_ccvv_algorithms.cc distribute_df_integrals.cc, $(notdir $(wildcard *.cc)))\n"
             
+        addons += ("INCLUDES += -I%s/mini-boost\n" % default_path)
 
         addons  += "CXXSRC = $(filter-out %s, $(notdir $(wildcard *.cc)))\n" % string_filter 
         re_addons = re.compile(r"DEPENDINCLUDE")

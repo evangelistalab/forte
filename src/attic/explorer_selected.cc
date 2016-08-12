@@ -4,8 +4,8 @@
 #include <functional>
 #include <algorithm>
 
-#include <boost/timer.hpp>
-#include <boost/format.hpp>
+#include "mini-boost/boost/timer.hpp"
+#include "mini-boost/boost/format.hpp"
 
 #include "physconst.h"
 #include <libqt/qt.h>
@@ -28,7 +28,7 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options)
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",space_m_threshold_);
 
     // 1) Build the Hamiltonian
-    boost::timer t_hbuild;
+    ForteTimer t_hbuild;
     SharedMatrix H_m = build_model_space_hamiltonian(options);
     outfile->Printf("\n  Time spent building H model       = %f s",t_hbuild.elapsed());
     outfile->Flush();
@@ -43,7 +43,7 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options)
     SharedVector evals_m(new Vector("e",nroots));
 
     // 3) Diagonalize the model space Hamiltonian
-    boost::timer t_hdiag;
+    ForteTimer t_hdiag;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H_m,evals_m,evecs_m,nroots);
@@ -94,7 +94,7 @@ void LambdaCI::diagonalize_selected_space(psi::Options& options)
     SharedVector evals(new Vector("e",nroots));
 
     // 4) Diagonalize the Hamiltonian
-    boost::timer t_hdiag_large;
+    ForteTimer t_hdiag_large;
     if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
         outfile->Printf("\n  Using the Davidson-Liu algorithm.");
         davidson_liu(H,evals,evecs,nroots);
@@ -386,7 +386,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
         double min_range = static_cast<double>(step) * delta_lambda;
         double max_range = min_range + delta_lambda;
 
-        boost::timer t_select;
+        ForteTimer t_select;
         outfile->Printf("\n\n  Finding dets in the range : [%f,%f), starting from %zu",min_range,max_range,search_from);
         std::vector<size_t> det_in_range;
         for (int I = search_from; I < ntot_dets; ++I){
@@ -471,7 +471,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
         evals.reset(new Vector("e",nroot));
 
         // Form the Hamiltonian matrix
-        boost::timer t_h;
+        ForteTimer t_h;
 #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < num_selected_test_dets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[selected_test_dets[I]];
@@ -495,7 +495,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
         outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
+        ForteTimer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
@@ -576,7 +576,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options)
     //    SharedVector evals(new Vector("e",nroots));
 
     //    // 4) Diagonalize the Hamiltonian
-    //    boost::timer t_hdiag_large;
+    //    ForteTimer t_hdiag_large;
     //    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
     //        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     //        davidson_liu(H,evals,evecs,nroots);
@@ -657,7 +657,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     outfile->Flush();
     //    for (int step = 0; step < renomalization_steps; ++step){
     for (int step = 0; step < renomalization_steps + 1; ++step){
-        boost::timer t_select;
+        ForteTimer t_select;
 
         size_t num_selected_dets = selected_dets.size();
 
@@ -767,7 +767,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         evecs->zero();
         evals->zero();
         // Form the Hamiltonian matrix
-        boost::timer t_h;
+        ForteTimer t_h;
 #pragma omp parallel for schedule(dynamic)
         for (size_t I = 0; I < num_selected_test_dets; ++I){
             boost::tuple<double,int,int,int,int>& determinantI = determinants_[selected_test_dets[I]];
@@ -791,7 +791,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
         outfile->Flush();
 
         // 4) Diagonalize the Hamiltonian
-        boost::timer t_hdiag_large;
+        ForteTimer t_hdiag_large;
         if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
             outfile->Printf("\n  Using the Davidson-Liu algorithm.");
             davidson_liu(H,evals,evecs,nroot);
@@ -878,7 +878,7 @@ void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options)
     //    SharedVector evals(new Vector("e",nroots));
 
     //    // 4) Diagonalize the Hamiltonian
-    //    boost::timer t_hdiag_large;
+    //    ForteTimer t_hdiag_large;
     //    if (options.get_str("DIAG_ALGORITHM") == "DAVIDSON"){
     //        outfile->Printf("\n  Using the Davidson-Liu algorithm.");
     //        davidson_liu(H,evals,evecs,nroots);

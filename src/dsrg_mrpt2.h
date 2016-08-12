@@ -27,7 +27,7 @@
 #include <fstream>
 #include <sstream>
 #include <tuple>
-#include <boost/assign.hpp>
+#include "mini-boost/boost/assign.hpp"
 
 #include <liboptions/liboptions.h>
 #include <libmints/wavefunction.h>
