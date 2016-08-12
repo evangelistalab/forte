@@ -69,7 +69,7 @@ public:
     /// Compute the DSRG-MRPT2 energy with relaxed reference (once)
     double compute_energy_relaxed();
 
-    /// Compute the multi-state DSRG-MRPT2 energy
+    /// Compute the multi-state DSRG-MRPT2 energies
     double compute_energy_multi_state();
 
     /// Set CASCI eigen values and eigen vectors for state averaging

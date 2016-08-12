@@ -367,10 +367,9 @@ read_options(std::string name, Options &options)
         /// OPTIONS FOR STATE-AVERAGE CASCI/CASSCF
         //////////////////////////////////////////////////////////////
         /*- An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...] -*/
-        options.add("AVG_STATES", new ArrayType());
-        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]
-         *  Note that AVG_WEIGHTS is required when the same option is specified in Psi4 -*/
-        options.add("AVG_WEIGHTS", new ArrayType());
+        options.add("AVG_STATE", new ArrayType());
+        /*- An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...] -*/
+        options.add("AVG_WEIGHT", new ArrayType());
         /*- Monitor the CAS-CI solutions through iterations -*/
         options.add_bool("MONITOR_SA_SOLUTION", false);
 
@@ -1023,7 +1022,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(cas_type == "CAS")
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-            if(options["AVG_STATES"].has_changed()){
+            if(options["AVG_STATE"].has_changed()){
                 fci_mo->compute_sa_energy();
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
