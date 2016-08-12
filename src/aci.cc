@@ -2199,6 +2199,10 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+
+        // Only orthogonalize PQ space
+        sparse_solver.set_root_project( false );
+
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
