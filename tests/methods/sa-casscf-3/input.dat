@@ -37,7 +37,7 @@ set forte {
   cas_type         fci
   e_convergence    1e-10
   int_type         conventional
-  avg_states       [[5, 3, 1], [0, 1, 1]]
+  avg_state        [[5, 3, 1], [0, 1, 1]]
   casscf_reference true
 }
 
