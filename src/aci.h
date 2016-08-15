@@ -163,6 +163,8 @@ private:
     DiagonalizationMethod diag_method_ = DLString;
 	/// The reference root
 	int ref_root_;
+	/// The reference root
+	int root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient

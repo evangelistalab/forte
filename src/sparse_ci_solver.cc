@@ -1657,6 +1657,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 
 void SparseCISolver::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
 {
+    bad_states_.clear();
     for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
         bad_states_.push_back( roots[i] );
     }
@@ -1724,7 +1725,9 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     if( root_project_ ){
         for( int n = 0, max_n = bad_states_.size(); n< max_n; ++n ){
             bad_roots.push_back( bad_states_[n] );
+            outfile->Printf("\n  Root %d has %zu elements to project out", n, bad_states_[n].size());
         }
+        outfile->Printf("\n  Added %zu bad roots", bad_states_.size());
     } 
 
 
