@@ -199,6 +199,7 @@ void AdaptiveCI::startup()
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 	ref_root_ = options_.get_int("ROOT");
+	root_ = options_.get_int("ROOT");
 
     reference_type_ = "SR";
     if( options_["ACI_INITIAL_SPACE"].has_changed() ){
@@ -522,9 +523,6 @@ double AdaptiveCI::compute_energy()
 
     std::vector<STLBitsetDeterminant> full_space;
     std::vector<size_t> sizes(nroot_);
-    if( ex_alg_ == "ROOT_ORTHOGONALIZE"){
-        old_roots_.resize( nroot_ - 1 );
-    }
 
     for( int i = 0; i < nrun; ++i ){
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
@@ -532,6 +530,7 @@ double AdaptiveCI::compute_energy()
         PQ_space_.clear();
         if( multi_state ){
             ref_root_ = i;
+            root_ = i;
         }
         compute_aci( PQ_evecs, PQ_evals );
 
@@ -546,7 +545,7 @@ double AdaptiveCI::compute_energy()
             save_old_root( PQ_space_, PQ_evecs, i);
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
-            ref_root_ = i;
+            root_ = i;
             wfn_analyzer(PQ_space_, PQ_evecs, nroot_ ); 
         }
     }
@@ -1422,7 +1421,7 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
 
     std::ofstream final_wfn;
-    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(ref_root_) +  ".txt");
+    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
     
     
     STLBitsetDeterminant rdet(occ);
@@ -2128,6 +2127,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 			outfile->Printf("\n Not checking for spin-completeness.");
 		}
         // Diagonalize H in the P space
+        if( ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle >= pre_iter_){
+            sparse_solver.set_root_project(true);
+            add_bad_roots( P_space_ );
+            sparse_solver.add_bad_roots( bad_roots_ );
+        }
     
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
@@ -2189,14 +2193,15 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 			if (!quiet_mode_) outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 
-        // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        Timer diag_pq;
 
-        if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        if( (options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle >= pre_iter_){
             sparse_solver.set_root_project(true);
             add_bad_roots( PQ_space_ );
             sparse_solver.add_bad_roots( bad_roots_ );
         }
+
+        // Step 3. Diagonalize the Hamiltonian in the P + Q space
+        Timer diag_pq;
 
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
 
@@ -2267,6 +2272,8 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
             outfile->Printf("\n Cycle %d took: %1.6f s", cycle, cycle_time.get() );
         }
+
+        ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     }// end iterations
 
 	if( det_save_ ) det_list_.close();
@@ -2278,7 +2285,6 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		outfile->Printf("\n  Not performing spin projection.");
 	}
 
-    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
 
 }
 
@@ -2324,9 +2330,10 @@ void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMa
 
 void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
 {
-
+    bad_roots_.clear();
     det_hash<size_t> detmapper;
     // Build the hash
+    outfile->Printf("\n  Adding bad roots");
     for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
         detmapper[dets[I]] = I;
     }
@@ -2338,7 +2345,8 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
         std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
         
         for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
-            if( detmapper.count(state[I].first) > 0 ){
+            if( detmapper.count(state[I].first) != 0 ){
+//                outfile->Printf("\n %zu, %f ", I, detmapper[state[I].first] , state[I].second );
                 bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
             }
         }
@@ -2350,9 +2358,13 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
 
 void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
 {
+    std::vector<std::pair<STLBitsetDeterminant, double>> vec;
+    outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
     for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
-        old_roots_[root].push_back( std::make_pair( dets[I], PQ_evecs->get(I, root)));
+        vec.push_back( std::make_pair( dets[I], PQ_evecs->get(I, ref_root_)));
     } 
+    old_roots_.push_back(vec);
+    outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
 }
 
 /*
