@@ -21,10 +21,6 @@
 #include "apici.h"
 #include "fcimc.h"
 #include "fci_mo.h"
-#ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
-#endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
@@ -43,6 +39,10 @@
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
 #include "localize.h"
+#ifdef HAVE_CHEMPS2
+#include "dmrgscf.h"
+#include "dmrgsolver.h"
+#endif
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -1240,13 +1240,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(cas_type == "CAS")
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-            fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
-            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") != "NONE"){
-                dsrg_mrpt3->compute_energy_relaxed();
-            }else{
-                dsrg_mrpt3->compute_energy();
+            if(options["AVG_STATE"].has_changed()){
+                fci_mo->compute_sa_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+                dsrg_mrpt3->set_p_space(fci_mo->p_space());
+                dsrg_mrpt3->set_eigens(fci_mo->eigens());
+                dsrg_mrpt3->compute_energy_multi_state();
+            } else {
+                fci_mo->compute_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+                if(options.get_str("RELAX_REF") != "NONE"){
+                    dsrg_mrpt3->compute_energy_relaxed();
+                }else{
+                    dsrg_mrpt3->compute_energy();
+                }
             }
         }
 
