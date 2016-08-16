@@ -13,7 +13,7 @@
 #include <libmints/molecule.h>
 #include <libmints/vector.h>
 
-#include "apici.h"
+#include "pci.h"
 #include "sparse_ci_solver.h"
 #include "helpers.h"
 #include "dynamic_bitset_determinant.h"
@@ -837,7 +837,7 @@ double AdaptivePathIntegralCI::compute_energy()
     }
     timer_off("PIFCI:<E>end_v");
 
-    Process::environment.globals["APIFCI ENERGY"] = var_energy;
+    Process::environment.globals["PCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
     outfile->Printf("\n  * Adaptive-CI Variational Energy     = %18.12f Eh",1,var_energy);
@@ -888,7 +888,7 @@ double AdaptivePathIntegralCI::compute_energy()
         timer_off("PIFCI:Post_Diag");
 
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_;
-        Process::environment.globals["APIFCI POST DIAG ENERGY"] = post_diag_energy;
+        Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Adaptive-CI Post-diag   Energy     = %18.12f Eh",1,post_diag_energy);
 
