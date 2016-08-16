@@ -12,11 +12,11 @@ fci_tests = ["fci-1"]
 
 aci_tests = ["aci-1"]
 
-apifci_tests = ["apifci-1"]
+pci_tests = ["pci-1"]
 
 dsrg_tests   = ["diskdf-dsrg-mrpt2-1"]
 
-tests =  dsrg_tests + fci_tests + aci_tests + apifci_tests 
+tests =  dsrg_tests + fci_tests + aci_tests + pci_tests 
 
 class bcolors:
     HEADER = '\033[95m'

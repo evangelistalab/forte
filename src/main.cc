@@ -18,7 +18,7 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
-#include "apici.h"
+#include "pci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
@@ -123,13 +123,13 @@ read_options(std::string name, Options &options)
          *  - FCI Full configuration interaction (Francesco's code)
          *  - CAS Full configuration interaction (York's code)
          *  - ACI Adaptive configuration interaction
-         *  - APICI Adaptive path-integral CI
+         *  - PCI Projector CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
          *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS DMRG"
-                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
+                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
                                               " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
@@ -897,10 +897,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "APICI"){
-        auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+    if (options.get_str("JOB_TYPE") == "PCI"){
+        auto pci = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
-            apici->compute_energy();
+            pci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
@@ -1223,15 +1223,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             aci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI"){
         {
             auto dsrg = std::make_shared<TensorSRG>(ref_wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
         {
-            auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
-            apici->compute_energy();
+            auto pci = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+            pci->compute_energy();
         }
     }
 

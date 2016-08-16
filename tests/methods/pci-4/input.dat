@@ -4,7 +4,7 @@
 import forte
 
 refscf = -14.6097447388741113 #TEST
-refapifci = -14.646162385366 #TEST
+refpci = -14.646162385366 #TEST
 
 molecule li2{
    Li
@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type apici
+  job_type pci
   nroot 1
   charge 0
   tau 1.0
@@ -37,4 +37,4 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refapifci, get_variable("APIFCI ENERGY"), 10, "APIFCI energy") #TEST
+compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST
