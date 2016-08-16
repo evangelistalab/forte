@@ -4,7 +4,7 @@
 import forte
 
 refscf = -14.83996952353288 #TEST
-refapifci = -14.880852267631  #TEST
+refpci = -14.880852267631  #TEST
 
 molecule li2{
    Li
@@ -18,7 +18,7 @@ set {
 }
 
 set forte {
-  job_type apici
+  job_type pci
   nroot 1
   charge 0
   tau 1.0

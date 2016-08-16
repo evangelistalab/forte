@@ -4,7 +4,7 @@
 import forte
 
 refscf = -108.3243829450626947 #TEST
-refapifci = -108.6380293360 #TEST
+refpci = -108.6380293360 #TEST
 
 molecule N2{
    N
@@ -19,7 +19,7 @@ set {
 }
 
 set forte {
-  job_type apici
+  job_type pci
   frozen_docc [1,0,0,0,0,1,0,0]
   frozen_uocc [4,1,2,2,1,5,2,2]
   nroot 1
@@ -31,7 +31,7 @@ set forte {
   USE_INTER_NORM true
   ENERGY_ESTIMATE_THRESHOLD 1e-5
   DYNAMIC_PRESCREENING true
-  PROPAGATOR POWER
+  GENERATOR POWER
   MP2_NOS true
   maxbeta 100000.00
 }
@@ -40,4 +40,4 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refapifci, get_variable("APIFCI ENERGY"), 7, "APIFCI energy") #TEST
+compare_values(refpci, get_variable("PCI ENERGY"), 7, "PCI energy") #TEST
