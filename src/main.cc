@@ -547,7 +547,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
+        options.add_str("GENERATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -898,7 +898,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         aci->compute_energy();
     }
     if (options.get_str("JOB_TYPE") == "PCI"){
-        auto pci = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+        auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
             pci->compute_energy();
         }
@@ -1230,7 +1230,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             dsrg->transfer_integrals();
         }
         {
-            auto pci = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+            auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
             pci->compute_energy();
         }
     }
