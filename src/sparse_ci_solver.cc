@@ -1635,6 +1635,34 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         }
     }
 
+    // Project out lower roots from the guess
+    if( root_project_ ){
+        for( size_t n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
+            outfile->Printf("\n  Projecting out root %d from intial guess", n);
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            for( size_t g = 0, max_g = guess.size(); g < max_g; ++g ){
+                std::vector<std::pair<size_t,double>>& guess_state = guess[n].second;
+
+                // loop through each guess
+                double overlap = 0.0;
+                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
+                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
+                        if( guess_state[I].first == bad_state[J].first  ){
+                            overlap += guess_state[I].second * bad_state[J].second;
+                        }
+                    }
+                } 
+                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
+                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
+                        if( guess_state[I].first == bad_state[J].first  ){
+                            guess[n].second[I].second -= overlap * guess_state[I].second;
+                        }
+                    }
+                } 
+            }
+        }
+    }
+
     return guess;
 
 //    // Check the spin
