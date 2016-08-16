@@ -1,10 +1,10 @@
-#! This tests the Adaptive Path-Integral FCI procedure with initiator approximation
+#! This tests the Adaptive Path-Integral FCI procedure with dynamic prescreening
 #! Generated using commit GITCOMMIT
 
 import forte
 
 refscf = -14.6097447388741113 #TEST
-refapifci = -14.646160455942 #TEST
+refpci = -14.646162385366 #TEST
 
 molecule li2{
    Li
@@ -18,16 +18,18 @@ set {
 }
 
 set forte {
-  job_type apici
+  job_type pci
   nroot 1
   charge 0
   tau 1.0
   spawning_threshold 0.0001
-  GUESS_SPAWNING_THRESHOLD 1.
-  ENERGY_ESTIMATE_FREQ 25
+  ENERGY_ESTIMATE_FREQ 100
   FAST_EVAR true
-  ENERGY_ESTIMATE_THRESHOLD 0.001
-  PROPAGATOR POWER
+  USE_INTER_NORM true
+  ENERGY_ESTIMATE_THRESHOLD 1e-5
+  DYNAMIC_PRESCREENING true
+  GENERATOR POWER
+  MP2_NOS true
   maxbeta 100000.00
 }
 
@@ -35,4 +37,4 @@ energy('scf')
 compare_values(refscf, get_variable("CURRENT ENERGY"), 11, "SCF energy") #TEST
 
 energy('forte')
-compare_values(refapifci, get_variable("APIFCI ENERGY"), 10, "APIFCI energy") #TEST
+compare_values(refpci, get_variable("PCI ENERGY"), 10, "PCI energy") #TEST

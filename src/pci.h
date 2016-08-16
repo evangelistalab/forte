@@ -20,8 +20,8 @@
  *@END LICENSE
  */
 
-#ifndef _adaptive_pifci_h_
-#define _adaptive_pifci_h_
+#ifndef _pci_h_
+#define _pci_h_
 
 #include <fstream>
 
@@ -39,24 +39,24 @@
 
 namespace psi{ namespace forte{
 
-enum PropagatorType {LinearPropagator,
+enum GeneratorType {LinearGenerator,
                      TrotterLinear,
-                     QuadraticPropagator,
-                     CubicPropagator,
-                     QuarticPropagator,
-                     PowerPropagator,
-                     OlsenPropagator,
-                     DavidsonLiuPropagator,
-                     ExpChebyshevPropagator,
-                     DeltaChebyshevPropagator,
-                     ChebyshevPropagator,
-                     DeltaPropagator};
+                     QuadraticGenerator,
+                     CubicGenerator,
+                     QuarticGenerator,
+                     PowerGenerator,
+                     OlsenGenerator,
+                     DavidsonLiuGenerator,
+                     ExpChebyshevGenerator,
+                     DeltaChebyshevGenerator,
+                     ChebyshevGenerator,
+                     DeltaGenerator};
 
 /**
  * @brief The SparsePathIntegralCI class
  * This class implements an a sparse path-integral FCI algorithm
  */
-class AdaptivePathIntegralCI : public Wavefunction
+class ProjectorCI : public Wavefunction
 {
 public:
     // ==> Class Constructor and Destructor <==
@@ -67,7 +67,7 @@ public:
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    AdaptivePathIntegralCI(SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    ProjectorCI(SharedWavefunction ref_wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // ==> Class Interface <==
 
@@ -85,10 +85,10 @@ private:
     static std::shared_ptr<FCIIntegrals> fci_ints_;
     /// The maximum number of threads
     int num_threads_;
-    /// The type of propagator used
-    PropagatorType propagator_;
-    /// A string that describes the propagator type
-    std::string propagator_description_;
+    /// The type of Generator used
+    GeneratorType generator_;
+    /// A string that describes the Generator type
+    std::string generator_description_;
     /// The wave function symmetry
     int wavefunction_symmetry_;
     /// The symmetry of each orbital in Pitzer ordering
@@ -198,7 +198,7 @@ private:
 //    std::tuple<double, double, double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
 //    std::pair<double, double> fit_Aetx_c_opt(std::vector<std::pair<double, double>> data, double threshold);
 
-    // * Chebyshev propagator
+    // * Chebyshev Generator
     /// Range of Hamiltonian
     double range_;
     /// Order of truncate
@@ -242,36 +242,36 @@ private:
 
     /**
     * Propagate the wave function by a step of length tau
-    * @param propagator The type of propagator used
+    * @param Generator The type of Generator used
     * @param dets The set of determinants that form the wave function at time n
     * @param C The wave function coefficients at time n
     * @param tau The time step in a.u.
     * @param spawning_threshold The threshold used to accept or reject spawning events
     * @param S An energy shift subtracted from the Hamiltonian
     */
-    void propagate(PropagatorType propagator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
+    void propagate(GeneratorType generator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
     void propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
-    /// A first-order propagator
+    /// A first-order Generator
     void propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// An Trotter-decomposed propagator (H = H^d + H^od)
+    /// An Trotter-decomposed Generator (H = H^d + H^od)
     void propagate_Trotter_linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// An experimental second-order propagator
+    /// An experimental second-order Generator
     void propagate_second_order(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// An experimental arbitrary-order Taylor series propagator
+    /// An experimental arbitrary-order Taylor series Generator
     void propagate_Taylor(int order,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// The power propagator
+    /// The power Generator
     void propagate_power(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
-    /// The power propagator
+    /// The power Generator
     void propagate_power_quadratic_extrapolation(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// The Olsen propagator
+    /// The Olsen Generator
     void propagate_Olsen(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
-    /// The Davidson-Liu propagator
+    /// The Davidson-Liu Generator
     void propagate_DavidsonLiu(det_vec& dets, std::vector<double>& C, double spawning_threshold);
-    /// The Chebyshev propagator
+    /// The Chebyshev Generator
     void propagate_Chebyshev(det_vec& dets, std::vector<double>& C, double spawning_threshold);
 //    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
-    /// The Polynomial propagator
+    /// The Polynomial Generator
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
 
     /// Apply tau H to a set of determinants
@@ -333,4 +333,4 @@ private:
 
 }} // End Namespaces
 
-#endif // _adaptive_pifci_h_
+#endif // _pci_h_

@@ -18,13 +18,9 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
-#include "apici.h"
+#include "pci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
-#ifdef HAVE_CHEMPS2
-#include "dmrgscf.h"
-#include "dmrgsolver.h"
-#endif
 #include "mrdsrg.h"
 #include "mrdsrg_so.h"
 #include "dsrg_mrpt2.h"
@@ -43,6 +39,10 @@
 #include "dsrg_mrpt.h"
 #include "v2rdm.h"
 #include "localize.h"
+#ifdef HAVE_CHEMPS2
+#include "dmrgscf.h"
+#include "dmrgsolver.h"
+#endif
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -123,13 +123,13 @@ read_options(std::string name, Options &options)
          *  - FCI Full configuration interaction (Francesco's code)
          *  - CAS Full configuration interaction (York's code)
          *  - ACI Adaptive configuration interaction
-         *  - APICI Adaptive path-integral CI
+         *  - PCI Projector CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
          *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS DMRG"
-                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
+                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
                                               " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
@@ -547,7 +547,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
+        options.add_str("GENERATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -897,10 +897,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "APICI"){
-        auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+    if (options.get_str("JOB_TYPE") == "PCI"){
+        auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
-            apici->compute_energy();
+            pci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
@@ -1223,15 +1223,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             aci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI"){
         {
             auto dsrg = std::make_shared<TensorSRG>(ref_wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
         {
-            auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
-            apici->compute_energy();
+            auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
+            pci->compute_energy();
         }
     }
 
@@ -1240,13 +1240,22 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         if(cas_type == "CAS")
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
-            fci_mo->compute_energy();
-            Reference reference = fci_mo->reference();
-            std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") != "NONE"){
-                dsrg_mrpt3->compute_energy_relaxed();
-            }else{
-                dsrg_mrpt3->compute_energy();
+            if(options["AVG_STATE"].has_changed()){
+                fci_mo->compute_sa_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+                dsrg_mrpt3->set_p_space(fci_mo->p_space());
+                dsrg_mrpt3->set_eigens(fci_mo->eigens());
+                dsrg_mrpt3->compute_energy_multi_state();
+            } else {
+                fci_mo->compute_energy();
+                Reference reference = fci_mo->reference();
+                std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));
+                if(options.get_str("RELAX_REF") != "NONE"){
+                    dsrg_mrpt3->compute_energy_relaxed();
+                }else{
+                    dsrg_mrpt3->compute_energy();
+                }
             }
         }
 
