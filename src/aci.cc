@@ -614,6 +614,11 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 
 	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
 	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+    if( nroot_ == 1 ){
+        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", tau_q_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
+    }
+
+
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -2087,6 +2092,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
