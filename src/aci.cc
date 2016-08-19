@@ -717,7 +717,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
         size_t num_extra = 0;
         for( size_t I = 0, max_I = last_excluded; I < max_I; ++I){
             size_t J = last_excluded - I;
-            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10){
+            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
                 PQ_space_.push_back(sorted_dets[J].second);
                 num_extra++;
             }else{
