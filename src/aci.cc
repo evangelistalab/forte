@@ -707,6 +707,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
         if( sum + energy < tau_q_){
             sum += energy;
             ept2[0] -= energy;
+            last_excluded = I;
         }else{
             PQ_space_.push_back(sorted_dets[I].second);
         }
