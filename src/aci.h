@@ -137,9 +137,9 @@ private:
     /// The initial reference
     std::string reference_type_;
     /// The threshold applied to the primary space
-    double tau_p_;
+    double sigma_;
     /// The threshold applied to the secondary space
-    double tau_q_;
+    double gamma_;
     /// The prescreening threshold
 	double screen_thresh_;
     /// The number of roots computed

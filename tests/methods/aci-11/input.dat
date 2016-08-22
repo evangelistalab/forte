@@ -35,8 +35,7 @@ set forte {
   perturb_select false
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
-  TAUP 0.01
-  TAUQ 0.01
+  sigma 0.01
   nroot 1
   charge 0
   enforce_spin_complete true

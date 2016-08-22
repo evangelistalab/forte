@@ -122,13 +122,10 @@ void AdaptiveCI::startup()
 
 	// Include frozen_docc and restricted_docc
 	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-	frzvpi_ = mo_space_info_->get_dimension("INACTIVE_UOCC");
 	nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
 	// "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-	rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
 
 	// Number of correlated electrons
 	nactel_ = 0;
@@ -149,17 +146,13 @@ void AdaptiveCI::startup()
 
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
-	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
-	rvir_  = mo_space_info_->size("RESTRICTED_UOCC");	
-
-
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-    tau_p_ = options_.get_double("TAUP");
-    tau_q_ = options_.get_double("TAUQ");
+    sigma_ = options_.get_double("SIGMA");
+    gamma_ = options_.get_double("GAMMA");
 	screen_thresh_ = options_.get_double("PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
@@ -260,8 +253,8 @@ void AdaptiveCI::print_info()
         {"Root used for properties",options_.get_int("ROOT")}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
-        {"P-threshold",tau_p_},
-        {"Q-threshold",tau_q_},
+        {"Sigma",sigma_},
+        {"Gamma",gamma_},
         {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
@@ -615,7 +608,7 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
 	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
     if( nroot_ == 1 ){
-        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", tau_q_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
+        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
     }
 
 
@@ -704,7 +697,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
     size_t last_excluded = 0;
     for( size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
         double energy = sorted_dets[I].first;
-        if( sum + energy < tau_q_){
+        if( sum + energy < sigma_){
             sum += energy;
             ept2[0] -= energy;
             last_excluded = I;
@@ -811,7 +804,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         if (aimed_selection_){
             sorted_dets.push_back(std::make_pair(criteria,it.first));
 		}else{
-            if (std::fabs(criteria) > tau_q_){
+            if (std::fabs(criteria) > sigma_){
                 PQ_space_.push_back(it.first);
             }else{
                 for (int n = 0; n < nroot; ++n){
@@ -830,7 +823,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         size_t last_excluded = 0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const STLBitsetDeterminant& det = sorted_dets[I].second;
-            if (sum + sorted_dets[I].first < tau_q_){
+            if (sum + sorted_dets[I].first < sigma_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
                 const std::vector<double>& V_vec = V_hash[det];
@@ -1255,6 +1248,8 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     pruned_space.clear();
     pruned_space_map.clear();
 
+    double tau_p = sigma_ * gamma_;
+
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
     if(nav == 0) nav = nroot;
@@ -1287,7 +1282,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
         size_t last_excluded = 0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
-            if (sum + dsum < tau_p_){ // exclude small contributions that sum to less than tau_p
+            if (sum + dsum < tau_p){ // exclude small contributions that sum to less than tau_p
                 sum += dsum;
                 last_excluded = I;
             }else{
@@ -1317,7 +1312,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     // Include all determinants such that |C_I| > tau_p
     else{
         for (size_t I = 0; I < large_space.size(); ++I){
-            if (dm_det_list[I].first > tau_p_){
+            if (dm_det_list[I].first > tau_p){
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
             }
