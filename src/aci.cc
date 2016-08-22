@@ -614,6 +614,11 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 
 	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
 	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+    if( nroot_ == 1 ){
+        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", tau_q_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
+    }
+
+
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -702,6 +707,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
         if( sum + energy < tau_q_){
             sum += energy;
             ept2[0] -= energy;
+            last_excluded = I;
         }else{
             PQ_space_.push_back(sorted_dets[I].second);
         }
@@ -712,7 +718,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
         size_t num_extra = 0;
         for( size_t I = 0, max_I = last_excluded; I < max_I; ++I){
             size_t J = last_excluded - I;
-            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10){
+            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
                 PQ_space_.push_back(sorted_dets[J].second);
                 num_extra++;
             }else{
@@ -2087,6 +2093,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 

@@ -542,6 +542,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SAVE_FINAL_WFN", false);
         /*- Print the P space? -*/
         options.add_bool("PRINT_REFS", false);
+        /*- Set the initial guess space size for DL solver -*/
+        options.add_int("DL_GUESS_SIZE", 100);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
