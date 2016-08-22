@@ -25,8 +25,7 @@ set {
 set forte {
   job_type aci
   frozen_docc [1,0,0,0,0,1,0,0]
-  taup 0.05
-  tauq 0.05
+  sigma 0.05
   charge 0
   nroot 2
   n_average 2

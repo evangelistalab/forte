@@ -36,8 +36,7 @@ set forte {
   project_out_spin_contaminants false
   enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
-  TAUP 0.08
-  TAUQ 0.08
+  sigma 0.08
   nroot 3
   mp2_nos true
   average_offset 0

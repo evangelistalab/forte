@@ -31,8 +31,7 @@ set forte{
    root_sym               0
    nroot                  1
    dsrg_s                 1.0
-   taup					  0.0
-   tauq					  0.0
+   sigma					  0.0
    ntrial_per_root        100
    CAS_TYPE				  ACI
 }

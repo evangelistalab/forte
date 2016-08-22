@@ -106,7 +106,7 @@ void OrbitalOptimizer::startup()
     }
     else if(options_.get_str("CAS_TYPE") == "ACI")
     {
-        if(options_.get_double("TAUP") == 0.0 && options_.get_double("TAUQ") == 0.0)
+        if(options_.get_double("SIGMA") == 0.0 and options_.get_double("GAMMA") == 0.0)
         {
             cas_ = true;
         }

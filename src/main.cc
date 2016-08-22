@@ -472,9 +472,9 @@ read_options(std::string name, Options &options)
         /*- The selection type for the Q-space-*/
         options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
         /*-Threshold for the selection of the P space -*/
-        options.add_double("TAUP",0.01);
+        options.add_double("SIGMA",0.01);
         /*- The threshold for the selection of the Q space -*/
-        options.add_double("TAUQ",0.01);
+        options.add_double("GAMMA",1.0);
         /*- The SD-space prescreening threshold -*/
         options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
