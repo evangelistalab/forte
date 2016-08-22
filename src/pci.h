@@ -50,7 +50,8 @@ enum GeneratorType {LinearGenerator,
                      ExpChebyshevGenerator,
                      DeltaChebyshevGenerator,
                      ChebyshevGenerator,
-                     DeltaGenerator};
+                     DeltaGenerator,
+                     LanczosGenerator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -273,6 +274,8 @@ private:
 //    void propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// The Polynomial Generator
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
+    /// The Lanczos Generator
+    void propagate_Lanczos(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
@@ -292,6 +295,11 @@ private:
     void apply_tau_H_det_subset(double tau, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
     /// Apply tau H to a determinant by selection within subset
     void apply_tau_H_det_subset_prescreening(double tau, double spawning_threshold, Determinant& detI, double CI, det_hash<>& dets_sum_map, std::vector<std::pair<Determinant, double>>& new_space_C_vec, double E0);
+    /// Apply symmetric approx tau H to a set of determinants with selection according to reference coefficients
+    void apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S);
+    /// Apply symmetric approx tau H to a determinant using dynamic screening with selection according to a reference coefficient
+    void apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
+
 
     /// Estimates the energy give a wave function
     std::map<std::string, double> estimate_energy(det_vec& dets,std::vector<double>& C);
