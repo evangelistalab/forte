@@ -24,6 +24,7 @@
 #define _adaptive_ci_h_
 
 #include <fstream>
+#include <iomanip> 
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>

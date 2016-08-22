@@ -1427,8 +1427,10 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
 
     std::ofstream final_wfn;
-    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
-    
+    if( print_final_wfn ){
+        final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
+        final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ << "  " << nbeta_ << endl;
+    }
     
     STLBitsetDeterminant rdet(occ);
 	auto ref_bits = rdet.bits();
@@ -1458,7 +1460,19 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 													   excitation_counter[ndiff].second + det_weight[I].first * det_weight[I].first);
 
             if( print_final_wfn and (n == ref_root_) ){
-                final_wfn << det_space[I].str().c_str() << "\t" << evecs->get(I,n) << "\t" << ndiff << "\n"; 
+
+                auto abits = det_space[I].get_alfa_bits_vector_bool();
+                auto bbits = det_space[I].get_beta_bits_vector_bool();
+
+                final_wfn << std::setw(18) << std::setprecision(12) <<  evecs->get(I,n) << "  ";// <<  abits << "  " << bbits << det_space[I].str().c_str() << endl;
+                for( int i = 0; i < nact_; ++i ){
+                    final_wfn << abits[i];
+                }
+                final_wfn << "   ";
+                for( int i = 0; i < nact_; ++i ){
+                    final_wfn << bbits[i] << endl;
+                }
+
             } 
 
 		}
