@@ -1470,9 +1470,9 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
                 }
                 final_wfn << "   ";
                 for( int i = 0; i < nact_; ++i ){
-                    final_wfn << bbits[i] << endl;
+                    final_wfn << bbits[i];
                 }
-
+                final_wfn << endl;
             } 
 
 		}
