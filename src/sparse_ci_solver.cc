@@ -1512,7 +1512,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity)
 {
     size_t ndets = space.size();
-    size_t nguess = std::min(static_cast<size_t>(nroot) * 100,ndets);
+    size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_,ndets);
     std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
