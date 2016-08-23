@@ -40,13 +40,16 @@ void combine_hashes(std::vector<det_hash<>>& thread_det_C_map, det_hash<>& dets_
 void combine_hashes(det_hash<>& dets_C_hash_A,det_hash<>& dets_C_hash_B);
 void combine_hashes_into_hash(std::vector<det_hash<>>& thread_det_C_hash,det_hash<>& dets_C_hash);
 void copy_hash_to_vec(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>& C);
+void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>& C);
 void copy_vec_to_hash(det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash);
 void scale(std::vector<double>& A,double alpha);
 void scale(det_hash<>& A,double alpha);
 double normalize(std::vector<double>& C);
 double normalize(det_hash<>& dets_C);
+double norm(std::vector<double>& C);
 double norm(det_hash<>& dets_C);
 double dot(det_hash<>& A,det_hash<>& B);
+double dot(std::vector<double> C1, std::vector<double> C2);
 void add(det_hash<>& A,double beta,det_hash<>& B);
 double factorial(int n);
 void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
@@ -1057,6 +1060,22 @@ void ProjectorCI::propagate_delta(det_vec& dets,std::vector<double>& C,double sp
 
 void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
 {
+    det_hash<> dets_C_hash;
+    apply_tau_H_symm(1.0,spawning_threshold,dets,C,dets_C_hash, 0.0);
+    std::vector<std::vector<double>> H_n_C(chebyshev_order_);
+    std::vector<std::vector<double>> N_H_n_C;
+    copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[0]);
+    std::vector<double> temp(H_n_C[0]);
+    normalize(temp);
+    N_H_n_C.push_back(temp);
+    for (int i = 1; i < chebyshev_order_; i++) {
+        dets_C_hash.clear();
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, N_H_n_C[i-1], C, dets_C_hash, 0.0);
+        copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[i]);
+        std::vector<double> temp(H_n_C[0]);
+        normalize(temp);
+        N_H_n_C.push_back(temp);
+    }
 
 }
 
@@ -1807,7 +1826,7 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 
 //        outfile->Printf("\nSize of pre: %zu", pre_dets_C_hash.size());
 
-        size_t max_I = dets.size();
+        size_t max_I = ref_C.size();
 #pragma omp parallel for
         for (size_t I = 0; I < max_I; ++I){
             std::pair<double,double> zero_pair(0.0,0.0);
@@ -1843,25 +1862,6 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
         }
     } else {
         outfile->Printf("Symmetric approximated hamiltonian only implemented on dynamic prescreening.");
-    }
-    if (approx_E_flag_) {
-        timer_on("PIFCI:<E>a");
-        size_t max_I = dets.size();
-        double CHC_energy = 0.0;
-#pragma omp parallel for reduction(+:CHC_energy)
-        for (size_t I = 0; I < max_I; ++I){
-            CHC_energy += C[I] * dets_C_hash[dets[I]];
-        }
-        CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
-        timer_off("PIFCI:<E>a");
-        double CHC_energy_gradient = (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
-        old_approx_energy_ = approx_energy_;
-        approx_energy_ = CHC_energy;
-        approx_E_flag_ = false;
-        approx_E_tau_ = tau;
-        approx_E_S_ = S;
-        if (iter_ != 0)
-            outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
     }
 }
 
@@ -3436,6 +3436,25 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>&
     }
 }
 
+void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>& C)
+{
+    size_t hash_size = dets_C_hash.size();
+    dets.resize(hash_size);
+    C.resize(hash_size);
+    size_t size = dets.size();
+
+    for (size_t I = 0; I < size; ++I) {
+        C[I] = dets_C_hash[dets[I]];
+        dets_C_hash.erase(dets[I]);
+    }
+    size_t I = size;
+    for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end(); it != endit; ++it){
+        dets[I] = it->first;
+        C[I] = it->second;
+        I++;
+    }
+}
+
 void copy_vec_to_hash(det_vec& dets,const std::vector<double>& C, det_hash<>& dets_C_hash)
 {
     size_t size = C.size();
@@ -3471,6 +3490,16 @@ double normalize(det_hash<>& dets_C)
     return norm;
 }
 
+double norm(std::vector<double>& C) {
+    size_t size = C.size();
+    double norm = 0.0;
+    for (size_t I = 0; I < size; ++I){
+        norm += C[I] * C[I];
+    }
+    norm = std::sqrt(norm);
+    return norm;
+}
+
 double norm(det_hash<>& dets_C)
 {
     double norm = 0.0;
@@ -3488,6 +3517,17 @@ double dot(det_hash<>& A,det_hash<>& B)
         res += det_C.second * B[det_C.first];
     }
     return res;
+}
+
+double dot(std::vector<double> C1, std::vector<double> C2)
+{
+    size_t size1 = C1.size(), size2 = C2.size();
+    size1 = size1 < size2 ? size1 : size2;
+    double result = 0.0;
+    for (int i = 0; i < size1; i++) {
+        result += C1[i] * C2[i];
+    }
+    return result;
 }
 
 void add(det_hash<>& A,double beta,det_hash<>& B)
