@@ -33,8 +33,7 @@ set forte{
    nroot                   1
    dsrg_s                  0.5
    cas_type				   aci
-   taup                    0.0
-   tauq					   0.0
+   sigma                    0.0
    multiplicity            1
 }
 

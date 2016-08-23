@@ -1365,6 +1365,11 @@ void SparseCISolver::set_maxiter_davidson(int value)
     maxiter_davidson_ = value;
 }
 
+void SparseCISolver::set_force_diag( int value )
+{
+    force_diag_method_ = value;
+}
+
 void SparseCISolver::diagonalize_hamiltonian(const std::vector<STLBitsetDeterminant>& space,SharedVector& evals,SharedMatrix& evecs,int nroot,int multiplicity,DiagonalizationMethod diag_method)
 {
     if (space.size() <= 200 && !force_diag_method_){
@@ -1507,7 +1512,7 @@ std::vector<std::pair<std::vector<int>,std::vector<double>>> SparseCISolver::bui
 std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISolver::initial_guess(const std::vector<STLBitsetDeterminant>& space, int nroot, int multiplicity)
 {
     size_t ndets = space.size();
-    size_t nguess = std::min(static_cast<size_t>(nroot) * 100,ndets);
+    size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_,ndets);
     std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> guess(nguess);
 
     // Find the ntrial lowest diagonals
@@ -1630,6 +1635,34 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         }
     }
 
+    // Project out lower roots from the guess
+    if( root_project_ ){
+        for( size_t n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
+            outfile->Printf("\n  Projecting out root %d from intial guess", n);
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            for( size_t g = 0, max_g = guess.size(); g < max_g; ++g ){
+                std::vector<std::pair<size_t,double>>& guess_state = guess[n].second;
+
+                // loop through each guess
+                double overlap = 0.0;
+                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
+                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
+                        if( guess_state[I].first == bad_state[J].first  ){
+                            overlap += guess_state[I].second * bad_state[J].second;
+                        }
+                    }
+                } 
+                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
+                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
+                        if( guess_state[I].first == bad_state[J].first  ){
+                            guess[n].second[I].second -= overlap * guess_state[I].second;
+                        }
+                    }
+                } 
+            }
+        }
+    }
+
     return guess;
 
 //    // Check the spin
@@ -1652,6 +1685,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 
 void SparseCISolver::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
 {
+    bad_states_.clear();
     for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
         bad_states_.push_back( roots[i] );
     }
@@ -1719,7 +1753,9 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     if( root_project_ ){
         for( int n = 0, max_n = bad_states_.size(); n< max_n; ++n ){
             bad_roots.push_back( bad_states_[n] );
+            outfile->Printf("\n  Root %d has %zu elements to project out", n, bad_states_[n].size());
         }
+        outfile->Printf("\n  Added %zu bad roots", bad_states_.size());
     } 
 
 

@@ -28,8 +28,8 @@ set scf {
 set forte {
   job_type = aci
   SELECT_TYPE energy
-  TAUP 0.001000
-  TAUQ 0.00001000
+  sigma 0.00001000
+  gamma 100.0
   nroot 1
   charge 0
   perturb_select true

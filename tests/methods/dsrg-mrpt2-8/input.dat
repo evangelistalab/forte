@@ -1,0 +1,59 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf     = -106.752885060580013
+refdsrgpt2   = -106.929958783667061
+
+molecule {
+  0 1
+  Li
+  F  1 R
+  R = 10.000
+
+  units bohr
+}
+
+basis {
+  assign Li cc-pvdz
+  assign F  aug-cc-pvdz
+}
+
+set globals{
+  reference           rhf
+  scf_type            out_of_core
+  maxiter             300
+  e_convergence       10
+  d_convergence       10
+  docc                [4,0,1,1]
+  restricted_docc     [3,0,1,1]
+  active              [2,0,0,0]
+  mcscf_r_convergence 7
+  mcscf_e_convergence 10
+  mcscf_maxiter       250
+  mcscf_diis_start    6
+  num_roots           2
+  follow_root         2
+  avg_states          [1,2]
+}
+
+set forte{
+  job_type           dsrg-mrpt2
+  frozen_docc        [3,0,0,0]
+  restricted_docc    [0,0,1,1]
+  active             [2,0,0,0]
+  root_sym           0
+  nroot              2
+  root               0
+  dsrg_s             0.5
+  maxiter            50
+  relax_ref          once
+  e_convergence      8
+  cas_type           cas
+  avg_state          [[0,1,2]]
+}
+
+Emcscf, wfn = energy('casscf', return_wfn=True)
+
+energy('forte',ref_wfn=wfn)
+compare_values(refdsrgpt2,get_variable("CURRENT ENERGY"),10,"MS-DSRG-MRPT2 energy root 0")

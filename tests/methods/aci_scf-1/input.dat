@@ -45,8 +45,8 @@ set forte{
    CASSCF_ITERATIONS        25
    print                    0
    CASSCF_DO_DIIS           false
-   taup                     0.0
-   tauq                     0.0
+   sigma                    0.0
+   gamma                    0.0
    job_type                 CASSCF
    select_type              amp
 }
