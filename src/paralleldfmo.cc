@@ -321,7 +321,7 @@ void ParallelDFMO::J_one_half()
     if(not GA_J_onehalf_)
         throw PSIEXCEPTION("Failure in creating J_^(-1/2) in GA");
 
-    if(GA_Nodeid() == 0)
+    //if(GA_Nodeid() == 0)
     {
         boost::shared_ptr<IntegralFactory> Jfactory(new IntegralFactory(auxiliary_, BasisSet::zero_ao_basis_set(), auxiliary_, BasisSet::zero_ao_basis_set()));
         std::vector<boost::shared_ptr<TwoBodyAOInt> > Jeri;
@@ -371,14 +371,18 @@ void ParallelDFMO::J_one_half()
         // > Invert J < //
 
         J->power(-1.0/2.0, 1e-10);
-        for(int me = 0; me < GA_Nnodes(); me++)
+        if(GA_Nodeid() == 0)
         {
-            int begin_offset[2];
-            int end_offset[2];
-            NGA_Distribution(GA_J_onehalf_, me, begin_offset, end_offset);
-            int offset = begin_offset[0];
-            NGA_Put(GA_J_onehalf_, begin_offset, end_offset, J->pointer()[offset], &naux);
+            for(int me = 0; me < GA_Nnodes(); me++)
+            {
+                int begin_offset[2];
+                int end_offset[2];
+                NGA_Distribution(GA_J_onehalf_, me, begin_offset, end_offset);
+                int offset = begin_offset[0];
+                NGA_Put(GA_J_onehalf_, begin_offset, end_offset, J->pointer()[offset], &naux);
+            }
         }
     }
+
 }
 }}
