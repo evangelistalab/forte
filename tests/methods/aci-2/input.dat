@@ -29,8 +29,8 @@ set forte {
   job_type = aci
   frozen_docc = [0,0,0,0,0,0,0,0]
   SELECT_TYPE amp
-  TAUP 0.01000
-  TAUQ 0.001000
+  gamma 10.00
+  sigma 0.001000
   enforce_spin_complete false
   nroot 1
   charge 0

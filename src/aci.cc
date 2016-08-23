@@ -122,13 +122,10 @@ void AdaptiveCI::startup()
 
 	// Include frozen_docc and restricted_docc
 	frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-	frzvpi_ = mo_space_info_->get_dimension("INACTIVE_UOCC");
 	nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
 	// "Correlated" includes restricted_docc
     ncmo_ = mo_space_info_->size("CORRELATED");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-	rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
 
 	// Number of correlated electrons
 	nactel_ = 0;
@@ -149,17 +146,13 @@ void AdaptiveCI::startup()
 
 	mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
-	rdocc_ = mo_space_info_->size("RESTRICTED_DOCC");
-	rvir_  = mo_space_info_->size("RESTRICTED_UOCC");	
-
-
     // Build the reference determinant and compute its energy
     reference_determinant_ = STLBitsetDeterminant(get_occupation());
 
     // Read options
     nroot_ = options_.get_int("NROOT");
-    tau_p_ = options_.get_double("TAUP");
-    tau_q_ = options_.get_double("TAUQ");
+    sigma_ = options_.get_double("SIGMA");
+    gamma_ = options_.get_double("GAMMA");
 	screen_thresh_ = options_.get_double("PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_.get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_.get_bool("PROJECT_OUT_SPIN_CONTAMINANTS");
@@ -199,6 +192,7 @@ void AdaptiveCI::startup()
     do_guess_ = options_.get_bool("LAMBDA_GUESS");
     det_save_ = options_.get_bool("SAVE_DET_FILE");
 	ref_root_ = options_.get_int("ROOT");
+	root_ = options_.get_int("ROOT");
 
     reference_type_ = "SR";
     if( options_["ACI_INITIAL_SPACE"].has_changed() ){
@@ -259,8 +253,8 @@ void AdaptiveCI::print_info()
         {"Root used for properties",options_.get_int("ROOT")}};
 
     std::vector<std::pair<std::string,double>> calculation_info_double{
-        {"P-threshold",tau_p_},
-        {"Q-threshold",tau_q_},
+        {"Sigma",sigma_},
+        {"Gamma",gamma_},
         {"Convergence threshold",options_.get_double("E_CONVERGENCE")}};
 
     std::vector<std::pair<std::string,std::string>> calculation_info_string{
@@ -522,9 +516,6 @@ double AdaptiveCI::compute_energy()
 
     std::vector<STLBitsetDeterminant> full_space;
     std::vector<size_t> sizes(nroot_);
-    if( ex_alg_ == "ROOT_ORTHOGONALIZE"){
-        old_roots_.resize( nroot_ - 1 );
-    }
 
     for( int i = 0; i < nrun; ++i ){
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
@@ -532,6 +523,7 @@ double AdaptiveCI::compute_energy()
         PQ_space_.clear();
         if( multi_state ){
             ref_root_ = i;
+            root_ = i;
         }
         compute_aci( PQ_evecs, PQ_evals );
 
@@ -543,10 +535,10 @@ double AdaptiveCI::compute_energy()
             PQ_space_.clear();    
         }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and i != (nrun - 1)){
             // orthogonalize
-            add_bad_roots( PQ_space_, PQ_evecs, i);
+            save_old_root( PQ_space_, PQ_evecs, i);
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }if (ex_alg_ == "ROOT_ORTHOGONALIZE" ){
-            ref_root_ = i;
+            root_ = i;
             wfn_analyzer(PQ_space_, PQ_evecs, nroot_ ); 
         }
     }
@@ -615,6 +607,11 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 
 	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
 	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+    if( nroot_ == 1 ){
+        outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
+    }
+
+
     for (int i = 0; i < nroot_; ++ i){
         double abs_energy = PQ_evals->get(i) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
@@ -700,9 +697,10 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
     size_t last_excluded = 0;
     for( size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
         double energy = sorted_dets[I].first;
-        if( sum + energy < tau_q_){
+        if( sum + energy < sigma_){
             sum += energy;
             ept2[0] -= energy;
+            last_excluded = I;
         }else{
             PQ_space_.push_back(sorted_dets[I].second);
         }
@@ -713,7 +711,7 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
         size_t num_extra = 0;
         for( size_t I = 0, max_I = last_excluded; I < max_I; ++I){
             size_t J = last_excluded - I;
-            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-10){
+            if( std::fabs(sorted_dets[last_excluded + 1].first - sorted_dets[J].first) < 1.0e-9){
                 PQ_space_.push_back(sorted_dets[J].second);
                 num_extra++;
             }else{
@@ -806,7 +804,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         if (aimed_selection_){
             sorted_dets.push_back(std::make_pair(criteria,it.first));
 		}else{
-            if (std::fabs(criteria) > tau_q_){
+            if (std::fabs(criteria) > sigma_){
                 PQ_space_.push_back(it.first);
             }else{
                 for (int n = 0; n < nroot; ++n){
@@ -825,7 +823,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         size_t last_excluded = 0;
         for (size_t I = 0, max_I = sorted_dets.size(); I < max_I; ++I){
             const STLBitsetDeterminant& det = sorted_dets[I].second;
-            if (sum + sorted_dets[I].first < tau_q_){
+            if (sum + sorted_dets[I].first < sigma_){
                 sum += sorted_dets[I].first;
                 double EI = det.energy();
                 const std::vector<double>& V_vec = V_hash[det];
@@ -1250,6 +1248,8 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     pruned_space.clear();
     pruned_space_map.clear();
 
+    double tau_p = sigma_ * gamma_;
+
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
     if(nav == 0) nav = nroot;
@@ -1282,7 +1282,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
         size_t last_excluded = 0;
         for (size_t I = 0; I < large_space.size(); ++I){
             double dsum = std::pow(dm_det_list[I].first,2.0);
-            if (sum + dsum < tau_p_){ // exclude small contributions that sum to less than tau_p
+            if (sum + dsum < tau_p){ // exclude small contributions that sum to less than tau_p
                 sum += dsum;
                 last_excluded = I;
             }else{
@@ -1312,7 +1312,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     // Include all determinants such that |C_I| > tau_p
     else{
         for (size_t I = 0; I < large_space.size(); ++I){
-            if (dm_det_list[I].first > tau_p_){
+            if (dm_det_list[I].first > tau_p){
                 pruned_space.push_back(large_space[dm_det_list[I].second]);
                 pruned_space_map[large_space[dm_det_list[I].second]] = 1;
             }
@@ -1422,8 +1422,10 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
     bool print_final_wfn = options_.get_bool("SAVE_FINAL_WFN");
 
     std::ofstream final_wfn;
-    if( print_final_wfn ) final_wfn.open("final_wfn_"+ std::to_string(ref_root_) +  ".txt");
-    
+    if( print_final_wfn ){
+        final_wfn.open("final_wfn_"+ std::to_string(root_) +  ".txt");
+        final_wfn << det_space.size() << "  " << nact_ << "  " << nalpha_ << "  " << nbeta_ << endl;
+    }
     
     STLBitsetDeterminant rdet(occ);
 	auto ref_bits = rdet.bits();
@@ -1453,7 +1455,19 @@ void AdaptiveCI::wfn_analyzer(std::vector<STLBitsetDeterminant>& det_space, Shar
 													   excitation_counter[ndiff].second + det_weight[I].first * det_weight[I].first);
 
             if( print_final_wfn and (n == ref_root_) ){
-                final_wfn << det_space[I].str().c_str() << "\t" << evecs->get(I,n) << "\t" << ndiff << "\n"; 
+
+                auto abits = det_space[I].get_alfa_bits_vector_bool();
+                auto bbits = det_space[I].get_beta_bits_vector_bool();
+
+                final_wfn << std::setw(18) << std::setprecision(12) <<  evecs->get(I,n) << "  ";// <<  abits << "  " << bbits << det_space[I].str().c_str() << endl;
+                for( int i = 0; i < nact_; ++i ){
+                    final_wfn << abits[i];
+                }
+                final_wfn << "   ";
+                for( int i = 0; i < nact_; ++i ){
+                    final_wfn << bbits[i];
+                }
+                final_wfn << endl;
             } 
 
 		}
@@ -2087,6 +2101,8 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
+    sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+    sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
 
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
@@ -2127,6 +2143,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 			outfile->Printf("\n Not checking for spin-completeness.");
 		}
         // Diagonalize H in the P space
+        if( ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle >= pre_iter_){
+            sparse_solver.set_root_project(true);
+            add_bad_roots( P_space_ );
+            sparse_solver.add_bad_roots( bad_roots_ );
+        }
     
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
@@ -2136,7 +2157,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if( cycle < pre_iter_ ){
             ex_alg_ = "AVERAGE";
         }else if ( cycle == pre_iter_ and follow ){
-            ex_alg_ = "ROOT_SELECT";
+            ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
         }        
         // If doing root-following, grab the initial root
         if( follow and cycle == pre_iter_){
@@ -2146,11 +2167,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
 
-        if( follow and num_ref_roots > 1){
+        if( follow and num_ref_roots > 1 and (cycle >= pre_iter_) ){
             ref_root_ = root_follow( P_ref, P_space_, P_evecs, num_ref_roots);
         } 
 
-		// Save the dimention of the previous PQ space
+		// Save the dimension of the previous PQ space
 		//size_t PQ_space_prev = PQ_space_.size();
 
 		// Use spin projection to ensure the P space is spin pure
@@ -2188,15 +2209,18 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 			if (!quiet_mode_) outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
 		}
 
-        // Step 3. Diagonalize the Hamiltonian in the P + Q space
-        Timer diag_pq;
 
-        if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        if( (options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle >= pre_iter_){
             sparse_solver.set_root_project(true);
+            add_bad_roots( PQ_space_ );
             sparse_solver.add_bad_roots( bad_roots_ );
         }
 
+        // Step 3. Diagonalize the Hamiltonian in the P + Q space
+        Timer diag_pq;
+
         sparse_solver.diagonalize_hamiltonian(PQ_space_,PQ_evals,PQ_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
+
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
@@ -2227,9 +2251,10 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
        // }
         num_ref_roots = std::min(nroot_,int(PQ_space_.size()));
 
-        if( follow and num_ref_roots > 0){
+        if( follow and num_ref_roots > 0 and (cycle >= pre_iter_) ){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
+
         bool stuck = check_stuck( energy_history, PQ_evals );
         if( stuck and (options_.get_str("EXCITED_ALGORITHM") != "COMPOSITE")  ){
             outfile->Printf("\n  Procedure is stuck! Quitting...");
@@ -2263,6 +2288,8 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             print_wfn(PQ_space_,PQ_evecs,num_ref_roots);
             outfile->Printf("\n Cycle %d took: %1.6f s", cycle, cycle_time.get() );
         }
+
+        ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
     }// end iterations
 
 	if( det_save_ ) det_list_.close();
@@ -2274,7 +2301,6 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		outfile->Printf("\n  Not performing spin projection.");
 	}
 
-    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
 
 }
 
@@ -2318,34 +2344,43 @@ void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMa
 
 }  
 
-void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
+void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
 {
-
+    bad_roots_.clear();
     det_hash<size_t> detmapper;
-    if( root > 0 ){
-        // Build the hash
-        for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
-            detmapper[dets[I]] = I;
-        }
-
-        // Look through each state, save common determinants/coeffs
-        std::vector<std::pair<size_t, double>> bad_root;
-        for( int i = 0; i < root; ++i ){
-            std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
-            
-            for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
-                if( detmapper.count(state[I].first) > 0 ){
-                    bad_root.push_back(std::make_pair( detmapper[state[I].first], PQ_evecs->get( I, root ) )); 
-                }
-            }
-            bad_roots_.push_back(bad_root);
-        }
+    // Build the hash
+    outfile->Printf("\n  Adding bad roots");
+    for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+        detmapper[dets[I]] = I;
     }
 
+    // Look through each state, save common determinants/coeffs
+    std::vector<std::pair<size_t, double>> bad_root;
+    int nroot = old_roots_.size();
+    for( int i = 0; i < nroot; ++i ){
+        std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
+        
+        for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
+            if( detmapper.count(state[I].first) != 0 ){
+//                outfile->Printf("\n %zu, %f ", I, detmapper[state[I].first] , state[I].second );
+                bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
+            }
+        }
+        bad_roots_.push_back(bad_root);
+    }
+    
 
+}
+
+void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
+{
+    std::vector<std::pair<STLBitsetDeterminant, double>> vec;
+    outfile->Printf("\n  Saving root %d, ref_root is %d", root, ref_root_);
     for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
-        old_roots_[root].push_back( std::make_pair( dets[I], PQ_evecs->get(I, root)));
+        vec.push_back( std::make_pair( dets[I], PQ_evecs->get(I, ref_root_)));
     } 
+    old_roots_.push_back(vec);
+    outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
 }
 
 /*

@@ -46,8 +46,7 @@ set forte {
   active                 [1,0,1,2,1,2,1,0]
   root_sym               0
   nroot                  1
-  taup	                 0.001
-  tauq                   0.001
+  sigma	                 0.001
   enforce_spin_complete   true
   casscf_reference       true
   cas_type                ACI

@@ -24,6 +24,7 @@
 #define _adaptive_ci_h_
 
 #include <fstream>
+#include <iomanip> 
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
@@ -136,9 +137,9 @@ private:
     /// The initial reference
     std::string reference_type_;
     /// The threshold applied to the primary space
-    double tau_p_;
+    double sigma_;
     /// The threshold applied to the secondary space
-    double tau_q_;
+    double gamma_;
     /// The prescreening threshold
 	double screen_thresh_;
     /// The number of roots computed
@@ -163,6 +164,8 @@ private:
     DiagonalizationMethod diag_method_ = DLString;
 	/// The reference root
 	int ref_root_;
+	/// The reference root
+	int root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -359,10 +362,13 @@ private:
     void merge_determinants( std::vector<STLBitsetDeterminant>& final, std::vector<STLBitsetDeterminant>& source );
 
     /// Compute the RDMs
-    void compute_rdms( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, int root1, int root2 );
+    void compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 );
+
+    /// Save older roots
+    void save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root );
 
     /// Add roots to be projected out in DL
-    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root);
+    void add_bad_roots( std::vector<STLBitsetDeterminant>& dets);
 
     /// Print Summary
     void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );

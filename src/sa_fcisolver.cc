@@ -28,41 +28,41 @@ void SA_FCISolver::read_options()
     nstates_ = 0;
     parsed_options_.clear();
 
-    if(options_["AVG_STATES"].has_changed()){
-        int nentry = options_["AVG_STATES"].size();
+    if(options_["AVG_STATE"].has_changed()){
+        int nentry = options_["AVG_STATE"].size();
 
         // figure out total number of states
         std::vector<int> nstatespim;
         std::vector<int> irreps;
         std::vector<int> multis;
         for(int i = 0; i < nentry; ++i){
-            if(options_["AVG_STATES"][i].size() != 3){
-                outfile->Printf("\n  Error: invalid input of AVG_STATES. Each entry should take an array of three numbers.");
-                throw PSIEXCEPTION("Invalid input of AVG_STATES");
+            if(options_["AVG_STATE"][i].size() != 3){
+                outfile->Printf("\n  Error: invalid input of AVG_STATE. Each entry should take an array of three numbers.");
+                throw PSIEXCEPTION("Invalid input of AVG_STATE");
             }
 
             // irrep
-            int irrep = options_["AVG_STATES"][i][0].to_integer();
+            int irrep = options_["AVG_STATE"][i][0].to_integer();
             if(irrep >= nirrep || irrep < 0){
-                outfile->Printf("\n  Error: invalid irrep in AVG_STATES. Please check the input irrep (start from 0) not to exceed %d",
+                outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please check the input irrep (start from 0) not to exceed %d",
                                 nirrep - 1);
-                throw PSIEXCEPTION("Invalid irrep in AVG_STATES");
+                throw PSIEXCEPTION("Invalid irrep in AVG_STATE");
             }
             irreps.push_back(irrep);
 
             // multiplicity
-            int multi = options_["AVG_STATES"][i][1].to_integer();
+            int multi = options_["AVG_STATE"][i][1].to_integer();
             if(multi < 1){
-                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATES.");
-                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATES");
+                outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
+                throw PSIEXCEPTION("Invaid multiplicity in AVG_STATE");
             }
             multis.push_back(multi);
 
             // number of states of irrep and multiplicity
-            int nstates_this = options_["AVG_STATES"][i][2].to_integer();
+            int nstates_this = options_["AVG_STATE"][i][2].to_integer();
             if(nstates_this < 1){
-                outfile->Printf("\n  Error: invalid nstates in AVG_STATES. nstates of a certain irrep and multiplicity should greater than 0.");
-                throw PSIEXCEPTION("Invalid nstates in AVG_STATES.");
+                outfile->Printf("\n  Error: invalid nstates in AVG_STATE. nstates of a certain irrep and multiplicity should greater than 0.");
+                throw PSIEXCEPTION("Invalid nstates in AVG_STATE.");
             }
             nstatespim.push_back(nstates_this);
             nstates_ += nstates_this;
@@ -70,28 +70,28 @@ void SA_FCISolver::read_options()
 
         // test input weights
         std::vector<std::vector<double>> weights;
-        if(options_["AVG_WEIGHTS"].has_changed()){
-            if(options_["AVG_WEIGHTS"].size() != nentry){
-                outfile->Printf("\n  Error: mismatched number of entries in AVG_STATES (%d) and AVG_WEIGHTS (%d).",
-                                nentry, options_["AVG_WEIGHTS"].size());
-                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATES and AVG_WEIGHTS.");
+        if(options_["AVG_WEIGHT"].has_changed()){
+            if(options_["AVG_WEIGHT"].size() != nentry){
+                outfile->Printf("\n  Error: mismatched number of entries in AVG_STATE (%d) and AVG_WEIGHT (%d).",
+                                nentry, options_["AVG_WEIGHT"].size());
+                throw PSIEXCEPTION("Mismatched number of entries in AVG_STATE and AVG_WEIGHT.");
             }
 
             double wsum = 0.0;
             for(int i = 0; i < nentry; ++i){
-                int nw = options_["AVG_WEIGHTS"][i].size();
+                int nw = options_["AVG_WEIGHT"][i].size();
                 if(nw != nstatespim[i]){
-                    outfile->Printf("\n  Error: mismatched number of weights in entry %d of AVG_WEIGHTS. Asked for %d states but only %d weights.",
+                    outfile->Printf("\n  Error: mismatched number of weights in entry %d of AVG_WEIGHT. Asked for %d states but only %d weights.",
                                     i, nstatespim[i], nw);
-                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHTS.");
+                    throw PSIEXCEPTION("Mismatched number of weights in AVG_WEIGHT.");
                 }
 
                 std::vector<double> weight;
                 for(int n = 0; n < nw; ++n){
-                    double w = options_["AVG_WEIGHTS"][i][n].to_double();
+                    double w = options_["AVG_WEIGHT"][i][n].to_double();
                     if(w < 0.0){
-                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHTS.");
-                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHTS.");
+                        outfile->Printf("\n  Error: negative weights in AVG_WEIGHT.");
+                        throw PSIEXCEPTION("Negative weights in AVG_WEIGHT.");
                     }
                     weight.push_back(w);
                     wsum += w;
@@ -99,8 +99,8 @@ void SA_FCISolver::read_options()
                 weights.push_back(weight);
             }
             if(fabs(wsum - 1.0) > 1.0e-10){
-                outfile->Printf("\n  Error: AVG_WEIGHTS entries do not add up to 1.0. Sum = %.10f", wsum);
-                throw PSIEXCEPTION("AVG_WEIGHTS entries do not add up to 1.0.");
+                outfile->Printf("\n  Error: AVG_WEIGHT entries do not add up to 1.0. Sum = %.10f", wsum);
+                throw PSIEXCEPTION("AVG_WEIGHT entries do not add up to 1.0.");
             }
 
         } else {
@@ -280,7 +280,7 @@ double SA_FCISolver::compute_energy()
             sa_cas_ref.push_back(fcisolver.reference());
         }
     }
-    if(!options_["AVG_WEIGHTS"].has_changed())
+    if(!options_["AVG_WEIGHT"].has_changed())
     {
         for(auto& casscf_energy : casscf_energies)
         {

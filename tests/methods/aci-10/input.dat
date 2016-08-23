@@ -42,8 +42,7 @@ set forte {
   root_sym               0
   nroot                  1
   job_type               aci
-  taup	                  0.001
-  tauq                   0.001
+  sigma	                  0.001
   select_type            aimed_energy	 
   spin_projection        1
   enforce_spin_complete  true

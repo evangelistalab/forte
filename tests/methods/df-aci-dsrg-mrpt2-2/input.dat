@@ -44,8 +44,7 @@ set forte {
    job_type                three-dsrg-mrpt2
    cas_type                ACI
    select_type             amp
-   taup					   0.001
-   tauq					   0.001
+   sigma					   0.001
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)
