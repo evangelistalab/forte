@@ -9,6 +9,7 @@
 #include <libqt/qt.h>
 #include "integrals.h"
 #include <cassert>
+#include <omp.h>
 #ifdef HAVE_GA
     #include <ga.h>
     #include <macdecls.h>
@@ -29,8 +30,9 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     wfn_ = ref_wfn;
 
     integral_type_ = DistDF;
-    outfile->Printf("\n  DistDFIntegrals overall time");
+    outfile->Printf("\n  DistDFIntegrals overall time with %d MPI Process and %d threads", GA_Nnodes(), omp_get_max_threads());
     Timer DFInt;
+    #define omp_get_max_threads() 1
     allocate();
 
     //Form a correlated mo to mo before I create integrals
@@ -50,14 +52,13 @@ std::shared_ptr<MOSpaceInfo> mo_space_info)
     #endif
 
     gather_integrals();
-    MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if(my_proc == 0)
     {
         test_distributed_integrals();
     }
     //make_diagonal_integrals();
     if (ncmo_ < nmo_){
-        if(my_proc == 0) freeze_core_orbitals();
+        freeze_core_orbitals();
         // Set the new value of the number of orbitals to be used in indexing routines
         aptei_idx_ = ncmo_;
     }
@@ -147,7 +148,8 @@ void DistDFIntegrals::test_distributed_integrals()
         int MY_DF = NGA_Create(C_DBL, 2, dim, (char *)"DistributedDF", chunk);
         if(MY_DF == 0)
             GA_Error("DistributedDF failed on creating the tensor", 1);
-        GA_Print_distribution(MY_DF);
+        //GA_Print_distribution(MY_DF);
+        //GA_Print_distribution(DistDF_ga_);
         int my_proc = GA_Nodeid();
         int num_proc = GA_Nnodes();
         if(my_proc == 0)
@@ -173,8 +175,67 @@ void DistDFIntegrals::test_distributed_integrals()
         for(auto my_norm : my_df_norm)
         {
             outfile->Printf("\n ||SERIAL_DF - DistDF||_{\infinity} = %4.16f", my_norm);
+            if(my_norm > 1e-4)
+                throw PSIEXCEPTION("DF and DistDF do not agree");
         }
-       
+        ///Test getting entire three_integral_object
+        std::vector<size_t> Avec(nthree_, 0);
+        std::vector<size_t> p(nmo_, 0);
+        std::iota(Avec.begin(), Avec.end(), 0);
+        std::iota(p.begin(), p.end(), 0);
+
+        ///Test whether DFIntegrals is same as DistributedDF
+        ForteIntegrals* test_int = new DFIntegrals(options_,wfn_,UnrestrictedMOs, RemoveFrozenMOs, mo_space_info_);
+        ambit::Tensor entire_b_df = test_int->three_integral_block(Avec, p, p);
+        ambit::Tensor entire_b_dist = three_integral_block(Avec, p, p);
+        entire_b_df("Q, p, q") -= entire_b_dist("Q, p, q");
+        outfile->Printf("\n Test read entire A: %8.8f", entire_b_df.norm(2.0));
+        if(entire_b_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for all integrals does not work");
+
+        ///Test partial nthree 
+        int block = nthree_ / 2;
+        std::vector<size_t> Apartial(block, 0);
+        std::iota(Apartial.begin(), Apartial.end(), 0);
+        ambit::Tensor partial_b_df = test_int->three_integral_block(Apartial, p, p);
+        ambit::Tensor partial_b_dist = three_integral_block(Apartial, p, p);
+        partial_b_df("Q, p, q") -= partial_b_dist("Q, p, q");
+        outfile->Printf("\n Test partial A: %8.8f", partial_b_df.norm(2.0));
+        if(partial_b_df.norm(2.0) > 1.0e-6)
+          throw PSIEXCEPTION("three_integral_block for partial nthree integrals does not work");
+        ///Test rdocc 
+
+        ambit::Tensor b_zero_df = test_int->three_integral_block(Avec, {0},{0});
+        ambit::Tensor b_zero_dist = three_integral_block(Avec, {0},{0});
+        b_zero_df("Q, p, q") -= b_zero_dist("Q, p, q");
+        outfile->Printf("\n Test Q_00: %8.8f", b_zero_df.norm(2.0));
+        if(b_zero_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_00");
+
+        ambit::Tensor b_one_df = test_int->three_integral_block(Avec, {1}, {1});
+        ambit::Tensor b_one_dist = three_integral_block(Avec, {1},{1});
+        b_one_df("Q, p, q") -= b_one_dist("Q, p, q");
+        outfile->Printf("\n Test Q_{11}: %8.8f", b_one_df.norm(2.0));
+        if(b_one_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_11");
+        
+        auto rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
+        auto active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        ambit::Tensor b_mn_df = test_int->three_integral_block(Avec, rdocc,rdocc);
+        ambit::Tensor b_mn_dist = three_integral_block(Avec, rdocc,rdocc);
+        b_mn_df("Q, p, q") -= b_mn_dist("Q, p, q");
+        outfile->Printf("\n Test Q_mn: %8.8f", b_mn_df.norm(2.0));
+        if(b_mn_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_mn");
+
+        ambit::Tensor b_mu_df = test_int->three_integral_block(Avec, rdocc,active);
+        ambit::Tensor b_mu_dist = three_integral_block(Avec, rdocc,active);
+        b_mu_df("Q, p, q") -= b_mu_dist("Q, p, q");
+        outfile->Printf("\n Test Q_{mu}: %8.8f", b_mu_df.norm(2.0));
+        if(b_mu_df.norm(2.0) > 1.0e-6)
+            throw PSIEXCEPTION("three_integral_block for B_11");
+
+        delete test_int;
 }
 
 ambit::Tensor DistDFIntegrals::read_integral_chunk(boost::shared_ptr<Tensor>& B,std::vector<int>& lo, std::vector<int>& hi)
@@ -237,10 +298,10 @@ ambit::Tensor DistDFIntegrals::read_integral_chunk(boost::shared_ptr<Tensor>& B,
 }
 void DistDFIntegrals::deallocate()
 {
-    //GA_Destroy(DistDF_ga_);
-    delete[] diagonal_aphys_tei_aa;
-    delete[] diagonal_aphys_tei_ab;
-    delete[] diagonal_aphys_tei_bb;
+    GA_Destroy(DistDF_ga_);
+    //delete[] diagonal_aphys_tei_aa;
+    //delete[] diagonal_aphys_tei_ab;
+    //delete[] diagonal_aphys_tei_bb;
 }
 void DistDFIntegrals::allocate()
 {
@@ -267,7 +328,6 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
 {
     ambit::Tensor ReturnTensor = ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
     std::vector<double>& ReturnTensorV = ReturnTensor.data();
-    std::vector<double> buffer(A.size() * nmo_ * nmo_, 0.0);
     bool frozen_core = false;
 
     if(frzcpi_.sum() && aptei_idx_ == ncmo_)
@@ -278,24 +338,90 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
     /// A lot of logic needs to be done to figure out where information lies
     int subscript_begin[2];
     int subscript_end[2];
-    subscript_begin[0] = A[0];
-    subscript_begin[1] = 0;
-    //subscript_end[0] = A[A.size() - 1];
-    //subscript_end[1] = nmo_ * nmo_;
-    //buffer.resize(buffer_size);
-    //NGA_Get(DistDF_ga_, one_core_offset_begin, one_core_offset_end, &buffer[0], ld);
+    ///If user wants blocking in A
+    //GA_Print_distribution(DistDF_ga_);
+    if(p.size() == nmo_ && q.size() == nmo_ && A.size() < nthree_)
+    {
+        int ld[1];
+        ld[0] = nmo_ * nmo_;
+        subscript_begin[0] = A[0];
+        subscript_begin[1] = 0;
+        subscript_end[0] = A[A.size() - 1];
+        subscript_end[1] = nmo_ * nmo_ - 1;
+        for(int i = 0; i < 2; i++)
+            outfile->Printf("\n subscript[%d] = (%d, %d)", i, subscript_begin[i], subscript_end[i]);
+        NGA_Get(DistDF_ga_, subscript_begin, subscript_end, &ReturnTensorV[0], ld);
+        return ReturnTensor;
+    }
+    else if ( p.size() == nmo_ && q.size() == nmo_ && A.size() == nthree_)
+    {
+        int ld[1];
+        ld[0] = nmo_ * nmo_;
+        subscript_begin[0] = 0;
+        subscript_begin[1] = 0;
+        subscript_end[0] = nthree_ - 1;
+        subscript_end[1] = nmo_ * nmo_ - 1;
+        for(int i = 0; i < 2; i++)
+            outfile->Printf("\n subscript[%d] = (%d, %d)", i, subscript_begin[i], subscript_end[i]);
+        NGA_Get(DistDF_ga_, subscript_begin, subscript_end, &ReturnTensorV[0], ld);
+        return ReturnTensor;
+    }
+    else if (A.size() == nthree_ and (p.size() != nmo_ or q.size() != nmo_))
+    {
+        ///DF_Tensor is packed in like (NAUX, p, q) where fast dimension is q.  
+        ///To read tensor from ga, I will assume in that auxiliary index is nthree_
+        ///Let's say I want (nthree_,1,nmo_), I have to translate that to lo and hi index.  
+        ///lo[0] = 0, hi[0] = nthree_ - 1
+        ///lo[1] = 1 * nmo_ + 0
+        ///hi[1] = 1 * nmo_ + nmo_
+        ///This means lo[1] = p[idx] * nmo_ + q[idx_min]
+        ///                           hi[1] = p[idx] * nmo_ + q[idx_max]
+        ///Few ways to do this:  Read all of q (ignore q vector) for every p
+        ///Then put the select bits into the tensor
+        ///Slower way:  Read only 1 entry at a time for p and q
+        ///No reason to do this.  Maybe if you want a dumb algorithm
 
-    return ReturnTensor;
+        int ld[1];
+        ld[0] = nmo_;
+        subscript_begin[0] = 0;
+        subscript_end[0] = nthree_ - 1;
+        std::vector< std::vector<double> > ga_buf_vector;
+        for(size_t plist = 0; plist < p.size(); plist++) {
+            std::vector<double> ga_buf(nthree_ * nmo_);
+            size_t p_index = p[plist];
+            subscript_begin[1] = (p_index  * nmo_);
+            subscript_end[1] =   (p_index + 1) * nmo_ - 1;
+            for(int i = 0; i < 2; i++)
+                outfile->Printf("\n subscript[%d] = (%d, %d)", i, subscript_begin[i], subscript_end[i]);
+            
+            NGA_Get(DistDF_ga_, subscript_begin, subscript_end, &ga_buf[0], ld);
+            ga_buf_vector.push_back(ga_buf);
+            //for(int qlist = 0; qlist < q.size(); qlist++){
+            //    size_t q_index = q[qlist];
+            
+            //}
+            //ReturnTensorV = ga_buf;
+        }
+        ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value)
+        {
+            size_t p_index = p[i[1]];
+            size_t q_index = q[i[2]];
+            size_t A_index = A[i[0]];
+            value = ga_buf_vector[i[1]][A_index * nmo_ + q[i[2]]];
+        });
+            
+        return ReturnTensor;
+    }
+    else if (A.size() != nthree_ and p.size() != nmo_ and q.size() != nmo_)
+    {
+    }
 
 }
 void DistDFIntegrals::gather_integrals()
 {
     boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(wfn_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
-    int naux = auxiliary->nbf();
     SharedMatrix Ca = wfn_->Ca();
     SharedMatrix Ca_ao(new Matrix("CA_AO", wfn_->nso(), wfn_->nmo()));
-    int nso = wfn_->nso();
-    int nmo = wfn_->nmo();
     for (size_t h = 0, index = 0; h < wfn_->nirrep(); ++h){
         for (size_t i = 0; i < wfn_->nmopi()[h]; ++i){
             size_t nao = wfn_->nso();
@@ -313,8 +439,29 @@ void DistDFIntegrals::gather_integrals()
     DFMO.set_C(Ca_ao);
     DFMO.compute_integrals();
     DistDF_ga_ = DFMO.Q_PQ();
+    int dim[3];
+    int chunk[3];
+    ///Note:  I assume that we always store all the 3index integrals
+    ///Frozen core does not gain any benefits in storage
+    ///Accessing elements needs to use absolute index.  Will convert to absolute in API
+    dim[0] = nthree_;
+    dim[1] = nmo_;
+    dim[2] = nmo_;
+    chunk[0] = -1;
+    chunk[1] = nmo_;
+    chunk[2] = nmo_;
 }
-
+void DistDFIntegrals::retransform_integrals()
+{
+    aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
+    int my_proc = 0;
+    my_proc = GA_Nodeid();
+    outfile->Printf("\n Integrals are about to be computed.");
+    gather_integrals();
+    outfile->Printf("\n Integrals are about to be updated.");
+    update_integrals();
+}
 
 }}
 

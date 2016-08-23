@@ -485,6 +485,7 @@ boost::shared_ptr<Matrix> CASSCF::set_frozen_core_orbitals()
         }
     }
 
+    JK_->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_->C_left();
     std::vector<boost::shared_ptr<Matrix> >&Cr = JK_->C_right();
@@ -537,6 +538,7 @@ ambit::Tensor CASSCF::transform_integrals()
 
     // Transform from the SO to the AO basis for the C matrix.
     // just transfroms the C_{mu_ao i} -> C_{mu_so i}
+    Timer CSO2AO;
     for (size_t h = 0, index = 0; h < nirrep_; ++h){
         for (int i = 0; i < nmopi[h]; ++i){
             size_t nao = nso;
@@ -550,6 +552,7 @@ ambit::Tensor CASSCF::transform_integrals()
         }
 
     }
+    outfile->Printf("\n CSO2SO takes %8.4f s.", CSO2AO.get());
 
     for(size_t v = 0; v < na_;v++){
             SharedVector Call_vec = Call->get_column(0, active_abs[v]);

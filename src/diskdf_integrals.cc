@@ -718,19 +718,19 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
     size_t pn;
     if(nthree_ == A.size())
     {
-            if(frozen_core)
-            {
-                pn = cmotomo_[p];
-            }
-            else
-            {
-                pn = p;
-            }
+        if(frozen_core)
+        {
+            pn = cmotomo_[p];
+        }
+        else
+        {
+            pn = p;
+        }
 
-            boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
+        boost::shared_ptr<Matrix> Aq(new Matrix("Aq", nmo_, nthree_));
 
-            fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
-            fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
+        fseek(B_->file_pointer(), pn*nthree_*nmo_*sizeof(double), SEEK_SET);
+        fread(&(Aq->pointer()[0][0]), sizeof(double), nmo_ * nthree_, B_->file_pointer());
 
 
         if(frozen_core)
