@@ -555,6 +555,12 @@ double AdaptiveCI::compute_energy()
         outfile->Printf("\n  Size of combined space: %zu", dim);
         
         SparseCISolver sparse_solver;      
+        sparse_solver.set_parallel(true);
+        sparse_solver.set_e_convergence(options_.get_double("E_CONVERGENCE"));
+        sparse_solver.set_maxiter_davidson(options_.get_int("MAXITER_DAVIDSON"));
+        sparse_solver.set_spin_project(project_out_spin_contaminants_);
+        sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
+        sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         sparse_solver.diagonalize_hamiltonian(full_space,PQ_evals,PQ_evecs,nroot_,wavefunction_multiplicity_,diag_method_);
 
     }
