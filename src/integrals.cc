@@ -232,7 +232,18 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         }
     }
 
-    boost::shared_ptr<JK> JK_core = JK::build_JK(wfn_->basisset(),options_);
+    boost::shared_ptr<JK> JK_core;
+    if(options_.get_str("SCF_TYPE")=="GTFOCK")
+    {
+    #ifdef HAVE_JK_FACTORY
+        Process::environment.set_legacy_molecule(wfn_->molecule());
+        JK_core = boost::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
+    #else
+        throw PSIEXCEPTION("GTFock was not compiled in this version");
+    #endif
+    } else {
+        JK_core = JK::build_JK(wfn_->basisset(), options_);
+    }
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
@@ -240,11 +251,17 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     //JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
+    JK_core->set_do_J(true);
+    JK_core->set_allow_desymmetrization(true);
+    JK_core->set_do_K(true);
 
     std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
 
     Cl.clear();
+    Cr.clear();
     Cl.push_back(C_core);
+    Cr.push_back(C_core);
 
     JK_core->compute();
 
