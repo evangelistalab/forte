@@ -11,7 +11,8 @@
 #include <libpsio/psio.hpp>
 #include <libqt/qt.h>
 #include <libmints/molecule.h>
-#include <libmints/vector.h>
+#include "libmints/matrix.h"
+#include "libmints/vector.h"
 
 #include "pci.h"
 #include "sparse_ci_solver.h"
@@ -239,6 +240,10 @@ void ProjectorCI::startup()
     }else if (options_.get_str("GENERATOR") == "DELTA"){
         generator_ = DeltaGenerator;
         generator_description_ = "Delta-Chebyshev-Iter-Power";
+        time_step_ = 1.0;
+    }else if (options_.get_str("GENERATOR") == "LANCZOS"){
+        generator_ = LanczosGenerator;
+        generator_description_ = "Lanczos";
         time_step_ = 1.0;
     }
 
@@ -1060,23 +1065,79 @@ void ProjectorCI::propagate_delta(det_vec& dets,std::vector<double>& C,double sp
 
 void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
 {
+    size_t ref_size = C.size();
+    int krylov_order = chebyshev_order_ < ref_size + 1 ? chebyshev_order_ : ref_size + 1;
+
     det_hash<> dets_C_hash;
     apply_tau_H_symm(1.0,spawning_threshold,dets,C,dets_C_hash, 0.0);
-    std::vector<std::vector<double>> H_n_C(chebyshev_order_);
-    std::vector<std::vector<double>> N_H_n_C;
-    copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[0]);
-    std::vector<double> temp(H_n_C[0]);
-    normalize(temp);
-    N_H_n_C.push_back(temp);
-    for (int i = 1; i < chebyshev_order_; i++) {
+//    for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end(); it != endit; ++it){
+//        outfile -> Printf(" %lf ", it->second);
+//    }
+    std::vector<std::vector<double>> H_n_C(krylov_order + 1);
+    H_n_C[0] = C;
+    copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[1]);
+
+    std::vector<double> norms(krylov_order);
+    norms[0] = normalize(H_n_C[1]);
+
+    for (int i = 2; i <= krylov_order; i++) {
+//        for (int k = 0; k < H_n_C[i-1].size(); k++) {
+//            outfile -> Printf(" %lf ", H_n_C[i-1][k]);
+//        }
         dets_C_hash.clear();
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, N_H_n_C[i-1], C, dets_C_hash, 0.0);
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, H_n_C[i-1], C, dets_C_hash, 0.0);
+//        apply_tau_H_symm(1.0,spawning_threshold,dets,H_n_C[i-1],dets_C_hash, 0.0);
+
+        outfile -> Printf("\n  HC iter %d :", i);
+        for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end(); it != endit; ++it){
+            outfile -> Printf(" %lf ", it->second);
+        }
         copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[i]);
-        std::vector<double> temp(H_n_C[0]);
-        normalize(temp);
-        N_H_n_C.push_back(temp);
+        norms[i-1] = normalize(H_n_C[i]);
     }
 
+    for (int i = 0; i <= krylov_order; i++) {
+        outfile -> Printf("\n  %d :", i);
+        for (int j = 0; j < H_n_C[i].size(); j++) {
+            outfile -> Printf(" %lf ", H_n_C[i][j]);
+        }
+    }
+    outfile -> Printf("\n  Norms: ");
+    for (int i = 0; i < krylov_order; i++) {
+        outfile -> Printf(" %lf ", norms[i]);
+    }
+    outfile -> Printf("\n");
+
+    SharedMatrix A(new Matrix (krylov_order, krylov_order));
+    SharedMatrix B(new Matrix (krylov_order, krylov_order));
+
+    for (int i = 0; i < krylov_order; i++) {
+        for (int j = i; j < krylov_order; j++) {
+            double dotIJ = dot(H_n_C[i], H_n_C[j]);
+            B->set(i,j, dotIJ);
+            B->set(j,i, dotIJ);
+        }
+    }
+
+    for (int i = 0; i < krylov_order; i++) {
+        for (int j = i; j < krylov_order; j++) {
+            double dotIJ = norms[j] * dot(H_n_C[i], H_n_C[j+1]);
+            A->set(i,j, dotIJ);
+            A->set(j,i, dotIJ);
+        }
+    }
+
+
+
+    A->print();
+    B->print();
+
+    SharedMatrix evecs(new Matrix (krylov_order, krylov_order));
+    SharedVector evals(new Vector(krylov_order));
+    A->diagonalize(B, evecs, evals);
+
+    evals -> print();
+    evecs -> print();
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
@@ -1824,7 +1885,6 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
         det_hash<> ref_dets_C_hash;
         copy_vec_to_hash(dets, ref_C, ref_dets_C_hash);
 
-//        outfile->Printf("\nSize of pre: %zu", pre_dets_C_hash.size());
 
         size_t max_I = ref_C.size();
 #pragma omp parallel for
@@ -1867,8 +1927,8 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 
 void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling)
 {
-    bool do_singles = (max_coupling.first == 0.0) or (std::fabs(max_coupling.first * CI) >= spawning_threshold);
-    bool do_doubles = (max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * CI) >= spawning_threshold);
+    bool do_singles = (max_coupling.first == 0.0) or (std::fabs(max_coupling.first * ref_CI) >= spawning_threshold);
+    bool do_doubles = (max_coupling.second == 0.0) or (std::fabs(max_coupling.second  * ref_CI) >= spawning_threshold);
 
     // Diagonal contributions
     double det_energy = detI.energy();
@@ -1902,8 +1962,10 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning
                             new_space_C_vec.push_back(std::make_pair(detJ, tau * HJI * CI));
                             det_hash_it it = ref_dets_C_hash.find(detJ);
                             if (it != ref_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
-//                                outfile->Printf("\nTouched: %.12f previous: %.12f",CI, new_space_C_vec[0].second);
                                 it = pre_dets_C_hash.find(detJ);
+//                                if (it == pre_dets_C_hash.end()) {
+//                                    outfile -> Printf("\n\nERROR: apply_tau_H_ref_C_symm_det_dynamic aa det NOT FOUND in pre_dets_C_hash");
+//                                }
                                 new_space_C_vec[0].second += tau * HJI * it -> second;
 //                                outfile->Printf(", then: %.12f", new_space_C_vec[0].second);
                             }
@@ -1927,6 +1989,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning
                             det_hash_it it = ref_dets_C_hash.find(detJ);
                             if (it != ref_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
                                 it = pre_dets_C_hash.find(detJ);
+//                                if (it == pre_dets_C_hash.end()) {
+//                                    outfile -> Printf("\n\nERROR: apply_tau_H_ref_C_symm_det_dynamic bb det NOT FOUND in pre_dets_C_hash");
+//                                }
                                 new_space_C_vec[0].second += tau * HJI * it -> second;
                             }
                         }
@@ -1955,6 +2020,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning
                                     det_hash_it it = ref_dets_C_hash.find(detJ);
                                     if (it != ref_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
                                         it = pre_dets_C_hash.find(detJ);
+//                                        if (it == pre_dets_C_hash.end()) {
+//                                            outfile -> Printf("\n\nERROR: apply_tau_H_ref_C_symm_det_dynamic aaaa det NOT FOUND in pre_dets_C_hash");
+//                                        }
                                         new_space_C_vec[0].second += tau * HJI * it -> second;
                                     }
                                 }
@@ -1982,6 +2050,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning
                                     det_hash_it it = ref_dets_C_hash.find(detJ);
                                     if (it != ref_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
                                         it = pre_dets_C_hash.find(detJ);
+//                                        if (it == pre_dets_C_hash.end()) {
+//                                            outfile -> Printf("\n\nERROR: apply_tau_H_ref_C_symm_det_dynamic abab det NOT FOUND in pre_dets_C_hash");
+//                                        }
                                         new_space_C_vec[0].second += tau * HJI * it -> second;
                                     }
                                 }
@@ -2009,6 +2080,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning
                                     det_hash_it it = ref_dets_C_hash.find(detJ);
                                     if (it != ref_dets_C_hash.end() && std::fabs(HJI * it -> second) < spawning_threshold){
                                         it = pre_dets_C_hash.find(detJ);
+//                                        if (it == pre_dets_C_hash.end()) {
+//                                            outfile -> Printf("\n\nERROR: apply_tau_H_ref_C_symm_det_dynamic bbbb det NOT FOUND in pre_dets_C_hash");
+//                                        }
                                         new_space_C_vec[0].second += tau * HJI * it -> second;
                                     }
                                 }
@@ -3439,9 +3513,9 @@ void copy_hash_to_vec(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>&
 void copy_hash_to_vec_order_ref(det_hash<>& dets_C_hash,det_vec& dets,std::vector<double>& C)
 {
     size_t hash_size = dets_C_hash.size();
+    size_t size = dets.size();
     dets.resize(hash_size);
     C.resize(hash_size);
-    size_t size = dets.size();
 
     for (size_t I = 0; I < size; ++I) {
         C[I] = dets_C_hash[dets[I]];
