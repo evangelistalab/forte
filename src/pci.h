@@ -275,7 +275,7 @@ private:
     /// The Polynomial Generator
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
     /// The Lanczos Generator
-    void propagate_Lanczos(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S);
+    void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
