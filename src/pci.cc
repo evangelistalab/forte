@@ -822,7 +822,7 @@ double ProjectorCI::compute_energy()
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(approx_energy_gradient) < e_convergence_){
+            if (std::fabs(approx_energy_gradient) < e_convergence_ && cycle > 1){
                 converged = true;
                 break;
             }
@@ -1988,8 +1988,8 @@ void ProjectorCI::apply_tau_H_symm(double tau,double spawning_threshold,det_vec&
 void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S)
 {
 //    outfile -> Printf("\napply_tau_H_ref_C_symm : Beginning args:");
-//    print_vector(ref_C, "ref_C");
-//    print_vector(C, "C");
+//    (ref_C, "ref_C");
+//    (C, "C");
 
     // A vector of maps that hold (determinant,coefficient)
 //    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
@@ -2005,9 +2005,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 //        print_hash(pre_dets_C_hash, "pre_dets_C_hash");
 //        print_hash(ref_dets_C_hash, "ref_dets_C_hash");
 
-        size_t max_I = ref_C.size();
+        size_t ref_max_I = ref_C.size();
 #pragma omp parallel for
-        for (size_t I = 0; I < max_I; ++I){
+        for (size_t I = 0; I < ref_max_I; ++I){
 //            outfile -> Printf("\napply_tau_H_ref_C_symm : Det[%d]:\n", I);
             std::pair<double,double> zero_pair(0.0,0.0);
             // Update the list of couplings
@@ -2042,6 +2042,16 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 //                        outfile->Printf(" %.4lf ", det_C.second);
                     }
                 }
+            }
+        }
+        size_t max_I = C.size();
+        for (size_t I = ref_max_I; I < max_I; ++I){
+            // Diagonal contribution
+            double det_energy = dets[I].energy();
+            // Diagonal contributions
+            #pragma omp critical
+            {
+                dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
             }
         }
     } else {
