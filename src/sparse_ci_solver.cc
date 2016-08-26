@@ -1665,21 +1665,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
     }
 
-    for (size_t n = 0; n < nguess; ++n){
-        b->zero();
-        for (auto& guess_vec_info : guess[guess_list[n]].second){
-            b->set(guess_vec_info.first,guess_vec_info.second);
-        }
-        if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
-        dls.add_guess(b);
-    }
-
-    // Prepare a list of bad roots to project out and pass them to the solver
     std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
-    for (auto& g : guess){
-        if (g.first != multiplicity) bad_roots.push_back(g.second);
-    }
-
     if( root_project_ ){
         for( int n = 0, max_n = bad_states_.size(); n< max_n; ++n ){
             bad_roots.push_back( bad_states_[n] );
@@ -1687,6 +1673,44 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         }
         outfile->Printf("\n  Added %zu bad roots", bad_states_.size());
     } 
+
+    for (size_t n = 0; n < nguess; ++n){
+        b->zero();
+        for (auto& guess_vec_info : guess[guess_list[n]].second){
+            b->set(guess_vec_info.first,guess_vec_info.second);
+        }
+        if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+
+        // Project bad roots out of guess
+        if( root_project_ ){
+            for( int n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
+                for( auto& bad_root : bad_states_ ){
+                    double overlap = 0.0;
+                    for( auto& det : bad_root ){
+                        size_t I = det.first;
+                        double CI = det.second;
+                        overlap += b->get(I) * CI;
+                    }
+                    for( auto& det : bad_root ){
+                        size_t I = det.first;
+                        double CI = det.second;
+                        b->set( I, b->get(I) - overlap * CI );  
+                    }
+                } 
+            }
+        }
+        double norm = 1.0 / std::sqrt( b->norm() );
+        b->scale( norm );        
+
+        outfile->Printf("\n  Norm of guess %d: %1.8f",n, b->norm());
+        dls.add_guess(b);
+    }
+
+    // Prepare a list of bad roots to project out and pass them to the solver
+    for (auto& g : guess){
+        if (g.first != multiplicity) bad_roots.push_back(g.second);
+    }
+
 
 
     dls.set_project_out(bad_roots);
