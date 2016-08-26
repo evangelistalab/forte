@@ -602,6 +602,8 @@ double AdaptiveCI::compute_energy()
     outfile->Printf("\n\n  %s: %f s","Adaptive-CI (bitset) ran in ",aci_elapse.get());
     outfile->Printf("\n\n  %s: %d","Saving information for root",options_.get_int("ROOT"));
 
+    //printf( "\n%1.5f\n", aci_elapse.get());
+
     return PQ_evals->get(options_.get_int("ROOT")) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy();
 }
 
@@ -660,6 +662,9 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
 void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
 {
     Timer build;
+
+    int ithread = omp_get_thread_num();
+    int nthreads = omp_get_num_threads();
     
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double> > V_hash;
@@ -687,13 +692,23 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
     Timer screen;    
 
     // Compute criteria for all dets, store them all
-    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
+    size_t count = 0;
+    size_t hash_size = V_hash.size();
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets( hash_size );
     for ( const auto& I : V_hash ){
+
+        if( (count % nthreads) != ithread ){
+            count++;
+            continue;
+        }
+
         double delta = I.first.energy() - evals->get(0);
         double V = I.second[0];
 
         double criteria = 0.5 * (delta - sqrt(delta*delta + V*V*4.0 ) );
-        sorted_dets.push_back(std::make_pair(std::fabs(criteria),I.first));
+        sorted_dets[count] = std::make_pair(std::fabs(criteria),I.first);
+        
+        count++;
     }
     
     std::sort(sorted_dets.begin(),sorted_dets.end(),pairComp);
@@ -773,7 +788,8 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	std::vector<double> e2(nroot_,0.0);
     std::vector<double> ept2(nroot_,0.0);
 	double criteria;
-    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets;
+    size_t hash_size = V_hash.size();
+    std::vector<std::pair<double,STLBitsetDeterminant>> sorted_dets(hash_size);
 
 	// Define coupling out of loop, assume perturb_select_ = false	
 	std::function<double (double A, double B, double C)> C1_eq = [](double A, double B, double C)->double 
@@ -788,7 +804,15 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 	}
 
     // Check the coupling between the reference and the SD space
+    int ithread = omp_get_thread_num();
+    int nthreads = omp_get_num_threads();
+    size_t p_size = PQ_space_.size();
+    size_t count = 0;
     for (const auto& it : V_hash){
+        if( (count % nthreads) != ithread ){
+            count++;
+            continue;
+        }
         double EI = it.first.energy();
         for (int n = 0; n < nroot; ++n){
             double V = it.second[n];
@@ -808,8 +832,9 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
 		}
 
         if (aimed_selection_){
-            sorted_dets.push_back(std::make_pair(criteria,it.first));
+            sorted_dets[count] = std::make_pair(criteria,it.first);
 		}else{
+            #pragma omp critical
             if (std::fabs(criteria) > sigma_){
                 PQ_space_.push_back(it.first);
             }else{
@@ -818,6 +843,7 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
                 }
             }
         }
+        count++;
     } // end loop over determinants 
 	//for figure
 
