@@ -1258,6 +1258,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
+    off = ref_root_;
     if(nav == 0) nav = nroot;
 
     if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
@@ -2363,19 +2364,29 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
     // Look through each state, save common determinants/coeffs
     std::vector<std::pair<size_t, double>> bad_root;
     int nroot = old_roots_.size();
+    size_t idx = dets.size();
     for( int i = 0; i < nroot; ++i ){
+        size_t nadd = 0;
         std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
         
         for( size_t I = 0, max_I = state.size(); I < max_I; ++I ){
             if( detmapper.count(state[I].first) != 0 ){
 //                outfile->Printf("\n %zu, %f ", I, detmapper[state[I].first] , state[I].second );
                 bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
+            }else{
+                dets.push_back( state[I].first );
+                detmapper[state[I].first] = nadd;
+                bad_root.push_back( std::make_pair(idx + nadd, state[I].second) );
+                nadd++;
             }
         }
         bad_roots_.push_back(bad_root);
+        outfile->Printf("\n  Added %zu determinants from root %zu", nadd, i);
     }
     
-
+    for( int i = 0; i < bad_roots_.size(); ++i){
+     //   outfile->Printf("\n  Added %zu determinants from root %zu", bad_roots_[i].size(), i);
+    }
 }
 
 void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root )
