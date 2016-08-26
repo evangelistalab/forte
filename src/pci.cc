@@ -51,6 +51,7 @@ double norm(std::vector<double>& C);
 double norm(det_hash<>& dets_C);
 double dot(det_hash<>& A,det_hash<>& B);
 double dot(std::vector<double> C1, std::vector<double> C2);
+size_t ortho_norm(std::vector<std::vector<double>> & H_n_C, double colinear_threshold);
 void add(det_hash<>& A,double beta,det_hash<>& B);
 double factorial(int n);
 void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
@@ -1113,6 +1114,8 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
         norms[i-1] = normalize(H_n_C[i]);
     }
 
+
+
 //    for (int i = 0; i <= krylov_order; i++) {
 //        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
 //    }
@@ -1170,13 +1173,20 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
             t.set(j,i, dotIJ);
         }
     }
-//    t.set(0,0,10); t.set(0,1,1);
-//    t.set(1,0,1);  t.set(1,1,10);
-//    m.set(0,0,2);  m.set(0,1,1);
-//    m.set(1,0,1);  m.set(1,1,2);
 
 //    t.print();
 //    m.print();
+
+    Matrix S_evecs(krylov_order, krylov_order);
+    Vector S_eigs(krylov_order);
+    m.diagonalize(S_evecs, S_eigs, 0);
+//    m.print();
+//    S_evecs.print();
+//    S_eigs.print();
+//    outfile->Printf("\n E-value of overlap matrix : %.2e", S_eigs.get(0));
+//    for (int i = 1; i < krylov_order; i++) {
+//        outfile->Printf(" %.2e", S_eigs.get(i));
+//    }
 
     int lwork = 3*krylov_order;
     double *work = new double[lwork];
@@ -1212,45 +1222,6 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
             C[j] += t.get(0,0,i) * H_n_C[i][j];
         }
     }
-
-//    Matrix t(*this);
-//    Matrix m(metric);
-
-//    int lwork = 3*max_nrow();
-//    double *work = new double[lwork];
-
-//    for (int h=0; h<nirrep_; ++h) {
-//        if (!rowspi_[h] && !colspi_[h])
-//            continue;
-
-//        int err = C_DSYGV(1, 'V', 'U',
-//                          rowspi_[h], t.matrix_[h][0],
-//                          rowspi_[h], m.matrix_[h][0],
-//                          rowspi_[h], eigvalues->pointer(h),
-//                          work, lwork);
-
-//        if (err != 0) {
-//            if (err < 0) {
-//                outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: argument %d has invalid parameter.\n", -err);
-
-//                abort();
-//            }
-//            if (err > 0) {
-//                outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: error value: %d\n", err);
-
-//                abort();
-//            }
-//        }
-
-//        // TODO: Sort the data according to eigenvalues.
-//    }
-//    delete[] work;
-
-//    outfile -> Printf("\n  C: ");
-//    for (int i = 0; i < C.size(); i++) {
-//        outfile -> Printf(" %lf ", C[i]);
-//    }
-//    outfile -> Printf("\n");
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
@@ -3741,6 +3712,28 @@ double dot(std::vector<double> C1, std::vector<double> C2)
         result += C1[i] * C2[i];
     }
     return result;
+}
+
+size_t ortho_norm(std::vector<std::vector<double>> & H_n_C, double colinear_threshold = 1e-9)
+{
+    size_t nVec = H_n_C.size();
+    std::vector<double> S(nVec - 1);
+    for (size_t i = 1; i < nVec; i++) {
+        size_t j = 0;
+        for (j = 0; j < i; j++) {
+            S[j] = dot(H_n_C[i], H_n_C[j]);
+//            if (fabs(S[j]) < colinear_threshold)
+//                return i;
+            size_t len_Cj = H_n_C[j].size();
+            for (size_t k = 0; k < len_Cj; k++) {
+                H_n_C[i][k] -= H_n_C[j][k] * S[j];
+            }
+        }
+        double norm = normalize(H_n_C[i]);
+        if (norm < colinear_threshold)
+            return i;
+    }
+    return nVec;
 }
 
 void add(det_hash<>& A,double beta,det_hash<>& B)
