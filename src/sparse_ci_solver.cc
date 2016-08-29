@@ -1566,7 +1566,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
     }
 
     // Project out lower roots from the guess
-    if( root_project_ ){
+/*    if( root_project_ ){
         for( size_t n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
             outfile->Printf("\n  Projecting out root %d from intial guess", n);
             std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
@@ -1592,7 +1592,7 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
             }
         }
     }
-
+*/
     return guess;
 
 //    // Check the spin
@@ -1682,7 +1682,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
 
         // Project bad roots out of guess
-        if( root_project_ ){
+    /*    if( root_project_ ){
             for( int n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
                 for( auto& bad_root : bad_states_ ){
                     double overlap = 0.0;
@@ -1698,14 +1698,12 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
                     }
                 } 
             }
-        }
+        }*/
         double norm = 1.0 / std::sqrt( b->norm() );
         b->scale( norm );        
 
-        outfile->Printf("\n  Norm of guess %d: %1.8f",n, b->norm());
         dls.add_guess(b);
     }
-
     // Prepare a list of bad roots to project out and pass them to the solver
     for (auto& g : guess){
         if (g.first != multiplicity) bad_roots.push_back(g.second);
