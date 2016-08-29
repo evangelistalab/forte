@@ -907,9 +907,9 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 	
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
-
+    off = ref_root_;
     if( nav == 0 ) nav = nroot;
-    if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
+    if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
 
 	double f_C1 = 0.0;
@@ -1287,7 +1287,7 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
     off = ref_root_;
     if(nav == 0) nav = nroot;
 
-    if( (off + nav) > nroot ) throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
+    if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double,size_t> > dm_det_list;
