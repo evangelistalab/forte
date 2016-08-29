@@ -50,8 +50,10 @@ double normalize(det_hash<>& dets_C);
 double norm(std::vector<double>& C);
 double norm(det_hash<>& dets_C);
 double dot(det_hash<>& A,det_hash<>& B);
-double dot(std::vector<double> C1, std::vector<double> C2);
+double dot(std::vector<double>& C1, std::vector<double>& C2);
+size_t ortho_norm(std::vector<std::vector<double>> & H_n_C, Matrix &A, double colinear_threshold);
 void add(det_hash<>& A,double beta,det_hash<>& B);
+void add(std::vector<double> & a, double k, std::vector<double> & b);
 double factorial(int n);
 void binomial_coefs(std::vector<double>& coefs, int order, double a, double b);
 void Taylor_generator_coefs(std::vector<double>& coefs, int order, double tau, double S);
@@ -822,7 +824,7 @@ double ProjectorCI::compute_energy()
 
             iter_Evar_steps_.push_back(std::make_pair(iter_, var_energy));
 
-            if (std::fabs(approx_energy_gradient) < e_convergence_){
+            if (std::fabs(approx_energy_gradient) < e_convergence_ && cycle > 1){
                 converged = true;
                 break;
             }
@@ -1113,6 +1115,49 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
         norms[i-1] = normalize(H_n_C[i]);
     }
 
+    Matrix A(krylov_order, krylov_order);
+
+    for (int i = 0; i < krylov_order; i++) {
+        for (int j = i; j < krylov_order; j++) {
+            double dotIJ = norms[j] * dot(H_n_C[i], H_n_C[j+1]);
+            A.set(i,j, dotIJ);
+            A.set(j,i, dotIJ);
+        }
+    }
+
+    size_t current_order = ortho_norm(H_n_C, A, 0.0);
+
+    for (int i = 0; i <= krylov_order; i++) {
+        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
+    }
+
+    if (current_order < krylov_order)
+        outfile -> Printf("\n  Near linear dependency spotted, reduced krylov_order to %d", current_order);
+
+    Matrix H(current_order, current_order);
+    for (int i = 0; i < current_order; i++) {
+        for (int j = 0; j < current_order; j++) {
+            H.set(i,j, A.get(i,j));
+        }
+    }
+    Matrix evecs(current_order, current_order);
+    Vector eigs(current_order);
+    H.diagonalize(evecs, eigs);
+    outfile -> Printf("\n  H:");
+    H.print();
+    outfile -> Printf("\n  evecs:");
+    evecs.print();
+    outfile -> Printf("\n  eigs:");
+    eigs.print();
+
+    scale(C, evecs.get(0,0));
+    C.resize(dets.size());
+    for (int i = 1; i < current_order; i++) {
+        for (int j = 0; j < H_n_C[i].size(); j++) {
+            C[j] += evecs.get(0,i) * H_n_C[i][j];
+        }
+    }
+
 //    for (int i = 0; i <= krylov_order; i++) {
 //        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
 //    }
@@ -1152,105 +1197,73 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //    A -> print();
 //    krylov_order = 2;
 
-    Matrix t(krylov_order, krylov_order);
-    Matrix m(krylov_order, krylov_order);
+//    Matrix t(krylov_order, krylov_order);
+//    Matrix m(krylov_order, krylov_order);
 
-    for (int i = 0; i < krylov_order; i++) {
-        for (int j = i; j < krylov_order; j++) {
-            double dotIJ = dot(H_n_C[i], H_n_C[j]);
-            m.set(i,j, dotIJ);
-            m.set(j,i, dotIJ);
-        }
-    }
-
-    for (int i = 0; i < krylov_order; i++) {
-        for (int j = i; j < krylov_order; j++) {
-            double dotIJ = norms[j] * dot(H_n_C[i], H_n_C[j+1]);
-            t.set(i,j, dotIJ);
-            t.set(j,i, dotIJ);
-        }
-    }
-//    t.set(0,0,10); t.set(0,1,1);
-//    t.set(1,0,1);  t.set(1,1,10);
-//    m.set(0,0,2);  m.set(0,1,1);
-//    m.set(1,0,1);  m.set(1,1,2);
-
-//    t.print();
-//    m.print();
-
-    int lwork = 3*krylov_order;
-    double *work = new double[lwork];
-    SharedVector evals(new Vector(krylov_order));
-
-    int err = C_DSYGV(1, 'V', 'U',
-                      krylov_order, t.get_pointer(0),
-                      krylov_order, m.get_pointer(0),
-                      krylov_order, evals->pointer(0),
-                      work, lwork);
-    if (err != 0) {
-        if (err < 0) {
-            outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: argument %d has invalid parameter.\n", -err);
-
-            abort();
-        }
-        if (err > 0) {
-            outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: error value: %d\n", err);
-
-            abort();
-        }
-    }
-    delete[] work;
-
-//    t.print();
-//    m.print();
-//    evals->print();
-
-    scale(C, t.get(0,0,0));
-    C.resize(dets.size());
-    for (int i = 1; i < krylov_order; i++) {
-        for (int j = 0; j < H_n_C[i].size(); j++) {
-            C[j] += t.get(0,0,i) * H_n_C[i][j];
-        }
-    }
-
-//    Matrix t(*this);
-//    Matrix m(metric);
-
-//    int lwork = 3*max_nrow();
-//    double *work = new double[lwork];
-
-//    for (int h=0; h<nirrep_; ++h) {
-//        if (!rowspi_[h] && !colspi_[h])
-//            continue;
-
-//        int err = C_DSYGV(1, 'V', 'U',
-//                          rowspi_[h], t.matrix_[h][0],
-//                          rowspi_[h], m.matrix_[h][0],
-//                          rowspi_[h], eigvalues->pointer(h),
-//                          work, lwork);
-
-//        if (err != 0) {
-//            if (err < 0) {
-//                outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: argument %d has invalid parameter.\n", -err);
-
-//                abort();
-//            }
-//            if (err > 0) {
-//                outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: error value: %d\n", err);
-
-//                abort();
-//            }
+//    for (int i = 0; i < krylov_order; i++) {
+//        for (int j = i; j < krylov_order; j++) {
+//            double dotIJ = dot(H_n_C[i], H_n_C[j]);
+//            m.set(i,j, dotIJ);
+//            m.set(j,i, dotIJ);
 //        }
+//    }
 
-//        // TODO: Sort the data according to eigenvalues.
+//    for (int i = 0; i < krylov_order; i++) {
+//        for (int j = i; j < krylov_order; j++) {
+//            double dotIJ = norms[j] * dot(H_n_C[i], H_n_C[j+1]);
+//            t.set(i,j, dotIJ);
+//            t.set(j,i, dotIJ);
+//        }
+//    }
+
+////    t.print();
+////    m.print();
+
+//    Matrix S_evecs(krylov_order, krylov_order);
+//    Vector S_eigs(krylov_order);
+//    m.diagonalize(S_evecs, S_eigs, 0);
+////    m.print();
+////    S_evecs.print();
+////    S_eigs.print();
+////    outfile->Printf("\n E-value of overlap matrix : %.2e", S_eigs.get(0));
+////    for (int i = 1; i < krylov_order; i++) {
+////        outfile->Printf(" %.2e", S_eigs.get(i));
+////    }
+
+//    int lwork = 3*krylov_order;
+//    double *work = new double[lwork];
+//    SharedVector evals(new Vector(krylov_order));
+
+//    int err = C_DSYGV(1, 'V', 'U',
+//                      krylov_order, t.get_pointer(0),
+//                      krylov_order, m.get_pointer(0),
+//                      krylov_order, evals->pointer(0),
+//                      work, lwork);
+//    if (err != 0) {
+//        if (err < 0) {
+//            outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: argument %d has invalid parameter.\n", -err);
+
+//            abort();
+//        }
+//        if (err > 0) {
+//            outfile->Printf( "Matrix::diagonalize with metric: C_DSYGV: error value: %d\n", err);
+
+//            abort();
+//        }
 //    }
 //    delete[] work;
 
-//    outfile -> Printf("\n  C: ");
-//    for (int i = 0; i < C.size(); i++) {
-//        outfile -> Printf(" %lf ", C[i]);
+////    t.print();
+////    m.print();
+////    evals->print();
+
+//    scale(C, t.get(0,0,0));
+//    C.resize(dets.size());
+//    for (int i = 1; i < krylov_order; i++) {
+//        for (int j = 0; j < H_n_C[i].size(); j++) {
+//            C[j] += t.get(0,0,i) * H_n_C[i][j];
+//        }
 //    }
-//    outfile -> Printf("\n");
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
@@ -1988,8 +2001,8 @@ void ProjectorCI::apply_tau_H_symm(double tau,double spawning_threshold,det_vec&
 void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S)
 {
 //    outfile -> Printf("\napply_tau_H_ref_C_symm : Beginning args:");
-//    print_vector(ref_C, "ref_C");
-//    print_vector(C, "C");
+//    (ref_C, "ref_C");
+//    (C, "C");
 
     // A vector of maps that hold (determinant,coefficient)
 //    std::vector<det_hash<>> thread_det_C_hash(num_threads_);
@@ -2005,9 +2018,9 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 //        print_hash(pre_dets_C_hash, "pre_dets_C_hash");
 //        print_hash(ref_dets_C_hash, "ref_dets_C_hash");
 
-        size_t max_I = ref_C.size();
+        size_t ref_max_I = ref_C.size();
 #pragma omp parallel for
-        for (size_t I = 0; I < max_I; ++I){
+        for (size_t I = 0; I < ref_max_I; ++I){
 //            outfile -> Printf("\napply_tau_H_ref_C_symm : Det[%d]:\n", I);
             std::pair<double,double> zero_pair(0.0,0.0);
             // Update the list of couplings
@@ -2042,6 +2055,16 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
 //                        outfile->Printf(" %.4lf ", det_C.second);
                     }
                 }
+            }
+        }
+        size_t max_I = C.size();
+        for (size_t I = ref_max_I; I < max_I; ++I){
+            // Diagonal contribution
+            double det_energy = dets[I].energy();
+            // Diagonal contributions
+            #pragma omp critical
+            {
+                dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
             }
         }
     } else {
@@ -3722,7 +3745,7 @@ double dot(det_hash<>& A,det_hash<>& B)
     return res;
 }
 
-double dot(std::vector<double> C1, std::vector<double> C2)
+double dot(std::vector<double> &C1, std::vector<double> &C2)
 {
     size_t size1 = C1.size(), size2 = C2.size();
     size1 = size1 < size2 ? size1 : size2;
@@ -3733,11 +3756,73 @@ double dot(std::vector<double> C1, std::vector<double> C2)
     return result;
 }
 
+size_t ortho_norm(std::vector<std::vector<double>> & H_n_C, Matrix & A, double colinear_threshold)
+{
+    size_t order = H_n_C.size() - 1;
+    Vector N(order);
+    Matrix QC(order, order), QHC(order, order);
+
+    N.set(0, 1.0);
+    QC.set(0, 0, 1.0);
+    QHC.set(0, 0, A.get(0,0));
+
+    for (size_t n = 1; n < order; n++) {
+        for (size_t m = 0; m < n; m++) {
+            double qm_dot_Cn = dot(H_n_C[m], H_n_C[n]);
+            QC.set(m,n,qm_dot_Cn);
+            add(H_n_C[n], -qm_dot_Cn, H_n_C[m]);
+        }
+        double norm = normalize(H_n_C[n]);
+        if (norm < colinear_threshold)
+            return n;
+        N.set(n, 1.0/norm);
+        for (size_t m = 0; m < n; m++) {
+            double correction = 0.0;
+            for (size_t i = 0; i < n; i++) {
+                correction += QC.get(i,n) * A.get(i,m);
+            }
+            double QmHCn = dot(H_n_C[m], H_n_C[n+1]);
+            QHC.set(m,n, QmHCn);
+            double Anm = N.get(n) * (QmHCn - correction);
+            A.set(m,n,Anm);
+            A.set(n,m,Anm);
+        }
+        double QCQHC_correction = 0.0, QCAQC_correction = 0.0;
+        for (size_t i = 0; i < n; i++) {
+            QCQHC_correction += QC.get(i,n) * QHC.get(i,n);
+            for (size_t j = 0; j < n; j++) {
+                QCAQC_correction += QC.get(i,n) * A.get(i,j) * QC.get(j,n);
+            }
+        }
+        double Ann = N.get(n) * N.get(n) * (A.get(n,n) - 2.0 * QCQHC_correction + QCAQC_correction);
+        A.set(n,n, Ann);
+    }
+
+    outfile -> Printf("\n  QC:");
+    QC.print();
+    outfile -> Printf("\n  QHC:");
+    QHC.print();
+    outfile -> Printf("\n  N:");
+    N.print();
+
+
+    return order;
+}
+
 void add(det_hash<>& A,double beta,det_hash<>& B)
 {
     // A += beta B
     for (auto& det_C : B){
         A[det_C.first] += beta * det_C.second;
+    }
+}
+
+void add(std::vector<double> & a, double k, std::vector<double> & b) {
+    size_t sizeA = a.size(), sizeB = b.size();
+    if (sizeA < sizeB)
+        a.resize(sizeB);
+    for (int i = 0; i < sizeB; i++) {
+        a[i] += k * b[i];
     }
 }
 
