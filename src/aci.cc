@@ -2180,7 +2180,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if( ex_alg_ == "ROOT_ORTHOGONALIZE" and root_ > 0 and cycle >= pre_iter_){
             sparse_solver.set_root_project(true);
             add_bad_roots( P_space_ );
-            sparse_solver.add_bad_roots( bad_roots_ );
+            sparse_solver.add_bad_states( bad_roots_ );
         }
     
         Timer diag;
@@ -2194,7 +2194,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
         }        
         // If doing root-following, grab the initial root
-        if( follow and cycle == pre_iter_){
+        if( follow and pre_iter_ == 0 ){
             for( size_t I = 0, maxI = P_space_.size(); I < maxI; ++I){
                 P_ref.push_back( std::make_pair( P_space_[I], P_evecs->get(I, ref_root_) ));
             } 
@@ -2247,7 +2247,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if( (options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle >= pre_iter_){
             sparse_solver.set_root_project(true);
             add_bad_roots( PQ_space_ );
-            sparse_solver.add_bad_roots( bad_roots_ );
+            sparse_solver.add_bad_states( bad_roots_ );
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
@@ -2285,6 +2285,14 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
        // }
         num_ref_roots = std::min(nroot_,int(PQ_space_.size()));
 
+        // If doing root-following, grab the initial root
+        if( follow and cycle == (pre_iter_ - 1)){
+            for( size_t I = 0, maxI = PQ_space_.size(); I < maxI; ++I){
+                P_ref.push_back( std::make_pair( PQ_space_[I], PQ_evecs->get(I, ref_root_) ));
+            } 
+        }
+
+        //if( follow and num_ref_roots > 0 and (cycle >= (pre_iter_ - 1)) ){
         if( follow and num_ref_roots > 0 and (cycle >= pre_iter_) ){
             ref_root_ = root_follow( P_ref, PQ_space_, PQ_evecs, num_ref_roots);
         }
@@ -2400,11 +2408,11 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
             if( detmapper.count(state[I].first) != 0 ){
 //                outfile->Printf("\n %zu, %f ", I, detmapper[state[I].first] , state[I].second );
                 bad_root.push_back(std::make_pair( detmapper[state[I].first], state[I].second  )); 
-            }else{
-                dets.push_back( state[I].first );
-                detmapper[state[I].first] = nadd;
-                bad_root.push_back( std::make_pair(idx + nadd, state[I].second) );
                 nadd++;
+            }else{
+              //  dets.push_back( state[I].first );
+              //  detmapper[state[I].first] = nadd;
+              //  bad_root.push_back( std::make_pair(idx + nadd, state[I].second) );
             }
         }
         bad_roots_.push_back(bad_root);
@@ -2426,30 +2434,6 @@ void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedM
     old_roots_.push_back(vec);
     outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
 }
-
-/*
-void AdaptiveCI::orthogonalize_intersection( std::vector<std::vector<STLBitsetDeterminant>>& state_list, std::vector<std::vector<double>>& evecs  )
-{
-    int nstate = state_list.size();
-
-    // Make sure the number of states matches the number of eigenvectors
-    if ( nstate != evecs.size() ){
-        throw PSIEXCEPTION("\n  %d eigenvectors provided for %d states!", evecs.size(), nstate );
-    }
-
-    for( int n = 0; n < nstate; ++n ){
-
-        // Create hash for current root
-        det_hash<int> root_hash;
-        std::vector<STLBitsetDeterminant>& dets = state_list[n];
-        for( int I = 0, max_I = dets.size(); I < max_I; ++I ){
-            root_hash[ dets[I] ] = I;
-        } 
-
-    }
-
-}
-*/
 
 }} // EndNamespaces
 
