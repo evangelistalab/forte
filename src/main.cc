@@ -546,7 +546,7 @@ read_options(std::string name, Options &options)
         options.add_int("DL_GUESS_SIZE", 100);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
+        ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
         options.add_str("GENERATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA LANCZOS");
@@ -595,6 +595,10 @@ read_options(std::string name, Options &options)
         options.add_double("MAXBETA",1000.0);
         /*- The order of Chebyshev truncation -*/
         options.add_int("CHEBYSHEV_ORDER", 5);
+        /*- The order of Krylov truncation -*/
+        options.add_int("KRYLOV_ORDER", 5);
+        /*- The minimum norm of orthogonal vector -*/
+        options.add_double("COLINEAR_THRESHOLD",1.0e-6);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO

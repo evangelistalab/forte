@@ -185,6 +185,7 @@ void ProjectorCI::startup()
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
     initiator_approx_factor_ = options_.get_double("INITIATOR_APPROX_FACTOR");
+    colinear_threshold_ = options_.get_double("COLINEAR_THRESHOLD");
 
     max_guess_size_ = options_.get_int("MAX_GUESS_SIZE");
     energy_estimate_freq_ = options_.get_int("ENERGY_ESTIMATE_FREQ");
@@ -199,6 +200,7 @@ void ProjectorCI::startup()
     do_initiator_approx_ = options_.get_bool("INITIATOR_APPROX");
     do_perturb_analysis_ = options_.get_bool("PERTURB_ANALYSIS");
     chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
+    krylov_order_ = options_.get_int("KRYLOV_ORDER");
     symm_approx_H_ = options_.get_bool("SYMM_APPROX_H");
 
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
@@ -1088,23 +1090,22 @@ void ProjectorCI::propagate_delta(det_vec& dets,std::vector<double>& C,double sp
 void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
 {
     size_t ref_size = C.size();
-    int krylov_order = chebyshev_order_ < ref_size + 1 ? chebyshev_order_ : ref_size + 1;
-//    int krylov_order = chebyshev_order_;
-
+    int krylov_order = krylov_order_ < ref_size + 1 ? krylov_order_ : ref_size + 1;
+    std::vector<std::vector<double>> H_n_C(krylov_order + 1);
+    H_n_C[0] = C;
     det_hash<> dets_C_hash;
-//    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, C, C, dets_C_hash, 0.0);
-    apply_tau_H_symm(1.0,spawning_threshold,dets,C,dets_C_hash, 0.0);
+    std::vector<double> norms(krylov_order);
+//    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, H_n_C[0], C, dets_C_hash, 0.0);
+//    apply_tau_H_symm(1.0,spawning_threshold,dets,C,dets_C_hash, 0.0);
 //    for (det_hash_it it = dets_C_hash.begin(), endit = dets_C_hash.end(); it != endit; ++it){
 //        outfile -> Printf(" %lf ", it->second);
 //    }
-    std::vector<std::vector<double>> H_n_C(krylov_order + 1);
-    H_n_C[0] = C;
-    copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[1]);
 
-    std::vector<double> norms(krylov_order);
-    norms[0] = normalize(H_n_C[1]);
+//    copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[1]);
 
-    for (int i = 2; i <= krylov_order; i++) {
+//    norms[0] = normalize(H_n_C[1]);
+
+    for (int i = 1; i <= krylov_order; i++) {
 //        for (int k = 0; k < H_n_C[i-1].size(); k++) {
 //            outfile -> Printf(" %lf ", H_n_C[i-1][k]);
 //        }
@@ -1116,11 +1117,11 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
         norms[i-1] = normalize(H_n_C[i]);
     }
 
-    for (int i = 0; i <= krylov_order; i++) {
-        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
-    }
+//    for (int i = 0; i <= krylov_order; i++) {
+//        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
+//    }
 
-    print_vector(norms, "Norms: ");
+//    print_vector(norms, "Norms: ");
 
     Matrix A(krylov_order, krylov_order);
 
@@ -1132,14 +1133,14 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
         }
     }
 
-    outfile -> Printf("\n  A:");
-    A.print();
+//    outfile -> Printf("\n  A:");
+//    A.print();
 
-    size_t current_order = ortho_norm(H_n_C, norms, A, 0.0);
+    size_t current_order = ortho_norm(H_n_C, norms, A, colinear_threshold_);
 
-    for (int i = 0; i <= krylov_order; i++) {
-        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
-    }
+//    for (int i = 0; i <= krylov_order; i++) {
+//        print_vector(H_n_C[i], "H_n_C["+std::to_string(i)+"]");
+//    }
 
     if (current_order < krylov_order)
         outfile -> Printf("\n  Near linear dependency spotted, reduced krylov_order to %d", current_order);
@@ -1153,12 +1154,12 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
     Matrix evecs(current_order, current_order);
     Vector eigs(current_order);
     H.diagonalize(evecs, eigs);
-    outfile -> Printf("\n  H:");
-    H.print();
-    outfile -> Printf("\n  evecs:");
-    evecs.print();
-    outfile -> Printf("\n  eigs:");
-    eigs.print();
+//    outfile -> Printf("\n  H:");
+//    H.print();
+//    outfile -> Printf("\n  evecs:");
+//    evecs.print();
+//    outfile -> Printf("\n  eigs:");
+//    eigs.print();
 
     scale(C, evecs.get(0,0));
     C.resize(dets.size());
@@ -2078,18 +2079,37 @@ void ProjectorCI::apply_tau_H_ref_C_symm(double tau,double spawning_threshold,de
                 }
             }
         }
-//        size_t max_I = C.size();
-//        for (size_t I = ref_max_I; I < max_I; ++I){
-//            // Diagonal contribution
-//            double det_energy = dets[I].energy();
-//            // Diagonal contributions
-//            #pragma omp critical
-//            {
-//                dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
-//            }
-//        }
+        size_t max_I = C.size();
+        for (size_t I = ref_max_I; I < max_I; ++I){
+            // Diagonal contribution
+            double det_energy = dets[I].energy();
+            // Diagonal contributions
+            #pragma omp critical
+            {
+                dets_C_hash[dets[I]] += tau * (det_energy - S) * C[I];
+            }
+        }
     } else {
         outfile->Printf("Symmetric approximated hamiltonian only implemented on dynamic prescreening.");
+    }
+    if (approx_E_flag_) {
+        timer_on("PIFCI:<E>a");
+        size_t max_I = dets.size();
+        double CHC_energy = 0.0;
+#pragma omp parallel for reduction(+:CHC_energy)
+        for (size_t I = 0; I < max_I; ++I){
+            CHC_energy += C[I] * dets_C_hash[dets[I]];
+        }
+        CHC_energy = CHC_energy/tau + S + nuclear_repulsion_energy_;
+        timer_off("PIFCI:<E>a");
+        double CHC_energy_gradient = (CHC_energy - approx_energy_) / (time_step_ * energy_estimate_freq_);
+        old_approx_energy_ = approx_energy_;
+        approx_energy_ = CHC_energy;
+        approx_E_flag_ = false;
+        approx_E_tau_ = tau;
+        approx_E_S_ = S;
+        if (iter_ != 0)
+            outfile->Printf(" %20.12f %10.3e",approx_energy_,CHC_energy_gradient);
     }
 
 //    outfile -> Printf("\napply_tau_H_ref_C_symm : End:");
@@ -3818,8 +3838,8 @@ size_t ortho_norm(std::vector<std::vector<double>> & H_n_C, std::vector<double> 
             add(H_n_C[n], -qm_dot_Cn, H_n_C[m]);
         }
         double norm = normalize(H_n_C[n]);
-        outfile->Printf("\nCorrect norm order %d: %e", n, norm);
-        if (norm < colinear_threshold)
+//        outfile->Printf("\nCorrect norm order %d: %e", n, norm);
+        if (norm < colinear_threshold && n > 1)
             return n;
         N.set(n, 1.0/norm);
         for (size_t m = 0; m < n; m++) {

@@ -202,8 +202,12 @@ private:
     // * Chebyshev Generator
     /// Range of Hamiltonian
     double range_;
-    /// Order of truncate
+    /// Order of Chebyshev truncate
     int chebyshev_order_;
+    /// Order of Krylov subspace truncate
+    int krylov_order_;
+    /// Threshold for norm of orthogonal basis to be colinear.
+    double colinear_threshold_;
 
     // * Convergence analysis
     /// Shift of Hamiltonian
