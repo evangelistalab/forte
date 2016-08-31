@@ -549,7 +549,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("GENERATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA LANCZOS");
+        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -599,6 +599,8 @@ read_options(std::string name, Options &options)
         options.add_int("KRYLOV_ORDER", 5);
         /*- The minimum norm of orthogonal vector -*/
         options.add_double("COLINEAR_THRESHOLD",1.0e-6);
+        /*- Do spawning according to reference -*/
+        options.add_bool("REFERENCE_SPAWNING",false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO

@@ -61,7 +61,7 @@ void Taylor_polynomial_coefs(std::vector<double>& coefs, int order);
 void Chebyshev_polynomial_coefs(std::vector<double>& coefs, int order);
 void Exp_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
-void Delta_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range);
 void print_polynomial(std::vector<double>& coefs);
 
 void print_vector(const std::vector<double>& C, std::string description)
@@ -202,6 +202,11 @@ void ProjectorCI::startup()
     chebyshev_order_ = options_.get_int("CHEBYSHEV_ORDER");
     krylov_order_ = options_.get_int("KRYLOV_ORDER");
     symm_approx_H_ = options_.get_bool("SYMM_APPROX_H");
+    reference_spawning_ = options_.get_bool("REFERENCE_SPAWNING");
+    if (reference_spawning_ && !symm_approx_H_) {
+        symm_approx_H_ = true;
+        outfile->Printf("\n\n  Warning! Use of symmetric approximated Hamiltonian is enforced by using reference spawning.");
+    }
 
     variational_estimate_ = options_.get_bool("VAR_ESTIMATE");
     print_full_wavefunction_ = options_.get_bool("PRINT_FULL_WAVEFUNCTION");
@@ -245,14 +250,6 @@ void ProjectorCI::startup()
             outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    }else if (options_.get_str("GENERATOR") == "DELTA-CHEBYSHEV"){
-        generator_ = DeltaChebyshevGenerator;
-        generator_description_ = "Delta-Chebyshev";
-        time_step_ = 1.0;
-        if (chebyshev_order_ <= 0) {
-            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
-            chebyshev_order_ = 5;
-        }
     }else if (options_.get_str("GENERATOR") == "CHEBYSHEV"){
         generator_ = ChebyshevGenerator;
         generator_description_ = "Chebyshev";
@@ -261,14 +258,22 @@ void ProjectorCI::startup()
             outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
             chebyshev_order_ = 5;
         }
-    }else if (options_.get_str("GENERATOR") == "DELTA"){
-        generator_ = DeltaGenerator;
-        generator_description_ = "Delta-Chebyshev-Iter-Power";
+    }else if (options_.get_str("GENERATOR") == "WALL-CHEBYSHEV"){
+        generator_ = WallChebyshevGenerator;
+        generator_description_ = "Wall-Chebyshev";
         time_step_ = 1.0;
+        if (chebyshev_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Chebyshev order %d out of bound, automatically adjusted to 5.", chebyshev_order_);
+            chebyshev_order_ = 5;
+        }
     }else if (options_.get_str("GENERATOR") == "LANCZOS"){
         generator_ = LanczosGenerator;
         generator_description_ = "Lanczos";
         time_step_ = 1.0;
+        if (krylov_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Krylov order %d out of bound, automatically adjusted to 5.", krylov_order_);
+            krylov_order_ = 5;
+        }
     }
 
     num_threads_ = omp_get_max_threads();
@@ -536,9 +541,8 @@ void ProjectorCI::compute_characteristic_function()
     case ChebyshevGenerator:
         Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
         break;
-    case DeltaGenerator:
-    case DeltaChebyshevGenerator:
-        Delta_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
+    case WallChebyshevGenerator:
+        Wall_Chebyshev_generator_coefs(cha_func_coefs_, chebyshev_order_, time_step_, shift_, range_);
     default:
         break;
     }
@@ -664,7 +668,7 @@ void Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau
     Polynomial_generator_coefs(coefs, poly_coefs, -1.0/range, 0.0);
 }
 
-void Delta_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
+void Wall_Chebyshev_generator_coefs(std::vector<double>& coefs, int order, double tau, double S, double range)
 {
     coefs.clear();
     std::vector<double> poly_coefs;
@@ -1017,8 +1021,8 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets, std::vector<
     }
 
     switch (generator) {
-    case DeltaGenerator:
-        propagate_delta(dets,C,spawning_threshold,S);
+    case WallChebyshevGenerator:
+        propagate_wallCh(dets,C,spawning_threshold,S);
         break;
     case LanczosGenerator:
         propagate_Lanczos(dets,C,spawning_threshold,S);
@@ -1065,22 +1069,32 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets, std::vector<
     normalize(C);
 }
 
-void ProjectorCI::propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
+void ProjectorCI::propagate_wallCh(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S)
 {
 
     // A map that contains the pair (determinant,coefficient)
     const double PI = 2*acos(0.0);
     det_hash<> dets_C_hash;
+    std::vector<double> ref_C;
+    if (reference_spawning_) {
+        ref_C = C;
+    }
     for (int i = chebyshev_order_; i>0; i--) {
 //        outfile->Printf("\nCurrent root:%.12lf",range_ * root + shift_);
 //        apply_tau_H(-1.0/range_,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
         double root = -cos(((double)i)*PI/(chebyshev_order_ + 0.5));
-        if (symm_approx_H_) {
-            apply_tau_H_symm(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+        if (reference_spawning_) {
+            apply_tau_H_ref_C_symm(-1.0,spawning_threshold,dets,C, ref_C,dets_C_hash, range_ * root + shift_);
+            copy_hash_to_vec_order_ref(dets_C_hash,dets,C);
         } else {
-            apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+            if (symm_approx_H_) {
+                apply_tau_H_symm(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+            } else {
+                apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
+            }
+            copy_hash_to_vec(dets_C_hash,dets,C);
         }
-        copy_hash_to_vec(dets_C_hash,dets,C);
+
         dets_C_hash.clear();
         normalize(C);
     }

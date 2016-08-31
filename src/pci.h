@@ -48,9 +48,8 @@ enum GeneratorType {LinearGenerator,
                      OlsenGenerator,
                      DavidsonLiuGenerator,
                      ExpChebyshevGenerator,
-                     DeltaChebyshevGenerator,
+                     WallChebyshevGenerator,
                      ChebyshevGenerator,
-                     DeltaGenerator,
                      LanczosGenerator};
 
 /**
@@ -225,6 +224,10 @@ private:
     /// Use symmetric approximated hamiltonian
     bool symm_approx_H_;
 
+    // * Reference spawning
+    /// Spawning according to the coefficient in a reference
+    bool reference_spawning_;
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -256,7 +259,7 @@ private:
     */
     void propagate(GeneratorType generator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
+    void propagate_wallCh(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
     /// A first-order Generator
     void propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An Trotter-decomposed Generator (H = H^d + H^od)
