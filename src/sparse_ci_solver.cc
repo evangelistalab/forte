@@ -25,6 +25,7 @@ namespace psi{ namespace forte{
 #else
     #define omp_get_max_threads() 1
     #define omp_get_thread_num() 0
+    #define omp_get_num_threads() 1
 #endif
 
 
@@ -37,7 +38,7 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     using bstmap_it = det_hash::iterator;
 
 
-    int ntd = omp_get_max_threads();
+    int ntd = omp_get_num_threads();
     outfile->Printf("\n  Using %d threads.", ntd);
 
     print_ = print_details;
@@ -487,6 +488,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     outfile->Flush();
 }
 
+void SigmaVectorString::add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states )
+{
+//
+}
 
 /*  Single/double creation/annihilaton are labeled as follows
  *  a_ann_list:  0
@@ -863,7 +868,7 @@ Timer single;
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",a_cre_list.size());
     //    outfile->Printf("\n  |A> -> a+_q |A>: %zu",b_cre_list.size());
 	if( print_details ){
-        outfile->Printf("\n  Time spen building single lists: %f s", single.get());
+        outfile->Printf("\n  Time spent building single lists: %f s", single.get());
 		outfile->Printf("\n  Memory for single-hole lists: %f MB",double(mem_tuple_singles) / (1024. * 1024.) ); // Convert to MB
 		outfile->Printf("\n  Memory for single-hole maps:  %f MB", s_map_size / (1024. * 1024.) ); // Convert to MB
 		outfile->Printf("\n  Generating determinants with N-2 electrons.\n");
@@ -1160,11 +1165,34 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
     sigma->zero();
     double* sigma_p = sigma->pointer();
     double* b_p = b->pointer();
-//        outfile->Printf("\n  alpha");
+
+    // Compute the overlap with each root    
+    int nbad = bad_states_.size();
+    std::vector<double> overlap(nbad);
+    if( nbad != 0 ){
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            double dprd = 0.0;
+            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                dprd += bad_state[det].second * b_p[bad_state[det].first];
+            }
+            overlap[n] = dprd;
+        }
+        //outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+    }
+
 
     for (size_t J = 0; J < size_; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                if( bad_state[det].first == J ){
+                    sigma_p[J] -= diag_[J] * bad_state[det].second * overlap[n];
+                }
+            }
+        }
 
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list[J]){
@@ -1176,19 +1204,19 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-//                    outfile->Printf("\n  %zu -> %zu", J, I);
+                    for( int n = 0; n < nbad; ++n ){
+                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                            if( bad_state[det].first == J ){
+                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                            }
+                        }
+                    } 
                 }
             }
         }
     }
- //   outfile->Printf("\n  Printing sigma:");
- //   for (size_t J = 0; J < size_; ++J){
- //       outfile->Printf("\n  %12.9f", sigma_p[J]);
- //   }
-
- //   for (size_t J = 0; J < size_; ++J){
-        // bb singles
-//        outfile->Printf("\n  beta");
+    // bb singles
     for (size_t J = 0; J < size_; ++J){
         for (auto& bJ_mo_sign : b_ann_list[J]){
             const size_t bJ_add = bJ_mo_sign.first;
@@ -1199,13 +1227,19 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = bbJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-//                    outfile->Printf("\n  %zu -> %zu", J, I);
+                    for( int n = 0; n < nbad; ++n ){
+                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                            if( bad_state[det].first == J ){
+                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                            }
+                        }
+                    } 
                 }
             }
         }
     }
-        // aaaa doubles
-//        outfile->Printf("\n  alpha-alpha");
+    // aaaa doubles
     for (size_t J = 0; J < size_; ++J){
         for (auto& aaJ_mo_sign : aa_ann_list[J]){
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
@@ -1221,14 +1255,20 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-//                    outfile->Printf("\n  %zu -> %zu", J, I);
+                    for( int n = 0; n < nbad; ++n ){
+                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                            if( bad_state[det].first == J ){
+                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                            }
+                        }
+                    } 
                 }
             }
         }
     }
 
-        // aabb singles
-//     outfile->Printf("\n  alpha-beta");
+    // aabb singles
     for (size_t J = 0; J < size_; ++J){
         for (auto& abJ_mo_sign : ab_ann_list[J]){
             const size_t abJ_add = std::get<0>(abJ_mo_sign);
@@ -1244,13 +1284,19 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                //    outfile->Printf("\n  %zu -> %zu", J, I);
+                    for( int n = 0; n < nbad; ++n ){
+                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                            if( bad_state[det].first == J ){
+                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                            }
+                        }
+                    } 
                 }
             }
         }
     }
-        // bbbb singles
-//        outfile->Printf("\n  beta-beta");
+    // bbbb singles
     for (size_t J = 0; J < size_; ++J){
         for (auto& bbJ_mo_sign : bb_ann_list[J]){
             const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
@@ -1266,12 +1312,30 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-//                   outfile->Printf("\n  %zu -> %zu", J, I);
+                    for( int n = 0; n < nbad; ++n ){
+                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
+                            if( bad_state[det].first == J ){
+                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                            }
+                        }
+                    } 
                 }
             }
         }
     }
+
 }
+
+
+void SigmaVectorList::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
+{
+    bad_states_.clear();
+    for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
+        bad_states_.push_back( roots[i] );
+    }
+}
+
 
 void SigmaVectorList::get_diagonal(Vector& diag)
 {
@@ -1344,6 +1408,7 @@ void SparseCISolver::diagonalize_davidson_liu_solver(const std::vector<STLBitset
     // Diagonalize H
     SigmaVectorList svl (space, print_details_);
     SigmaVector* sigma_vector = &svl;
+    sigma_vector->add_bad_roots( bad_states_ );
     davidson_liu_solver(space,sigma_vector,evals,evecs,nroot,multiplicity);
 }
 
@@ -1391,6 +1456,26 @@ SharedMatrix SparseCISolver::build_full_hamiltonian(const std::vector<STLBitsetD
             H->set(J,I,HIJ);
         }
     }
+    
+    if( root_project_ ){
+        // Form the projection matrix
+        for( int n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
+            SharedMatrix P(new Matrix("P", dim_space, dim_space));
+            P->identity();
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            for( size_t det1 = 0, ndet = bad_state.size(); det1 < ndet; ++det1 ){
+                for( size_t det2 = 0; det2< ndet; ++det2 ){
+                    size_t& I = bad_state[det1].first;
+                    size_t& J = bad_state[det2].first;
+                    double& el1 = bad_state[det1].second;
+                    double& el2 = bad_state[det2].second;
+                    P->set( I, J, P->get(I,J) - el1*el2);
+                }
+            }
+            H->transform(P);
+        }
+    }
+
     return H;
 }
 
@@ -1565,36 +1650,6 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
         }
     }
 
-    // Project out lower roots from the guess
-    if( root_project_ ){
-        for( size_t n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
-            outfile->Printf("\n  Projecting out root %d from intial guess", n);
-            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-            for( size_t g = 0, max_g = guess.size(); g < max_g; ++g ){
-                std::vector<std::pair<size_t,double>>& guess_state = guess[n].second;
-
-                // loop through each guess
-                double overlap = 0.0;
-                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
-                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
-                        if( guess_state[I].first == bad_state[J].first  ){
-                            overlap += guess_state[I].second * bad_state[J].second;
-                        }
-                    }
-                } 
-                for( size_t I = 0, max_I = guess_state.size(); I < max_I; ++I ){
-                    for( size_t J = 0, max_J = bad_state.size(); J < max_J; ++J ){
-                        if( guess_state[I].first == bad_state[J].first  ){
-                            guess[n].second[I].second -= overlap * guess_state[I].second;
-                        }
-                    }
-                } 
-            }
-        }
-    }
-
-    return guess;
-
 //    // Check the spin
 //    for (int r = 0; r < nguess; ++r){
 //        double s2 = 0.0;
@@ -1611,9 +1666,11 @@ std::vector<std::pair<double,std::vector<std::pair<size_t,double>>>> SparseCISol
 //        }
 //        outfile->Printf("\n  Guess Root %d: <E> = %f, <S^2> = %f",r,e,s2);
 //    }
+
+    return guess;
  }
 
-void SparseCISolver::add_bad_roots( std::vector<std::vector<std::pair<size_t, double>>>& roots )
+void SparseCISolver::add_bad_states( std::vector<std::vector<std::pair<size_t, double>>>& roots )
 {
     bad_states_.clear();
     for( int i = 0, max_i = roots.size(); i < max_i; ++i ){
@@ -1649,7 +1706,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     dls.startup(sigma);
 
     size_t guess_size = dls.collapse_size();
-    if (print_details_) outfile->Printf("\n  number of guess vectors: %d",guess_size);
 
     auto guess = initial_guess(space,nroot,multiplicity);
 
@@ -1666,14 +1722,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     }
 
     std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
-    if( root_project_ ){
-        for( int n = 0, max_n = bad_states_.size(); n< max_n; ++n ){
-            bad_roots.push_back( bad_states_[n] );
-            outfile->Printf("\n  Root %d has %zu elements to project out", n, bad_states_[n].size());
-        }
-        outfile->Printf("\n  Added %zu bad roots", bad_states_.size());
-    } 
-
     for (size_t n = 0; n < nguess; ++n){
         b->zero();
         for (auto& guess_vec_info : guess[guess_list[n]].second){
@@ -1681,31 +1729,8 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         }
         if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
 
-        // Project bad roots out of guess
-        if( root_project_ ){
-            for( int n = 0, max_n = bad_states_.size(); n < max_n; ++n ){
-                for( auto& bad_root : bad_states_ ){
-                    double overlap = 0.0;
-                    for( auto& det : bad_root ){
-                        size_t I = det.first;
-                        double CI = det.second;
-                        overlap += b->get(I) * CI;
-                    }
-                    for( auto& det : bad_root ){
-                        size_t I = det.first;
-                        double CI = det.second;
-                        b->set( I, b->get(I) - overlap * CI );  
-                    }
-                } 
-            }
-        }
-        double norm = 1.0 / std::sqrt( b->norm() );
-        b->scale( norm );        
-
-        outfile->Printf("\n  Norm of guess %d: %1.8f",n, b->norm());
         dls.add_guess(b);
     }
-
     // Prepare a list of bad roots to project out and pass them to the solver
     for (auto& g : guess){
         if (g.first != multiplicity) bad_roots.push_back(g.second);
@@ -1717,14 +1742,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
 
     SolverStatus converged = SolverStatus::NotConverged;
     
-//    for( int i = 0; i < fci_size; ++i ){
-//        if( b->get(i) > 0 ){
-//        outfile->Printf("\n b: %f", b->get(i));
-//        space[i].print();
-//        outfile->Printf("\n");
-//        }
-//    }
-
     if(print_details_){
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
         outfile->Printf("\n  ----------------------------------------");
@@ -1742,6 +1759,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
         do{
             dls.get_b(b);
             sigma_vector->compute_sigma(sigma,b);
+
             add_sigma = dls.add_sigma(sigma);
         } while (add_sigma);
 
