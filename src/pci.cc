@@ -816,8 +816,14 @@ double ProjectorCI::compute_energy()
             if (cycle == 0)  approx_energy_gradient = 10.0 * e_convergence_+1.0;
 
 
-            outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
-                            proj_energy,proj_energy_gradient);
+            if (generator_ != LanczosGenerator) {
+                outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
+                                proj_energy,proj_energy_gradient);
+            } else {
+                outfile->Printf("\n%9d %8d %10zu %20.12f %10.3e",cycle,krylov_order_,C.size(),
+                                proj_energy,proj_energy_gradient);
+            }
+
 
             if (variational_estimate_) {
                 var_energy = results["VARIATIONAL ENERGY"];
