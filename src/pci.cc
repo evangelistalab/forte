@@ -1137,6 +1137,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 
 //    print_vector(norms, "Norms: ");
 
+//// Orthogonal solver BEGIN
     Matrix A(krylov_order, krylov_order);
 
     for (int i = 0; i < krylov_order; i++) {
@@ -1159,29 +1160,77 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
     if (current_order < krylov_order)
         outfile -> Printf("\n  Near linear dependency spotted, reduced krylov_order to %d", current_order);
 
-    Matrix H(current_order, current_order);
+    SharedMatrix H(new Matrix (current_order, current_order));
+
     for (int i = 0; i < current_order; i++) {
         for (int j = 0; j < current_order; j++) {
-            H.set(i,j, A.get(i,j));
+            H->set(i,j, A.get(i,j));
         }
     }
-    Matrix evecs(current_order, current_order);
-    Vector eigs(current_order);
-    H.diagonalize(evecs, eigs);
-//    outfile -> Printf("\n  H:");
-//    H.print();
-//    outfile -> Printf("\n  evecs:");
-//    evecs.print();
-//    outfile -> Printf("\n  eigs:");
-//    eigs.print();
+    SharedMatrix evecs(new Matrix (current_order, current_order));
+    SharedVector eigs(new Vector(current_order));
+    H->diagonalize(evecs, eigs);
 
-    scale(C, evecs.get(0,0));
+//    outfile -> Printf("\n  H:");
+//    H->print();
+//    outfile -> Printf("\n  evecs:");
+//    evecs->print();
+//    outfile -> Printf("\n  eigs:");
+//    eigs->print();
+
+    int ground_index = 0;
+    double abs_ground_coef = fabs(evecs->get(0, ground_index));
+    for (int i = 1; i < current_order; i++) {
+        if (fabs(evecs->get(0, i)) > abs_ground_coef) {
+            abs_ground_coef = fabs(evecs->get(0, i));
+            ground_index = i;
+        }
+    }
+
+    while (ground_index != 0) {
+        current_order -= ground_index;
+        H.reset(new Matrix (current_order, current_order));
+        for (int i = 0; i < current_order; i++) {
+            for (int j = 0; j < current_order; j++) {
+                H->set(i,j, A.get(i,j));
+            }
+        }
+        evecs.reset(new Matrix (current_order, current_order));
+        eigs.reset(new Vector(current_order));
+        H->diagonalize(evecs, eigs);
+
+//        outfile -> Printf("\nRebuilt  H:");
+//        H->print();
+//        outfile -> Printf("\nRebuilt  evecs:");
+//        evecs->print();
+//        outfile -> Printf("\nRebuilt  eigs:");
+//        eigs->print();
+
+        ground_index = 0;
+        abs_ground_coef = fabs(evecs->get(0, ground_index));
+        for (int i = 1; i < current_order; i++) {
+            if (fabs(evecs->get(0, i)) > abs_ground_coef) {
+                abs_ground_coef = fabs(evecs->get(0, i));
+                ground_index = i;
+            }
+        }
+    }
+    if (current_order <= 1) {
+        outfile->Printf("\n\n  Current Krylov order <= 1 !!!");
+        abort();
+    }
+
+    scale(C, evecs->get(0,0));
     C.resize(dets.size());
     for (int i = 1; i < current_order; i++) {
         for (int j = 0; j < H_n_C[i].size(); j++) {
-            C[j] += evecs.get(i,0) * H_n_C[i][j];
+            C[j] += evecs->get(i,0) * H_n_C[i][j];
         }
     }
+    krylov_order_ = current_order;
+
+
+//// Orthogonal solver BEGIN
 
 //// print Hamiltonian
 //    outfile->Printf("\n[");
@@ -1203,6 +1252,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //    }
 //    outfile -> Printf("\n");
 
+//// Diagonalize overlap matrix BEGIN
 //    SharedMatrix A(new Matrix (krylov_order, krylov_order));
 //    SharedMatrix B(new Matrix (krylov_order, krylov_order));
 
@@ -1232,7 +1282,9 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //    evecs -> print();
 //    A -> print();
 //    krylov_order = 2;
+//// Diagonalize overlap matrix END
 
+//// Generalized eigenvalue problem solver BEGIN
 //    Matrix t(krylov_order, krylov_order);
 //    Matrix m(krylov_order, krylov_order);
 
@@ -1300,6 +1352,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //            C[j] += t.get(0,0,i) * H_n_C[i][j];
 //        }
 //    }
+//// Generalized eigenvalue problem solver END
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
