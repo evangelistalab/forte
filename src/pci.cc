@@ -888,8 +888,8 @@ double ProjectorCI::compute_energy()
     outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,approx_energy_);
     outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - approx_energy_);
 
-    double pfError = estimate_path_filtering_error(dets, C, spawning_threshold_);
-    outfile->Printf("\n\n  * Adaptive-CI Path-filtering Error  <= %18.12f Eh",1,pfError);
+//    double pfError = estimate_path_filtering_error(dets, C, spawning_threshold_);
+//    outfile->Printf("\n\n  * Adaptive-CI Path-filtering Error  <= %18.12f Eh",1,pfError);
 
     if (do_perturb_analysis_) {
         double error_2nd_perturb_sub, error_2nd_perturb_full;
