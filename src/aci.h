@@ -372,6 +372,8 @@ private:
 
     /// Print Summary
     void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+
+    void compute_multistate();
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
 //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
