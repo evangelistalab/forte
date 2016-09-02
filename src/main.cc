@@ -488,7 +488,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE MULTISTATE");
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/

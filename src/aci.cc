@@ -510,6 +510,7 @@ double AdaptiveCI::compute_energy()
     bool multi_state = false;
         
     if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE"   or 
+        options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
         options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE" ){
         nrun = nroot_;
         multi_state = true;
@@ -534,7 +535,11 @@ double AdaptiveCI::compute_energy()
             // Combine selected determinants into total space
             merge_determinants( full_space, PQ_space_ );
             PQ_space_.clear();    
-        }else if (ex_alg_ == "ROOT_ORTHOGONALIZE" and i != (nrun - 1)){
+        }else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")  and i != (nrun - 1)){
+            // orthogonalize
+            save_old_root( PQ_space_, PQ_evecs, i);
+            //compute_rdms( PQ_space_, PQ_evecs, i,i);
+        }else if ((ex_alg_ == "MULTISTATE")){
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
@@ -564,6 +569,10 @@ double AdaptiveCI::compute_energy()
         sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
         sparse_solver.diagonalize_hamiltonian(full_space,PQ_evals,PQ_evecs,nroot_,wavefunction_multiplicity_,diag_method_);
 
+    }
+
+    if( ex_alg_ == "MULTISTATE" ){
+        compute_multistate(); 
     }
 
     // Compute the RDMs
@@ -2158,6 +2167,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         bool follow = false;
         if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" or
             options_.get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" or
+            options_.get_str("EXCITED_ALGORITHM") == "MULTISTATE" or
             options_.get_str("EXCITED_ALGORITHM") == "ROOT_ORTHOGONALIZE"){
             
             follow = true;
@@ -2433,6 +2443,88 @@ void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedM
     } 
     old_roots_.push_back(vec);
     outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
+}
+
+void AdaptiveCI::compute_multistate()
+{
+    outfile->Printf("\n  Computing multistate solution");
+    int nroot = old_roots_.size();
+
+    //Form the overlap matrix
+
+    SharedMatrix S(new Matrix(nroot,nroot)); 
+    S->identity();
+    for( int A = 0; A < nroot; ++A ){
+        std::vector<std::pair<STLBitsetDeterminant, double>>& stateA = old_roots_[A];
+        size_t ndetA = stateA.size();
+        for( int B = 0; B < nroot; ++B ){
+            if( A == B ) continue;
+            std::vector<std::pair<STLBitsetDeterminant, double>>& stateB = old_roots_[B];
+            size_t  ndetB = stateB.size();
+            double overlap = 0.0;
+            
+            for( size_t I = 0; I < ndetA; ++I){
+                STLBitsetDeterminant& detA = stateA[I].first;
+                for( size_t J = 0; J < ndetB; ++J ){
+                    STLBitsetDeterminant& detB = stateB[J].first;
+                    if( detA == detB ){
+                        overlap += stateA[I].second * stateB[J].second;
+                    }
+                }
+            }
+            S->set( A, B, overlap );
+        }
+    }
+
+    //Diagonalize the overlap
+    SharedMatrix Sevecs(new Matrix(nroot,nroot));
+    SharedVector Sevals(new Vector(nroot));
+    S->diagonalize(Sevecs,Sevals);
+
+    // Form symmetric orthogonalization matrix
+
+    SharedMatrix Strans(new Matrix(nroot,nroot));
+    SharedMatrix Diag(new Matrix(nroot,nroot));
+    Diag->identity();
+    for( int n = 0; n < nroot; ++n ){
+        Diag->set( n,n, -1.0 * sqrt(Sevals->get(n)));
+    }
+
+
+    Strans->transform(Sevecs,Diag,Sevecs);
+    
+    // Form the Hamiltonian
+
+    SharedMatrix H(new Matrix(nroot,nroot));
+
+    for( int A = 0; A < nroot; ++A ){
+        std::vector<std::pair<STLBitsetDeterminant, double>>& stateA = old_roots_[A];
+        size_t ndetA = stateA.size();
+        for( int B = A; B < nroot; ++B ){
+            std::vector<std::pair<STLBitsetDeterminant, double>>& stateB = old_roots_[B];
+            size_t ndetB = stateB.size();
+            double HIJ = 0.0; 
+            for( size_t I = 0; I < ndetA; ++I){
+                STLBitsetDeterminant& detA = stateA[I].first;
+                for( size_t J = 0; J < ndetB; ++J ){
+                    STLBitsetDeterminant& detB = stateB[J].first;
+                    HIJ += detA.slater_rules(detB) * stateA[I].second * stateB[J].second;
+                }
+            }
+            H->set( A, B, HIJ );
+            H->set( B, A, HIJ );
+        }
+    }
+    H->print();    
+    H->transform(Strans);
+ //`   H->transform(Sevecs);
+
+    SharedMatrix Hevecs(new Matrix(nroot,nroot));
+    SharedVector Hevals(new Vector(nroot));
+    
+    H->diagonalize(Hevecs,Hevals);
+    
+    Hevals->print();
 }
 
 }} // EndNamespaces
