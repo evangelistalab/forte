@@ -48,9 +48,8 @@ enum GeneratorType {LinearGenerator,
                      OlsenGenerator,
                      DavidsonLiuGenerator,
                      ExpChebyshevGenerator,
-                     DeltaChebyshevGenerator,
+                     WallChebyshevGenerator,
                      ChebyshevGenerator,
-                     DeltaGenerator,
                      LanczosGenerator};
 
 /**
@@ -202,8 +201,12 @@ private:
     // * Chebyshev Generator
     /// Range of Hamiltonian
     double range_;
-    /// Order of truncate
+    /// Order of Chebyshev truncate
     int chebyshev_order_;
+    /// Order of Krylov subspace truncate
+    int krylov_order_;
+    /// Threshold for norm of orthogonal basis to be colinear.
+    double colinear_threshold_;
 
     // * Convergence analysis
     /// Shift of Hamiltonian
@@ -220,6 +223,10 @@ private:
     bool do_perturb_analysis_;
     /// Use symmetric approximated hamiltonian
     bool symm_approx_H_;
+
+    // * Reference spawning
+    /// Spawning according to the coefficient in a reference
+    bool reference_spawning_;
 
     // ==> Class functions <==
 
@@ -252,7 +259,7 @@ private:
     */
     void propagate(GeneratorType generator,det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// A Delta projector fitted by 10th order chebyshev polynomial
-    void propagate_delta(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
+    void propagate_wallCh(det_vec& dets,std::vector<double>& C,double spawning_threshold,double S);
     /// A first-order Generator
     void propagate_Linear(det_vec& dets,std::vector<double>& C,double tau,double spawning_threshold,double S);
     /// An Trotter-decomposed Generator (H = H^d + H^od)
