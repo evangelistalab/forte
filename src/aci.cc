@@ -518,6 +518,7 @@ double AdaptiveCI::compute_energy()
 
     std::vector<STLBitsetDeterminant> full_space;
     std::vector<size_t> sizes(nroot_);
+    SharedVector energies(new Vector(nroot_));
 
     for( int i = 0; i < nrun; ++i ){
         if(!quiet_mode_) outfile->Printf("\n  Computing wavefunction for root %d", i); 
@@ -535,9 +536,10 @@ double AdaptiveCI::compute_energy()
             // Combine selected determinants into total space
             merge_determinants( full_space, PQ_space_ );
             PQ_space_.clear();    
-        }else if ((ex_alg_ == "ROOT_ORTHOGONALIZE")  and i != (nrun - 1)){
+        }else if ((ex_alg_ == "ROOT_ORTHOGONALIZE") ){// and i != (nrun - 1)){
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
+            energies->set(i,PQ_evals->get(i));
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }else if ((ex_alg_ == "MULTISTATE")){
             // orthogonalize
@@ -585,9 +587,8 @@ double AdaptiveCI::compute_energy()
     if( !quiet_mode_ ){
         if( ex_alg_ == "ROOT_COMBINE" ){
             print_final( full_space, PQ_evecs, PQ_evals );
-        }else if ( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
-        }else{
-            print_final( PQ_space_, PQ_evecs, PQ_evals );
+        }else if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+            print_final( PQ_space_, PQ_evecs, energies );
         }
     }
     outfile->Flush();
@@ -623,8 +624,8 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
     // Print a summary
     outfile->Printf("\n\n  ==> ACI Summary <==\n");
 
-	outfile->Printf("\n  Iterations required:                         %zu", cycle_);
-	outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
+	    outfile->Printf("\n  Iterations required:                         %zu", cycle_);
+	    outfile->Printf("\n  Dimension of optimized determinant space:    %zu\n", dim);
     if( nroot_ == 1 ){
         outfile->Printf("\n  ACI(%.3f) Correlation energy: %.12f Eh", sigma_, reference_determinant_.energy() - PQ_evals->get(ref_root_));
     }
@@ -647,13 +648,15 @@ void AdaptiveCI::print_final( std::vector<STLBitsetDeterminant>& dets, SharedMat
         outfile->Printf("\n\n  Root %d Energy + PT2:         %.12f", ref_root_, PQ_evals->get(ref_root_) + nuclear_repulsion_energy_ + fci_ints_->scalar_energy()+ multistate_pt2_energy_correction_[ref_root_]);
     }
 
-    outfile->Printf("\n\n  ==> Wavefunction Information <==");
+    if( ex_alg_ != "ROOT_ORTHOGONALIZE" ){
+        outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
-    print_wfn(dets, PQ_evecs, nroot_);
+        print_wfn(dets, PQ_evecs, nroot_);
 
-    outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
-    outfile->Printf(  "\n  __________ 	____________   ________________ ");
-    wfn_analyzer(dets, PQ_evecs, nroot_);	
+        outfile->Printf("\n\n     Order		 # of Dets        Total |c^2|   ");
+        outfile->Printf(  "\n  __________ 	____________   ________________ ");
+        wfn_analyzer(dets, PQ_evecs, nroot_);	
+    }
 
    // if(options_.get_bool("DETERMINANT_HISTORY")){
    // 	outfile->Printf("\n Det history (number,cycle,origin)");
