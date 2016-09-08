@@ -589,7 +589,10 @@ double AdaptiveCI::compute_energy()
             print_final( full_space, PQ_evecs, PQ_evals );
         }else if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
             print_final( PQ_space_, PQ_evecs, energies );
+        }else{
+            print_final( PQ_space_, PQ_evecs, PQ_evals );
         }
+        
     }
     outfile->Flush();
 
