@@ -50,7 +50,8 @@ enum GeneratorType {LinearGenerator,
                      ExpChebyshevGenerator,
                      WallChebyshevGenerator,
                      ChebyshevGenerator,
-                     LanczosGenerator};
+                     LanczosGenerator,
+                     DLGenerator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -283,6 +284,8 @@ private:
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
     /// The Lanczos Generator
     void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
+    /// The DL Generator
+    void propagate_DL(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
