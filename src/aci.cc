@@ -539,7 +539,7 @@ double AdaptiveCI::compute_energy()
         }else if ((ex_alg_ == "ROOT_ORTHOGONALIZE") ){// and i != (nrun - 1)){
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
-            energies->set(i,PQ_evals->get(i));
+            energies->set(i,PQ_evals->get(0));
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }else if ((ex_alg_ == "MULTISTATE")){
             // orthogonalize
