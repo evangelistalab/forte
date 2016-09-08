@@ -549,7 +549,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS");
+        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS DL");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
