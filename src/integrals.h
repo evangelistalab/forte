@@ -27,7 +27,7 @@ namespace forte{
 /// This decides the type of transformation: resticted vs. unrestricted
 enum IntegralSpinRestriction {RestrictedMOs,UnrestrictedMOs};
 enum IntegralFrozenCore {RemoveFrozenMOs,KeepFrozenMOs};
-enum IntegralType {ConventionalInts, DF, Cholesky, DiskDF, DistDF, Effective};
+enum IntegralType {ConventionalInts, DF, Cholesky, DiskDF, DistDF, Effective, Own};
 //The integrals implementation is in a cc file for each class.  
 //DFIntegrals->df_integrals.cc
 
@@ -78,7 +78,7 @@ private:
 
 public:
     /// Return the number of auxiliary functions
-    virtual size_t nthree() const = 0;
+    virtual size_t nthree() {throw PSIEXCEPTION("Not Implemented for this specific Int Type");}
 
     /// Return the frozen core energy
     double scalar() const {return scalar_;}
@@ -792,6 +792,62 @@ private:
     void test_distributed_integrals();
 };
 #endif
+/// This class is used if the user wants to generate their own integrals for their method.  
+/// This would be very useful for CI based methods (the integrals class is wasteful and dumb for this area)
+/// Also, I am putting this here if I(Kevin) ever get around to implementing AO-DSRG-MRPT2
+class OwnIntegrals : public ForteIntegrals {
+public:
+
+      OwnIntegrals(psi::Options &options,SharedWavefunction ref_wfn, IntegralSpinRestriction restricted,IntegralFrozenCore resort_frozen_core, std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+    virtual void retransform_integrals() {}
+    ///aptei_xy functions are slow.  try to use three_integral_block
+
+    virtual double aptei_aa(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {return 0.0;}
+    virtual double aptei_ab(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {return 0.0;}
+    virtual double aptei_bb(size_t /*p*/, size_t /*q*/, size_t /*r*/, size_t /*s*/) {return 0.0;}
+
+    /// Reads the antisymmetrized alpha-alpha chunck and returns an ambit::Tensor
+    virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/, const std::vector<size_t>& /*r*/,
+        const std::vector<size_t>& /*s*/){return blank_tensor_;}
+    virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/, const std::vector<size_t>& /*r*/,
+        const std::vector<size_t>& /*s*/){return blank_tensor_;}
+    virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/, const std::vector<size_t>& /*r*/,
+        const std::vector<size_t>& /*s*/){return blank_tensor_;}
+
+    virtual double diag_aptei_aa(size_t, size_t){return 0.0;}
+    virtual double diag_aptei_ab(size_t, size_t){return 0.0;}
+    virtual double diag_aptei_bb(size_t, size_t){return 0.0;}
+    virtual double three_integral(size_t , size_t, size_t){return 0.0;}
+    virtual double** three_integral_pointer()
+    {
+        throw PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+    }
+    ///Read a block of the DFIntegrals and return an Ambit tensor of size A by p by q
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/, const std::vector<size_t>& /*p*/, const std::vector<size_t>& /*q*/)
+    {return blank_tensor_;}
+    ///return ambit tensor of size A by q
+    virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/, size_t /*p*/, const std::vector<size_t>& /*q*/) {return
+    blank_tensor_;}
+
+    virtual void set_tei(size_t, size_t, size_t,size_t,double,bool,bool) {}
+    virtual ~OwnIntegrals();
+
+    virtual void make_fock_matrix(SharedMatrix /*gamma_a*/,SharedMatrix /*gamma_b*/){}
+
+private:
+    SharedWavefunction wfn_;
+    virtual void gather_integrals() {}
+    virtual void allocate() {}
+    virtual void deallocate() {}
+    virtual void make_diagonal_integrals() {}
+    virtual void resort_three(boost::shared_ptr<Matrix>& /*threeint*/, std::vector<size_t>& /*map*/) {}
+    virtual void resort_integrals_after_freezing() {}
+    virtual void resort_four(double *&, std::vector<size_t> &){}
+    ambit::Tensor blank_tensor_;
+
+};
+
 
 
 
