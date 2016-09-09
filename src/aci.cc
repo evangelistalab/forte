@@ -2161,6 +2161,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
    // compute_aci( PQ_evecs, PQevals );
 
+    std::vector<STLBitsetDeterminant> old_dets;
+    SharedMatrix old_evecs;
+
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
         Timer cycle_time;
@@ -2199,6 +2202,13 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             sparse_solver.add_bad_states( bad_roots_ );
         }
     
+        // Grab and set the guess
+        if( cycle > 0 ){
+            auto guess = dl_initial_guess( old_dets, P_space_, old_evecs );
+            outfile->Printf("\n  Setting guess");
+            sparse_solver.set_initial_guess( guess );
+        }
+
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -2266,6 +2276,13 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             sparse_solver.add_bad_states( bad_roots_ );
         }
 
+        // Grab and set the guess
+        if( cycle > 0 ){
+            auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs );
+            outfile->Printf("\n  Setting guess");
+            sparse_solver.set_initial_guess( guess );
+        }
+
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
 
@@ -2274,8 +2291,12 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
-		// Ensure the solutions are spin-pure
+        // Save the solutions for the next iteration
+        old_dets.clear();
+        old_dets = PQ_space_;
+        old_evecs = PQ_evecs->clone();
 
+		// Ensure the solutions are spin-pure
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
             project_determinant_space(PQ_space_, PQ_evecs, PQ_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
@@ -2360,6 +2381,26 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 	}
 
 
+}
+
+std::vector<std::pair<size_t,double>> AdaptiveCI::dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs)
+{
+    std::vector<std::pair<size_t,double>> guess;
+
+    // Build a hash of new dets
+    det_hash<size_t> detmap;
+    for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+        detmap[dets[I]] = I;
+    }
+
+    // Loop through old dets, store index of old det
+    for( size_t I = 0, max_I = old_dets.size(); I < max_I; ++I ){
+        STLBitsetDeterminant& det = old_dets[I];
+        if( detmap.count(det) != 0 ){
+            guess.push_back( std::make_pair( detmap[det], evecs->get(I, ref_root_)) );
+        }
+    }
+    return guess;
 }
 
 void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 )
