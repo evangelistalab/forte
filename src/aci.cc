@@ -2204,9 +2204,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     
         // Grab and set the guess
         if( cycle > 0 ){
-            auto guess = dl_initial_guess( old_dets, P_space_, old_evecs );
-            outfile->Printf("\n  Setting guess");
-            sparse_solver.set_initial_guess( guess );
+            for( int n = 0; n < num_ref_roots; ++n ){
+                auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, n );
+                outfile->Printf("\n  Setting guess");
+                sparse_solver.set_initial_guess( guess );
+            }
         }
 
         Timer diag;
@@ -2278,9 +2280,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
         // Grab and set the guess
         if( cycle > 0 ){
-            auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs );
-            outfile->Printf("\n  Setting guess");
-            sparse_solver.set_initial_guess( guess );
+            for( int n = 0; n < num_ref_roots; ++n ){
+                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, n );
+                outfile->Printf("\n  Setting guess for root %d", n);
+                sparse_solver.set_initial_guess( guess );
+            }
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
@@ -2383,7 +2387,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
 }
 
-std::vector<std::pair<size_t,double>> AdaptiveCI::dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs)
+std::vector<std::pair<size_t,double>> AdaptiveCI::dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int root)
 {
     std::vector<std::pair<size_t,double>> guess;
 
@@ -2397,7 +2401,7 @@ std::vector<std::pair<size_t,double>> AdaptiveCI::dl_initial_guess( std::vector<
     for( size_t I = 0, max_I = old_dets.size(); I < max_I; ++I ){
         STLBitsetDeterminant& det = old_dets[I];
         if( detmap.count(det) != 0 ){
-            guess.push_back( std::make_pair( detmap[det], evecs->get(I, ref_root_)) );
+            guess.push_back( std::make_pair( detmap[det], evecs->get(I, root)) );
         }
     }
     return guess;
