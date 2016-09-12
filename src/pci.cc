@@ -274,6 +274,14 @@ void ProjectorCI::startup()
             outfile->Printf("\n\n  Warning! Krylov order %d out of bound, automatically adjusted to 5.", krylov_order_);
             krylov_order_ = 5;
         }
+    }else if (options_.get_str("GENERATOR") == "DL"){
+        generator_ = DLGenerator;
+        generator_description_ = "Davidson-Liu by Tianyuan";
+        time_step_ = 1.0;
+        if (krylov_order_ <= 0) {
+            outfile->Printf("\n\n  Warning! Krylov order %d out of bound, automatically adjusted to 8.", krylov_order_);
+            krylov_order_ = 8;
+        }
     }
 
     num_threads_ = omp_get_max_threads();
@@ -849,13 +857,13 @@ double ProjectorCI::compute_energy()
         outfile->Flush();
     }
 
-    det_hash<> dets_C_hash;
-    if (symm_approx_H_) {
-        apply_tau_H_symm(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
-    } else {
-        apply_tau_H(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
-    }
-    dets_C_hash.clear();
+//    det_hash<> dets_C_hash;
+//    if (symm_approx_H_) {
+//        apply_tau_H_symm(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
+//    } else {
+//        apply_tau_H(approx_E_tau_,spawning_threshold_,dets,C,dets_C_hash, approx_E_S_);
+//    }
+//    dets_C_hash.clear();
     if (variational_estimate_) {
         outfile->Printf("\n  --------------------------------------------------------------------------------------------------------------------------------");
     } else {
@@ -1032,6 +1040,9 @@ void ProjectorCI::propagate(GeneratorType generator, det_vec& dets, std::vector<
         break;
     case LanczosGenerator:
         propagate_Lanczos(dets,C,spawning_threshold,S);
+        break;
+    case DLGenerator:
+        propagate_DL(dets,C,spawning_threshold,S);
         break;
     case ChebyshevGenerator:
         propagate_Chebyshev(dets,C,spawning_threshold);
@@ -1359,6 +1370,94 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //        }
 //    }
 //// Generalized eigenvalue problem solver END
+}
+
+void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
+{
+//    size_t ref_size = C.size();
+    std::vector<std::vector<double>> b_vec(krylov_order_);
+    std::vector<std::vector<double>> sigma_vec(krylov_order_);
+    std::vector<double> alpha_vec(krylov_order_);
+    SharedMatrix A(new Matrix (krylov_order_, krylov_order_));
+    b_vec[0] = C;
+    det_hash<> dets_C_hash;
+    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
+    copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
+
+    A->set(0,0,dot(b_vec[0], sigma_vec[0]));
+
+    size_t dets_size = dets.size();
+    std::vector<double> diag_vec(dets_size);
+    for (int i = 0; i < dets_size; i++) {
+        diag_vec[i] = dets[i].energy();
+    }
+
+    double lambda = A->get(0,0);
+    alpha_vec[0] = 1.0;
+    std::vector<double> delta_vec(dets_size);
+    int current_order = 1;
+
+    int i = 1;
+    for (i = 1; i < krylov_order_; i++) {
+        for (int j = 0; j < dets_size; j++) {
+            double r_j = 0.0;
+            for (int k = 0; k < i; k++) {
+                r_j += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
+            }
+            delta_vec[j] = r_j/(lambda - diag_vec[j]);
+        }
+        normalize(delta_vec);
+        for (int m = 0; m < i; m++) {
+            double delta_dot_bm = dot(delta_vec, b_vec[m]);
+            add(delta_vec, -delta_dot_bm, b_vec[m]);
+        }
+        double correct_norm = normalize(delta_vec);
+        if (correct_norm < e_convergence_) {
+            outfile->Printf( "Davidson break at %d-th iter because the correction norm %e is too small.\n", i, correct_norm);
+            break;
+        }
+//        print_vector(delta_vec, "delta_vec");
+        b_vec[i] = delta_vec;
+
+        dets_C_hash.clear();
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[i], C, dets_C_hash, 0.0);
+        copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[i]);
+        for (int m = 0; m < i; m++) {
+            double b_i_dot_sigma_m = dot(b_vec[i], sigma_vec[m]);
+            A->set(i,m,b_i_dot_sigma_m);
+            A->set(m,i,b_i_dot_sigma_m);
+        }
+        A->set(i,i,dot(b_vec[i], sigma_vec[i]));
+
+        current_order = i+1;
+        SharedMatrix G(new Matrix (current_order, current_order));
+
+        for (int i = 0; i < current_order; i++) {
+            for (int j = 0; j < current_order; j++) {
+                G->set(i,j, A->get(i,j));
+            }
+        }
+        SharedMatrix evecs(new Matrix (current_order, current_order));
+        SharedVector eigs(new Vector(current_order));
+        G->diagonalize(evecs, eigs);
+
+        lambda = eigs->get(0);
+        for (int j = 0; j < current_order; j++) {
+            alpha_vec[j] = evecs->get(j,0);
+        }
+    }
+
+//    for (int i = 0; i < krylov_order_; i++) {
+//        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
+//    }
+
+    scale(C, alpha_vec[0]);
+    C.resize(dets.size());
+    for (int i = 1; i < current_order; i++) {
+        for (int j = 0; j < b_vec[i].size(); j++) {
+            C[j] += alpha_vec[i] * b_vec[i][j];
+        }
+    }
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
