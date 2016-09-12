@@ -375,7 +375,7 @@ private:
 
     void compute_multistate();
 
-    std::vector<std::pair<size_t,double>> dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs );
+    std::vector<std::pair<size_t,double>> dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot );
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
 //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);

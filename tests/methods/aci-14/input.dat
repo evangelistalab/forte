@@ -31,7 +31,7 @@ set forte {
   charge 0
   root_sym 0
   ACI_INITIAL_SPACE CISD
-  aci_preiterations 1
+  aci_preiterations 0
   maxiter_davidson 1000
 }
 
