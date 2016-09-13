@@ -141,6 +141,10 @@ private:
     int maxiter_;
     /// The maximum number of iterations in Davidson generator
     int max_Davidson_iter_;
+    /// The number of trial vector to retain after collapsing
+    int davidson_collapse_per_root_;
+    /// The maxim number of trial vectors
+    int davidson_subspace_per_root_;
     /// The current iteration
     int iter_;
     /// The current root
