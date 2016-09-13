@@ -180,8 +180,12 @@ SolverStatus DavidsonLiuSolver::update()
     // form preconditioned residue vectors
     form_correction_vectors();
 
+//    SharedMatrix old_f;
+//    old_f = f->clone();
     // Step #3b: Project out undesired roots
     project_out_roots(f);
+//    old_f->subtract(f);
+//    outfile->Printf("\n Residual: %1.8f", old_f->sum_of_squares());
 
     // Step #4: Orthonormalize the Correction Vectors
     normalize_vectors(f,nroot_);

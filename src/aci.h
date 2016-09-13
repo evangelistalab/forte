@@ -24,6 +24,7 @@
 #define _adaptive_ci_h_
 
 #include <fstream>
+#include <iomanip> 
 
 #include <libmints/wavefunction.h>
 #include <liboptions/liboptions.h>
@@ -136,9 +137,9 @@ private:
     /// The initial reference
     std::string reference_type_;
     /// The threshold applied to the primary space
-    double tau_p_;
+    double sigma_;
     /// The threshold applied to the secondary space
-    double tau_q_;
+    double gamma_;
     /// The prescreening threshold
 	double screen_thresh_;
     /// The number of roots computed
@@ -163,6 +164,8 @@ private:
     DiagonalizationMethod diag_method_ = DLString;
 	/// The reference root
 	int ref_root_;
+	/// The reference root
+	int root_;
     /// Enable aimed selection
     bool aimed_selection_;
     /// If true select by energy, if false use first-order coefficient
@@ -369,6 +372,10 @@ private:
 
     /// Print Summary
     void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
+
+    void compute_multistate();
+
+    std::vector<std::pair<size_t,double>> dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot );
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
 //    /// Perform a Davidson-Liu diagonalization
 //    void davidson_liu(SharedMatrix H,SharedVector Eigenvalues,SharedMatrix Eigenvectors,int nroots);
