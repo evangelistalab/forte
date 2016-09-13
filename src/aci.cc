@@ -2203,7 +2203,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
     
         // Grab and set the guess
-        if( cycle > 0 ){
+        if( cycle > 1 ){
             for( int n = 0; n < num_ref_roots; ++n ){
                 auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, n );
                 outfile->Printf("\n  Setting guess");
@@ -2279,7 +2279,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
         // Grab and set the guess
-        if( cycle > 0 ){
+        if( cycle > 1 ){
             for( int n = 0; n < num_ref_roots; ++n ){
                 auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, n );
                 outfile->Printf("\n  Setting guess for root %d", n);
