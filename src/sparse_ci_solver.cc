@@ -1683,6 +1683,17 @@ void SparseCISolver::set_root_project( bool value )
     root_project_ = value;
 }
 
+void SparseCISolver::set_initial_guess( std::vector< std::pair< size_t, double >>& guess )
+{
+    set_guess_ = true;
+    guess_.clear();
+
+    for( size_t I = 0, max_I = guess.size(); I < max_I; ++I ){
+        guess_.push_back( guess[I] );
+    }
+
+}
+
 bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SigmaVector* sigma_vector,
                                          SharedVector Eigenvalues,
@@ -1705,40 +1716,54 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     sigma_vector->get_diagonal(*sigma);
     dls.startup(sigma);
 
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+
     size_t guess_size = dls.collapse_size();
 
     auto guess = initial_guess(space,nroot,multiplicity);
 
-    std::vector<int> guess_list;
-    for (size_t g = 0; g < guess.size(); ++g){
-        if (guess[g].first == multiplicity) guess_list.push_back(g);
-    }
-
-    // number of guess to be used
-    size_t nguess = std::min(guess_list.size(),guess_size);
-
-    if (nguess == 0){
-        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
-    }
-
-    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
-    for (size_t n = 0; n < nguess; ++n){
-        b->zero();
-        for (auto& guess_vec_info : guess[guess_list[n]].second){
-            b->set(guess_vec_info.first,guess_vec_info.second);
+    if( !set_guess_ ){
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g){
+            if (guess[g].first == multiplicity) guess_list.push_back(g);
         }
-        if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
 
-        dls.add_guess(b);
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(),guess_size);
+
+        if (nguess == 0){
+            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n){
+            b->zero();
+            for (auto& guess_vec_info : guess[guess_list[n]].second){
+                b->set(guess_vec_info.first,guess_vec_info.second);
+            }
+            if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+            
+            dls.add_guess(b);
+        }
     }
+
     // Prepare a list of bad roots to project out and pass them to the solver
     for (auto& g : guess){
         if (g.first != multiplicity) bad_roots.push_back(g.second);
     }
-
-
-
     dls.set_project_out(bad_roots);
+
+    if( set_guess_ ){
+        // Use previous solution as guess
+        b->zero();        
+        for( size_t I = 0, max_I = guess_.size(); I < max_I; ++I ){
+            b->set( guess_[I].first, guess_[I].second );
+        }
+        double norm = sqrt( 1.0 / b->norm() );
+        b->scale(norm);
+        dls.add_guess(b);
+    }
+
+
 
     SolverStatus converged = SolverStatus::NotConverged;
     

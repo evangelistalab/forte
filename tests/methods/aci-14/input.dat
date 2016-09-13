@@ -1,8 +1,8 @@
 import forte
 
 refscf = -75.3790205732515943 
-refaci = -75.639608283030 
-refacipt2 = -75.719527467504
+refaci = -75.645407341861 
+refacipt2 = -75.837464107199
 
 molecule C2{ 
 C  0.00000 0.00000 0.0 
@@ -30,8 +30,8 @@ set forte {
   nroot 3
   charge 0
   root_sym 0
-  average_offset 0
   ACI_INITIAL_SPACE CISD
+  aci_preiterations 0
   maxiter_davidson 1000
 }
 
