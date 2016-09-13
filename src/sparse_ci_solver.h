@@ -199,6 +199,9 @@ public:
     /// Set the size of the guess space
     void set_guess_dimension( size_t value ){ dl_guess_ = value; };
 
+    /// Set the initial guess
+    void set_initial_guess( std::vector< std::pair<size_t,double> >& guess ); 
+
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
     void diagonalize_full(const std::vector<STLBitsetDeterminant>& space,
@@ -246,6 +249,11 @@ private:
 
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
+
+    /// Set the initial guess?
+    bool set_guess_ = false;
+    std::vector<std::pair<size_t,double>> guess_;
+
 };
 
 }}
