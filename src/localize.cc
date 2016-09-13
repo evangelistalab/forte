@@ -26,8 +26,9 @@ LOCALIZE::LOCALIZE(boost::shared_ptr<Wavefunction> wfn, Options &options, std::s
     nel -= options.get_int("CHARGE");
 
     // The wavefunction multiplicity
-    int multiplicity = options.get_int("MULTIPLICITY");
-    int ms = multiplicity - 1;
+    multiplicity_ = options.get_int("MULTIPLICITY");
+    outfile->Printf("\n MULT: %d",multiplicity_);
+    int ms = multiplicity_ - 1;
 
     // The number of active electrons
     int nactel = nel - 2*nfrz_ - 2*nrst_;
@@ -55,6 +56,12 @@ void LOCALIZE::localize_orbitals()
 
     Dimension nsopi = wfn_->nsopi();
     int nirrep = wfn_->nirrep();
+    int off = 0;
+    if( multiplicity_ == 3 ){
+        naocc_ -= 1;
+        navir_ -= 1;
+        off = 2;
+    }
 
     SharedMatrix Caocc( new Matrix("Caocc", nsopi[0], naocc_ )); 
     SharedMatrix Cavir( new Matrix("Cavir", nsopi[0], navir_ )); 
@@ -65,7 +72,7 @@ void LOCALIZE::localize_orbitals()
                 Caocc->set(h, mu, i, Ca->get(h, mu, abs_act_[i]));
             }
             for(int i = 0; i < navir_; ++i){
-                Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i+naocc_]));
+                Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i+naocc_+off]));
             } 
         }
     }
@@ -90,8 +97,8 @@ void LOCALIZE::localize_orbitals()
         } 
         for( int i = 0 ; i < navir_; ++i){
             SharedVector vec = Lvir->get_column(h, i);
-            Ca->set_column(h, i+nfrz_+nrst_+naocc_, vec );
-            Cb->set_column(h, i+nfrz_+nrst_+naocc_, vec );
+            Ca->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
+            Cb->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
         } 
     }
    

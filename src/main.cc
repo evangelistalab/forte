@@ -18,7 +18,7 @@
 #include "multidimensional_arrays.h"
 #include "mp2_nos.h"
 #include "aci.h"
-#include "apici.h"
+#include "pci.h"
 #include "fcimc.h"
 #include "fci_mo.h"
 #include "mrdsrg.h"
@@ -123,13 +123,13 @@ read_options(std::string name, Options &options)
          *  - FCI Full configuration interaction (Francesco's code)
          *  - CAS Full configuration interaction (York's code)
          *  - ACI Adaptive configuration interaction
-         *  - APICI Adaptive path-integral CI
+         *  - PCI Projector CI
          *  - DSRG-MRPT2 Tensor-based DSRG-MRPT2 code
          *  - THREE-DSRG-MRPT2 A DF/CD based DSRG-MRPT2 code.  Very fast
          *  - CASSCF A AO based CASSCF code by Kevin Hannon
         -*/
-        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC APICI FCI CAS DMRG"
-                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-APICI TENSORSRG TENSORSRG-CI"
+        options.add_str("JOB_TYPE","EXPLORER","EXPLORER ACI ACI_SPARSE FCIQMC PCI FCI CAS DMRG"
+                                              " SR-DSRG SR-DSRG-ACI SR-DSRG-PCI TENSORSRG TENSORSRG-CI"
                                               " DSRG-MRPT2 DSRG-MRPT3 MR-DSRG-PT2 THREE-DSRG-MRPT2 SQ NONE"
                                               " SOMRDSRG BITSET_PERFORMANCE MRDSRG MRDSRG_SO CASSCF"
                                               " ACTIVE-DSRGPT2 DSRG_MRPT TASKS");
@@ -472,9 +472,9 @@ read_options(std::string name, Options &options)
         /*- The selection type for the Q-space-*/
         options.add_str("SELECT_TYPE","AIMED_ENERGY","ENERGY AMP AIMED_AMP AIMED_ENERGY");
         /*-Threshold for the selection of the P space -*/
-        options.add_double("TAUP",0.01);
+        options.add_double("SIGMA",0.01);
         /*- The threshold for the selection of the Q space -*/
-        options.add_double("TAUQ",0.01);
+        options.add_double("GAMMA",1.0);
         /*- The SD-space prescreening threshold -*/
         options.add_double("PRESCREEN_THRESHOLD", 1e-9);
         /*- The threshold for smoothing the Hamiltonian. -*/
@@ -488,7 +488,7 @@ read_options(std::string name, Options &options)
         /*Reference to be used in calculating ∆e (q_rel has to be true)*/
         options.add_str("Q_REFERENCE", "GS", "ADJACENT");
         /* Method to calculate excited state */
-        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE");
+        options.add_str("EXCITED_ALGORITHM", "AVERAGE","ROOT_SELECT AVERAGE COMPOSITE ROOT_COMBINE ROOT_ORTHOGONALIZE MULTISTATE");
         /*Number of roots to compute on final re-diagonalization*/
         options.add_int("POST_ROOT",1);
         /*Diagonalize after ACI procedure with higher number of roots*/
@@ -542,12 +542,14 @@ read_options(std::string name, Options &options)
         options.add_bool("SAVE_FINAL_WFN", false);
         /*- Print the P space? -*/
         options.add_bool("PRINT_REFS", false);
+        /*- Set the initial guess space size for DL solver -*/
+        options.add_int("DL_GUESS_SIZE", 100);
 
         //////////////////////////////////////////////////////////////
-        ///         OPTIONS FOR THE ADAPTIVE PATH-INTEGRAL CI
+        ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("PROPAGATOR","DELTA","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV DELTA-CHEBYSHEV CHEBYSHEV DELTA");
+        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS DL");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -591,8 +593,16 @@ read_options(std::string name, Options &options)
         options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
+        /*- The maximum value of Davidson generator iteration -*/
+        options.add_int("MAX_DAVIDSON_ITER", 12);
         /*- The order of Chebyshev truncation -*/
         options.add_int("CHEBYSHEV_ORDER", 5);
+        /*- The order of Krylov truncation -*/
+        options.add_int("KRYLOV_ORDER", 5);
+        /*- The minimum norm of orthogonal vector -*/
+        options.add_double("COLINEAR_THRESHOLD",1.0e-6);
+        /*- Do spawning according to reference -*/
+        options.add_bool("REFERENCE_SPAWNING",false);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE FULL CI QUANTUM MONTE-CARLO
@@ -764,7 +774,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
     int my_proc = 0;
     int n_nodes = 1;
     #ifdef HAVE_GA
-    GA_Initialize();
+    //GA_Initialize();
     ///Use C/C++ memory allocators 
     GA_Register_stack_memory(replace_malloc, replace_free);
     n_nodes = GA_Nnodes();
@@ -897,10 +907,10 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         auto aci = std::make_shared<AdaptiveCI>(ref_wfn,options,ints_,mo_space_info);
         aci->compute_energy();
     }
-    if (options.get_str("JOB_TYPE") == "APICI"){
-        auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
+    if (options.get_str("JOB_TYPE") == "PCI"){
+        auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
         for (int n = 0; n < options.get_int("NROOT"); ++n){
-            apici->compute_energy();
+            pci->compute_energy();
         }
     }
     if (options.get_str("JOB_TYPE") == "FCI"){
@@ -1223,15 +1233,15 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
             aci->compute_energy();
         }
     }
-    if (options.get_str("JOB_TYPE") == "SR-DSRG-APICI"){
+    if (options.get_str("JOB_TYPE") == "SR-DSRG-PCI"){
         {
             auto dsrg = std::make_shared<TensorSRG>(ref_wfn,options,ints_, mo_space_info);
             dsrg->compute_energy();
             dsrg->transfer_integrals();
         }
         {
-            auto apici = std::make_shared<AdaptivePathIntegralCI>(ref_wfn,options,ints_, mo_space_info);
-            apici->compute_energy();
+            auto pci = std::make_shared<ProjectorCI>(ref_wfn,options,ints_, mo_space_info);
+            pci->compute_energy();
         }
     }
 
@@ -1321,7 +1331,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
 
     outfile->Printf("\n\n  Your calculation took %.8f seconds\n", overall_time.get());
     #ifdef HAVE_GA
-    GA_Terminate();
+    //GA_Terminate();
     #endif
     return ref_wfn;
 }

@@ -34,8 +34,7 @@ set forte {
   excited_algorithm average
   n_average 2
   average_offset 1
-  TAUP 0.01
-  TAUQ 0.01
+  sigma 0.01
   nroot 3
   root 1 
   charge 0

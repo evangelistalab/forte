@@ -31,8 +31,8 @@ set forte {
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
   enforce_spin_complete false
-  TAUP 0.0040000
-  TAUQ 0.000500
+  gamma  8.0
+  sigma 0.000500
   nroot 1
   charge 0
   diag_algorithm full

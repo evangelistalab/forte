@@ -32,8 +32,7 @@ set forte {
   JOB_TYPE aci
   multiplicity 1
   SELECT_TYPE aimed_energy
-  TAUP 0.07
-  TAUQ 0.07
+  sigma 0.07
   nroot 1
   charge 0
   enforce_spin_complete true

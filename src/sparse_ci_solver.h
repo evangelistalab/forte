@@ -48,6 +48,7 @@ public:
     virtual void compute_sigma(SharedVector sigma, SharedVector b) = 0;
     virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
     virtual void get_diagonal(Vector& diag) = 0;
+    virtual void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states ) = 0;
 
 protected:
     size_t size_;
@@ -67,9 +68,14 @@ public:
     void get_diagonal(Vector& diag);
     void get_hamiltonian(Matrix& H);
     std::vector<std::pair<std::vector<int>,std::vector<double>>> get_sparse_hamiltonian();
+    void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states );
 
+    std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
 protected:
     const std::vector<STLBitsetDeterminant>& space_;
+
+
+
     // Create the list of a_p|N>
     std::vector<std::vector<std::pair<size_t,short>>> a_ann_list;
     std::vector<std::vector<std::pair<size_t,short>>> b_ann_list;
@@ -114,6 +120,7 @@ public:
     void compute_sigma(SharedVector sigma, SharedVector b);
     void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
     void get_diagonal(Vector& diag);
+    void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& bad_states_ );
 
 protected:
     bool print_;
@@ -184,10 +191,16 @@ public:
     std::vector<std::pair<std::vector<int>,std::vector<double>>> build_sparse_hamiltonian(const std::vector<STLBitsetDeterminant> &space);
 
     /// Add roots to project out during Davidson-Liu procedure
-    void add_bad_roots( std::vector<std::vector<std::pair<size_t,double>>>& roots );    
+    void add_bad_states( std::vector<std::vector<std::pair<size_t,double>>>& roots );    
 
     /// Set option to force diagonalization type
     void set_force_diag( int value );
+
+    /// Set the size of the guess space
+    void set_guess_dimension( size_t value ){ dl_guess_ = value; };
+
+    /// Set the initial guess
+    void set_initial_guess( std::vector< std::pair<size_t,double> >& guess ); 
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -231,9 +244,16 @@ private:
     int maxiter_davidson_ = 100;
     /// Force to use diag_method no matter how small the space is
     bool force_diag_method_ = false;
+    /// Initial guess size per root
+    size_t dl_guess_ = 100;
 
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
+
+    /// Set the initial guess?
+    bool set_guess_ = false;
+    std::vector<std::pair<size_t,double>> guess_;
+
 };
 
 }}
