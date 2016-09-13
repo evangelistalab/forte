@@ -593,6 +593,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
+        /*- The maximum value of Davidson generator iteration -*/
+        options.add_int("MAX_DAVIDSON_ITER", 12);
         /*- The order of Chebyshev truncation -*/
         options.add_int("CHEBYSHEV_ORDER", 5);
         /*- The order of Krylov truncation -*/

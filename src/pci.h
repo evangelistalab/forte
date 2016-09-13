@@ -139,10 +139,14 @@ private:
     double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
+    /// The maximum number of iterations in Davidson generator
+    int max_Davidson_iter_;
     /// The current iteration
     int iter_;
     /// The current root
     int current_root_;
+    /// The current davidson iter
+    int current_davidson_iter_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
     /// The eigensolver type

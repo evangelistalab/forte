@@ -182,6 +182,7 @@ void ProjectorCI::startup()
     if (initial_guess_spawning_threshold_ < 0.0) initial_guess_spawning_threshold_ = 10.0*spawning_threshold_;
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXBETA") / time_step_;
+    max_Davidson_iter_ = options_.get_int("MAX_DAVIDSON_ITER");
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
     initiator_approx_factor_ = options_.get_double("INITIATOR_APPROX_FACTOR");
@@ -823,14 +824,29 @@ double ProjectorCI::compute_energy()
             double approx_energy_gradient = (approx_energy_ - old_approx_energy_) / (time_step_ * energy_estimate_freq_);
             if (cycle == 0)  approx_energy_gradient = 10.0 * e_convergence_+1.0;
 
-
-            if (generator_ != LanczosGenerator) {
-                outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
-                                proj_energy,proj_energy_gradient);
-            } else {
+            switch (generator_) {
+            case LanczosGenerator:
                 outfile->Printf("\n%9d %8d %10zu %20.12f %10.3e",cycle,krylov_order_,C.size(),
                                 proj_energy,proj_energy_gradient);
+                break;
+            case DLGenerator:
+                outfile->Printf("\n%9d %8d %10zu %20.12f %10.3e",cycle,current_davidson_iter_,C.size(),
+                                proj_energy,proj_energy_gradient);
+                break;
+            default:
+                outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
+                                proj_energy,proj_energy_gradient);
+                break;
             }
+
+
+//            if (generator_ != LanczosGenerator) {
+//                outfile->Printf("\n%9d %8.2f %10zu %20.12f %10.3e",cycle,beta,C.size(),
+//                                proj_energy,proj_energy_gradient);
+//            } else {
+//                outfile->Printf("\n%9d %8d %10zu %20.12f %10.3e",cycle,krylov_order_,C.size(),
+//                                proj_energy,proj_energy_gradient);
+//            }
 
 
             if (variational_estimate_) {
@@ -1374,7 +1390,7 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 
 void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
 {
-//    size_t ref_size = C.size();
+    size_t ref_size = C.size();
     std::vector<std::vector<double>> b_vec(krylov_order_);
     std::vector<std::vector<double>> sigma_vec(krylov_order_);
     std::vector<double> alpha_vec(krylov_order_);
@@ -1383,6 +1399,11 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
     det_hash<> dets_C_hash;
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
     copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
+    if (ref_size <= 1) {
+        C = sigma_vec[0];
+        outfile->Printf( "\nDavidson break because the reference space have only 1 determinant.");
+        return;
+    }
 
     A->set(0,0,dot(b_vec[0], sigma_vec[0]));
 
@@ -1394,18 +1415,21 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 
     double lambda = A->get(0,0);
     alpha_vec[0] = 1.0;
-    std::vector<double> delta_vec(dets_size);
+    std::vector<double> delta_vec(dets_size, 0.0);
     int current_order = 1;
 
     int i = 1;
     for (i = 1; i < krylov_order_; i++) {
-        for (int j = 0; j < dets_size; j++) {
-            double r_j = 0.0;
-            for (int k = 0; k < i; k++) {
-                r_j += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
+
+        for (int k = 0; k < i; k++) {
+            for (int j = 0; j < b_vec[k].size(); j++) {
+                delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
-            delta_vec[j] = r_j/(lambda - diag_vec[j]);
         }
+        for (int j = 0; j < dets_size; j++) {
+            delta_vec[j] /= lambda - diag_vec[j];
+        }
+
         normalize(delta_vec);
         for (int m = 0; m < i; m++) {
             double delta_dot_bm = dot(delta_vec, b_vec[m]);
@@ -1413,7 +1437,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
         }
         double correct_norm = normalize(delta_vec);
         if (correct_norm < e_convergence_) {
-            outfile->Printf( "Davidson break at %d-th iter because the correction norm %e is too small.\n", i, correct_norm);
+            outfile->Printf( "\nDavidson break at %d-th iter because the correction norm %10.3e is too small.", i, correct_norm);
             break;
         }
 //        print_vector(delta_vec, "delta_vec");
@@ -1441,9 +1465,16 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
         SharedVector eigs(new Vector(current_order));
         G->diagonalize(evecs, eigs);
 
+        double e_gradiant = -lambda;
+
         lambda = eigs->get(0);
         for (int j = 0; j < current_order; j++) {
             alpha_vec[j] = evecs->get(j,0);
+        }
+        e_gradiant += lambda;
+        outfile->Printf( "\nDavidson iter %4d correction norm %10.3e dE %10.3e.", i, correct_norm, e_gradiant);
+        if (fabs(e_gradiant) < e_convergence_ ) {
+            break;
         }
     }
 
@@ -1451,13 +1482,28 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
 //    }
 
+    current_davidson_iter_ = current_order;
+
     scale(C, alpha_vec[0]);
-    C.resize(dets.size());
+//    C.clear();
+//    C = b_vec[0];
+    C.resize(dets.size(), 0.0);
+//    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
         for (int j = 0; j < b_vec[i].size(); j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
+
+//    std::vector<double> C2;
+//    C2.resize(dets.size(), 0.0);
+//    for (int i = 0; i < current_order; i++) {
+//        for (int j = 0; j < b_vec[i].size(); j++) {
+//            C2[j] += alpha_vec[i] * b_vec[i][j];
+//        }
+//    }
+//    add(C2, -1.0, C);
+//    outfile->Printf("\nC2 norm %10.3e", norm(C2));
 }
 
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
