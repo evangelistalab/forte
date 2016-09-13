@@ -183,6 +183,8 @@ void ProjectorCI::startup()
     time_step_ = options_.get_double("TAU");
     maxiter_ = options_.get_int("MAXBETA") / time_step_;
     max_Davidson_iter_ = options_.get_int("MAX_DAVIDSON_ITER");
+    davidson_collapse_per_root_ = options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT");
+    davidson_subspace_per_root_ = options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT");
     e_convergence_ = options_.get_double("E_CONVERGENCE");
     energy_estimate_threshold_ = options_.get_double("ENERGY_ESTIMATE_THRESHOLD");
     initiator_approx_factor_ = options_.get_double("INITIATOR_APPROX_FACTOR");
@@ -1391,10 +1393,10 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S)
 {
     size_t ref_size = C.size();
-    std::vector<std::vector<double>> b_vec(krylov_order_);
-    std::vector<std::vector<double>> sigma_vec(krylov_order_);
-    std::vector<double> alpha_vec(krylov_order_);
-    SharedMatrix A(new Matrix (krylov_order_, krylov_order_));
+    std::vector<std::vector<double>> b_vec(davidson_subspace_per_root_);
+    std::vector<std::vector<double>> sigma_vec(davidson_subspace_per_root_);
+    std::vector<double> alpha_vec(davidson_subspace_per_root_);
+    SharedMatrix A(new Matrix (davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
     apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
@@ -1419,10 +1421,10 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
     int current_order = 1;
 
     int i = 1;
-    for (i = 1; i < krylov_order_; i++) {
+    for (i = 1; i < max_Davidson_iter_; i++) {
 
-        for (int k = 0; k < i; k++) {
-            for (int j = 0; j < b_vec[k].size(); j++) {
+        for (int k = 0; k < current_order; k++) {
+            for (int j = 0, jmax = b_vec[k].size(); j < jmax ; j++) {
                 delta_vec[j] += alpha_vec[k] * (sigma_vec[k][j] - lambda * b_vec[k][j]);
             }
         }
@@ -1431,7 +1433,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
         }
 
         normalize(delta_vec);
-        for (int m = 0; m < i; m++) {
+        for (int m = 0; m < current_order; m++) {
             double delta_dot_bm = dot(delta_vec, b_vec[m]);
             add(delta_vec, -delta_dot_bm, b_vec[m]);
         }
@@ -1441,24 +1443,24 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             break;
         }
 //        print_vector(delta_vec, "delta_vec");
-        b_vec[i] = delta_vec;
+        b_vec[current_order] = delta_vec;
 
         dets_C_hash.clear();
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[i], C, dets_C_hash, 0.0);
-        copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[i]);
-        for (int m = 0; m < i; m++) {
-            double b_i_dot_sigma_m = dot(b_vec[i], sigma_vec[m]);
-            A->set(i,m,b_i_dot_sigma_m);
-            A->set(m,i,b_i_dot_sigma_m);
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[current_order], C, dets_C_hash, 0.0);
+        copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[current_order]);
+        for (int m = 0; m < current_order; m++) {
+            double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
+            A->set(current_order,m,b_dot_sigma_m);
+            A->set(m,current_order,b_dot_sigma_m);
         }
-        A->set(i,i,dot(b_vec[i], sigma_vec[i]));
+        A->set(current_order,current_order,dot(b_vec[current_order], sigma_vec[current_order]));
 
-        current_order = i+1;
+        current_order++;
         SharedMatrix G(new Matrix (current_order, current_order));
 
-        for (int i = 0; i < current_order; i++) {
+        for (int k = 0; k < current_order; k++) {
             for (int j = 0; j < current_order; j++) {
-                G->set(i,j, A->get(i,j));
+                G->set(k,j, A->get(k,j));
             }
         }
         SharedMatrix evecs(new Matrix (current_order, current_order));
@@ -1472,9 +1474,13 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             alpha_vec[j] = evecs->get(j,0);
         }
         e_gradiant += lambda;
-        outfile->Printf( "\nDavidson iter %4d correction norm %10.3e dE %10.3e.", i, correct_norm, e_gradiant);
+        outfile->Printf( "\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e.", i, current_order, correct_norm, e_gradiant);
         if (fabs(e_gradiant) < e_convergence_ ) {
             break;
+        }
+        if (current_order >= davidson_subspace_per_root_) {
+
+            current_order = davidson_collapse_per_root_;
         }
     }
 
@@ -1482,15 +1488,16 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
 //    }
 
-    current_davidson_iter_ = current_order;
+    current_davidson_iter_ = i;
 
-    scale(C, alpha_vec[0]);
+//    scale(C, alpha_vec[0]);
 //    C.clear();
-//    C = b_vec[0];
+    C = b_vec[0];
+    scale(C, alpha_vec[0]);
     C.resize(dets.size(), 0.0);
 //    b_vec[0].resize(dets.size(), 0.0);
     for (int i = 1; i < current_order; i++) {
-        for (int j = 0; j < b_vec[i].size(); j++) {
+        for (int j = 0, jmax = b_vec[i].size(); j < jmax; j++) {
             C[j] += alpha_vec[i] * b_vec[i][j];
         }
     }
