@@ -18,9 +18,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sat Jun 25 17:19:52 2016
+    Psi4 started on: Tue Sep 13 19:03:40 2016
 
-    Process ID:  82798
+    Process ID:  86364
     PSI4DATADIR: /Users/zxu66/src/psi4public/share
     Memory level set to 256.000 MB
 
@@ -73,7 +73,7 @@ set forte{
   semi_canonical         false
   int_type               cholesky
   cholesky_tolerance     1e-8
-  print_time_profile     true
+ print_time_profile     true
 }
 
 Ecasscf, wfn = energy('casscf', return_wfn=True)
@@ -88,7 +88,7 @@ compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed e
   Memory set to 100.000 MiB by Python script.
 
 *** tstart() called on che-zxu66-01i
-*** at Sat Jun 25 17:19:53 2016
+*** at Tue Sep 13 19:03:41 2016
 
 
          ---------------------------------------------------------
@@ -177,16 +177,16 @@ compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed e
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:  -108.11718154518279   -1.08117e+02   4.00760e-02 
-   @RHF iter   1:  -108.67991016387488   -5.62729e-01   9.05580e-03 
-   @RHF iter   2:  -108.70078741138592   -2.08772e-02   2.52173e-03 DIIS
-   @RHF iter   3:  -108.70254294874938   -1.75554e-03   6.07650e-04 DIIS
-   @RHF iter   4:  -108.70274678739170   -2.03839e-04   7.71792e-05 DIIS
-   @RHF iter   5:  -108.70274842584148   -1.63845e-06   5.02743e-06 DIIS
-   @RHF iter   6:  -108.70274843370075   -7.85927e-09   1.01252e-06 DIIS
-   @RHF iter   7:  -108.70274843402235   -3.21606e-10   1.20599e-07 DIIS
-   @RHF iter   8:  -108.70274843403014   -7.78755e-12   1.46981e-08 DIIS
-   @RHF iter   9:  -108.70274843403034   -1.98952e-13   1.12662e-09 DIIS
+   @RHF iter   0:  -108.11718154518282   -1.08117e+02   4.00760e-02 
+   @RHF iter   1:  -108.67991016387494   -5.62729e-01   9.05580e-03 
+   @RHF iter   2:  -108.70078741138585   -2.08772e-02   2.52173e-03 DIIS
+   @RHF iter   3:  -108.70254294874924   -1.75554e-03   6.07650e-04 DIIS
+   @RHF iter   4:  -108.70274678739169   -2.03839e-04   7.71792e-05 DIIS
+   @RHF iter   5:  -108.70274842584146   -1.63845e-06   5.02743e-06 DIIS
+   @RHF iter   6:  -108.70274843370079   -7.85933e-09   1.01252e-06 DIIS
+   @RHF iter   7:  -108.70274843402228   -3.21492e-10   1.20599e-07 DIIS
+   @RHF iter   8:  -108.70274843403016   -7.87281e-12   1.46981e-08 DIIS
+   @RHF iter   9:  -108.70274843403034   -1.84741e-13   1.12662e-09 DIIS
 
   ==> Post-Iterations <==
 
@@ -203,8 +203,8 @@ compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed e
 
        1B3g    0.006438     1B2g    0.006438     3B1u    0.274672  
        4B1u    0.583974     2B2u    0.605918     2B3u    0.605918  
-       4Ag     0.606730     5Ag     0.672279     2B2g    0.691812  
-       2B3g    0.691812     5B1u    1.061625     1B1g    1.092627  
+       4Ag     0.606730     5Ag     0.672279     2B3g    0.691812  
+       2B2g    0.691812     5B1u    1.061625     1B1g    1.092627  
        6Ag     1.092627     3B3u    1.131046     3B2u    1.131046  
        1Au     1.379040     6B1u    1.379040     7Ag     1.735683  
        3B2g    1.791968     3B3g    1.791968     7B1u    1.905822  
@@ -213,11 +213,11 @@ compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed e
        5B2u    3.855360     8B1u    3.889305     9Ag     3.893638  
        2B1g    3.893638    10Ag     3.933627     6B2u    4.116775  
        6B3u    4.116775     5B3g    4.232150     5B2g    4.232150  
-       9B1u    4.525356     2Au     4.525356     3B1g    4.727329  
-      11Ag     4.727329     6B3g    4.872627     6B2g    4.872627  
-       3Au     4.886992    10B1u    4.886992     7B2u    4.939264  
-       7B3u    4.939264    11B1u    4.950607    12B1u    5.220282  
-      12Ag     5.437112     7B3g    5.589418     7B2g    5.589418  
+       2Au     4.525356     9B1u    4.525356    11Ag     4.727329  
+       3B1g    4.727329     6B2g    4.872627     6B3g    4.872627  
+       3Au     4.886992    10B1u    4.886992     7B3u    4.939264  
+       7B2u    4.939264    11B1u    4.950607    12B1u    5.220282  
+      12Ag     5.437112     7B2g    5.589418     7B3g    5.589418  
       13Ag     6.030490    13B1u    8.267448  
 
     Final Occupation by Irrep:
@@ -231,25 +231,25 @@ compare_values(refdsrgpt3,get_variable("CURRENT ENERGY"),7,"DSRG-MRPT3 relaxed e
    => Energetics <=
 
     Nuclear Repulsion Energy =             17.2864554806066621
-    One-Electron Energy =                -181.4890987999127105
-    Two-Electron Energy =                  55.4998948852757152
+    One-Electron Energy =                -181.4890987999128811
+    Two-Electron Energy =                  55.4998948852758716
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                       -108.7027484340303261
+    Total Energy =                       -108.7027484340303545
 
 
   Saving occupied orbitals to File 180.
 
-*** tstop() called on che-zxu66-01i at Sat Jun 25 17:19:54 2016
+*** tstop() called on che-zxu66-01i at Tue Sep 13 19:03:42 2016
 Module time:
 	user time   =       0.52 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
+	system time =       0.07 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
 	user time   =       0.52 seconds =       0.01 minutes
-	system time =       0.06 seconds =       0.00 minutes
+	system time =       0.07 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 
 
@@ -345,35 +345,35 @@ ORBITALS:
 
                         Total Energy        Delta E      RMS Grad   NCI
 
-   @MCSCF Iter   1:  -108.87520795403461   -1.7246e-01   2.8321e-02   1   Initial CI
-   @MCSCF Iter   2:  -108.93986762060227   -6.4660e-02   1.6430e-02  12   APPROX
-   @MCSCF Iter   3:  -108.94932764579860   -9.4600e-03   6.6527e-03  11   APPROX
-   @MCSCF Iter   4:  -108.95064863912424   -1.3210e-03   3.5371e-03  10   APPROX
-   @MCSCF Iter   5:  -108.95103438278881   -3.8574e-04   2.1699e-03   9   APPROX
-   @MCSCF Iter   6:  -108.95118368139286   -1.4930e-04   1.3203e-03   9   APPROX
-   @MCSCF Iter   7:  -108.95124309852170   -5.9417e-05   7.9569e-04   9   APPROX
-   @MCSCF Iter   8:  -108.95126644899685   -2.3350e-05   4.8193e-04   9   APPROX
-   @MCSCF Iter   9:  -108.95127552840395   -9.0794e-06   2.9466e-04   9   APPROX
-   @MCSCF Iter  10:  -108.95127903832115   -3.5099e-06   1.8155e-04   8   APPROX, DIIS
-   @MCSCF Iter  11:  -108.95128123868049   -2.2004e-06   3.9680e-06   9   APPROX, DIIS
-   @MCSCF Iter  12:  -108.95128123897443   -2.9394e-10   6.3015e-07   4   APPROX, DIIS
-   @MCSCF Iter  13:  -108.95128123898158   -7.1481e-12   1.5870e-07   3   APPROX, DIIS
-   @MCSCF Iter  14:  -108.95128123898181   -2.2737e-13   3.2809e-08   1   APPROX, DIIS
-   @MCSCF Iter  15:  -108.95128123898185   -4.2633e-14   1.0200e-08   1   APPROX, DIIS
-   @MCSCF Iter  16:  -108.95128123898184    1.4211e-14   2.4972e-09   1   APPROX, DIIS
+   @MCSCF Iter   1:  -108.87520795403447   -1.7246e-01   2.8321e-02   1   Initial CI
+   @MCSCF Iter   2:  -108.93986762060210   -6.4660e-02   1.6430e-02  12   APPROX
+   @MCSCF Iter   3:  -108.94932764579845   -9.4600e-03   6.6527e-03  11   APPROX
+   @MCSCF Iter   4:  -108.95064863912410   -1.3210e-03   3.5371e-03  10   APPROX
+   @MCSCF Iter   5:  -108.95103438278868   -3.8574e-04   2.1699e-03   9   APPROX
+   @MCSCF Iter   6:  -108.95118368139272   -1.4930e-04   1.3203e-03   9   APPROX
+   @MCSCF Iter   7:  -108.95124309852160   -5.9417e-05   7.9569e-04   9   APPROX
+   @MCSCF Iter   8:  -108.95126644899676   -2.3350e-05   4.8193e-04   9   APPROX
+   @MCSCF Iter   9:  -108.95127552840387   -9.0794e-06   2.9466e-04   9   APPROX
+   @MCSCF Iter  10:  -108.95127903832108   -3.5099e-06   1.8155e-04   8   APPROX, DIIS
+   @MCSCF Iter  11:  -108.95128123868035   -2.2004e-06   3.9680e-06   9   APPROX, DIIS
+   @MCSCF Iter  12:  -108.95128123897429   -2.9394e-10   6.3015e-07   4   APPROX, DIIS
+   @MCSCF Iter  13:  -108.95128123898147   -7.1765e-12   1.5870e-07   3   APPROX, DIIS
+   @MCSCF Iter  14:  -108.95128123898172   -2.5580e-13   3.2809e-08   1   APPROX, DIIS
+   @MCSCF Iter  15:  -108.95128123898169    2.8422e-14   1.0200e-08   1   APPROX, DIIS
+   @MCSCF Iter  16:  -108.95128123898169    0.0000e+00   2.4972e-09   1   APPROX, DIIS
 
        MCSCF has converged!
 
-   @MCSCF Final Energy:  -108.951281238981835
+   @MCSCF Final Energy:  -108.951281238981693
 
 
    => Energetics <=
 
    SCF energy =             -108.702748434030340
-   Total CI energy =        -108.951281238981835
+   Total CI energy =        -108.951281238981693
 
 
-   CI Root  1 energy =      -108.951281238981835
+   CI Root  1 energy =      -108.951281238981693
 
 
 The 20 most important determinants
@@ -387,17 +387,17 @@ The 20 most important determinants
 *   7   -0.094999  (   13,   13)  3B1uX  1B2uX  1B3uX  
 *   8    0.085139  (   14,   15)  3AgX  1B2gB  1B3gA  1B2uA  1B3uB  
 *   9    0.085139  (   15,   14)  3AgX  1B2gA  1B3gB  1B2uB  1B3uA  
-*  10   -0.070851  (   12,   13)  3AgA  1B3gA  3B1uB  1B2uB  1B3uX  
-*  11   -0.070851  (   13,   12)  3AgB  1B3gB  3B1uA  1B2uA  1B3uX  
-*  12    0.070851  (   11,   13)  3AgA  1B2gA  3B1uB  1B2uX  1B3uB  
-*  13    0.070851  (   13,   11)  3AgB  1B2gB  3B1uA  1B2uX  1B3uA  
+*  10    0.070851  (   11,   13)  3AgA  1B2gA  3B1uB  1B2uX  1B3uB  
+*  11    0.070851  (   13,   11)  3AgB  1B2gB  3B1uA  1B2uX  1B3uA  
+*  12   -0.070851  (   12,   13)  3AgA  1B3gA  3B1uB  1B2uB  1B3uX  
+*  13   -0.070851  (   13,   12)  3AgB  1B3gB  3B1uA  1B2uA  1B3uX  
 *  14    0.039862  (    3,    3)  1B2gX  3B1uX  1B2uX  
 *  15    0.039862  (    4,    4)  1B3gX  3B1uX  1B3uX  
-*  16    0.038778  (    8,    9)  3AgA  1B2gB  3B1uA  1B2uX  1B3uB  
-*  17    0.038778  (    9,    8)  3AgB  1B2gA  3B1uB  1B2uX  1B3uA  
-*  18   -0.038778  (    6,    7)  3AgA  1B3gB  3B1uA  1B2uB  1B3uX  
-*  19   -0.038778  (    7,    6)  3AgB  1B3gA  3B1uB  1B2uA  1B3uX  
-*  20   -0.034404  (    2,    3)  3AgA  1B2gX  1B3gA  3B1uB  1B2uB  
+*  16   -0.038778  (    6,    7)  3AgA  1B3gB  3B1uA  1B2uB  1B3uX  
+*  17   -0.038778  (    7,    6)  3AgB  1B3gA  3B1uB  1B2uA  1B3uX  
+*  18    0.038778  (    8,    9)  3AgA  1B2gB  3B1uA  1B2uX  1B3uB  
+*  19    0.038778  (    9,    8)  3AgB  1B2gA  3B1uB  1B2uX  1B3uA  
+*  20    0.034404  (    2,    4)  3AgA  1B2gA  1B3gX  3B1uB  1B3uB  
 
 
 
@@ -452,20 +452,89 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   Number of frozen occupied orbitals:          2
   Number of frozen unoccupied orbitals:        0
 
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           N          0.000000000000     0.000000000000    -0.750000000000    14.003074004780
+           N          0.000000000000     0.000000000000     0.750000000000    14.003074004780
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVTZ
+    Total number of shells = 20
+    Number of primitives   = 52
+    Number of AO           = 70
+    Number of SO           = 60
+    Maximum AM             = 3
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     N     18s 5p 2d 1f // 4s 3p 2d 1f 
+       2     N     18s 5p 2d 1f // 4s 3p 2d 1f 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVTZ ]
+    spherical
+    ****
+    N   1
+    S   8 1.00
+                     11420.00000000           0.00052300
+                      1712.00000000           0.00404500
+                       389.30000000           0.02077500
+                       110.00000000           0.08072700
+                        35.57000000           0.23307400
+                        12.54000000           0.43350100
+                         4.64400000           0.34747200
+                         0.51180000          -0.00850800
+    S   8 1.00
+                     11420.00000000          -0.00011500
+                      1712.00000000          -0.00089500
+                       389.30000000          -0.00462400
+                       110.00000000          -0.01852800
+                        35.57000000          -0.05733900
+                        12.54000000          -0.13207600
+                         4.64400000          -0.17251000
+                         0.51180000           0.59994400
+    S   1 1.00
+                         1.29300000           1.00000000
+    S   1 1.00
+                         0.17870000           1.00000000
+    P   3 1.00
+                        26.63000000           0.01467000
+                         5.94800000           0.09176400
+                         1.74200000           0.29868300
+    P   1 1.00
+                         0.55500000           1.00000000
+    P   1 1.00
+                         0.17250000           1.00000000
+    D   1 1.00
+                         1.65400000           1.00000000
+    D   1 1.00
+                         0.46900000           1.00000000
+    F   1 1.00
+                         1.09300000           1.00000000
+    ****
+
 
   Cholesky integrals time
  Computing the Cholesky Vectors 
 
-    Computing CD Integrals               ......Done. Timing        2.733272 s
+    Computing CD Integrals               ......Done. Timing        2.545100 s
  Need 0.017917 GB to store cd integrals in core
 
  Number of cholesky vectors 668 to satisfy       0.000000010000 tolerance
 
-  Frozen-core energy            -97.933525510373 a.u.
+  Frozen-core energy            -97.933525510372 a.u.
 
- FrozenOneBody Operator takes  0.45642500 s
+  FrozenOneBody Operator takes  0.46080200 s
   Resorting integrals after freezing core.
-  CholeskyIntegrals take 3.77760100
+  CholeskyIntegrals take 3.61041900
 
                 -----------------------------------------------
                   String-based Full Configuration Interaction
@@ -520,7 +589,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
       0     -108.898956283811  0.000  singlet
       1     -108.706565191835  6.000  quintet
       2     -108.630217611351  2.000  triplet
-      3     -108.614556473659  0.000  singlet
+      3     -108.614556473658  0.000  singlet
       4     -108.550982687390  0.000  singlet
       5     -108.470110523390  0.000  singlet
       6     -108.427238063865  0.000  singlet
@@ -571,24 +640,25 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
       7     -108.951281223488  -3.536e-07
       8     -108.951281238316  -1.483e-08
       9     -108.951281239276  -9.602e-10
-     10     -108.951281239355  -7.924e-11
+     10     -108.951281239355  -7.925e-11
   ----------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
   ==> Root No. 0 <==
 
-    2 0 0 0 2 2      0.89111794
-    2 2 0 0 2 0     -0.22448187
-    2 0 2 0 0 2     -0.22448187
-    2 b a 0 b a      0.11161912
-    2 a b 0 a b      0.11161912
+    2 0 0 0 2 2     -0.89111794
+    2 2 0 0 2 0      0.22448187
+    2 0 2 0 0 2      0.22448187
+    2 b a 0 b a     -0.11161912
+    2 a b 0 a b     -0.11161912
 
-    Total Energy:      -108.951281239355140
+    Total Energy:      -108.951281239355055
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.000 s
-    Timing for 3-RDM: 0.002 s
+    Timing for 3-RDM: 0.003 s
 
   ==> NATURAL ORBITALS <==
 
@@ -596,6 +666,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
         1B2g    0.195410      1B3g    0.195410      1B1u    0.068182  
 
 
+  size of reference: 216
 
                   -------------------------------------------
                     Driven Similarity Renormalization Group
@@ -608,17 +679,32 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Calculation Information <==
 
-    ntamp                                                15
-    flow parameter                                1.000e+00
-    taylor expansion threshold                    1.000e-03
-    intruder_tamp                                 1.000e-01
-    int_type                                       CHOLESKY
-    source operator                                STANDARD
-    reference relaxation                               ONCE
+    ntamp                                                 15
+    flow parameter                                 1.000e+00
+    taylor expansion threshold                     1.000e-03
+    intruder_tamp                                  1.000e-01
+    int_type                                        CHOLESKY
+    source operator                                 STANDARD
+    state_type                                STATE_SPECIFIC
+    reference relaxation                                ONCE
+
+  ==> Memory Infomation <==
+
+    Memory asigned                                  90.00 MB
+    Memory used before DSRG                         19.73 MB
+    Tensor B (3 index)                              35.95 MB
+    Density Cumulants (1, 2, 3)                      1.53 MB
+    Asym MO tei (hhpp)                               4.82 MB
+    Fock matrix                                      0.11 MB
+    Hbar active (aa, aaaa)                          31.68 KB
+    Amplitudes (hp, hhpp)                            4.79 MB
+    O intermediates (hp, hhpp)                       4.79 MB
+    Memory remaining                                54.20 MB
+    Energy part 1 min                                4.81 MB
+    Energy part 2 min                                4.81 MB
 
   ==> Checking Orbitals <==
 
-    Checking if orbitals are semi-canonicalized ...
     Warning! Orbitals are not semi-canonicalized!
     Off-Diagonal norms of the core, active, virtual blocks of Fock matrix
                   core          active         virtual
@@ -631,8 +717,8 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> First-Order Amplitudes <==
 
-    Computing T2 amplitudes                  ...  Done. Timing      0.334 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.018 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.335 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.020 s
     Active Indices:    1   15   22   33   44   51 
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
@@ -643,7 +729,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 51      52    ]-0.027120 [ 44      45    ]-0.027120 [ 33      38    ]-0.025185 
     [ 33      41    ]-0.018814 [ 51      53    ]-0.011341 [ 44      46    ]-0.011341 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 132)                   0.215599314412812.
+    Norm of T1A vector: (nonzero elements: 132)                   0.215599314412814.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -655,7 +741,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 51      52    ]-0.027120 [ 44      45    ]-0.027120 [ 33      38    ]-0.025185 
     [ 33      41    ]-0.018814 [ 51      53    ]-0.011341 [ 44      46    ]-0.011341 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 132)                   0.215599314412811.
+    Norm of T1B vector: (nonzero elements: 132)                   0.215599314412814.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -666,7 +752,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 15  44  22  52] 0.045359 [ 22  51  15  45] 0.045359 [  1  15   2  15] 0.044785 
     [  1  22   2  22] 0.044785 [ 22  33  23  33]-0.044266 [ 15  33  16  33]-0.044266 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 44496)                0.829300256510253.
+    Norm of T2AA vector: (nonzero elements: 44496)                0.829300256510256.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -678,7 +764,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 15  44  15  45]-0.063219 [  1   1   1   2] 0.060337 [ 33  33  33  37] 0.058547 
     [ 51  51  51  52]-0.058205 [ 44  44  44  45]-0.058205 [ 44  51  44  52]-0.053313 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 51878)                0.846057461161862.
+    Norm of T2AB vector: (nonzero elements: 51878)                0.846057461161863.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -690,7 +776,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 15  44  22  52] 0.045359 [ 22  51  15  45] 0.045359 [  1  15   2  15] 0.044785 
     [  1  22   2  22] 0.044785 [ 22  33  23  33]-0.044266 [ 15  33  16  33]-0.044266 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 44496)                0.829300256510253.
+    Norm of T2BB vector: (nonzero elements: 44496)                0.829300256510256.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -711,217 +797,168 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.979 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.152 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.003 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.160 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Renormalizing two-electron integrals     ...  Done. Timing      0.318 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.313 s
     Renormalizing Fock matrix elements       ...  Done. Timing      0.009 s
-    Computing 2nd-order energy               ...  Done. Timing      0.062 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.153 s
+    Computing 2nd-order energy               ...  Done. Timing      0.068 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.154 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
     Preparing 2nd-order amplitudes           ...
-    [V, T2] (C_2)^3 -> C1 P started: Sat Jun 25 17:20:07 2016
-    [V, T2] (C_2)^3 -> C1 P ended:   Sat Jun 25 17:20:07 2016
-    [V, T2] (C_2)^3 -> C1 P wall time 0.1 s.
-    [V, T2] (C_2)^3 -> C1 H started: Sat Jun 25 17:20:07 2016
-    [V, T2] (C_2)^3 -> C1 H ended:   Sat Jun 25 17:20:07 2016
-    [V, T2] (C_2)^3 -> C1 H wall time 0.2 s.
-    [V, T2] C_4 C_2 2:2 -> C1 started: Sat Jun 25 17:20:07 2016
-    [V, T2] C_4 C_2 2:2 -> C1 ended:   Sat Jun 25 17:20:07 2016
-    [V, T2] C_4 C_2 2:2 -> C1 wall time 0.1 s.
-    [V, T2] C_4 C_2 1:3 -> C1 started: Sat Jun 25 17:20:07 2016
-    [V, T2] C_4 C_2 1:3 -> C1 ended:   Sat Jun 25 17:20:07 2016
-    [V, T2] C_4 C_2 1:3 -> C1 wall time 0.1 s.
-    [V, T2] DF -> C2 HH started: Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 HH ended:   Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 HH wall time 0.1 s.
-    Computing [V, T2] -> C2 PP in 8 batches using 26.18 MB
-    [V, T2] DF -> C2 PP AA started: Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 PP AA ended:   Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 PP AA wall time 0.0 s.
-    [V, T2] DF -> C2 PP AV/VA block AA started: Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 PP AV/VA block AA ended:   Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 PP AV/VA block AA wall time 0.7 s.
-    [V, T2] DF -> C2 PP VV block AA started: Sat Jun 25 17:20:08 2016
-    [V, T2] DF -> C2 PP VV block AA ended:   Sat Jun 25 17:20:10 2016
-    [V, T2] DF -> C2 PP VV block AA wall time 1.4 s.
-    [V, T2] DF -> C2 PP AV/VA block AC started: Sat Jun 25 17:20:10 2016
-    [V, T2] DF -> C2 PP AV/VA block AC ended:   Sat Jun 25 17:20:10 2016
-    [V, T2] DF -> C2 PP AV/VA block AC wall time 0.4 s.
-    [V, T2] DF -> C2 PP VV block AC started: Sat Jun 25 17:20:10 2016
-    [V, T2] DF -> C2 PP VV block AC ended:   Sat Jun 25 17:20:11 2016
-    [V, T2] DF -> C2 PP VV block AC wall time 1.0 s.
-    [V, T2] DF -> C2 PP AV/VA block CA started: Sat Jun 25 17:20:11 2016
-    [V, T2] DF -> C2 PP AV/VA block CA ended:   Sat Jun 25 17:20:12 2016
-    [V, T2] DF -> C2 PP AV/VA block CA wall time 0.5 s.
-    [V, T2] DF -> C2 PP VV block CA started: Sat Jun 25 17:20:12 2016
-    [V, T2] DF -> C2 PP VV block CA ended:   Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP VV block CA wall time 1.0 s.
-    [V, T2] DF -> C2 PP AV/VA block CC started: Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP AV/VA block CC ended:   Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP AV/VA block CC wall time 0.2 s.
-    [V, T2] DF -> C2 PP VV block CC started: Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP VV block CC ended:   Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP VV block CC wall time 0.6 s.
-    [V, T2] DF -> C2 PP AV/VA block aA started: Sat Jun 25 17:20:13 2016
-    [V, T2] DF -> C2 PP AV/VA block aA ended:   Sat Jun 25 17:20:14 2016
-    [V, T2] DF -> C2 PP AV/VA block aA wall time 0.7 s.
-    [V, T2] DF -> C2 PP VV block aA started: Sat Jun 25 17:20:14 2016
-    [V, T2] DF -> C2 PP VV block aA ended:   Sat Jun 25 17:20:15 2016
-    [V, T2] DF -> C2 PP VV block aA wall time 1.4 s.
-    [V, T2] DF -> C2 PP AV/VA block aC started: Sat Jun 25 17:20:15 2016
-    [V, T2] DF -> C2 PP AV/VA block aC ended:   Sat Jun 25 17:20:16 2016
-    [V, T2] DF -> C2 PP AV/VA block aC wall time 0.4 s.
-    [V, T2] DF -> C2 PP VV block aC started: Sat Jun 25 17:20:16 2016
-    [V, T2] DF -> C2 PP VV block aC ended:   Sat Jun 25 17:20:17 2016
-    [V, T2] DF -> C2 PP VV block aC wall time 0.9 s.
-    [V, T2] DF -> C2 PP AV/VA block aa started: Sat Jun 25 17:20:17 2016
-    [V, T2] DF -> C2 PP AV/VA block aa ended:   Sat Jun 25 17:20:17 2016
-    [V, T2] DF -> C2 PP AV/VA block aa wall time 0.6 s.
-    [V, T2] DF -> C2 PP VV block aa started: Sat Jun 25 17:20:17 2016
-    [V, T2] DF -> C2 PP VV block aa ended:   Sat Jun 25 17:20:19 2016
-    [V, T2] DF -> C2 PP VV block aa wall time 1.4 s.
-    [V, T2] DF -> C2 PP AV/VA block ac started: Sat Jun 25 17:20:19 2016
-    [V, T2] DF -> C2 PP AV/VA block ac ended:   Sat Jun 25 17:20:19 2016
-    [V, T2] DF -> C2 PP AV/VA block ac wall time 0.5 s.
-    [V, T2] DF -> C2 PP VV block ac started: Sat Jun 25 17:20:19 2016
-    [V, T2] DF -> C2 PP VV block ac ended:   Sat Jun 25 17:20:20 2016
-    [V, T2] DF -> C2 PP VV block ac wall time 1.1 s.
-    [V, T2] DF -> C2 PP AV/VA block cA started: Sat Jun 25 17:20:20 2016
-    [V, T2] DF -> C2 PP AV/VA block cA ended:   Sat Jun 25 17:20:21 2016
-    [V, T2] DF -> C2 PP AV/VA block cA wall time 0.5 s.
-    [V, T2] DF -> C2 PP VV block cA started: Sat Jun 25 17:20:21 2016
-    [V, T2] DF -> C2 PP VV block cA ended:   Sat Jun 25 17:20:22 2016
-    [V, T2] DF -> C2 PP VV block cA wall time 1.0 s.
-    [V, T2] DF -> C2 PP AV/VA block cC started: Sat Jun 25 17:20:22 2016
-    [V, T2] DF -> C2 PP AV/VA block cC ended:   Sat Jun 25 17:20:22 2016
-    [V, T2] DF -> C2 PP AV/VA block cC wall time 0.2 s.
-    [V, T2] DF -> C2 PP VV block cC started: Sat Jun 25 17:20:22 2016
-    [V, T2] DF -> C2 PP VV block cC ended:   Sat Jun 25 17:20:23 2016
-    [V, T2] DF -> C2 PP VV block cC wall time 0.5 s.
-    [V, T2] DF -> C2 PP AV/VA block ca started: Sat Jun 25 17:20:23 2016
-    [V, T2] DF -> C2 PP AV/VA block ca ended:   Sat Jun 25 17:20:23 2016
-    [V, T2] DF -> C2 PP AV/VA block ca wall time 0.4 s.
-    [V, T2] DF -> C2 PP VV block ca started: Sat Jun 25 17:20:23 2016
-    [V, T2] DF -> C2 PP VV block ca ended:   Sat Jun 25 17:20:24 2016
-    [V, T2] DF -> C2 PP VV block ca wall time 1.0 s.
-    [V, T2] DF -> C2 PP AV/VA block cc started: Sat Jun 25 17:20:24 2016
-    [V, T2] DF -> C2 PP AV/VA block cc ended:   Sat Jun 25 17:20:24 2016
-    [V, T2] DF -> C2 PP AV/VA block cc wall time 0.3 s.
-    [V, T2] DF -> C2 PP VV block cc started: Sat Jun 25 17:20:24 2016
-    [V, T2] DF -> C2 PP VV block cc ended:   Sat Jun 25 17:20:25 2016
-    [V, T2] DF -> C2 PP VV block cc wall time 0.6 s.
-    [V, T2] DF -> C2 PH Coulomb started: Sat Jun 25 17:20:25 2016
-    [V, T2] DF -> C2 PH Coulomb ended:   Sat Jun 25 17:20:25 2016
-    [V, T2] DF -> C2 PH Coulomb wall time 0.1 s.
-    [V, T2] DF -> C2 PH exchange started: Sat Jun 25 17:20:25 2016
-    [V, T2] DF -> C2 PH exchange ended:   Sat Jun 25 17:20:26 2016
-    [V, T2] DF -> C2 PH exchange wall time 0.9 s.
-    [V, T2] (C_2)^3 -> C1 P started: Sat Jun 25 17:20:26 2016
-    [V, T2] (C_2)^3 -> C1 P ended:   Sat Jun 25 17:20:26 2016
-    [V, T2] (C_2)^3 -> C1 P wall time 0.2 s.
-    [V, T2] (C_2)^3 -> C1 H started: Sat Jun 25 17:20:26 2016
-    [V, T2] (C_2)^3 -> C1 H ended:   Sat Jun 25 17:20:26 2016
-    [V, T2] (C_2)^3 -> C1 H wall time 0.2 s.
-    [V, T2] C_4 C_2 2:2 -> C1 started: Sat Jun 25 17:20:26 2016
-    [V, T2] C_4 C_2 2:2 -> C1 ended:   Sat Jun 25 17:20:27 2016
-    [V, T2] C_4 C_2 2:2 -> C1 wall time 0.1 s.
-    [V, T2] C_4 C_2 1:3 -> C1 started: Sat Jun 25 17:20:27 2016
-    [V, T2] C_4 C_2 1:3 -> C1 ended:   Sat Jun 25 17:20:27 2016
-    [V, T2] C_4 C_2 1:3 -> C1 wall time 0.0 s.
-    [V, T2] DF -> C2 HH started: Sat Jun 25 17:20:27 2016
-    [V, T2] DF -> C2 HH ended:   Sat Jun 25 17:20:27 2016
-    [V, T2] DF -> C2 HH wall time 0.1 s.
-    Computing [V, T2] -> C2 PP in 8 batches using 26.18 MB
-    [V, T2] DF -> C2 PP AA started: Sat Jun 25 17:20:27 2016
-    [V, T2] DF -> C2 PP AA ended:   Sat Jun 25 17:20:27 2016
-    [V, T2] DF -> C2 PP AA wall time 0.0 s.
-    [V, T2] DF -> C2 PP AV/VA block AA started: Sat Jun 25 17:20:27 2016
-    [V, T2] DF -> C2 PP AV/VA block AA ended:   Sat Jun 25 17:20:28 2016
-    [V, T2] DF -> C2 PP AV/VA block AA wall time 0.6 s.
-    [V, T2] DF -> C2 PP VV block AA started: Sat Jun 25 17:20:28 2016
-    [V, T2] DF -> C2 PP VV block AA ended:   Sat Jun 25 17:20:29 2016
-    [V, T2] DF -> C2 PP VV block AA wall time 1.3 s.
-    [V, T2] DF -> C2 PP AV/VA block AV started: Sat Jun 25 17:20:29 2016
-    [V, T2] DF -> C2 PP AV/VA block AV ended:   Sat Jun 25 17:20:32 2016
-    [V, T2] DF -> C2 PP AV/VA block AV wall time 3.2 s.
-    [V, T2] DF -> C2 PP VV block AV started: Sat Jun 25 17:20:32 2016
-    [V, T2] DF -> C2 PP VV block AV ended:   Sat Jun 25 17:20:39 2016
-    [V, T2] DF -> C2 PP VV block AV wall time 6.4 s.
-    [V, T2] DF -> C2 PP AV/VA block VA started: Sat Jun 25 17:20:39 2016
-    [V, T2] DF -> C2 PP AV/VA block VA ended:   Sat Jun 25 17:20:42 2016
-    [V, T2] DF -> C2 PP AV/VA block VA wall time 2.9 s.
-    [V, T2] DF -> C2 PP VV block VA started: Sat Jun 25 17:20:42 2016
-    [V, T2] DF -> C2 PP VV block VA ended:   Sat Jun 25 17:20:48 2016
-    [V, T2] DF -> C2 PP VV block VA wall time 6.0 s.
-    [V, T2] DF -> C2 PP AV/VA block VV started: Sat Jun 25 17:20:48 2016
-    [V, T2] DF -> C2 PP AV/VA block VV ended:   Sat Jun 25 17:20:53 2016
-    [V, T2] DF -> C2 PP AV/VA block VV wall time 5.5 s.
-    [V, T2] DF -> C2 PP VV block VV started: Sat Jun 25 17:20:53 2016
-    [V, T2] DF -> C2 PP VV block VV ended:   Sat Jun 25 17:21:04 2016
-    [V, T2] DF -> C2 PP VV block VV wall time 10.8 s.
-    [V, T2] DF -> C2 PP AV/VA block aA started: Sat Jun 25 17:21:04 2016
-    [V, T2] DF -> C2 PP AV/VA block aA ended:   Sat Jun 25 17:21:05 2016
-    [V, T2] DF -> C2 PP AV/VA block aA wall time 0.7 s.
-    [V, T2] DF -> C2 PP VV block aA started: Sat Jun 25 17:21:05 2016
-    [V, T2] DF -> C2 PP VV block aA ended:   Sat Jun 25 17:21:06 2016
-    [V, T2] DF -> C2 PP VV block aA wall time 1.4 s.
-    [V, T2] DF -> C2 PP AV/VA block aV started: Sat Jun 25 17:21:06 2016
-    [V, T2] DF -> C2 PP AV/VA block aV ended:   Sat Jun 25 17:21:09 2016
-    [V, T2] DF -> C2 PP AV/VA block aV wall time 3.0 s.
-    [V, T2] DF -> C2 PP VV block aV started: Sat Jun 25 17:21:09 2016
-    [V, T2] DF -> C2 PP VV block aV ended:   Sat Jun 25 17:21:15 2016
-    [V, T2] DF -> C2 PP VV block aV wall time 6.1 s.
-    [V, T2] DF -> C2 PP AV/VA block aa started: Sat Jun 25 17:21:15 2016
-    [V, T2] DF -> C2 PP AV/VA block aa ended:   Sat Jun 25 17:21:16 2016
-    [V, T2] DF -> C2 PP AV/VA block aa wall time 0.6 s.
-    [V, T2] DF -> C2 PP VV block aa started: Sat Jun 25 17:21:16 2016
-    [V, T2] DF -> C2 PP VV block aa ended:   Sat Jun 25 17:21:17 2016
-    [V, T2] DF -> C2 PP VV block aa wall time 1.3 s.
-    [V, T2] DF -> C2 PP AV/VA block av started: Sat Jun 25 17:21:17 2016
-    [V, T2] DF -> C2 PP AV/VA block av ended:   Sat Jun 25 17:21:20 2016
-    [V, T2] DF -> C2 PP AV/VA block av wall time 3.0 s.
-    [V, T2] DF -> C2 PP VV block av started: Sat Jun 25 17:21:20 2016
-    [V, T2] DF -> C2 PP VV block av ended:   Sat Jun 25 17:21:26 2016
-    [V, T2] DF -> C2 PP VV block av wall time 6.1 s.
-    [V, T2] DF -> C2 PP AV/VA block vA started: Sat Jun 25 17:21:26 2016
-    [V, T2] DF -> C2 PP AV/VA block vA ended:   Sat Jun 25 17:21:29 2016
-    [V, T2] DF -> C2 PP AV/VA block vA wall time 2.9 s.
-    [V, T2] DF -> C2 PP VV block vA started: Sat Jun 25 17:21:29 2016
-    [V, T2] DF -> C2 PP VV block vA ended:   Sat Jun 25 17:21:35 2016
-    [V, T2] DF -> C2 PP VV block vA wall time 5.9 s.
-    [V, T2] DF -> C2 PP AV/VA block vV started: Sat Jun 25 17:21:35 2016
-    [V, T2] DF -> C2 PP AV/VA block vV ended:   Sat Jun 25 17:21:40 2016
-    [V, T2] DF -> C2 PP AV/VA block vV wall time 5.3 s.
-    [V, T2] DF -> C2 PP VV block vV started: Sat Jun 25 17:21:40 2016
-    [V, T2] DF -> C2 PP VV block vV ended:   Sat Jun 25 17:21:51 2016
-    [V, T2] DF -> C2 PP VV block vV wall time 11.3 s.
-    [V, T2] DF -> C2 PP AV/VA block va started: Sat Jun 25 17:21:51 2016
-    [V, T2] DF -> C2 PP AV/VA block va ended:   Sat Jun 25 17:21:54 2016
-    [V, T2] DF -> C2 PP AV/VA block va wall time 3.0 s.
-    [V, T2] DF -> C2 PP VV block va started: Sat Jun 25 17:21:54 2016
-    [V, T2] DF -> C2 PP VV block va ended:   Sat Jun 25 17:22:00 2016
-    [V, T2] DF -> C2 PP VV block va wall time 6.1 s.
-    [V, T2] DF -> C2 PP AV/VA block vv started: Sat Jun 25 17:22:00 2016
-    [V, T2] DF -> C2 PP AV/VA block vv ended:   Sat Jun 25 17:22:06 2016
-    [V, T2] DF -> C2 PP AV/VA block vv wall time 5.2 s.
-    [V, T2] DF -> C2 PP VV block vv started: Sat Jun 25 17:22:06 2016
-    [V, T2] DF -> C2 PP VV block vv ended:   Sat Jun 25 17:22:17 2016
-    [V, T2] DF -> C2 PP VV block vv wall time 10.8 s.
-    [V, T2] DF -> C2 PH Coulomb started: Sat Jun 25 17:22:17 2016
-    [V, T2] DF -> C2 PH Coulomb ended:   Sat Jun 25 17:22:17 2016
-    [V, T2] DF -> C2 PH Coulomb wall time 0.2 s.
-    [V, T2] DF -> C2 PH exchange started: Sat Jun 25 17:22:17 2016
-    [V, T2] DF -> C2 PH exchange ended:   Sat Jun 25 17:22:18 2016
-    [V, T2] DF -> C2 PH exchange wall time 0.9 s.  Done. Timing    131.110 s
-    Computing T2 amplitudes                  ...  Done. Timing      0.298 s
-    Computing T1 amplitudes                  ...  Done. Timing      0.009 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.064 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.162 s
+  [V, T2] (C_2)^3 -> C1 P started: Tue Sep 13 19:03:55 2016
+  [V, T2] (C_2)^3 -> C1 P ended:   Tue Sep 13 19:03:55 2016
+  [V, T2] (C_2)^3 -> C1 P wall time 0.1 s.
+  [V, T2] (C_2)^3 -> C1 H started: Tue Sep 13 19:03:55 2016
+  [V, T2] (C_2)^3 -> C1 H ended:   Tue Sep 13 19:03:55 2016
+  [V, T2] (C_2)^3 -> C1 H wall time 0.2 s.
+  [V, T2] C_4 C_2 2:2 -> C1 started: Tue Sep 13 19:03:55 2016
+  [V, T2] C_4 C_2 2:2 -> C1 ended:   Tue Sep 13 19:03:55 2016
+  [V, T2] C_4 C_2 2:2 -> C1 wall time 0.1 s.
+  [V, T2] C_4 C_2 1:3 -> C1 started: Tue Sep 13 19:03:55 2016
+  [V, T2] C_4 C_2 1:3 -> C1 ended:   Tue Sep 13 19:03:55 2016
+  [V, T2] C_4 C_2 1:3 -> C1 wall time 0.1 s.
+  [V, T2] DF -> C2 HH (1.62 MB) started: Tue Sep 13 19:03:55 2016
+  [V, T2] DF -> C2 HH ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 HH wall time 0.1 s.
+  [V, T2] DF -> C2 (1.70 MB) PP started: Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PP ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PP wall time 0.1 s.
+  [V, T2] DF -> C2 PH Coulomb (2.39 MB) started: Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PH Coulomb ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PH Coulomb wall time 0.1 s.
+  [V, T2] DF -> C2 PH exchange (1.83 MB) started: Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PH exchange ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] DF -> C2 PH exchange wall time 0.1 s.
+  [V, T2] (C_2)^3 -> C1 P started: Tue Sep 13 19:03:56 2016
+  [V, T2] (C_2)^3 -> C1 P ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] (C_2)^3 -> C1 P wall time 0.2 s.
+  [V, T2] (C_2)^3 -> C1 H started: Tue Sep 13 19:03:56 2016
+  [V, T2] (C_2)^3 -> C1 H ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] (C_2)^3 -> C1 H wall time 0.2 s.
+  [V, T2] C_4 C_2 2:2 -> C1 started: Tue Sep 13 19:03:56 2016
+  [V, T2] C_4 C_2 2:2 -> C1 ended:   Tue Sep 13 19:03:56 2016
+  [V, T2] C_4 C_2 2:2 -> C1 wall time 0.1 s.
+  [V, T2] C_4 C_2 1:3 -> C1 started: Tue Sep 13 19:03:56 2016
+  [V, T2] C_4 C_2 1:3 -> C1 ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] C_4 C_2 1:3 -> C1 wall time 0.1 s.
+  [V, T2] DF -> C2 HH (1.24 MB) started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 HH ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 HH wall time 0.1 s.
+    Computing [V, T2] DF -> C2 PP(AA) (0.92 MB)
+  [V, T2] DF -> C2 PP(AA) started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AA) ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AA) wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block AA in batches (1, 1.86 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block AA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block AA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block AA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block AV in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block AV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block AV ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block AV wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block VA in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block VA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block VA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block VA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block VV in batches (1, 19.53 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block VV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block VV ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block VV wall time 0.1 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block aA in batches (1, 1.86 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block aA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block aV in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block aV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aV ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aV wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block aa in batches (1, 1.86 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block aa started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aa ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block aa wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block av in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block av started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block av ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block av wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block vA in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block vA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block vV in batches (1, 19.53 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block vV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vV ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vV wall time 0.1 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block va in batches (1, 14.25 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block va started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block va ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block va wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(AV/VA) block vv in batches (1, 19.53 MB)
+  [V, T2] DF -> C2 PP(AV/VA) block vv started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vv ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(AV/VA) block vv wall time 0.1 s.
+    Computing [V, T2] DF -> C2 PP(VV) block AA in batches (1, 4.65 MB)
+  [V, T2] DF -> C2 PP(VV) block AA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block AA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block AA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block AV in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block AV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block AV ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block AV wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block VA in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block VA started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block VA ended:   Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block VA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block VV in batches (2, 38.72 MB)
+  [V, T2] DF -> C2 PP(VV) block VV started: Tue Sep 13 19:03:57 2016
+  [V, T2] DF -> C2 PP(VV) block VV ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block VV wall time 3.4 s.
+    Computing [V, T2] DF -> C2 PP(VV) block aA in batches (1, 4.65 MB)
+  [V, T2] DF -> C2 PP(VV) block aA started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aA ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block aV in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block aV started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aV ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aV wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block aa in batches (1, 4.65 MB)
+  [V, T2] DF -> C2 PP(VV) block aa started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aa ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block aa wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block av in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block av started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block av ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block av wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block vA in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block vA started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block vA ended:   Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block vA wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block vV in batches (2, 38.72 MB)
+  [V, T2] DF -> C2 PP(VV) block vV started: Tue Sep 13 19:04:01 2016
+  [V, T2] DF -> C2 PP(VV) block vV ended:   Tue Sep 13 19:04:04 2016
+  [V, T2] DF -> C2 PP(VV) block vV wall time 3.3 s.
+    Computing [V, T2] DF -> C2 PP(VV) block va in batches (1, 21.68 MB)
+  [V, T2] DF -> C2 PP(VV) block va started: Tue Sep 13 19:04:04 2016
+  [V, T2] DF -> C2 PP(VV) block va ended:   Tue Sep 13 19:04:04 2016
+  [V, T2] DF -> C2 PP(VV) block va wall time 0.0 s.
+    Computing [V, T2] DF -> C2 PP(VV) block vv in batches (2, 38.72 MB)
+  [V, T2] DF -> C2 PP(VV) block vv started: Tue Sep 13 19:04:04 2016
+  [V, T2] DF -> C2 PP(VV) block vv ended:   Tue Sep 13 19:04:08 2016
+  [V, T2] DF -> C2 PP(VV) block vv wall time 3.7 s.
+  [V, T2] DF -> C2 PH Coulomb (2.39 MB) started: Tue Sep 13 19:04:08 2016
+  [V, T2] DF -> C2 PH Coulomb ended:   Tue Sep 13 19:04:08 2016
+  [V, T2] DF -> C2 PH Coulomb wall time 0.2 s.
+  [V, T2] DF -> C2 PH exchange (4.41 MB) started: Tue Sep 13 19:04:08 2016
+  [V, T2] DF -> C2 PH exchange ended:   Tue Sep 13 19:04:08 2016
+  [V, T2] DF -> C2 PH exchange wall time 0.3 s.  Done. Timing     13.891 s
+    Computing T2 amplitudes                  ...  Done. Timing      0.320 s
+    Computing T1 amplitudes                  ...  Done. Timing      0.007 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.066 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.154 s
 
   ==> Second-Order Amplitudes Summary <==
 
@@ -935,7 +972,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [  1       2    ]-0.008773 [ 33      35    ] 0.007843 [  1       3    ] 0.006572 
     [ 51      53    ]-0.004786 [ 44      46    ]-0.004786 [  1       5    ]-0.004343 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 132)                   0.045835967182707.
+    Norm of T1A vector: (nonzero elements: 132)                   0.045835967182709.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -947,7 +984,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [  1       2    ]-0.008773 [ 33      35    ] 0.007843 [  1       3    ] 0.006572 
     [ 51      53    ]-0.004786 [ 44      46    ]-0.004786 [  1       5    ]-0.004343 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 132)                   0.045835967182707.
+    Norm of T1B vector: (nonzero elements: 132)                   0.045835967182709.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
@@ -958,7 +995,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 22  44  22  45]-0.017107 [ 22  33   6  44] 0.016909 [ 15  33   6  51] 0.016909 
     [ 15  33   1  52] 0.016506 [ 22  33   1  45] 0.016506 [  1  51   1  52] 0.016301 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 44576)                0.271077496190984.
+    Norm of T2AA vector: (nonzero elements: 44576)                0.271077496191002.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -970,7 +1007,7 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 33  51   2  15]-0.014625 [ 33  44   2  22]-0.014625 [  1  33   1  35] 0.014619 
     [ 32  32  22  22]-0.014443 [ 32  32  15  15]-0.014443 [  0  51   1  52]-0.013853 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 51864)                0.244378866813688.
+    Norm of T2AB vector: (nonzero elements: 51864)                0.244378866813700.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -982,26 +1019,26 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     [ 22  44  22  45]-0.017107 [ 22  33   6  44] 0.016909 [ 15  33   6  51] 0.016909 
     [ 15  33   1  52] 0.016506 [ 22  33   1  45] 0.016506 [  1  51   1  52] 0.016301 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 44576)                0.271077496190984.
+    Norm of T2BB vector: (nonzero elements: 44576)                0.271077496191002.
     --------------------------------------------------------------------------------
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
     Renormalizing Fock matrix elements       ...  Done. Timing      0.009 s
-    Renormalizing two-electron integrals     ...  Done. Timing      0.312 s
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.058 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.155 s
+    Renormalizing two-electron integrals     ...  Done. Timing      0.314 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.061 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.153 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
-    E0 (reference)                      =   -108.951281239355140
-    2nd-order corr. energy              =     -0.225873646652508
-    3rd-order corr. energy part 1       =     -0.000849491735236
-    3rd-order corr. energy part 2       =     -0.012280654772163
+    E0 (reference)                      =   -108.951281239355055
+    2nd-order corr. energy              =     -0.225873646652492
+    3rd-order corr. energy part 1       =     -0.000849491735235
+    3rd-order corr. energy part 2       =     -0.012280654772176
     3rd-order corr. energy part 3       =     -0.003239999360247
-    3rd-order corr. energy              =     -0.016370145867646
-    DSRG-MRPT3 corr. energy             =     -0.242243792520154
-    DSRG-MRPT3 total energy             =   -109.193525031875296
+    3rd-order corr. energy              =     -0.016370145867659
+    DSRG-MRPT3 corr. energy             =     -0.242243792520151
+    DSRG-MRPT3 total energy             =   -109.193525031875211
 
     Notes:
       3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
@@ -1018,18 +1055,18 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> Scalar of the DSRG Hamiltonian (WRT True Vacuum) <==
 
-    Scalar0                             =    -28.546455002109425
-    Scalar1                             =      2.768365085219467
-    Scalar2                             =      6.824021438672977
-    Total Scalar W/O Frozen-Core        =    -18.954068478216982
-    Total Scalar W/  Frozen-Core        =   -116.887593988589515
+    Scalar0                             =    -28.546455002109454
+    Scalar1                             =      2.768365085219640
+    Scalar2                             =      6.824021438672849
+    Total Scalar W/O Frozen-Core        =    -18.954068478216961
+    Total Scalar W/  Frozen-Core        =   -116.887593988589373
 
   ==> Test De-Normal-Ordered Hamiltonian <==
 
-    One-Body Energy (after)             =     -9.190315809470270
-    Two-Body Energy (after)             =     -0.402070714422171
-    Total Energy (after)                =   -109.193525031875296
-    Total Energy (before)               =   -109.193525031875296
+    One-Body Energy (after)             =     -9.190315809470421
+    Two-Body Energy (after)             =     -0.402070714422068
+    Total Energy (after)                =   -109.193525031875197
+    Total Energy (before)               =   -109.193525031875211
 
   ==> String Lists <==
 
@@ -1093,9 +1130,9 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
      21     -108.151035178572  2.000  triplet
      22     -108.106071270892  0.000  singlet
      23     -108.026616605650  2.000  triplet
-     24     -107.349571106035  0.000  singlet
+     24     -107.349571106034  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.002 s
+  Timing for initial guess  =      0.003 s
 
   Projecting out root 1
   Projecting out root 2
@@ -1114,14 +1151,14 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
   ----------------------------------------
     Iter.      Avg. Energy       Delta_E
   ----------------------------------------
-      1     -109.161520371200  -1.092e+02
+      1     -109.161520371199  -1.092e+02
       2     -109.189185724072  -2.767e-02
       3     -109.193588405092  -4.403e-03
       4     -109.195091823298  -1.503e-03
       5     -109.195155288258  -6.346e-05
-      6     -109.195157085939  -1.798e-06
+      6     -109.195157085938  -1.798e-06
       7     -109.195157170517  -8.458e-08
-      8     -109.195157173203  -2.685e-09
+      8     -109.195157173202  -2.685e-09
       9     -109.195157173340  -1.376e-10
      10     -109.195157173350  -1.003e-11
   ----------------------------------------
@@ -1132,12 +1169,13 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
     2 0 0 0 2 2     -0.90649383
     2 0 2 0 0 2      0.21174455
     2 2 0 0 2 0      0.21174455
-    2 b a 0 b a     -0.11076853
     2 a b 0 a b     -0.11076853
+    2 b a 0 b a     -0.11076853
 
-    Total Energy:      -109.195157173350282
+    Total Energy:      -109.195157173350083
 
-  ==> RDMs for Root No. 0 <==
+  ==> Computing RDMs for Root No. 0 <==
+
     Timing for 1-RDM: 0.000 s
 
   ==> NATURAL ORBITALS <==
@@ -1150,21 +1188,21 @@ Calling plugin /Users/zxu66/src/forte/forte.so.
 
   ==> MRDSRG Energy Summary <==
 
-    DSRG-MRPT3 Total Energy (fixed)     =   -109.193525031875296
-    DSRG-MRPT3 Total Energy (relaxed)   =   -109.195157173350282
+    DSRG-MRPT3 Total Energy (fixed)     =   -109.193525031875211
+    DSRG-MRPT3 Total Energy (relaxed)   =   -109.195157173350083
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.005       0.012       0.010       0.224
-    -> C1       0.007       0.051       0.267       1.540
-    -> C2                   0.173       0.539     129.988
+    -> C0       0.004       0.011       0.010       0.234
+    -> C1       0.006       0.058       0.277       1.591
+    -> C2                   0.175       0.568      12.709
     -----------------------------------------------------
 
 
-  Your calculation took 138.89538400 seconds
+  Your calculation took 21.52516300 seconds
 	DSRG-MRPT3 relaxed energy.........................................PASSED
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -1404,6 +1404,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
     if (ref_size <= 1) {
         C = sigma_vec[0];
         outfile->Printf( "\nDavidson break because the reference space have only 1 determinant.");
+        current_davidson_iter_ = 1;
         return;
     }
 
@@ -1479,7 +1480,37 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
-
+            b_vec[0].resize(dets_size, 0.0);
+            for (int j = 0, jmax = dets.size(); j < jmax; j++) {
+                std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
+                std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
+                for (int l = 0; l < davidson_collapse_per_root_; l++) {
+                    for (int k = 0; k < current_order; k++) {
+                        b_j[l] += evecs->get(k,l) * b_vec[k][j];
+                        sigma_j[l] += evecs->get(k,l) * sigma_vec[k][j];
+                    }
+                }
+                for (int l = 0; l < davidson_collapse_per_root_; l++) {
+                    b_vec[l][j] = b_j[l];
+                    sigma_vec[l][j] = sigma_j[l];
+                }
+            }
+            for (int l = davidson_collapse_per_root_; l < davidson_subspace_per_root_; l++) {
+                b_vec[l].clear();
+                sigma_vec[l].clear();
+            }
+            for (int m = 0; m < davidson_collapse_per_root_; m++) {
+                for (int n = 0; n <= m; n++) {
+                    double n_dot_sigma_m = dot(b_vec[n], sigma_vec[m]);
+                    A->set(n,m,n_dot_sigma_m);
+                    A->set(m,n,n_dot_sigma_m);
+                }
+            }
+            alpha_vec[0] = 1.0;
+            for (int l = 1; l < davidson_subspace_per_root_; l++) {
+                alpha_vec[l] = 0.0;
+            }
+            outfile->Printf( "\nDavidson collapsed from %d vectors to %d vectors.", current_order, davidson_collapse_per_root_);
             current_order = davidson_collapse_per_root_;
         }
     }
@@ -1488,7 +1519,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
 //    }
 
-    current_davidson_iter_ = i;
+    current_davidson_iter_ = i+1;
 
 //    scale(C, alpha_vec[0]);
 //    C.clear();
