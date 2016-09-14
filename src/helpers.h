@@ -196,9 +196,10 @@ double to_gb(T num_el){
  * @brief Compute the memory requirement
  * @param nele The number of elements for storage
  * @param type_size The size of the data type
- * @return A pair of size in appropriate unit (B, KB, MB, GB, TB)
+ * @return A pair of size in appropriate unit (B, KB, MB, GB, TB, PB)
  */
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
+
 /**
  * @brief split up a vector into different processors
  * @param size_t size_of_tasks

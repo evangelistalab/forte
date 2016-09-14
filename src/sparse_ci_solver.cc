@@ -1190,6 +1190,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                 if( bad_state[det].first == J ){
                     sigma_p[J] -= diag_[J] * bad_state[det].second * overlap[n];
+                    break;
                 }
             }
         }
@@ -1209,6 +1210,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                         for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                             if( bad_state[det].first == J ){
                                 sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                                break;
                             }
                         }
                     } 
@@ -1232,6 +1234,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                         for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                             if( bad_state[det].first == J ){
                                 sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                                break;
                             }
                         }
                     } 
@@ -1260,6 +1263,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                         for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                             if( bad_state[det].first == J ){
                                 sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                                break;
                             }
                         }
                     } 
@@ -1289,6 +1293,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                         for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                             if( bad_state[det].first == J ){
                                 sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                                break;
                             }
                         }
                     } 
@@ -1317,6 +1322,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                         for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
                             if( bad_state[det].first == J ){
                                 sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
+                                break;
                             }
                         }
                     } 

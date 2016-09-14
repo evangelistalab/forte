@@ -2203,12 +2203,12 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
     
         // Grab and set the guess
-        if( cycle > 1 ){
-            for( int n = 0; n < num_ref_roots; ++n ){
-                auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, n );
-                outfile->Printf("\n  Setting guess");
+        if( cycle > 1 and nroot_ == 1){
+     //       for( int n = 0; n < num_ref_roots; ++n ){
+                auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
+    //            outfile->Printf("\n  Setting guess");
                 sparse_solver.set_initial_guess( guess );
-            }
+    //        }
         }
 
         Timer diag;
@@ -2279,12 +2279,12 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
         // Grab and set the guess
-        if( cycle > 1 ){
-            for( int n = 0; n < num_ref_roots; ++n ){
-                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, n );
-                outfile->Printf("\n  Setting guess for root %d", n);
+        if( cycle > 1 and nroot_ == 1 ){
+      //      for( int n = 0; n < num_ref_roots; ++n ){
+                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, ref_root_ );
+      //          outfile->Printf("\n  Setting guess for root %d", n);
                 sparse_solver.set_initial_guess( guess );
-            }
+      //      }
         }
 
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
@@ -2458,10 +2458,11 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
     }
 
     // Look through each state, save common determinants/coeffs
-    std::vector<std::pair<size_t, double>> bad_root;
     int nroot = old_roots_.size();
     size_t idx = dets.size();
     for( int i = 0; i < nroot; ++i ){
+
+        std::vector<std::pair<size_t, double>> bad_root;
         size_t nadd = 0;
         std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
         
