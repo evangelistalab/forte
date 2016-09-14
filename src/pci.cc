@@ -1480,6 +1480,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
+            b_vec[0].resize(dets_size, 0.0);
             for (int j = 0, jmax = dets.size(); j < jmax; j++) {
                 std::vector<double> b_j(davidson_collapse_per_root_, 0.0);
                 std::vector<double> sigma_j(davidson_collapse_per_root_, 0.0);
