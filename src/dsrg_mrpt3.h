@@ -26,6 +26,7 @@
 #include <chrono>
 #include <ctime>
 #include <fstream>
+#include <utility>
 #include "mini-boost/boost/assign.hpp"
 
 #include <liboptions/liboptions.h>
@@ -119,6 +120,9 @@ protected:
 
     /// The molecular integrals required by MethodBase
     std::shared_ptr<ForteIntegrals>  ints_;
+
+    /// Total memory left
+    long long int mem_total_;
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -335,10 +339,22 @@ protected:
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF / CD)
     void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
-    /// Compute two-body term of commutator [V, T2] in batching, particle-particle contraction
-    void V_T2_C2_DF_PP(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
-    /// Compute two-body term of commutator [V, T2] in batching, particle-hole contraction (exchange part)
-    void V_T2_C2_DF_PH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<size_t>>& sub_virt_mos);
+    /// Compute two-body term of commutator [V, T2], particle-particle contraction when "ab" in T2 are actives
+    void V_T2_C2_DF_AA(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2] (batch), particle-particle contraction when "ab" in T2 are active and virtual
+    void V_T2_C2_DF_AV(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2] (batch), particle-particle contraction when "ab" in T2 are virtuals
+    void V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is active
+    void V_T2_C2_DF_AH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs, const std::vector<std::vector<std::string>>& jb);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::string>& qs_lower, const std::vector<std::string>& jb_lower);
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::string>& qs_lower, const std::vector<std::string>& jb_lower);
+
+    /// Compute two-body term of commutator [V, T2], particle-hole contraction (exchange part), contracted particle index is virtual
+    void V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2, const std::vector<std::vector<std::string>>& qs, const std::vector<std::vector<std::string>>& jb);
+
 
     // => Reference relaxation <= //
 
@@ -358,6 +374,15 @@ protected:
     ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
+
+    /**
+     * Get a sub block of tensor T
+     * @param T The big tensor
+     * @param P The map of <partitioned dimension index, its absolute indices in T>
+     * @param name The name of the returned sub tensor
+     * @return A sub tensor of T with the same dimension
+     */
+    ambit::Tensor sub_block(ambit::Tensor& T, const std::map<size_t, std::vector<size_t> >& P, const std::string& name);
 };
 
 }} // End Namespaces
