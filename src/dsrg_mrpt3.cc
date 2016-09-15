@@ -185,6 +185,7 @@ void DSRG_MRPT3::startup()
         nelement = 6 * sh * sh * sh * sh + 4 * sa * sa * sa * sa * sa * sa + 6 * sa * sa * sa * sa + sL * sg * sg;
         mem_info.push_back({"Memory used before DSRG", converter(nelement * sizeof(double))});
         mem_info.push_back({"Tensor B (3 index)", converter(2 * sL * sg * sg * sizeof(double))});
+        mem_total_ -= 2 * sL * sg * sg * sizeof(double);
 
     } else {
         nelement = 6 * sh * sh * sh * sh + 4 * sa * sa * sa * sa * sa * sa + 6 * sa * sa * sa * sa + 3 * sg * sg * sg * sg;
@@ -3448,15 +3449,16 @@ void DSRG_MRPT3::V_T2_C2_DF_AV(BlockedTensor &B, BlockedTensor &T2, const double
         size_t smax = (sh1 > sh0) ? sh1 : sh0;
         size_t nbatch = 1;
         size_t svs = sv / nbatch;
-        size_t total_ele = 2 * shole * shole * sa * svs + sh0 * sh1 * sa * svs + sL * svs * smax;
-        while(total_ele * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
+        size_t nele_total = 2 * shole * shole * sa * svs + sh0 * sh1 * sa * svs + sL * svs * smax;
+        size_t nele_batch = 2 * nele_total; // 2 for tensor resorting
+        while(nele_batch * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
             nbatch += 1;
             svs = sv / nbatch;
-            total_ele = 2 * sh0 * sh1 * sa * svs + sh0 * sh1 * sa * svs + sL * svs * sh1;
+            nele_batch = 2 * (2 * shole * shole * sa * svs + sh0 * sh1 * sa * svs + sL * svs * sh1);
         }
 
         // memory usage
-        std::pair<double, std::string> mem_use = to_xb(total_ele, sizeof(double));
+        std::pair<double, std::string> mem_use = to_xb(nele_batch, sizeof(double));
 
         // fill the indices of sub virtuals
         std::vector<std::vector<size_t>> sub_virt_mos; // relative virtual indices
@@ -3691,11 +3693,11 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
         std::vector<std::vector<size_t>> sub_virt_mos0, sub_virt_mos1; // relative virtual indices
         size_t nbatch0 = 1, nbatch1 = 1;
         size_t total_ele = sv * sv * (sh0 * sh1 + shole * shole) + sL * sv * (sh1 + sh0);
-        size_t nele_batch = total_ele;
+        size_t nele_batch = 2 * total_ele;
 
         while(nele_batch * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
             nbatch0 += 1;
-            nele_batch = (sv * sv * (sh0 * sh1 + shole * shole) + sL * sv * (sh1 + sh0)) / nbatch0;
+            nele_batch = 2 * (sv * sv * (sh0 * sh1 + shole * shole) + sL * sv * (sh1 + sh0)) / nbatch0; // 2 for tensor resorting
         }
 
         // if sv > nbatch0, just separate the 1st virtual index
@@ -4092,10 +4094,11 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         size_t nbatch = 1;
         size_t svs = sv / nbatch;
         size_t nele_total = sL * ss * svs + sq * sc * ss * svs + sq * ss * smax_jb + sc * smax_jb * svs;
-        while(nele_total * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
+        size_t nele_batch = 2 * nele_total; // 2 for tensor resorting
+        while(nele_batch * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
             nbatch += 1;
             svs = sv / nbatch;
-            nele_total = sL * ss * svs + sq * sc * ss * svs + sq * ss * smax_jb + sc * smax_jb * svs;
+            nele_batch = 2 * (sL * ss * svs + sq * sc * ss * svs + sq * ss * smax_jb + sc * smax_jb * svs);
         }
 
         // if nbatch > sv, tensor is too large to be batched
@@ -4125,7 +4128,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VC_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         }
 
         // memory usage
-        std::pair<double, std::string> mem_use = to_xb(nele_total, sizeof(double));
+        std::pair<double, std::string> mem_use = to_xb(nele_batch, sizeof(double));
 
         // set timer
         start_ = std::chrono::system_clock::now();
@@ -4409,10 +4412,11 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         size_t nbatch = 1;
         size_t svs = sv / nbatch;
         size_t nele_total = sL * (ss * svs + sq * sa) + sq * sa * ss * svs + smax_jb * svs * sa + sq * ss * smax_jb;
-        while(nele_total * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
+        size_t nele_batch = 2 * nele_total; // 2 for tensor resorting
+        while(nele_batch * sizeof(double) > static_cast<long long int>(0.95 * mem_total_)){
             nbatch += 1;
             svs = sv / nbatch;
-            nele_total = sL * (ss * svs + sq * sa) + sq * sa * ss * svs + smax_jb * svs * sa + sq * ss * smax_jb;
+            nele_batch = 2 * (sL * (ss * svs + sq * sa) + sq * sa * ss * svs + smax_jb * svs * sa + sq * ss * smax_jb);
         }
 
         // if nbatch > sv, tensor is too large to be batched
@@ -4442,7 +4446,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
         }
 
         // memory usage
-        std::pair<double, std::string> mem_use = to_xb(nele_total, sizeof(double));
+        std::pair<double, std::string> mem_use = to_xb(nele_batch, sizeof(double));
 
         // set timer
         start_ = std::chrono::system_clock::now();
