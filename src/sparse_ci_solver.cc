@@ -1179,21 +1179,22 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             overlap[n] = dprd;
         }
         //outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+            
+            #pragma omp parallel for
+            for( size_t det = 0; det < ndet; ++det ){
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n]; 
+            }        
+        }
     }
 
 
     for (size_t J = 0; J < size_; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
-        for( int n = 0; n < nbad; ++n ){
-            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                if( bad_state[det].first == J ){
-                    sigma_p[J] -= diag_[J] * bad_state[det].second * overlap[n];
-                    break;
-                }
-            }
-        }
 
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list[J]){
@@ -1205,15 +1206,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                                break;
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1229,15 +1221,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = bbJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                                break;
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1258,15 +1241,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                                break;
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1288,15 +1262,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                                break;
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1317,15 +1282,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                                break;
-                            }
-                        }
-                    } 
                 }
             }
         }
