@@ -1307,7 +1307,7 @@ void FCI_MO::Diagonalize_H(const vecdet &det, vector<pair<SharedVector, double>>
     }
 
     SparseCISolver sparse_solver;
-    int nroot = det_size < 5 * nroot_ ? det_size : 5 * nroot_;
+    int nroot = det_size < 20 * nroot_ ? det_size : 20 * nroot_;
     SharedMatrix vec_tmp;
     SharedVector val_tmp;
     DiagonalizationMethod diag_method = DLSolver;
@@ -2132,6 +2132,7 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
         F->diagonalize(U,lambda);
         evecs.push_back(U);
         evals.push_back(lambda);
+
 //        U->eivprint(lambda);
 //        SharedMatrix X = Matrix::triplet(U,F,U,true,false,false);
 //        X->print();
