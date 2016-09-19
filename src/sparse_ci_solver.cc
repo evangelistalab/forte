@@ -46,10 +46,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     size_t max_I = space.size();
 
     use_disk_ = disk;
-    if( max_I > 2.3e6 ){
-        use_disk_ = true;
-        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
-    }
+//    if( max_I > 2.3e6 ){
+//        use_disk_ = true;
+//        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
+//    }
     noalfa_ = space[0].get_alfa_occ().size();
     nobeta_ = space[0].get_beta_occ().size();
 
