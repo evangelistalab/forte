@@ -65,6 +65,7 @@ void LOCALIZE::localize_orbitals()
 
     SharedMatrix Caocc( new Matrix("Caocc", nsopi[0], naocc_ )); 
     SharedMatrix Cavir( new Matrix("Cavir", nsopi[0], navir_ )); 
+    SharedMatrix Caact( new Matrix("Caact", nsopi[0], off )); 
 
     for(int h = 0; h < nirrep; h++){
         for(int mu = 0; mu < nsopi[h]; mu++){
@@ -74,6 +75,9 @@ void LOCALIZE::localize_orbitals()
             for(int i = 0; i < navir_; ++i){
                 Cavir->set(h, mu, i, Ca->get(h, mu, abs_act_[i+naocc_+off]));
             } 
+            for( int i = 0; i < off; ++i ){
+                Caact->set(h, mu, i, Ca->get(h, mu, abs_act_[i+naocc_]));
+            }
         }
     }
 
@@ -89,6 +93,11 @@ void LOCALIZE::localize_orbitals()
     
     SharedMatrix Lvir = loc_v->L();
 
+    boost::shared_ptr<Localizer> loc_c = Localizer::build( local_type_, primary, Caact); 
+    loc_c->localize();
+    
+    SharedMatrix Lact = loc_c->L();
+
     for( int h = 0; h < nirrep; ++h){
         for( int i = 0; i < naocc_; ++i){
             SharedVector vec = Laocc->get_column(h, i);
@@ -100,6 +109,11 @@ void LOCALIZE::localize_orbitals()
             Ca->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
             Cb->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
         } 
+        for( int i = 0; i < off; ++i ){
+            SharedVector vec = Lact->get_column(h, i);
+            Ca->set_column(h, i+nfrz_+nrst_+naocc_, vec );
+            Cb->set_column(h, i+nfrz_+nrst_+naocc_, vec );
+        }
     }
    
     ints_->retransform_integrals();
