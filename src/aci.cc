@@ -923,7 +923,6 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 	
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
-    off = ref_root_;
     if( nav == 0 ) nav = nroot;
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
@@ -992,15 +991,15 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 	if(ref_root_ + 1 > nroot_){
 		throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
 	}
-
-//	if(nroot == 1){
-//		ref_root_ = 0;
-//	}
+    int root = ref_root_;
+	if(nroot == 1){
+		ref_root_ = 0;
+	}
 
 	if(aimed_selection_){
-		select_value = energy_selection_ ? E2[ref_root_] : (C1[ref_root_]*C1[ref_root_]);
+		select_value = energy_selection_ ? E2[root] : (C1[root]*C1[root]);
 	}else{
-		select_value = energy_selection_ ? E2[ref_root_] : C1[ref_root_];
+		select_value = energy_selection_ ? E2[root] : C1[root];
 	}
 
 	return select_value;
@@ -1300,7 +1299,6 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
-    off = ref_root_;
     if(nav == 0) nav = nroot;
 
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
@@ -2160,6 +2158,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     if(streamline_qspace_ and !quiet_mode_) outfile->Printf("\n  Using streamlined Q-space builder.");
 
    // compute_aci( PQ_evecs, PQevals );
+    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
 
     std::vector<STLBitsetDeterminant> old_dets;
     SharedMatrix old_evecs;
@@ -2203,7 +2202,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
     
         // Grab and set the guess
-        if( cycle > 1 and nroot_ == 1){
+        if( cycle > 2 and nroot_ == 1){
      //       for( int n = 0; n < num_ref_roots; ++n ){
                 auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
     //            outfile->Printf("\n  Setting guess");
@@ -2279,7 +2278,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         }
 
         // Grab and set the guess
-        if( cycle > 1 and nroot_ == 1 ){
+        if( cycle > 2 and nroot_ == 1 ){
       //      for( int n = 0; n < num_ref_roots; ++n ){
                 auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, ref_root_ );
       //          outfile->Printf("\n  Setting guess for root %d", n);
