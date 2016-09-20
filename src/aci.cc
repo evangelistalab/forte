@@ -1017,17 +1017,19 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
     int nvalpha = avir.size();
     int nvbeta  = bvir.size();
 
+    STLBitsetDeterminant new_det(det);
+
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_alfa_bit(ii,false);
-                new_det.set_alfa_bit(aa,true);
                 double HIJ = det.slater_rules_single_alpha(ii,aa);
 				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                    new_det = det;
+                    new_det.set_alfa_bit(ii,false);
+                    new_det.set_alfa_bit(aa,true);
 					if( (V_hash.count(new_det) == 0)){
 						V_hash[new_det] = std::vector<double>(nroot);
 					}
@@ -1044,11 +1046,11 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_beta_bit(ii,false);
-                new_det.set_beta_bit(aa,true);
                 double HIJ = det.slater_rules_single_beta(ii,aa);
 				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                    new_det = det;
+                    new_det.set_beta_bit(ii,false);
+                    new_det.set_beta_bit(aa,true);
                     if (V_hash.count(new_det) == 0){
                         V_hash[new_det] = std::vector<double>(nroot);
                     }
@@ -1070,13 +1072,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_alfa_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_alfa_bit(bb,true);
                         double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_alfa_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_alfa_bit(bb,true);
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
 
                             if (V_hash.count(new_det) == 0){
@@ -1101,13 +1103,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
                         double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
 
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
 
@@ -1132,13 +1134,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_beta_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_beta_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
                         double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_beta_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
 
                             HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
                             if (V_hash.count(new_det) == 0){
@@ -2204,12 +2206,13 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         // Grab and set the guess
         if( cycle > 2 and nroot_ == 1){
      //       for( int n = 0; n < num_ref_roots; ++n ){
-                auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
+     //           auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
     //            outfile->Printf("\n  Setting guess");
-                sparse_solver.set_initial_guess( guess );
+     //           sparse_solver.set_initial_guess( guess );
     //        }
         }
 
+        sparse_solver.manual_guess( false );
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
