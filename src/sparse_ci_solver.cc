@@ -46,10 +46,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     size_t max_I = space.size();
 
     use_disk_ = disk;
-    if( max_I > 2.3e6 ){
-        use_disk_ = true;
-        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
-    }
+//    if( max_I > 2.3e6 ){
+//        use_disk_ = true;
+//        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
+//    }
     noalfa_ = space[0].get_alfa_occ().size();
     nobeta_ = space[0].get_beta_occ().size();
 
@@ -1645,6 +1645,10 @@ void SparseCISolver::set_root_project( bool value )
     root_project_ = value;
 }
 
+void SparseCISolver::manual_guess( bool value ){
+    set_guess_ = value;
+}
+
 void SparseCISolver::set_initial_guess( std::vector< std::pair< size_t, double >>& guess )
 {
     set_guess_ = true;
@@ -1683,7 +1687,6 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     size_t guess_size = dls.collapse_size();
 
     auto guess = initial_guess(space,nroot,multiplicity);
-
     if( !set_guess_ ){
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g){
