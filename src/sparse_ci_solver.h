@@ -201,6 +201,8 @@ public:
 
     /// Set the initial guess
     void set_initial_guess( std::vector< std::pair<size_t,double> >& guess ); 
+    void manual_guess( bool value );
+    
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
