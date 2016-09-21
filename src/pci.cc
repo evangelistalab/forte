@@ -1565,13 +1565,14 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
 {
     // A map that contains the pair (determinant,coefficient)
+    const double PI = 2*acos(0.0);
     det_hash<> dets_C_hash;
     for (int i = 0; i < chebyshev_order_; i++) {
         double root = 0.0;
         if (i < 0) {
             root = 1.0;
         } else {
-            root = cos((2.0*i+1)/(2.0*chebyshev_order_));
+            root = cos((2.0*i+1)*PI/(2.0*chebyshev_order_));
         }
 
         apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
