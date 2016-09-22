@@ -3215,7 +3215,7 @@ double THREE_DSRG_MRPT2::relaxed_energy()
     if(options_["MULTIPLICITY"].has_changed()){
         multi = options_.get_int("MULTIPLICITY");
     }
-    int ms = multi - 1;
+    int ms = (multi + 1) % 2;
     if(options_["MS"].has_changed()){
         ms = options_.get_int("MS");
     }
