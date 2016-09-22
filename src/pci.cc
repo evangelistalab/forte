@@ -1159,8 +1159,14 @@ void ProjectorCI::propagate_Lanczos(det_vec& dets,std::vector<double>& C, double
 //            outfile -> Printf(" %lf ", H_n_C[i-1][k]);
 //        }
         dets_C_hash.clear();
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, H_n_C[i-1], C, dets_C_hash, 0.0);
-//        apply_tau_H_symm(1.0,spawning_threshold,dets,H_n_C[i-1],dets_C_hash, 0.0);
+
+        if (reference_spawning_) {
+            apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, H_n_C[i-1], C, dets_C_hash, 0.0);
+        } else if (symm_approx_H_) {
+            apply_tau_H_symm(1.0,spawning_threshold,dets,H_n_C[i-1],dets_C_hash, 0.0);
+        } else {
+            apply_tau_H(1.0,spawning_threshold,dets,H_n_C[i-1],dets_C_hash, 0.0);
+        }
 
         copy_hash_to_vec_order_ref(dets_C_hash, dets, H_n_C[i]);
         norms[i-1] = normalize(H_n_C[i]);
@@ -1399,7 +1405,13 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
     SharedMatrix A(new Matrix (davidson_subspace_per_root_, davidson_subspace_per_root_));
     b_vec[0] = C;
     det_hash<> dets_C_hash;
-    apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
+    if (reference_spawning_) {
+        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[0], C, dets_C_hash, 0.0);
+    } else if (symm_approx_H_) {
+        apply_tau_H_symm(1.0,spawning_threshold,dets,b_vec[0],dets_C_hash, 0.0);
+    } else {
+        apply_tau_H(1.0,spawning_threshold,dets,b_vec[0],dets_C_hash, 0.0);
+    }
     copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[0]);
     if (ref_size <= 1) {
         C = sigma_vec[0];
@@ -1447,7 +1459,13 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
         b_vec[current_order] = delta_vec;
 
         dets_C_hash.clear();
-        apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[current_order], C, dets_C_hash, 0.0);
+        if (reference_spawning_) {
+            apply_tau_H_ref_C_symm(1.0, spawning_threshold, dets, b_vec[current_order], C, dets_C_hash, 0.0);
+        } else if (symm_approx_H_) {
+            apply_tau_H_symm(1.0,spawning_threshold,dets,b_vec[current_order],dets_C_hash, 0.0);
+        } else {
+            apply_tau_H(1.0,spawning_threshold,dets,b_vec[current_order],dets_C_hash, 0.0);
+        }
         copy_hash_to_vec_order_ref(dets_C_hash, dets, sigma_vec[current_order]);
         for (int m = 0; m < current_order; m++) {
             double b_dot_sigma_m = dot(b_vec[current_order], sigma_vec[m]);
@@ -1547,13 +1565,14 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 void ProjectorCI::propagate_Chebyshev(det_vec& dets,std::vector<double>& C,double spawning_threshold)
 {
     // A map that contains the pair (determinant,coefficient)
+    const double PI = 2*acos(0.0);
     det_hash<> dets_C_hash;
     for (int i = 0; i < chebyshev_order_; i++) {
         double root = 0.0;
         if (i < 0) {
             root = 1.0;
         } else {
-            root = cos((2.0*i+1)/(2.0*chebyshev_order_));
+            root = cos((2.0*i+1)*PI/(2.0*chebyshev_order_));
         }
 
         apply_tau_H(-1.0,spawning_threshold,dets,C,dets_C_hash, range_ * root + shift_);
