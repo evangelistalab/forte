@@ -2165,6 +2165,10 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     std::vector<STLBitsetDeterminant> old_dets;
     SharedMatrix old_evecs;
 
+    if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
+        ref_root_ = options_.get_int("ROOT");
+    }
+
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
         Timer cycle_time;
@@ -2283,9 +2287,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         // Grab and set the guess
         if( cycle > 2 and nroot_ == 1 ){
       //      for( int n = 0; n < num_ref_roots; ++n ){
-                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, ref_root_ );
+//                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, ref_root_ );
       //          outfile->Printf("\n  Setting guess for root %d", n);
-                sparse_solver.set_initial_guess( guess );
+  //              sparse_solver.set_initial_guess( guess );
       //      }
         }
 
@@ -2298,9 +2302,9 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
         // Save the solutions for the next iteration
-        old_dets.clear();
-        old_dets = PQ_space_;
-        old_evecs = PQ_evecs->clone();
+//        old_dets.clear();
+//        old_dets = PQ_space_;
+//        old_evecs = PQ_evecs->clone();
 
 		// Ensure the solutions are spin-pure
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
@@ -2330,6 +2334,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
         // If doing root-following, grab the initial root
         if( follow and cycle == (pre_iter_ - 1)){
+
+            if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
+                ref_root_ = options_.get_int("ROOT");
+            }
+
             for( size_t I = 0, maxI = PQ_space_.size(); I < maxI; ++I){
                 P_ref.push_back( std::make_pair( PQ_space_[I], PQ_evecs->get(I, ref_root_) ));
             } 

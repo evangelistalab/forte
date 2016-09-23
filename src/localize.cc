@@ -93,10 +93,13 @@ void LOCALIZE::localize_orbitals()
     
     SharedMatrix Lvir = loc_v->L();
 
-    boost::shared_ptr<Localizer> loc_c = Localizer::build( local_type_, primary, Caact); 
-    loc_c->localize();
+    SharedMatrix Lact;
+    if( multiplicity_ == 3 ){
+        boost::shared_ptr<Localizer> loc_c = Localizer::build( local_type_, primary, Caact); 
+        loc_c->localize();
+        Lact = loc_c->L();
+    }
     
-    SharedMatrix Lact = loc_c->L();
 
     for( int h = 0; h < nirrep; ++h){
         for( int i = 0; i < naocc_; ++i){
@@ -109,6 +112,7 @@ void LOCALIZE::localize_orbitals()
             Ca->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
             Cb->set_column(h, i+nfrz_+nrst_+naocc_ + off, vec );
         } 
+       
         for( int i = 0; i < off; ++i ){
             SharedVector vec = Lact->get_column(h, i);
             Ca->set_column(h, i+nfrz_+nrst_+naocc_, vec );
