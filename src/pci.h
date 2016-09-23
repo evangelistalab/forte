@@ -237,6 +237,20 @@ private:
     /// Spawning according to the coefficient in a reference
     bool reference_spawning_;
 
+//    // * Helping statistic
+//    /// Hash for statistics
+//    det_hash<size_t> statistic_hash;
+//    /// Vector for statistics
+//    std::vector<Determinant> statistic_vec;
+//    void count_hash(Determinant det) {
+//        auto it = statistic_hash.find(det);
+//        if (it == statistic_hash.end()) {
+//            statistic_vec.push_back(det);
+//            statistic_hash[det] = 0;
+//        }
+//        statistic_hash[det]++;
+//    }
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -317,6 +331,7 @@ private:
     void apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S);
     /// Apply symmetric approx tau H to a determinant using dynamic screening with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
+//    void apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
 
 
     /// Estimates the energy give a wave function
