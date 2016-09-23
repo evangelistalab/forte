@@ -247,7 +247,7 @@ private:
     /// Force to use diag_method no matter how small the space is
     bool force_diag_method_ = false;
     /// Initial guess size per root
-    size_t dl_guess_ = 100;
+    size_t dl_guess_ = 200;
 
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t,double>>> bad_states_;
