@@ -358,6 +358,7 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size){
     to_XB["MB"] = 1000000.0;
     to_XB["GB"] = 1000000000.0;
     to_XB["TB"] = 1000000000000.0;
+    to_XB["PB"] = 1000000000000000.0;
 
     // convert to appropriate unit
     size_t bytes = nele * type_size;

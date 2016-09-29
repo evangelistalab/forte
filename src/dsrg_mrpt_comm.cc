@@ -120,15 +120,15 @@ void DSRG_MRPT::H2_T2_C0_L1(BlockedTensor& H2, BlockedTensor& T2, const double& 
 
         // [H2, T2] from cavv
         ambit::BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_,"temp_cavv",{"aa"});
-        temp["vu"] += H2["muef"] * T2["mvef"];
-        temp["vu"] += H2["umef"] * T2["vmef"];
+        temp["vu"] += 2.0 * H2["muef"] * T2["mvef"];
+//        temp["vu"] += H2["umef"] * T2["vmef"];
         temp["vu"] -= H2["muef"] * T2["vmef"];
         E += temp["vu"] * L1_["uv"];
 
         // [H2, T2] from ccav
         temp.zero();
-        temp["vu"] += H2["mnve"] * T2["mnue"];
-        temp["vu"] += H2["mnev"] * T2["mneu"];
+        temp["vu"] += 2.0 * H2["mnve"] * T2["mnue"];
+//        temp["vu"] += H2["mnev"] * T2["mneu"];
         temp["vu"] -= H2["mnev"] * T2["mnue"];
         E += temp["vu"] * Eta1_["uv"];
     }
@@ -256,7 +256,7 @@ double DSRG_MRPT::V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_
             BT_scaled_by_RD(T);
             BT_scaled_by_Rplus1(V);
         }
-        temp["vu"] += V["muef"] * T["mvef"];
+        temp["vu"] += 2.0 * V["muef"] * T["mvef"];
 
         // modify T for the third term
         T = ambit::BlockedTensor::build(tensor_type_,"T2_acvv",{"acvv"});
@@ -270,15 +270,15 @@ double DSRG_MRPT::V_T2_C0_L1_cavv(const std::vector<std::vector<size_t>>& small_
         }
         temp["vu"] -= V["muef"] * T["vmef"];
 
-        // modify V for the second term
-        V = ambit::BlockedTensor::build(tensor_type_,"V_acvv",{"acvv"});
-        V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
-            value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-        });
-        if(ccvv_source_ == "NORMAL"){
-            BT_scaled_by_Rplus1(V);
-        }
-        temp["vu"] += V["umef"] * T["vmef"];
+//        // modify V for the second term
+//        V = ambit::BlockedTensor::build(tensor_type_,"V_acvv",{"acvv"});
+//        V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
+//            value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+//        });
+//        if(ccvv_source_ == "NORMAL"){
+//            BT_scaled_by_Rplus1(V);
+//        }
+//        temp["vu"] += V["umef"] * T["vmef"];
 
         E += temp["vu"] * L1_["uv"];
     }
@@ -311,7 +311,7 @@ double DSRG_MRPT::V_T2_C0_L1_ccav(){
         BT_scaled_by_RD(T);
         BT_scaled_by_Rplus1(V);
     }
-    temp["vu"] += V["mnve"] * T["mnue"];
+    temp["vu"] += 2.0 * V["mnve"] * T["mnue"];
 
     // modify T for the third term
     T = ambit::BlockedTensor::build(tensor_type_,"T2_ccva",{"ccva"});
@@ -325,15 +325,15 @@ double DSRG_MRPT::V_T2_C0_L1_ccav(){
     }
     temp["vu"] -= V["mnve"] * T["mneu"];
 
-    // modify V for the second term
-    V = ambit::BlockedTensor::build(tensor_type_,"V_ccva",{"ccva"});
-    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
-        value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
-    });
-    if(ccvv_source_ == "NORMAL"){
-        BT_scaled_by_Rplus1(V);
-    }
-    temp["vu"] += V["mnev"] * T["mneu"];
+//    // modify V for the second term
+//    V = ambit::BlockedTensor::build(tensor_type_,"V_ccva",{"ccva"});
+//    V.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>&,double& value){
+//        value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+//    });
+//    if(ccvv_source_ == "NORMAL"){
+//        BT_scaled_by_Rplus1(V);
+//    }
+//    temp["vu"] += V["mnev"] * T["mneu"];
 
     E += temp["vu"] * Eta1_["uv"];
     return E;

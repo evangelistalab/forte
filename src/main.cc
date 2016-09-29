@@ -549,7 +549,7 @@ read_options(std::string name, Options &options)
         ///         OPTIONS FOR THE PROJECTOR CI
         //////////////////////////////////////////////////////////////
         /*- The propagation algorithm -*/
-        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS");
+        options.add_str("GENERATOR","WALL-CHEBYSHEV","LINEAR QUADRATIC CUBIC QUARTIC POWER TROTTER OLSEN DAVIDSON MITRUSHENKOV EXP-CHEBYSHEV WALL-CHEBYSHEV CHEBYSHEV LANCZOS DL");
         /*- The determinant importance threshold -*/
         options.add_double("SPAWNING_THRESHOLD",0.001);
         /*- The maximum number of determinants used to form the guess wave function -*/
@@ -593,6 +593,8 @@ read_options(std::string name, Options &options)
         options.add_bool("SYMM_APPROX_H",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
+        /*- The maximum value of Davidson generator iteration -*/
+        options.add_int("MAX_DAVIDSON_ITER", 12);
         /*- The order of Chebyshev truncation -*/
         options.add_int("CHEBYSHEV_ORDER", 5);
         /*- The order of Krylov truncation -*/

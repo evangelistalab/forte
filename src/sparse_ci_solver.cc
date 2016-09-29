@@ -46,10 +46,10 @@ SigmaVectorString::SigmaVectorString( const std::vector<STLBitsetDeterminant>& s
     size_t max_I = space.size();
 
     use_disk_ = disk;
-    if( max_I > 2.3e6 ){
-        use_disk_ = true;
-        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
-    }
+//    if( max_I > 2.3e6 ){
+//        use_disk_ = true;
+//        if( print_ ) outfile->Printf("\n  Determinant space exceeds 2.3 x 10^6. Switching to disk algorithm");
+//    }
     noalfa_ = space[0].get_alfa_occ().size();
     nobeta_ = space[0].get_beta_occ().size();
 
@@ -1179,20 +1179,22 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             overlap[n] = dprd;
         }
         //outfile->Printf("\n Overlap: %1.6f", overlap[0]);
+
+        for( int n = 0; n < nbad; ++n ){
+            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
+            size_t ndet = bad_state.size();
+            
+            #pragma omp parallel for
+            for( size_t det = 0; det < ndet; ++det ){
+                b_p[bad_state[det].first] -= bad_state[det].second * overlap[n]; 
+            }        
+        }
     }
 
 
     for (size_t J = 0; J < size_; ++J){
         // reference
         sigma_p[J] += diag_[J] * b_p[J];
-        for( int n = 0; n < nbad; ++n ){
-            std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-            for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                if( bad_state[det].first == J ){
-                    sigma_p[J] -= diag_[J] * bad_state[det].second * overlap[n];
-                }
-            }
-        }
 
         // aa singles
         for (auto& aJ_mo_sign : a_ann_list[J]){
@@ -1204,14 +1206,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1227,14 +1221,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = bbJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1255,14 +1241,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = aaaaJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_aa(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1284,14 +1262,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = ababJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_ab(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1312,14 +1282,6 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
                     const size_t I = bbbbJ_add;
                     const double HIJ = sign_pq * sign_rs * STLBitsetDeterminant::fci_ints_->tei_bb(p,q,r,s);
                     sigma_p[I] += HIJ * b_p[J];
-                    for( int n = 0; n < nbad; ++n ){
-                        std::vector<std::pair<size_t,double>>& bad_state = bad_states_[n];
-                        for( size_t det = 0, ndet = bad_state.size(); det < ndet; ++det ){
-                            if( bad_state[det].first == J ){
-                                sigma_p[I] -= HIJ * bad_state[det].second * overlap[n];
-                            }
-                        }
-                    } 
                 }
             }
         }
@@ -1683,6 +1645,21 @@ void SparseCISolver::set_root_project( bool value )
     root_project_ = value;
 }
 
+void SparseCISolver::manual_guess( bool value ){
+    set_guess_ = value;
+}
+
+void SparseCISolver::set_initial_guess( std::vector< std::pair< size_t, double >>& guess )
+{
+    set_guess_ = true;
+    guess_.clear();
+
+    for( size_t I = 0, max_I = guess.size(); I < max_I; ++I ){
+        guess_.push_back( guess[I] );
+    }
+
+}
+
 bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SigmaVector* sigma_vector,
                                          SharedVector Eigenvalues,
@@ -1705,40 +1682,53 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     sigma_vector->get_diagonal(*sigma);
     dls.startup(sigma);
 
+    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
+
     size_t guess_size = dls.collapse_size();
 
     auto guess = initial_guess(space,nroot,multiplicity);
-
-    std::vector<int> guess_list;
-    for (size_t g = 0; g < guess.size(); ++g){
-        if (guess[g].first == multiplicity) guess_list.push_back(g);
-    }
-
-    // number of guess to be used
-    size_t nguess = std::min(guess_list.size(),guess_size);
-
-    if (nguess == 0){
-        throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
-    }
-
-    std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
-    for (size_t n = 0; n < nguess; ++n){
-        b->zero();
-        for (auto& guess_vec_info : guess[guess_list[n]].second){
-            b->set(guess_vec_info.first,guess_vec_info.second);
+    if( !set_guess_ ){
+        std::vector<int> guess_list;
+        for (size_t g = 0; g < guess.size(); ++g){
+            if (guess[g].first == multiplicity) guess_list.push_back(g);
         }
-        if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
 
-        dls.add_guess(b);
+        // number of guess to be used
+        size_t nguess = std::min(guess_list.size(),guess_size);
+
+        if (nguess == 0){
+            throw PSIEXCEPTION("\n\n  Found zero FCI guesses with the requested multiplicity.\n\n");
+        }
+
+        for (size_t n = 0; n < nguess; ++n){
+            b->zero();
+            for (auto& guess_vec_info : guess[guess_list[n]].second){
+                b->set(guess_vec_info.first,guess_vec_info.second);
+            }
+            if( print_details_ ) outfile->Printf("\n  Adding guess %d (multiplicity = %f)",n,guess[guess_list[n]].first);
+            
+            dls.add_guess(b);
+        }
     }
+
     // Prepare a list of bad roots to project out and pass them to the solver
     for (auto& g : guess){
         if (g.first != multiplicity) bad_roots.push_back(g.second);
     }
-
-
-
     dls.set_project_out(bad_roots);
+
+    if( set_guess_ ){
+        // Use previous solution as guess
+        b->zero();        
+        for( size_t I = 0, max_I = guess_.size(); I < max_I; ++I ){
+            b->set( guess_[I].first, guess_[I].second );
+        }
+        double norm = sqrt( 1.0 / b->norm() );
+        b->scale(norm);
+        dls.add_guess(b);
+    }
+
+
 
     SolverStatus converged = SolverStatus::NotConverged;
     

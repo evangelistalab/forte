@@ -50,7 +50,8 @@ enum GeneratorType {LinearGenerator,
                      ExpChebyshevGenerator,
                      WallChebyshevGenerator,
                      ChebyshevGenerator,
-                     LanczosGenerator};
+                     LanczosGenerator,
+                     DLGenerator};
 
 /**
  * @brief The SparsePathIntegralCI class
@@ -138,10 +139,18 @@ private:
     double e_convergence_;
     /// The maximum number of iterations
     int maxiter_;
+    /// The maximum number of iterations in Davidson generator
+    int max_Davidson_iter_;
+    /// The number of trial vector to retain after collapsing
+    int davidson_collapse_per_root_;
+    /// The maxim number of trial vectors
+    int davidson_subspace_per_root_;
     /// The current iteration
     int iter_;
     /// The current root
     int current_root_;
+    /// The current davidson iter
+    int current_davidson_iter_;
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground state calculation?
     bool post_diagonalization_;
     /// The eigensolver type
@@ -228,6 +237,20 @@ private:
     /// Spawning according to the coefficient in a reference
     bool reference_spawning_;
 
+//    // * Helping statistic
+//    /// Hash for statistics
+//    det_hash<size_t> statistic_hash;
+//    /// Vector for statistics
+//    std::vector<Determinant> statistic_vec;
+//    void count_hash(Determinant det) {
+//        auto it = statistic_hash.find(det);
+//        if (it == statistic_hash.end()) {
+//            statistic_vec.push_back(det);
+//            statistic_hash[det] = 0;
+//        }
+//        statistic_hash[det]++;
+//    }
+
     // ==> Class functions <==
 
     /// All that happens before we compute the energy
@@ -283,6 +306,8 @@ private:
     void propagate_Polynomial(det_vec& dets,std::vector<double>& C, std::vector<double>& coef,double spawning_threshold);
     /// The Lanczos Generator
     void propagate_Lanczos(det_vec& dets, std::vector<double>& C, double spawning_threshold, double S);
+    /// The DL Generator
+    void propagate_DL(det_vec& dets,std::vector<double>& C, double spawning_threshold, double S);
 
     /// Apply tau H to a set of determinants
     void apply_tau_H(double tau, double spawning_threshold, det_vec &dets, const std::vector<double>& C, det_hash<>& dets_C_map, double S);
@@ -306,6 +331,7 @@ private:
     void apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S);
     /// Apply symmetric approx tau H to a determinant using dynamic screening with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
+//    void apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
 
 
     /// Estimates the energy give a wave function
