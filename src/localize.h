@@ -34,6 +34,7 @@ private:
 
     int naocc_;
     int navir_;
+    int multiplicity_;
 
     std::vector<size_t> abs_act_;
         

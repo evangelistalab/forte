@@ -539,7 +539,7 @@ double AdaptiveCI::compute_energy()
         }else if ((ex_alg_ == "ROOT_ORTHOGONALIZE") ){// and i != (nrun - 1)){
             // orthogonalize
             save_old_root( PQ_space_, PQ_evecs, i);
-            energies->set(i,PQ_evals->get(i));
+            energies->set(i,PQ_evals->get(0));
             //compute_rdms( PQ_space_, PQ_evecs, i,i);
         }else if ((ex_alg_ == "MULTISTATE")){
             // orthogonalize
@@ -589,7 +589,10 @@ double AdaptiveCI::compute_energy()
             print_final( full_space, PQ_evecs, PQ_evals );
         }else if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
             print_final( PQ_space_, PQ_evecs, energies );
+        }else{
+            print_final( PQ_space_, PQ_evecs, PQ_evals );
         }
+        
     }
     outfile->Flush();
 
@@ -920,7 +923,6 @@ double AdaptiveCI::average_q_values( int nroot,std::vector<double>& C1, std::vec
 	
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
-    off = ref_root_;
     if( nav == 0 ) nav = nroot;
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
 
@@ -989,15 +991,15 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 	if(ref_root_ + 1 > nroot_){
 		throw PSIEXCEPTION("\n  Your selection is not valid. Check ROOT in options.");
 	}
-
-//	if(nroot == 1){
-//		ref_root_ = 0;
-//	}
+    int root = ref_root_;
+	if(nroot == 1){
+		ref_root_ = 0;
+	}
 
 	if(aimed_selection_){
-		select_value = energy_selection_ ? E2[ref_root_] : (C1[ref_root_]*C1[ref_root_]);
+		select_value = energy_selection_ ? E2[root] : (C1[root]*C1[root]);
 	}else{
-		select_value = energy_selection_ ? E2[ref_root_] : C1[ref_root_];
+		select_value = energy_selection_ ? E2[root] : C1[root];
 	}
 
 	return select_value;
@@ -1015,17 +1017,19 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
     int nvalpha = avir.size();
     int nvbeta  = bvir.size();
 
+    STLBitsetDeterminant new_det(det);
+
     // Generate aa excitations
     for (int i = 0; i < noalpha; ++i){
         int ii = aocc[i];
         for (int a = 0; a < nvalpha; ++a){
             int aa = avir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_alfa_bit(ii,false);
-                new_det.set_alfa_bit(aa,true);
                 double HIJ = det.slater_rules_single_alpha(ii,aa);
 				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                    new_det = det;
+                    new_det.set_alfa_bit(ii,false);
+                    new_det.set_alfa_bit(aa,true);
 					if( (V_hash.count(new_det) == 0)){
 						V_hash[new_det] = std::vector<double>(nroot);
 					}
@@ -1042,11 +1046,11 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
         for (int a = 0; a < nvbeta; ++a){
             int aa = bvir[a];
             if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
-                STLBitsetDeterminant new_det(det);
-                new_det.set_beta_bit(ii,false);
-                new_det.set_beta_bit(aa,true);
                 double HIJ = det.slater_rules_single_beta(ii,aa);
 				if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                    new_det = det;
+                    new_det.set_beta_bit(ii,false);
+                    new_det.set_beta_bit(aa,true);
                     if (V_hash.count(new_det) == 0){
                         V_hash[new_det] = std::vector<double>(nroot);
                     }
@@ -1068,13 +1072,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvalpha; ++b){
                     int bb = avir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_alfa_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_alfa_bit(bb,true);
                         double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_alfa_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_alfa_bit(bb,true);
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
 
                             if (V_hash.count(new_det) == 0){
@@ -1099,13 +1103,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = 0; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_alfa_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_alfa_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
                         double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_alfa_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_alfa_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
 
                             HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
 
@@ -1130,13 +1134,13 @@ void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evec
                 for (int b = a + 1; b < nvbeta; ++b){
                     int bb = bvir[b];
                     if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
-                        STLBitsetDeterminant new_det(det);
-                        new_det.set_beta_bit(ii,false);
-                        new_det.set_beta_bit(jj,false);
-                        new_det.set_beta_bit(aa,true);
-                        new_det.set_beta_bit(bb,true);
                         double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
 						if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                            new_det = det;
+                            new_det.set_beta_bit(ii,false);
+                            new_det.set_beta_bit(jj,false);
+                            new_det.set_beta_bit(aa,true);
+                            new_det.set_beta_bit(bb,true);
 
                             HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
                             if (V_hash.count(new_det) == 0){
@@ -1297,7 +1301,6 @@ void AdaptiveCI::prune_q_space(std::vector<STLBitsetDeterminant>& large_space,st
 
     int nav = options_.get_int("N_AVERAGE");
     int off = options_.get_int("AVERAGE_OFFSET");
-    off = ref_root_;
     if(nav == 0) nav = nroot;
 
     if( (off + nav) > nroot ) off = nroot - nav; //throw PSIEXCEPTION("\n  Your desired number of roots and the offset exceeds the maximum number of roots!");
@@ -2157,6 +2160,14 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     if(streamline_qspace_ and !quiet_mode_) outfile->Printf("\n  Using streamlined Q-space builder.");
 
    // compute_aci( PQ_evecs, PQevals );
+    ex_alg_ = options_.get_str("EXCITED_ALGORITHM");
+
+    std::vector<STLBitsetDeterminant> old_dets;
+    SharedMatrix old_evecs;
+
+    if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
+        ref_root_ = options_.get_int("ROOT");
+    }
 
 	int cycle;
     for (cycle = 0; cycle < max_cycle_; ++cycle){
@@ -2196,6 +2207,16 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             sparse_solver.add_bad_states( bad_roots_ );
         }
     
+        // Grab and set the guess
+        if( cycle > 2 and nroot_ == 1){
+     //       for( int n = 0; n < num_ref_roots; ++n ){
+     //           auto guess = dl_initial_guess( old_dets, P_space_, old_evecs, ref_root_ );
+    //            outfile->Printf("\n  Setting guess");
+     //           sparse_solver.set_initial_guess( guess );
+    //        }
+        }
+
+        sparse_solver.manual_guess( false );
         Timer diag;
         sparse_solver.diagonalize_hamiltonian(P_space_,P_evals,P_evecs,num_ref_roots,wavefunction_multiplicity_,diag_method_);
         if (!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag.get());
@@ -2263,6 +2284,15 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
             sparse_solver.add_bad_states( bad_roots_ );
         }
 
+        // Grab and set the guess
+        if( cycle > 2 and nroot_ == 1 ){
+      //      for( int n = 0; n < num_ref_roots; ++n ){
+//                auto guess = dl_initial_guess( old_dets, PQ_space_, old_evecs, ref_root_ );
+      //          outfile->Printf("\n  Setting guess for root %d", n);
+  //              sparse_solver.set_initial_guess( guess );
+      //      }
+        }
+
         // Step 3. Diagonalize the Hamiltonian in the P + Q space
         Timer diag_pq;
 
@@ -2271,8 +2301,12 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
         if(!quiet_mode_) outfile->Printf("\n  Time spent diagonalizing H:   %1.6f s", diag_pq.get());
 		if(det_save_) save_dets_to_file( PQ_space_, PQ_evecs );
 
-		// Ensure the solutions are spin-pure
+        // Save the solutions for the next iteration
+//        old_dets.clear();
+//        old_dets = PQ_space_;
+//        old_evecs = PQ_evecs->clone();
 
+		// Ensure the solutions are spin-pure
 		if( (spin_projection == 1 or spin_projection == 3) and PQ_space_.size() <= 200){
             project_determinant_space(PQ_space_, PQ_evecs, PQ_evals, num_ref_roots);
 		}else if ( !quiet_mode_ ){
@@ -2300,6 +2334,11 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
         // If doing root-following, grab the initial root
         if( follow and cycle == (pre_iter_ - 1)){
+
+            if( options_.get_str("EXCITED_ALGORITHM") == "ROOT_SELECT" ){
+                ref_root_ = options_.get_int("ROOT");
+            }
+
             for( size_t I = 0, maxI = PQ_space_.size(); I < maxI; ++I){
                 P_ref.push_back( std::make_pair( PQ_space_[I], PQ_evecs->get(I, ref_root_) ));
             } 
@@ -2359,6 +2398,26 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
 }
 
+std::vector<std::pair<size_t,double>> AdaptiveCI::dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int root)
+{
+    std::vector<std::pair<size_t,double>> guess;
+
+    // Build a hash of new dets
+    det_hash<size_t> detmap;
+    for( size_t I = 0, max_I = dets.size(); I < max_I; ++I ){
+        detmap[dets[I]] = I;
+    }
+
+    // Loop through old dets, store index of old det
+    for( size_t I = 0, max_I = old_dets.size(); I < max_I; ++I ){
+        STLBitsetDeterminant& det = old_dets[I];
+        if( detmap.count(det) != 0 ){
+            guess.push_back( std::make_pair( detmap[det], evecs->get(I, root)) );
+        }
+    }
+    return guess;
+}
+
 void AdaptiveCI::compute_rdms( std::vector<STLBitsetDeterminant>& dets, SharedMatrix& PQ_evecs, int root1, int root2 )
 {
     CI_RDMS ci_rdms_(options_,fci_ints_,dets,PQ_evecs, root1, root2);
@@ -2410,10 +2469,11 @@ void AdaptiveCI::add_bad_roots( std::vector<STLBitsetDeterminant>& dets )
     }
 
     // Look through each state, save common determinants/coeffs
-    std::vector<std::pair<size_t, double>> bad_root;
     int nroot = old_roots_.size();
     size_t idx = dets.size();
     for( int i = 0; i < nroot; ++i ){
+
+        std::vector<std::pair<size_t, double>> bad_root;
         size_t nadd = 0;
         std::vector<std::pair<STLBitsetDeterminant, double>>& state = old_roots_[i];
         
