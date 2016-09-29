@@ -3027,7 +3027,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
             size_t na = acore_mos_[n];
             size_t nb = bcore_mos_[n];
 
-        std::copy(&BmvQ_swapped.data()[n * nthree_ * active_],&BmvQ_swapped.data()[n * nthree_ * active_ + nthree_ * active_], Bn_vQ[thread].data().begin());
+            std::copy(&BmvQ_swapped.data()[n * nthree_ * active_],&BmvQ_swapped.data()[n * nthree_ * active_ + nthree_ * active_], Bn_vQ[thread].data().begin());
         //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
         //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
         //    });
