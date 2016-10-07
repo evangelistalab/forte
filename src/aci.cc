@@ -1247,6 +1247,12 @@ void AdaptiveCI::generate_pair_excited_determinants(int nroot,int I,SharedMatrix
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,SharedVector evals)
 {
     int nroot = evals->dim();
+    int ref = 0;
+
+    if( ex_alg_ == "ROOT_ORTHOGONALIZE" ){
+        ref = ref_root_;
+        nroot = 1;
+    }
 
     if (energy_history.size() == 0){
         std::vector<double> new_energies;
@@ -1264,6 +1270,7 @@ bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_hist
     std::vector<double> new_energies;
     std::vector<double> old_energies = energy_history[energy_history.size() - 1];
     for (int n = 0; n < nroot; ++ n){
+        n += ref;
         double state_n_energy = evals->get(n) + nuclear_repulsion_energy_;
         new_energies.push_back(state_n_energy);
         new_avg_energy += state_n_energy;
@@ -2143,6 +2150,8 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
 
     outfile->Flush();
 
+    size_t nvec = options_.get_int("N_GUESS_VEC");
+
     std::vector<std::vector<double> > energy_history;
     SparseCISolver sparse_solver;
     if(quiet_mode_) sparse_solver.set_print_details(false);
@@ -2152,7 +2161,7 @@ void AdaptiveCI::compute_aci( SharedMatrix& PQ_evecs, SharedVector& PQ_evals )
     sparse_solver.set_spin_project(project_out_spin_contaminants_);
     sparse_solver.set_force_diag(options_.get_bool("FORCE_DIAG_METHOD"));
     sparse_solver.set_guess_dimension(options_.get_int("DL_GUESS_SIZE"));
-
+    sparse_solver.set_num_vecs( nvec );
 	int spin_projection = options_.get_int("SPIN_PROJECTION");
 
 	if( det_save_ ) det_list_.open("det_list.txt");
