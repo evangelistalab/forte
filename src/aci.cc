@@ -574,7 +574,8 @@ double AdaptiveCI::compute_energy()
     }
 
     if( ex_alg_ == "MULTISTATE" ){
-        compute_multistate(); 
+        compute_multistate(PQ_evals); 
+        PQ_evals->print();
     }
 
     // Compute the RDMs
@@ -2517,7 +2518,7 @@ void AdaptiveCI::save_old_root( std::vector<STLBitsetDeterminant>& dets, SharedM
     outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
 }
 
-void AdaptiveCI::compute_multistate()
+void AdaptiveCI::compute_multistate( SharedVector& PQ_evals)
 {
     outfile->Printf("\n  Computing multistate solution");
     int nroot = old_roots_.size();
@@ -2547,7 +2548,6 @@ void AdaptiveCI::compute_multistate()
             S->set( A, B, overlap );
         }
     }
-
     //Diagonalize the overlap
     SharedMatrix Sevecs(new Matrix(nroot,nroot));
     SharedVector Sevals(new Vector(nroot));
@@ -2556,14 +2556,15 @@ void AdaptiveCI::compute_multistate()
     // Form symmetric orthogonalization matrix
 
     SharedMatrix Strans(new Matrix(nroot,nroot));
+    SharedMatrix Sint(new Matrix(nroot,nroot));
     SharedMatrix Diag(new Matrix(nroot,nroot));
     Diag->identity();
     for( int n = 0; n < nroot; ++n ){
-        Diag->set( n,n, -1.0 * sqrt(Sevals->get(n)));
+        Diag->set( n,n,  1.0 / sqrt(Sevals->get(n)));
     }
 
-
-    Strans->transform(Sevecs,Diag,Sevecs);
+    Sint->gemm(false, true, 1.0, Diag, Sevecs, 1.0);  
+    Strans->gemm(false, false, 1.0, Sevecs, Sint,1.0);  
     
     // Form the Hamiltonian
 
@@ -2587,16 +2588,19 @@ void AdaptiveCI::compute_multistate()
             H->set( B, A, HIJ );
         }
     }
-    H->print();    
+//    H->print();    
     H->transform(Strans);
- //`   H->transform(Sevecs);
 
     SharedMatrix Hevecs(new Matrix(nroot,nroot));
     SharedVector Hevals(new Vector(nroot));
     
     H->diagonalize(Hevecs,Hevals);
     
-    Hevals->print();
+    for( int n = 0; n < nroot; ++n ){
+        PQ_evals->set( n, Hevals->get(n));// + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
+    }
+
+    PQ_evals->print();
 }
 
 }} // EndNamespaces
