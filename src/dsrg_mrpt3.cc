@@ -100,7 +100,7 @@ void DSRG_MRPT3::startup()
     };
 
     // memory usage
-    mem_total_ = static_cast<long long int> (0.90 * Process::environment.get_memory());
+    mem_total_ = static_cast<long long int> (0.98 * Process::environment.get_memory());
     std::vector<std::pair<std::string,std::string>> mem_info {
         {"Memory asigned", converter(mem_total_)}
     };
