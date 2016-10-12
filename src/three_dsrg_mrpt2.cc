@@ -2727,16 +2727,6 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO()
                     value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
-                // beta-beta
-//                BefVec[thread]("EF") = BmbVec[thread]("gE") * BnbVec[thread]("gF");
-//                BefJKVec[thread]("EF")  = BefVec[thread]("EF") * BefVec[thread]("EF");
-//                BefJKVec[thread]("EF") -= BefVec[thread]("EF") * BefVec[thread]("FE");
-//                RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-//                    double D = Fb_[mb] + Fb_[nb] - Fb_[bvirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-//                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
-//                Ebeta += 0.5 * BefJKVec[thread]("EF") * RDVec[thread]("EF");
-
-                // alpha-beta
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
