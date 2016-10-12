@@ -544,6 +544,8 @@ read_options(std::string name, Options &options)
         options.add_bool("PRINT_REFS", false);
         /*- Set the initial guess space size for DL solver -*/
         options.add_int("DL_GUESS_SIZE", 100);
+        /*- Number of guess vectors for Sparse CI solver -*/
+        options.add_int("N_GUESS_VEC", 10);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI
@@ -727,6 +729,10 @@ read_options(std::string name, Options &options)
         options.add_str("SMART_DSRG_S", "DSRG_S", "DSRG_S MIN_DELTA1 MAX_DELTA1 DAVG_MIN_DELTA1 DAVG_MAX_DELTA1");
         /*- Print DSRG-MRPT3 Timing Profile -*/
         options.add_bool("PRINT_TIME_PROFILE", false);
+        /*- Diagonalize which Hamiltonian in MS-DSRG-MRPT2/3
+         *  - AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
+         *  - FULL:       CASCI using determinants -*/
+        options.add_str("DSRG_MS_HEFF", "FULL", "FULL AVG_STATES");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
