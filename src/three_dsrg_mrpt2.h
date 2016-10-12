@@ -213,6 +213,7 @@ protected:
     double E_VT2_2_batch_virtual_mpi();
     double E_VT2_2_batch_virtual_ga();
     double E_VT2_2_batch_virtual_rep();
+    double E_VT2_2_AO();
     double E_VT2_4PP();
     double E_VT2_4HH();
     double E_VT2_4PH();
