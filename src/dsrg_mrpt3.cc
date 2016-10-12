@@ -263,6 +263,8 @@ void DSRG_MRPT3::startup()
 
     } else {
         if(multi_state_){
+            relax_ref_ = "MULTI-STATE";
+
             Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
             Hbar2_ = BTF_->build(tensor_type_,"Two-body Hbar",spin_cases({"aaaa"}));
             Hbar1_["uv"] = F_["uv"];
