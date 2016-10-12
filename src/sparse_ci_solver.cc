@@ -1660,6 +1660,11 @@ void SparseCISolver::set_initial_guess( std::vector< std::pair< size_t, double >
 
 }
 
+
+void SparseCISolver::set_num_vecs( size_t value ){
+    nvec_ = value;
+}
+
 bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>& space,
                                          SigmaVector* sigma_vector,
                                          SharedVector Eigenvalues,
@@ -1683,8 +1688,7 @@ bool SparseCISolver::davidson_liu_solver(const std::vector<STLBitsetDeterminant>
     dls.startup(sigma);
 
     std::vector<std::vector<std::pair<size_t,double>>> bad_roots;
-
-    size_t guess_size = dls.collapse_size();
+    size_t guess_size = std::min( nvec_, dls.collapse_size());
 
     auto guess = initial_guess(space,nroot,multiplicity);
     if( !set_guess_ ){

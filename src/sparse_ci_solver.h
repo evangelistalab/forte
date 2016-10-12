@@ -202,7 +202,7 @@ public:
     /// Set the initial guess
     void set_initial_guess( std::vector< std::pair<size_t,double> >& guess ); 
     void manual_guess( bool value );
-    
+    void set_num_vecs( size_t value );    
 
 private:
     /// Form the full Hamiltonian and diagonalize it (for debugging)
@@ -255,7 +255,8 @@ private:
     /// Set the initial guess?
     bool set_guess_ = false;
     std::vector<std::pair<size_t,double>> guess_;
-
+    // Number of guess vectors
+    size_t nvec_ = 10;
 };
 
 }}

@@ -373,7 +373,7 @@ private:
     /// Print Summary
     void print_final( std::vector<STLBitsetDeterminant>& dets,  SharedMatrix& PQ_evecs, SharedVector& PQ_evals );
 
-    void compute_multistate();
+    void compute_multistate(SharedVector& PQ_evals);
 
     std::vector<std::pair<size_t,double>> dl_initial_guess( std::vector<STLBitsetDeterminant>& old_dets, std::vector<STLBitsetDeterminant>& dets, SharedMatrix& evecs, int nroot );
 //    int david2(double **A, int N, int M, double *eps, double **v,double cutoff, int print);
