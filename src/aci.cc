@@ -574,8 +574,10 @@ double AdaptiveCI::compute_energy()
     }
 
     if( ex_alg_ == "MULTISTATE" ){
+        Timer multi;
         compute_multistate(PQ_evals); 
-        PQ_evals->print();
+        outfile->Printf("\n  Time spent computing multistate solution: %1.5f", multi.get());
+    //    PQ_evals->print();
     }
 
     // Compute the RDMs
@@ -2570,6 +2572,7 @@ void AdaptiveCI::compute_multistate( SharedVector& PQ_evals)
 
     SharedMatrix H(new Matrix(nroot,nroot));
 
+#pragma omp parallel for
     for( int A = 0; A < nroot; ++A ){
         std::vector<std::pair<STLBitsetDeterminant, double>>& stateA = old_roots_[A];
         size_t ndetA = stateA.size();
@@ -2600,7 +2603,7 @@ void AdaptiveCI::compute_multistate( SharedVector& PQ_evals)
         PQ_evals->set( n, Hevals->get(n));// + nuclear_repulsion_energy_ + fci_ints_->scalar_energy());
     }
 
-    PQ_evals->print();
+//    PQ_evals->print();
 }
 
 }} // EndNamespaces
