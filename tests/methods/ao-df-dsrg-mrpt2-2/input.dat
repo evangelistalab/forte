@@ -2,6 +2,7 @@
 #! Generated using commit GITCOMMIT
 import forte
 
+dsrg_energy = -3.390152807418032
 molecule {
   0 1
   H  0.0  0.0  0.0
@@ -37,6 +38,7 @@ set forte{
    ao_dsrg_mrpt2         true
 }
 ref_energy, refwfn = energy('scf', return_wfn=True)
-energy('forte', ref_wfn=refwfn)
+forte_energy = energy('forte', ref_wfn=refwfn)
+compare_values(dsrg_energy, forte_energy, 6, "DSRG-MRPT2")
 
 
