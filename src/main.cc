@@ -712,7 +712,7 @@ read_options(std::string name, Options &options)
         /*- T1 Amplitudes -*/
         options.add_str("T1_AMP", "DSRG", "DSRG SRG ZERO");
         /*- Reference Relaxation -*/
-        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE");
+        options.add_str("RELAX_REF", "NONE", "NONE ONCE ITERATE STATE-AVG");
         /*- Max Iteration for Reference Relaxation -*/
         options.add_int("MAXITER_RELAX_REF", 10);
         /*- DSRG Taylor Expansion Threshold -*/
@@ -732,7 +732,7 @@ read_options(std::string name, Options &options)
         /*- Diagonalize which Hamiltonian in MS-DSRG-MRPT2/3
          *  - AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
          *  - FULL:       CASCI using determinants -*/
-        options.add_str("DSRG_MS_HEFF", "FULL", "FULL AVG_STATES");
+        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
@@ -953,17 +953,28 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         std::string cas_type = options.get_str("CAS_TYPE");
         if (cas_type == "CAS") {
             FCI_MO fci_mo(ref_wfn,options,ints_,mo_space_info);
-            fci_mo.compute_energy();
-            Reference reference = fci_mo.reference();
 
-            std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
-            if(options.get_str("RELAX_REF") == "NONE"){
-                mrdsrg->compute_energy();
-            }else{
-                if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
-                    throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+            if(options["AVG_STATE"].has_changed()){
+                options.set_str("FORTE","RELAX_REF","STATE-AVG");
+                fci_mo.compute_sa_energy();
+                Reference reference = fci_mo.reference();
+                std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
+                mrdsrg->set_p_space(fci_mo.p_space());
+                mrdsrg->set_eigens(fci_mo.eigens());
+                mrdsrg->compute_energy_sa();
+            } else {
+                fci_mo.compute_energy();
+                Reference reference = fci_mo.reference();
+
+                std::shared_ptr<MRDSRG> mrdsrg(new MRDSRG(reference,ref_wfn,options,ints_,mo_space_info));
+                if(options.get_str("RELAX_REF") == "NONE"){
+                    mrdsrg->compute_energy();
+                }else{
+                    if(options.get_str("DSRG_TRANS_TYPE") == "CC"){
+                        throw PSIEXCEPTION("Reference relaxation for CC-type DSRG transformation is not implemented yet.");
+                    }
+                    mrdsrg->compute_energy_relaxed();
                 }
-                mrdsrg->compute_energy_relaxed();
             }
         } else if (cas_type == "FCI") {
             if (options.get_bool("SEMI_CANONICAL")) {
@@ -1042,6 +1053,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATE"].has_changed()){
+                options.set_str("FORTE","RELAX_REF","STATE-AVG");
                 fci_mo->compute_sa_energy();
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT2> dsrg_mrpt2(new DSRG_MRPT2(reference,ref_wfn,options,ints_,mo_space_info));
@@ -1257,6 +1269,7 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         {
             std::shared_ptr<FCI_MO> fci_mo(new FCI_MO(ref_wfn,options,ints_,mo_space_info));
             if(options["AVG_STATE"].has_changed()){
+                options.set_str("FORTE","RELAX_REF","STATE-AVG");
                 fci_mo->compute_sa_energy();
                 Reference reference = fci_mo->reference();
                 std::shared_ptr<DSRG_MRPT3> dsrg_mrpt3(new DSRG_MRPT3(reference,ref_wfn,options,ints_,mo_space_info));

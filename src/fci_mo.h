@@ -60,7 +60,7 @@ public:
     double compute_energy();
 
     /// Returns the reference object
-    Reference reference();
+    Reference reference(const int& level = 3);
 
     /// Compute state-averaged CASCI energy
     double compute_sa_energy();
