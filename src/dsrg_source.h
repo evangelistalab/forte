@@ -123,6 +123,19 @@ public:
         return s_ * D / (1.0 + s_ * D * D);
     }
 };
+class MP2_SOURCE : public DSRG_SOURCE {
+public:
+    MP2_SOURCE(double s, double taylor_threshold);
+    
+
+    virtual double compute_renormalized(const double& D) {
+        return 1.0;
+    }
+    
+    virtual double compute_renormalized_denominator(const double& D) {
+        return 1.0 / D ;
+    }
+};
 
 }}
 
