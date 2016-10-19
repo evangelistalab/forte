@@ -105,7 +105,7 @@ read_options(std::string name, Options &options)
          *  - CONVENTIONAL Conventional two-electron integrals
          *  - DF Density fitted two-electron integrals
          *  - CHOLESKY Cholesky decomposed two-electron integrals -*/
-        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE");
+        options.add_str("INT_TYPE","CONVENTIONAL","CONVENTIONAL DF CHOLESKY DISKDF DISTDF ALL EFFECTIVE OWNINTEGRALS");
 
         /*- The damping factor in the erf(x omega)/x integrals -*/
         options.add_double("EFFECTIVE_COULOMB_OMEGA",1.0);
@@ -759,6 +759,9 @@ read_options(std::string name, Options &options)
         options.add_str("CCVV_SOURCE", "NORMAL", "ZERO NORMAL");
         /*- Algorithm for the ccvv term for three-dsrg-mrpt2 -*/
         options.add_str("CCVV_ALGORITHM", "FLY_AMBIT", "CORE FLY_AMBIT FLY_LOOP BATCH_CORE BATCH_VIRTUAL BATCH_CORE_GA BATCH_VIRTUAL_GA BATCH_VIRTUAL_MPI BATCH_CORE_MPI BATCH_CORE_REP BATCH_VIRTUAL_REP");
+        /*- Do AO-DSRG-MRPT2 -*/
+        options.add_bool("AO_DSRG_MRPT2", false);
+        
         /*- Batches for CCVV_ALGORITHM -*/
         options.add_int("CCVV_BATCH_NUMBER", -1);
         /*- Excessive printing for DF_DSRG_MRPT2 -*/
@@ -837,9 +840,11 @@ extern "C" SharedWavefunction forte(SharedWavefunction ref_wfn, Options &options
         #ifdef HAVE_GA
         ints_ = std::make_shared<DistDFIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
         #endif
+    }else if(options.get_str("INT_TYPE") == "OWNINTEGRALS") {
+        ints_ = std::make_shared<OwnIntegrals>(options, ref_wfn, UnrestrictedMOs, RemoveFrozenMOs, mo_space_info);
     }
     else{
-        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF or CONVENTIONAL");
+        outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
         throw PSIEXCEPTION("INT_TYPE is not correct.  Check options");
     }
 
