@@ -135,12 +135,9 @@ void DSRG_MRPT2::startup()
     relax_ref_ = options_.get_str("RELAX_REF");
     multi_state_ = options_["AVG_STATE"].has_changed();
     if(relax_ref_ != "NONE"){
-        if(relax_ref_ != "ONCE"){
+        if(relax_ref_ != "ONCE" && !multi_state_){
             outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE", relax_ref_.c_str());
             relax_ref_ = "ONCE";
-        }
-        if(multi_state_){
-            outfile->Printf("\n\n  Multi-state computations ignore RELAX_REF option.");
         }
 
         Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
@@ -150,18 +147,6 @@ void DSRG_MRPT2::startup()
         Hbar2_["uvxy"] = V_["uvxy"];
         Hbar2_["uVxY"] = V_["uVxY"];
         Hbar2_["UVXY"] = V_["UVXY"];
-    } else {
-        if(multi_state_){
-            relax_ref_ = "MULTI-STATE";
-
-            Hbar1_ = BTF_->build(tensor_type_,"One-body Hbar",spin_cases({"aa"}));
-            Hbar2_ = BTF_->build(tensor_type_,"Two-body Hbar",spin_cases({"aaaa"}));
-            Hbar1_["uv"] = F_["uv"];
-            Hbar1_["UV"] = F_["UV"];
-            Hbar2_["uvxy"] = V_["uvxy"];
-            Hbar2_["uVxY"] = V_["uVxY"];
-            Hbar2_["UVXY"] = V_["UVXY"];
-        }
     }
 
     // initialize timer for commutator
@@ -1472,7 +1457,7 @@ double DSRG_MRPT2::compute_energy_multi_state(){
         // diagonalize which the second-order effective Hamiltonian
         // FULL: CASCI using determinants
         // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if(options_.get_str("DSRG_MS_HEFF") == "FULL") {
+        if(options_.get_str("DSRG_SA_HEFF") == "FULL") {
 
             outfile->Printf("    Use string FCI code.");
 
@@ -1581,7 +1566,7 @@ double DSRG_MRPT2::compute_energy_multi_state(){
     } // end looping averaged states
 
     // energy summuary
-    print_h2("Multi-State DSRG-MRPT2 Energy Summary");
+    print_h2("State-Average DSRG-MRPT2 Energy Summary");
 
     outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT2 Energy");
     std::string dash(41, '-');

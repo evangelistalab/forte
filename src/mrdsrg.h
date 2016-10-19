@@ -15,6 +15,7 @@
 #include "blockedtensorfactory.h"
 #include "dsrg_source.h"
 #include "dsrg_time.h"
+#include "stl_bitset_determinant.h"
 
 using namespace ambit;
 namespace psi{ namespace forte{
@@ -43,6 +44,15 @@ public:
 
     /// Compute the corr_level energy with relaxed reference
     double compute_energy_relaxed();
+
+    /// Compute state-average MR-DSRG energy
+    double compute_energy_sa();
+
+    /// Set CASCI eigen values and eigen vectors for state averaging
+    void set_eigens(std::vector<std::vector<std::pair<SharedVector,double>>> eigens) {eigens_ = eigens;}
+
+    /// Set determinants in the model space
+    void set_p_space(std::vector<psi::forte::STLBitsetDeterminant> p_space) {p_space_ = p_space;}
 
 protected:
 
@@ -76,6 +86,11 @@ protected:
 
     /// MO space info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
+    /// CASCI eigen values and eigen vectors for state averaging
+    std::vector<std::vector<std::pair<SharedVector,double>>> eigens_;
+    /// Determinants in the model space
+    std::vector<psi::forte::STLBitsetDeterminant> p_space_;
 
     /// List of alpha core MOs
     std::vector<size_t> acore_mos_;
