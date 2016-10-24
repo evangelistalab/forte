@@ -193,7 +193,7 @@ double ACTIVE_DSRGPT2::compute_energy(){
                     if(options_.get_str("CORR_LEVEL") == "PT2"){
                         if(options_.get_str("INT_TYPE") == "CONVENTIONAL"){
                             std::shared_ptr<DSRG_MRPT2> dsrg = std::make_shared<DSRG_MRPT2>(reference,reference_wavefunction_,options_,ints_,mo_space_info_);
-                            dsrg->ignore_semicanonical(true);
+                            dsrg->set_ignore_semicanonical(true);
                             dsrg->set_actv_occ(fci_mo.actv_occ());
                             dsrg->set_actv_uocc(fci_mo.actv_uocc());
                             Ept = dsrg->compute_energy();

@@ -794,7 +794,7 @@ double MRDSRG::compute_energy_sa(){
     // energy summuary
     print_h2("State-Average MR-DSRG Energy Summary");
 
-    outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT3 Energy");
+    outfile->Printf("\n    Multi.  Irrep.  No.    MR-DSRG Energy");
     std::string dash(41, '-');
     outfile->Printf("\n    %s", dash.c_str());
 
