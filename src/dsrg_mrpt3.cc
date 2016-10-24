@@ -1374,11 +1374,6 @@ double DSRG_MRPT3::compute_energy_multi_state(){
                                   "Nonet","Decaet","11-et","12-et","13-et","14-et","15-et","16-et","17-et","18-et",
                                   "19-et","20-et","21-et","22-et","23-et","24-et"};
 
-    // size of 1rdm and 2rdm
-    size_t na = mo_space_info_->size("ACTIVE");
-    size_t nele1 = na * na;
-    size_t nele2 = na * nele1;
-
     // get effective one-electron integral (DSRG transformed)
     BlockedTensor oei = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
     oei.block("aa").data() = fci_ints->oei_a_vector();
@@ -1463,13 +1458,10 @@ double DSRG_MRPT3::compute_energy_multi_state(){
                     CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
                     ci_rdms.set_symmetry(irrep);
 
-                    std::vector<double> opdm_a (nele1, 0.0);
-                    std::vector<double> opdm_b (nele1, 0.0);
-                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
+                    std::vector<double> opdm_a,opdm_b;
+                    std::vector<double> tpdm_aa,tpdm_ab,tpdm_bb;
 
-                    std::vector<double> tpdm_aa (nele2, 0.0);
-                    std::vector<double> tpdm_ab (nele2, 0.0);
-                    std::vector<double> tpdm_bb (nele2, 0.0);
+                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
                     ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
 
                     // put rdms in tensor format

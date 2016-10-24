@@ -79,7 +79,7 @@ public:
     void set_p_space(std::vector<psi::forte::STLBitsetDeterminant> p_space) {p_space_ = p_space;}
 
     /// Ignore semi-canonical testing in DSRG-MRPT2
-    void ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
+    void set_ignore_semicanonical(bool ignore) {ignore_semicanonical_ = ignore;}
 
     /// Set active active occupied MOs (relative to active)
     void set_actv_occ(std::vector<size_t> actv_occ) {actv_occ_mos_ = std::vector<size_t>(actv_occ);}
@@ -305,6 +305,19 @@ protected:
     ambit::Tensor separate_tensor(ambit::Tensor& tens, const Dimension& irrep, const int& h);
     /// Combine a separated 2D ambit::Tensor
     void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const Dimension& irrep, const int& h);
+
+
+    // => Multi-state energy <= //
+
+    /// Compute multi-state energy in the state-average way
+    std::vector<std::vector<double>> compute_energy_sa();
+    /// Compute multi-state energy in the XMS way
+    std::vector<std::vector<double>> compute_energy_xms();
+
+    /// Compute density cumulants
+    void compute_cumulants(std::shared_ptr<FCIIntegrals> fci_ints,
+                           SharedMatrix evecs, const int& root1, const int& root2,
+                           const int& irrep);
 };
 
 }} // End Namespaces
