@@ -304,6 +304,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms(){
             // need to turn off semicanonical
             // TODO: solve amplitudes iteratively due to Factv off-diagonal elements
 //            set_ignore_semicanonical(true);
+            Eref_ = eigens_[n][N].second;
             double Edsrg = compute_energy();
 
             // TODO: save a copy of amplitudes
