@@ -15,7 +15,6 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <omp.h>
 #ifdef HAVE_MPI
     #include <mpi.h>
 #endif
