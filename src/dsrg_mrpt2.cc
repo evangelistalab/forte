@@ -258,10 +258,16 @@ void DSRG_MRPT2::build_fock(){
     F_["EF"] += VFock["EVFU"] * Gamma1_["UV"];
 
     // off-diagonal and all-active blocks
-    F_["ai"] += V_["aviu"] * Gamma1_["uv"];
-    F_["ai"] += V_["aViU"] * Gamma1_["UV"];
-    F_["AI"] += V_["vAuI"] * Gamma1_["uv"];
-    F_["AI"] += V_["AVIU"] * Gamma1_["UV"];
+    VFock = ambit::BlockedTensor::build(tensor_type_,"VFock",{"paha","pAhA","aPaH","PAHA"});
+    VFock.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if ((spin[0] == AlphaSpin) and (spin[1] == AlphaSpin)) value = ints_->aptei_aa(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == AlphaSpin) and (spin[1] == BetaSpin) ) value = ints_->aptei_ab(i[0],i[1],i[2],i[3]);
+        if ((spin[0] == BetaSpin)  and (spin[1] == BetaSpin) ) value = ints_->aptei_bb(i[0],i[1],i[2],i[3]);
+    });
+    F_["ai"] += VFock["aviu"] * Gamma1_["uv"];
+    F_["ai"] += VFock["aViU"] * Gamma1_["UV"];
+    F_["AI"] += VFock["vAuI"] * Gamma1_["uv"];
+    F_["AI"] += VFock["AVIU"] * Gamma1_["UV"];
 
     // obtain diagonal elements of Fock matrix
     F_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
@@ -1402,190 +1408,6 @@ double DSRG_MRPT2::E_VT2_6()
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220",timer.get());
     return E;
-}
-
-double DSRG_MRPT2::compute_energy_multi_state(){
-    // compute DSRG-MRPT2 energy
-    compute_energy();
-
-    // transfer integrals
-    transfer_integrals();
-
-    // prepare FCI integrals
-    std::shared_ptr<FCIIntegrals> fci_ints = std::make_shared<FCIIntegrals>(ints_, aactv_mos_, acore_mos_);
-    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA"));
-    fci_ints->compute_restricted_one_body_operator();
-//    STLBitsetDeterminant::set_ints(fci_ints);
-
-    // get character table
-    CharacterTable ct = Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> irrep_symbol;
-    for(int h = 0; h < this->nirrep(); ++h){
-        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    }
-
-    // multiplicity table
-    std::vector<std::string> multi_label{"Singlet","Doublet","Triplet","Quartet","Quintet","Sextet","Septet","Octet",
-                                  "Nonet","Decaet","11-et","12-et","13-et","14-et","15-et","16-et","17-et","18-et",
-                                  "19-et","20-et","21-et","22-et","23-et","24-et"};
-
-    // size of 1rdm and 2rdm
-    size_t na = mo_space_info_->size("ACTIVE");
-    size_t nele1 = na * na;
-    size_t nele2 = na * nele1;
-
-    // get effective one-electron integral (DSRG transformed)
-    BlockedTensor oei = BTF_->build(tensor_type_,"temp1",spin_cases({"aa"}));
-    oei.block("aa").data() = fci_ints->oei_a_vector();
-    oei.block("AA").data() = fci_ints->oei_b_vector();
-
-    // get nuclear repulsion energy
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
-    double Enuc = molecule->nuclear_repulsion_energy();
-
-    // loop over entries of AVG_STATE
-    print_h2("Diagonalize Effective Hamiltonian");
-    outfile->Printf("\n");
-    int nentry = eigens_.size();
-    std::vector<std::vector<double>> Edsrg_sa (nentry, std::vector<double> ());
-
-    for(int n = 0; n < nentry; ++n){
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
-
-        // diagonalize which the second-order effective Hamiltonian
-        // FULL: CASCI using determinants
-        // AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
-        if(options_.get_str("DSRG_SA_HEFF") == "FULL") {
-
-            outfile->Printf("    Use string FCI code.");
-
-            // prepare FCISolver
-            int charge = Process::environment.molecule()->molecular_charge();
-            if(options_["CHARGE"].has_changed()){
-                charge = options_.get_int("CHARGE");
-            }
-            auto nelec = 0;
-            int natom = Process::environment.molecule()->natom();
-            for(int i = 0; i < natom; ++i){
-                nelec += Process::environment.molecule()->fZ(i);
-            }
-            nelec -= charge;
-            int ms = (multi + 1) % 2;
-            auto nelec_actv = nelec - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * acore_mos_.size();
-            auto na = (nelec_actv + ms) / 2;
-            auto nb =  nelec_actv - na;
-
-            Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-            int ntrial_per_root = options_.get_int("NTRIAL_PER_ROOT");
-
-            FCISolver fcisolver(active_dim,acore_mos_,aactv_mos_,na,nb,multi,irrep,
-                                ints_,mo_space_info_,ntrial_per_root,print_,options_);
-            fcisolver.set_max_rdm_level(1);
-            fcisolver.set_nroot(nstates);
-            fcisolver.set_root(nstates - 1);
-            fcisolver.set_fci_iterations(options_.get_int("FCI_ITERATIONS"));
-            fcisolver.set_collapse_per_root(options_.get_int("DAVIDSON_COLLAPSE_PER_ROOT"));
-            fcisolver.set_subspace_per_root(options_.get_int("DAVIDSON_SUBSPACE_PER_ROOT"));
-
-            // compute energy and fill in results
-            fcisolver.compute_energy();
-            SharedVector Ems = fcisolver.eigen_vals();
-            for(int i = 0; i < nstates; ++i){
-                Edsrg_sa[n].push_back(Ems->get(i) + Enuc);
-            }
-
-        } else {
-
-            int dim = (eigens_[n][0].first)->dim();
-            SharedMatrix evecs (new Matrix("evecs",dim,dim));
-            for(int i = 0; i < eigens_[n].size(); ++i){
-                evecs->set_column(0,i,(eigens_[n][i]).first);
-            }
-
-            SharedMatrix Heff (new Matrix("Heff " + multi_label[multi - 1]
-                               + " " + irrep_symbol[irrep], nstates, nstates));
-            for(int A = 0; A < nstates; ++A){
-                for(int B = A; B < nstates; ++B){
-
-                    // compute rdms
-                    CI_RDMS ci_rdms (options_,fci_ints,p_space_,evecs,A,B);
-                    ci_rdms.set_symmetry(irrep);
-
-                    std::vector<double> opdm_a (nele1, 0.0);
-                    std::vector<double> opdm_b (nele1, 0.0);
-                    ci_rdms.compute_1rdm(opdm_a,opdm_b);
-
-                    std::vector<double> tpdm_aa (nele2, 0.0);
-                    std::vector<double> tpdm_ab (nele2, 0.0);
-                    std::vector<double> tpdm_bb (nele2, 0.0);
-                    ci_rdms.compute_2rdm(tpdm_aa,tpdm_ab,tpdm_bb);
-
-                    // put rdms in tensor format
-                    BlockedTensor D1 = BTF_->build(tensor_type_,"D1",spin_cases({"aa"}),true);
-                    D1.block("aa").data() = opdm_a;
-                    D1.block("AA").data() = opdm_b;
-
-                    BlockedTensor D2 = BTF_->build(tensor_type_,"D2",spin_cases({"aaaa"}),true);
-                    D2.block("aaaa").data() = tpdm_aa;
-                    D2.block("aAaA").data() = tpdm_ab;
-                    D2.block("AAAA").data() = tpdm_bb;
-
-                    double H_AB = 0.0;
-                    H_AB += oei["uv"] * D1["uv"];
-                    H_AB += oei["UV"] * D1["UV"];
-                    H_AB += 0.25 * Hbar2_["uvxy"] * D2["xyuv"];
-                    H_AB += 0.25 * Hbar2_["UVXY"] * D2["XYUV"];
-                    H_AB += Hbar2_["uVxY"] * D2["xYuV"];
-
-                    if(A == B){
-                        H_AB += ints_->frozen_core_energy() + fci_ints->scalar_energy() + Enuc;
-                        Heff->set(A,B,H_AB);
-                    } else {
-                        Heff->set(A,B,H_AB);
-                        Heff->set(B,A,H_AB);
-                    }
-
-                }
-            } // end forming effective Hamiltonian
-
-            SharedMatrix U (new Matrix("U of Heff", nstates, nstates));
-            SharedVector Ems (new Vector("MS Energies", nstates));
-            Heff->diagonalize(U, Ems);
-
-            Heff->print();
-            //        U->eivprint(Ems);
-
-            // fill in Edsrg_sa
-            for(int i = 0; i < nstates; ++i){
-                Edsrg_sa[n].push_back(Ems->get(i));
-            }
-        } // end if DSRG_AVG_DIAG
-
-    } // end looping averaged states
-
-    // energy summuary
-    print_h2("State-Average DSRG-MRPT2 Energy Summary");
-
-    outfile->Printf("\n    Multi.  Irrep.  No.    DSRG-MRPT2 Energy");
-    std::string dash(41, '-');
-    outfile->Printf("\n    %s", dash.c_str());
-
-    for(int n = 0; n < nentry; ++n){
-        int irrep = options_["AVG_STATE"][n][0].to_integer();
-        int multi = options_["AVG_STATE"][n][1].to_integer();
-        int nstates = options_["AVG_STATE"][n][2].to_integer();
-
-        for(int i = 0; i < nstates; ++i){
-            outfile->Printf("\n     %3d     %3s    %2d   %20.12f",
-                            multi, irrep_symbol[irrep].c_str(), i, Edsrg_sa[n][i]);
-        }
-        outfile->Printf("\n    %s", dash.c_str());
-    }
-
-    Process::environment.globals["CURRENT ENERGY"] = Edsrg_sa[0][0];
-    return Edsrg_sa[0][0];
 }
 
 double DSRG_MRPT2::compute_energy_relaxed(){
