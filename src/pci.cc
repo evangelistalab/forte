@@ -1001,7 +1001,7 @@ bool ProjectorCI::converge_test()
     }
     static double lastLow = 0.0;
     if (approx_energy_ > old_approx_energy_) {
-        if (approx_energy_ >= lastLow) {
+        if (old_approx_energy_ > lastLow) {
             lastLow = old_approx_energy_;
             return true;
         }
