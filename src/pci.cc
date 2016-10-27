@@ -1000,12 +1000,17 @@ bool ProjectorCI::converge_test()
         return false;
     }
     static double lastLow = 0.0;
-    if (approx_energy_ > old_approx_energy_) {
+    static bool previous_go_up = false;
+    if (approx_energy_ > old_approx_energy_ && !previous_go_up) {
         if (old_approx_energy_ > lastLow) {
             lastLow = old_approx_energy_;
             return true;
         }
         lastLow = old_approx_energy_;
+        previous_go_up = true;
+    }
+    if (approx_energy_ < old_approx_energy_){
+        previous_go_up = false;
     }
     return false;
 }
