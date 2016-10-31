@@ -1808,6 +1808,24 @@ void AdaptiveCI::print_nos()
     }
     outfile->Printf( "\n\n");
 
+    // Compute active space weights
+    double no_thresh = options_.get_double("NO_THRESHOLD");
+    print_h2( "Active Space Weights" );
+    for( int h = 0; h < nirrep_; ++h ){
+        std::vector<double> weights( nactpi_[h], 0.0 );
+        for( int p = 0; p < nactpi_[h]; ++p ){
+            for( int q = 0; q < nactpi_[h]; ++q ){
+                double occ = OCC_A->get(h,q) + OCC_B->get(h,q);
+                if( (occ >= no_thresh ) and ( occ <= (2.0-no_thresh))  ){
+                    weights[p] +=  (NO_A->get( h, p, q))* (NO_A->get( h, p, q)); 
+                }
+            }
+        }
+        outfile->Printf("\n  Irrep %d:",h);
+        for( int w = 0; w < nactpi_[h]; ++w ){
+            outfile->Printf("\n     %d     %1.9f", w, weights[w]);
+        }
+    }
 
 }
 
