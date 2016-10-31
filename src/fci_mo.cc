@@ -2532,22 +2532,26 @@ void FCI_MO::compute_ref(){
     timer_off("Compute Ref");
 }
 
-Reference FCI_MO::reference()
+Reference FCI_MO::reference(const int& level)
 {
-    if(options_["AVG_STATE"].has_changed()){
-        compute_sa_ref();
-    } else {
-        compute_ref();
-    }
-
     Reference ref;
     ref.set_Eref(Eref_);
     ref.set_L1a(L1a);
     ref.set_L1b(L1b);
-    ref.set_L2aa(L2aa);
-    ref.set_L2ab(L2ab);
-    ref.set_L2bb(L2bb);
-    if(options_.get_str("THREEPDC") != "ZERO"){
+
+    if(level > 1){
+        if(options_["AVG_STATE"].has_changed()){
+            compute_sa_ref();
+        } else {
+            compute_ref();
+        }
+
+        ref.set_L2aa(L2aa);
+        ref.set_L2ab(L2ab);
+        ref.set_L2bb(L2bb);
+    }
+
+    if(level > 2 && (options_.get_str("THREEPDC") != "ZERO")){
         ref.set_L3aaa(L3aaa);
         ref.set_L3aab(L3aab);
         ref.set_L3abb(L3abb);

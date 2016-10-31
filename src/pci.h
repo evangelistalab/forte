@@ -232,6 +232,8 @@ private:
     bool do_perturb_analysis_;
     /// Use symmetric approximated hamiltonian
     bool symm_approx_H_;
+    /// Stop iteration when higher new low detected
+    bool stop_higher_new_low_;
 
     // * Reference spawning
     /// Spawning according to the coefficient in a reference
@@ -331,7 +333,8 @@ private:
     void apply_tau_H_ref_C_symm(double tau,double spawning_threshold,det_vec& dets,const std::vector<double>& C, const std::vector<double>& ref_C, det_hash<>& dets_C_hash, double S);
     /// Apply symmetric approx tau H to a determinant using dynamic screening with selection according to a reference coefficient
     void apply_tau_H_ref_C_symm_det_dynamic(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
-//    void apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
+    void apply_tau_H_ref_C_symm_det_dynamic_smooth(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
+    //    void apply_tau_H_ref_C_symm_det_dynamic_stat(double tau, double spawning_threshold, det_hash<> &pre_dets_C_hash, det_hash<> &ref_dets_C_hash, const Determinant &detI, double CI, double ref_CI, std::vector<std::pair<Determinant, double> > &new_space_C_vec, double E0, std::pair<double,double>& max_coupling);
 
 
     /// Estimates the energy give a wave function
@@ -370,6 +373,9 @@ private:
     void compute_characteristic_function();
     /// Print the characteristic function
     void print_characteristic_function();
+
+    /// Test the convergence of calculation
+    bool converge_test();
 };
 
 }} // End Namespaces
