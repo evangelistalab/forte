@@ -1822,8 +1822,10 @@ void AdaptiveCI::print_nos()
             }
         }
         outfile->Printf("\n  Irrep %d:",h);
+        outfile->Printf(    "\n  Active idx    MO idx      Weight");
+        outfile->Printf(    "\n ------------  -------   -------------");
         for( int w = 0; w < nactpi_[h]; ++w ){
-            outfile->Printf("\n     %d     %1.9f", w, weights[w]);
+            outfile->Printf("\n     %d           %d       %1.9f", w+1,w + frzcpi_[h] + 1, weights[w]);
         }
     }
 
