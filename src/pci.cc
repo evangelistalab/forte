@@ -978,7 +978,7 @@ double ProjectorCI::compute_energy()
         Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
         outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh",1,post_diag_energy);
-        outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh",1,var_energy - reference_determinant_.energy() - nuclear_repulsion_energy_);
+        outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh",1,post_diag_energy - reference_determinant_.energy() - nuclear_repulsion_energy_);
 
         std::vector<double> diag_C(C.size());
 
