@@ -4,22 +4,20 @@ namespace psi{ namespace forte{
 
 template<
         class Key,
-        class T,
         class Hash,
         class KeyEqual,
         class Allocator
-> StaticLinkedHash<Key, T, Hash, KeyEqual, Allocator>::StaticLinkedHash()
+> StaticLinkedHashSet<Key, Hash, KeyEqual, Allocator>::StaticLinkedHashSet()
 {
 
 }
 
 template<
         class Key,
-        class T,
         class Hash,
         class KeyEqual,
         class Allocator
-> StaticLinkedHash<Key, T, Hash, KeyEqual, Allocator>::~StaticLinkedHash()
+> StaticLinkedHashSet<Key, Hash, KeyEqual, Allocator>::~StaticLinkedHashSet()
 {
 
 }

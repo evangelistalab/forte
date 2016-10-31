@@ -5,6 +5,7 @@
 #include <libmints/molecule.h>
 #include <libmints/matrix.h>
 #include <libmints/vector.h>
+#include <lib3index/dftensor.h>
 #include <libqt/qt.h>
 #include "blockedtensorfactory.h"
 #include "fci_solver.h"
@@ -20,11 +21,11 @@
 #ifdef HAVE_GA
     #include <ga.h>
     #include <macdecls.h>
-    #include <omp.h>
 #else
     #define GA_Nnodes() 1
     #define GA_Nodeid() 0
 #endif
+#include "ao_helper.h"
 using namespace ambit;
 
 namespace psi{ namespace forte{
@@ -1624,6 +1625,13 @@ double THREE_DSRG_MRPT2::E_VT2_2()
         outfile->Printf("\n Specify a correct algorithm string");
         throw PSIEXCEPTION("Specify either CORE FLY_LOOP FLY_AMBIT BATCH_CORE BATCH_VIRTUAL BATCH_CORE_MPI BATCH_VIRTUAL_MPI or other algorihm");
     }
+    if(options_.get_bool("AO_DSRG_MRPT2"))
+    {
+        double Eccvv_ao = E_VT2_2_AO_Slow();
+        Eccvv = Eccvv_ao;
+        outfile->Printf("\n Eccvv_ao: %8.10f", Eccvv_ao);
+    }
+    outfile->Printf("\n Eccvv: %8.10f", Eccvv);
     std::string strccvv = "Computing <[V, T2]> (C_2)^4 ccvv";
     outfile->Printf("\n    %-37s ...", strccvv.c_str());
     outfile->Printf("...Done. Timing %15.6f s", ccvv_timer.get());
@@ -2148,6 +2156,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
             RDVec.push_back(ambit::Tensor::build(tensor_type_, "RDVec", {virtual_, virtual_}));
 
         }
+        bool ao_dsrg_check = options_.get_bool("AO_DSRG_MRPT2");
 
         #pragma omp parallel for num_threads(num_threads_) \
         reduction(+:Ealpha, Ebeta, Emixed)
@@ -2185,7 +2194,11 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+                    if(ao_dsrg_check) value = 1.0 / D;
+                    else {
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));;
+                    }
+                });
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 BefVec[thread].zero();
@@ -2208,8 +2221,12 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefVec[thread]("eF") = BmaVec[thread]("ge") * BnbVec[thread]("gF");
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
-                    double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+                    double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
+                    if(ao_dsrg_check) value = 1.0 / D;
+                    else {
+                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));;
+                    }
+                });
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }
         }
@@ -2239,6 +2256,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
          BefJKVec.push_back(ambit::Tensor::build(tensor_type_,"BefJK",{virtual_,virtual_}));
          RDVec.push_back(ambit::Tensor::build(tensor_type_,"RD",{virtual_,virtual_}));
         }
+        bool ao_dsrg_check = options_.get_bool("AO_DSRG_MRPT2");
         #pragma omp parallel for num_threads(num_threads_) \
         schedule(dynamic) \
         reduction(+:Ealpha, Ebeta, Emixed) \
@@ -2272,7 +2290,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("ef") -= BefVec[thread]("ef") * BefVec[thread]("fe");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fa_[na] - Fa_[avirt_mos_[i[0]]] - Fa_[avirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+                    if(ao_dsrg_check) value = (1.0 / D );
+                    else 
+                        value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));
+                    });
                 Ealpha += factor * 1.0 * BefJKVec[thread]("ef") * RDVec[thread]("ef");
 
                 // beta-beta
@@ -2289,7 +2310,10 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit()
                 BefJKVec[thread]("eF")  = BefVec[thread]("eF") * BefVec[thread]("eF");
                 RDVec[thread].iterate([&](const std::vector<size_t>& i,double& value){
                     double D = Fa_[ma] + Fb_[nb] - Fa_[avirt_mos_[i[0]]] - Fb_[bvirt_mos_[i[1]]];
-                    value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));});
+                    if(ao_dsrg_check) value = (1.0 / D );
+                    else 
+                        value = dsrg_source_->compute_renormalized_denominator(D) * (1.0 + dsrg_source_->compute_renormalized(D));
+                    });
                 Emixed += factor * BefJKVec[thread]("eF") * RDVec[thread]("eF");
             }
         }
@@ -2526,7 +2550,119 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core()
     //return (Ealpha + Ebeta + Emixed);
     return (Ealpha + Ebeta + Emixed);
 }
+double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow()
+{
+    /// E_{DSRG} -> Conventional basis
 
+    /// V_{me}^{nf} = [(me | nf) - (mf | ne)] * [1 + exp(Delta_{me}^{nf}]
+    /// V_{me}^{NF} = [(me | NF) * [1 + exp(Delta_{me}^{NF}]
+    /// V_{ME}^{NF} = [(ME | NF) * [1 + exp(Delta_{ME}^{NF}]
+
+    /// T_{nf}^{me} = [(me | nf) - (mf | ne)] * [1 - exp(Delta_{me}^{nf}] / Delta_{me}^{nf}[(
+    /// T_{NF}^{me} = [(me | NF)] * [1 - exp(Delta_{me}^{NF}] / Delta_{me}^{NF}[(
+    /// T_{NF}^{ME} = [(ME | NF) - (MF | NE)] * [1 - exp(Delta_{ME}^{NF}] / Delta_{ME}^{NF}[(
+
+    /// E_{menf} = V_{me}^{nf} * T_{nf}^{me}
+    /// E_{meNF} = V_{me}^{NF} * T_{NF}^{me}
+    /// E_{MENF} = V_{ME}^{NF} * T_{NF}^{ME}
+
+    /// E_{AO-DSRG-MRPT2} 
+
+    /// The first step for the derivation of the AO method:
+    /// R(s)_{me}^{nf} = 0 -> decouple the ccvv term (ie similar to MP2)
+    /// V_{me}^{nf} = (me | nf) - (mf | ne) 
+    /// V_{me}^{NF} = (me | NF) 
+    /// V_{ME}^{NF} = (ME | NF) - (MF | NE)
+
+    /// T_{nf}^{me} = [(me | nf) - (mf | ne)] * [1 / Delta_{me}^{nf}]
+    /// T_{NF}^{me} = [(me | NF)] * [1  / Delta_{me}^{NF}]
+    /// T_{NF}^{ME} = [(ME | NF) - (MF | NE)] * [1 / Delta_{ME}^{NF}[(
+
+    /// If this is an AO method, need to actually use AO integrals
+    /// PO = C_{mu i} C_{nu i} Pi_{i}^{\alpha}
+    /// PV = C_{mu a} C_{nu a} Pi_{a}^{\alpha}
+    /// (me | nf) = PO_{\mu m} * PV_{\nu e} (\mu \nu | \rho \sigma) * PO_{n \rho } * PV_{\sigma f}
+
+    double Ealpha = 0.0;
+    double Emixed = 0.0;
+    double Ebeta  = 0.0;
+    SharedMatrix Cwfn = reference_wavefunction_->Ca();
+    if(Cwfn->nirrep() != 1)
+        throw PSIEXCEPTION("AO-DSRGMPT2 does not work with symmetry");
+
+
+    
+    /// Create the AtomicOrbitalHelper Class
+    SharedVector epsilon_rdocc(new Vector("EPS_RDOCC", core_));
+    SharedVector epsilon_virtual(new Vector("EPS_VIRTUAL", virtual_));
+    int core_count = 0;
+    for(auto m : acore_mos_)
+    {
+        epsilon_rdocc->set(core_count, Fa_[m]);
+        core_count++;
+    }
+    int virtual_count = 0;
+    for(auto e : avirt_mos_)
+    {
+        epsilon_virtual->set(virtual_count, Fa_[e]);
+        virtual_count++;
+    }
+    epsilon_rdocc->print();
+    epsilon_virtual->print();
+
+    AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, active_);
+    boost::shared_ptr<BasisSet> primary   = reference_wavefunction_->basisset();
+    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(reference_wavefunction_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    ao_helper.Compute_AO_Screen(primary);
+    ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
+    size_t weights = ao_helper.Weights();
+    SharedMatrix AO_Screen = ao_helper.AO_Screen();
+    SharedMatrix TransAO_Screen = ao_helper.TransAO_Screen();
+    SharedMatrix Occupied_Density = ao_helper.POcc();
+    SharedMatrix Virtual_Density = ao_helper.PVir();
+    Occupied_Density->print();
+    Virtual_Density->print();
+    size_t nmo = static_cast<size_t>(nmo_);
+
+    ambit::Tensor POcc = ambit::Tensor::build(tensor_type_,"POcc",{weights, nmo, nmo});
+    ambit::Tensor PVir = ambit::Tensor::build(tensor_type_,"Pvir",{weights, nmo, nmo});
+    ambit::Tensor AO_Full = ambit::Tensor::build(tensor_type_, "Qso", {nmo, nmo, nmo, nmo});
+    ambit::Tensor DF_AO = ambit::Tensor::build(tensor_type_, "Qso", {nthree_, nmo, nmo});
+    ambit::Tensor DF_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nthree_, nmo, nmo});
+    ambit::Tensor Full_LTAO = ambit::Tensor::build(tensor_type_, "Qso", {weights, nmo, nmo, nmo, nmo});
+    ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    ambit::Tensor E_weight_mixed = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    //ambit::Tensor E_weight_alpha = ambit::Tensor::build(tensor_type_, "Ew", {weights});
+    DFTensor df_tensor(primary, auxiliary, Cwfn, core_, virtual_);
+    SharedMatrix Qso = df_tensor.Qso();
+    DF_AO.iterate([&](const std::vector<size_t>& i,double& value){
+        value = Qso->get(i[0], i[1] * nmo + i[2]);});
+    POcc.iterate([&](const std::vector<size_t>& i,double& value){
+        value = Occupied_Density->get(i[0], i[1] * nmo + i[2]);});
+    PVir.iterate([&](const std::vector<size_t>& i,double& value){
+        value = Virtual_Density->get(i[0], i[1] * nmo + i[2]);});
+
+    DF_LTAO("w,Q,m,e") = DF_AO("Q, mu, nu") * POcc("w, mu, m") * PVir("w, nu, e");
+    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
+    AO_Full("m, e, n, f") = DF_AO("Q, m, e") * DF_AO("Q, n, f");
+    E_weight_mixed("w") = Full_LTAO("w, m, e, n, f") * AO_Full("m, e, n, f");
+
+    //AO_Full.zero();
+    //Full_LTAO.zero();
+    AO_Full("m, e, n, f") =  DF_AO("Q, m, e") * DF_AO("Q, n, f");
+    AO_Full("m, e, n, f") -= DF_AO("Q, m, f") * DF_AO("Q, n, e");
+    Full_LTAO("w, m, e, n, f") = DF_LTAO("w, Q, m, e") * DF_LTAO("w, Q, n, f");
+    Full_LTAO("w, m, e, n, f") -= DF_LTAO("w, Q, m, f") * DF_LTAO("w, Q, n, e");
+    E_weight_alpha("w") = Full_LTAO("w,m,e,n,f") * AO_Full("m, e, n, f");
+    for(int w = 0; w < weights; w++)
+    {
+        Ealpha -= E_weight_alpha.data()[w];
+        Ebeta -=  E_weight_alpha.data()[w];
+        Emixed -= E_weight_mixed.data()[w];
+    }
+
+    return (0.25 * Ealpha + 0.25 * Ebeta + Emixed);
+}
 double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual()
 {
     bool debug_print = options_.get_bool("DSRG_MRPT2_DEBUG");
@@ -3027,7 +3163,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active()
             size_t na = acore_mos_[n];
             size_t nb = bcore_mos_[n];
 
-        std::copy(&BmvQ_swapped.data()[n * nthree_ * active_],&BmvQ_swapped.data()[n * nthree_ * active_ + nthree_ * active_], Bn_vQ[thread].data().begin());
+            std::copy(&BmvQ_swapped.data()[n * nthree_ * active_],&BmvQ_swapped.data()[n * nthree_ * active_ + nthree_ * active_], Bn_vQ[thread].data().begin());
         //    Bn_vQ[thread].iterate([&](const std::vector<size_t>& i,double& value){
         //        value = BmvQ_data[i[0] * core_ * active_ + n * active_ + i[1] ];
         //    });
