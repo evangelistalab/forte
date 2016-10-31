@@ -365,17 +365,17 @@ void print_polynomial(std::vector<double>& coefs) {
 double ProjectorCI::estimate_high_energy()
 {
     double high_obt_energy = 0.0;
-    int ne = 0;
+    int nea = 0, neb = 0;
     std::vector<std::pair<double, int>> obt_energies;
     auto bits_ = reference_determinant_.bits_;
     Determinant high_det(reference_determinant_);
     for (int i = 0; i < ncmo_; i++) {
         if (bits_[i]) {
-            ++ne;
+            ++nea;
             high_det.destroy_alfa_bit(i);
         }
         if (bits_[ncmo_ +i]){
-            ++ne;
+            ++neb;
             high_det.destroy_beta_bit(i);
         }
 
@@ -394,16 +394,20 @@ double ProjectorCI::estimate_high_energy()
 //    outfile->Printf("\n\n  Estimating high energy, size of obt_energies: %d", obt_energies.size());
 //    for (auto item : obt_energies)
 //        outfile -> Printf("  %lf", item);
-    int Ndocc = ne/2;
-    for (int i = 1; i <= Ndocc; i++) {
-        high_obt_energy += 2.0 * obt_energies[obt_energies.size()-i].first;
+//    int Ndocc = ne/2;
+    for (int i = 1; i <= nea; i++) {
+        high_obt_energy += obt_energies[obt_energies.size()-i].first;
         high_det.create_alfa_bit(obt_energies[obt_energies.size()-i].second);
+    }
+    for (int i = 1; i <= neb; i++) {
+        high_obt_energy += obt_energies[obt_energies.size()-i].first;
         high_det.create_beta_bit(obt_energies[obt_energies.size()-i].second);
     }
-    if (ne % 2) {
-        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc].first;
-        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
-    }
+
+//    if (ne % 2) {
+//        high_obt_energy += obt_energies[obt_energies.size()-1-Ndocc].first;
+//        high_det.create_alfa_bit(obt_energies[obt_energies.size()-1-Ndocc].second);
+//    }
     lambda_h_ = high_obt_energy + fci_ints_->frozen_core_energy() + fci_ints_->scalar_energy();
 
     double lambda_h_G = high_det.energy();
@@ -512,8 +516,8 @@ double ProjectorCI::estimate_high_energy()
     outfile->Printf("\n\n  ==> Estimate highest excitation energy <==");
     outfile->Printf("\n  Highest Excited determinant:");
     high_det.print();
-    outfile->Printf("\n  Determinant Energy                    :  %.12f", high_det.energy());
-    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_G);
+    outfile->Printf("\n  Determinant Energy                    :  %.12f", high_det.energy() + nuclear_repulsion_energy_);
+    outfile->Printf("\n  Highest Energy Gershgorin circle Est. :  %.12f", lambda_h_G + nuclear_repulsion_energy_);
     lambda_h_ = lambda_h_G;
     return lambda_h_;
 }
@@ -565,8 +569,8 @@ void ProjectorCI::print_characteristic_function()
     outfile->Printf("\n\n  ==> Characteristic Function <==");
     print_polynomial(cha_func_coefs_);
     outfile->Printf("\n    with tau = %e, shift = %.12f, range = %.12f", time_step_, shift_, range_);
-    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "", lambda_1_);
-    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "", lambda_h_);
+    outfile->Printf("\n    Initial guess: lambda_1= %s%.12f", lambda_1_ >= 0.0 ? " " : "", lambda_1_ + nuclear_repulsion_energy_);
+    outfile->Printf("\n    Est. Highest eigenvalue= %s%.12f", lambda_h_ >= 0.0 ? " " : "", lambda_h_ + nuclear_repulsion_energy_);
 }
 
 double factorial(int n)
@@ -921,14 +925,16 @@ double ProjectorCI::compute_energy()
     Process::environment.globals["PCI ENERGY"] = var_energy;
 
     outfile->Printf("\n\n  ==> Post-Iterations <==\n");
-    outfile->Printf("\n  * Adaptive-CI Variational Energy     = %18.12f Eh",1,var_energy);
-    outfile->Printf("\n  * Adaptive-CI Projective  Energy     = %18.12f Eh",1,proj_energy);
+    outfile->Printf("\n  * Projector-CI Variational Energy     = %18.12f Eh",1,var_energy);
+    outfile->Printf("\n  * Projector-CI Projective  Energy     = %18.12f Eh",1,proj_energy);
 
-    outfile->Printf("\n\n  * Adaptive-CI Approximate Energy     = %18.12f Eh",1,approx_energy_);
-    outfile->Printf("\n  * 1st order perturbation  Energy     = %18.12f Eh",1,var_energy - approx_energy_);
+    outfile->Printf("\n\n  * Projector-CI Approximate Energy     = %18.12f Eh",1,approx_energy_);
+    outfile->Printf("\n  * 1st order perturbation   Energy     = %18.12f Eh",1,var_energy - approx_energy_);
+
+    outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh",1,var_energy - reference_determinant_.energy() - nuclear_repulsion_energy_);
 
 //    double pfError = estimate_path_filtering_error(dets, C, spawning_threshold_);
-//    outfile->Printf("\n\n  * Adaptive-CI Path-filtering Error  <= %18.12f Eh",1,pfError);
+//    outfile->Printf("\n\n  * Projector-CI Path-filtering Error  <= %18.12f Eh",1,pfError);
 
     if (do_perturb_analysis_) {
         double error_2nd_perturb_sub, error_2nd_perturb_full;
@@ -936,14 +942,14 @@ double ProjectorCI::compute_energy()
         outfile->Printf("\n  * 2nd order perturbation est. Energy = %18.12f Eh",1,error_2nd_perturb_sub);
     }
 
-    outfile->Printf("\n\n  * Size of CI space                   = %zu",C.size());
+    outfile->Printf("\n\n  * Size of CI space                    = %zu",C.size());
 
     if (do_schwarz_prescreening_) {
-        outfile->Printf("\n  * Schwarz prescreening total attempt= %zu",schwarz_total_);
-        outfile->Printf("\n  * Schwarz prescreening succeed      = %zu",schwarz_succ_);
+        outfile->Printf("\n  * Schwarz prescreening total attempt = %zu",schwarz_total_);
+        outfile->Printf("\n  * Schwarz prescreening succeed       = %zu",schwarz_succ_);
     }
 
-    outfile->Printf("\n\n  %s: %f s","Adaptive Path-Integral CI (bitset) ran in ",t_apici.elapsed());
+    outfile->Printf("\n\n  %s: %f s","Projector-CI (bitset) ran in  ",t_apici.elapsed());
     outfile->Flush();
 
     if (print_full_wavefunction_) {
@@ -971,7 +977,8 @@ double ProjectorCI::compute_energy()
         double post_diag_energy = apfci_evals->get(current_root_) + nuclear_repulsion_energy_;
         Process::environment.globals["PCI POST DIAG ENERGY"] = post_diag_energy;
 
-        outfile->Printf("\n\n  * Adaptive-CI Post-diag   Energy     = %18.12f Eh",1,post_diag_energy);
+        outfile->Printf("\n\n  * Projector-CI Post-diag   Energy     = %18.12f Eh",1,post_diag_energy);
+        outfile->Printf("\n  * Projector-CI Var. Corr.  Energy     = %18.12f Eh",1,post_diag_energy - reference_determinant_.energy() - nuclear_repulsion_energy_);
 
         std::vector<double> diag_C(C.size());
 
