@@ -546,6 +546,7 @@ read_options(std::string name, Options &options)
         options.add_int("DL_GUESS_SIZE", 100);
         /*- Number of guess vectors for Sparse CI solver -*/
         options.add_int("N_GUESS_VEC", 10);
+        options.add_double("NO_THRESHOLD",0.02);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI
