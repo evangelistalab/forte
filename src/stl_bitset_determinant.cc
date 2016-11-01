@@ -501,6 +501,36 @@ double STLBitsetDeterminant::slater_rules_single_beta(int i, int a) const
     return sign * matrix_element;
 }
 
+double STLBitsetDeterminant::slater_rules_single_alpha_abs(int i, int a) const
+{
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    double matrix_element = fci_ints_->oei_a(i,a);
+    for(int p = 0; p < nmo_; ++p){
+        if(bits_[p]){
+            matrix_element += fci_ints_->tei_aa(i,p,a,p);
+        }
+        if(bits_[nmo_ +p]){
+            matrix_element += fci_ints_->tei_ab(i,p,a,p);
+        }
+    }
+    return matrix_element;
+}
+
+double STLBitsetDeterminant::slater_rules_single_beta_abs(int i, int a) const
+{
+    // Slater rule 2 PhiI = j_a^+ i_a PhiJ
+    double matrix_element = fci_ints_->oei_b(i,a);
+    for(int p = 0; p < nmo_; ++p){
+        if(bits_[p]){
+            matrix_element += fci_ints_->tei_ab(p,i,p,a);
+        }
+        if(bits_[nmo_ +p]){
+            matrix_element += fci_ints_->tei_bb(i,p,a,p);
+        }
+    }
+    return matrix_element;
+}
+
 double STLBitsetDeterminant::slater_sign_alpha(int n) const
 {
     double sign = 1.0;
