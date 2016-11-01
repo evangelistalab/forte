@@ -1070,7 +1070,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
             for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
                 const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                 if (p != q){
-                    const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
+                    const double HIJ = space_[aaJ_mo_sign.first].slater_rules_single_alpha(p,q);
                     const size_t I = aaJ_mo_sign.first;
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
@@ -1086,7 +1086,7 @@ void SigmaVectorList::compute_sigma(Matrix& sigma, Matrix& b, int nroot)
             for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
                 const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                 if (p != q){
-                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
+                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules_single_beta(p,q);
                     const size_t I = bbJ_mo_sign.first;
                     for (int a = 0; a < nroot; ++a){
                         sigma_p[I][a] += HIJ * b_p[a][J];
@@ -1203,6 +1203,7 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& aaJ_mo_sign : a_cre_list[aJ_add]){
                 const size_t q = std::abs(aaJ_mo_sign.second) - 1;
                 if (p != q){
+                //    const double HIJ = space_[aaJ_mo_sign.first].slater_rules_single_alpha(p,q);
                     const double HIJ = space_[aaJ_mo_sign.first].slater_rules(space_[J]);
                     const size_t I = aaJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
@@ -1218,7 +1219,8 @@ void SigmaVectorList::compute_sigma(SharedVector sigma, SharedVector b)
             for (auto& bbJ_mo_sign : b_cre_list[bJ_add]){
                 const size_t q = std::abs(bbJ_mo_sign.second) - 1;
                 if (p != q){
-                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J]);
+                  //  const double HIJ = space_[bbJ_mo_sign.first].slater_rules_single_beta(p,q);
+                    const double HIJ = space_[bbJ_mo_sign.first].slater_rules(space_[J] );
                     const size_t I = bbJ_mo_sign.first;
                     sigma_p[I] += HIJ * b_p[J];
                 }
