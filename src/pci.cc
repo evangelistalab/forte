@@ -1495,7 +1495,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             add(delta_vec, -delta_dot_bm, b_vec[m]);
         }
         double correct_norm = normalize(delta_vec);
-        if (correct_norm < e_convergence_) {
+        if (correct_norm < 1e-4) {
             outfile->Printf( "\nDavidson break at %d-th iter because the correction norm %10.3e is too small.", i, correct_norm);
             break;
         }
