@@ -474,6 +474,7 @@ double STLBitsetDeterminant::slater_rules_single_alpha(int i, int a) const
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = SlaterSign(bits_,i) * SlaterSign(bits_,a) * (a > i ? -1.0 : 1.0);
     double matrix_element = fci_ints_->oei_a(i,a);
+#pragma omp parallel for reduction( + : matrix_element )
     for(int p = 0; p < nmo_; ++p){
         if(bits_[p]){
             matrix_element += fci_ints_->tei_aa(i,p,a,p);
@@ -490,6 +491,7 @@ double STLBitsetDeterminant::slater_rules_single_beta(int i, int a) const
     // Slater rule 2 PhiI = j_a^+ i_a PhiJ
     double sign = SlaterSign(bits_,nmo_ + i) * SlaterSign(bits_,nmo_ + a) * (a > i ? -1.0 : 1.0);
     double matrix_element = fci_ints_->oei_b(i,a);
+#pragma omp parallel for reduction( + : matrix_element )
     for(int p = 0; p < nmo_; ++p){
         if(bits_[p]){
             matrix_element += fci_ints_->tei_ab(p,i,p,a);
