@@ -1810,22 +1810,35 @@ void AdaptiveCI::print_nos()
 
     // Compute active space weights
     double no_thresh = options_.get_double("NO_THRESHOLD");
+
+    std::vector<int> active(nirrep_,0);
+    std::vector<std::vector<int>> active_idx(nirrep_);
+    std::vector<int> docc(nirrep_, 0); 
+
     print_h2( "Active Space Weights" );
     for( int h = 0; h < nirrep_; ++h ){
         std::vector<double> weights( nactpi_[h], 0.0 );
+        std::vector<double> oshell( nactpi_[h], 0.0 );
         for( int p = 0; p < nactpi_[h]; ++p ){
             for( int q = 0; q < nactpi_[h]; ++q ){
                 double occ = OCC_A->get(h,q) + OCC_B->get(h,q);
                 if( (occ >= no_thresh ) and ( occ <= (2.0-no_thresh))  ){
                     weights[p] +=  (NO_A->get( h, p, q))* (NO_A->get( h, p, q)); 
+                    oshell[p] +=  (NO_A->get( h, p, q))* (NO_A->get( h, p, q)) * (2-occ)*occ ; 
                 }
             }
         }
+        
+
         outfile->Printf("\n  Irrep %d:",h);
-        outfile->Printf(    "\n  Active idx    MO idx      Weight");
-        outfile->Printf(    "\n ------------  -------   -------------");
+        outfile->Printf(    "\n  Active idx     MO idx        Weight         OS-Weight");
+        outfile->Printf(    "\n ------------   --------   -------------    -------------");
         for( int w = 0; w < nactpi_[h]; ++w ){
-            outfile->Printf("\n     %d           %d       %1.9f", w+1,w + frzcpi_[h] + 1, weights[w]);
+            outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f", w+1,w + frzcpi_[h] + 1, weights[w], oshell[w]);
+            if( weights[w] >= 0.9 ){
+                active[h]++;
+                active_idx[h].push_back(w + frzcpi_[h] + 1);
+            }
         }
     }
 
