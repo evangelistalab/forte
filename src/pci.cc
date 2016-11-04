@@ -1499,6 +1499,10 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
             outfile->Printf( "\nDavidson break at %d-th iter because the correction norm %10.3e is too small.", i, correct_norm);
             break;
         }
+        if (correct_norm > 1e1) {
+            outfile->Printf( "\nDavidson break at %d-th iter because the correction norm %10.3e is too large.", i, correct_norm);
+            break;
+        }
 //        print_vector(delta_vec, "delta_vec");
         b_vec[current_order] = delta_vec;
 
