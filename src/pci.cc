@@ -1586,6 +1586,9 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 //    }
 
     current_davidson_iter_ = i+1;
+    if (current_davidson_iter_ > max_Davidson_iter_) {
+        current_davidson_iter_ = max_Davidson_iter_;
+    }
 
 //    scale(C, alpha_vec[0]);
 //    C.clear();
