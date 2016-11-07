@@ -1543,6 +1543,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
         e_gradiant += lambda;
         outfile->Printf( "\nDavidson iter %4d order %4d correction norm %10.3e dE %10.3e.", i, current_order, correct_norm, e_gradiant);
         if (fabs(e_gradiant) < e_convergence_ ) {
+            i++;
             break;
         }
         if (current_order >= davidson_subspace_per_root_) {
@@ -1585,10 +1586,7 @@ void ProjectorCI::propagate_DL(det_vec& dets,std::vector<double>& C, double spaw
 //        print_vector(b_vec[i], "b_vec["+std::to_string(i)+"]");
 //    }
 
-    current_davidson_iter_ = i+1;
-    if (current_davidson_iter_ > max_Davidson_iter_) {
-        current_davidson_iter_ = max_Davidson_iter_;
-    }
+    current_davidson_iter_ = i;
 
 //    scale(C, alpha_vec[0]);
 //    C.clear();
