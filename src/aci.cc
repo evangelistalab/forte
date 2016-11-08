@@ -1008,6 +1008,212 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 	return select_value;
 }
 
+void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::vector<STLBitsetDeterminant>& P_space, det_hash<std::vector<double>>& V_hash )
+{
+    // Build hash of reference determinants
+    det_hash<size_t> P_hash;
+    size_t max_P = P_space.size();
+    for( size_t P = 0; P < max_P; ++P ){
+        P_hash[P_space[P]] = P;
+    }
+
+    // Loop over reference determinants
+#pragma omp parallel for
+    for( size_t P = 0; P < max_P; ++P ){
+        STLBitsetDeterminant& det(P_space[P]);
+
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta  = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta  = bvir.size();
+
+        
+        //This will store the excited determinant info for each thread
+        std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets( noalpha * nvalpha  );
+
+        //Generate alpha excitations 
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    double HIJ = det.slater_rules_single_alpha(ii,aa);
+	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                        auto new_det = det;
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_alfa_bit(aa,true);
+	    				if( (P_hash.count(new_det) == 0)){
+                            std::vector<double> coupling(nroot, 0.0);
+	    				    for (int n = 0; n < nroot; ++n){
+	    				    	coupling[n] += HIJ * evecs->get(P,n);
+	    				    }
+                            thread_ex_dets[i * noalpha + a] = std::make_pair(new_det,coupling);
+	    				}
+	    			}
+                }
+            }
+        }
+        #pragma omp critical
+        {
+            for( size_t I = 0; I < noalpha*nvalpha; ++I ){
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                STLBitsetDeterminant& det = thread_ex_dets[I].first;
+                for( int n = 0; n < nroot; ++n ){
+                    V_hash[det][n] += coupling[n]; 
+                }
+            }
+            thread_ex_dets.resize( nobeta*nvbeta );
+        } 
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    double HIJ = det.slater_rules_single_beta(ii,aa);
+	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                        auto new_det = det;
+                        new_det.set_beta_bit(ii,false);
+                        new_det.set_beta_bit(aa,true);
+                        if (P_hash.count(new_det) == 0){
+                            std::vector<double> coupling(nroot, 0.0);
+	    				    for (int n = 0; n < nroot; ++n){
+	    				    	coupling[n] += HIJ * evecs->get(P,n);
+	    				    }
+                            thread_ex_dets[i * nobeta + a] = std::make_pair(new_det,coupling);
+                        }
+                    }
+                }
+            }
+        }
+        #pragma omp critical
+        {
+            for( size_t I = 0; I < nobeta*nvbeta; ++I ){
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                STLBitsetDeterminant& det = thread_ex_dets[I].first;
+                for( int n = 0; n < nroot; ++n ){
+                    V_hash[det][n] += coupling[n]; 
+                }
+            }
+            thread_ex_dets.resize( noalpha * noalpha * nvalpha * nvalpha );
+        } 
+
+        // Generate aa excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = i + 1; j < noalpha; ++j){
+                int jj = aocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = a + 1; b < nvalpha; ++b){
+                        int bb = avir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                auto new_det = det;
+                                new_det.set_alfa_bit(ii,false);
+                                new_det.set_alfa_bit(jj,false);
+                                new_det.set_alfa_bit(aa,true);
+                                new_det.set_alfa_bit(bb,true);
+                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
+
+                                if (P_hash.count(new_det) == 0){
+                                    std::vector<double> coupling(nroot,0.0);
+                                    for( int n = 0; n < nroot; ++n ){
+                                        coupling[n] += HIJ * evecs->get(P,n);
+                                    }
+                                    thread_ex_dets[i * noalpha*noalpha*nvalpha + j*nvalpha*noalpha +  a*nvalpha + b ] = std::make_pair(new_det,coupling);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        #pragma omp critical
+        {
+            for( size_t I = 0; I < noalpha*noalpha*nvalpha*nvalpha; ++I ){
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                STLBitsetDeterminant& det = thread_ex_dets[I].first;
+                for( int n = 0; n < nroot; ++n ){
+                    V_hash[det][n] += coupling[n]; 
+                }
+            }
+            thread_ex_dets.resize( nobeta * noalpha * nvalpha * nvbeta );
+        } 
+        // Generate ab excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = 0; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = 0; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                new_det = det;
+                                new_det.set_alfa_bit(ii,false);
+                                new_det.set_beta_bit(jj,false);
+                                new_det.set_alfa_bit(aa,true);
+                                new_det.set_beta_bit(bb,true);
+
+                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
+
+                                if (P_hash.count(new_det) == 0){
+                                    std::vector<double> coulping(nroot,0.0);
+                                    for( int n = 0; n < nroot; ++n ){
+                                        coupling[n] += HIJ * evecs->get(P,n);
+                                    }
+                                    thread_ex_dets[i * nobeta * nvalpha *nvbeta + j * bvalpha * nvbeta + a * nvalpha]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Generate bb excitations
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int j = i + 1; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvbeta; ++a){
+                    int aa = bvir[a];
+                    for (int b = a + 1; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,I)->norm() >= screen_thresh_) ){
+                                new_det = det;
+                                new_det.set_beta_bit(ii,false);
+                                new_det.set_beta_bit(jj,false);
+                                new_det.set_beta_bit(aa,true);
+                                new_det.set_beta_bit(bb,true);
+
+                                HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
+                                if (V_hash.count(new_det) == 0){
+                                    V_hash[new_det] = std::vector<double>(nroot);
+                                }
+                                for (int n = 0; n < nroot; ++n){
+                                    V_hash[new_det][n] += HIJ * evecs->get(I,n);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
     std::vector<int> aocc = det.get_alfa_occ();
