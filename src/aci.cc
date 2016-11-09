@@ -854,7 +854,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         if (aimed_selection_){
             sorted_dets[count] = std::make_pair(criteria,it.first);
 		}else{
-            #pragma omp critical
             if (std::fabs(criteria) > sigma_){
                 PQ_space_.push_back(it.first);
             }else{
@@ -1019,7 +1018,15 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
     }
 
     // Loop over reference determinants
-#pragma omp parallel for
+#pragma omp parallel
+{
+    if ( omp_get_thread_num() == 0 ){
+        outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
+    }
+    //This will store the excited determinant info for each thread
+    std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets;//( noalpha * nvalpha  );
+    
+    #pragma omp for schedule(guided) 
     for( size_t P = 0; P < max_P; ++P ){
         STLBitsetDeterminant& det(P_space[P]);
 
@@ -1034,8 +1041,6 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
         int nvbeta  = bvir.size();
 
         
-        //This will store the excited determinant info for each thread
-        std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets;//( noalpha * nvalpha  );
 
         //Generate alpha excitations 
         for (int i = 0; i < noalpha; ++i){
@@ -1059,26 +1064,6 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
 	    			}
                 }
             }
-        }
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            #pragma omp critical
-            {
-                if( V_hash.count(det) != 0 ){
-                    for( int n = 0; n < nroot; ++n ){
-                        V_hash[det][n] += coupling[n]; 
-                    }
-                }else{
-                    V_hash[det] = coupling;
-                }
-            }
-        } 
-            //thread_ex_dets.resize( nobeta*nvbeta );
-
-        #pragma omp critical
-        {
-            thread_ex_dets.clear();
         }
 
         // Generate beta excitations
@@ -1104,25 +1089,6 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
                 }
             }
         }
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            #pragma omp critical
-            {
-                if( V_hash.count(det) != 0 ){
-                    for( int n = 0; n < nroot; ++n ){
-                        V_hash[det][n] += coupling[n]; 
-                    }
-                }else{
-                    V_hash[det] = coupling;
-                }
-            }
-        } 
-        #pragma omp critical
-        {
-            //thread_ex_dets.resize( noalpha * noalpha * nvalpha * nvalpha );
-            thread_ex_dets.clear();
-        } 
 
         // Generate aa excitations
         for (int i = 0; i < noalpha; ++i){
@@ -1158,26 +1124,6 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
             }
         }
 
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            #pragma omp critical
-            {
-                if( V_hash.count(det) != 0 ){
-                    for( int n = 0; n < nroot; ++n ){
-                        V_hash[det][n] += coupling[n]; 
-                    }
-                }else{
-                    V_hash[det] = coupling;
-                }
-            }
-        } 
-        #pragma omp critical
-        {
-            //thread_ex_dets.resize( noalpha * noalpha * nvalpha * nvalpha );
-            thread_ex_dets.clear();
-        } 
-        
         // Generate ab excitations
         for (int i = 0; i < noalpha; ++i){
             int ii = aocc[i];
@@ -1212,25 +1158,6 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
                 }
             }
         }
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            #pragma omp critical
-            {
-                if( V_hash.count(det) != 0 ){
-                    for( int n = 0; n < nroot; ++n ){
-                        V_hash[det][n] += coupling[n]; 
-                    }
-                }else{
-                    V_hash[det] = coupling;
-                }
-            }
-        } 
-        #pragma omp critical
-        {
-            //thread_ex_dets.resize( noalpha * noalpha * nvalpha * nvalpha );
-            thread_ex_dets.clear();
-        } 
 
         // Generate bb excitations
         for (int i = 0; i < nobeta; ++i){
@@ -1264,26 +1191,23 @@ void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::v
                 }
             }
         }
-        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
-            std::vector<double>& coupling = thread_ex_dets[I].second;
-            STLBitsetDeterminant& det = thread_ex_dets[I].first;
-            #pragma omp critical
-            {
-                if( V_hash.count(det) != 0 ){
-                    for( int n = 0; n < nroot; ++n ){
-                        V_hash[det][n] += coupling[n]; 
-                    }
-                }else{
-                    V_hash[det] = coupling;
-                }
-            }
-        } 
-        #pragma omp critical
-        {
-            //thread_ex_dets.resize( noalpha * noalpha * nvalpha * nvalpha );
-            thread_ex_dets.clear();
-        } 
     }
+
+    #pragma omp critical
+    {
+        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
+        std::vector<double>& coupling = thread_ex_dets[I].second;
+        STLBitsetDeterminant& det = thread_ex_dets[I].first;
+            if( V_hash.count(det) != 0 ){
+                for( int n = 0; n < nroot; ++n ){
+                    V_hash[det][n] += coupling[n]; 
+                }
+            }else{
+                V_hash[det] = coupling;
+            }
+        }
+    } 
+}
 }
 
 
