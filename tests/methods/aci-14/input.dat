@@ -33,6 +33,7 @@ set forte {
   ACI_INITIAL_SPACE CISD
   aci_preiterations 0
   maxiter_davidson 1000
+  average_offset 0
 }
 
 set_num_threads(8)
