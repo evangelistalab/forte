@@ -546,6 +546,7 @@ read_options(std::string name, Options &options)
         options.add_int("DL_GUESS_SIZE", 100);
         /*- Number of guess vectors for Sparse CI solver -*/
         options.add_int("N_GUESS_VEC", 10);
+        options.add_double("NO_THRESHOLD",0.02);
 
         //////////////////////////////////////////////////////////////
         ///         OPTIONS FOR THE PROJECTOR CI
@@ -593,6 +594,8 @@ read_options(std::string name, Options &options)
         options.add_bool("PERTURB_ANALYSIS",false);
         /*- Use Symmetric Approximate Hamiltonian -*/
         options.add_bool("SYMM_APPROX_H",false);
+        /*- Stop iteration when higher new low detected -*/
+        options.add_bool("STOP_HIGHER_NEW_LOW",false);
         /*- The maximum value of beta -*/
         options.add_double("MAXBETA",1000.0);
         /*- The maximum value of Davidson generator iteration -*/

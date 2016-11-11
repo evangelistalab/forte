@@ -1,20 +1,19 @@
 #ifndef STATICLINKEDHASH_H
 #define STATICLINKEDHASH_H
 
-#include<unordered_map>
+#include<unordered_set>
 
 namespace psi{ namespace forte{
 template<
         class Key,
-        class T,
         class Hash = std::hash<Key>,
         class KeyEqual = std::equal_to<Key>,
-        class Allocator = std::allocator< std::pair< const Key, T> >
-> class StaticLinkedHash
+        class Allocator = std::allocator<Key>
+> class StaticLinkedHashSet
 {
 public:
-    StaticLinkedHash();
-    ~StaticLinkedHash();
+    StaticLinkedHashSet();
+    ~StaticLinkedHashSet();
 };
 }}
 

@@ -688,10 +688,11 @@ void AdaptiveCI::default_find_q_space(SharedVector evals, SharedMatrix evecs)
     // This hash saves the determinant coupling to the model space eigenfunction
     det_hash<std::vector<double> > V_hash;
 
-    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
-        STLBitsetDeterminant& det = P_space_[I];
-        generate_excited_determinants(1,I,evecs,det,V_hash);
-    }
+//    for (size_t I = 0, max_I = P_space_.size(); I < max_I; ++I){
+//        STLBitsetDeterminant& det = P_space_[I];
+//        generate_excited_determinants(1,I,evecs,det,V_hash);
+//    }
+    get_excited_determinants(nroot_,evecs,P_space_,V_hash);
 	
     if( !quiet_mode_){
         outfile->Printf("\n  %s: %zu determinants","Dimension of the SD space",V_hash.size());
@@ -853,7 +854,6 @@ void AdaptiveCI::find_q_space(int nroot,SharedVector evals,SharedMatrix evecs)
         if (aimed_selection_){
             sorted_dets[count] = std::make_pair(criteria,it.first);
 		}else{
-            #pragma omp critical
             if (std::fabs(criteria) > sigma_){
                 PQ_space_.push_back(it.first);
             }else{
@@ -1007,6 +1007,209 @@ double AdaptiveCI::root_select( int nroot, std::vector<double>& C1, std::vector<
 
 	return select_value;
 }
+
+void AdaptiveCI::get_excited_determinants( int nroot, SharedMatrix evecs, std::vector<STLBitsetDeterminant>& P_space, det_hash<std::vector<double>>& V_hash )
+{
+    // Build hash of reference determinants
+    det_hash<size_t> P_hash;
+    size_t max_P = P_space.size();
+    for( size_t P = 0; P < max_P; ++P ){
+        P_hash[P_space[P]] = P;
+    }
+
+    // Loop over reference determinants
+#pragma omp parallel
+{
+    if ( omp_get_thread_num() == 0 ){
+        outfile->Printf("\n  Using %d threads.", omp_get_max_threads());
+    }
+    //This will store the excited determinant info for each thread
+    std::vector<std::pair<STLBitsetDeterminant, std::vector<double>>> thread_ex_dets;//( noalpha * nvalpha  );
+    
+    #pragma omp for schedule(guided) 
+    for( size_t P = 0; P < max_P; ++P ){
+        STLBitsetDeterminant& det(P_space[P]);
+
+        std::vector<int> aocc = det.get_alfa_occ();
+        std::vector<int> bocc = det.get_beta_occ();
+        std::vector<int> avir = det.get_alfa_vir();
+        std::vector<int> bvir = det.get_beta_vir();
+
+        int noalpha = aocc.size();
+        int nobeta  = bocc.size();
+        int nvalpha = avir.size();
+        int nvbeta  = bvir.size();
+
+        
+
+        //Generate alpha excitations 
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int a = 0; a < nvalpha; ++a){
+                int aa = avir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    double HIJ = det.slater_rules_single_alpha(ii,aa);
+	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                        auto new_det = det;
+                        new_det.set_alfa_bit(ii,false);
+                        new_det.set_alfa_bit(aa,true);
+	    				if( (P_hash.count(new_det) == 0)){
+                            std::vector<double> coupling(nroot, 0.0);
+	    				    for (int n = 0; n < nroot; ++n){
+	    				    	coupling[n] += HIJ * evecs->get(P,n);
+	    				    }
+                           // thread_ex_dets[i * noalpha + a] = std::make_pair(new_det,coupling);
+                            thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
+	    				}
+	    			}
+                }
+            }
+        }
+
+        // Generate beta excitations
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int a = 0; a < nvbeta; ++a){
+                int aa = bvir[a];
+                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0){
+                    double HIJ = det.slater_rules_single_beta(ii,aa);
+	    			if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                        auto new_det = det;
+                        new_det.set_beta_bit(ii,false);
+                        new_det.set_beta_bit(aa,true);
+                        if (P_hash.count(new_det) == 0){
+                            std::vector<double> coupling(nroot, 0.0);
+	    				    for (int n = 0; n < nroot; ++n){
+	    				    	coupling[n] += HIJ * evecs->get(P,n);
+	    				    }
+                           // thread_ex_dets[i * nobeta + a] = std::make_pair(new_det,coupling);
+                            thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate aa excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = i + 1; j < noalpha; ++j){
+                int jj = aocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = a + 1; b < nvalpha; ++b){
+                        int bb = avir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            double HIJ = fci_ints_->tei_aa(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                auto new_det = det;
+                                new_det.set_alfa_bit(ii,false);
+                                new_det.set_alfa_bit(jj,false);
+                                new_det.set_alfa_bit(aa,true);
+                                new_det.set_alfa_bit(bb,true);
+                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_alpha(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_alpha(bb);
+
+                                if (P_hash.count(new_det) == 0){
+                                    std::vector<double> coupling(nroot,0.0);
+                                    for( int n = 0; n < nroot; ++n ){
+                                        coupling[n] += HIJ * evecs->get(P,n);
+                                    }
+                                    //thread_ex_dets[i * noalpha*noalpha*nvalpha + j*nvalpha*noalpha +  a*nvalpha + b ] = std::make_pair(new_det,coupling);
+                                    thread_ex_dets.push_back( std::make_pair(new_det,coupling) );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate ab excitations
+        for (int i = 0; i < noalpha; ++i){
+            int ii = aocc[i];
+            for (int j = 0; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvalpha; ++a){
+                    int aa = avir[a];
+                    for (int b = 0; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0){
+                            double HIJ = fci_ints_->tei_ab(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                STLBitsetDeterminant new_det = det;
+                                new_det.set_alfa_bit(ii,false);
+                                new_det.set_beta_bit(jj,false);
+                                new_det.set_alfa_bit(aa,true);
+                                new_det.set_beta_bit(bb,true);
+
+                                HIJ *= det.slater_sign_alpha(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_alpha(aa) * new_det.slater_sign_beta(bb);
+
+                                if (P_hash.count(new_det) == 0){
+                                    std::vector<double> coupling(nroot,0.0);
+                                    for( int n = 0; n < nroot; ++n ){
+                                        coupling[n] += HIJ * evecs->get(P,n);
+                                    }
+                                    //thread_ex_dets[i * nobeta * nvalpha *nvbeta + j * bvalpha * nvbeta + a * nvalpha]
+                                    thread_ex_dets.push_back( std::make_pair( new_det, coupling ));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate bb excitations
+        for (int i = 0; i < nobeta; ++i){
+            int ii = bocc[i];
+            for (int j = i + 1; j < nobeta; ++j){
+                int jj = bocc[j];
+                for (int a = 0; a < nvbeta; ++a){
+                    int aa = bvir[a];
+                    for (int b = a + 1; b < nvbeta; ++b){
+                        int bb = bvir[b];
+                        if ((mo_symmetry_[ii] ^ (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0){
+                            double HIJ = fci_ints_->tei_bb(ii,jj,aa,bb);
+	    					if ( (std::fabs(HIJ) * evecs->get_row(0,P)->norm() >= screen_thresh_) ){
+                                STLBitsetDeterminant new_det = det;
+                                new_det.set_beta_bit(ii,false);
+                                new_det.set_beta_bit(jj,false);
+                                new_det.set_beta_bit(aa,true);
+                                new_det.set_beta_bit(bb,true);
+
+                                HIJ *= det.slater_sign_beta(ii) * det.slater_sign_beta(jj) * new_det.slater_sign_beta(aa) * new_det.slater_sign_beta(bb);
+                                if (P_hash.count(new_det) == 0){
+                                    std::vector<double> coupling(nroot,0.0);
+                                    for( int n = 0; n < nroot; ++n ){
+                                        coupling[n] += HIJ * evecs->get(P,n);
+                                    }
+                                    thread_ex_dets.push_back( std::make_pair( new_det, coupling) ); 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #pragma omp critical
+    {
+        for( size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I ){
+        std::vector<double>& coupling = thread_ex_dets[I].second;
+        STLBitsetDeterminant& det = thread_ex_dets[I].first;
+            if( V_hash.count(det) != 0 ){
+                for( int n = 0; n < nroot; ++n ){
+                    V_hash[det][n] += coupling[n]; 
+                }
+            }else{
+                V_hash[det] = coupling;
+            }
+        }
+    } 
+}
+}
+
 
 void AdaptiveCI::generate_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,det_hash<std::vector<double>>& V_hash)
 {
@@ -1808,6 +2011,39 @@ void AdaptiveCI::print_nos()
     }
     outfile->Printf( "\n\n");
 
+    // Compute active space weights
+    double no_thresh = options_.get_double("NO_THRESHOLD");
+
+    std::vector<int> active(nirrep_,0);
+    std::vector<std::vector<int>> active_idx(nirrep_);
+    std::vector<int> docc(nirrep_, 0); 
+
+    print_h2( "Active Space Weights" );
+    for( int h = 0; h < nirrep_; ++h ){
+        std::vector<double> weights( nactpi_[h], 0.0 );
+        std::vector<double> oshell( nactpi_[h], 0.0 );
+        for( int p = 0; p < nactpi_[h]; ++p ){
+            for( int q = 0; q < nactpi_[h]; ++q ){
+                double occ = OCC_A->get(h,q) + OCC_B->get(h,q);
+                if( (occ >= no_thresh ) and ( occ <= (2.0-no_thresh))  ){
+                    weights[p] +=  (NO_A->get( h, p, q))* (NO_A->get( h, p, q)); 
+                    oshell[p] +=  (NO_A->get( h, p, q))* (NO_A->get( h, p, q)) * (2-occ)*occ ; 
+                }
+            }
+        }
+        
+
+        outfile->Printf("\n  Irrep %d:",h);
+        outfile->Printf(    "\n  Active idx     MO idx        Weight         OS-Weight");
+        outfile->Printf(    "\n ------------   --------   -------------    -------------");
+        for( int w = 0; w < nactpi_[h]; ++w ){
+            outfile->Printf("\n      %0.2d           %d       %1.9f      %1.9f", w+1,w + frzcpi_[h] + 1, weights[w], oshell[w]);
+            if( weights[w] >= 0.9 ){
+                active[h]++;
+                active_idx[h].push_back(w + frzcpi_[h] + 1);
+            }
+        }
+    }
 
 }
 
