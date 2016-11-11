@@ -2657,11 +2657,15 @@ double FCI_MO::compute_sa_energy(){
 
     // form Fock matrix
     size_t count = 0;
-    Form_Fock(Fa_,Fb_);
-    Check_Fock(Fa_,Fb_,dconv_,count);
-    if(print_ > 1){
-        print_d2("Fa", Fa_);
-        print_d2("Fb", Fb_);
+    if(form_Fock_){
+        Form_Fock(Fa_,Fb_);
+        Check_Fock(Fa_,Fb_,dconv_,count);
+        if(print_ > 1){
+            print_d2("Fa", Fa_);
+            print_d2("Fb", Fb_);
+        }
+    }else{
+        outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
     }
 
     // Orbitals. If use Kevin's CASSCF, this part is ignored.
@@ -2736,11 +2740,15 @@ double FCI_MO::compute_sa_energy(){
 
             // form Fock matrix
             count = 0;
-            Form_Fock(Fa_,Fb_);
-            Check_Fock(Fa_,Fb_,dconv_,count);
-            if(print_ > 1){
-                print_d2("Fa", Fa_);
-                print_d2("Fb", Fb_);
+            if(form_Fock_){
+                Form_Fock(Fa_,Fb_);
+                Check_Fock(Fa_,Fb_,dconv_,count);
+                if(print_ > 1){
+                    print_d2("Fa", Fa_);
+                    print_d2("Fb", Fb_);
+                }
+            }else{
+                outfile->Printf("\n  Skip Fock matrix build in FCI_MO.");
             }
 
         }else{

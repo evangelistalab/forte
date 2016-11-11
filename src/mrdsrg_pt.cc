@@ -1354,6 +1354,17 @@ double MRDSRG::compute_energy_pt3(){
 
 bool MRDSRG::check_semicanonical(){
     outfile->Printf("\n    Checking if orbitals are semi-canonicalized ...");
+
+    H0th_.iterate([&](const std::vector<size_t>& i,const std::vector<SpinType>& spin,double& value){
+        if(i[0] == i[1]){
+            if(spin[0] == AlphaSpin){
+                value = Fa_[i[0]];
+            }else{
+                value = Fb_[i[0]];
+            }
+        }
+    });
+
     std::vector<std::string> blocks = diag_one_labels();
     std::vector<double> Foff;
     double Foff_sum = 0.0;
@@ -1366,6 +1377,7 @@ bool MRDSRG::check_semicanonical(){
         Foff.emplace_back(value);
         Foff_sum += value;
     }
+
     double threshold = 0.5 * std::sqrt(options_.get_double("E_CONVERGENCE"));
     bool semi = false;
     if(Foff_sum > threshold){
@@ -1381,6 +1393,7 @@ bool MRDSRG::check_semicanonical(){
         outfile->Printf("     OK.");
         semi = true;
     }
+
     return semi;
 }
 

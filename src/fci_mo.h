@@ -107,6 +107,9 @@ public:
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) {quiet_ = quiet;}
 
+    /// Set false to skip Fock build in FCI_MO
+    void set_form_Fock(bool form_fock) {form_Fock_ = form_fock;}
+
     /// Return indices (relative to active, not absolute) of active occupied orbitals
     vector<size_t> actv_occ() {return ao_;}
 
@@ -303,6 +306,7 @@ protected:
     /// Fock Matrix
     d2 Fa_;
     d2 Fb_;
+    bool form_Fock_ = true;
     void Form_Fock(d2 &A, d2 &B);
     void Check_Fock(const d2 &A, const d2 &B, const double &E, size_t &count);
     void Check_FockBlock(const d2 &A, const d2 &B, const double &E, size_t &count, const size_t &dim, const vector<size_t> &idx, const string &str);

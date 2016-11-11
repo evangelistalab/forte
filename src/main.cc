@@ -732,7 +732,7 @@ read_options(std::string name, Options &options)
         /*- Diagonalize which Hamiltonian in MS-DSRG-MRPT2/3
          *  - AVG_STATES: H_AB = <A|H|B> where A and B are SA-CAS states
          *  - FULL:       CASCI using determinants -*/
-        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES");
+        options.add_str("DSRG_SA_HEFF", "FULL", "FULL AVG_STATES XMS");
         /*- DSRG Perturbation -*/
         options.add_bool("DSRGPT", true);
         /*- Include internal amplitudes according to excitation level -*/
