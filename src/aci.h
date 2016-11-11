@@ -293,6 +293,9 @@ private:
     void generate_excited_determinants(int nroot, int I, SharedMatrix evecs, STLBitsetDeterminant &det, 
 										std::unordered_map<STLBitsetDeterminant,std::vector<double>, STLBitsetDeterminant::Hash>& V_hash);
 
+    /// Alternate/experimental determinant generator
+    void get_excited_determinants( int nroot, SharedMatrix evecs, std::vector<STLBitsetDeterminant>& P_space, det_hash<std::vector<double>>& V_hash ); 
+
     /// Experimental
     void generate_pair_excited_determinants(int nroot,int I,SharedMatrix evecs,STLBitsetDeterminant& det,
 											std::unordered_map<STLBitsetDeterminant,std::vector<double>, STLBitsetDeterminant::Hash>& V_hash);

@@ -151,6 +151,10 @@ public:
     double slater_rules_single_alpha(int i, int a) const;
     /// Compute the matrix element of the Hamiltonian between this determinant and a given one
     double slater_rules_single_beta(int i, int a) const;
+    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    double slater_rules_single_alpha_abs(int i, int a) const;
+    /// Compute the matrix element of the Hamiltonian between this determinant and a given one
+    double slater_rules_single_beta_abs(int i, int a) const;
     /// Apply S+ to this determinant
     std::vector<std::pair<STLBitsetDeterminant,double>> spin_plus() const;
     /// Apply S- to this determinant

@@ -2,7 +2,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                               Psi4 (no tag) Driver
 
-                          Git: Rev {detached?} 7a17eb9 dirty
+                          Git: Rev {master} 8d4cec3 
 
     J. M. Turney, A. C. Simmonett, R. M. Parrish, E. G. Hohenstein,
     F. A. Evangelista, J. T. Fermann, B. J. Mintz, L. A. Burns, J. J. Wilke,
@@ -12,14 +12,16 @@
     (doi: 10.1002/wcms.93)
 
                          Additional Contributions by
-    A. E. DePrince, M. Saitow, U. Bozkaya, A. Yu. Sokolov
+    A. E. DePrince, U. Bozkaya, A. Yu. Sokolov, D. G. A. Smith, R. Di Remigio,
+    R. M. Richard, J. F. Gonthier, H. R. McAlexander, M. Saitow, and
+    B. P. Pritchard
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Fri Jan 22 16:49:18 2016
+    Psi4 started on: Wed Nov  2 10:15:29 2016
 
-    Process ID:  20725
-    PSI4DATADIR: /Users/jeffschriber/src/psi4/lib
+    Process ID:  10296
+    PSI4DATADIR: /Users/jeffschriber/src/psi4/share
     Memory level set to 256.000 MB
 
   ==> Input File <==
@@ -54,15 +56,13 @@ set {
 set forte {
   job_type aci
   SELECT_TYPE aimed_energy
-  TAUP 0.001000
-  TAUQ 0.0010000
+  sigma 0.001000
   nroot 1
   charge 0
   aci_add_aimed_degenerate false
   project_out_spin_contaminants false
   enforce_spin_complete false
-  diag_algorithm davidson
-  quiet_mode true
+  diag_algorithm full
 }
 
 energy('scf')
@@ -75,8 +75,8 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
 --------------------------------------------------------------------------
 /Users/jeffschriber/src/forte/forte.so loaded.
 
-*** tstart() called on Jeffs-MBP.attlocal.net
-*** at Fri Jan 22 16:49:18 2016
+*** tstart() called on Jeffs-MacBook-Pro-2.local
+*** at Wed Nov  2 10:15:30 2016
 
 
          ---------------------------------------------------------
@@ -118,7 +118,7 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
   DIIS enabled.
   MOM disabled.
   Fractional occupation disabled.
-  Guess Type is CORE.
+  Guess Type is SAD.
   Energy threshold   = 1.00e-10
   Density threshold  = 1.00e-10
   Integral threshold = 0.00e+00
@@ -142,83 +142,23 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
     Total      20      20       2       2       2       0
    -------------------------------------------------------
 
-  Starting with a DF guess...
-
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
   ==> Integral Setup <==
 
-  ==> DFJK: Density-Fitted J/K Matrices <==
-
-    J tasked:                  Yes
-    K tasked:                  Yes
-    wK tasked:                  No
-    OpenMP threads:              1
-    Integrals threads:           1
-    Memory (MB):               183
-    Algorithm:                Core
-    Integral Cache:           NONE
-    Schwarz Cutoff:          1E-12
-    Fitting Condition:       1E-12
-
-   => Auxiliary Basis Set <=
-
-  Basis Set: 
-    Number of shells: 36
-    Number of basis function: 92
-    Number of Cartesian functions: 100
-    Spherical Harmonics?: true
-    Max angular momentum: 2
-
-  Minimum eigenvalue in the overlap matrix is 5.7536001511E-02.
-  Using Symmetric Orthogonalization.
-  SCF Guess: Core (One-Electron) Hamiltonian.
-
-  ==> Iterations <==
-
-                           Total Energy        Delta E     RMS |[F,P]|
-
-   @DF-RHF iter   1:    -1.71408476830325   -1.71408e+00   3.03473e-02 
-   @DF-RHF iter   2:    -2.02926966423014   -3.15185e-01   1.95988e-03 DIIS
-   @DF-RHF iter   3:    -2.03106837095232   -1.79871e-03   3.77097e-04 DIIS
-   @DF-RHF iter   4:    -2.03112213391050   -5.37630e-05   4.80901e-05 DIIS
-   @DF-RHF iter   5:    -2.03112349709050   -1.36318e-06   8.80613e-06 DIIS
-   @DF-RHF iter   6:    -2.03112358532795   -8.82375e-08   3.40899e-06 DIIS
-   @DF-RHF iter   7:    -2.03112360398698   -1.86590e-08   4.17411e-07 DIIS
-   @DF-RHF iter   8:    -2.03112360421584   -2.28858e-10   7.27320e-08 DIIS
-   @DF-RHF iter   9:    -2.03112360422287   -7.02904e-12   1.82299e-08 DIIS
-   @DF-RHF iter  10:    -2.03112360422334   -4.75175e-13   1.47943e-09 DIIS
-   @DF-RHF iter  11:    -2.03112360422334   -1.77636e-15   2.63770e-10 DIIS
-   @DF-RHF iter  12:    -2.03112360422334    1.77636e-15   2.44137e-11 DIIS
-
-  DF guess converged.
-
-  ==> Integral Setup <==
-
- MINTS: Wrapper to libmints.
-   by Justin Turney
-
+  Using in-core PK algorithm.
    Calculation information:
       Number of atoms:                   4
       Number of AO shells:              12
-      Number of SO shells:              12
       Number of primitives:             20
       Number of atomic orbitals:        20
       Number of basis functions:        20
 
-      Number of irreps:                  1
-      Integral cutoff                 0.00e+00
-      Number of functions per irrep: [  20 ]
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
 
- OEINTS: Overlap, kinetic, potential, dipole, and quadrupole integrals
-         stored in file 35.
-
-      Computing two-electron integrals...done
-      Computed 21706 non-zero two-electron integrals.
-        Stored in file 33.
-
-	Batch   1 pq = [       0,     210] index = [             0,22155]
+  Performing in-core PK
+  Using 44310 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
   ==> DiskJK: Disk-Based J/K Matrices <==
 
     J tasked:                  Yes
@@ -227,15 +167,27 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
     Memory (MB):               183
     Schwarz Cutoff:          1E-12
 
-   @RHF iter  13:    -2.03108132528611    4.22789e-05   1.10081e-05 DIIS
-   @RHF iter  14:    -2.03108137987115   -5.45850e-08   2.41595e-06 DIIS
-   @RHF iter  15:    -2.03108138279127   -2.92012e-09   4.92232e-07 DIIS
-   @RHF iter  16:    -2.03108138290984   -1.18574e-10   4.57573e-08 DIIS
-   @RHF iter  17:    -2.03108138291113   -1.29052e-12   1.11533e-08 DIIS
-   @RHF iter  18:    -2.03108138291133   -1.95399e-13   1.63955e-09 DIIS
-   @RHF iter  19:    -2.03108138291133   -3.55271e-15   2.55281e-10 DIIS
-   @RHF iter  20:    -2.03108138291133   -2.66454e-15   1.14169e-10 DIIS
-   @RHF iter  21:    -2.03108138291134   -1.77636e-15   8.74840e-12 DIIS
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 5.7536001511E-02.
+  Using Symmetric Orthogonalization.
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:    -2.05781211521487   -2.05781e+00   2.60527e-02 
+   @RHF iter   1:    -2.02421914721005    3.35930e-02   4.42027e-03 
+   @RHF iter   2:    -2.03094105509566   -6.72191e-03   6.37767e-04 DIIS
+   @RHF iter   3:    -2.03107613680380   -1.35082e-04   9.53772e-05 DIIS
+   @RHF iter   4:    -2.03108081942086   -4.68262e-06   2.03592e-05 DIIS
+   @RHF iter   5:    -2.03108133566472   -5.16244e-07   5.45595e-06 DIIS
+   @RHF iter   6:    -2.03108138188185   -4.62171e-08   8.62154e-07 DIIS
+   @RHF iter   7:    -2.03108138288388   -1.00203e-09   1.39776e-07 DIIS
+   @RHF iter   8:    -2.03108138290738   -2.34923e-11   5.26715e-08 DIIS
+   @RHF iter   9:    -2.03108138291133   -3.95328e-12   1.96657e-09 DIIS
+   @RHF iter  10:    -2.03108138291133   -1.77636e-15   3.28645e-10 DIIS
+   @RHF iter  11:    -2.03108138291133   -8.88178e-16   7.23869e-11 DIIS
 
   ==> Post-Iterations <==
 
@@ -261,24 +213,217 @@ compare_values(refacipt2, get_variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #T
 
   Energy converged.
 
-  @RHF Final Energy:    -2.03108138291134
+  @RHF Final Energy:    -2.03108138291133
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1366905881325060
-    One-Electron Energy =                  -7.9878690267226178
-    Two-Electron Energy =                   2.8200970556787754
+    One-Electron Energy =                  -7.9878690265316727
+    Two-Electron Energy =                   2.8200970554878326
     DFT Exchange-Correlation Energy =       0.0000000000000000
     Empirical Dispersion Energy =           0.0000000000000000
     PCM Polarization Energy =               0.0000000000000000
     EFP Energy =                            0.0000000000000000
-    Total Energy =                         -2.0310813829113363
+    Total Energy =                         -2.0310813829113341
 
-    Alert: EFP and PCM quantities not currently incorporated into SCF psivars.
+
+  Saving occupied orbitals to File 180.
+
+*** tstop() called on Jeffs-MacBook-Pro-2.local at Wed Nov  2 10:15:30 2016
+Module time:
+	user time   =       0.21 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.21 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
 
 Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
-  ==> Properties <==
 
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: (a.u.)
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: (a.u.)
+     X:     0.0029      Y:    -0.0417      Z:    -0.0248
+
+  Dipole Moment: (a.u.)
+     X:     0.0029      Y:    -0.0417      Z:    -0.0248     Total:     0.0486
+
+  Dipole Moment: (Debye)
+     X:     0.0074      Y:    -0.1060      Z:    -0.0631     Total:     0.1235
+
+	SCF energy........................................................PASSED
+
+*** tstart() called on Jeffs-MacBook-Pro-2.local
+*** at Wed Nov  2 10:15:30 2016
+
+
+         ---------------------------------------------------------
+                                   SCF
+            by Justin Turney, Rob Parrish, and Andy Simmonett
+                              RHF Reference
+                        1 Threads,    256 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c1
+    Full point group: C1
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H         -0.400000000000    -0.050000000000    -0.500000000000     1.007825032070
+           H          0.400000000000    -0.050000000000    -0.500000000000     1.007825032070
+           H          0.100000000000    -0.350000000000     0.500000000000     1.007825032070
+           H         -0.100000000000     0.450000000000     0.500000000000     1.007825032070
+
+  Running in c1 symmetry.
+
+  Rotational constants: A =     25.52952  B =     13.25079  C =     11.75880 [cm^-1]
+  Rotational constants: A = 765355.63070  B = 397248.78268  C = 352519.82412 [MHz]
+  Nuclear repulsion =    3.136690588132506
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 4
+  Nalpha       = 2
+  Nbeta        = 2
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is PK.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-10
+  Density threshold  = 1.00e-10
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Number of shells: 12
+    Number of basis function: 20
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 1
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A         20      20       0       0       0       0
+   -------------------------------------------------------
+    Total      20      20       2       2       2       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   4
+      Number of AO shells:              12
+      Number of primitives:             20
+      Number of atomic orbitals:        20
+      Number of basis functions:        20
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 44310 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+  ==> DiskJK: Disk-Based J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Memory (MB):               183
+    Schwarz Cutoff:          1E-12
+
+    OpenMP threads:              1
+  Minimum eigenvalue in the overlap matrix is 5.7536001511E-02.
+  Using Symmetric Orthogonalization.
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                        Total Energy        Delta E     RMS |[F,P]|
+
+   @RHF iter   0:    -2.05781211521487   -2.05781e+00   2.60527e-02 
+   @RHF iter   1:    -2.02421914721005    3.35930e-02   4.42027e-03 
+   @RHF iter   2:    -2.03094105509566   -6.72191e-03   6.37767e-04 DIIS
+   @RHF iter   3:    -2.03107613680380   -1.35082e-04   9.53772e-05 DIIS
+   @RHF iter   4:    -2.03108081942086   -4.68262e-06   2.03592e-05 DIIS
+   @RHF iter   5:    -2.03108133566472   -5.16244e-07   5.45595e-06 DIIS
+   @RHF iter   6:    -2.03108138188185   -4.62171e-08   8.62154e-07 DIIS
+   @RHF iter   7:    -2.03108138288388   -1.00203e-09   1.39776e-07 DIIS
+   @RHF iter   8:    -2.03108138290738   -2.34923e-11   5.26715e-08 DIIS
+   @RHF iter   9:    -2.03108138291133   -3.95239e-12   1.96657e-09 DIIS
+   @RHF iter  10:    -2.03108138291133   -3.55271e-15   3.28645e-10 DIIS
+   @RHF iter  11:    -2.03108138291133    1.77636e-15   7.23870e-11 DIIS
+
+  ==> Post-Iterations <==
+
+    Orbital Energies (a.u.)
+    -----------------------
+
+    Doubly Occupied:                                                      
+
+       1A     -0.831246     2A     -0.342592  
+
+    Virtual:                                                              
+
+       3A      0.129478     4A      0.165148     5A      0.393168  
+       6A      0.538096     7A      0.774720     8A      0.856941  
+       9A      1.266282    10A      1.334161    11A      1.395911  
+      12A      1.711764    13A      1.730215    14A      1.976391  
+      15A      2.251536    16A      2.286274    17A      2.404790  
+      18A      2.533391    19A      3.214030    20A      3.326443  
+
+    Final Occupation by Irrep:
+              A 
+    DOCC [     2 ]
+
+  Energy converged.
+
+  @RHF Final Energy:    -2.03108138291133
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.1366905881325060
+    One-Electron Energy =                  -7.9878690265316710
+    Two-Electron Energy =                   2.8200970554878326
+    DFT Exchange-Correlation Energy =       0.0000000000000000
+    Empirical Dispersion Energy =           0.0000000000000000
+    PCM Polarization Energy =               0.0000000000000000
+    EFP Energy =                            0.0000000000000000
+    Total Energy =                         -2.0310813829113323
+
+
+  Saving occupied orbitals to File 180.
+
+*** tstop() called on Jeffs-MacBook-Pro-2.local at Wed Nov  2 10:15:30 2016
+Module time:
+	user time   =       0.22 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.49 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 Bohr
 
 Properties computed using the SCF density matrix
 
@@ -295,19 +440,10 @@ Properties computed using the SCF density matrix
      X:     0.0074      Y:    -0.1060      Z:    -0.0631     Total:     0.1235
 
 
-  Saving occupied orbitals to File 180.
-
-*** tstop() called on Jeffs-MBP.attlocal.net at Fri Jan 22 16:49:18 2016
-Module time:
-	user time   =       0.33 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-Total time:
-	user time   =       0.33 seconds =       0.01 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
 Reading options from the FORTE block
 Calling plugin /Users/jeffschriber/src/forte/forte.so.
+
+
 
 
   ==> MO Space Information <==
@@ -330,6 +466,81 @@ Calling plugin /Users/jeffschriber/src/forte/forte.so.
   Number of frozen occupied orbitals:          0
   Number of frozen unoccupied orbitals:        0
 
+    Molecular point group: c1
+    Full point group: C1
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+           H         -0.400000000000    -0.050000000000    -0.500000000000     1.007825032070
+           H          0.400000000000    -0.050000000000    -0.500000000000     1.007825032070
+           H          0.100000000000    -0.350000000000     0.500000000000     1.007825032070
+           H         -0.100000000000     0.450000000000     0.500000000000     1.007825032070
+
+  -AO BASIS SET INFORMATION:
+    Name                   = CC-PVDZ
+    Total number of shells = 12
+    Number of primitives   = 20
+    Number of AO           = 20
+    Number of SO           = 20
+    Maximum AM             = 1
+    Spherical Harmonics    = TRUE
+
+  -Contraction Scheme:
+    Atom   Type   All Primitives // Shells:
+   ------ ------ --------------------------
+       1     H     4s 1p // 2s 1p 
+       2     H     4s 1p // 2s 1p 
+       3     H     4s 1p // 2s 1p 
+       4     H     4s 1p // 2s 1p 
+
+  ==> AO Basis Functions <==
+
+    [ CC-PVDZ ]
+    spherical
+    ****
+    H   1
+    S   3 1.00
+                        13.01000000           0.01968500
+                         1.96200000           0.13797700
+                         0.44460000           0.47814800
+    S   1 1.00
+                         0.12200000           1.00000000
+    P   1 1.00
+                         0.72700000           1.00000000
+    ****
+    H   2
+    S   3 1.00
+                        13.01000000           0.01968500
+                         1.96200000           0.13797700
+                         0.44460000           0.47814800
+    S   1 1.00
+                         0.12200000           1.00000000
+    P   1 1.00
+                         0.72700000           1.00000000
+    ****
+    H   3
+    S   3 1.00
+                        13.01000000           0.01968500
+                         1.96200000           0.13797700
+                         0.44460000           0.47814800
+    S   1 1.00
+                         0.12200000           1.00000000
+    P   1 1.00
+                         0.72700000           1.00000000
+    ****
+    H   4
+    S   3 1.00
+                        13.01000000           0.01968500
+                         1.96200000           0.13797700
+                         0.44460000           0.47814800
+    S   1 1.00
+                         0.12200000           1.00000000
+    P   1 1.00
+                         0.72700000           1.00000000
+    ****
+
 
   Overall Conventional Integrals timings
 
@@ -342,56 +553,255 @@ Calling plugin /Users/jeffschriber/src/forte/forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02485500 s
+  Integral transformation done. 0.02453900 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.003576 GB
-  Conventional integrals take 0.04291500 s
+  Conventional integrals take 0.08707900 s
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 52919 nonzero elements out of 192721 (0.274589)
-  Time spent building H (openmp): 0.296993 s
+                    ---------------------------------------
+                      Adaptive Configuration Interaction
+                      written by Francesco A. Evangelista
+                    ---------------------------------------
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 15758 nonzero elements out of 53824 (0.292769)
-  Time spent building H (openmp): 0.087880 s
+  ==> Reference Information <==
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 167698 nonzero elements out of 964324 (0.173902)
-  Time spent building H (openmp): 1.146045 s
+  There are 0 frozen orbitals.
+  There are 20 active orbitals.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 29388 nonzero elements out of 106276 (0.276525)
-  Time spent building H (openmp): 0.161866 s
+  |22000000000000000000>
+  REFERENCE ENERGY:         -2.031081382911
+  ==> Calculation Information <==
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 178880 nonzero elements out of 1048576 (0.170593)
-  Time spent building H (openmp): 0.970932 s
+  -----------------------------------------------------------------
+    Multiplicity                             1    
+    Symmetry                                 0    
+    Number of roots                          1    
+    Root used for properties                 0    
+    Sigma                                    1.00e-03
+    Gamma                                    1.00e+00
+    Convergence threshold                    1.00e-10
+    Determinant selection criterion          Second-order Energy
+    Selection criterion                      Aimed selection
+    Excited Algorithm                        AVERAGE
+    Q Type                                   Absolute Energy
+    PT2 Parameters                           False
+    Project out spin contaminants            False
+    Enforce spin completeness of basis       False
+    Enforce complete aimed selection         False
+  -----------------------------------------------------------------
+  Computing wavefunction for root 0
+  Using streamlined Q-space builder.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 30048 nonzero elements out of 108900 (0.275923)
-  Time spent building H (openmp): 0.131395 s
+  ==> Cycle 0 <==
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 179200 nonzero elements out of 1052676 (0.170233)
-  Time spent building H (openmp): 0.884424 s
+  Initial P space dimension: 1
+ Not checking for spin-completeness.
+  Time spent diagonalizing H:   0.000059 s
+  Not performing spin projection.
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 30048 nonzero elements out of 108900 (0.275923)
-  Time spent building H (openmp): 0.123570 s
+    P-space  CI Energy Root   0        = -2.031081382911 Eh =   0.0000 eV
 
-  Davidson-liu sparse algorithm
-  Building H using OpenMP-take2
-  The sparse Hamiltonian matrix contains 179200 nonzero elements out of 1052676 (0.170233)
-  Time spent building H (openmp): 0.969688 s
+  Dimension of the SD space: 1602 determinants
+  Time spent building the model space: 0.005269 s
 
-  Your calculation took 11.94326300 seconds
+  Dimension of the P + Q space: 439 determinants
+  Time spent screening the model space: 0.003235 s
+  Time spent diagonalizing H:   0.305786 s
+  Not performing spin projection.
 
-*** PSI4 exiting successfully. Buy a developer a beer!
+    PQ-space CI Energy Root   0        = -2.112550522879 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.113544106779 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0   0.977978 0.956441180           0 |22000000000000000000>
+    1  -0.065543 0.004295858         436 |20200000000000000000>
+    2  -0.048567 0.002358719         432 |20020000000000000000>
+    3  -0.044755 0.002003007         438 |20000200000000000000>
+    4  -0.031775 0.001009623         397 |20+000-0000000000000>
+    5  -0.031775 0.001009623         398 |20-000+0000000000000>
+    6  -0.031446 0.000988821         433 |02200000000000000000>
+    7   0.028062 0.000787454         402 |-++-0000000000000000>
+    8   0.028062 0.000787454         403 |+--+0000000000000000>
+    9  -0.028006 0.000784329         435 |02000020000000000000>
+
+  Spin state for root 0: S^2 = 0.000000, S = 0.000, singlet (from 1 determinants, 95.64)
+ Cycle 0 took: 0.315482 s
+
+  ==> Cycle 1 <==
+
+  Initial P space dimension: 232
+ Not checking for spin-completeness.
+  Time spent diagonalizing H:   0.064168 s
+  Not performing spin projection.
+
+    P-space  CI Energy Root   0        = -2.109168732072 Eh =   0.0000 eV
+
+  Dimension of the SD space: 32882 determinants
+  Time spent building the model space: 4.565392 s
+
+  Dimension of the P + Q space: 982 determinants
+  Time spent screening the model space: 0.063858 s
+  Time spent diagonalizing H:   2.395342 s
+  Not performing spin projection.
+
+    PQ-space CI Energy Root   0        = -2.115287571488 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.116286837175 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0  -0.975606 0.951807043         231 |22000000000000000000>
+    1   0.071503 0.005112711         230 |20200000000000000000>
+    2   0.052279 0.002733071         229 |20020000000000000000>
+    3   0.044582 0.001987585         228 |20000200000000000000>
+    4   0.034301 0.001176572         226 |20-000+0000000000000>
+    5   0.034301 0.001176572         227 |20+000-0000000000000>
+    6   0.032460 0.001053633         225 |02200000000000000000>
+    7   0.029912 0.000894712         216 |200-000+000000000000>
+    8   0.029912 0.000894712         215 |200+000-000000000000>
+    9  -0.029793 0.000887644         224 |-++-0000000000000000>
+
+  Spin state for root 0: S^2 = 0.000082, S = 0.000, singlet (from 982 determinants, 100.00)
+ Cycle 1 took: 8.504331 s
+
+  ==> Cycle 2 <==
+
+  Initial P space dimension: 326
+ Not checking for spin-completeness.
+  Time spent diagonalizing H:   0.129630 s
+  Not performing spin projection.
+
+    P-space  CI Energy Root   0        = -2.111973424885 Eh =   0.0000 eV
+
+  Dimension of the SD space: 33954 determinants
+  Time spent building the model space: 9.486177 s
+
+  Dimension of the P + Q space: 1024 determinants
+  Time spent screening the model space: 0.066718 s
+  Time spent diagonalizing H:   3.688475 s
+  Not performing spin projection.
+
+    PQ-space CI Energy Root   0        = -2.115354212129 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.116353909251 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0  -0.975510 0.951619998         325 |22000000000000000000>
+    1   0.071824 0.005158669         324 |20200000000000000000>
+    2   0.052741 0.002781639         323 |20020000000000000000>
+    3   0.044511 0.001981251         322 |20000200000000000000>
+    4   0.034351 0.001180011         321 |20-000+0000000000000>
+    5   0.034351 0.001179977         320 |20+000-0000000000000>
+    6   0.032399 0.001049684         319 |02200000000000000000>
+    7   0.029960 0.000897624         318 |200-000+000000000000>
+    8   0.029960 0.000897615         317 |200+000-000000000000>
+    9  -0.029841 0.000890480         316 |-++-0000000000000000>
+
+  Spin state for root 0: S^2 = 0.173149, S = 0.150, singlet (from 1001 determinants, 3.56)
+ Cycle 2 took: 14.967604 s
+
+  ==> Cycle 3 <==
+
+  Initial P space dimension: 330
+ Not checking for spin-completeness.
+  Time spent diagonalizing H:   0.151137 s
+  Not performing spin projection.
+
+    P-space  CI Energy Root   0        = -2.112053110771 Eh =   0.0000 eV
+
+  Dimension of the SD space: 34036 determinants
+  Time spent building the model space: 8.088691 s
+
+  Dimension of the P + Q space: 1026 determinants
+  Time spent screening the model space: 0.061331 s
+  Time spent diagonalizing H:   2.910524 s
+  Not performing spin projection.
+
+    PQ-space CI Energy Root   0        = -2.115356497831 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.116356355301 Eh =   0.0000 eV
+
+
+  Most important contributions to root   0:
+    0  -0.975509 0.951617742         329 |22000000000000000000>
+    1   0.071825 0.005158896         328 |20200000000000000000>
+    2   0.052727 0.002780096         327 |20020000000000000000>
+    3   0.044511 0.001981232         326 |20000200000000000000>
+    4   0.034352 0.001180038         324 |20+000-0000000000000>
+    5   0.034351 0.001179981         325 |20-000+0000000000000>
+    6   0.032399 0.001049664         323 |02200000000000000000>
+    7   0.029960 0.000897607         321 |200+000-000000000000>
+    8   0.029960 0.000897605         322 |200-000+000000000000>
+    9  -0.029841 0.000890459         320 |-++-0000000000000000>
+
+  Spin state for root 0: S^2 = 0.200408, S = 0.171, singlet (from 1001 determinants, 3.52)
+ Cycle 3 took: 12.602723 s
+
+  ==> Cycle 4 <==
+
+  Initial P space dimension: 330
+ Not checking for spin-completeness.
+  Time spent diagonalizing H:   0.135611 s
+  Not performing spin projection.
+
+    P-space  CI Energy Root   0        = -2.112053110771 Eh =   0.0000 eV
+
+  Dimension of the SD space: 34036 determinants
+  Time spent building the model space: 7.200040 s
+
+  Dimension of the P + Q space: 1026 determinants
+  Time spent screening the model space: 0.076610 s
+  Time spent diagonalizing H:   2.797545 s
+  Not performing spin projection.
+
+    PQ-space CI Energy Root   0        = -2.115356497831 Eh =   0.0000 eV
+    PQ-space CI Energy + EPT2 Root   0 = -2.116356355301 Eh =   0.0000 eV
+
+  ***** Calculation Converged *****
+  Not performing spin projection.
+  1-RDM  took 0.005894 s (determinant)
+
+  ==> ACI Summary <==
+
+  Iterations required:                         4
+  Dimension of optimized determinant space:    1026
+
+  ACI(0.001) Correlation energy: 0.084275114920 Eh
+  * Adaptive-CI Energy Root   0        = -2.115356497831 Eh =   0.0000 eV
+  * Adaptive-CI Energy Root   0 + EPT2 = -2.116356355301 Eh =   0.0000 eV
+
+  ==> Wavefunction Information <==
+
+  Most important contributions to root   0:
+    0  -0.975509 0.951617742         329 |22000000000000000000>
+    1   0.071825 0.005158896         328 |20200000000000000000>
+    2   0.052727 0.002780096         327 |20020000000000000000>
+    3   0.044511 0.001981232         326 |20000200000000000000>
+    4   0.034352 0.001180038         324 |20-000+0000000000000>
+    5   0.034351 0.001179981         325 |20+000-0000000000000>
+    6   0.032399 0.001049664         323 |02200000000000000000>
+    7   0.029960 0.000897607         321 |200-000+000000000000>
+    8   0.029960 0.000897605         322 |200+000-000000000000>
+    9  -0.029841 0.000890459         319 |+--+0000000000000000>
+
+  Spin state for root 0: S^2 = 0.200408, S = 0.171, singlet (from 1001 determinants, 3.52)
+
+     Order		 # of Dets        Total |c^2|   
+  __________ 	____________   ________________ 
+        0                  1           0.95161774226
+        1                 24           0.00060790027
+        2                678           0.04728579086
+        3                137           0.00010640544
+        4                186           0.00038216117
+
+  Highest-order excitation searched:     10  
+
+
+  Adaptive-CI (bitset) ran in : 47.972855 s
+
+  Saving information for root: 0
+
+  Your calculation took 48.14422500 seconds
+	ACI energy........................................................PASSED
+	ACI+PT2 energy....................................................PASSED
+
+*** Psi4 exiting successfully. Buy a developer a beer!
