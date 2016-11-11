@@ -14,14 +14,12 @@ double DSRG_MRPT2::compute_energy_multi_state(){
 
     // multi-state calculation
     std::vector<std::vector<double>> Edsrg_ms;
-    bool test = false;
 
-    if(test){
-        Edsrg_ms = compute_energy_sa();
-    }else{
+    if(options_.get_str("DSRG_SA_HEFF") == "XMS"){
         Edsrg_ms = compute_energy_xms();
+    }else{
+        Edsrg_ms = compute_energy_sa();
     }
-
 
     // energy summuary
     print_h2("Multi-State DSRG-MRPT2 Energy Summary");
