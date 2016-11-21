@@ -717,6 +717,8 @@ double ProjectorCI::compute_energy()
 
     // Increase the root counter (ground state = 0)
     current_root_ += 1;
+    lastLow = 0.0;
+    previous_go_up = false;
 
     outfile->Printf("\n\n\t  ---------------------------------------------------------");
     outfile->Printf("\n\t      Adaptive Path-Integral Full Configuration Interaction");
@@ -1006,8 +1008,6 @@ bool ProjectorCI::converge_test()
     if (!stop_higher_new_low_) {
         return false;
     }
-    static double lastLow = 0.0;
-    static bool previous_go_up = false;
     if (approx_energy_ > old_approx_energy_ && !previous_go_up) {
         if (old_approx_energy_ > lastLow) {
             lastLow = old_approx_energy_;
