@@ -234,6 +234,8 @@ private:
     bool symm_approx_H_;
     /// Stop iteration when higher new low detected
     bool stop_higher_new_low_;
+    double lastLow = 0.0;
+    bool previous_go_up = false;
 
     // * Reference spawning
     /// Spawning according to the coefficient in a reference
