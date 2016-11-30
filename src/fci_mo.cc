@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
+#include <libmints/mints.h>
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "fci_vector.h"
 #include "fci_mo.h"
@@ -484,6 +485,9 @@ double FCI_MO::compute_energy(){
 //            nat_orbs();
         }
     }
+
+    // compute oscillator strength
+    compute_oscillator_strength();
 
     Eref_ = eigen_[root_].second;
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
@@ -2320,6 +2324,137 @@ bool FCI_MO::CheckDensity(){
     return natural;
 }
 
+void FCI_MO::compute_trans_dipole(){
+
+    if(nirrep_ != 1){
+        outfile->Printf("\n  Computing transition dipole moments in %s symmetry.",
+                        Process::environment.molecule()->sym_label().c_str());
+        outfile->Printf("\n  Currently only support transitions with the same irrep.");
+        outfile->Printf("\n  Please set molecular symmetry to C1.\n");
+        return;
+    }
+    print_h2("Computing Transition Dipole Moments");
+
+    // obtain SO dipole from libmints
+    std::vector<SharedMatrix> dipole_ints;
+    for(const std::string& direction: {"X","Y","Z"}){
+        std::string name = "SO Dipole" + direction;
+        dipole_ints.push_back(SharedMatrix(new Matrix(name, this->nsopi(), this->nsopi()) ));
+    }
+
+    boost::shared_ptr<BasisSet> basisset = this->basisset();
+    boost::shared_ptr<IntegralFactory> ints = boost::shared_ptr<IntegralFactory>(
+                new IntegralFactory(basisset,basisset,basisset,basisset));
+    boost::shared_ptr<OneBodySOInt> sodOBI(ints->so_dipole());
+
+    sodOBI->compute(dipole_ints);
+
+    // transform SO dipole to MO dipole
+    for(const SharedMatrix& dipole: dipole_ints){
+        dipole->transform(this->Ca());
+    }
+
+    // symmetrize the density according to point group
+    auto symmetrize_density = [&](const vector<double>& vec, const SharedMatrix& mat) {
+
+        size_t offset = 0;
+        mat->zero();
+
+        for(int h = 0; h < nirrep_; ++h){
+
+            // frozen core
+            for(size_t i = 0; i < frzcpi_[h]; ++i){
+                mat->set(h, i, i, 1.0);
+            }
+
+            // restricted core
+            size_t offset1 = frzcpi_[h];
+            for(size_t i = 0; i < core_[h]; ++i){
+                size_t ni = i + offset1;
+                mat->set(h, ni, ni, 1.0);
+            }
+
+            // active
+            offset1 += core_[h];
+            for(size_t u = 0; u < active_[h]; ++u){
+                size_t mu = u + offset;
+                size_t nu = u + offset1;
+
+                for(size_t v = 0; v < active_[h]; ++v){
+                    size_t mv = v + offset;
+                    size_t nv = v + offset1;
+
+                    mat->set(h, nu, nv, vec[mu * na_ + mv]);
+                }
+            }
+            offset += active_[h];
+        }
+    };
+
+    // prepare eigen vectors for ci_rdm
+    int dim = (eigen_[0].first)->dim();
+    SharedMatrix evecs (new Matrix("evecs", dim, dim));
+    for(int i = 0; i < eigen_.size(); ++i){
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+
+    // loop over states of the same symmetry
+    trans_dipole_.clear();
+    for(int A = 1; A < nroot_; ++A){
+        CI_RDMS ci_rdms (options_,fci_ints_,determinant_,evecs,0,A);
+        vector<double> opdm_a (na_ * na_, 0.0);
+        vector<double> opdm_b (na_ * na_, 0.0);
+        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+
+        SharedMatrix MOtransD (new Matrix("MO transition density 0 -> " + std::to_string(A), nmopi_, nmopi_));
+        symmetrize_density(opdm_a, MOtransD);
+
+        vector<double> de(4, 0.0);
+        for(int i = 0; i < 3; ++i){
+            de[i] = 2.0 * MOtransD->vector_dot(dipole_ints[i]); // 2.0 for beta spin
+        }
+        de[3] = std::accumulate(de.begin(),de.end(),0.0);
+
+        outfile->Printf("\n  Transition dipole moments (a.u.) 0 -> %2d:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f",
+                        A, de[0], de[1], de[2], de[3]);
+        trans_dipole_.push_back(de);
+    }
+    outfile->Printf("\n");
+}
+
+void FCI_MO::compute_oscillator_strength(){
+
+    if(nirrep_ != 1){
+        outfile->Printf("\n  Computing oscillator strength in %s symmetry.",
+                        Process::environment.molecule()->sym_label().c_str());
+        outfile->Printf("\n  Currently only support transitions with the same irrep.");
+        outfile->Printf("\n  Please set molecular symmetry to C1.\n");
+        return;
+    }
+
+    // compute transition dipole
+    compute_trans_dipole();
+
+    // compute oscillator strength
+    print_h2("Computing Oscillator Strength");
+    osc_str_.clear();
+    for(int A = 1; A < nroot_; ++A){
+
+        vector<double> oc(4, 0.0);
+        double Ex = eigen_[A].second - eigen_[0].second;
+        for(int i = 0; i < 3; ++i){
+            double transdipole = trans_dipole_[A-1][i];
+            oc[i] = 2.0/3.0 * Ex * transdipole * transdipole;
+        }
+        oc[3] = std::accumulate(oc.begin(),oc.end(),0.0);
+
+        outfile->Printf("\n  Oscillator strength (a.u.) 0 -> %2d:  X: %7.4f  Y: %7.4f  Z: %7.4f  Total: %7.4f",
+                        A, oc[0], oc[1], oc[2], oc[3]);
+        osc_str_.push_back(oc);
+    }
+    outfile->Printf("\n");
+}
+
 void FCI_MO::compute_SOquadrupole(){
     so_Qpole_.clear();
     for(const auto& name: {"XX","XY","XZ","YY","YZ","ZZ"}){
@@ -2728,7 +2863,6 @@ double FCI_MO::compute_sa_energy(){
                 }
 
             } // end looping over all averaged states
-            eigen_.clear(); // make sure other code use eigens_ for state average
             outfile->Printf("\n    Total Energy (averaged over %d states): %20.15f\n", nstates, Ecas_sa);
 
             // fill in Da_, Db_, L1a, L1b
@@ -2755,6 +2889,9 @@ double FCI_MO::compute_sa_energy(){
 //            nat_orbs();
         }
     }
+
+    // compute oscillator strength
+    compute_oscillator_strength();
 
     Eref_ = Ecas_sa;
     Process::environment.globals["CURRENT ENERGY"] = Eref_;
