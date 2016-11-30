@@ -329,6 +329,16 @@ protected:
     size_t idx_diffused_;
     vector<size_t> diffused_orbs_;
 
+    /// Transition dipoles
+    vector<vector<double>> trans_dipole_;
+    /// Compute transition dipole
+    void compute_trans_dipole();
+
+    /// Oscillator strengths
+    vector<vector<double>> osc_str_;
+    /// Compute oscillator strength
+    void compute_oscillator_strength();
+
     /**
      * @brief Return a vector of corresponding indices before the vector is sorted
      * @typename T The data type of the sorted vector
