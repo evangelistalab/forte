@@ -1,22 +1,24 @@
 //[forte-public]
 #include <cmath>
-
-#include <psifiles.h>
-#include <libtrans/integraltransform.h>
-#include <libpsio/psio.hpp>
-#include <libmints/factory.h>
-#include <libmints/matrix.h>
-#include <libmints/basisset.h>
-#include <libmints/wavefunction.h>
-#include <libqt/qt.h>
-#include <libfock/jk.h>
 #include <algorithm>
 #include <numeric>
+
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/factory.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libqt/qt.h"
+#include "psi4/libfock/jk.h"
 #include "blockedtensorfactory.h"
-#include <libmints/mints.h>
 
 #include "integrals.h"
 #include "memory.h"
+
 #ifdef HAVE_GA
 #include <ga.h>
 #include <macdecls.h>
@@ -25,8 +27,6 @@
 using namespace std;
 using namespace psi;
 using namespace ambit;
-
-#include <psi4-dec.h>
 
 namespace psi{ namespace forte{
 
@@ -68,7 +68,7 @@ ForteIntegrals::~ForteIntegrals()
 void ForteIntegrals::startup()
 {
     // Grab the global (default) PSIO object, for file I/O
-    boost::shared_ptr<PSIO> psio(_default_psio_lib_);
+    std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
 
 
@@ -172,7 +172,7 @@ void ForteIntegrals::set_oei(size_t p, size_t q,double value,bool alpha)
 void ForteIntegrals::transform_one_electron_integrals()
 {
     // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
+    std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
 
     SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
     SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
@@ -232,17 +232,18 @@ void ForteIntegrals::compute_frozen_one_body_operator()
         }
     }
 
-    boost::shared_ptr<JK> JK_core;
+    std::shared_ptr<JK> JK_core;
     if(options_.get_str("SCF_TYPE")=="GTFOCK")
     {
     #ifdef HAVE_JK_FACTORY
         Process::environment.set_legacy_molecule(wfn_->molecule());
-        JK_core = boost::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
+        JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
     #else
         throw PSIEXCEPTION("GTFock was not compiled in this version");
     #endif
     } else {
-        JK_core = JK::build_JK(wfn_->basisset(), options_);
+        // PORTTODO is DF_BASIS_MP2 correct here?
+        JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"), options_);
     }
 
     JK_core->set_memory(Process::environment.get_memory() * 0.8);
@@ -255,8 +256,8 @@ void ForteIntegrals::compute_frozen_one_body_operator()
     JK_core->set_allow_desymmetrization(true);
     JK_core->set_do_K(true);
 
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_core->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK_core->C_right();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK_core->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cr = JK_core->C_right();
 
     Cl.clear();
     Cr.clear();

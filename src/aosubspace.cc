@@ -3,12 +3,14 @@
 #include <vector>
 #include <regex>
 
-#include <masses.h>
-#include <Z_to_element.h>
-#include <element_to_Z.h>
-#include <libmints/mints.h>
-#include <libmints/matrix.h>
-#include <libmints/basisset_parser.h>
+#include "psi4/masses.h"
+//#include "psi4/libmints/Z_to_element.h"
+#include "psi4/libmints/element_to_Z.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/basisset_parser.h"
 
 #include "boost/format.hpp"
 
@@ -33,6 +35,7 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& option
 {
     SharedMatrix Ps;
 
+    /* PORTTODO: re-enable this block
     // Run this code only if user specified a subspace
     if (options["SUBSPACE"].size() > 0){
         std::vector<std::string> subspace_str;
@@ -42,9 +45,9 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& option
         }
 
         // Create a basis set parser object and read the minimal basis
-        boost::shared_ptr<Molecule> molecule = wfn->molecule();
-        boost::shared_ptr<BasisSetParser> parser(new Gaussian94BasisSetParser());
-        boost::shared_ptr<BasisSet> min_basis = BasisSet::pyconstruct_orbital(molecule,"BASIS",options.get_str("MIN_BASIS"));
+        std::shared_ptr<Molecule> molecule = wfn->molecule();
+        std::shared_ptr<BasisSetParser> parser(new Gaussian94BasisSetParser());
+        std::shared_ptr<BasisSet> min_basis = BasisSet::pyconstruct_orbital(molecule,"BASIS",options.get_str("MIN_BASIS"));
 
         // Create an AOSubspace object
         AOSubspace aosub(subspace_str,molecule,min_basis);
@@ -72,16 +75,16 @@ SharedMatrix create_aosubspace_projector(SharedWavefunction wfn, Options& option
 
         Ps =  aosub.build_projector(subspace,molecule,min_basis,wfn->basisset());
     }
-
+    */
     return Ps;
 }
 
-AOSubspace::AOSubspace(boost::shared_ptr<Molecule> molecule,boost::shared_ptr<BasisSet> basis)
+AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule,std::shared_ptr<BasisSet> basis)
 {
     startup();
 }
 
-AOSubspace::AOSubspace(std::vector<std::string> subspace_str,boost::shared_ptr<Molecule> molecule, boost::shared_ptr<BasisSet> basis)
+AOSubspace::AOSubspace(std::vector<std::string> subspace_str,std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis)
     : subspace_str_(subspace_str), molecule_(molecule), basis_(basis)
 {
     startup();
@@ -129,17 +132,17 @@ void AOSubspace::startup()
 }
 
 SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
-                                         boost::shared_ptr<Molecule> molecule,
-                                         boost::shared_ptr<BasisSet> min_basis,
-                                         boost::shared_ptr<BasisSet> large_basis)
+                                         std::shared_ptr<Molecule> molecule,
+                                         std::shared_ptr<BasisSet> min_basis,
+                                         std::shared_ptr<BasisSet> large_basis)
 {
     bool debug = false;
 
-    boost::shared_ptr<IntegralFactory> integral_mm(
+    std::shared_ptr<IntegralFactory> integral_mm(
                 new IntegralFactory(min_basis, min_basis, min_basis, min_basis));
-    boost::shared_ptr<IntegralFactory> integral_ml(
+    std::shared_ptr<IntegralFactory> integral_ml(
                 new IntegralFactory(min_basis, large_basis, large_basis, large_basis));
-    boost::shared_ptr<IntegralFactory> integral_ll(
+    std::shared_ptr<IntegralFactory> integral_ll(
                 new IntegralFactory(large_basis, large_basis, large_basis, large_basis));
 
 
@@ -153,7 +156,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     }
 
     // Compute the overlap integral in the minimal basis
-    boost::shared_ptr<OneBodyAOInt> sOBI_mm(integral_mm->ao_overlap());
+    std::shared_ptr<OneBodyAOInt> sOBI_mm(integral_mm->ao_overlap());
     SharedMatrix S_mm = SharedMatrix(new Matrix("S_mm",nbf_m,nbf_m));
     sOBI_mm->compute(S_mm);
 
@@ -198,7 +201,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
 #endif
 
     // Compute the overlap integral in the minimal/large basis
-    boost::shared_ptr<OneBodyAOInt> sOBI_ml(integral_ml->ao_overlap());
+    std::shared_ptr<OneBodyAOInt> sOBI_ml(integral_ml->ao_overlap());
     SharedMatrix S_ml = SharedMatrix(new Matrix("S_ml",nbf_m,nbf_l));
     sOBI_ml->compute(S_ml);
 #if _DEBUG_AOSUBSPACE_
@@ -214,7 +217,7 @@ SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     SXXS_ll->print();
 #endif
 
-    boost::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
+    std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
     SharedMatrix AO2SO_ = plist->aotoso();
     Dimension large_basis_so_dim = plist->SO_basisdim();
     SharedMatrix SXXS_ll_so(new Matrix("SXXS_ll_so",large_basis_so_dim,large_basis_so_dim));
@@ -373,7 +376,7 @@ void AOSubspace::parse_basis_set()
 
         std::vector<int> ao_list;
 
-        if (debug_) outfile->Printf("\n  Atom %d (%s) has %d shells\n",A,Z_to_element[Z].c_str(),n_shell);
+        if (debug_) outfile->Printf("\n  Atom %d (Z = %d) has %d shells\n",A,Z,n_shell);
 
         for (int Q = 0; Q < n_shell; Q++){
             const GaussianShell& shell = basis_->shell(A,Q);

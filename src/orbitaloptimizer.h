@@ -4,8 +4,8 @@
 #include "reference.h"
 #include "helpers.h"
 #include "blockedtensorfactory.h"
-#include <libmints/matrix.h>
-#include <libfock/jk.h>
+#include "psi4/libmints/matrix.h"
+#include "psi4/libfock/jk.h"
 
 using namespace psi;
 
@@ -76,7 +76,7 @@ public:
     /// Print a summary of timings
     void set_print_timings(bool timing){timings_ = timing;}
     void set_wavefunction(SharedWavefunction wfn){ wfn_ = wfn; }
-    void set_jk(boost::shared_ptr<JK>& JK)
+    void set_jk(std::shared_ptr<JK>& JK)
     {
         JK_ = JK;
     }
@@ -91,7 +91,7 @@ protected:
     SharedMatrix gamma2M_;
     ambit::Tensor integral_;
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    boost::shared_ptr<JK> JK_;
+    std::shared_ptr<JK> JK_;
 
 
     Options options_;

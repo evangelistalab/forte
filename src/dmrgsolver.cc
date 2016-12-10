@@ -1,21 +1,21 @@
-//#include <libplugin/plugin.h>
-#include <psi4-dec.h>
-#include <libdpd/dpd.h>
-#include <psifiles.h>
-#include <libpsio/psio.hpp>
-#include <libiwl/iwl.hpp>
-#include <libtrans/integraltransform.h>
-#include <libmints/wavefunction.h>
-#include <libmints/mints.h>
-#include <libmints/typedefs.h>
-#include <libmints/matrix.h>
-#include <libmints/mintshelper.h>
-#include <libmints/factory.h>
-//Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
-#include <libciomr/libciomr.h>
-#include <liboptions/liboptions.h>
-#include <libfock/jk.h>
-#include <libmints/writer_file_prefix.h>
+#ifdef HAVE_CHEMPS2
+
+#include "psi4/psi4-dec.h"
+#include "psi4/libdpd/dpd.h"
+#include "psi4/psifiles.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libiwl/iwl.hpp"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/typedefs.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/factory.h"
+//Header above this comment contains typedef std::shared_ptr<psi::Matrix> SharedMatrix;
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/writer_file_prefix.h"
 //Header above allows to obtain "filename.moleculename" with psi::get_writer_file_prefix()
 
 #include <stdlib.h>
@@ -460,12 +460,12 @@ std::vector<double> DMRGSolver::one_body_operator()
     /// D_{uv}^{inactive} = \sum_{i = 0}^{inactive}C_{ui} * C_{vi}
     /// This section of code computes the fock matrix for the INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    boost::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
+    std::shared_ptr<JK> JK_inactive = JK::build_JK(wfn_->basisset(), wfn_->options());
 
     JK_inactive->set_memory(Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
 
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK_inactive->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK_inactive->C_left();
     Cl.clear();
     Cl.push_back(Cdocc);
     JK_inactive->compute();
@@ -477,7 +477,7 @@ std::vector<double> DMRGSolver::one_body_operator()
     F_restricted->subtract(K_restricted);
 
     ///Just create the OneInt integrals from scratch
-    boost::shared_ptr<PSIO> psio_ = PSIO::shared_object();
+    std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
     SharedMatrix T = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
     SharedMatrix V = SharedMatrix(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
     SharedMatrix OneInt = T;
@@ -548,7 +548,7 @@ void DMRGSolver::print_natural_orbitals(double* opdm)
     int nirrep = wfn_->nirrep();
     size_t na_ = mo_space_info_->size("ACTIVE");
 
-    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep,active_dim, active_dim));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep,active_dim, active_dim));
 
     int offset = 0;
     for(int h = 0; h < nirrep; h++){
@@ -586,3 +586,5 @@ void DMRGSolver::print_natural_orbitals(double* opdm)
 }
 
 }} // End Namespaces
+
+#endif // #ifdef HAVE_CHEMPS2

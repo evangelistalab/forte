@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
-#include <libmints/mints.h>
+
 #include "mini-boost/boost/algorithm/string/predicate.hpp"
 #include "fci_vector.h"
 #include "fci_mo.h"
@@ -79,7 +79,7 @@ void FCI_MO::read_options(){
     dconv_ = options_.get_double("D_CONVERGENCE");
 
     // nuclear repulsion
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
     e_nuc_ = molecule->nuclear_repulsion_energy();
 
     // number of Irrep
@@ -2217,7 +2217,7 @@ void FCI_MO::BD_Fock(const d2 &Fa, const d2 &Fb, SharedMatrix &Ua, SharedMatrix 
 
 //    bool natural = CheckDensity();
 //    if(!natural){
-//        boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+//        std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
 //        SharedMatrix Ua (new Matrix("Unitary A", nmopi_, nmopi_));
 //        SharedMatrix Ub (new Matrix("Unitary B", nmopi_, nmopi_));
 //        BD_2D_Matrix(Da_,Db_,Ua,Ub,"density","C");
@@ -2343,10 +2343,10 @@ void FCI_MO::compute_trans_dipole(){
         dipole_ints.push_back(SharedMatrix(new Matrix(name, this->nsopi(), this->nsopi()) ));
     }
 
-    boost::shared_ptr<BasisSet> basisset = this->basisset();
-    boost::shared_ptr<IntegralFactory> ints = boost::shared_ptr<IntegralFactory>(
+    std::shared_ptr<BasisSet> basisset = this->basisset();
+    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
                 new IntegralFactory(basisset,basisset,basisset,basisset));
-    boost::shared_ptr<OneBodySOInt> sodOBI(ints->so_dipole());
+    std::shared_ptr<OneBodySOInt> sodOBI(ints->so_dipole());
 
     sodOBI->compute(dipole_ints);
 
@@ -2462,10 +2462,10 @@ void FCI_MO::compute_SOquadrupole(){
         so_Qpole_.push_back(SharedMatrix(new Matrix(name,this->nsopi(),this->nsopi()) ));
     }
 
-    boost::shared_ptr<BasisSet> basisset = this->basisset();
-    boost::shared_ptr<IntegralFactory> ints = boost::shared_ptr<IntegralFactory>(
+    std::shared_ptr<BasisSet> basisset = this->basisset();
+    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
                 new IntegralFactory(basisset,basisset,basisset,basisset));
-    boost::shared_ptr<OneBodySOInt> soqOBI(ints->so_quadrupole());
+    std::shared_ptr<OneBodySOInt> soqOBI(ints->so_quadrupole());
 
     soqOBI->compute(so_Qpole_);
     soqOBI.reset();

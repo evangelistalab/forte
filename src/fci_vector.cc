@@ -1,12 +1,13 @@
 #include <cmath>
 #include <algorithm>
 
-#include "libmints/vector.h"
-#include "libmints/matrix.h"
-#include <libfock/jk.h>
-#include <libmints/mints.h>
-#include <libmints/mintshelper.h>
-#include <libmints/wavefunction.h>
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/pointgrp.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
 
 
 #include "helpers.h"
@@ -481,8 +482,8 @@ void FCIWfn::print_natural_orbitals(std::shared_ptr<MOSpaceInfo> mo_space_info)
     print_h2("NATURAL ORBITALS");
     Dimension active_dim = mo_space_info->get_dimension("ACTIVE");
 
-    boost::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_,active_dim, active_dim));
-    boost::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, active_dim, active_dim));
+    std::shared_ptr<Matrix> opdm_a(new Matrix("OPDM_A",nirrep_,active_dim, active_dim));
+    std::shared_ptr<Matrix> opdm_b(new Matrix("OPDM_b",nirrep_, active_dim, active_dim));
 
     int offset = 0;
     for(int h = 0; h < nirrep_; h++){

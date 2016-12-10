@@ -1,7 +1,7 @@
 #include "methodbase.h"
 
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
 
 namespace psi{ namespace forte{
 

@@ -23,7 +23,7 @@
 #ifndef _reference_h_
 #define _reference_h_
 
-#include <libmints/wavefunction.h>
+#include "psi4/libmints/wavefunction.h"
 
 #include <ambit/tensor.h>
 

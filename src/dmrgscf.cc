@@ -1,18 +1,18 @@
-//#include <libplugin/plugin.h>
-#include <psi4-dec.h>
-#include <libdpd/dpd.h>
-#include <psifiles.h>
-#include <libpsio/psio.hpp>
-#include <libiwl/iwl.hpp>
-#include <libtrans/integraltransform.h>
-#include <libmints/wavefunction.h>
-#include <libmints/mints.h>
-#include <libmints/typedefs.h>
-//Header above this comment contains typedef boost::shared_ptr<psi::Matrix> SharedMatrix;
-#include <libciomr/libciomr.h>
-#include <liboptions/liboptions.h>
-#include <libfock/jk.h>
-#include <libmints/writer_file_prefix.h>
+#ifdef HAVE_CHEMPS2
+
+#include "psi4/psi4-dec.h"
+#include "psi4/libdpd/dpd.h"
+#include "psi4/psifiles.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libiwl/iwl.hpp"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/typedefs.h"
+//Header above this comment contains typedef std::shared_ptr<psi::Matrix> SharedMatrix;
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/writer_file_prefix.h"
 //Header above allows to obtain "filename.moleculename" with psi::get_writer_file_prefix()
 
 #include <stdlib.h>
@@ -69,7 +69,7 @@ int DMRGSCF::chemps2_groupnumber(const string SymmLabel){
 
 }
 
-void DMRGSCF::buildTmatrix( CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio, SharedMatrix Cmat){
+void DMRGSCF::buildTmatrix( CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFindices * iHandler, std::shared_ptr<PSIO> psio, SharedMatrix Cmat){
 
     const int nirrep = this->nirrep();
     const int nmo    = this->nmo();
@@ -98,7 +98,7 @@ void DMRGSCF::buildTmatrix( CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSC
 
 }
 
-void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
+void DMRGSCF::buildJK(SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, std::shared_ptr<JK> myJK){
 
     const int nso    = this->nso();
     int * nsopi      = this->nsopi();
@@ -164,7 +164,7 @@ void DMRGSCF::copyCHEMPS2MXtoPSIMX( CheMPS2::DMRGSCFmatrix * source, CheMPS2::DM
 }
 
 
-void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
+void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, std::shared_ptr<JK> myJK){
 
     MO_RDM->zero();
     for (int irrep = 0; irrep < iHandler->getNirreps(); irrep++){
@@ -177,7 +177,7 @@ void DMRGSCF::buildQmatOCC( CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSC
 }
 
 
-void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSCFindices * iHandler, double * DMRG1DM, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, boost::shared_ptr<JK> myJK){
+void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSCFindices * iHandler, double * DMRG1DM, SharedMatrix MO_RDM, SharedMatrix MO_JK, SharedMatrix Cmat, std::shared_ptr<JK> myJK){
 
     MO_RDM->zero();
     const int nOrbDMRG = iHandler->getDMRGcumulative(iHandler->getNirreps());
@@ -198,7 +198,7 @@ void DMRGSCF::buildQmatACT( CheMPS2::DMRGSCFmatrix * theQmatACT, CheMPS2::DMRGSC
 }
 
 
-void DMRGSCF::buildHamDMRG( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::Hamiltonian * HamDMRG, boost::shared_ptr<PSIO> psio){
+void DMRGSCF::buildHamDMRG( std::shared_ptr<IntegralTransform> ints, std::shared_ptr<MOSpace> Aorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFmatrix * theQmatOCC, CheMPS2::DMRGSCFindices * iHandler, CheMPS2::Hamiltonian * HamDMRG, std::shared_ptr<PSIO> psio){
 
     ints->update_orbitals();
     // Since we don't regenerate the SO ints, we don't call sort_so_tei, and the OEI are not updated !!!!!
@@ -267,7 +267,7 @@ void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix *theQmatOCC, CheMPS2::DMR
 
 }
 
-void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio){
+void DMRGSCF::fillRotatedTEI_coulomb( std::shared_ptr<IntegralTransform> ints, std::shared_ptr<MOSpace> OAorbs_ptr, CheMPS2::DMRGSCFmatrix * theTmatrix, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, std::shared_ptr<PSIO> psio){
 
     ints->update_orbitals();
     // Since we don't regenerate the SO ints, we don't call sort_so_tei, and the OEI are not updated !!!!!
@@ -337,7 +337,7 @@ void DMRGSCF::fillRotatedTEI_coulomb( boost::shared_ptr<IntegralTransform> ints,
 }
 
 
-void DMRGSCF::fillRotatedTEI_exchange( boost::shared_ptr<IntegralTransform> ints, boost::shared_ptr<MOSpace> OAorbs_ptr, boost::shared_ptr<MOSpace> Vorbs_ptr, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, boost::shared_ptr<PSIO> psio ){
+void DMRGSCF::fillRotatedTEI_exchange( std::shared_ptr<IntegralTransform> ints, std::shared_ptr<MOSpace> OAorbs_ptr, std::shared_ptr<MOSpace> Vorbs_ptr, CheMPS2::DMRGSCFintegrals * theRotatedTEI, CheMPS2::DMRGSCFindices * iHandler, std::shared_ptr<PSIO> psio ){
 
     ints->update_orbitals();
     ints->transform_tei( Vorbs_ptr, OAorbs_ptr, Vorbs_ptr, OAorbs_ptr );
@@ -407,8 +407,8 @@ double DMRGSCF::compute_energy()
     /*******************************
      *   Environment information   *
      *******************************/
-    boost::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default) PSIO object, for file I/O
-    //boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction(); // The reference (SCF) wavefunction
+    std::shared_ptr<PSIO> psio(_default_psio_lib_); // Grab the global (default) PSIO object, for file I/O
+    //std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction(); // The reference (SCF) wavefunction
     if (!reference_wavefunction_){ throw PSIEXCEPTION("SCF has not been run yet!"); }
 
     /*************************
@@ -584,7 +584,7 @@ double DMRGSCF::compute_energy()
 
     SharedMatrix work1; work1 = SharedMatrix( new Matrix("work1", nirrep, orbspi, orbspi) );
     SharedMatrix work2; work2 = SharedMatrix( new Matrix("work2", nirrep, orbspi, orbspi) );
-    boost::shared_ptr<JK> myJK = boost::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
+    std::shared_ptr<JK> myJK = std::shared_ptr<JK>(new DiskJK(this->basisset(), options_));
 
     myJK->set_cutoff(0.0);
     myJK->initialize();
@@ -606,17 +606,17 @@ double DMRGSCF::compute_energy()
           Vorbs.push_back( iHandler->getOrigNVIRTstart(h) + orb );
        }
     }
-    boost::shared_ptr<MOSpace> OAorbs_ptr; OAorbs_ptr = boost::shared_ptr<MOSpace>( new MOSpace( 'Q', OAorbs, empty ) );
-    boost::shared_ptr<MOSpace>  Aorbs_ptr;  Aorbs_ptr = boost::shared_ptr<MOSpace>( new MOSpace( 'S',  Aorbs, empty ) );
-    boost::shared_ptr<MOSpace>  Vorbs_ptr;  Vorbs_ptr = boost::shared_ptr<MOSpace>( new MOSpace( 'T',  Vorbs, empty ) );
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
+    std::shared_ptr<MOSpace> OAorbs_ptr; OAorbs_ptr = std::shared_ptr<MOSpace>( new MOSpace( 'Q', OAorbs, empty ) );
+    std::shared_ptr<MOSpace>  Aorbs_ptr;  Aorbs_ptr = std::shared_ptr<MOSpace>( new MOSpace( 'S',  Aorbs, empty ) );
+    std::shared_ptr<MOSpace>  Vorbs_ptr;  Vorbs_ptr = std::shared_ptr<MOSpace>( new MOSpace( 'T',  Vorbs, empty ) );
+    std::vector<std::shared_ptr<MOSpace> > spaces;
     spaces.push_back( OAorbs_ptr   );
     spaces.push_back(  Aorbs_ptr   );
     spaces.push_back(  Vorbs_ptr   );
     spaces.push_back( MOSpace::all );
     // CheMPS2 requires RHF or ROHF orbitals.
-    boost::shared_ptr<IntegralTransform> ints;
-    ints = boost::shared_ptr<IntegralTransform>( new IntegralTransform(reference_wavefunction_, spaces, IntegralTransform::Restricted ) );
+    std::shared_ptr<IntegralTransform> ints;
+    ints = std::shared_ptr<IntegralTransform>( new IntegralTransform(reference_wavefunction_, spaces, IntegralTransform::Restricted ) );
     ints->set_keep_iwl_so_ints( true );
     ints->set_keep_dpd_so_ints( true );
     //ints->set_print(6);
@@ -1042,3 +1042,5 @@ void DMRGSCF::compute_reference(double* one_rdm, double* two_rdm, double* three_
 }
 
 }} // End Namespaces
+
+#endif // #ifdef HAVE_CHEMPS2

@@ -1,12 +1,12 @@
 #include <numeric>
 
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
-#include <lib3index/dftensor.h>
-#include <libqt/qt.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/lib3index/dftensor.h"
+#include "psi4/libqt/qt.h"
 #include "blockedtensorfactory.h"
 #include "fci_solver.h"
 #include "fci_vector.h"
@@ -256,8 +256,8 @@ void THREE_DSRG_MRPT2::startup()
 
         //printf("\n Settingup reference shit begin P%d", my_proc);
         //Compute the fock matrix from the reference.  Make sure fock matrix is updated in integrals class.
-        boost::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
-        boost::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
+        std::shared_ptr<Matrix> Gamma1_matrixA(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
+        std::shared_ptr<Matrix> Gamma1_matrixB(new Matrix("Gamma1_RDM", ncmo_, ncmo_));
         for(size_t m = 0; m < core_; m++){
                 Gamma1_matrixA->set(acore_mos_[m],acore_mos_[m],1.0);
                 Gamma1_matrixB->set(bcore_mos_[m],bcore_mos_[m],1.0);
@@ -655,7 +655,7 @@ double THREE_DSRG_MRPT2::compute_ref()
     E += 0.25 * V_["UVXY"] * Lambda2_["UVXY"];
     E += V_["uVxY"] * Lambda2_["uVxY"];
 
-    boost::shared_ptr<Molecule> molecule = Process::environment.molecule();
+    std::shared_ptr<Molecule> molecule = Process::environment.molecule();
     double Enuc = molecule->nuclear_repulsion_energy();
 
     return E + frozen_core_energy_+ Enuc;
@@ -2611,8 +2611,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow()
     epsilon_virtual->print();
 
     AtomicOrbitalHelper ao_helper(Cwfn, epsilon_rdocc, epsilon_virtual, 1e-6, active_);
-    boost::shared_ptr<BasisSet> primary   = reference_wavefunction_->basisset();
-    boost::shared_ptr<BasisSet> auxiliary = BasisSet::pyconstruct_orbital(reference_wavefunction_->molecule(), "DF_BASIS_MP2",options_.get_str("DF_BASIS_MP2"));
+    std::shared_ptr<BasisSet> primary   = reference_wavefunction_->basisset();
+    std::shared_ptr<BasisSet> auxiliary = reference_wavefunction_->get_basisset("DF_BASIS_MP2");
+
     ao_helper.Compute_AO_Screen(primary);
     ao_helper.Estimate_TransAO_Screen(primary, auxiliary);
     size_t weights = ao_helper.Weights();

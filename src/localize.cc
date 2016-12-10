@@ -1,18 +1,18 @@
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
-#include <libmints/molecule.h>
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/molecule.h"
 
-#include <liboptions/liboptions.h>
-#include <libmints/local.h> 
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/local.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "localize.h"
 
 namespace psi{ namespace forte{
 
 
-LOCALIZE::LOCALIZE(boost::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info) : wfn_(wfn),ints_(ints)
+LOCALIZE::LOCALIZE(std::shared_ptr<Wavefunction> wfn, Options &options, std::shared_ptr<ForteIntegrals>  ints, std::shared_ptr<MOSpaceInfo> mo_space_info) : wfn_(wfn),ints_(ints)
 {
     nfrz_ = mo_space_info->size("FROZEN_DOCC");
     nrst_ = mo_space_info->size("RESTRICTED_DOCC");
@@ -81,21 +81,21 @@ void LOCALIZE::localize_orbitals()
         }
     }
 
-    boost::shared_ptr<BasisSet> primary = wfn_->basisset();
+    std::shared_ptr<BasisSet> primary = wfn_->basisset();
 
-    boost::shared_ptr<Localizer> loc_a = Localizer::build( local_type_, primary, Caocc); 
+    std::shared_ptr<Localizer> loc_a = Localizer::build( local_type_, primary, Caocc); 
     loc_a->localize();
     
     SharedMatrix Laocc = loc_a->L();
 
-    boost::shared_ptr<Localizer> loc_v = Localizer::build( local_type_, primary, Cavir); 
+    std::shared_ptr<Localizer> loc_v = Localizer::build( local_type_, primary, Cavir); 
     loc_v->localize();
     
     SharedMatrix Lvir = loc_v->L();
 
     SharedMatrix Lact;
     if( multiplicity_ == 3 ){
-        boost::shared_ptr<Localizer> loc_c = Localizer::build( local_type_, primary, Caact); 
+        std::shared_ptr<Localizer> loc_c = Localizer::build( local_type_, primary, Caact); 
         loc_c->localize();
         Lact = loc_c->L();
     }

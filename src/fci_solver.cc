@@ -12,14 +12,13 @@
 
 #include "mini-boost/boost/format.hpp"
 
-#include <libciomr/libciomr.h>
-#include <liboptions/liboptions.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/molecule.h>
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
-#include "libmints/matrix.h"
-#include "libmints/vector.h"
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "stl_bitset_determinant.h"
 #include "integrals.h"
@@ -33,7 +32,7 @@
 #include <macdecls.h>
 #endif
 
-#include <psi4-dec.h>
+#include "psi4/psi4-dec.h"
 
 using namespace std;
 using namespace psi;

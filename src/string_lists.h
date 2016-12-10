@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include <utility>
-#include "libmints/dimension.h"
+#include "psi4/libmints/dimension.h"
 
 #include "boost/shared_ptr.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -65,7 +65,7 @@ struct H3StringSubstitution {
     H3StringSubstitution(short sign_,short p_,short q_,short r_,size_t J_) : sign(sign_), p(p_), q(q_), r(r_), J(J_) {}
 };
 
-typedef boost::shared_ptr<BinaryGraph> GraphPtr;
+typedef std::shared_ptr<BinaryGraph> GraphPtr;
 typedef std::vector<std::vector<boost::dynamic_bitset<>>> StringList;
 typedef std::map<boost::tuple<size_t,size_t,int>,std::vector<StringSubstitution> > VOList;
 typedef std::map<boost::tuple<size_t,size_t,size_t,size_t,int>,std::vector<StringSubstitution> > VOVOList;

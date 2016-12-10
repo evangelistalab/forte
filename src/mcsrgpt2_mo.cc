@@ -1,4 +1,4 @@
-#include <libqt/qt.h>
+#include "psi4/libqt/qt.h"
 #include <string>
 #include <numeric>
 #include <utility>

@@ -2,9 +2,9 @@
 #define _aosubspace_h_
 
 #include "mini-boost/boost/shared_ptr.hpp"
-#include <libmints/molecule.h>
-#include <libmints/basisset.h>
-#include <liboptions/liboptions.h>
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/liboptions/liboptions.h"
 
 #define _DEBUG_AOSUBSPACE_ 0
 
@@ -43,7 +43,7 @@ private:
  * Typical usage:
  *
  *    // Find the AO subset
- *    boost::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
+ *    std::shared_ptr<Wavefunction> wfn = Process::environment.wavefunction();
  *
  *    std::vector<std::string> subspace_str;
  *    if (options["SUBSPACE"].size() > 0){
@@ -105,9 +105,9 @@ public:
     // ==> Constructors <==
 
     // Simple constructor
-    AOSubspace(boost::shared_ptr<Molecule> molecule,boost::shared_ptr<BasisSet> basis);
+    AOSubspace(std::shared_ptr<Molecule> molecule,std::shared_ptr<BasisSet> basis);
     // Constructor with list of subspaces
-    AOSubspace(std::vector<std::string> subspace_str,boost::shared_ptr<Molecule> molecule,boost::shared_ptr<BasisSet> basis);
+    AOSubspace(std::vector<std::string> subspace_str,std::shared_ptr<Molecule> molecule,std::shared_ptr<BasisSet> basis);
 
     // ==> User's interface <==
 
@@ -121,9 +121,9 @@ public:
     const std::vector<int>& subspace();
 
     SharedMatrix build_projector(const std::vector<int>& subspace,
-                                 boost::shared_ptr<Molecule> molecule,
-                                 boost::shared_ptr<BasisSet> min_basis,
-                                 boost::shared_ptr<BasisSet> large_basis);
+                                 std::shared_ptr<Molecule> molecule,
+                                 std::shared_ptr<BasisSet> min_basis,
+                                 std::shared_ptr<BasisSet> large_basis);
 
     /// Return a vector of labels for each atomic orbital.  This function accepts
     /// an optional argument that indicates the formatting that will be fed to
@@ -146,9 +146,9 @@ private:
     /// The vector of subspace descriptors passed by the user
     std::vector<std::string> subspace_str_;
     /// The molecule
-    boost::shared_ptr<Molecule> molecule_;
+    std::shared_ptr<Molecule> molecule_;
     /// The AO basis set
-    boost::shared_ptr<BasisSet> basis_;
+    std::shared_ptr<BasisSet> basis_;
 
     /// The label of Cartesian atomic orbitals.
     /// lm_labels_cartesian_[l][m] returns the label for an orbital

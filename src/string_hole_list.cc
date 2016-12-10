@@ -9,7 +9,7 @@
 
 #include <algorithm>
 
-#include <psi4-dec.h>
+#include "psi4/psi4-dec.h"
 
 #include "string_lists.h"
 

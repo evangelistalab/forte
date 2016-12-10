@@ -1,24 +1,27 @@
-#include "finite_temperature.h"
-#include <libpsio/psio.h>
-#include <libmints/wavefunction.h>
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
 #include <vector>
-#include <liboptions/liboptions.h>
-#include <libciomr/libciomr.h>
-#include <liboptions/liboptions.h>
-#include <libmoinfo/libmoinfo.h>
-#include <libmints/molecule.h>
-#include <libpsio/psio.h>
-#include <libpsio/psio.hpp>
-#include <libfock/jk.h>
-#include "helpers.h"
 #include <numeric>
+
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libfunctional/superfunctional.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libfock/jk.h"
+
+#include "helpers.h"
+#include "finite_temperature.h"
+
 
 namespace psi { namespace forte {
 
 FiniteTemperatureHF::FiniteTemperatureHF(SharedWavefunction ref_wfn, Options& options, std::shared_ptr<MOSpaceInfo> mo_space)
-    : RHF(ref_wfn,options,_default_psio_lib_),
+    : RHF(ref_wfn,std::make_shared<SuperFunctional>(),options,_default_psio_lib_),
       mo_space_info_(mo_space),
       options_(options)
 {
@@ -261,13 +264,13 @@ void FiniteTemperatureHF::form_G()
     }
     frac_occupation();
     form_D();
-    boost::shared_ptr<JK> JK = JK::build_JK(this->basisset(),options_ );
+    std::shared_ptr<JK> JK = JK::build_JK(this->basisset(), get_basisset("DF_BASIS_SCF"),options_ );
     JK->set_memory(Process::environment.get_memory() * 0.8);
     JK->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
     JK->initialize();
 
-    std::vector<boost::shared_ptr<Matrix> >&Cl = JK->C_left();
-    std::vector<boost::shared_ptr<Matrix> >&Cr = JK->C_right();
+    std::vector<std::shared_ptr<Matrix> >&Cl = JK->C_left();
+    std::vector<std::shared_ptr<Matrix> >&Cr = JK->C_right();
 
     Cl.clear();
     if(nmo_ > 0)

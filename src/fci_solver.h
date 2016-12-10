@@ -2,9 +2,9 @@
 #ifndef _fci_solver_h_
 #define _fci_solver_h_
 
-#include <libmints/wavefunction.h>
-#include <liboptions/liboptions.h>
-#include <physconst.h>
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/physconst.h"
 
 #include "fci_vector.h"
 

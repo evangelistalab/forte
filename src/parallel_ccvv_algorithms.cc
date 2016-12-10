@@ -1,11 +1,13 @@
+#ifdef HAVE_MPI
+
 #include <numeric>
 
-#include <libpsio/psio.hpp>
-#include <libpsio/psio.h>
-#include <libmints/molecule.h>
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
-#include <libqt/qt.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libqt/qt.h"
 #include "blockedtensorfactory.h"
 #include "fci_solver.h"
 #include "fci_vector.h"
@@ -1044,3 +1046,5 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga()
     return (Ealpha + Ebeta + Emixed);
 }
 }}
+
+#endif

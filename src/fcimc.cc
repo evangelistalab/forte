@@ -1,10 +1,10 @@
 #include <cmath>
 
-#include <libpsio/psio.hpp>
-#include <libmints/wavefunction.h>
-#include <libmints/molecule.h>
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
 
-#include <libqt/qt.h>
+#include "psi4/libqt/qt.h"
 
 #include "fcimc.h"
 #include "fci_vector.h"

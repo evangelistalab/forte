@@ -1,9 +1,9 @@
 #ifndef DMRGSOLVER_H
 #define DMRGSOLVER_H
 
-#include <liboptions/liboptions.h>
-#include <libmints/wavefunction.h>
-#include <libfock/jk.h>
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libfock/jk.h"
 #include "reference.h"
 #include "integrals.h"
 #include "helpers.h"

@@ -1,9 +1,10 @@
-#include <libmints/matrix.h>
-#include <libmints/vector.h>
-#include <libmints/sieve.h>
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/sieve.h"
 #include "ao_helper.h"
-#include <lib3index/denominator.h>
-#include <libfock/jk.h>
+#include "psi4/lib3index/denominator.h"
+#include "psi4/libfock/jk.h"
+
 namespace psi { namespace forte {
 
 AtomicOrbitalHelper::AtomicOrbitalHelper(SharedMatrix CMO, SharedVector eps_occ, SharedVector eps_vir, double laplace_tolerance)
@@ -60,7 +61,7 @@ void AtomicOrbitalHelper::Compute_Psuedo_Density()
     POcc_ = Xocc->clone();
     PVir_ = Yvir->clone();
 }
-void AtomicOrbitalHelper::Compute_AO_Screen(boost::shared_ptr<BasisSet>& primary)
+void AtomicOrbitalHelper::Compute_AO_Screen(std::shared_ptr<BasisSet>& primary)
 {
     ERISieve sieve(primary, 1e-10);
     std::vector<double> my_function_pair_values = sieve.function_pair_values();
@@ -72,10 +73,10 @@ void AtomicOrbitalHelper::Compute_AO_Screen(boost::shared_ptr<BasisSet>& primary
     AO_Screen_ = AO_Screen;
     AO_Screen_->set_name("ScwartzAOInts");
 }
-void AtomicOrbitalHelper::Estimate_TransAO_Screen(boost::shared_ptr<BasisSet>& primary, boost::shared_ptr<BasisSet>& auxiliary)
+void AtomicOrbitalHelper::Estimate_TransAO_Screen(std::shared_ptr<BasisSet>& primary, std::shared_ptr<BasisSet>& auxiliary)
 {
     Compute_Psuedo_Density();
-    boost::shared_ptr<JK> jk(new DFJK(primary, auxiliary));
+    std::shared_ptr<JK> jk(new DFJK(primary, auxiliary));
     jk->initialize();
     jk->compute();
     SharedMatrix AO_Trans_Screen(new Matrix("AOTrans", weights_, nbf_ * nbf_));

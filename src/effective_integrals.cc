@@ -1,8 +1,8 @@
 #include <cmath>
 
-#include <psifiles.h>
-#include <libmints/sointegral_twobody.h>
-#include <libmints/integralparameters.h>
+#include "psi4/psifiles.h"
+#include "psi4/libmints/sointegral_twobody.h"
+#include "psi4/libmints/integralparameters.h"
 
 #include "integrals.h"
 #include "blockedtensorfactory.h"
@@ -77,11 +77,11 @@ void EffectiveIntegrals::transform_integrals()
     Timer int_timer;
 
     // Now we want the reference (SCF) wavefunction
-    boost::shared_ptr<IntegralFactory> integral = wfn_->integral();
+    std::shared_ptr<IntegralFactory> integral = wfn_->integral();
 
-    boost::shared_ptr<SOBasisSet> sobasisset = wfn_->sobasisset();
-//    boost::shared_ptr<TwoBodyAOInt> tb(integral->eri());
-//    boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+    std::shared_ptr<SOBasisSet> sobasisset = wfn_->sobasisset();
+//    std::shared_ptr<TwoBodyAOInt> tb(integral->eri());
+//    std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
 //    ERISaver eri_saver(aptei_idx_,num_aptei);
 //    SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
@@ -102,8 +102,8 @@ void EffectiveIntegrals::transform_integrals()
 
     // Erf(x)/x integrals (long range)
     {
-        boost::shared_ptr<TwoBodyAOInt> tb(integral->erf_eri(eff_coulomb_omega));
-        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+        std::shared_ptr<TwoBodyAOInt> tb(integral->erf_eri(eff_coulomb_omega));
+        std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
         ERISaver erf_eri_saver(aptei_idx_,num_aptei);
         SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
@@ -119,8 +119,8 @@ void EffectiveIntegrals::transform_integrals()
 
 //    // Erfc(x)/x integrals (short range)
 //    {
-//        boost::shared_ptr<TwoBodyAOInt> tb(integral->erf_complement_eri(eff_coulomb_omega));
-//        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+//        std::shared_ptr<TwoBodyAOInt> tb(integral->erf_complement_eri(eff_coulomb_omega));
+//        std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
 //        ERISaver erf_complement_eri_saver(aptei_idx_,num_aptei);
 //        SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
@@ -135,15 +135,15 @@ void EffectiveIntegrals::transform_integrals()
 
     // Gaussian(gamma,c) integrals (short range)
     {
-        boost::shared_ptr<Vector> coeff = boost::shared_ptr<Vector>(new Vector(1));
-        boost::shared_ptr<Vector> exponent = boost::shared_ptr<Vector>(new Vector(1));
+        std::shared_ptr<Vector> coeff = std::shared_ptr<Vector>(new Vector(1));
+        std::shared_ptr<Vector> exponent = std::shared_ptr<Vector>(new Vector(1));
         coeff->set(0,eff_coulomb_factor);
         exponent->set(0,eff_coulomb_exp);
 
-        boost::shared_ptr<CorrelationFactor> cf = boost::shared_ptr<CorrelationFactor>(new CorrelationFactor(1));
+        std::shared_ptr<CorrelationFactor> cf = std::shared_ptr<CorrelationFactor>(new CorrelationFactor(1));
         cf->set_params(coeff,exponent);
-        boost::shared_ptr<TwoBodyAOInt> tb(integral->f12(cf));
-        boost::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
+        std::shared_ptr<TwoBodyAOInt> tb(integral->f12(cf));
+        std::shared_ptr<TwoBodySOInt> eri(new TwoBodySOInt(tb,integral));
 
         ERISaver f12_eri_saver(aptei_idx_,num_aptei);
         SOShellCombinationsIterator shellIter(sobasisset, sobasisset, sobasisset, sobasisset);
